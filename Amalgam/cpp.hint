@@ -1,0 +1,59 @@
+#define MAKE_HOOK(name, address, type, callconvo, ...) namespace Hooks \
+{\
+	namespace name\
+	{\
+		void Init(); \
+		inline CHook Hook(Init); \
+		using FN = type(callconvo *)(__VA_ARGS__); \
+		type callconvo Func(__VA_ARGS__); \
+	}\
+} \
+void Hooks::name::Init() { Hook.Create(reinterpret_cast<void *>(address), Func); } \
+type callconvo Hooks::name::Func(__VA_ARGS__)
+#define CALL_ORIGINAL Hook.Original<FN>()
+#define MAKE_INTERFACE_VERSION(type, name, dll, version) namespace I { inline type *name = nullptr; } \
+namespace MAKE_INTERFACE_SCOPE \
+{\
+	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, version, -1, 0); \
+}
+#define MAKE_INTERFACE_SIGNATURE(type, name, dll, version, offset, deref) namespace I { inline type *name = nullptr; } \
+namespace MAKE_INTERFACE_SCOPE \
+{\
+	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, version, offset, deref); \
+}
+#define MAKE_INTERFACE_NULL(type, name) namespace I { inline type *name = nullptr; }
+#define MAKE_INTERFACE_VERSION_SEARCH(type, name, dll, version) namespace I { inline type *name = nullptr; } \
+namespace MAKE_INTERFACE_SCOPE \
+{\
+	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, version, -1, 0, true); \
+}
+#define MAKE_INTERFACE_SIGNATURE_SEARCH(type, name, dll, signature, offset, deref) namespace I { inline type *name = nullptr; } \
+namespace MAKE_INTERFACE_SCOPE \
+{\
+	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, signature, offset, deref, true); \
+}
+#define NETVAR(_name, type, table, name) type& _name() \
+{ \
+	static int nOffset = U::NetVars.GetNetVar(table, name); \
+	return *reinterpret_cast<type*>(std::uintptr_t(this) + nOffset); \
+}
+#define NETVAR_OFF(_name, type, table, name, offset) type& _name() \
+{ \
+	static int nOffset = U::NetVars.GetNetVar(table, name) + offset; \
+	return *reinterpret_cast<type*>(std::uintptr_t(this) + nOffset); \
+}
+#define OFFSET(name, type, offset) type& name() \
+{ \
+	return *reinterpret_cast<type*>(std::uintptr_t(this) + offset); \
+}
+#define VIRTUAL(name, type, fn, base, index) type name() \
+{ \
+	return reinterpret_cast<fn>(U::Memory.GetVFunc(base, index))(base); \
+}
+#define CONDGET(name, conditions, cond) bool name() \
+{ \
+	return (conditions & cond); \
+}
+#define MAKE_SIGNATURE(name, dll, sig, offset) namespace S { inline CSignature name(dll, sig, offset, #name); }
+#define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }
+#define ADD_FEATURE(type, name) ADD_FEATURE_CUSTOM(type, name, F)
