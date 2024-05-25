@@ -243,7 +243,7 @@
     <ClCompile Include="src\Features\EnginePrediction\EnginePrediction.cpp" />
     <ClCompile Include="src\Features\ImGui\Render.cpp" />
     <ClCompile Include="src\Features\ImGui\Menu\Menu.cpp" />
-    <ClCompile Include="src\Features\Logs\Logs.cpp" />
+    <ClCompile Include="src\Features\Records\Records.cpp" />
     <ClCompile Include="src\Features\Misc\Misc.cpp" />
     <ClCompile Include="src\Features\NetworkFix\NetworkFix.cpp" />
     <ClCompile Include="src\Features\NoSpread\NoSpread.cpp" />
@@ -494,7 +494,7 @@
     <ClInclude Include="src\Features\ImGui\MaterialDesign\MaterialIcons.h" />
     <ClInclude Include="src\Features\ImGui\Menu\Components.h" />
     <ClInclude Include="src\Features\ImGui\Menu\Menu.h" />
-    <ClInclude Include="src\Features\Logs\Logs.h" />
+    <ClInclude Include="src\Features\Records\Records.h" />
     <ClInclude Include="src\Features\Players\PlayerCore.h" />
     <ClInclude Include="src\Features\Players\PlayerUtils.h" />
     <ClInclude Include="src\Features\Visuals\Materials\Materials.h" />

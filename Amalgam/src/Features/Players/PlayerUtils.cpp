@@ -1,7 +1,7 @@
 #include "PlayerUtils.h"
 
 #include "../../SDK/Definitions/Types.h"
-#include "../Logs/Logs.h"
+#include "../Records/Records.h"
 
 uint32_t GetFriendsID(int iIndex)
 {
@@ -40,7 +40,7 @@ void CPlayerlistUtils::AddTag(uint32_t friendsID, std::string sTag, bool bSave, 
 		{
 			PriorityLabel_t plTag;
 			if (GetTag(sTag, &plTag))
-				F::Logs.TagsChanged(sName, "Added", plTag.Color.ToHexA(), sTag);
+				F::Records.TagsChanged(sName, "Added", plTag.Color.ToHexA(), sTag);
 		}
 	}
 }
@@ -67,7 +67,7 @@ void CPlayerlistUtils::RemoveTag(uint32_t friendsID, std::string sTag, bool bSav
 			{
 				PriorityLabel_t plTag;
 				if (GetTag(sTag, &plTag))
-					F::Logs.TagsChanged(sName, "Removed", plTag.Color.ToHexA(), sTag);
+					F::Records.TagsChanged(sName, "Removed", plTag.Color.ToHexA(), sTag);
 			}
 			break;
 		}

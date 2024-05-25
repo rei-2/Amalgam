@@ -3,7 +3,7 @@
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/CheaterDetection/CheaterDetection.h"
 #include "../Features/CritHack/CritHack.h"
-#include "../Features/Logs/Logs.h"
+#include "../Features/Records/Records.h"
 #include "../Features/Misc/Misc.h"
 #include "../Features/PacketManip/AntiAim/AntiAim.h"
 #include "../Features/Resolver/Resolver.h"
@@ -22,7 +22,7 @@ MAKE_HOOK(CGameEventManager_FireEventIntern, S::CGameEventManager_FireEventInter
 	auto pLocal = H::Entities.GetLocal();
 	auto uHash = FNV1A::Hash(pEvent->GetName());
 
-	F::Logs.Event(pEvent, uHash, pLocal);
+	F::Records.Event(pEvent, uHash, pLocal);
 	F::CritHack.Event(pEvent, uHash, pLocal);
 	F::Misc.Event(pEvent, uHash);
 	switch (uHash)

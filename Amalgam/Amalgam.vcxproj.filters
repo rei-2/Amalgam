@@ -6,7 +6,7 @@
     <ClCompile Include="src\Features\Conditions\Conditions.cpp" />
     <ClCompile Include="src\Features\Configs\Configs.cpp" />
     <ClCompile Include="src\Features\ImGui\Menu\Menu.cpp" />
-    <ClCompile Include="src\Features\Logs\Logs.cpp" />
+    <ClCompile Include="src\Features\Records\Records.cpp" />
     <ClCompile Include="src\Features\Players\PlayerCore.cpp" />
     <ClCompile Include="src\Features\Players\PlayerUtils.cpp" />
     <ClCompile Include="src\Features\Visuals\Materials\Materials.cpp" />
@@ -174,7 +174,7 @@
     <ClInclude Include="src\Features\ImGui\MaterialDesign\MaterialIcons.h" />
     <ClInclude Include="src\Features\ImGui\Menu\Components.h" />
     <ClInclude Include="src\Features\ImGui\Menu\Menu.h" />
-    <ClInclude Include="src\Features\Logs\Logs.h" />
+    <ClInclude Include="src\Features\Records\Records.h" />
     <ClInclude Include="src\Features\Players\PlayerCore.h" />
     <ClInclude Include="src\Features\Players\PlayerUtils.h" />
     <ClInclude Include="src\Features\Visuals\Materials\Materials.h" />

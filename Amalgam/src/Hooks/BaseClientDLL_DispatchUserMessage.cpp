@@ -1,7 +1,7 @@
 #include "../SDK/SDK.h"
 
 #include "../Features/Misc/Misc.h"
-#include "../Features/Logs/Logs.h"
+#include "../Features/Records/Records.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -16,7 +16,7 @@ MAKE_HOOK(BaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL
 	switch (type)
 	{
 	case VoteStart:
-		F::Logs.UserMessage(msgData);
+		F::Records.UserMessage(msgData);
 
 		break;
 	/*
