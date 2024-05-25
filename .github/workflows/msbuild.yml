@@ -17,10 +17,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
     - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v1.1
 
     - name: Restore NuGet packages
       working-directory: ${{env.GITHUB_WORKSPACE}}
@@ -30,7 +30,7 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: msbuild /m /p:Platform=${{env.BUILD_PLATFORM}} /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}} 
     
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v3
       with:
        name: Amalgam
        path: ${{env.SOLUTION_FILE_PATH}}/output/${{env.BUILD_PLATFORM}}/${{env.BUILD_CONFIGURATION}}/*.dll
