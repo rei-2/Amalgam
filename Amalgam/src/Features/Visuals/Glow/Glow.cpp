@@ -3,6 +3,7 @@
 #include "../Materials/Materials.h"
 #include "../FakeAngle/FakeAngle.h"
 #include "../../Backtrack/Backtrack.h"
+#include "../../Players/PlayerUtils.h"
 
 Glow_t CGlow::GetStruct(bool Stencil, bool Blur, int StencilScale, int BlurScale)
 {
@@ -16,13 +17,9 @@ Glow_t CGlow::GetStruct(bool Stencil, bool Blur, int StencilScale, int BlurScale
 
 bool CGlow::GetPlayerGlow(CTFPlayer* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy)
 {
-	if (Vars::Glow::Player::Local.Value && pEntity == pLocal)
-	{
-		*pGlow = GetStruct(Vars::Glow::Player::Stencil.Value, Vars::Glow::Player::Blur.Value, Vars::Glow::Player::StencilScale.Value, Vars::Glow::Player::BlurScale.Value);
-		*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
-		return true;
-	}
-	else if (Vars::Glow::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex()))
+	if (Vars::Glow::Player::Local.Value && pEntity == pLocal
+		|| Vars::Glow::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
+		|| Vars::Glow::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.mTags["Default"].Priority)
 	{
 		*pGlow = GetStruct(Vars::Glow::Player::Stencil.Value, Vars::Glow::Player::Blur.Value, Vars::Glow::Player::StencilScale.Value, Vars::Glow::Player::BlurScale.Value);
 		*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);

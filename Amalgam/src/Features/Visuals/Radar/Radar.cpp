@@ -1,5 +1,7 @@
 #include "Radar.h"
 
+#include "../../Players/PlayerUtils.h"
+
 bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, int& y, int& z)
 {
 	const float flRange = Vars::Radar::Main::Range.Value;
@@ -209,7 +211,8 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int nIndex = pOwner->entindex();
 					if (nIndex != I::EngineClient->GetLocalPlayer() && pOwner != H::Entities.GetObservedTarget())
 					{
-						if (!(Vars::Radar::Buildings::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex)))
+						if (!(Vars::Radar::Buildings::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex))
+							&& !(Vars::Radar::Buildings::Draw.Value & 1 << 4 && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.mTags["Default"].Priority))
 						{
 							if (!(Vars::Radar::Buildings::Draw.Value & 1 << 1) && pOwner->As<CTFPlayer>()->m_iTeamNum() != pLocal->m_iTeamNum())
 								continue;
@@ -282,7 +285,8 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			const int nIndex = pPlayer->entindex();
 			if (nIndex != I::EngineClient->GetLocalPlayer() && pPlayer != H::Entities.GetObservedTarget())
 			{
-				if (!(Vars::Radar::Players::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex)))
+				if (!(Vars::Radar::Players::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex))
+					&& !(Vars::Radar::Players::Draw.Value & 1 << 4 && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.mTags["Default"].Priority))
 				{
 					if (!(Vars::Radar::Players::Draw.Value & 1 << 1) && pPlayer->m_iTeamNum() != pLocal->m_iTeamNum())
 						continue;
@@ -292,7 +296,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 			else if (!(Vars::Radar::Players::Draw.Value & 1 << 0))
 				continue;
-			if (!(Vars::Radar::Players::Draw.Value & 1 << 4) && pPlayer->m_flInvisibility() >= 1.f)
+			if (!(Vars::Radar::Players::Draw.Value & 1 << 5) && pPlayer->m_flInvisibility() >= 1.f)
 				continue;
 
 			int x, y, z;

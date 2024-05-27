@@ -39,8 +39,8 @@ public:
 	bool HasTag(uint32_t friendsID, std::string sTag);
 	bool HasTag(int iIndex, std::string sTag);
 
-	int GetPriority(uint32_t friendsID);
-	int GetPriority(int iIndex);
+	int GetPriority(uint32_t friendsID, bool bCache = true);
+	int GetPriority(int iIndex, bool bCache = true);
 	bool GetSignificantTag(uint32_t friendsID, std::string* sTag, PriorityLabel_t* plTag, int iMode = 1); // iMode: 0 - Priorities & Labels, 1 - Priorities, 2 - Labels
 	bool GetSignificantTag(int iIndex, std::string* sTag, PriorityLabel_t* plTag, int iMode = 1); // iMode: 0 - Priorities & Labels, 1 - Priorities, 2 - Labels
 	bool IsIgnored(uint32_t friendsID);

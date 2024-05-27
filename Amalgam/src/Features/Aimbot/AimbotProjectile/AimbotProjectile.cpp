@@ -220,7 +220,7 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& targe
 				Vec3 vCenter, vBBoxMins, vBBoxMaxs; target.m_pEntity->As<CBaseAnimating>()->GetHitboxInfo(HITBOX_HEAD, &vCenter, &vBBoxMins, &vBBoxMaxs);
 				Vec3 vOff = vCenter + (vBBoxMins + vBBoxMaxs) / 2 - target.m_pEntity->GetAbsOrigin();
 
-				const float flHeight = vOff.z + (vMaxs.z - vOff.z) * (Vars::Aimbot::Projectile::HuntermanLerp.Value / 100.f);
+				const float flHeight = vOff.z + (vMaxs.z - vOff.z) * (Vars::Aimbot::Projectile::HuntsmanLerp.Value / 100.f);
 				const float flMax = vMaxs.z - Vars::Aimbot::Projectile::VerticalShift.Value;
 				mPoints[iPriority] = Vec3(vOff.x, vOff.y, std::min(flHeight, flMax));
 			}
@@ -486,7 +486,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 	}
 
 	if (Vars::Aimbot::General::AimType.Value != 2)
-		projInfo.m_vHull += Vec3(Vars::Aimbot::Projectile::HullInc.Value, Vars::Aimbot::Projectile::HullInc.Value, Vars::Aimbot::Projectile::HullInc.Value);
+		projInfo.m_vHull += Vec3(Vars::Aimbot::Projectile::HullIncrease.Value, Vars::Aimbot::Projectile::HullIncrease.Value, Vars::Aimbot::Projectile::HullIncrease.Value);
 
 	const Vec3 vOriginal = target.m_pEntity->GetAbsOrigin();
 	target.m_pEntity->SetAbsOrigin(target.m_vPos);
@@ -644,7 +644,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 		tInfo.iPrimeTime = TIME_TO_TICKS(PrimeTime(pWeapon));
 	}
 
-	const float flLatency = F::Backtrack.GetReal() + TICKS_TO_TIME(G::AnticipatedChoke - 1 + Vars::Aimbot::Projectile::LatOff.Value);
+	const float flLatency = F::Backtrack.GetReal() + TICKS_TO_TIME(G::AnticipatedChoke - 1 + Vars::Aimbot::Projectile::LatencyOffset.Value);
 	const bool bCanSplash = Vars::Aimbot::Projectile::SplashPrediction.Value && tInfo.flRadius;
 	const int iSplash = bCanSplash ? Vars::Aimbot::Projectile::SplashPrediction.Value : 0;
 

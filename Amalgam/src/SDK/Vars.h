@@ -139,14 +139,14 @@ namespace Vars
 			CVar(SplashRadius, 90.f)
 			CVar(AutoRelease, 0.f)
 
-			CVar(iGroundSamples, 5, NOSAVE) // debug
-			CVar(iAirSamples, 5, NOSAVE) // debug
+			CVar(GroundSamples, 5, NOSAVE) // debug
+			CVar(AirSamples, 5, NOSAVE) // debug
 			CVar(VerticalShift, 5.f, NOSAVE) // debug
-			CVar(LatOff, 0.f, NOSAVE) // debug
-			CVar(HullInc, 0.f, NOSAVE) // debug
+			CVar(LatencyOffset, 0.f, NOSAVE) // debug
+			CVar(HullIncrease, 0.f, NOSAVE) // debug
 			CVar(DragOverride, 0.f, NOSAVE) // debug
 			CVar(TimeOverride, 0.f, NOSAVE) // debug
-			CVar(HuntermanLerp, 50.f, NOSAVE) // debug
+			CVar(HuntsmanLerp, 50.f, NOSAVE) // debug
 			CVar(SplashPoints, 80, NOSAVE) // debug
 			CVar(SplashCount, 5, NOSAVE) // debug
 		SUBNAMESPACE_END(Projectile)
@@ -228,11 +228,11 @@ namespace Vars
 	NAMESPACE_END(AntiHack)
 
 	NAMESPACE_BEGIN(CheaterDetection)
-		CVar(Methods, 0b00001)				// { Duck Speed, Aim flicking, Packet choking, Invalid pitch }
+		CVar(Methods, 0b00001) // { Duck Speed, Aim flicking, Packet choking, Invalid pitch }
 		CVar(DetectionsRequired, 10)
 		CVar(MinimumChoking, 20)
-		CVar(MinimumFlick, 20.f)			// min flick size to suspect
-		CVar(MaximumNoise, 5.f)				// max different between angles before and after flick
+		CVar(MinimumFlick, 20.f) // min flick size to suspect
+		CVar(MaximumNoise, 5.f) // max different between angles before and after flick
 	NAMESPACE_END(CheaterDetection)
 
 	NAMESPACE_BEGIN(ESP)
@@ -274,6 +274,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Player)
 			CVar(Local, false, VISUAL)
 			CVar(Friend, false, VISUAL)
+			CVar(Priority, false, VISUAL)
 		
 			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
 			CVar(OccludedMaterial, std::vector<std::string> {}, VISUAL)
@@ -351,6 +352,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Player)
 			CVar(Local, false, VISUAL)
 			CVar(Friend, false, VISUAL)
+			CVar(Priority, false, VISUAL)
 				
 			CVar(Stencil, false, VISUAL)
 			CVar(Blur, false, VISUAL)
@@ -556,7 +558,7 @@ namespace Vars
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
 			CVar(IconType, 1, VISUAL) // 0 - Icons, 1 - Portraits, 2 - Avatars
-			CVar(Draw, 0b11010, VISUAL) // { Cloaked, Friends, Team, Enemy, Local }
+			CVar(Draw, 0b101010, VISUAL) // { Cloaked, Priority, Friends, Team, Enemy, Local }
 			CVar(IconSize, 24, VISUAL)
 			CVar(Health, false, VISUAL)
 			CVar(Height, false, VISUAL)
@@ -565,7 +567,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Buildings)
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
-			CVar(Draw, 0b1011, VISUAL) // { Friends, Team, Enemy, Local }
+			CVar(Draw, 0b01011, VISUAL) // { Priority, Friends, Team, Enemy, Local }
 			CVar(Health, false, VISUAL)
 			CVar(IconSize, 18, VISUAL)
 		SUBNAMESPACE_END(Buildings)
@@ -721,27 +723,4 @@ namespace Vars
 		CVar(ServerHitbox, false, NOSAVE)
 		CVar(AntiAimLines, false, NOSAVE)
 	NAMESPACE_END(Debug)
-
-	NAMESPACE_BEGIN(Fonts)
-		SUBNAMESPACE_BEGIN(FONT_ESP)
-			CVar(szName, std::string("Tahoma"), VISUAL | NOCOND)
-			CVar(nTall, 12, VISUAL | NOCOND)
-			CVar(nWeight, 0, VISUAL | NOCOND)
-			CVar(nFlags, 512, VISUAL | NOCOND)
-		SUBNAMESPACE_END(FONT_ESP)
-
-		SUBNAMESPACE_BEGIN(FONT_NAME)
-			CVar(szName, std::string("Tahoma"), VISUAL | NOCOND)
-			CVar(nTall, 12, VISUAL | NOCOND)
-			CVar(nWeight, 0, VISUAL | NOCOND)
-			CVar(nFlags, 512, VISUAL | NOCOND)
-		SUBNAMESPACE_END(FONT_NAME)
-
-		SUBNAMESPACE_BEGIN(FONT_INDICATORS)
-			CVar(szName, std::string("Tahoma"), VISUAL | NOCOND)
-			CVar(nTall, 13, VISUAL | NOCOND)
-			CVar(nWeight, -1, VISUAL | NOCOND)
-			CVar(nFlags, 512, VISUAL | NOCOND)
-		SUBNAMESPACE_END(FONT_INDICATORS)
-	NAMESPACE_END(Fonts)
 }

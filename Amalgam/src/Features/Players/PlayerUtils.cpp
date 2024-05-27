@@ -111,8 +111,11 @@ bool CPlayerlistUtils::HasTag(int iIndex, std::string sTag)
 
 
 
-int CPlayerlistUtils::GetPriority(uint32_t friendsID)
+int CPlayerlistUtils::GetPriority(uint32_t friendsID, bool bCache)
 {
+	if (bCache)
+		return H::Entities.GetPriority(friendsID);
+
 	const int iDefault = mTags["Default"].Priority;
 	if (!friendsID)
 		return iDefault;
@@ -141,8 +144,11 @@ int CPlayerlistUtils::GetPriority(uint32_t friendsID)
 	}
 	return iDefault;
 }
-int CPlayerlistUtils::GetPriority(int iIndex)
+int CPlayerlistUtils::GetPriority(int iIndex, bool bCache)
 {
+	if (bCache)
+		return H::Entities.GetPriority(iIndex);
+
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
 		return GetPriority(friendsID);
 	return mTags["Default"].Priority;

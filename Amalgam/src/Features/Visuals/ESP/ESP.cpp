@@ -60,19 +60,14 @@ void CESP::DrawPlayers(CTFPlayer* pLocal)
 
 		if (pPlayer->IsDormant())
 		{
-			if (!Vars::ESP::DormantAlpha.Value)
+			if (!Vars::ESP::DormantAlpha.Value || Vars::ESP::DormantPriority.Value && F::PlayerUtils.GetPriority(nIndex) <= F::PlayerUtils.mTags["Default"].Priority)
 				continue;
-			if (Vars::ESP::DormantPriority.Value)
-			{
-				PlayerInfo_t pi{};
-				if (I::EngineClient->GetPlayerInfo(nIndex, &pi) && F::PlayerUtils.GetPriority(pi.friendsID) <= F::PlayerUtils.mTags["Default"].Priority)
-					continue;
-			}
 		}
 
 		if (nIndex != I::EngineClient->GetLocalPlayer())
 		{
-			if (!(Vars::ESP::Draw.Value & 1 << 2 && H::Entities.IsFriend(nIndex)))
+			if (!(Vars::ESP::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex))
+				&& !(Vars::ESP::Draw.Value & 1 << 4 && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.mTags["Default"].Priority))
 			{
 				if (!(Vars::ESP::Draw.Value & 1 << 0) && pPlayer->m_iTeamNum() != pLocal->m_iTeamNum())
 					continue;
@@ -80,7 +75,7 @@ void CESP::DrawPlayers(CTFPlayer* pLocal)
 					continue;
 			}
 		}
-		else if (!(Vars::ESP::Draw.Value & 1 << 3) || !I::Input->CAM_IsThirdPerson())
+		else if (!(Vars::ESP::Draw.Value & 1 << 2) || !I::Input->CAM_IsThirdPerson())
 			continue;
 
 		I::MatSystemSurface->DrawSetAlphaMultiplier((pPlayer->IsDormant() ? Vars::ESP::DormantAlpha.Value : Vars::ESP::ActiveAlpha.Value) / 255.f);
@@ -476,7 +471,8 @@ void CESP::DrawBuildings(CTFPlayer* pLocal)
 			int nIndex = pOwner->entindex();
 			if (nIndex != I::EngineClient->GetLocalPlayer())
 			{
-				if (!(Vars::ESP::Draw.Value & 1 << 2 && H::Entities.IsFriend(nIndex)))
+				if (!(Vars::ESP::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex))
+					&& !(Vars::ESP::Draw.Value & 1 << 4 && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.mTags["Default"].Priority))
 				{
 					if (!(Vars::ESP::Draw.Value & 1 << 0) && pOwner->m_iTeamNum() != pLocal->m_iTeamNum())
 						continue;
@@ -484,7 +480,7 @@ void CESP::DrawBuildings(CTFPlayer* pLocal)
 						continue;
 				}
 			}
-			else if (!(Vars::ESP::Draw.Value & 1 << 3))
+			else if (!(Vars::ESP::Draw.Value & 1 << 2))
 				continue;
 		}
 		else
@@ -632,7 +628,7 @@ void CESP::DrawWorld()
 
 	I::MatSystemSurface->DrawSetAlphaMultiplier(Vars::ESP::ActiveAlpha.Value);
 
-	if (Vars::ESP::Draw.Value & 1 << 4)
+	if (Vars::ESP::Draw.Value & 1 << 5)
 	{
 		for (auto NPC : H::Entities.GetGroup(EGroupType::WORLD_NPC))
 		{
@@ -661,7 +657,7 @@ void CESP::DrawWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & 1 << 5)
+	if (Vars::ESP::Draw.Value & 1 << 6)
 	{
 		for (auto pHealth : H::Entities.GetGroup(EGroupType::WORLD_HEALTH))
 		{
@@ -671,7 +667,7 @@ void CESP::DrawWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & 1 << 6)
+	if (Vars::ESP::Draw.Value & 1 << 7)
 	{
 		for (auto pAmmo : H::Entities.GetGroup(EGroupType::WORLD_AMMO))
 		{
@@ -681,7 +677,7 @@ void CESP::DrawWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & 1 << 7)
+	if (Vars::ESP::Draw.Value & 1 << 8)
 	{
 		for (auto pCash : H::Entities.GetGroup(EGroupType::WORLD_MONEY))
 		{
@@ -693,7 +689,7 @@ void CESP::DrawWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & 1 << 8)
+	if (Vars::ESP::Draw.Value & 1 << 9)
 	{
 		for (auto pBomb : H::Entities.GetGroup(EGroupType::WORLD_BOMBS))
 		{
@@ -716,7 +712,7 @@ void CESP::DrawWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & 1 << 9)
+	if (Vars::ESP::Draw.Value & 1 << 10)
 	{
 		for (auto pBook : H::Entities.GetGroup(EGroupType::WORLD_SPELLBOOK))
 		{
@@ -728,7 +724,7 @@ void CESP::DrawWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & 1 << 10)
+	if (Vars::ESP::Draw.Value & 1 << 11)
 	{
 		for (auto pGargy : H::Entities.GetGroup(EGroupType::WORLD_GARGOYLE))
 		{

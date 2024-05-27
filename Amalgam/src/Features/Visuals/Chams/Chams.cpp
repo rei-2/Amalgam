@@ -3,6 +3,7 @@
 #include "../Materials/Materials.h"
 #include "../FakeAngle/FakeAngle.h"
 #include "../../Backtrack/Backtrack.h"
+#include "../../Players/PlayerUtils.h"
 
 Chams_t CChams::GetStruct(std::vector<std::string> VisibleMaterial, std::vector<std::string> OccludedMaterial, Color_t VisibleColor, Color_t OccludedColor)
 {
@@ -16,12 +17,9 @@ Chams_t CChams::GetStruct(std::vector<std::string> VisibleMaterial, std::vector<
 
 bool CChams::GetPlayerChams(CTFPlayer* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
 {
-	if (Vars::Chams::Player::Local.Value && pEntity == pLocal)
-	{
-		*pChams = GetStruct(Vars::Chams::Player::VisibleMaterial.Value, Vars::Chams::Player::OccludedMaterial.Value, Vars::Chams::Player::VisibleColor.Value, Vars::Chams::Player::OccludedColor.Value);
-		return true;
-	}
-	else if (Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex()))
+	if (Vars::Chams::Player::Local.Value && pEntity == pLocal
+		|| Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
+		|| Vars::Chams::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.mTags["Default"].Priority)
 	{
 		*pChams = GetStruct(Vars::Chams::Player::VisibleMaterial.Value, Vars::Chams::Player::OccludedMaterial.Value, Vars::Chams::Player::VisibleColor.Value, Vars::Chams::Player::OccludedColor.Value);
 		return true;

@@ -196,12 +196,12 @@ void CMenu::MenuAimbot()
 			{
 				if (Section("debug## projectile"))
 				{
-					FSlider("ground samples", Vars::Aimbot::Projectile::iGroundSamples, 3, 66, 1, "%d", FSlider_Left);
-					FSlider("air samples", Vars::Aimbot::Projectile::iAirSamples, 3, 66, 1, "%d", FSlider_Right);
-					FSlider("vert shift", Vars::Aimbot::Projectile::VerticalShift, 0.f, 20.f, 0.5f, "%.1f", FSlider_Left);
-					FSlider("hunterman lerp", Vars::Aimbot::Projectile::HuntermanLerp, 0.f, 100.f, 1.f, "%.0f%%", FSlider_Right);
-					FSlider("latency offset", Vars::Aimbot::Projectile::LatOff, -1.f, 1.f, 0.1f, "%.1f", FSlider_Left);
-					FSlider("hull inc", Vars::Aimbot::Projectile::HullInc, 0.f, 3.f, 0.5f, "%.1f", FSlider_Right);
+					FSlider("ground samples", Vars::Aimbot::Projectile::GroundSamples, 3, 66, 1, "%d", FSlider_Left);
+					FSlider("air samples", Vars::Aimbot::Projectile::AirSamples, 3, 66, 1, "%d", FSlider_Right);
+					FSlider("vertical shift", Vars::Aimbot::Projectile::VerticalShift, 0.f, 20.f, 0.5f, "%.1f", FSlider_Left);
+					FSlider("huntsman lerp", Vars::Aimbot::Projectile::HuntsmanLerp, 0.f, 100.f, 1.f, "%.0f%%", FSlider_Right);
+					FSlider("latency offset", Vars::Aimbot::Projectile::LatencyOffset, -1.f, 1.f, 0.1f, "%.1f", FSlider_Left);
+					FSlider("hull increase", Vars::Aimbot::Projectile::HullIncrease, 0.f, 3.f, 0.5f, "%.1f", FSlider_Right);
 					FSlider("drag override", Vars::Aimbot::Projectile::DragOverride, 0.f, 1.f, 0.001f, "%.3f", FSlider_Left);
 					FSlider("time override", Vars::Aimbot::Projectile::TimeOverride, 0.f, 1.f, 0.001f, "%.3f", FSlider_Right);
 					FSlider("splash points", Vars::Aimbot::Projectile::SplashPoints, 0, 100, 1, "%d", FSlider_Left);
@@ -330,7 +330,7 @@ void CMenu::MenuVisuals()
 			TableNextColumn();
 			if (Section("ESP"))
 			{
-				FDropdown("Draw", Vars::ESP::Draw, { "Enemy", "Team", "Friends", "Local", "NPCs", "Health", "Ammo", "Money", "Bombs", "Spellbook", "Gargoyle" }, {}, FDropdown_Multi);
+				FDropdown("Draw", Vars::ESP::Draw, { "Enemy", "Team", "Local", "Friends", "Priority", "NPCs", "Health", "Ammo", "Money", "Bombs", "Spellbook", "Gargoyle" }, {}, FDropdown_Multi);
 				FDropdown("Player", Vars::ESP::Player, { "Name", "Health bar", "Health text", "Uber bar", "Uber text", "Class icon", "Class text", "Weapon icon", "Weapon text", "Distance", "Box", "Bones", "Priority", "Labels", "Buffs", "Debuffs", "Misc", "Lag compensation", "Ping", "KDR" }, {}, FDropdown_Multi);
 				FDropdown("Building", Vars::ESP::Building, { "Name", "Health bar", "Health text", "Distance", "Box", "Owner", "Level", "Conditions" }, {}, FDropdown_Multi);
 			} EndSection();
@@ -425,6 +425,7 @@ void CMenu::MenuVisuals()
 			{
 				FToggle("Local", Vars::Chams::Player::Local);
 				FToggle("Friend", Vars::Chams::Player::Friend, FToggle_Middle);
+				FToggle("Priority", Vars::Chams::Player::Priority);
 
 				FMDropdown("Visible material", Vars::Chams::Player::VisibleMaterial, FDropdown_Left, 1);
 				FColorPicker("Visible color", Vars::Chams::Player::VisibleColor, 0, FColorPicker_Dropdown);
@@ -520,6 +521,7 @@ void CMenu::MenuVisuals()
 			{
 				FToggle("Local", Vars::Glow::Player::Local);
 				FToggle("Friend", Vars::Glow::Player::Friend, FToggle_Middle);
+				FToggle("Priority", Vars::Glow::Player::Priority);
 				Dummy({ 0, 8 });
 
 				FToggle("Stencil", Vars::Glow::Player::Stencil);
@@ -760,7 +762,7 @@ void CMenu::MenuVisuals()
 			{
 				FToggle("Enabled", Vars::Radar::Players::Enabled);
 				FToggle("Background", Vars::Radar::Players::Background, FToggle_Middle);
-				FDropdown("Draw", Vars::Radar::Players::Draw, { "Local", "Enemy", "Team", "Friends", "Cloaked" }, {}, FDropdown_Multi | FDropdown_Left);
+				FDropdown("Draw", Vars::Radar::Players::Draw, { "Local", "Enemy", "Team", "Friends", "Priority", "Cloaked" }, {}, FDropdown_Multi | FDropdown_Left);
 				FDropdown("Icon", Vars::Radar::Players::IconType, { "Icons", "Portraits", "Avatar" }, {}, FDropdown_Right);
 				FSlider("Icon size## Player", Vars::Radar::Players::IconSize, 12, 30, 2);
 				FToggle("Health bar", Vars::Radar::Players::Health);
@@ -773,7 +775,7 @@ void CMenu::MenuVisuals()
 			{
 				FToggle("Enabled", Vars::Radar::Buildings::Enabled);
 				FToggle("Background", Vars::Radar::Buildings::Background, FToggle_Middle);
-				FDropdown("Draw", Vars::Radar::Buildings::Draw, { "Local", "Enemy", "Team", "Friends" }, {}, FDropdown_Multi);
+				FDropdown("Draw", Vars::Radar::Buildings::Draw, { "Local", "Enemy", "Team", "Friends", "Priority" }, {}, FDropdown_Multi);
 				FSlider("Icon size## Building", Vars::Radar::Buildings::IconSize, 12, 30, 2);
 				FToggle("Health bar", Vars::Radar::Buildings::Health);
 			} EndSection();

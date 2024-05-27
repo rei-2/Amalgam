@@ -199,7 +199,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 		return false;
 	}
 
-	const int iStrafeSamples = pPlayer->OnSolid() ? Vars::Aimbot::Projectile::iGroundSamples.Value : Vars::Aimbot::Projectile::iAirSamples.Value;
+	const int iStrafeSamples = pPlayer->OnSolid() ? Vars::Aimbot::Projectile::GroundSamples.Value : Vars::Aimbot::Projectile::AirSamples.Value;
 
 	// calculate strafe if desired
 	bool bCalculated = cancelStrafe ? false : StrafePrediction(playerStorageOut, iStrafeSamples);

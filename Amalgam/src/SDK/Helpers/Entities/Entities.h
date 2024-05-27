@@ -21,6 +21,8 @@ class CEntities
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
 	std::unordered_map<uint32_t, int> m_mIDIndex = {};
 	std::unordered_map<int, bool> m_mFriends;
+	std::unordered_map<uint32_t, int> m_mUPriorities;
+	std::unordered_map<int, int> m_mIPriorities;
 
 public:
 	void Fill();
@@ -36,8 +38,10 @@ public:
 	CTFPlayer* GetObservedTarget() { return m_pObservedTarget; }
 
 	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group) { return m_mGroups[Group]; }
-	bool IsFriend(int entIdx) { return m_mFriends[entIdx]; }
+	bool IsFriend(int iIndex) { return m_mFriends[iIndex]; }
 	bool IsFriend(uint32_t friendsID) { return m_mFriends[m_mIDIndex[friendsID]]; }
+	int GetPriority(uint32_t friendsID) { return m_mUPriorities[friendsID]; }
+	int GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
 };
 
 ADD_FEATURE_CUSTOM(CEntities, Entities, H);

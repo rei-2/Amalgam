@@ -2,6 +2,7 @@
 
 #include "../../SDK.h"
 #include "../../../Utils/Hash/FNV1A.h"
+#include "../../../Features/Players/PlayerUtils.h"
 
 void CEntities::Fill()
 {
@@ -156,6 +157,18 @@ void CEntities::Fill()
 		case ETFClassID::CSniperDot:
 			m_mGroups[EGroupType::MISC_DOTS].push_back(pEntity);
 			break;
+		}
+	}
+
+	m_mUPriorities.clear(); m_mIPriorities.clear();
+	for (auto& pPlayer : m_mGroups[EGroupType::PLAYERS_ALL])
+	{
+		PlayerInfo_t pi{};
+		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
+		{
+			int iPriority = F::PlayerUtils.GetPriority(pi.friendsID, false);
+			m_mUPriorities[pi.friendsID] = iPriority;
+			m_mIPriorities[pPlayer->entindex()] = iPriority;
 		}
 	}
 }

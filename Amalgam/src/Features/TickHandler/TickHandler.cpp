@@ -68,7 +68,7 @@ int CTickshiftHandler::GetTicks(CTFPlayer* pLocal)
 	if (G::DoubleTap && G::ShiftedGoal < G::ShiftedTicks)
 		return G::ShiftedTicks - G::ShiftedGoal;
 
-	if (!!Vars::CL_Move::Doubletap::Doubletap.Value
+	if (!Vars::CL_Move::Doubletap::Doubletap.Value
 		|| G::ShiftedTicks < std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift)
 		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack || F::AutoRocketJump.iFrame != -1)
 		return 0;
