@@ -641,7 +641,7 @@ bool CMisc::SteamRPC()
 		default: I::SteamFriends->SetRichPresence("matchgrouploc", "SpecialEvent"); break;
 		}
 	}
-	I::SteamFriends->SetRichPresence("currentmap", Vars::Misc::Steam::MapText.Value.empty() ? "Fedoraware" : Vars::Misc::Steam::MapText.Value.c_str());
+	I::SteamFriends->SetRichPresence("currentmap", Vars::Misc::Steam::MapText.Value.c_str());
 	I::SteamFriends->SetRichPresence("steam_player_group_size", std::to_string(Vars::Misc::Steam::GroupSize.Value).c_str());
 
 	return true;

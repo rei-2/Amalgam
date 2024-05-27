@@ -941,10 +941,10 @@ void CMenu::MenuMisc()
 		if (Section("Steam RPC"))
 		{
 			FToggle("Steam RPC", Vars::Misc::Steam::EnableRPC);
+			FToggle("Override in menu", Vars::Misc::Steam::OverrideMenu, FToggle_Middle);
 			FDropdown("Match group", Vars::Misc::Steam::MatchGroup, { "Special Event", "MvM Mann Up", "Competitive", "Casual", "MvM Boot Camp" }, {}, FDropdown_Left);
-			FSDropdown("Map text", Vars::Misc::Steam::MapText, { "Fedoraware", "Figoraware", "Meowhook.club", "Rathook.cc", "Nitro.tf" }, FSDropdown_Custom | FDropdown_Right);
+			FSDropdown("Map text", Vars::Misc::Steam::MapText, {}, FSDropdown_Custom | FDropdown_Right);
 			FSlider("Group size", Vars::Misc::Steam::GroupSize, 0, 6);
-			FToggle("Override in menu", Vars::Misc::Steam::OverrideMenu);
 		} EndSection();
 
 		EndTable();

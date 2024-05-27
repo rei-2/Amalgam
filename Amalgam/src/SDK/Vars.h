@@ -643,9 +643,9 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Steam)
 			CVar(EnableRPC, false)
+			CVar(OverrideMenu, false)
 			CVar(MatchGroup, 0) // 0 - Special Event; 1 - MvM Mann Up; 2 - Competitive; 3 - Casual; 4 - MvM Boot Camp;
-			CVar(OverrideMenu, false) // Override matchgroup when in main menu
-			CVar(MapText, std::string("Fedoraware"))
+			CVar(MapText, std::string("Amalgam"))
 			CVar(GroupSize, 1337)
 		SUBNAMESPACE_END(Steam)
 	NAMESPACE_END(Misc)
