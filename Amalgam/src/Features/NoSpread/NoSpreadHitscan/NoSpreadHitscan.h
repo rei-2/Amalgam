@@ -20,8 +20,10 @@ public:
 
 	bool bWaitingForPlayerPerf = false;
 	int bSynced = 0, iBestSync = 0;
+	double dRequestTime = 0.0;
 	float flServerTime = 0.f;
-	float flFloatTimeDelta = 0.f;
+	double dTimeDelta = 0.0;
+	std::deque<double> vTimeDeltas = {};
 
 	int iSeed = 0;
 	float flMantissaStep = 0;

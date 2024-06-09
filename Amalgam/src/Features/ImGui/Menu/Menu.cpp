@@ -148,6 +148,14 @@ void CMenu::MenuAimbot()
 				FToggle("Always melee", Vars::CritHack::AlwaysMelee);
 				FToggle("No spread", Vars::Aimbot::General::NoSpread, FToggle_Middle);
 			} EndSection();
+			if (Vars::Debug::Info.Value)
+			{
+				if (Section("debug## aimbot"))
+				{
+					FSlider("offset## nospread", Vars::Aimbot::General::NoSpreadOffset, -5.f, 5.f, 1.f, "%.1f", FSlider_Precision);
+					FSlider("average", Vars::Aimbot::General::NoSpreadAverage, 1, 100);
+				} EndSection();
+			}
 			if (Section("Backtrack"))
 			{
 				FToggle("Enabled", Vars::Backtrack::Enabled);

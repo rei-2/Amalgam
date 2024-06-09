@@ -218,7 +218,7 @@ void CVisuals::DrawSeedPrediction(CTFPlayer* pLocal)
 	if (Vars::Debug::Info.Value)
 	{
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, cColor, align, std::format("Seed {}", F::NoSpreadHitscan.iSeed).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, cColor, align, std::format("{}", F::NoSpreadHitscan.flFloatTimeDelta).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, cColor, align, std::format("{} ({})", F::NoSpreadHitscan.dTimeDelta, F::NoSpreadHitscan.vTimeDeltas.size()).c_str());
 	}
 }
 

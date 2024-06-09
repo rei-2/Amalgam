@@ -8,7 +8,8 @@ void CNoSpreadHitscan::Reset(bool bResetPrint)
 {
 	bWaitingForPlayerPerf = false;
 	flServerTime = 0.f;
-	flFloatTimeDelta = 0.f;
+	vTimeDeltas.clear();
+	dTimeDelta = 0.f;
 
 	iSeed = 0;
 	flMantissaStep = 0;
@@ -34,10 +35,8 @@ int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
 	static auto sv_usercmd_custom_random_seed = U::ConVars.FindVar("sv_usercmd_custom_random_seed");
 	if (sv_usercmd_custom_random_seed ? sv_usercmd_custom_random_seed->GetBool() : true)
 	{
-		const float flFloatTime = float(SDK::PlatFloatTime()) + flFloatTimeDelta;
-		//SDK::Output("Seed Prediction", std::format("{}\n", flFloatTime).c_str());
-
-		const float flTime = (flFloatTime) * 1000;
+		double dFloatTime = SDK::PlatFloatTime() + dTimeDelta;
+		float flTime = float(dFloatTime * 1000.0);
 		return std::bit_cast<int32_t>(flTime) & 255;
 	}
 	else
@@ -47,8 +46,8 @@ int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
 float CNoSpreadHitscan::CalcMantissaStep(float val)
 {
 	// Calculate the delta to the next representable value
-	const float nextValue = std::nextafter(val, std::numeric_limits<float>::infinity());
-	const float mantissaStep = (nextValue - val) * 1000;
+	float nextValue = std::nextafter(val, std::numeric_limits<float>::infinity());
+	float mantissaStep = (nextValue - val) * 1000;
 
 	// Get the closest mantissa (next power of 2)
 	return powf(2, ceilf(logf(mantissaStep) / logf(2)));
@@ -56,10 +55,10 @@ float CNoSpreadHitscan::CalcMantissaStep(float val)
 
 std::string CNoSpreadHitscan::GetFormat(int m_ServerTime)
 {
-	const int iDays = m_ServerTime / 86400;
-	const int iHours = m_ServerTime / 3600 % 24;
-	const int iMinutes = m_ServerTime / 60 % 60;
-	const int iSeconds = m_ServerTime % 60;
+	int iDays = m_ServerTime / 86400;
+	int iHours = m_ServerTime / 3600 % 24;
+	int iMinutes = m_ServerTime / 60 % 60;
+	int iSeconds = m_ServerTime % 60;
 
 	if (iDays)
 		return std::format("{}d {}h", iDays, iHours);
@@ -77,8 +76,9 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 	static Timer playerperfTimer{};
 	if (playerperfTimer.Run(50) && !bWaitingForPlayerPerf && I::EngineClient->IsInGame())
 	{
-		I::EngineClient->ClientCmd_Unrestricted("playerperf");
+		I::ClientState->SendStringCmd("playerperf");
 		bWaitingForPlayerPerf = true;
+		dRequestTime = SDK::PlatFloatTime();
 	}
 }
 
@@ -103,21 +103,28 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 		bWaitingForPlayerPerf = false;
 
 		// credits to kgb for idea
-		const float flNewServerTime = std::stof(matches[1].str());
+		float flNewServerTime = std::stof(matches[1].str());
 		if (flNewServerTime < flServerTime)
 			return true;
 
 		flServerTime = flNewServerTime;
-		flFloatTimeDelta = flServerTime - float(SDK::PlatFloatTime());
+
+		double dRecieveTime = SDK::PlatFloatTime();
+		double dResponseTime = dRecieveTime - dRequestTime;
+
+		vTimeDeltas.push_back(flServerTime - dRecieveTime + dResponseTime);
+		while (!vTimeDeltas.empty() && vTimeDeltas.size() > Vars::Aimbot::General::NoSpreadAverage.Value)
+			vTimeDeltas.pop_front();
+		dTimeDelta = std::reduce(vTimeDeltas.begin(), vTimeDeltas.end()) / vTimeDeltas.size() + TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value);
 
 		flMantissaStep = CalcMantissaStep(flServerTime);
-		const int iSynced = flMantissaStep < 4.f ? 2 : 1;
+		const int iSynced = flMantissaStep < /*4*/1.f ? 2 : 1;
 		bSynced = iSynced == 1;
 
 		if (!iBestSync || iBestSync == 2 && bSynced)
 		{
 			iBestSync = iSynced;
-			SDK::Output("Seed Prediction", bSynced ? std::format("Synced ({})", flFloatTimeDelta).c_str() : "Not synced, step too low", Vars::Menu::Theme::Accent.Value);
+			SDK::Output("Seed Prediction", bSynced ? std::format("Synced ({})", dTimeDelta).c_str() : "Not synced, step too low", Vars::Menu::Theme::Accent.Value);
 			SDK::Output("Seed Prediction", std::format("Age {}; Step {}", GetFormat(flServerTime), CalcMantissaStep(flServerTime)).c_str(), Vars::Menu::Theme::Accent.Value);
 		}
 
@@ -134,7 +141,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 		return;
 
 	// credits to cathook for average spread stuff
-	const float flSpread = pWeapon->GetWeaponSpread();
+	float flSpread = pWeapon->GetWeaponSpread();
 	auto tfWeaponInfo = pWeapon->GetWeaponInfo();
 	int iBulletsPerShot = tfWeaponInfo ? tfWeaponInfo->GetWeaponData(0).m_nBulletsPerShot : 1;
 	iBulletsPerShot = static_cast<int>(SDK::AttribHookValue(static_cast<float>(iBulletsPerShot), "mult_bullets_per_shot", pWeapon));
@@ -158,7 +165,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 
 			if (!bDoubletap)
 			{
-				const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
+				float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
 				if ((iBulletsPerShot == 1 && flTimeSinceLastShot > 1.25f) || (iBulletsPerShot > 1 && flTimeSinceLastShot > 0.25f))
 					return;
 			}
