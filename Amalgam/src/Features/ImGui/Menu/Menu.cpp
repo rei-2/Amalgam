@@ -152,15 +152,16 @@ void CMenu::MenuAimbot()
 			{
 				if (Section("debug## aimbot"))
 				{
+					FSlider("hitscan peek", Vars::Aimbot::General::HitscanPeek, 0, 10);
 					FSlider("offset## nospread", Vars::Aimbot::General::NoSpreadOffset, -5.f, 5.f, 1.f, "%.1f", FSlider_Precision);
-					FSlider("average", Vars::Aimbot::General::NoSpreadAverage, 1, 100);
+					FSlider("average", Vars::Aimbot::General::NoSpreadAverage, 1, 25);
 				} EndSection();
 			}
 			if (Section("Backtrack"))
 			{
 				FToggle("Enabled", Vars::Backtrack::Enabled);
 				FToggle("Prefer on shot", Vars::Backtrack::PreferOnShot, FToggle_Middle);
-				FSlider("Fake latency", Vars::Backtrack::Latency, 0, F::Backtrack.flMaxUnlag * 1000, 5, "%d", FSlider_Clamp); // unreliable above 900
+				FSlider("Fake latency", Vars::Backtrack::Latency, 0, F::Backtrack.flMaxUnlag * 1000, 5, "%d", FSlider_Clamp); // unreliable above 1000 - ping probably
 				FSlider("Fake interp", Vars::Backtrack::Interp, 0, F::Backtrack.flMaxUnlag * 1000, 5, "%d", FSlider_Clamp);
 				FSlider("Window", Vars::Backtrack::Window, 1, 200, 5, "%d", FSlider_Clamp);
 			} EndSection();

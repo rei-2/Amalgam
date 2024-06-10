@@ -648,6 +648,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 
 		if (pCmd->buttons & IN_ATTACK)
 		{
+			G::IsAttacking = true;
 			target.m_vAngleTo = Aim(pCmd->viewangles, Math::CalcAngle(vLocalPos, target.m_vPos));
 			target.m_vAngleTo.x = pCmd->viewangles.x; // we don't need to care about pitch
 			Aim(pCmd, target.m_vAngleTo);

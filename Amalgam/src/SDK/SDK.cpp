@@ -431,10 +431,8 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 			return trace.DidHit() && !(trace.surface.flags & 0x0004) /*SURF_SKY*/;
 		}
 		case TF_WEAPON_MINIGUN:
-		{
 			return (pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_FIRING || pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_SPINNING) &&
 				pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
-		}
 		}
 
 		return pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
@@ -469,7 +467,7 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!G::IsAttacking)
 	{
 		const float direction = Math::VelocityToAngles(pLocal->m_vecVelocity()).y;
-		pCmd->viewangles = { -90, direction, 0 };
+		pCmd->viewangles = { 90, direction, 0 };
 		pCmd->sidemove = 0; pCmd->forwardmove = 0;
 		return true;
 	}

@@ -39,10 +39,10 @@ MAKE_HOOK(BaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 3
 		H::Entities.Fill();
 		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 		{
-			G::VelocityMap[pEntity->entindex()] = { pEntity->m_vecOrigin(), pEntity->m_vecMaxs().z - pEntity->m_vecMins().z, pEntity->m_flSimulationTime() };
-
 			if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
 				continue; // local player managed in CPrediction_RunCommand
+
+			G::VelocityMap[pEntity->entindex()] = { pEntity->m_vecOrigin(), pEntity->m_vecMaxs().z - pEntity->m_vecMins().z, pEntity->m_flSimulationTime() };
 
 			static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
 			const int iTicks = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;

@@ -44,32 +44,51 @@ MAKE_HOOK(ClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 2
 		if (G::WeaponDefIndex != nOldDefIndex || !pWeapon->m_iClip1() || !pLocal->IsAlive() || pLocal->IsTaunting() || pLocal->IsBonked() || pLocal->IsAGhost() || pLocal->IsInBumperKart())
 			G::WaitForShift = 1;
 
-		bool bCanAttack = pLocal->CanAttack() && (pWeapon->m_iWeaponID() == TF_WEAPON_FLAME_BALL ? pLocal->m_flTankPressure() >= 100.f : true);
-		G::CanPrimaryAttack = bCanAttack && pWeapon->CanPrimaryAttack(pLocal);
-		G::CanSecondaryAttack = bCanAttack && pWeapon->CanSecondaryAttack(pLocal);
+		G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+		bool bCanAttack = pLocal->CanAttack();
 		switch (SDK::GetRoundState())
 		{
 		case GR_STATE_BETWEEN_RNDS:
 		case GR_STATE_GAME_OVER:
-			if (pLocal->m_fFlags() & FL_FROZEN)
-				G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+			bCanAttack = bCanAttack && !(pLocal->m_fFlags() & FL_FROZEN);
 		}
-		if (pWeapon->m_iSlot() != SLOT_MELEE)
+		if (bCanAttack)
 		{
-			if (pWeapon->IsInReload())
-				G::CanPrimaryAttack = pWeapon->HasPrimaryAmmoForShot();
+			switch (pWeapon->m_iWeaponID())
+			{
+			case TF_WEAPON_FLAME_BALL:
+				G::CanPrimaryAttack = G::CanSecondaryAttack = pLocal->m_flTankPressure() >= 100.f;
+				break;
+			case TF_WEAPON_BUILDER:
+				G::CanPrimaryAttack = true;
+				break;
+			default:
+				G::CanPrimaryAttack = pWeapon->CanPrimaryAttack(pLocal);
+				G::CanSecondaryAttack = pWeapon->CanSecondaryAttack(pLocal);
 
-			if (pWeapon->m_iWeaponID() == TF_WEAPON_MINIGUN && pWeapon->As<CTFMinigun>()->m_iWeaponState() != AC_STATE_FIRING && pWeapon->As<CTFMinigun>()->m_iWeaponState() != AC_STATE_SPINNING)
-				G::CanPrimaryAttack = false;
+				if (pWeapon->m_iSlot() == SLOT_MELEE)
+					break;
+				
+				if (pWeapon->IsInReload())
+					G::CanPrimaryAttack = pWeapon->HasPrimaryAmmoForShot();
 
-			if (pWeapon->m_iWeaponID() == TF_WEAPON_FLAREGUN_REVENGE && pCmd->buttons & IN_ATTACK2)
-				G::CanPrimaryAttack = false;
+				if (G::WeaponDefIndex != Soldier_m_TheBeggarsBazooka && pWeapon->m_iClip1() == 0)
+					G::CanPrimaryAttack = false;
 
-			if (pWeapon->m_bEnergyWeapon() && !pWeapon->m_flEnergy())
-				G::CanPrimaryAttack = false;
+				if (pWeapon->m_bEnergyWeapon() && !pWeapon->m_flEnergy())
+					G::CanPrimaryAttack = false;
 
-			if (G::WeaponDefIndex != Soldier_m_TheBeggarsBazooka && pWeapon->m_iClip1() == 0)
-				G::CanPrimaryAttack = false;
+				switch (pWeapon->m_iWeaponID())
+				{
+				case TF_WEAPON_MINIGUN:
+					if (pWeapon->As<CTFMinigun>()->m_iWeaponState() != AC_STATE_FIRING && pWeapon->As<CTFMinigun>()->m_iWeaponState() != AC_STATE_SPINNING)
+						G::CanPrimaryAttack = false;
+					break;
+				case TF_WEAPON_FLAREGUN_REVENGE:
+					if (pCmd->buttons & IN_ATTACK2)
+						G::CanPrimaryAttack = false;
+				}
+			}
 		}
 
 		G::IsAttacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);

@@ -66,6 +66,13 @@ struct PlayerStorage
 	bool m_bInitFailed = false;
 };
 
+struct VelocityData
+{
+	Vec3 m_vVelocity = {};
+	bool m_bGrounded = true;
+	float m_flSimTime = 0.f;
+};
+
 class CMovementSimulation
 {
 private:
@@ -73,7 +80,7 @@ private:
 	void Reset(PlayerStorage& playerStorage);
 
 	bool SetupMoveData(PlayerStorage& playerStorage);
-	bool GetYawDifference(const std::deque<std::pair<Vec3, float>>& mPositionRecords, size_t i, float* flYaw);
+	bool GetYawDifference(const std::deque<VelocityData>& mPositionRecords, size_t i, float* flYaw);
 	float GetAverageYaw(const int iIndex, const int iSamples);
 	bool StrafePrediction(PlayerStorage& playerStorage, const int iSamples);
 
@@ -81,7 +88,7 @@ private:
 	bool m_bOldFirstTimePredicted = false;
 	float m_flOldFrametime = 0.f;
 
-	std::unordered_map<int, std::deque<std::pair<Vec3, float>>> mVelocities;
+	std::unordered_map<int, std::deque<VelocityData>> mVelocities;
 
 public:
 	void FillVelocities();

@@ -512,6 +512,24 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 	else
 		vVelocity = pLocal->m_vecVelocity();
+
+	/*
+	static bool bSet = false;
+
+	if (!G::AntiWarp)
+	{
+		bSet = false;
+		return;
+	}
+
+	if (!G::IsAttacking && !bSet)
+	{
+		bSet = true;
+		SDK::StopMovement(pLocal, pCmd);
+	}
+	else
+		pCmd->forwardmove = pCmd->sidemove = 0.f;
+	*/
 }
 
 void CMisc::LegJitter(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)

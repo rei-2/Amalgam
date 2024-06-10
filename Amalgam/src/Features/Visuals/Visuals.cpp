@@ -334,7 +334,7 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		Vec3 vVelocity = pLocal->m_vecVelocity();
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, { 255, 255, 255, 255 }, ALIGN_TOPLEFT, "Velocity: %.3f (%.3f, %.3f, %.3f)", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z);
 
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, { 255, 255, 255, 255 }, ALIGN_TOPLEFT, std::format("Attacking: {}", G::IsAttacking).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, { 255, 255, 255, 255 }, ALIGN_TOPLEFT, std::format("Attacking: {} ({}, {})", G::IsAttacking, G::CanPrimaryAttack, G::CanSecondaryAttack).c_str());
 
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, { 255, 255, 255, 255 }, ALIGN_TOPLEFT, "RoundState: %i", SDK::GetRoundState());
 

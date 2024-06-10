@@ -125,7 +125,21 @@ void CMovementSimulation::FillVelocities()
 				if (TIME_TO_TICKS(flSimTime - flOldSimTime) <= 0)
 					return;
 
-				mVelocities[iEntIndex].push_front({ vVelocity, flSimTime });
+				const VelocityData vRecord = {
+					vVelocity,
+					pEntity->IsOnGround(),
+					flSimTime
+				};
+
+				if (!mVelocities[iEntIndex].empty())
+				{
+					const VelocityData vLast = mVelocities[iEntIndex][0];
+
+					if (vRecord.m_bGrounded != vLast.m_bGrounded)
+						mVelocities[iEntIndex].clear();
+				}
+
+				mVelocities[iEntIndex].push_front(vRecord);
 
 				if (mVelocities[iEntIndex].size() > 66)
 					mVelocities[iEntIndex].pop_back();
@@ -217,8 +231,8 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 				break;
 
 			const auto& pRecord1 = mVelocityRecords[i], &pRecord2 = mVelocityRecords[i + 1];
-			const float flYaw1 = Math::VelocityToAngles(pRecord1.first).y, flYaw2 = Math::VelocityToAngles(pRecord2.first).y;
-			const float flTime1 = pRecord1.second, flTime2 = pRecord2.second;
+			const float flYaw1 = Math::VelocityToAngles(pRecord1.m_vVelocity).y, flYaw2 = Math::VelocityToAngles(pRecord2.m_vVelocity).y;
+			const float flTime1 = pRecord1.m_flSimTime, flTime2 = pRecord2.m_flSimTime;
 
 			float flYaw = (flYaw1 - flYaw2) / TIME_TO_TICKS(flTime1 - flTime2);
 			flYaw = fmodf(flYaw + 180.f, 360.f);
@@ -283,14 +297,14 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& playerStorage)
 	return true;
 }
 
-bool CMovementSimulation::GetYawDifference(const std::deque<std::pair<Vec3, float>>& mVelocityRecords, size_t i, float* flYaw)
+bool CMovementSimulation::GetYawDifference(const std::deque<VelocityData>& mVelocityRecords, size_t i, float* flYaw)
 {
 	if (mVelocityRecords.size() <= i + 2)
 		return false;
 
 	const auto& pRecord1 = mVelocityRecords[i], &pRecord2 = mVelocityRecords[i + 1];
-	const float flYaw1 = Math::VelocityToAngles(pRecord1.first).y, flYaw2 = Math::VelocityToAngles(pRecord2.first).y;
-	const float flTime1 = pRecord1.second, flTime2 = pRecord2.second;
+	const float flYaw1 = Math::VelocityToAngles(pRecord1.m_vVelocity).y, flYaw2 = Math::VelocityToAngles(pRecord2.m_vVelocity).y;
+	const float flTime1 = pRecord1.m_flSimTime, flTime2 = pRecord2.m_flSimTime;
 
 	const int iTicks = std::max(TIME_TO_TICKS(flTime1 - flTime2), 1);
 	*flYaw = (flYaw1 - flYaw2) / iTicks;
@@ -300,7 +314,7 @@ bool CMovementSimulation::GetYawDifference(const std::deque<std::pair<Vec3, floa
 	static int iSign = 0;
 	const int iLastSign = iSign;
 	const int iCurSign = iSign = *flYaw > 0 ? 1 : -1;
-	if (fabsf(*flYaw) < 640.f / pRecord1.first.Length2D() / iTicks) // dumb way to get straight bool
+	if (fabsf(*flYaw) < 200.f / pRecord1.m_vVelocity.Length2D() / iTicks) // dumb way to get straight bool
 		return false;
 
 	return !i || iLastSign == iCurSign ? true : false;
