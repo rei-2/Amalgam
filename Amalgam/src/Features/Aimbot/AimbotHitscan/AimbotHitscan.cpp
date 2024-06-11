@@ -2,6 +2,7 @@
 
 #include "../../Backtrack/Backtrack.h"
 #include "../../Resolver/Resolver.h"
+#include "../../TickHandler/TickHandler.h"
 #include "../../Visuals/Visuals.h"
 
 bool CAimbotHitscan::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo) // this won't prevent shooting bones outside of fov
@@ -315,9 +316,6 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 		return false;
 
 	Vec3 vEyePos = pLocal->GetShootPos(), vPeekPos = {};
-	float flSpread = pWeapon->GetWeaponSpread();
-	if (flSpread)
-		vPeekPos = pLocal->GetShootPos() + pLocal->GetAbsVelocity() * TICKS_TO_TIME(-Vars::Aimbot::General::HitscanPeek.Value);
 	const float flMaxRange = powf(GetMaxRange(pWeapon), 2.f);
 
 	auto pModel = target.m_pEntity->GetModel();
@@ -353,6 +351,10 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 		}
 	}
 
+	float flSpread = pWeapon->GetWeaponSpread();
+	if (flSpread && Vars::Aimbot::General::HitscanPeek.Value)
+		vPeekPos = pLocal->GetShootPos() + pLocal->GetAbsVelocity() * TICKS_TO_TIME(-Vars::Aimbot::General::HitscanPeek.Value);
+
 	static int iPreferredTick = 0; // if we're doubletapping, we can't change viewangles so have a preferred tick to use
 	if (!I::ClientState->chokedcommands)
 		iPreferredTick = 0;
@@ -374,6 +376,8 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 	int iReturn = false;
 	for (auto& pTick : vRecords)
 	{
+		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pLocal) : true) && Vars::Aimbot::General::HitscanPeek.Value;
+
 		if (target.m_TargetType == ETargetType::PLAYER || target.m_TargetType == ETargetType::SENTRY)
 		{
 			auto boneMatrix = (matrix3x4*)(&pTick.BoneMatrix.BoneMatrix);
@@ -459,11 +463,14 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 					Vec3 vForward = {};
 					Math::AngleVectors(vAngles, &vForward);
 
-					bool bPeekCheck = flSpread ? SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vTransformed) : true;
-					if (bPeekCheck)
-						flSpread = 0.f; // only use with a single hitbox
+					if (bRunPeekCheck)
+					{
+						bRunPeekCheck = false;
+						if (!SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vTransformed))
+							goto nextTick; // if we can't hit our primary hitbox, don't bother
+					}
 
-					if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed) && bPeekCheck)
+					if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed))
 					{
 						target.m_vAngleTo = vAngles;
 						if (RayToOBB(vEyePos, vForward, vCenter, vMins, vMaxs, boneMatrix[pair.first->bone])) // for the time being, no vischecks against other hitboxes
@@ -529,11 +536,14 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 				Vec3 vForward = {};
 				Math::AngleVectors(vAngles, &vForward);
 
-				bool bPeekCheck = flSpread ? SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vTransformed) : true;
-				if (bPeekCheck)
-					flSpread = 0.f; // only use with a single hitbox
+				if (bRunPeekCheck)
+				{
+					bRunPeekCheck = false;
+					if (!SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vTransformed))
+						goto nextTick; // if we can't hit our primary hitbox, don't bother
+				}
 
-				if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed) && bPeekCheck)
+				if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed))
 				{
 					target.m_vAngleTo = vAngles;
 					if (RayToOBB(vEyePos, vForward, target.m_pEntity->m_vecOrigin(), vMins, vMaxs, transform)) // for the time being, no vischecks against other hitboxes
@@ -546,6 +556,9 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 				}
 			}
 		}
+
+	nextTick:
+		continue;
 	}
 
 	return iReturn;

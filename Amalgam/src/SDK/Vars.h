@@ -119,7 +119,8 @@ namespace Vars
 			CVar(FOVCircle, true)
 			CVar(NoSpread, false)
 
-			CVar(HitscanPeek, 3, NOSAVE) // debug
+			CVar(HitscanPeek, 1, NOSAVE) // debug
+			CVar(PeekDTOnly, true, NOSAVE) // debug
 			CVar(NoSpreadOffset, 0.f, NOSAVE) // debug
 			CVar(NoSpreadAverage, 5, NOSAVE) // debug
 		SUBNAMESPACE_END(Global)
