@@ -6,7 +6,7 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
 
-	auto pEntity = static_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
+	auto pEntity = reinterpret_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
 
@@ -54,7 +54,7 @@ bool CTraceFilterProjectile::ShouldHitEntity(IHandleEntity* pServerEntity, int n
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
 
-	auto pEntity = static_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
+	auto pEntity = reinterpret_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
 
@@ -88,7 +88,7 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
 
-	auto pEntity = static_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
+	auto pEntity = reinterpret_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
 	switch (pEntity->GetClassID())
 	{
 	case ETFClassID::CBaseEntity:

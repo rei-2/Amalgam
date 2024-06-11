@@ -74,7 +74,7 @@ void CBacktrack::SetLerp(IGameEvent* pEvent)
 // Store the last 2048 sequences
 void CBacktrack::UpdateDatagram()
 {
-	auto pNetChan = static_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
+	auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
 	if (!pNetChan)
 		return;
 

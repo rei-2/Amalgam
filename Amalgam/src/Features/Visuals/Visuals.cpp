@@ -1,6 +1,5 @@
 #include "Visuals.h"
 
-#include "../ImGui/Render.h"
 #include "../Visuals/LocalConditions/LocalConditions.h"
 #include "../Backtrack/Backtrack.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
@@ -8,9 +7,6 @@
 #include "../CameraWindow/CameraWindow.h"
 #include "../NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "Materials/Materials.h"
-
-#include <ImGui/imgui_impl_win32.h>
-#include <ImGui/imgui_stdlib.h>
 
 MAKE_SIGNATURE(RenderLine, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 44 89 44 24", 0x0);
 MAKE_SIGNATURE(RenderBox, "engine.dll", "48 83 EC ? 8B 84 24 ? ? ? ? 4D 8B D8", 0x0);
@@ -57,40 +53,6 @@ void CVisuals::DrawTickbaseText(CTFPlayer* pLocal)
 		H::Draw.FillRect(posX, posY + 2, sizeX, sizeY, Vars::Menu::Theme::Accent.Value);
 		H::Draw.EndClipping();
 	}
-}
-void CVisuals::DrawTickbaseBars()
-{
-	/* get rid of me
-	
-	if (!(Vars::Menu::Indicators.Value & (1 << 0)) || I::EngineVGui->IsGameUIVisible())
-		return;
-
-	auto pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer());
-	if (!pLocal || !pLocal->As<CTFPlayer>()->IsAlive())
-		return;
-
-	const int iTicks = std::clamp(G::ShiftedTicks + G::ChokeAmount, 0, G::MaxShift);
-
-	const DragBox_t dtPos = Vars::Menu::TicksDisplay.Value;
-	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
-	const float ratioCurrent = (float)iTicks / (float)G::MaxShift;
-
-	float sizeX = 100 * Vars::Menu::DPI.Value, sizeY = 12 * Vars::Menu::DPI.Value, posY = dtPos.y + 5 + fFont.m_nTall;
-	ImGui::GetBackgroundDrawList()->AddRectFilled(
-		ImVec2(dtPos.x - sizeX / 2, posY), ImVec2(dtPos.x + sizeX / 2, posY + sizeY),
-		F::Render.Background, 10
-	);
-	if (iTicks && ratioCurrent)
-	{
-		sizeX = 96 * Vars::Menu::DPI.Value, sizeY = 8 * Vars::Menu::DPI.Value; posY = posY + 2 * Vars::Menu::DPI.Value;
-		ImGui::GetBackgroundDrawList()->PushClipRect(ImVec2(dtPos.x - sizeX / 2, posY), ImVec2(dtPos.x - sizeX / 2 + sizeX * ratioCurrent + 1, posY + sizeY), true);
-		ImGui::GetBackgroundDrawList()->AddRectFilled(
-			ImVec2(dtPos.x - sizeX / 2, posY), ImVec2(dtPos.x + sizeX / 2, posY + sizeY),
-			ImColor(Vars::Menu::Theme::Accent.Value.r, Vars::Menu::Theme::Accent.Value.g, Vars::Menu::Theme::Accent.Value.b, Vars::Menu::Theme::Accent.Value.a), 10
-		);
-		ImGui::GetBackgroundDrawList()->PopClipRect();
-	}
-	*/
 }
 
 void CVisuals::DrawOnScreenPing(CTFPlayer* pLocal)

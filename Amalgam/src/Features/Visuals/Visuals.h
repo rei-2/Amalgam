@@ -19,7 +19,6 @@ private:
 public:
 	void DrawAimbotFOV(CTFPlayer* pLocal);
 	void DrawTickbaseText(CTFPlayer* pLocal);
-	void DrawTickbaseBars();
 	void DrawOnScreenPing(CTFPlayer* pLocal);
 	void DrawOnScreenConditions(CTFPlayer* pLocal);
 	void DrawSeedPrediction(CTFPlayer* pLocal);

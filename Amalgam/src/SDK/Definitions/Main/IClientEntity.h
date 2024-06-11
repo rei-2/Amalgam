@@ -92,5 +92,5 @@ public:
 		}
 	}
 
-	template <typename T> inline T* As() { return static_cast<T*>(this); }
+	template <typename T> inline T* As() { return reinterpret_cast<T*>(this); }
 };

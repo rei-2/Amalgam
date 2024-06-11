@@ -2292,7 +2292,7 @@ void CMenu::Render()
 {
 	using namespace ImGui;
 
-	if (!ConfigLoaded)
+	if (!ConfigLoaded || !(ImGui::GetIO().DisplaySize.x > 160.f && ImGui::GetIO().DisplaySize.y > 28.f))
 		return;
 
 	InKeybind = false;

@@ -10,7 +10,7 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void, __f
 
 	if (dwRetAddr == dwDesired)
 	{
-		const auto pPlayer = static_cast<CTFPlayer*>(ecx);
+		const auto pPlayer = reinterpret_cast<CTFPlayer*>(ecx);
 		if (pPlayer && G::VelocityMap.contains(pPlayer->entindex()))
 		{
 			const auto newRecord = VelFixRecord(pPlayer->m_vecOrigin(), pPlayer->m_vecMaxs().z - pPlayer->m_vecMins().z, pPlayer->m_flSimulationTime());
