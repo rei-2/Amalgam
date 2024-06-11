@@ -153,7 +153,7 @@ void CMenu::MenuAimbot()
 				if (Section("debug## aimbot"))
 				{
 					FSlider("hitscan peek", Vars::Aimbot::General::HitscanPeek, 0, 5);
-					FToggle("hitscan peek", Vars::Aimbot::General::PeekDTOnly); // this should probably stay on if you want to be able to target hitboxes other than the highest priority one
+					FToggle("peek dt only", Vars::Aimbot::General::PeekDTOnly); // this should probably stay on if you want to be able to target hitboxes other than the highest priority one
 					FSlider("offset## nospread", Vars::Aimbot::General::NoSpreadOffset, -5.f, 5.f, 1.f, "%.1f", FSlider_Precision);
 					FSlider("average", Vars::Aimbot::General::NoSpreadAverage, 1, 25);
 				} EndSection();
