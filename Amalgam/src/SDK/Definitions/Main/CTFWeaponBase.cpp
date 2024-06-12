@@ -62,11 +62,9 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15148:
 		ReturnTexture("d_pistol");
 	case 46:
-		ReturnTexture("d_taunt_scout"); //Bonk has no icon but there is a taunt kill that says bonk so we'll use that
 	case 1145:
-		ReturnTexture("d_taunt_scout"); //Bonk has no icon but there is a taunt kill that says bonk so we'll use that
+		ReturnTexture("d_taunt_scout"); // Bonk has no icon but there is a taunt kill that says bonk so we'll use that
 	case 160:
-		ReturnTexture("d_maxgun");
 	case 294:
 		ReturnTexture("d_maxgun");
 	case 449:
@@ -74,35 +72,34 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 773:
 		ReturnTexture("d_pep_pistol");
 	case 812:
-		ReturnTexture("d_guillotine");
 	case 833:
 		ReturnTexture("d_guillotine");
 	case 30666:
 		ReturnTexture("d_the_capper");
 	case 0:
-		ReturnTexture("d_bat");
 	case 190:
-		ReturnTexture("d_bat");
 	case 660:
 		ReturnTexture("d_bat");
 	case 44:
 		ReturnTexture("d_sandman");
 	case 221:
-		ReturnTexture("d_holymackerel");
 	case 999:
 		ReturnTexture("d_holymackerel");
 	case 317:
-		ReturnTexture("d_candycane");
+		ReturnTexture("d_candy_cane");
 	case 325:
-		ReturnTexture("d_bostonbasher");
+		ReturnTexture("d_boston_basher");
 	case 349:
-		ReturnTexture("d_lavabat");
+		ReturnTexture("d_lava_bat");
 	case 355:
 		ReturnTexture("d_warfan");
 	case 450:
 		ReturnTexture("d_atomizer");
 	case 452:
 		ReturnTexture("d_scout_sword");
+	case 264:
+	case 1071:
+		ReturnTexture("d_fryingpan");
 	case 474:
 		ReturnTexture("d_nonnonviolent_protest");
 	case 572:
@@ -114,19 +111,20 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 880:
 		ReturnTexture("d_freedom_staff");
 	case 954:
-		ReturnTexture("d_memory_maker"); //Scout_t_TheMemoryMaker = 954, killme
+		ReturnTexture("d_memory_maker");
 	case 1013:
 		ReturnTexture("d_ham_shank");
 	case 1123:
 		ReturnTexture("d_necro_smasher");
 	case 1127:
-		ReturnTexture("d_crossing_guard");//dunno if this is right but i dont have the weapon so
+		ReturnTexture("d_crossing_guard");
 	case 30667:
 		ReturnTexture("d_batsaber");
 	case 30758:
 		ReturnTexture("d_prinny_machete");
 	case 18:
 	case 205:
+	case 658:
 	case 800:
 	case 809:
 	case 889:
@@ -146,13 +144,11 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15105:
 	case 15130:
 	case 15150:
-	case 237:// rocket jumper :|
-	case 658:
+	case 237: // rocket jumper :|
 		ReturnTexture("d_tf_projectile_rocket");
 	case 127:
 		ReturnTexture("d_rocketlauncher_directhit");
 	case 228:
-		ReturnTexture("d_blackbox");
 	case 1085:
 		ReturnTexture("d_blackbox");
 	case 414:
@@ -188,10 +184,10 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 1153:
 		ReturnTexture("d_panic_attack");
 	case 6:
-		ReturnTexture("d_shovel");
 	case 196:
 		ReturnTexture("d_shovel");
 	case 128:
+	case 775:
 		ReturnTexture("d_pickaxe");
 	case 154:
 		ReturnTexture("d_paintrain");
@@ -201,8 +197,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 		ReturnTexture("d_market_gardener");
 	case 447:
 		ReturnTexture("d_disciplinary_action");
-	case 775:
-		ReturnTexture("d_pickaxe_escape");
 	case 21:
 	case 208:
 	case 659:
@@ -292,7 +286,7 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 308:
 		ReturnTexture("d_loch_n_load");
 	case 996:
-		ReturnTexture("d_loose_cannon");
+		ReturnTexture("d_loose_cannon_explosion");
 	case 1151:
 		ReturnTexture("d_iron_bomber");
 	case 20:
@@ -324,7 +318,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 130:
 		ReturnTexture("d_sticky_resistance");
 	case 131:
-		ReturnTexture("d_demoshield");
 	case 1144:
 		ReturnTexture("d_demoshield");
 	case 1099:
@@ -337,7 +330,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 191:
 		ReturnTexture("d_bottle");
 	case 132:
-		ReturnTexture("d_sword");
 	case 1082:
 		ReturnTexture("d_sword");
 	case 172:
@@ -359,9 +351,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 654:
 	case 793:
 	case 802:
-	case 41:
-	case 312:
-	case 424:
 	case 882:
 	case 891:
 	case 900:
@@ -384,13 +373,17 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15125:
 	case 15147:
 		ReturnTexture("d_minigun");
+	case 41:
+		ReturnTexture("d_natascha");
+	case 312:
+		ReturnTexture("d_brass_beast");
+	case 424:
+		ReturnTexture("d_tomislav");
 	case 811:
-		ReturnTexture("d_long_heatmaker");
 	case 832:
 		ReturnTexture("d_long_heatmaker");
-	case 850:
-		ReturnTexture("d_iron_curtain");
 	case 298:
+	case 850:
 		ReturnTexture("d_iron_curtain");
 	case 425:
 		ReturnTexture("d_family_business");
@@ -400,9 +393,7 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 43:
 		ReturnTexture("d_gloves");
 	case 239:
-		ReturnTexture("d_gloves_running_urgently");
 	case 1084:
-		ReturnTexture("d_gloves_running_urgently");
 	case 1184:
 		ReturnTexture("d_gloves_running_urgently");
 	case 310:
@@ -418,9 +409,8 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 1100:
 		ReturnTexture("d_bread_bite");
 	case 141:
-		ReturnTexture("d_frontier_justice");
 	case 1004:
-		ReturnTexture("d_frontier_justice");
+		ReturnTexture("d_frontier_kill");
 	case 527:
 		ReturnTexture("d_widowmaker");
 	case 588:
@@ -428,7 +418,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 997:
 		ReturnTexture("d_rescue_ranger");
 	case 140:
-		ReturnTexture("d_wrangler_kill");
 	case 1086:
 		ReturnTexture("d_wrangler_kill");
 	case 528:
@@ -456,9 +445,9 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 169:
 		ReturnTexture("d_wrench");
 	case 142:
-		ReturnTexture("d_robot_arm");
+		ReturnTexture("d_robot_arm_kill");
 	case 155:
-		ReturnTexture("d_southern_hospitality");
+		ReturnTexture("d_southern_comfort_kill");
 	case 329:
 		ReturnTexture("d_wrench_jag");
 	case 589:
@@ -478,7 +467,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 1143:
 		ReturnTexture("d_bonesaw");
 	case 37:
-		ReturnTexture("d_ubersaw");
 	case 1003:
 		ReturnTexture("d_ubersaw");
 	case 173:
@@ -486,7 +474,7 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 304:
 		ReturnTexture("d_amputator");
 	case 413:
-		ReturnTexture("d_solemnvow");
+		ReturnTexture("d_solemn_vow");
 	case 14:
 	case 201:
 	case 664:
@@ -512,13 +500,11 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15135:
 	case 15136:
 	case 851:
-		ReturnTexture("d_sniperrifle");
+		ReturnTexture("d_headshot");
 	case 56:
-		ReturnTexture("d_tf_projectile_arrow");
 	case 1005:
-		ReturnTexture("d_tf_projectile_arrow");
 	case 1092:
-		ReturnTexture("d_tf_projectile_arrow");
+		ReturnTexture("d_huntsman");
 	case 30665:
 		ReturnTexture("d_shooting_star");
 	case 1098:
@@ -544,8 +530,9 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15134:
 	case 15153:
 		ReturnTexture("d_smg");
+	case 751:
+		ReturnTexture("d_pro_smg");
 	case 3:
-		ReturnTexture("d_club");
 	case 193:
 		ReturnTexture("d_club");
 	case 171:
@@ -570,7 +557,6 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15149:
 		ReturnTexture("d_revolver");
 	case 61:
-		ReturnTexture("d_ambassador");
 	case 1006:
 		ReturnTexture("d_ambassador");
 	case 161:
@@ -582,19 +568,16 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 525:
 		ReturnTexture("d_diamondback");
 	case 735:
-		ReturnTexture("d_psapper");
 	case 736:
-		ReturnTexture("d_psapper");
 	case 1080:
+		ReturnTexture("d_obj_attachment_sapper");
+	case 933:
 		ReturnTexture("d_psapper");
+	case 1102:
+		ReturnTexture("d_snack_attack");
 	case 810:
-		ReturnTexture("d_recorder");
 	case 831:
 		ReturnTexture("d_recorder");
-	case 933:
-		ReturnTexture("d_psapper"); // :(
-	case 1102:
-		ReturnTexture("d_psapper"); // :(
 	case 225:
 		ReturnTexture("d_eternal_reward");
 	case 356:
@@ -625,14 +608,11 @@ CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 	case 15119:
 	case 15143:
 	case 15144:
-	case 727: // :(
 		ReturnTexture("d_knife");
+	case 727:
+		ReturnTexture("d_black_rose");
 	case 27:
 		ReturnTexture("hud_spy_disguise_menu_icon");
-	case 264:
-		ReturnTexture("d_fryingpan");
-	case 1071:
-		ReturnTexture("d_fryingpan");
 	}
 	ReturnTexture("d_skull");
 }
