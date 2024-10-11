@@ -745,7 +745,8 @@ void CMenu::MenuVisuals()
 			}
 			if (Section("Hitbox"))
 			{
-				FColorPicker("Edge color", Vars::Colors::HitboxEdge, 1); FColorPicker("Face color", Vars::Colors::HitboxFace);
+				FColorPicker("Bound edge color", Vars::Colors::BoundHitboxEdge, 1); FColorPicker("Bound face color", Vars::Colors::BoundHitboxFace);
+				FColorPicker("Bone edge color", Vars::Colors::BoneHitboxEdge, 4); FColorPicker("Bone face color", Vars::Colors::BoneHitboxFace, 3);
 				FToggle("Draw Hitboxes", Vars::Visuals::Hitbox::ShowHitboxes);
 			} EndSection();
 			if (Section("Thirdperson"))
