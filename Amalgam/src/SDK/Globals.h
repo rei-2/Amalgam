@@ -86,9 +86,9 @@ namespace G
 
 	inline std::unordered_map<int, std::deque<VelFixRecord>> VelocityMap = {};
 
-	inline std::vector<DrawBullet> BulletsStorage = {};
-	inline std::vector<DrawLine> LinesStorage = {};
-	inline std::vector<DrawBox> BoxesStorage = {};
+	inline std::vector<DrawBullet> LineStorage = {};
+	inline std::vector<DrawLine> PathStorage = {};
+	inline std::vector<DrawBox> BoxStorage = {};
 
 	inline int* RandomSeed()
 	{

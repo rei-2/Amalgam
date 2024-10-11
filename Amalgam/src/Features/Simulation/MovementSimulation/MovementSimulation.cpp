@@ -382,7 +382,7 @@ void CMovementSimulation::Store()
 					*/
 				}
 
-				//G::BulletsStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.5f, bSet ? Color_t(SDK::RandomInt(200, 255), SDK::RandomInt(200, 255), SDK::RandomInt(200, 255), 255) : Color_t(0, 0, 0, 255) });
+				//G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.5f, bSet ? Color_t(SDK::RandomInt(200, 255), SDK::RandomInt(200, 255), SDK::RandomInt(200, 255), 255) : Color_t(0, 0, 0, 255) });
 			}
 			
 			
@@ -419,7 +419,7 @@ void CMovementSimulation::Store()
 
 bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& playerStorageOut, bool useHitchance, bool cancelStrafe)
 {
-	G::BulletsStorage.clear();
+	G::LineStorage.clear();
 	if (!pEntity || !pEntity->IsPlayer() || !pEntity->As<CTFPlayer>()->IsAlive())
 	{
 		playerStorageOut.m_bInitFailed = playerStorageOut.m_bFailed = true;
@@ -695,7 +695,7 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bLine)
 		Vec3 v1 = playerStorage.m_MoveData.m_vecAbsOrigin;
 		Vec3 v2 = v1 + (vMove.IsZero() ? Vec3(0, 0, 1) : Math::RotatePoint(vMove.GetNorm(), {}, { 0, playerStorage.m_MoveData.m_vecViewAngles.y, 0 })) * Vars::Visuals::Simulation::SeparatorLength.Value;
 
-		G::BulletsStorage.push_back({ { v1, v2 }, I::GlobalVars->curtime + 5.f, Color_t(SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), 255) });
+		G::LineStorage.push_back({ { v1, v2 }, I::GlobalVars->curtime + 5.f, Color_t(SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), 255) });
 	}
 	*/
 

@@ -101,10 +101,10 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 							SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", iDelay, n).c_str(), { 255, 0, 0, 255 }, Vars::Debug::Logging.Value);
 							if (Vars::Debug::Info.Value)
 							{
-								G::BulletsStorage.clear(); G::BoxesStorage.clear();
-								G::BulletsStorage.push_back({ { vOriginal, trace.endpos }, I::GlobalVars->curtime + 5.f, {}, true});
+								G::LineStorage.clear(); G::BoxStorage.clear();
+								G::LineStorage.push_back({ { vOriginal, trace.endpos }, I::GlobalVars->curtime + 5.f, {}, true});
 								Vec3 angles; Math::VectorAngles(trace.plane.normal, angles);
-								G::BoxesStorage.push_back({ trace.endpos, { -1.f, -1.f, -1.f }, { 1.f, 1.f, 1.f }, angles, I::GlobalVars->curtime + 5.f, {}, { 0, 0, 0, 0 }, true });
+								G::BoxStorage.push_back({ trace.endpos, { -1.f, -1.f, -1.f }, { 1.f, 1.f, 1.f }, angles, I::GlobalVars->curtime + 5.f, {}, { 0, 0, 0, 0 }, true });
 							}
 						}
 

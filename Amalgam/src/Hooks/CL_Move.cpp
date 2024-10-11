@@ -29,7 +29,7 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void, __fastcall,
 
 	F::NoSpreadHitscan.AskForPlayerPerf();
 
-	for (auto& Line : G::LinesStorage)
+	for (auto& Line : G::PathStorage)
 	{
 		if (Line.m_flTime < 0.f)
 			Line.m_flTime = std::min(Line.m_flTime + 1.f, 0.f);

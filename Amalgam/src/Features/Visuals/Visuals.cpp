@@ -307,8 +307,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 	}
 	else if (Vars::Visuals::Simulation::TrajectoryOnShot.Value)
 	{
-		G::LinesStorage.clear();
-		G::LinesStorage.push_back({ projInfo.PredictionLines, -float(projInfo.PredictionLines.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ProjectileColor.Value });
+		G::PathStorage.clear();
+		G::PathStorage.push_back({ projInfo.PredictionLines, -float(projInfo.PredictionLines.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ProjectileColor.Value });
 
 		if (pNormal)
 		{
@@ -316,12 +316,12 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 			const Vec3 vSize = { 1.f, flSize, flSize };
 			Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
 
-			G::BoxesStorage.clear();
-			G::BoxesStorage.push_back({ trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.PredictionLines.size()) + F::Backtrack.GetReal(), Vars::Colors::ProjectileColor.Value, { 0, 0, 0, 0 } });
+			G::BoxStorage.clear();
+			G::BoxStorage.push_back({ trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.PredictionLines.size()) + F::Backtrack.GetReal(), Vars::Colors::ProjectileColor.Value, { 0, 0, 0, 0 } });
 		}
 
 		if (!vPoints.empty())
-			G::LinesStorage.push_back({ vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.PredictionLines.size()) + F::Backtrack.GetReal(), Vars::Colors::ProjectileColor.Value });
+			G::PathStorage.push_back({ vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.PredictionLines.size()) + F::Backtrack.GetReal(), Vars::Colors::ProjectileColor.Value });
 	}
 }
 
@@ -521,7 +521,7 @@ std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBa
 
 void CVisuals::DrawBulletLines()
 {
-	for (auto& Line : G::BulletsStorage)
+	for (auto& Line : G::LineStorage)
 	{
 		if (Line.m_flTime < I::GlobalVars->curtime) continue;
 
@@ -571,7 +571,7 @@ void CVisuals::DrawSimLine(std::deque<Vec3>& Line, Color_t Color, int iStyle, bo
 
 void CVisuals::DrawSimLines()
 {
-	for (auto& Line : G::LinesStorage)
+	for (auto& Line : G::PathStorage)
 	{
 		if (Line.m_flTime >= 0.f && Line.m_flTime < I::GlobalVars->curtime)
 			continue;
@@ -582,7 +582,7 @@ void CVisuals::DrawSimLines()
 
 void CVisuals::DrawBoxes()
 {
-	for (auto& Box : G::BoxesStorage)
+	for (auto& Box : G::BoxStorage)
 	{
 		if (Box.m_flTime < I::GlobalVars->curtime) continue;
 
@@ -592,19 +592,19 @@ void CVisuals::DrawBoxes()
 
 void CVisuals::RevealBulletLines()
 {
-	for (auto& Line : G::BulletsStorage)
+	for (auto& Line : G::LineStorage)
 		Line.m_flTime = I::GlobalVars->curtime + 60.f;
 }
 
 void CVisuals::RevealSimLines()
 {
-	for (auto& PredictionLine : G::LinesStorage)
+	for (auto& PredictionLine : G::PathStorage)
 		PredictionLine.m_flTime = I::GlobalVars->curtime + 60.f;
 }
 
 void CVisuals::RevealBoxes()
 {
-	for (auto& Box : G::BoxesStorage)
+	for (auto& Box : G::BoxStorage)
 		Box.m_flTime = I::GlobalVars->curtime + 60.f;
 }
 

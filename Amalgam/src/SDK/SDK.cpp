@@ -253,6 +253,9 @@ void SDK::Trace(const Vec3& vecStart, const Vec3& vecEnd, unsigned int nMask, IT
 	Ray_t ray;
 	ray.Init(vecStart, vecEnd);
 	I::EngineTrace->TraceRay(ray, nMask, pFilter, pTrace);
+
+	if (Vars::Debug::VisualizeTraces.Value)
+		G::LineStorage.push_back({ { vecStart, Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd }, I::GlobalVars->curtime + 0.015f });
 }
 
 void SDK::TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHullMin, const Vec3& vecHullMax, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace)
@@ -260,6 +263,16 @@ void SDK::TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHul
 	Ray_t ray;
 	ray.Init(vecStart, vecEnd, vecHullMin, vecHullMax);
 	I::EngineTrace->TraceRay(ray, nMask, pFilter, pTrace);
+
+	if (Vars::Debug::VisualizeTraces.Value)
+	{
+		G::LineStorage.push_back({ { vecStart, Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd }, I::GlobalVars->curtime + 0.015f });
+		if (!(vecHullMax - vecHullMin).IsZero())
+		{
+			G::BoxStorage.push_back({ vecStart, vecHullMin, vecHullMax, {}, I::GlobalVars->curtime + 0.015f, {}, { 0, 0, 0, 0 } });
+			G::BoxStorage.push_back({ Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd, vecHullMin, vecHullMax, {}, I::GlobalVars->curtime + 0.015f, {}, { 0, 0, 0, 0 } });
+		}
+	}
 }
 
 bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask)

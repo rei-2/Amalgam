@@ -593,8 +593,8 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 							Vec3 vForward = vOld - vNew; vForward.Normalize();
 							const Vec3 vPos = trace.endpos + vForward * 16 + vOriginal - target.m_vPos;
 
-							//G::BulletsStorage.clear();
-							//G::BulletsStorage.push_back({ {pLocal->GetShootPos(), vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
+							//G::LineStorage.clear();
+							//G::LineStorage.push_back({ {pLocal->GetShootPos(), vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
 
 							float closestDist; int closestId = -1;
 							for (int i = 0; i < pSet->numhitboxes; ++i)
@@ -968,24 +968,24 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			{
 				if (Vars::Visuals::Simulation::Enabled.Value)
 				{
-					G::LinesStorage.clear();
-					G::LinesStorage.push_back({ vMoveLines, Vars::Visuals::Simulation::Timed.Value ? -int(vMoveLines.size()) : I::GlobalVars->curtime + 5.f, /*pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) :*/ Vars::Colors::PredictionColor.Value});
+					G::PathStorage.clear();
+					G::PathStorage.push_back({ vMoveLines, Vars::Visuals::Simulation::Timed.Value ? -int(vMoveLines.size()) : I::GlobalVars->curtime + 5.f, /*pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) :*/ Vars::Colors::PredictionColor.Value});
 					if (G::IsAttacking)
-						G::LinesStorage.push_back({ vProjLines, Vars::Visuals::Simulation::Timed.Value ? -int(vProjLines.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) : Vars::Colors::ProjectileColor.Value });
+						G::PathStorage.push_back({ vProjLines, Vars::Visuals::Simulation::Timed.Value ? -int(vProjLines.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) : Vars::Colors::ProjectileColor.Value });
 				}
 				if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
 				{
-					G::BoxesStorage.clear();
-					//G::BoxesStorage.insert(G::BoxesStorage.end(), vBoxes.begin(), vBoxes.end());
+					G::BoxStorage.clear();
+					//G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 					for (auto& tBox : vBoxes)
 					{
 						if (pWeapon->IsInReload())
 							tBox.m_colorEdge.r = tBox.m_colorFace.r = tBox.m_colorEdge.g = tBox.m_colorFace.g = tBox.m_colorEdge.b = tBox.m_colorFace.b = 0;
-						G::BoxesStorage.push_back(tBox);
+						G::BoxStorage.push_back(tBox);
 					}
 				}
 				//if (Vars::Visuals::Simulation::Enabled.Value || Vars::Visuals::Hitbox::ShowHitboxes.Value)
-				//	G::BulletsStorage.clear();
+				//	G::LineStorage.clear();
 			}
 
 			if (!pWeapon->IsInReload())

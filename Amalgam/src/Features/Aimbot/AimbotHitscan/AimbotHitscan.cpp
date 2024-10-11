@@ -843,14 +843,14 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			{
 				if (Vars::Visuals::Bullet::BulletTracer.Value)
 				{
-					G::BulletsStorage.clear();
-					G::BulletsStorage.push_back({ {pLocal->GetShootPos(), target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
+					G::LineStorage.clear();
+					G::LineStorage.push_back({ {pLocal->GetShootPos(), target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
 				}
 				if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
 				{
-					G::BoxesStorage.clear();
+					G::BoxStorage.clear();
 					auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.BoneMatrix.aBones, target.m_pEntity->As<CBaseAnimating>());
-					G::BoxesStorage.insert(G::BoxesStorage.end(), vBoxes.begin(), vBoxes.end());
+					G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 				}
 			}
 		}

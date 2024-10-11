@@ -194,10 +194,10 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			}
 			else
 			{
-				G::LinesStorage.clear();
-				G::LinesStorage.push_back({ localStorage.PredictionLines, I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value });
+				G::PathStorage.clear();
+				G::PathStorage.push_back({ localStorage.PredictionLines, I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value });
 				for (auto& target : targets)
-					G::LinesStorage.push_back({ targetStorage[target.m_pEntity].PredictionLines, I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
+					G::PathStorage.push_back({ targetStorage[target.m_pEntity].PredictionLines, I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
 			}
 		}
 
@@ -517,14 +517,14 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 
 			if (Vars::Visuals::Bullet::BulletTracer.Value)
 			{
-				G::BulletsStorage.clear();
-				G::BulletsStorage.push_back({ {vEyePos, target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
+				G::LineStorage.clear();
+				G::LineStorage.push_back({ {vEyePos, target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
 			}
 			if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
 			{
-				G::BoxesStorage.clear();
+				G::BoxStorage.clear();
 				auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.BoneMatrix.aBones, target.m_pEntity->As<CBaseAnimating>());
-				G::BoxesStorage.insert(G::BoxesStorage.end(), vBoxes.begin(), vBoxes.end());
+				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 			}
 		}
 		if (Vars::Visuals::Simulation::SwingLines.Value && pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f)
@@ -532,9 +532,9 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
 			if (!bAlwaysDraw)
 			{
-				G::LinesStorage.clear();
-				G::LinesStorage.push_back({ simLines[pLocal], I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value });
-				G::LinesStorage.push_back({ simLines[target.m_pEntity], I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
+				G::PathStorage.clear();
+				G::PathStorage.push_back({ simLines[pLocal], I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value });
+				G::PathStorage.push_back({ simLines[target.m_pEntity], I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
 			}
 		}
 

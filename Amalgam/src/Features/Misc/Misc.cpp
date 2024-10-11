@@ -479,9 +479,9 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 		F::Backtrack.flWishInterp = 0.f;
 		[[fallthrough]];
 	case FNV1A::Hash32Const("teamplay_round_start"):
-		G::BulletsStorage.clear();
-		G::BoxesStorage.clear();
-		G::LinesStorage.clear();
+		G::LineStorage.clear();
+		G::BoxStorage.clear();
+		G::PathStorage.clear();
 	}
 }
 

@@ -47,7 +47,7 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void, __fastcal
 	else if (uHash == FNV1A::Hash32Const("Line"))
 	{
 		bool bClear = false;
-		for (auto& Line : G::BulletsStorage)
+		for (auto& Line : G::LineStorage)
 		{
 			if (I::GlobalVars->curtime - (Line.m_flTime - 5.f) > 0)
 			{
@@ -56,9 +56,9 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void, __fastcal
 			}
 		}
 		if (bClear)
-			G::BulletsStorage.clear();
+			G::LineStorage.clear();
 
-		G::BulletsStorage.push_back({ {trace.startpos, trace.endpos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
+		G::LineStorage.push_back({ {trace.startpos, trace.endpos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
 	}
 	else if (uHash == FNV1A::Hash32Const("Beam"))
 	{

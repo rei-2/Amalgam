@@ -1278,6 +1278,8 @@ void CMenu::MenuSettings()
 				FToggle("Debug logging", Vars::Debug::Logging, FToggle_Middle);
 				FToggle("Show server hitboxes", Vars::Debug::ServerHitbox); HelpMarker("Only localhost servers");
 				FToggle("Anti aim lines", Vars::Debug::AntiAimLines, FToggle_Middle);
+				FToggle("Visualize traces", Vars::Debug::VisualizeTraces);
+				FToggle("Visualize trace hits", Vars::Debug::VisualizeTraceHits, FToggle_Middle);
 			} EndSection();
 			if (Section("Extra"))
 			{

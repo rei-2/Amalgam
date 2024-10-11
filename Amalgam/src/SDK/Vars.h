@@ -747,5 +747,7 @@ namespace Vars
 		CVar(Logging, false, NOSAVE)
 		CVar(ServerHitbox, false, NOSAVE)
 		CVar(AntiAimLines, false)
+		CVar(VisualizeTraces, false, NOSAVE)
+		CVar(VisualizeTraceHits, false, NOSAVE)
 	NAMESPACE_END(Debug)
 }
