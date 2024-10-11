@@ -560,7 +560,7 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 
 
 
-void CGlow::Init()
+void CGlow::Initialize()
 {
 	m_pRtFullFrame = I::MaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
 	m_pRtFullFrame->IncrementReferenceCount();
@@ -588,4 +588,19 @@ void CGlow::Init()
 		CREATERENDERTARGETFLAGS_HDR
 	);
 	m_pRenderBuffer2->IncrementReferenceCount();
+}
+
+void CGlow::Unload()
+{
+	m_pRtFullFrame->DecrementReferenceCount();
+	m_pRtFullFrame->DeleteIfUnreferenced();
+	m_pRtFullFrame = nullptr;
+
+	m_pRenderBuffer1->DecrementReferenceCount();
+	m_pRenderBuffer1->DeleteIfUnreferenced();
+	m_pRenderBuffer1 = nullptr;
+
+	m_pRenderBuffer2->DecrementReferenceCount();
+	m_pRenderBuffer2->DeleteIfUnreferenced();
+	m_pRenderBuffer2 = nullptr;
 }

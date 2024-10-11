@@ -55,6 +55,9 @@ class CGlow
 	bool bExtra = false;
 
 public:
+	void Initialize();
+	void Unload();
+
 	void Store(CTFPlayer* pLocal);
 
 	void RenderMain();
@@ -62,8 +65,6 @@ public:
 
 	void RenderViewmodel(void* ecx, int flags);
 	void RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
-
-	void Init();
 
 	bool bRendering = false;
 };

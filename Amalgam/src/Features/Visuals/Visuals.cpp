@@ -194,7 +194,7 @@ std::deque<Vec3> SplashTrace(Vec3 vOrigin, float flRadius, Vec3 vNormal = { 0, 0
 void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const bool bQuick)
 {
 	if (bQuick)
-		F::CameraWindow.ShouldDraw = false;
+		F::CameraWindow.m_bShouldDraw = false;
 	if ((bQuick ? !Vars::Visuals::Simulation::ProjectileTrajectory.Value && !Vars::Visuals::Simulation::ProjectileCamera.Value : !Vars::Visuals::Simulation::TrajectoryOnShot.Value)
 		|| !pLocal || !pWeapon || pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
 		return;
@@ -269,13 +269,15 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 	{
 		if (Vars::Visuals::Simulation::ProjectileCamera.Value && !I::EngineVGui->IsGameUIVisible() && pLocal->m_vecOrigin().DistTo(trace.endpos) > 500.f)
 		{
+			CGameTrace cameraTrace = {};
+
 			auto vAngles = Math::CalcAngle(trace.startpos, trace.endpos);
 			Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-			SDK::Trace(trace.endpos, trace.endpos - vForward * 500.f, MASK_SOLID, &filter, &trace);
+			SDK::Trace(trace.endpos, trace.endpos - vForward * 500.f, MASK_SOLID, &filter, &cameraTrace);
 
-			F::CameraWindow.ShouldDraw = true;
-			F::CameraWindow.CameraOrigin = trace.endpos;
-			F::CameraWindow.CameraAngles = vAngles;
+			F::CameraWindow.m_bShouldDraw = true;
+			F::CameraWindow.m_vCameraOrigin = cameraTrace.endpos;
+			F::CameraWindow.m_vCameraAngles = vAngles;
 		}
 
 		if (Vars::Visuals::Simulation::ProjectileTrajectory.Value)

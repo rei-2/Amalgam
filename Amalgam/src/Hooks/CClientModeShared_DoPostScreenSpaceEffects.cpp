@@ -13,28 +13,26 @@ MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVFunc(I::Clie
 	if (I::EngineVGui->IsGameUIVisible() || Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
 		return CALL_ORIGINAL(rcx, pSetup);
 
-	static std::once_flag onceFlag;
-	std::call_once(onceFlag, []
-		{
-			F::Glow.Init();
-			F::CameraWindow.Init();
-		});
+	auto pLocal = H::Entities.GetLocal();
+	auto pWeapon = H::Entities.GetWeapon();
+	if (pLocal)
+	{
+		F::Visuals.SplashRadius(pLocal);
+		if (pWeapon)
+			F::Visuals.ProjectileTrace(pLocal, pWeapon);
+	}
+
+	if (F::CameraWindow.m_bDrawing)
+		return CALL_ORIGINAL(rcx, pSetup);
 
 	F::Visuals.DrawBoxes();
 	F::Visuals.DrawBulletLines();
 	F::Visuals.DrawSimLines();
 	F::Visuals.DrawSightlines();
-
-	auto pLocal = H::Entities.GetLocal();
-	auto pWeapon = H::Entities.GetWeapon();
 	if (pLocal)
 	{
 		F::Chams.RenderMain();
 		F::Glow.RenderMain();
-
-		if (pWeapon)
-			F::Visuals.ProjectileTrace(pLocal, pWeapon);
-		F::Visuals.SplashRadius(pLocal);
 	}
 
 	return CALL_ORIGINAL(rcx, pSetup);

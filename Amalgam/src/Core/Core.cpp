@@ -6,6 +6,8 @@
 #include "../Features/Commands/Commands.h"
 #include "../Features/ImGui/Menu/Menu.h"
 #include "../Features/Visuals/Visuals.h"
+#include "../Features/Visuals/Glow/Glow.h"
+#include "../Features/CameraWindow/CameraWindow.h"
 #include "../SDK/Events/Events.h"
 
 void CCore::Load()
@@ -31,6 +33,8 @@ void CCore::Load()
 	U::Hooks.Initialize();
 	U::ConVars.Initialize();
 	F::Materials.LoadMaterials();
+	F::Glow.Initialize();
+	F::CameraWindow.Initialize();
 	F::Commands.Initialize();
 	H::Events.Initialize();
 
@@ -86,6 +90,8 @@ void CCore::Unload()
 	Sleep(250);
 
 	F::Materials.UnloadMaterials();
+	F::Glow.Unload();
+	F::CameraWindow.Unload();
 
 	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255, 255 });
 }
