@@ -712,8 +712,8 @@ namespace ImGui
 		}
 
 		PopStyleColor();
-		SetCursorPos({ vOriginalPos.x + vMins.x - 5, vOriginalPos.y + vMins.y - 5 });
-		Button("##", { vMaxs.x - vMins.x + 10, 13 }); // don't drag it around
+		SetCursorPos({ vOriginalPos.x + vMins.x - 6, vOriginalPos.y + vMins.y - 6 });
+		Button("##", { vMaxs.x - vMins.x + 12, 14 }); // don't drag it around
 		SetCursorPos(vOriginalPos); Dummy({ 0, iFlags & (FSlider_Left | FSlider_Right) ? 32.f : 24.f });
 
 		if (Transparent || Disabled)
