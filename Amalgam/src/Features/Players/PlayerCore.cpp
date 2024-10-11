@@ -17,41 +17,54 @@ void CPlayerlistCore::Run()
 
 void CPlayerlistCore::SavePlayers()
 {
-	if (!F::PlayerUtils.bSavePlayers)
+	if (!F::PlayerUtils.m_bSavePlayers || F::PlayerUtils.m_bLoadPlayers) // terrible if we end up saving while loading
 		return;
 
 	try
 	{
 		boost::property_tree::ptree writeTree;
 
-		// Put map entries into ptree
-		for (const auto& [friendsID, vTags] : F::PlayerUtils.mPlayerTags)
+		boost::property_tree::ptree tagTree;
+		for (auto& [friendsID, vTags] : F::PlayerUtils.m_mPlayerTags)
 		{
-			// don't fill with pointless info
-			if (!vTags.size())
+			if (vTags.empty())
 				continue;
 
-			boost::property_tree::ptree tagTree;
-			for (const auto& sTag : vTags)
+			boost::property_tree::ptree tagList;
+			for (auto& iID : vTags)
 			{
-				boost::property_tree::ptree child; child.put("", sTag);
-				tagTree.push_back(std::make_pair("", child));
+				boost::property_tree::ptree child; child.put("", iID);
+				tagList.push_back(std::make_pair("", child));
 			}
 
-			writeTree.put_child(std::to_string(friendsID), tagTree);
+			tagTree.put_child(std::to_string(friendsID), tagList);
 		}
+		writeTree.put_child("Tags", tagTree);
+
+		boost::property_tree::ptree aliasTree;
+		for (auto& [friendsID, sAlias] : F::PlayerUtils.m_mPlayerAliases)
+		{
+			if (sAlias.empty())
+				continue;
+
+			aliasTree.put(std::to_string(friendsID), sAlias);
+		}
+		writeTree.put_child("Aliases", aliasTree);
 
 		// Save the file
 		write_json(F::Configs.sConfigPath + "\\Core\\Players.json", writeTree);
 
-		F::PlayerUtils.bSavePlayers = false;
+		F::PlayerUtils.m_bSavePlayers = false;
 	}
-	catch (...) {}
+	catch (...)
+	{
+		SDK::Output("SavePlayers", "Failed", { 175, 150, 255, 255 });
+	}
 }
 
 void CPlayerlistCore::LoadPlayers()
 {
-	if (!F::PlayerUtils.bLoadPlayers)
+	if (!F::PlayerUtils.m_bLoadPlayers)
 		return;
 
 	try
@@ -60,9 +73,13 @@ void CPlayerlistCore::LoadPlayers()
 		{
 			boost::property_tree::ptree readTree;
 			read_json(F::Configs.sConfigPath + "\\Core\\Players.json", readTree);
-			F::PlayerUtils.mPlayerTags.clear();
+			F::PlayerUtils.m_mPlayerTags.clear();
 
-			for (auto& player : readTree)
+			auto tagTree = readTree.get_child_optional("Tags");
+			if (!tagTree)
+				tagTree = readTree; // support format w/o tag tree
+			
+			for (auto& player : *tagTree)
 			{
 				uint32_t friendsID = std::stoi(player.first);
 
@@ -70,12 +87,37 @@ void CPlayerlistCore::LoadPlayers()
 				{
 					std::string sTag = std::string(tag.first.data()).empty() ? tag.second.data() : tag.first.data(); // account for dumb old format
 
-					PriorityLabel_t plTag;
-					if (F::PlayerUtils.GetTag(sTag, &plTag) && !plTag.Assignable)
+					int iID = -1;
+					try
+					{	// new id based indexing
+						iID = std::stoi(sTag);
+					}
+					catch (...)
+					{	// old string based indexing
+						iID = F::PlayerUtils.GetTag(sTag);
+					}
+
+					if (iID == -1)
 						continue;
 
-					if (!F::PlayerUtils.HasTag(friendsID, sTag))
-						F::PlayerUtils.AddTag(friendsID, sTag, false);
+					auto pTag = F::PlayerUtils.GetTag(iID);
+					if (!pTag || !pTag->Assignable)
+						continue;
+
+					if (!F::PlayerUtils.HasTag(friendsID, iID))
+						F::PlayerUtils.AddTag(friendsID, iID, false);
+				}
+			}
+
+			if (auto aliasTree = readTree.get_child_optional("Aliases"))
+			{
+				for (auto& player : *aliasTree)
+				{
+					uint32_t friendsID = std::stoi(player.first);
+					std::string sAlias = player.second.data();
+
+					if (!sAlias.empty())
+						F::PlayerUtils.m_mPlayerAliases[friendsID] = player.second.data();
 				}
 			}
 		}
@@ -92,21 +134,25 @@ void CPlayerlistCore::LoadPlayers()
 				int iPriority = 2;
 				if (auto getValue = it.second.get_optional<int>("Mode")) { iPriority = std::max(*getValue, 0); }
 
-				if (iPriority == 4)
-					F::PlayerUtils.AddTag(friendsID, "Cheater", false);
-				if (iPriority == 1)
-					F::PlayerUtils.AddTag(friendsID, "Ignored", false);
+				switch (iPriority)
+				{
+				case 1: F::PlayerUtils.AddTag(friendsID, IGNORED_TAG, false); break;
+				case 4: F::PlayerUtils.AddTag(friendsID, CHEATER_TAG, false); break;
+				}
 			}
 		}
 
-		F::PlayerUtils.bLoadPlayers = false;
+		F::PlayerUtils.m_bLoadPlayers = false;
 	}
-	catch (...) {}
+	catch (...)
+	{
+		SDK::Output("LoadPlayers", "Failed", { 175, 150, 255, 255 });
+	}
 }
 
 void CPlayerlistCore::SaveTags()
 {
-	if (!F::PlayerUtils.bSaveTags)
+	if (!F::PlayerUtils.m_bSaveTags || F::PlayerUtils.m_bLoadTags) // terrible if we end up saving while loading
 		return;
 
 	try
@@ -114,27 +160,34 @@ void CPlayerlistCore::SaveTags()
 		boost::property_tree::ptree writeTree;
 
 		// Put map entries into ptree
-		for (const auto& [sTag, plTag] : F::PlayerUtils.mTags)
+		int iID = -1;
+		for (auto& tTag : F::PlayerUtils.m_vTags)
 		{
-			boost::property_tree::ptree tagTree;
-			tagTree.put_child("Color", F::Configs.ColorToTree(plTag.Color));
-			tagTree.put("Priority", plTag.Priority);
-			tagTree.put("Label", plTag.Label);
+			iID++;
 
-			writeTree.put_child(sTag, tagTree);
+			boost::property_tree::ptree tagTree;
+			tagTree.put("Name", tTag.Name);
+			tagTree.put_child("Color", F::Configs.ColorToTree(tTag.Color));
+			tagTree.put("Priority", tTag.Priority);
+			tagTree.put("Label", tTag.Label);
+
+			writeTree.put_child(std::to_string(iID), tagTree);
 		}
 
 		// Save the file
 		write_json(F::Configs.sConfigPath + "\\Core\\Tags.json", writeTree);
 
-		F::PlayerUtils.bSaveTags = false;
+		F::PlayerUtils.m_bSaveTags = false;
 	}
-	catch (...) {}
+	catch (...)
+	{
+		SDK::Output("SaveTags", "Failed", { 175, 150, 255, 255 });
+	}
 }
 
 void CPlayerlistCore::LoadTags()
 {
-	if (!F::PlayerUtils.bLoadTags)
+	if (!F::PlayerUtils.m_bLoadTags)
 		return;
 
 	try
@@ -143,28 +196,48 @@ void CPlayerlistCore::LoadTags()
 		{
 			boost::property_tree::ptree readTree;
 			read_json(F::Configs.sConfigPath + "\\Core\\Tags.json", readTree);
-			F::PlayerUtils.mTags = {
-				{ "Default", { { 200, 200, 200, 255 }, 0, false, false, true } },
-				{ "Ignored", { { 200, 200, 200, 255 }, -1, false, true, true } },
-				{ "Cheater", { { 255, 100, 100, 255 }, 1, false, true, true } },
-				{ "Friend", { { 100, 255, 100, 255 }, 0, true, false, true } }
+			F::PlayerUtils.m_vTags = {
+				{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
+				{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
+				{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
+				{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true }
 			};
 
 			for (auto& it : readTree)
 			{
-				PriorityLabel_t plTag = {};
-				if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, plTag.Color); }
-				if (auto getValue = it.second.get_optional<int>("Priority")) { plTag.Priority = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Label")) { plTag.Label = *getValue; }
+				PriorityLabel_t tTag = {};
+				if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
+				if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.Color); }
+				if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.Priority = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.Label = *getValue; }
 
-				std::string sTag = it.first;
-				F::PlayerUtils.mTags[sTag].Color = plTag.Color;
-				F::PlayerUtils.mTags[sTag].Priority = plTag.Priority;
-				F::PlayerUtils.mTags[sTag].Label = plTag.Label;
+				int iID = -1;
+				try
+				{	// new id based indexing
+					iID = std::stoi(it.first);
+				}
+				catch (...)
+				{	// old string based indexing
+					tTag.Name = it.first;
+					iID = F::PlayerUtils.GetTag(it.first);
+				}
+
+				if (iID > -1 && iID < F::PlayerUtils.m_vTags.size())
+				{
+					F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
+					F::PlayerUtils.m_vTags[iID].Color = tTag.Color;
+					F::PlayerUtils.m_vTags[iID].Priority = tTag.Priority;
+					F::PlayerUtils.m_vTags[iID].Label = tTag.Label;
+				}
+				else
+					F::PlayerUtils.m_vTags.push_back(tTag);
 			}
 		}
 
-		F::PlayerUtils.bLoadTags = false;
+		F::PlayerUtils.m_bLoadTags = false;
 	}
-	catch (...) {}
+	catch (...)
+	{
+		SDK::Output("LoadTags", "Failed", { 175, 150, 255, 255 });
+	}
 }

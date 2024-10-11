@@ -23,7 +23,7 @@ void CAimbotGlobal::SortPriority(std::vector<Target_t>* targets)
 			  });
 }
 
-bool CAimbotGlobal::ShouldIgnore(CTFPlayer* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bMedigun)
+bool CAimbotGlobal::ShouldIgnore(CTFPlayer* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	PlayerInfo_t pi{};
 	if (!pTarget || pTarget == pLocal || pTarget->IsDormant())
@@ -32,15 +32,11 @@ bool CAimbotGlobal::ShouldIgnore(CTFPlayer* pTarget, CTFPlayer* pLocal, CTFWeapo
 		return true;
 
 	if (pLocal->m_iTeamNum() == pTarget->m_iTeamNum())
-	{
-		if (bMedigun)
-			return pTarget->IsInvisible();
 		return false;
-	}
 
 	if (Vars::Aimbot::General::Ignore.Value & INVUL && pTarget->IsInvulnerable())
 	{
-		if (G::WeaponDefIndex != Heavy_t_TheHolidayPunch)
+		if (pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch)
 			return true;
 	}
 	if (Vars::Aimbot::General::Ignore.Value & CLOAKED && pTarget->IsInvisible())
@@ -54,19 +50,23 @@ bool CAimbotGlobal::ShouldIgnore(CTFPlayer* pTarget, CTFPlayer* pLocal, CTFWeapo
 		return true;
 	if (Vars::Aimbot::General::Ignore.Value & VACCINATOR)
 	{
-		switch (G::WeaponType)
+		switch (G::PrimaryWeaponType)
 		{
 		case EWeaponType::HITSCAN:
-			if (pTarget->IsBulletResist() && G::WeaponDefIndex != Spy_m_TheEnforcer)
+			if (pTarget->IsBulletResist() && pWeapon->m_iItemDefinitionIndex() != Spy_m_TheEnforcer)
 				return true;
 			break;
 		case EWeaponType::PROJECTILE:
-			if (pTarget->IsFireResist() && (pWeapon->m_iWeaponID() == TF_WEAPON_FLAMETHROWER || pWeapon->m_iWeaponID() == TF_WEAPON_FLAREGUN))
-				return true;
-			else if (pTarget->IsBulletResist() && pWeapon->m_iWeaponID() == TF_WEAPON_COMPOUND_BOW)
-				return true;
-			else if (pTarget->IsBlastResist())
-				return true;
+			switch (pWeapon->GetWeaponID())
+			{
+			case TF_WEAPON_FLAMETHROWER:
+			case TF_WEAPON_FLAREGUN:
+				return pTarget->IsFireResist();
+			case TF_WEAPON_COMPOUND_BOW:
+				return pTarget->IsBulletResist();
+			default:
+				return pTarget->IsBlastResist();
+			}
 		}
 	}
 	if (Vars::Aimbot::General::Ignore.Value & DISGUISED && pTarget->IsDisguised())
@@ -86,7 +86,7 @@ int CAimbotGlobal::GetPriority(int targetIdx)
 // will not predict for projectile weapons
 bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pBomb)
 {
-	if (G::WeaponType == EWeaponType::PROJECTILE)
+	if (G::PrimaryWeaponType == EWeaponType::PROJECTILE)
 		return false;
 
 	Vec3 vOrigin = pBomb->m_vecOrigin();
@@ -103,11 +103,11 @@ bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEn
 		if (vOrigin.DistTo(vPos) > 300.f)
 			continue;
 
-		bool isPlayer = Vars::Aimbot::General::Target.Value & PLAYER && pEntity->IsPlayer();
-		bool isSentry = Vars::Aimbot::General::Target.Value & SENTRY && pEntity->IsSentrygun();
-		bool isDispenser = Vars::Aimbot::General::Target.Value & DISPENSER && pEntity->IsDispenser();
-		bool isTeleporter = Vars::Aimbot::General::Target.Value & TELEPORTER && pEntity->IsTeleporter();
-		bool isNPC = Vars::Aimbot::General::Target.Value & NPC && pEntity->IsNPC();
+		bool isPlayer = pEntity->IsPlayer() && Vars::Aimbot::General::Target.Value & PLAYER;
+		bool isSentry = pEntity->IsSentrygun() && Vars::Aimbot::General::Target.Value & SENTRY;
+		bool isDispenser = pEntity->IsDispenser() && Vars::Aimbot::General::Target.Value & DISPENSER;
+		bool isTeleporter = pEntity->IsTeleporter() && Vars::Aimbot::General::Target.Value & TELEPORTER;
+		bool isNPC = pEntity->IsNPC() && Vars::Aimbot::General::Target.Value & NPC;
 		if (isPlayer || isSentry || isDispenser || isTeleporter || isNPC)
 		{
 			if (isPlayer && ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon))

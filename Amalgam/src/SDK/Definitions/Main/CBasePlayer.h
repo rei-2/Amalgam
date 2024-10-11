@@ -72,14 +72,24 @@ public:
 	NETVAR_OFF(m_flWaterJumpTime, float, "CBasePlayer", "m_fOnTarget", -60);
 	NETVAR_OFF(m_flSwimSoundTime, float, "CBasePlayer", "m_fOnTarget", -44);
 	NETVAR_OFF(m_vecLadderNormal, Vec3, "CBasePlayer", "m_fOnTarget", -36);
-	NETVAR_OFF(m_surfaceProps, int, "CBasePlayer", "m_hLastWeapon", 72);
-	NETVAR_OFF(m_pSurfaceData, void*, "CBasePlayer", "m_hLastWeapon", 76);
-	NETVAR_OFF(m_surfaceFriction, float, "CBasePlayer", "m_hLastWeapon", 80);
-	NETVAR_OFF(m_chTextureType, char, "CBasePlayer", "m_hLastWeapon", 84);
+	NETVAR_OFF(m_surfaceProps, int, "CBasePlayer", "m_szLastPlaceName", 20);
+	NETVAR_OFF(m_pSurfaceData, void*, "CBasePlayer", "m_szLastPlaceName", 24);
+	NETVAR_OFF(m_surfaceFriction, float, "CBasePlayer", "m_szLastPlaceName", 32);
+	NETVAR_OFF(m_chTextureType, char, "CBasePlayer", "m_szLastPlaceName", 36);
 
 	CONDGET(IsOnGround, m_fFlags(), FL_ONGROUND);
 	CONDGET(IsInWater, m_fFlags(), FL_INWATER);
 	CONDGET(IsDucking, m_fFlags(), FL_DUCKING);
+
+	VIRTUAL(PreThink, void, void(__fastcall*)(void*), this, 261);
+	VIRTUAL(Think, void, void(__fastcall*)(void*), this, 121);
+	VIRTUAL(PostThink, void, void(__fastcall*)(void*), this, 262);
+	VIRTUAL(GetRenderedWeaponModel, CBaseAnimating*, CBaseAnimating*(__fastcall*)(void*), this, 251);
+	
+	void SelectItem(const char* ptr, int subtype)
+	{
+		reinterpret_cast<void(__fastcall*)(void*, const char*, int)>(U::Memory.GetVFunc(this, 271))(this, ptr, subtype);
+	}
 
 	bool IsAlive()
 	{
@@ -109,7 +119,7 @@ public:
 	__inline void SetCurrentCmd(CUserCmd* pCmd)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBasePlayer", "m_hConstraintEntity") - 8;
-		*reinterpret_cast<CUserCmd**>(std::uintptr_t(this) + nOffset) = pCmd;
+		*reinterpret_cast<CUserCmd**>(uintptr_t(this) + nOffset) = pCmd;
 	}
 
 	int GetAmmoCount(int iAmmoType)

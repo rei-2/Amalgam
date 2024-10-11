@@ -6,7 +6,7 @@
 class CSignature
 {
 private:
-	std::uintptr_t m_dwVal = 0x0;
+	uintptr_t m_dwVal = 0x0;
 	const char* m_pszDLLName = {};
 	const char* m_pszSignature = {};
 	int m_nOffset = 0;
@@ -17,7 +17,7 @@ public:
 
 	void Initialize();
 
-	inline std::uintptr_t operator()()
+	inline uintptr_t operator()()
 	{
 		return m_dwVal;
 	}

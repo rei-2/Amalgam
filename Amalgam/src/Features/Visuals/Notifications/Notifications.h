@@ -4,17 +4,18 @@
 struct Notification_t
 {
 	std::string m_sText;
-	Color_t m_cColor;
-	float m_flTime;
+	float m_flCreateTime;
+	float m_flLifeTime;
+	float m_flPanTime;
 };
 
 class CNotifications
 {
 	std::vector<Notification_t> vNotifications;
-	int iMaxNotifySize = 8;
+	unsigned iMaxNotifySize = 10;
 
 public:
-	void Add(const std::string& sText, Color_t cColor = { 255, 255, 255, 255 }, float flLifeTime = Vars::Logging::Lifetime.Value);
+	void Add(const std::string& sText, float flLifeTime = Vars::Logging::Lifetime.Value, float flPanTime = 0.1f);
 	void Draw();
 };
 

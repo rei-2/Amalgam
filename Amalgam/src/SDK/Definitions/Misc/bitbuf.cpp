@@ -5,7 +5,7 @@
 inline void Q_memcpy(void* dest, const void* src, int count)
 {
 	int i;
-	if (((std::uintptr_t(dest) | std::uintptr_t(src) | count) & 3) == 0)
+	if (((uintptr_t(dest) | uintptr_t(src) | count) & 3) == 0)
 	{
 		count >>= 2;
 		for (i = 0; i < count; i++)
@@ -18,15 +18,56 @@ inline void Q_memcpy(void* dest, const void* src, int count)
 	}
 }
 
+inline int GetBitForBitnum(int bitNum)
+{
+	static int bitsForBitnum[] =
+	{
+		(1 << 0),
+		(1 << 1),
+		(1 << 2),
+		(1 << 3),
+		(1 << 4),
+		(1 << 5),
+		(1 << 6),
+		(1 << 7),
+		(1 << 8),
+		(1 << 9),
+		(1 << 10),
+		(1 << 11),
+		(1 << 12),
+		(1 << 13),
+		(1 << 14),
+		(1 << 15),
+		(1 << 16),
+		(1 << 17),
+		(1 << 18),
+		(1 << 19),
+		(1 << 20),
+		(1 << 21),
+		(1 << 22),
+		(1 << 23),
+		(1 << 24),
+		(1 << 25),
+		(1 << 26),
+		(1 << 27),
+		(1 << 28),
+		(1 << 29),
+		(1 << 30),
+		(1 << 31),
+	};
+
+	return bitsForBitnum[(bitNum) & (BITS_PER_INT - 1)];
+}
+
 void bf_write::StartWriting(void* pData, int nBytes, int iStartBit, int nBits)
 {
-	//using fn = int(__thiscall *)(bf_write *, void *, int, int, int);
+	//using fn = int(__fastcall *)(bf_write *, void *, int, int, int);
 	//static fn FN = reinterpret_cast<fn>(g_Pattern.Find(_(L"engine.dll"), _(L"55 8B EC 8B 45 08 8B 55 0C 83 E2 FC 89 01 8B 45 14")));
 	//return FN(this, pData, nBytes, iStartBit, nBits);
 	if (!(nBytes % 4 == 0))
 		return;
 
-	if (!((std::uintptr_t(pData) & 3) == 0))
+	if (!((uintptr_t(pData) & 3) == 0))
 		return;
 
 	nBytes &= ~3;
@@ -480,7 +521,7 @@ bool bf_write::WriteBits(const void* pInData, int nBits)
 	}
 
 	// Align output to dword boundary
-	while ((std::uintptr_t(pOut) & 3) != 0 && nBitsLeft >= 8)
+	while ((uintptr_t(pOut) & 3) != 0 && nBitsLeft >= 8)
 	{
 
 		WriteUBitLong(*pOut, 8, false);

@@ -40,6 +40,7 @@ namespace ICONS
 		{ -1, "sprites/healbeam.vtf" },
 		{ -1, "hud/hud_obj_status_ammo_64.vtf" },
 		{ -1, "hud/mvm_cash.vtf" },
+		{ -1, "effects/powerup_supernova_icon.vtf" },
 		{ -1, "hud/ico_demolish.vtf" },
 		{ -1, "vgui/spellbook_book.vtf" },
 		{ -1, "backpack/player/items/crafting/hwn2015_gargoyle_stone.vtf" }

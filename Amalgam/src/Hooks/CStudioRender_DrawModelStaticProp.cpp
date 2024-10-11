@@ -1,7 +1,7 @@
 #include "../SDK/SDK.h"
 
 MAKE_HOOK(CStudioRender_DrawModelStaticProp, U::Memory.GetVFunc(I::StudioRender, 30), void, __fastcall,
-	void* ecx, const DrawModelState_t& pState, const matrix3x4& modelToWorld, int flags)
+	void* rcx, const DrawModelState_t& pState, const matrix3x4& modelToWorld, int flags)
 {
 	if (Vars::Visuals::World::NearPropFade.Value)
 	{
@@ -18,5 +18,5 @@ MAKE_HOOK(CStudioRender_DrawModelStaticProp, U::Memory.GetVFunc(I::StudioRender,
 		}
 	}
 
-	CALL_ORIGINAL(ecx, pState, modelToWorld, flags);
+	CALL_ORIGINAL(rcx, pState, modelToWorld, flags);
 }

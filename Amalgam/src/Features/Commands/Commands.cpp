@@ -28,38 +28,34 @@ void CCommands::Initialize()
 			I::TFPartyClient->RequestQueueForMatch(k_eTFMatchGroup_Casual_Default);
 		});
 
-	Register("setcvar", [](std::deque<std::string> args)
+	Register("setcvar", [](const std::deque<std::string>& args)
 		{
-			// Check if the user provided at least 2 args
 			if (args.size() < 2)
 			{
-				I::CVar->ConsoleColorPrintf({ 255, 255, 255, 255 }, "Usage: setcvar <cvar> <value>\n");
+				SDK::Output("Usage:\n\tsetcvar <cvar> <value>");
 				return;
 			}
 
-			// Find the given CVar
 			const auto foundCVar = I::CVar->FindVar(args[0].c_str());
 			const std::string cvarName = args[0];
 			if (!foundCVar)
 			{
-				I::CVar->ConsoleColorPrintf({ 255, 255, 255, 255 }, "Could not find %s\n", cvarName.c_str());
+				SDK::Output(std::format("Could not find {}", cvarName).c_str());
 				return;
 			}
 
-			// Set the CVar to the given value
-			args.pop_front();
-			std::string newValue = boost::algorithm::join(args, " ");
+			auto vArgs = args; vArgs.pop_front();
+			std::string newValue = boost::algorithm::join(vArgs, " ");
 			boost::replace_all(newValue, "\"", "");
 			foundCVar->SetValue(newValue.c_str());
-			I::CVar->ConsoleColorPrintf({ 255, 255, 255, 255 }, "Set %s to: %s\n", cvarName.c_str(), newValue.c_str());
+			SDK::Output(std::format("Set {} to {}", cvarName, newValue).c_str());
 		});
 
-	Register("getcvar", [](std::deque<std::string> args)
+	Register("getcvar", [](const std::deque<std::string>& args)
 		{
-			// Check if the user provided 1 arg
 			if (args.size() != 1)
 			{
-				I::CVar->ConsoleColorPrintf({ 255, 255, 255, 255 }, "Usage: getcvar <cvar>\n");
+				SDK::Output("Usage:\n\tgetcvar <cvar>");
 				return;
 			}
 
@@ -67,14 +63,14 @@ void CCommands::Initialize()
 			const std::string cvarName = args[0];
 			if (!foundCVar)
 			{
-				I::CVar->ConsoleColorPrintf({ 255, 255, 255, 255 }, "Could not find %s\n", cvarName.c_str());
+				SDK::Output(std::format("Could not find {}", cvarName).c_str());
 				return;
 			}
 
-			I::CVar->ConsoleColorPrintf({ 255, 255, 255, 255 }, "Value of %s is: %s\n", cvarName.c_str(), foundCVar->GetString());
+			SDK::Output(std::format("Value of {} is {}", cvarName, foundCVar->GetString()).c_str());
 		});
 
-	Register("unload", [](std::deque<std::string> args)
+	Register("unload", [](const std::deque<std::string>& args)
 		{
 			if (F::Menu.IsOpen)
 				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.IsOpen = false);

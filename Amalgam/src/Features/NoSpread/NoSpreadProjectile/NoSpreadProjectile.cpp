@@ -2,10 +2,10 @@
 
 bool CNoSpreadProjectile::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (G::WeaponType != EWeaponType::PROJECTILE)
+	if (G::PrimaryWeaponType != EWeaponType::PROJECTILE)
 		return false;
 
-	switch (G::WeaponDefIndex)
+	switch (pWeapon->m_iItemDefinitionIndex())
 	{
 	case Soldier_m_RocketJumper:
 	case Demoman_s_StickyJumper:
@@ -24,7 +24,7 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	for (int i = 0; i < 6; ++i)
 		SDK::RandomFloat();
 
-	switch (pWeapon->m_iWeaponID())
+	switch (pWeapon->GetWeaponID())
 	{
 	case TF_WEAPON_SYRINGEGUN_MEDIC:
 	{
@@ -51,9 +51,12 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	}
 	}
 
-	if (G::WeaponDefIndex == Soldier_m_TheBeggarsBazooka)
+	if (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && !pWeapon->IsInReload())
 	{
+		float flOldCurrentTime = I::GlobalVars->curtime;
+		I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
 		pCmd->viewangles -= pWeapon->GetSpreadAngles() - I::EngineClient->GetViewAngles();
+		I::GlobalVars->curtime = flOldCurrentTime;
 
 		G::PSilentAngles = true;
 	}

@@ -12,12 +12,12 @@ public:
 	float x = 0.f, y = 0.f;
 
 public:
-	Vec2(void)
+	void Zero()
 	{
 		x = y = 0.f;
 	}
 
-	Vec2(float X, float Y)
+	Vec2(float X = 0.f, float Y = 0.f)
 	{
 		x = X; y = Y;
 	}
@@ -176,17 +176,12 @@ public:
 	float x = 0.f, y = 0.f, z = 0.f;
 
 public:
-	Vec3(void)
-	{
-		x = y = z = 0.f;
-	}
-
 	void Zero()
 	{
 		x = y = z = 0.f;
 	}
 
-	Vec3(float X, float Y, float Z)
+	Vec3(float X = 0.f, float Y = 0.f, float Z = 0.f)
 	{
 		x = X; y = Y; z = Z;
 	}
@@ -214,11 +209,6 @@ public:
 	Vec3& operator=(const Vec3& v)
 	{
 		x = v.x; y = v.y; z = v.z; return *this;
-	}
-
-	Vec3& operator=(const Vec2& v)
-	{
-		x = v.x; y = v.y; z = 0.f; return *this;
 	}
 
 	float& operator[](int i)
@@ -338,19 +328,25 @@ public:
 
 	float Normalize()
 	{
-		float fl_Length = Length();
-		float fl_Length_normal = 1.f / (FLT_EPSILON + fl_Length);
+		float flLength = Length();
+		float flLengthNormal = 1.f / (FLT_EPSILON + flLength);
 
-		x = x * fl_Length_normal;
-		y = y * fl_Length_normal;
-		z = z * fl_Length_normal;
+		x *= flLengthNormal;
+		y *= flLengthNormal;
+		z *= flLengthNormal;
 
-		return fl_Length;
+		return flLength;
 	}
 
-	float NormalizeInPlace()
+	Vec3 GetNorm()
 	{
-		return Normalize();
+		float flLengthNormal = 1.f / (FLT_EPSILON + Length());
+		return Vec3(x * flLengthNormal, y * flLengthNormal, z * flLengthNormal);
+	}
+
+	Vec3 Get2D()
+	{
+		return Vec3(x, y, 0);
 	}
 
 	float Length2D(void) const
@@ -470,7 +466,7 @@ struct FloatRange_t
 using byte = unsigned char;
 struct Color_t
 {
-	byte r = 0, g = 0, b = 0, a = 0;
+	byte r = 255, g = 255, b = 255, a = 255;
 
 	bool operator==(Color_t other) const
 	{
@@ -506,8 +502,8 @@ struct Color_t
 
 struct Gradient_t
 {
-	Color_t StartColor = { 0, 0, 0, 255 };
-	Color_t EndColor = { 0, 0, 0, 255 };
+	Color_t StartColor = {};
+	Color_t EndColor = {};
 
 	bool operator==(Gradient_t other) const
 	{
@@ -522,22 +518,18 @@ struct Gradient_t
 
 struct Chams_t
 {
-	std::vector<std::string>	VisibleMaterial = { "Original" };
-	std::vector<std::string>	OccludedMaterial = {};
-	Color_t						VisibleColor = { 255, 255, 255, 255 };
-	Color_t						OccludedColor = { 255, 255, 255, 255 };
+	std::vector<std::pair<std::string, Color_t>> Visible = { { "Original", Color_t() } };
+	std::vector<std::pair<std::string, Color_t>> Occluded = {};
 };
 
 struct Glow_t
 {
-	bool	Stencil = false;
-	bool	Blur = false;
-	int		StencilScale = 1;
-	int		BlurScale = 1;
+	int		Stencil = 0;
+	int		Blur = 0;
 
 	bool operator==(const Glow_t& other) const
 	{
-		return Stencil == other.Stencil && Blur == other.Blur && StencilScale == other.StencilScale && BlurScale == other.BlurScale;
+		return Stencil == other.Stencil && Blur == other.Blur;
 	}
 };
 

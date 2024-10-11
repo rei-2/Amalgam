@@ -9,14 +9,14 @@ struct Material_t
 
 	std::string sVMT = ""; // will be shown to user through material editor, for glow this won't matter
 	bool bLocked = false;
-
 };
 
 class CMaterials
 {
-public:
-	IMaterial* CreateNRef(char const* szName, KeyValues* pKV);
+	IMaterial* Create(char const* szName, KeyValues* pKV);
+	void Remove(IMaterial* pMaterial);
 
+public:
 	void LoadMaterials();
 	void UnloadMaterials();
 	void ReloadMaterials();
@@ -28,7 +28,7 @@ public:
 	void EditMaterial(std::string sName, std::string sVMT);
 	void RemoveMaterial(std::string sName);
 
-	void SetColor(IMaterial* material, Color_t color, bool bSetColor = true);
+	void SetColor(IMaterial* material, Color_t color);
 
 	std::unordered_map<std::string, Material_t> mChamMaterials;
 	std::unordered_map<std::string, Material_t> mGlowMaterials;

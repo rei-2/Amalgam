@@ -1,10 +1,8 @@
 #pragma once
 #include "../../SDK/SDK.h"
-#include "../Backtrack/Backtrack.h"
 
 struct PlayerInfo
 {
-	bool bShouldScan = false;
 	uint32_t friendsID = 0;
 	std::string sName = "";
 
@@ -32,7 +30,6 @@ class CCheaterDetection
 
 public:
 	void Run();
-	void Fill();
 
 	void ReportChoke(CTFPlayer* pEntity, int iChoke);
 	void ReportDamage(IGameEvent* pEvent);

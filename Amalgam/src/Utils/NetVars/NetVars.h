@@ -16,18 +16,18 @@ ADD_FEATURE_CUSTOM(CNetVars, NetVars, U);
 #define NETVAR(_name, type, table, name) type& _name() \
 { \
 	static int nOffset = U::NetVars.GetNetVar(table, name); \
-	return *reinterpret_cast<type*>(std::uintptr_t(this) + nOffset); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset); \
 }
 
 #define NETVAR_OFF(_name, type, table, name, offset) type& _name() \
 { \
 	static int nOffset = U::NetVars.GetNetVar(table, name) + offset; \
-	return *reinterpret_cast<type*>(std::uintptr_t(this) + nOffset); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset); \
 }
 
 #define OFFSET(name, type, offset) type& name() \
 { \
-	return *reinterpret_cast<type*>(std::uintptr_t(this) + offset); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + offset); \
 }
 
 #define VIRTUAL(name, type, fn, base, index) type name() \

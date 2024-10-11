@@ -5,12 +5,12 @@
 
 MAKE_SIGNATURE(CTFGameRules_Get, "client.dll", "48 8B 0D ? ? ? ? 4C 8B C3 48 8B D7 48 8B 01 FF 90 ? ? ? ? 84 C0", 0x0);
 
-class CGameRulesProxy
+class CTeamplayRules
 {
 public:
 };
 
-class CTeamplayRoundBasedRulesProxy : public CGameRulesProxy
+class CTeamplayRoundBasedRules : public CTeamplayRules
 {
 public:
 	NETVAR(m_iRoundState, int, "CTeamplayRoundBasedRulesProxy", "m_iRoundState");
@@ -34,8 +34,20 @@ public:
 	NETVAR(m_flStateTransitionTime, float, "CTeamplayRoundBasedRulesProxy", "m_flStateTransitionTime");
 };
 
-class CTFGameRulesProxy : public CTeamplayRoundBasedRulesProxy
+class CTFGameRules : public CTeamplayRoundBasedRules
 {
+public:
+	CTFGameRules* Get()
+	{
+		return *reinterpret_cast<CTFGameRules**>(U::Memory.RelToAbs(S::CTFGameRules_Get()));
+	}
+
+public:
+	__inline CViewVectors* GetViewVectors()
+	{
+		return reinterpret_cast<CViewVectors*(__fastcall*)()>(U::Memory.GetVFunc(this, 31))();
+	}
+
 public:
 	NETVAR(m_nGameType, int, "CTFGameRulesProxy", "m_nGameType");
 	NETVAR(m_nStopWatchState, int, "CTFGameRulesProxy", "m_nStopWatchState");
@@ -95,25 +107,11 @@ public:
 			return false;
 		
 		static int nOffset = U::NetVars.GetNetVar("CTeamplayRoundBasedRulesProxy", "m_bPlayerReady");
-		bool* ReadyStatus = reinterpret_cast<bool*>(std::uintptr_t(this) + nOffset);
+		bool* ReadyStatus = reinterpret_cast<bool*>(uintptr_t(this) + nOffset);
 		if (!ReadyStatus)
 			return false;
 
 		return ReadyStatus[playerIndex];
-	}
-};
-
-class CTFGameRules
-{
-public:
-	CTFGameRulesProxy* GetProxy()
-	{
-		return reinterpret_cast<CTFGameRulesProxy*>(this);
-	}
-
-	CTFGameRules* Get()
-	{
-		return *reinterpret_cast<CTFGameRules**>(U::Memory.RelToAbs(S::CTFGameRules_Get()));
 	}
 };
 

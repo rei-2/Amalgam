@@ -36,7 +36,7 @@ public:
 	void* IHasBuildPoints()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseObject", "m_iUpgradeLevel") - 340;
-		return reinterpret_cast<void*>(std::uintptr_t(this) + nOffset);
+		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
 	};
 
 	bool GetBuildPoint(int iPoint, Vec3& vecOrigin, Vec3& vecAngles)

@@ -27,11 +27,9 @@ void CNetworkFix::FixInputDelay(bool bFinalTick)
 		return;
 
 	CReadPacketState Backup = {};
-
 	Backup.Store();
 
 	CL_ReadPackets->Original<void(__cdecl*)(bool)>()(bFinalTick);
-
 	m_State.Store();
 
 	Backup.Restore();
@@ -47,6 +45,5 @@ bool CNetworkFix::ShouldReadPackets()
 		return true;
 
 	m_State.Restore();
-
 	return false;
 }

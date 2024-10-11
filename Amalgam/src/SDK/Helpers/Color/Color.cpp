@@ -30,18 +30,9 @@ Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool
 		if (pLocal == pPlayer)
 			out = Vars::Colors::Local.Value;
 		else if (H::Entities.IsFriend(pPlayer->entindex()))
-			out = F::PlayerUtils.mTags["Friend"].Color;
-
-		PlayerInfo_t pi{}; bool bTagColor = false; Color_t cTagColor;
-		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
-		{
-			std::string _; PriorityLabel_t plTag;
-			if (bTagColor = F::PlayerUtils.GetSignificantTag(pi.friendsID, &_, &plTag))
-				cTagColor = plTag.Color;
-		}
-
-		if (bTagColor)
-			out = cTagColor;
+			out = F::PlayerUtils.m_vTags[FRIEND_TAG].Color;
+		else if (auto pTag = F::PlayerUtils.GetSignificantTag(pPlayer->entindex()))
+			out = pTag->Color;
 		else if (pPlayer->IsCloaked())
 			out = Vars::Colors::Cloak.Value;
 		else if (pPlayer->IsInvulnerable())

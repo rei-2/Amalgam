@@ -22,8 +22,12 @@ public:
 	NETVAR(m_iState, int, "CBaseCombatWeapon", "m_iState");
 	NETVAR(m_hOwner, EHANDLE, "CBaseCombatWeapon", "m_hOwner");
 
+	NETVAR_OFF(m_bInReload, bool, "CBaseCombatWeapon", "m_flNextPrimaryAttack", 12);
+
+	VIRTUAL(GetName, const char*, const char* (__fastcall*)(void*), this, 332);
+
 	bool HasAmmo()
 	{
-		return S::CBaseCombatWeapon_HasAmmo.As<bool(__thiscall*)(void*)>()(this);
+		return S::CBaseCombatWeapon_HasAmmo.As<bool(__fastcall*)(void*)>()(this);
 	}
 };

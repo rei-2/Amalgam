@@ -39,7 +39,7 @@ public:
 };
 
 MAKE_HOOK(CStaticPropMgr_ComputePropOpacity, S::CStaticPropMgr_ComputePropOpacity(), void, __fastcall,
-	void* ecx, CStaticProp* pProp)
+	void* rcx, CStaticProp* pProp)
 {
 	if (Vars::Visuals::World::NoPropFade.Value && pProp)
 	{
@@ -47,5 +47,5 @@ MAKE_HOOK(CStaticPropMgr_ComputePropOpacity, S::CStaticPropMgr_ComputePropOpacit
 		return;
 	}
 
-	CALL_ORIGINAL(ecx, pProp);
+	CALL_ORIGINAL(rcx, pProp);
 }

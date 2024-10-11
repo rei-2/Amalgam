@@ -1,0 +1,80 @@
+#include "Events.h"
+
+#include "../../Features/Backtrack/Backtrack.h"
+#include "../../Features/CheaterDetection/CheaterDetection.h"
+#include "../../Features/CritHack/CritHack.h"
+#include "../../Features/Misc/Misc.h"
+#include "../../Features/PacketManip/AntiAim/AntiAim.h"
+#include "../../Features/Records/Records.h"
+#include "../../Features/Resolver/Resolver.h"
+#include "../../Features/Visuals/Visuals.h"
+
+void CEventListener::Initialize()
+{
+	std::vector<const char*> vEvents = { 
+		"client_beginconnect", "client_connected", "client_disconnect", "game_newmap", "teamplay_round_start", "player_connect_client", "player_spawn", "player_changeclass", "player_hurt", "vote_cast", "item_pickup", "revive_player_notify"
+	};
+
+	for (auto szEvent : vEvents)
+	{
+		I::GameEventManager->AddListener(this, szEvent, false);
+
+		if (!I::GameEventManager->FindListener(this, szEvent))
+			SDK::Output("Amalgam", std::format("Failed to add listener: {}", szEvent).c_str(), { 255, 150, 175, 255 });
+	}
+}
+
+void CEventListener::Unload()
+{
+	I::GameEventManager->RemoveListener(this);
+}
+
+void CEventListener::FireGameEvent(IGameEvent* pEvent)
+{
+	if (!pEvent || I::EngineClient->IsPlayingTimeDemo())
+		return;
+
+	auto pLocal = H::Entities.GetLocal();
+	auto uHash = FNV1A::Hash32(pEvent->GetName());
+
+	F::Records.Event(pEvent, uHash, pLocal);
+	F::CritHack.Event(pEvent, uHash, pLocal);
+	F::Misc.Event(pEvent, uHash);
+	switch (uHash)
+	{
+	case FNV1A::Hash32Const("player_hurt"):
+		F::Resolver.OnPlayerHurt(pEvent);
+		F::CheaterDetection.ReportDamage(pEvent);
+		break;
+	case FNV1A::Hash32Const("player_spawn"):
+		F::Backtrack.SetLerp(pEvent);
+		break;
+	case FNV1A::Hash32Const("item_pickup"): // this is never sent!!!
+	{
+		if (!Vars::Visuals::UI::PickupTimers.Value)
+			break;
+
+		if (auto pEntity = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"))))
+		{
+			auto itemName = pEvent->GetString("item");
+			if (std::strstr(itemName, "medkit"))
+				F::Visuals.m_vPickupDatas.push_back({ 1, I::EngineClient->Time(), pEntity->GetAbsOrigin() });
+			else if (std::strstr(itemName, "ammopack"))
+				F::Visuals.m_vPickupDatas.push_back({ 0, I::EngineClient->Time(), pEntity->GetAbsOrigin() });
+		}
+
+		break;
+	}
+	case FNV1A::Hash32Const("revive_player_notify"):
+	{
+		if (!Vars::Misc::MannVsMachine::InstantRevive.Value || pEvent->GetInt("entindex") != I::EngineClient->GetLocalPlayer())
+			break;
+
+		KeyValues* kv = new KeyValues("MVM_Revive_Response");
+		kv->SetInt("accepted", 1);
+		I::EngineClient->ServerCmdKeyValues(kv);
+	}
+	}
+
+	return;
+}

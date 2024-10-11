@@ -1,6 +1,6 @@
 #include "Render.h"
 
-#include "../../Hooks/Direct3DDevice9_EndScene.h"
+#include "../../Hooks/Direct3DDevice9.h"
 #include <ImGui/imgui_impl_win32.h>
 #include "MaterialDesign/MaterialIcons.h"
 #include "MaterialDesign/IconDefinitions.h"
@@ -16,9 +16,7 @@ void CRender::Render(IDirect3DDevice9* pDevice)
 			Initialize(pDevice);
 		});
 
-	pDevice->SetRenderState(D3DRS_COLORWRITEENABLE, 0xFFFFFFFF);
-	pDevice->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
-	pDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
+	DWORD dwOldRGB; pDevice->GetRenderState(D3DRS_SRGBWRITEENABLE, &dwOldRGB);
 	pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, false);
 
 	ImGui_ImplDX9_NewFrame();
@@ -26,16 +24,13 @@ void CRender::Render(IDirect3DDevice9* pDevice)
 	NewFrame();
 
 	LoadColors();
-	PushFont(FontRegular);
 
 	F::Menu.Render();
-
-	PopFont();
 
 	EndFrame();
 	ImGui::Render();
 	ImGui_ImplDX9_RenderDrawData(GetDrawData());
-	pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, true);
+	pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, dwOldRGB);
 }
 
 void CRender::LoadColors()
@@ -64,8 +59,8 @@ void CRender::LoadColors()
 	colors[ImGuiCol_FrameBgHovered] = ForemostLight;
 	colors[ImGuiCol_FrameBgActive] = Foremost;
 	colors[ImGuiCol_Header] = {};
-	colors[ImGuiCol_HeaderHovered] = ForemostLight;
-	colors[ImGuiCol_HeaderActive] = {};
+	colors[ImGuiCol_HeaderHovered] = { ForemostLight.Value.x * 1.1f, ForemostLight.Value.y * 1.1f, ForemostLight.Value.z * 1.1f, Foremost.Value.w }; // divd by 1.1
+	colors[ImGuiCol_HeaderActive] = Foremost;
 	colors[ImGuiCol_ModalWindowDimBg] = { Background.Value.x, Background.Value.y, Background.Value.z, 0.4f };
 	colors[ImGuiCol_PopupBg] = ForemostLight;
 	colors[ImGuiCol_ResizeGrip] = {};
@@ -104,9 +99,6 @@ void CRender::LoadStyle()
 
 void CRender::Initialize(IDirect3DDevice9* pDevice)
 {
-	while (!WndProc::hwWindow)
-		WndProc::hwWindow = SDK::GetTeamFortressWindow();
-
 	// Initialize ImGui and device
 	ImGui::CreateContext();
 	ImGui_ImplWin32_Init(WndProc::hwWindow);

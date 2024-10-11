@@ -6,10 +6,10 @@ class CFakeAngle
 public:
 	void Run(CTFPlayer* pLocal);
 
-	matrix3x4 BoneMatrix[128];
-	bool BonesSetup = false;
+	matrix3x4 aBones[MAXSTUDIOBONES];
+	bool bBonesSetup = false;
 
-	bool DrawChams = false;
+	bool bDrawChams = false;
 };
 
 ADD_FEATURE(CFakeAngle, FakeAngle)

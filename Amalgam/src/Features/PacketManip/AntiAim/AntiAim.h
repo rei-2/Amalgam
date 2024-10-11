@@ -12,16 +12,16 @@ private:
 	float GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake);
 	float GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake);
 
-	float CalculateCustomRealPitch(float flWishPitch, bool bFakeDown);
+	float CalculateCustomRealPitch(float flWishPitch);
 	float GetPitch(float flCurPitch);
 
 public:
 	bool AntiAimOn();
 	bool YawOn();
-	bool ShouldRun(CTFPlayer* pLocal);
+	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	bool GetEdge(CTFPlayer* pEntity, float flEdgeOrigYaw, bool bUpPitch);
-	void Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
+	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket);
 
 	Vec2 vFakeAngles = {};
 	Vec2 vRealAngles = {};

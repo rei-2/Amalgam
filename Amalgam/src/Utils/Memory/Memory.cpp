@@ -48,7 +48,7 @@ std::vector<int> pattern_to_byte(const char* pattern)
 	return bytes;
 }
 
-std::uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
+uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 {
 	if (const auto hMod = GetModuleHandleA(szModule))
 	{
@@ -90,7 +90,7 @@ std::uintptr_t CMemory::FindSignature(const char* szModule, const char* szPatter
 
 			// All good, now return the right address
 			if (byte_sequence_found)
-				return { reinterpret_cast<std::uintptr_t>(&image_bytes[i]) };
+				return { reinterpret_cast<uintptr_t>(&image_bytes[i]) };
 		}
 
 		// Byte sequence wasn't found

@@ -18,19 +18,17 @@ public:
 	}
 };
 
-using BoneMatrixes = struct
+struct BoneMatrix
 {
-	float BoneMatrix[128][3][4];
+	matrix3x4 aBones[128];
 };
 
 struct TickRecord
 {
 	float flSimTime = 0.f;
-	float flCreateTime = 0.f;
-	int iTickCount = 0;
-	bool bOnShot = false;
-	BoneMatrixes BoneMatrix{};
+	BoneMatrix BoneMatrix = {};
 	Vec3 vOrigin = {};
+	bool bOnShot = false;
 	bool bInvalid = false;
 };
 
@@ -42,13 +40,11 @@ class CBacktrack
 	// utils
 	void SendLerp();
 	void UpdateDatagram();
-	void StoreNolerp();
 	void MakeRecords();
 	void CleanRecords();
 
 	// data
 	std::unordered_map<int, bool> mDidShoot;
-	int iLastCreationTick = 0;
 
 	// data - fake latency
 	std::deque<CIncomingSequence> dSequences;
@@ -64,26 +60,22 @@ public:
 	std::deque<TickRecord>* GetRecords(CBaseEntity* pEntity);
 	std::deque<TickRecord> GetValidRecords(std::deque<TickRecord>* pRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false);
 
-	void Restart();
 	void FrameStageNotify();
 	void Run(CUserCmd* pCmd);
+	void Restart();
 	void SetLerp(IGameEvent* pEvent);
 	void ResolverUpdate(CBaseEntity* pEntity);
 	void ReportShot(int iIndex);
 	void AdjustPing(CNetChannel* netChannel);
 
-	bool bFakeLatency = false;
-	float flWishInterp = 0.015f;
-	float flFakeInterp = 0.015f;
-	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> mRecords;
-	std::unordered_map<CBaseEntity*, std::pair<int, matrix3x4[128]>> mBones;
-	std::unordered_map<CBaseEntity*, Vec3> mEyeAngles;
-	std::unordered_map<CBaseEntity*, bool> mLagCompensation;
-
-	bool bSettingUpBones = false;
-
 	int iTickCount = 0;
 	float flMaxUnlag = 1.f;
+
+	float flFakeLatency = 0.f;
+	float flFakeInterp = 0.015f;
+	float flWishInterp = 0.015f;
+
+	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> mRecords;
 };
 
 ADD_FEATURE(CBacktrack, Backtrack)

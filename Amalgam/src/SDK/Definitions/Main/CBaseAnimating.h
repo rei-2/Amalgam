@@ -59,7 +59,7 @@ public:
 		return pSet->numhitboxes;
 	}
 
-	Vec3 GetHitboxPos(int nHitbox, Vec3 vOffset = {})
+	Vec3 GetHitboxOrigin(int nHitbox, Vec3 vOffset = {})
 	{
 		auto pModel = GetModel();
 		if (!pModel) return {};
@@ -70,12 +70,32 @@ public:
 		auto pBox = pSet->pHitbox(nHitbox);
 		if (!pBox) return {};
 
-		matrix3x4 BoneMatrix[128] = {};
-		if (!SetupBones(BoneMatrix, 128, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
+		matrix3x4 aBones[MAXSTUDIOBONES] = {};
+		if (!SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
 			return {};
 
 		Vec3 vOut = {};
-		Math::VectorTransform(vOffset, BoneMatrix[pBox->bone], vOut);
+		Math::VectorTransform(vOffset, aBones[pBox->bone], vOut);
+		return vOut;
+	}
+
+	Vec3 GetHitboxCenter(int nHitbox, Vec3 vOffset = {})
+	{
+		auto pModel = GetModel();
+		if (!pModel) return {};
+		auto pHDR = I::ModelInfoClient->GetStudiomodel(pModel);
+		if (!pHDR) return {};
+		auto pSet = pHDR->pHitboxSet(m_nHitboxSet());
+		if (!pSet) return {};
+		auto pBox = pSet->pHitbox(nHitbox);
+		if (!pBox) return {};
+
+		matrix3x4 aBones[MAXSTUDIOBONES] = {};
+		if (!SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
+			return {};
+
+		Vec3 vOut = {};
+		Math::VectorTransform((pBox->bbmin + pBox->bbmax) / 2 + vOffset, aBones[pBox->bone], vOut);
 		return vOut;
 	}
 
@@ -90,8 +110,8 @@ public:
 		auto pBox = pSet->pHitbox(nHitbox);
 		if (!pBox) return;
 
-		matrix3x4 BoneMatrix[128] = {};
-		if (!SetupBones(BoneMatrix, 128, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
+		matrix3x4 aBones[MAXSTUDIOBONES] = {};
+		if (!SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
 			return;
 
 		if (pMins)
@@ -101,37 +121,37 @@ public:
 			*pMaxs = pBox->bbmax;
 
 		if (pCenter)
-			Math::VectorTransform(vOffset, BoneMatrix[pBox->bone], *pCenter);
+			Math::VectorTransform(vOffset, aBones[pBox->bone], *pCenter);
 
 		if (pMatrix)
-			memcpy(*pMatrix, BoneMatrix[pBox->bone], sizeof(matrix3x4));
+			memcpy(*pMatrix, aBones[pBox->bone], sizeof(matrix3x4));
 	}
 
 	std::array<float, 24>& m_flPoseParameter()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseAnimating", "m_flPoseParameter");
-		return *reinterpret_cast<std::array<float, 24>*>(std::uintptr_t(this) + nOffset);
+		return *reinterpret_cast<std::array<float, 24>*>(uintptr_t(this) + nOffset);
 	}
 
 	CUtlVector<matrix3x4>* GetCachedBoneData()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseAnimating", "m_hLightingOrigin") - 88;
-		return reinterpret_cast<CUtlVector<matrix3x4>*>(std::uintptr_t(this) + nOffset);
+		return reinterpret_cast<CUtlVector<matrix3x4>*>(uintptr_t(this) + nOffset);
 	}
 
 	float FrameAdvance(float flInterval)
 	{
-		return S::CBaseAnimating_FrameAdvance.As<float(__thiscall*)(void*, float)>()(this, flInterval);
+		return S::CBaseAnimating_FrameAdvance.As<float(__fastcall*)(void*, float)>()(this, flInterval);
 	}
 
 	void GetBonePosition(int iBone, Vector& origin, QAngle& angles)
 	{
-		S::CBaseAnimating_GetBonePosition.As<void(__thiscall*)(void*, int, Vector&, QAngle&)>()(this, iBone, origin, angles);
+		S::CBaseAnimating_GetBonePosition.As<void(__fastcall*)(void*, int, Vector&, QAngle&)>()(this, iBone, origin, angles);
 	}
 
 	__inline bool GetAttachment(int number, Vec3& origin)
 	{
-		return reinterpret_cast<bool(__thiscall*)(void*, int, Vec3&)>(U::Memory.GetVFunc(this, 71))(this, number, origin);
+		return reinterpret_cast<bool(__fastcall*)(void*, int, Vec3&)>(U::Memory.GetVFunc(this, 71))(this, number, origin);
 	}
 };
 

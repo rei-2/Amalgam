@@ -10,41 +10,41 @@
 
 const char* SearchForDLL(const char* pszDLLSearch)
 {
-    HANDLE hProcessSnap = INVALID_HANDLE_VALUE;
-    PROCESSENTRY32 pe32;
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hProcessSnap == INVALID_HANDLE_VALUE)
-        return pszDLLSearch;
+	HANDLE hProcessSnap = INVALID_HANDLE_VALUE;
+	PROCESSENTRY32 pe32;
+	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hProcessSnap == INVALID_HANDLE_VALUE)
+		return pszDLLSearch;
 
-    pe32.dwSize = sizeof(PROCESSENTRY32);
-    if (!Process32First(hProcessSnap, &pe32))
+	pe32.dwSize = sizeof(PROCESSENTRY32);
+	if (!Process32First(hProcessSnap, &pe32))
 	{
 		CloseHandle(hProcessSnap);
 		return pszDLLSearch;
 	}
 
-    do
-    {
+	do
+	{
 		if (pe32.szExeFile == strstr(pe32.szExeFile, "tf_win64.exe"))
 		{
 			HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
 			MODULEENTRY32 me32;
 			hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pe32.th32ProcessID);
 			if (hModuleSnap == INVALID_HANDLE_VALUE)
-				return pszDLLSearch;
+				break;
 
 			me32.dwSize = sizeof(MODULEENTRY32);
-
 			if (!Module32First(hModuleSnap, &me32))
 			{
 				CloseHandle(hModuleSnap);
-				return pszDLLSearch;
+				break;
 			}
 
 			do
 			{
-				if (strstr(me32.szModule, "shaderapi"))
+				if (strstr(me32.szModule, pszDLLSearch))
 				{
+					CloseHandle(hProcessSnap);
 					CloseHandle(hModuleSnap);
 					return me32.szModule;
 				}
@@ -53,10 +53,10 @@ const char* SearchForDLL(const char* pszDLLSearch)
 			CloseHandle(hModuleSnap);
 			break;
 		}
-    } while (Process32Next(hProcessSnap, &pe32));
+	} while (Process32Next(hProcessSnap, &pe32));
 
 	CloseHandle(hProcessSnap);
-    return pszDLLSearch;
+	return pszDLLSearch;
 }
 
 InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLLName, const char* sVersion, int nOffset, int nDereferenceCount, bool bSearchDLL)
@@ -88,7 +88,7 @@ void CInterfaces::Initialize()
 			auto dwDest = U::Memory.FindSignature(Interface->m_pszDLLName, Interface->m_pszVersion);
 			if (!dwDest)
 			{
-				AssertCustom(dwDest, std::format("CInterfaces::Initialize() Failed to initialize ({} {})", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+				AssertCustom(dwDest, std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
 				continue;
 			}
 
@@ -102,7 +102,7 @@ void CInterfaces::Initialize()
 			}
 		}
 
-		AssertCustom(*Interface->m_pPtr, std::format("CInterfaces::Initialize() Failed to initialize ({} {})", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+		AssertCustom(*Interface->m_pPtr, std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
 	}
 
 	H::Interfaces.Initialize(); // Initialize any null interfaces

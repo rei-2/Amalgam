@@ -62,7 +62,7 @@ class CAimbotGlobal
 public:
 	void SortTargets(std::vector<Target_t>*, const ESortMethod& method);
 	void SortPriority(std::vector<Target_t>*);
-	bool ShouldIgnore(CTFPlayer* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bMedigun = false);
+	bool ShouldIgnore(CTFPlayer* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	int GetPriority(int targetIdx);
 	bool ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pBomb);
 };

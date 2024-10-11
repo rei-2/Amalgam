@@ -31,28 +31,42 @@ bool CLC_Move::ReadFromBuffer(bf_read& buffer)
     return buffer.SeekRelative(m_nLength);
 }
 
-const char* NET_SetConVar::ToString() const { return "(NULL)"; }
+const char* NET_SetConVar::ToString() const
+{
+    return std::format("{}: {} cvars, \"{}\"=\"{}\"", GetName(), m_ConVars.Count(), m_ConVars[0].Name, m_ConVars[0].Value).c_str();
+}
 
 bool NET_SetConVar::WriteToBuffer(bf_write& buffer)
 {
-    buffer.WriteUBitLong(GetType(), 6);
-    const int numVars = 1;
-    buffer.WriteByte(numVars);
-    buffer.WriteString(ConVar.Name);
-    buffer.WriteString(ConVar.Value);
+    buffer.WriteUBitLong(GetType(), NETMSG_TYPE_BITS);
+
+    int numvars = m_ConVars.Count();
+
+    buffer.WriteByte(numvars);
+
+    for (int i = 0; i < numvars; i++)
+    {
+        CVar_t* var = &m_ConVars[i];
+        buffer.WriteString(var->Name);
+        buffer.WriteString(var->Value);
+    }
 
     return !buffer.IsOverflowed();
 }
 
 bool NET_SetConVar::ReadFromBuffer(bf_read& buffer)
 {
-    const int numVars = buffer.ReadByte();
+    int numvars = buffer.ReadByte();
 
-    for (int i = 0; i < numVars; i++)
+    m_ConVars.RemoveAll();
+
+    for (int i = 0; i < numvars; i++)
     {
-        CVar_t cvar;
-        buffer.ReadString(cvar.Name, sizeof(cvar.Name));
-        buffer.ReadString(cvar.Value, sizeof(cvar.Value));
+        CVar_t var;
+        buffer.ReadString(var.Name, sizeof(var.Name));
+        buffer.ReadString(var.Value, sizeof(var.Value));
+        m_ConVars.AddToTail(var);
+
     }
     return !buffer.IsOverflowed();
 }

@@ -4,12 +4,12 @@
 
 int CNetVars::GetOffset(RecvTable* pTable, const char* szNetVar)
 {
-	auto uHash = FNV1A::Hash(szNetVar);
+	auto uHash = FNV1A::Hash32(szNetVar);
 	for (int i = 0; i < pTable->m_nProps; i++)
 	{
 		RecvProp Prop = pTable->m_pProps[i];
 
-		if (uHash == FNV1A::Hash(Prop.m_pVarName))
+		if (uHash == FNV1A::Hash32(Prop.m_pVarName))
 			return Prop.GetOffset();
 
 		if (auto DataTable = Prop.GetDataTable())
@@ -26,10 +26,10 @@ int CNetVars::GetNetVar(const char* szClass, const char* szNetVar)
 {
 	ClientClass* pClasses = I::BaseClientDLL->GetAllClasses();
 
-	auto uHash = FNV1A::Hash(szClass);
+	auto uHash = FNV1A::Hash32(szClass);
 	for (auto pCurrNode = pClasses; pCurrNode; pCurrNode = pCurrNode->m_pNext)
 	{
-		if (uHash == FNV1A::Hash(pCurrNode->m_pNetworkName))
+		if (uHash == FNV1A::Hash32(pCurrNode->m_pNetworkName))
 			return GetOffset(pCurrNode->m_pRecvTable, szNetVar);
 	}
 

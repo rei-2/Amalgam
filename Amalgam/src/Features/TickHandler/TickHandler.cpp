@@ -10,15 +10,16 @@ void CTickshiftHandler::Reset()
 	G::ShiftedTicks = G::ShiftedGoal = 0;
 }
 
-void CTickshiftHandler::Recharge(CUserCmd* pCmd, CTFPlayer* pLocal)
+void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 {
 	bool bPassive = G::Recharge = false;
 
-	static float iPassiveTick = 0.f;
-	if (Vars::CL_Move::Doubletap::PassiveRecharge.Value && I::GlobalVars->tickcount >= iPassiveTick)
+	static float flPassiveTime = 0.f;
+	flPassiveTime = std::max(flPassiveTime - TICK_INTERVAL, -TICK_INTERVAL);
+	if (Vars::CL_Move::Doubletap::PassiveRecharge.Value && 0.f >= flPassiveTime)
 	{
 		bPassive = true;
-		iPassiveTick = I::GlobalVars->tickcount + 67 - Vars::CL_Move::Doubletap::PassiveRecharge.Value;
+		flPassiveTime += 1.f / Vars::CL_Move::Doubletap::PassiveRecharge.Value;
 	}
 
 	if (iDeficit && G::ShiftedTicks < G::MaxShift)
@@ -38,7 +39,7 @@ void CTickshiftHandler::Recharge(CUserCmd* pCmd, CTFPlayer* pLocal)
 		G::ShiftedGoal = G::ShiftedTicks + 1;
 }
 
-void CTickshiftHandler::Teleport(CUserCmd* pCmd)
+void CTickshiftHandler::Teleport()
 {
 	G::Warp = false;
 	if (!G::ShiftedTicks || G::DoubleTap || G::Recharge || bSpeedhack)
@@ -49,16 +50,16 @@ void CTickshiftHandler::Teleport(CUserCmd* pCmd)
 		G::ShiftedGoal = std::max(G::ShiftedTicks - Vars::CL_Move::Doubletap::WarpRate.Value + 1, 0);
 }
 
-void CTickshiftHandler::Doubletap(const CUserCmd* pCmd, CTFPlayer* pLocal)
+void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	if (G::ShiftedTicks < std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift)
 		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack
-		|| !G::CanPrimaryAttack || (G::WeaponType == EWeaponType::MELEE ? !(pCmd->buttons & IN_ATTACK) : !G::IsAttacking) || F::AutoRocketJump.iFrame != -1)
+		|| !G::CanPrimaryAttack || (G::PrimaryWeaponType == EWeaponType::MELEE ? !(pCmd->buttons & IN_ATTACK) : !G::IsAttacking) && !G::DoubleTap || F::AutoRocketJump.IsRunning())
 		return;
 
 	G::DoubleTap = Vars::CL_Move::Doubletap::Doubletap.Value;
 	if (G::DoubleTap && Vars::CL_Move::Doubletap::AntiWarp.Value)
-		G::AntiWarp = true;
+		G::AntiWarp = pLocal->m_hGroundEntity();
 	if (G::DoubleTap && bGoalReached)
 		G::ShiftedGoal = G::ShiftedTicks - std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift);
 }
@@ -70,15 +71,24 @@ int CTickshiftHandler::GetTicks(CTFPlayer* pLocal)
 
 	if (!Vars::CL_Move::Doubletap::Doubletap.Value
 		|| G::ShiftedTicks < std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift)
-		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack || F::AutoRocketJump.iFrame != -1)
+		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack || F::AutoRocketJump.IsRunning())
 		return 0;
 
 	return std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift);
 }
 
+void CTickshiftHandler::Speedhack()
+{
+	bSpeedhack = Vars::CL_Move::SpeedEnabled.Value;
+	if (!bSpeedhack)
+		return;
+
+	G::DoubleTap = G::Warp = G::Recharge = false;
+}
+
 bool CTickshiftHandler::ValidWeapon(CTFWeaponBase* pWeapon)
 {
-	switch (pWeapon->m_iWeaponID())
+	switch (pWeapon->GetWeaponID())
 	{
 	case TF_WEAPON_PDA:
 	case TF_WEAPON_PDA_ENGINEER_BUILD:
@@ -106,15 +116,6 @@ bool CTickshiftHandler::ValidWeapon(CTFWeaponBase* pWeapon)
 	return true;
 }
 
-void CTickshiftHandler::Speedhack(CUserCmd* pCmd)
-{
-	bSpeedhack = Vars::CL_Move::SpeedEnabled.Value;
-	if (!bSpeedhack)
-		return;
-
-	G::DoubleTap = G::Warp = G::Recharge = false;
-}
-
 void CTickshiftHandler::CLMoveFunc(float accumulated_extra_samples, bool bFinalTick)
 {
 	static auto CL_Move = U::Hooks.m_mHooks["CL_Move"];
@@ -138,12 +139,12 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 {
 	if (auto pWeapon = H::Entities.GetWeapon())
 	{
-		const int iWeaponID = pWeapon->m_iWeaponID();
+		const int iWeaponID = pWeapon->GetWeaponID();
 		if (iWeaponID != TF_WEAPON_PIPEBOMBLAUNCHER && iWeaponID != TF_WEAPON_CANNON)
 		{
 			if (!ValidWeapon(pWeapon))
 				G::WaitForShift = 2;
-			else if (G::IsAttacking || !G::CanPrimaryAttack || pWeapon->IsInReload())
+			else if (G::IsAttacking || !G::CanPrimaryAttack)
 				G::WaitForShift = Vars::CL_Move::Doubletap::TickLimit.Value;
 		}
 	}
@@ -183,18 +184,19 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 
 		G::DoubleTap = G::Warp = false;
 	}
-	// else recharge
+	// else recharge, run once if we have any choked ticks
+	else if (I::ClientState->chokedcommands)
+		CLMoveFunc(accumulated_extra_samples, bFinalTick);
 }
 
 void CTickshiftHandler::MovePre(CTFPlayer* pLocal)
 {
-	CUserCmd* pCmd = G::CurrentUserCmd;
-	if (!pLocal || !pCmd)
+	if (!pLocal)
 		return;
 
-	Recharge(pCmd, pLocal);
-	Teleport(pCmd);
-	Speedhack(pCmd);
+	Recharge(pLocal);
+	Teleport();
+	Speedhack();
 }
 
 void CTickshiftHandler::MovePost(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -202,7 +204,7 @@ void CTickshiftHandler::MovePost(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!pLocal)
 		return;
 
-	Doubletap(pCmd, pLocal);
+	Doubletap(pLocal, pCmd);
 }
 
 void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)

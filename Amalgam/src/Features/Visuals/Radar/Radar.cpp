@@ -5,11 +5,11 @@
 bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, int& y, int& z)
 {
 	const float flRange = Vars::Radar::Main::Range.Value;
-	const float flYaw = I::EngineClient->GetViewAngles().y * (PI / 180.f);
-	const float flCos = cosf(flYaw), flSin = sinf(flYaw);
+	const float flYaw = -DEG2RAD(I::EngineClient->GetViewAngles().y);
+	const float flSin = sinf(flYaw), flCos = cosf(flYaw);
 
-	const Vec3 vDelta = pEntity->GetAbsOrigin() - pLocal->GetAbsOrigin();
-	auto vPos = Vec2((vDelta.y * (-flCos) + vDelta.x * flSin), (vDelta.x * (-flCos) - vDelta.y * flSin));
+	const Vec3 vDelta = pLocal->GetAbsOrigin() - pEntity->GetAbsOrigin();
+	auto vPos = Vec2(vDelta.x * flSin + vDelta.y * flCos, vDelta.x * flCos - vDelta.y * flSin);
 	z = vDelta.z;
 
 	switch (Vars::Radar::Main::Style.Value)
@@ -32,20 +32,10 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 			if (!Vars::Radar::Main::AlwaysDraw.Value)
 				return false;
 
-			if (vPos.y > vPos.x)
-			{
-				if (vPos.y > -vPos.x)
-					vPos.x = flRange * vPos.x / vPos.y, vPos.y = flRange;
-				else
-					vPos.y = -flRange * vPos.y / vPos.x, vPos.x = -flRange;
-			}
-			else
-			{
-				if (vPos.y > -vPos.x)
-					vPos.y = flRange * vPos.y / vPos.x, vPos.x = flRange;
-				else
-					vPos.x = -flRange * vPos.x / vPos.y, vPos.y = -flRange;
-			}
+			Vec2 a = { -flRange / vPos.x, -flRange / vPos.y };
+			Vec2 b = { flRange / vPos.x, flRange / vPos.y };
+			Vec2 c = { std::min(a.x, b.x), std::min(a.y, b.y) };
+			vPos *= fabsf(std::max(c.x, c.y));
 		}
 	}
 
@@ -68,7 +58,7 @@ void CRadar::DrawBackground()
 	{
 	case 0:
 	{
-		const float flRadius = float(info.w) / 2;
+		const float flRadius = info.w / 2.f;
 		H::Draw.FillCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, backgroundColor);
 		H::Draw.LineCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, accentColor);
 		break;
@@ -89,7 +79,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 	{
 		const int iSize = Vars::Radar::World::IconSize.Value;
 
-		if (Vars::Radar::World::Draw.Value & 1 << 4)
+		if (Vars::Radar::World::Draw.Value & (1 << 6))
 		{
 			for (auto pGargy : H::Entities.GetGroup(EGroupType::WORLD_GARGOYLE))
 			{
@@ -102,10 +92,14 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 						H::Draw.FillCircle(x, y, flRadius, 20, Vars::Colors::Halloween.Value);
 					}
 
-					H::Draw.Texture(x, y, iSize, iSize, 38);
+					H::Draw.Texture(x, y, iSize, iSize, 39);
 				}
 			}
-			for (auto pBook : H::Entities.GetGroup(EGroupType::WORLD_SPELLBOOK))
+		}
+
+		if (Vars::Radar::World::Draw.Value & (1 << 5))
+		{
+			for (auto pBook : H::Entities.GetGroup(EGroupType::PICKUPS_SPELLBOOK))
 			{
 				int x, y, z;
 				if (GetDrawPosition(pLocal, pBook, x, y, z))
@@ -116,12 +110,30 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 						H::Draw.FillCircle(x, y, flRadius, 20, Vars::Colors::Halloween.Value);
 					}
 
+					H::Draw.Texture(x, y, iSize, iSize, 38);
+				}
+			}
+		}
+
+		if (Vars::Radar::World::Draw.Value & (1 << 4))
+		{
+			for (auto pPower : H::Entities.GetGroup(EGroupType::PICKUPS_POWERUP))
+			{
+				int x, y, z;
+				if (GetDrawPosition(pLocal, pPower, x, y, z))
+				{
+					if (Vars::Radar::World::Background.Value)
+					{
+						const float flRadius = sqrtf(pow(iSize, 2) * 2) / 2;
+						H::Draw.FillCircle(x, y, flRadius, 20, Vars::Colors::Powerup.Value);
+					}
+
 					H::Draw.Texture(x, y, iSize, iSize, 37);
 				}
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & 1 << 3)
+		if (Vars::Radar::World::Draw.Value & (1 << 3))
 		{
 			for (auto bBomb : H::Entities.GetGroup(EGroupType::WORLD_BOMBS))
 			{
@@ -131,7 +143,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					if (Vars::Radar::World::Background.Value)
 					{
 						const float flRadius = sqrtf(pow(iSize, 2) * 2) / 2;
-						H::Draw.FillCircle(x, y, flRadius, 20, Vars::Colors::Bomb.Value);
+						H::Draw.FillCircle(x, y, flRadius, 20, Vars::Colors::Halloween.Value);
 					}
 
 					H::Draw.Texture(x, y, iSize, iSize, 36);
@@ -139,9 +151,9 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & 1 << 2)
+		if (Vars::Radar::World::Draw.Value & (1 << 2))
 		{
-			for (auto pBook : H::Entities.GetGroup(EGroupType::WORLD_MONEY))
+			for (auto pBook : H::Entities.GetGroup(EGroupType::PICKUPS_MONEY))
 			{
 				int x, y, z;
 				if (GetDrawPosition(pLocal, pBook, x, y, z))
@@ -157,9 +169,9 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & 1 << 1)
+		if (Vars::Radar::World::Draw.Value & (1 << 1))
 		{
-			for (auto pAmmo : H::Entities.GetGroup(EGroupType::WORLD_AMMO))
+			for (auto pAmmo : H::Entities.GetGroup(EGroupType::PICKUPS_AMMO))
 			{
 				int x, y, z;
 				if (GetDrawPosition(pLocal, pAmmo, x, y, z))
@@ -175,9 +187,9 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & 1 << 0)
+		if (Vars::Radar::World::Draw.Value & (1 << 0))
 		{
-			for (auto pHealth : H::Entities.GetGroup(EGroupType::WORLD_HEALTH))
+			for (auto pHealth : H::Entities.GetGroup(EGroupType::PICKUPS_HEALTH))
 			{
 				int x, y, z;
 				if (GetDrawPosition(pLocal, pHealth, x, y, z))
@@ -211,16 +223,16 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int nIndex = pOwner->entindex();
 					if (nIndex != I::EngineClient->GetLocalPlayer() && pOwner != H::Entities.GetObservedTarget())
 					{
-						if (!(Vars::Radar::Buildings::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex))
-							&& !(Vars::Radar::Buildings::Draw.Value & 1 << 4 && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.mTags["Default"].Priority))
+						if (!(Vars::Radar::Buildings::Draw.Value & (1 << 3) && H::Entities.IsFriend(nIndex))
+							&& !(Vars::Radar::Buildings::Draw.Value & (1 << 4) && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority))
 						{
-							if (!(Vars::Radar::Buildings::Draw.Value & 1 << 1) && pOwner->As<CTFPlayer>()->m_iTeamNum() != pLocal->m_iTeamNum())
+							if (!(Vars::Radar::Buildings::Draw.Value & (1 << 1)) && pOwner->As<CTFPlayer>()->m_iTeamNum() != pLocal->m_iTeamNum())
 								continue;
-							if (!(Vars::Radar::Buildings::Draw.Value & 1 << 2) && pOwner->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum())
+							if (!(Vars::Radar::Buildings::Draw.Value & (1 << 2)) && pOwner->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum())
 								continue;
 						}
 					}
-					else if (!(Vars::Radar::Buildings::Draw.Value & 1 << 0))
+					else if (!(Vars::Radar::Buildings::Draw.Value & (1 << 0)))
 						continue;
 				}
 			}
@@ -285,18 +297,18 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			const int nIndex = pPlayer->entindex();
 			if (nIndex != I::EngineClient->GetLocalPlayer() && pPlayer != H::Entities.GetObservedTarget())
 			{
-				if (!(Vars::Radar::Players::Draw.Value & 1 << 3 && H::Entities.IsFriend(nIndex))
-					&& !(Vars::Radar::Players::Draw.Value & 1 << 4 && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.mTags["Default"].Priority))
+				if (!(Vars::Radar::Players::Draw.Value & (1 << 3) && H::Entities.IsFriend(nIndex))
+					&& !(Vars::Radar::Players::Draw.Value & (1 << 4) && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority))
 				{
-					if (!(Vars::Radar::Players::Draw.Value & 1 << 1) && pPlayer->m_iTeamNum() != pLocal->m_iTeamNum())
+					if (!(Vars::Radar::Players::Draw.Value & (1 << 1)) && pPlayer->m_iTeamNum() != pLocal->m_iTeamNum())
 						continue;
-					if (!(Vars::Radar::Players::Draw.Value & 1 << 2) && pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
+					if (!(Vars::Radar::Players::Draw.Value & (1 << 2)) && pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
 						continue;
 				}
 			}
-			else if (!(Vars::Radar::Players::Draw.Value & 1 << 0))
+			else if (!(Vars::Radar::Players::Draw.Value & (1 << 0)))
 				continue;
-			if (!(Vars::Radar::Players::Draw.Value & 1 << 5) && pPlayer->m_flInvisibility() >= 1.f)
+			if (!(Vars::Radar::Players::Draw.Value & (1 << 5)) && pPlayer->m_flInvisibility() >= 1.f)
 				continue;
 
 			int x, y, z;
@@ -338,7 +350,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 
 				if (Vars::Radar::Players::Health.Value)
 				{
-					const int iMaxHealth = pPlayer->m_iMaxHealth(), iHealth = pPlayer->m_iHealth();
+					const int iMaxHealth = pPlayer->GetMaxHealth(), iHealth = pPlayer->m_iHealth();
 
 					float flRatio = std::clamp(float(iHealth) / iMaxHealth, 0.f, 1.f);
 					Color_t cColor = Vars::Colors::HealthBar.Value.StartColor.Lerp(Vars::Colors::HealthBar.Value.EndColor, flRatio);
@@ -356,8 +368,8 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 				if (Vars::Radar::Players::Height.Value && std::abs(z) > 80.f)
 				{
 					const int m = x - iSize / 2;
-					const int iOffset = z > 0 ? -5 : 5;
-					const int yPos = z > 0 ? y - iBounds / 2 - 2 : y + iBounds / 2 + 2;
+					const int iOffset = z < 0 ? -5 : 5;
+					const int yPos = z < 0 ? y - iBounds / 2 - 2 : y + iBounds / 2 + 2;
 
 					H::Draw.DrawFillTriangle({ Vec2(m, yPos), Vec2(m + iSize * 0.5f, yPos + iOffset), Vec2(m + iSize, yPos) }, drawColor);
 				}

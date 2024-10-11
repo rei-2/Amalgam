@@ -1,8 +1,33 @@
 #pragma once
 #include "Interface.h"
 #include "../Main/INetChannel.h"
+#include "../Misc/ClientClass.h"
+#include "../Misc/ServerClass.h"
+#include "../Definitions.h"
 
 MAKE_SIGNATURE(CBaseClientState_SendStringCmd, "engine.dll", "48 81 EC ? ? ? ? 48 8B 49", 0x0);
+
+class IChangeFrameList;
+
+class PackedEntity
+{
+public:
+	ServerClass* m_pServerClass;
+	ClientClass* m_pClientClass;
+
+	int m_nEntityIndex;
+	int m_ReferenceCount;
+
+private:
+	CUtlVector<CSendProxyRecipients> m_Recipients;
+
+	void* m_pData;
+	int m_nBits;
+	IChangeFrameList* m_pChangeFrameList;
+
+	unsigned int m_nSnapshotCreationTick : 31;
+	unsigned int m_nShouldCheckCreationTick : 1;
+};
 
 struct CUtlString
 {
@@ -20,13 +45,13 @@ struct CClockDriftMgr
 class CClientState
 {
 public:
-	byte gap0[24];
+	byte pad0[24];
 	int m_Socket;
 	INetChannel* m_NetChannel;
 	unsigned int m_nChallengeNr;
 	double m_flConnectTime;
 	int m_nRetryNumber;
-	char m_szRetryAddress[260];
+	char m_szRetryAddress[MAX_OSPATH];
 	CUtlString m_sRetrySourceTag;
 	int m_retryChallenge;
 	int m_nSignonState;
@@ -41,15 +66,16 @@ public:
 	int m_nViewEntity;
 	int m_nPlayerSlot;
 	char m_szLevelFileName[128];
-	byte gap24C[132];
+	byte pad1[132];
 	char m_szLevelBaseName[128];
-	byte gap350[116];
+	byte pad2[132];
 	int m_nMaxClients;
-	byte gap3C8[34856];
+	PackedEntity* m_pEntityBaselines[2][MAX_EDICTS];
+	byte pad3[2068];
 	void* m_StringTableContainer;
 	bool m_bRestrictServerCommands;
 	bool m_bRestrictClientCommands;
-	byte gap8BFC[106];
+	byte pad4[106];
 	bool insimulation;
 	int oldtickcount;
 	float m_tickRemainder;
@@ -61,10 +87,10 @@ public:
 	int m_nSoundSequence;
 	bool ishltv;
 	bool isreplay;
-	byte gap8C8A[278];
+	byte pad5[278];
 	int demonum;
 	CUtlString demos[32];
-	byte gap8EE8[344184];
+	byte pad6[344184];
 	bool m_bMarkedCRCsUnverified;
 
 public:

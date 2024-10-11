@@ -10,7 +10,6 @@ struct WeaponStorage
 	float Cost = 0.f;
 	int AvailableCrits = 0;
 	int PotentialCrits = 0;
-	int StreamWait = -1;
 
 	int EntIndex = -1;
 	int DefIndex = -1;
@@ -46,7 +45,7 @@ private:
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	bool CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-	void Event(IGameEvent* pEvent, FNV1A_t uHash, CTFPlayer* pLocal);
+	void Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal);
 	void Store();
 	void Draw(CTFPlayer* pLocal);
 

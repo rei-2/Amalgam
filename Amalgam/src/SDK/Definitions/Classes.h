@@ -9,6 +9,7 @@
 #include "Main/CBaseObject.h"
 #include "Main/CBasePlayer.h"
 #include "Main/CBaseProjectile.h"
+#include "Main/CCaptureFlag.h"
 #include "Main/CEconDefinition.h"
 #include "Main/CEntitySphereQuery.h"
 #include "Main/CHalloweenPickup.h"

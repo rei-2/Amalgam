@@ -60,17 +60,27 @@ struct PlayerStorage
 
 	float m_flAverageYaw = 0.f;
 
-	std::deque<std::pair<Vec3, Vec3>> PredictionLines;
+	float m_flSimTime = 0.f;
+	float m_flPredictedDelta = 0.f;
+	float m_flPredictedSimTime = 0.f;
+
+	bool m_bPredictNetworked = true;
+	Vec3 m_vPredictedOrigin = {};
+
+	std::deque<Vec3> PredictionLines;
 
 	bool m_bFailed = false;
 	bool m_bInitFailed = false;
 };
 
-struct VelocityData
+struct MoveData
 {
-	Vec3 m_vVelocity = {};
-	bool m_bGrounded = true;
+	Vec3 m_vDirection = {};
+	Vec3 m_vAngles = {};
 	float m_flSimTime = 0.f;
+	int m_iMode = 0;
+	Vec3 m_vVelocity = {};
+	Vec3 m_vOrigin = {};
 };
 
 class CMovementSimulation
@@ -80,22 +90,25 @@ private:
 	void Reset(PlayerStorage& playerStorage);
 
 	bool SetupMoveData(PlayerStorage& playerStorage);
-	bool GetYawDifference(const std::deque<VelocityData>& mPositionRecords, size_t i, float* flYaw);
-	float GetAverageYaw(const int iIndex, const int iSamples);
+	bool GetYawDifference(const std::deque<MoveData>& vRecords, size_t i, float* flYaw, float flStraightFuzzyValue = 0.f);
+	float GetAverageYaw(PlayerStorage& playerStorage, const int iSamples);
 	bool StrafePrediction(PlayerStorage& playerStorage, const int iSamples);
 
 	bool m_bOldInPrediction = false;
 	bool m_bOldFirstTimePredicted = false;
 	float m_flOldFrametime = 0.f;
 
-	std::unordered_map<int, std::deque<VelocityData>> mVelocities;
+	std::unordered_map<int, std::deque<MoveData>> mRecords;
+	std::unordered_map<int, std::deque<float>> mSimTimes;
 
 public:
-	void FillVelocities();
+	void Store();
 
 	bool Initialize(CBaseEntity* pEntity, PlayerStorage& playerStorageOut, bool useHitchance = true, bool cancelStrafe = false);
-	void RunTick(PlayerStorage& playerStorage);
+	void RunTick(PlayerStorage& playerStorage, bool bLine = true);
 	void Restore(PlayerStorage& playerStorage);
+
+	float GetPredictedDelta(CBaseEntity* pEntity);
 };
 
 ADD_FEATURE(CMovementSimulation, MoveSim)

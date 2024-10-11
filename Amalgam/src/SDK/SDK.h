@@ -105,15 +105,20 @@ enum DataCenter_t // i'm not sure all of these are actually used for tf2 servers
 	DC_JNB = 1 << 31, // Johannesburg
 };
 
+template <typename T> int sign(T val)
+{
+	return (val > T(0)) - (val < T(0));
+}
+
 namespace SDK
 {
-	void Output(const char* cFunction, const char* cLog, Color_t cColor = { 255, 255, 255, 255 }, bool bConsole = true, bool bChat = false, bool bDebug = false);
+	void Output(const char* cFunction, const char* cLog = nullptr, Color_t cColor = { 255, 255, 255, 255 }, bool bConsole = true, bool bChat = false, bool bToast = false, bool bDebug = false);
 
 	HWND GetTeamFortressWindow();
 	bool IsGameWindowInFocus();
 
-	std::wstring ConvertUtf8ToWide(const std::string& ansi);
-	std::string ConvertWideToUTF8(const std::wstring& unicode);
+	std::wstring ConvertUtf8ToWide(const std::string& source);
+	std::string ConvertWideToUTF8(const std::wstring& source);
 
 	double PlatFloatTime();
 	int StdRandomInt(int min, int max);
@@ -129,8 +134,8 @@ namespace SDK
 
 	bool W2S(const Vec3& vOrigin, Vec3& m_vScreen);
 	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& transform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr);
-	bool IsOnScreen(CBaseEntity* pEntity);
 	bool IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin);
+	bool IsOnScreen(CBaseEntity* pEntity);
 
 	void Trace(const Vec3& vecStart, const Vec3& vecEnd, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace);
 	void TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHullMin, const Vec3& vecHullMax, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace);
@@ -140,12 +145,13 @@ namespace SDK
 	bool VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
 
 	int GetRoundState();
-	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon);
+	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType = nullptr);
 	const char* GetClassByIndex(const int nClass);
 
-	bool IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd);
+	bool IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase = false);
+	float MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch = false, bool bIgnoreSpecialAbility = false);
 
-	void FixMovement(CUserCmd* pCmd, const Vec3& vecTargetAngle);
+	void FixMovement(CUserCmd* pCmd, const Vec3& vTargetAngle);
 	bool StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	Vec3 ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& a, Vec3& b);

@@ -5,31 +5,29 @@
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
 
-Glow_t CGlow::GetStruct(bool Stencil, bool Blur, int StencilScale, int BlurScale)
+Glow_t CGlow::GetStruct(int Stencil, int Blur)
 {
 	return Glow_t{
 		Stencil,
-		Blur,
-		StencilScale,
-		BlurScale
+		Blur
 	};
 }
 
-bool CGlow::GetPlayerGlow(CTFPlayer* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy)
+bool CGlow::GetPlayerGlow(CBaseEntity* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy)
 {
 	if (Vars::Glow::Player::Local.Value && pEntity == pLocal
 		|| Vars::Glow::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
-		|| Vars::Glow::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.mTags["Default"].Priority)
+		|| Vars::Glow::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
 	{
-		*pGlow = GetStruct(Vars::Glow::Player::Stencil.Value, Vars::Glow::Player::Blur.Value, Vars::Glow::Player::StencilScale.Value, Vars::Glow::Player::BlurScale.Value);
+		*pGlow = GetStruct(Vars::Glow::Player::Stencil.Value, Vars::Glow::Player::Blur.Value);
 		*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
 		return true;
 	}
 
 	const bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 	*pGlow = bTeam
-		? GetStruct(Vars::Glow::Friendly::Stencil.Value, Vars::Glow::Friendly::Blur.Value, Vars::Glow::Friendly::StencilScale.Value, Vars::Glow::Friendly::BlurScale.Value)
-		: GetStruct(Vars::Glow::Enemy::Stencil.Value, Vars::Glow::Enemy::Blur.Value, Vars::Glow::Enemy::StencilScale.Value, Vars::Glow::Enemy::BlurScale.Value);
+		? GetStruct(Vars::Glow::Friendly::Stencil.Value, Vars::Glow::Friendly::Blur.Value)
+		: GetStruct(Vars::Glow::Enemy::Stencil.Value, Vars::Glow::Enemy::Blur.Value);
 	*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
 	return bTeam ? bFriendly : bEnemy;
 }
@@ -43,38 +41,29 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	{
 	// player glow
 	case ETFClassID::CTFPlayer:
-		return GetPlayerGlow(pEntity->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Players.Value, Vars::Glow::Enemy::Players.Value);
-	case ETFClassID::CTFWearable:
-	{
-		auto pOwner = pEntity->m_hOwnerEntity().Get();
-		if (!pOwner)
-			return false;
-
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Players.Value, Vars::Glow::Enemy::Players.Value);
-	}
+		return GetPlayerGlow(pEntity, pLocal, pGlow, pColor, Vars::Glow::Friendly::Players.Value, Vars::Glow::Enemy::Players.Value);
 	// building glow
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
 	case ETFClassID::CObjectTeleporter:
 	{
 		auto pOwner = pEntity->As<CBaseObject>()->m_hBuilder().Get();
-		if (!pOwner)
-			return false;
+		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Buildings.Value, Vars::Glow::Enemy::Buildings.Value);
+		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Buildings.Value, Vars::Glow::Enemy::Buildings.Value);
 	}
 	// ragdoll glow
-	case ETFClassID::CRagdollPropAttached:
-	case ETFClassID::CRagdollProp:
 	case ETFClassID::CTFRagdoll:
+	case ETFClassID::CRagdollProp:
+	case ETFClassID::CRagdollPropAttached:
 	{
 		auto pOwner = pEntity->As<CTFRagdoll>()->m_hPlayer().Get();
-		if (!pOwner)
-			return false;
+		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Ragdolls.Value, Vars::Glow::Enemy::Ragdolls.Value);
+		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Ragdolls.Value, Vars::Glow::Enemy::Ragdolls.Value);
 	}
 	// projectile glow
+	case ETFClassID::CBaseProjectile:
 	case ETFClassID::CBaseGrenade:
 	case ETFClassID::CTFWeaponBaseGrenadeProj:
 	case ETFClassID::CTFWeaponBaseMerasmusGrenade:
@@ -100,10 +89,9 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFProjectile_ThrowableRepel:
 	{
 		auto pOwner = pEntity->As<CBaseGrenade>()->m_hThrower().Get();
-		if (!pOwner)
-			return false;
+		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
+		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
 	}
 	case ETFClassID::CTFBaseRocket:
 	case ETFClassID::CTFFlameRocket:
@@ -113,7 +101,7 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFProjectile_Rocket:
 	//case ETFClassID::CTFProjectile_BallOfFire: // lifetime too short
 	case ETFClassID::CTFProjectile_MechanicalArmOrb:
-	case ETFClassID::CTFProjectile_SentryRocket: // not drawn, no weapon
+	case ETFClassID::CTFProjectile_SentryRocket:
 	case ETFClassID::CTFProjectile_SpellFireball:
 	case ETFClassID::CTFProjectile_SpellLightningOrb:
 	case ETFClassID::CTFProjectile_SpellKartOrb:
@@ -121,68 +109,71 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFProjectile_Flare:
 	{
 		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		if (!pWeapon)
-			return false;
+		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
+		if (!pOwner) pOwner = pEntity;
 
-		auto pOwner = pWeapon->As<CTFWeaponBase>()->m_hOwner().Get();
-		if (!pOwner)
-			return false;
-
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
+		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
 	}
 	case ETFClassID::CTFBaseProjectile:
 	case ETFClassID::CTFProjectile_EnergyRing: // not drawn, shoulddraw check, small anyways
 	//case ETFClassID::CTFProjectile_Syringe: // not drawn
 	{
 		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		if (!pWeapon)
-			return false;
+		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
+		if (!pOwner) pOwner = pEntity;
 
-		auto pOwner = pWeapon->As<CTFWeaponBase>()->m_hOwner().Get();
-		if (!pOwner)
-			return false;
-
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
+		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
 	}
+	// objective glow
+	case ETFClassID::CCaptureFlag:
+		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
+		*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
+		return Vars::Glow::World::Objective.Value;
 	// npc glow
 	case ETFClassID::CHeadlessHatman:
 	case ETFClassID::CTFTankBoss:
 	case ETFClassID::CMerasmus:
 	case ETFClassID::CZombie:
 	case ETFClassID::CEyeballBoss:
-		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 		*pColor = Vars::Colors::NPC.Value;
 		return Vars::Glow::World::NPCs.Value;
 	// pickup glow
 	case ETFClassID::CTFAmmoPack:
-		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 		*pColor = Vars::Colors::Ammo.Value;
 		return Vars::Glow::World::Pickups.Value;
 	case ETFClassID::CCurrencyPack:
-		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 		*pColor = Vars::Colors::Money.Value;
 		return Vars::Glow::World::Pickups.Value;
 	case ETFClassID::CHalloweenGiftPickup:
-		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 		*pColor = Vars::Colors::Halloween.Value;
 		return Vars::Glow::World::Halloween.Value;
 	case ETFClassID::CBaseAnimating:
 	{
 		if (H::Entities.IsAmmo(pEntity))
 		{
-			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Ammo.Value;
 			return Vars::Glow::World::Pickups.Value;
 		}
-		if (H::Entities.IsHealth(pEntity))
+		else if (H::Entities.IsHealth(pEntity))
 		{
-			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Health.Value;
 			return Vars::Glow::World::Pickups.Value;
 		}
-		if (H::Entities.IsSpellbook(pEntity))
+		else if (H::Entities.IsPowerup(pEntity))
 		{
-			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
+			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
+			*pColor = Vars::Colors::Powerup.Value;
+			return Vars::Glow::World::Powerups.Value;
+		}
+		else if (H::Entities.IsSpellbook(pEntity))
+		{
+			*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Halloween.Value;
 			return Vars::Glow::World::Halloween.Value;
 		}
@@ -191,36 +182,35 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	// bomb glow
 	case ETFClassID::CTFPumpkinBomb:
 	case ETFClassID::CTFGenericBomb:
-		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value, Vars::Glow::World::StencilScale.Value, Vars::Glow::World::BlurScale.Value);
-		*pColor = Vars::Colors::Bomb.Value;
+		*pGlow = GetStruct(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
+		*pColor = Vars::Colors::Halloween.Value;
 		return Vars::Glow::World::Bombs.Value;
 	}
 
 	// player glow
-	if (auto pWeapon = pEntity->As<CTFWeaponBase>())
-	{
-		auto pOwner = pWeapon->m_hOwnerEntity().Get();
-		if (!pOwner || !pOwner->IsPlayer())
-			return false;
+	auto pOwner = pEntity->m_hOwnerEntity().Get();
+	if (!pOwner || !pOwner->IsPlayer())
+		return false;
 
-		return GetPlayerGlow(pOwner->As<CTFPlayer>(), pLocal, pGlow, pColor, Vars::Glow::Friendly::Players.Value, Vars::Glow::Enemy::Players.Value);
-	}
-
-	return false;
+	return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Players.Value, Vars::Glow::Enemy::Players.Value);
 }
 
-void CGlow::SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatBlurY)
+void CGlow::SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurY)
 {
-	if (IMaterialVar* pVar = m_pMatBlurY->FindVar("$bloomamount", nullptr))
-		pVar->SetFloatValue(glow.BlurScale);
+	bool bFound; auto $bloomamount = m_pMatBlurY->FindVar("$bloomamount", &bFound, false);
+	if (bFound && $bloomamount)
+		$bloomamount->SetFloatValue(glow.Blur);
 
 	StencilBegin(pRenderContext);
+
+	flSavedBlend = I::RenderView->GetBlend();
+	I::RenderView->SetBlend(0.f);
 	I::RenderView->SetColorModulation(1.f, 1.f, 1.f);
-	I::RenderView->SetBlend(1.f);
-}
-void CGlow::SetupMid(IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, int w, int h)
-{
 	I::ModelRender->ForcedMaterialOverride(m_pMatGlowColor);
+}
+void CGlow::SetupMid(IMatRenderContext* pRenderContext, int w, int h)
+{
+	I::RenderView->SetBlend(flSavedBlend);
 
 	pRenderContext->PushRenderTargetAndViewport();
 	pRenderContext->SetRenderTarget(m_pRenderBuffer1);
@@ -248,8 +238,8 @@ void CGlow::SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* 
 	StencilPreDraw(pRenderContext);
 	if (glow.Stencil)
 	{
-		int side = float(glow.StencilScale + 1) / 2;
-		int corner = float(glow.StencilScale) / 2;
+		int side = float(glow.Stencil + 1) / 2;
+		int corner = float(glow.Stencil) / 2;
 		if (corner)
 		{
 			pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, -corner, -corner, w, h, 0.f, 0.f, w - 1, h - 1, w, h);
@@ -268,7 +258,6 @@ void CGlow::SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* 
 	StencilEnd(pRenderContext);
 
 	I::RenderView->SetColorModulation(1.f, 1.f, 1.f);
-	I::RenderView->SetBlend(1.f);
 	I::ModelRender->ForcedMaterialOverride(nullptr);
 }
 
@@ -304,32 +293,76 @@ void CGlow::DrawModel(CBaseEntity* pEntity, bool bModel)
 {
 	bRendering = true;
 
-	if (bModel)
-		I::RenderView->SetBlend(0.f);
 	const float flOldInvisibility = pEntity->IsPlayer() ? pEntity->As<CTFPlayer>()->m_flInvisibility() : -1.f;
 	if (flOldInvisibility > 0.999f)
 		pEntity->As<CTFPlayer>()->m_flInvisibility() = 0.f;
 
-	pEntity->DrawModel(bModel ? STUDIO_RENDER : (STUDIO_RENDER | STUDIO_NOSHADOWS));
+	//pEntity->DrawModel(bModel ? STUDIO_RENDER : (STUDIO_RENDER | STUDIO_NOSHADOWS));
+	pEntity->DrawModel(STUDIO_RENDER | STUDIO_NOSHADOWS);
 
 	if (flOldInvisibility > 0.999f)
 		pEntity->As<CTFPlayer>()->m_flInvisibility() = flOldInvisibility;
-	if (bModel)
-		I::RenderView->SetBlend(1.f);
 
 	bRendering = false;
 }
 
 
 
-void CGlow::RenderMain(CTFPlayer* pLocal)
+void CGlow::Store(CTFPlayer* pLocal)
 {
-	mEntities.clear();
-	const int w = H::Draw.m_nScreenW, h = H::Draw.m_nScreenH;
-	if (!pLocal || w < 1 || h < 1 || w > 4096 || h > 2160)
+	mvEntities.clear();
+	if (!pLocal)
 		return;
 
-	const auto pRenderContext = I::MaterialSystem->GetRenderContext();
+	for (int n = 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
+	{
+		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CBaseEntity>();
+		if (!pEntity)
+			continue;
+
+		Glow_t tGlow = {}; Color_t tColor = {};
+		if (GetGlow(pLocal, pEntity, &tGlow, &tColor) && SDK::IsOnScreen(pEntity))
+			mvEntities[tGlow].push_back({ pEntity, tColor });
+
+		if (pEntity->IsPlayer() && !pEntity->IsDormant())
+		{
+			// backtrack
+			if (Vars::Backtrack::Enabled.Value && Vars::Glow::Backtrack::Enabled.Value && (Vars::Glow::Backtrack::Stencil.Value || Vars::Glow::Backtrack::Blur.Value) && pEntity != pLocal)
+			{
+				auto pWeapon = H::Entities.GetWeapon();
+				if (pWeapon && G::PrimaryWeaponType != EWeaponType::PROJECTILE)
+				{
+					bool bShowFriendly = false, bShowEnemy = true;
+					if (pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheDisciplinaryAction)
+						bShowFriendly = true;
+					if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
+						bShowFriendly = true, bShowEnemy = false;
+
+					if (bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() || bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
+					{
+						tGlow = GetStruct(Vars::Glow::Backtrack::Stencil.Value, Vars::Glow::Backtrack::Blur.Value);
+						mvEntities[tGlow].push_back({ pEntity, tColor, true });
+					}
+				}
+			}
+
+			// fakeangle
+			if (Vars::Glow::FakeAngle::Enabled.Value && (Vars::Glow::FakeAngle::Stencil.Value || Vars::Glow::FakeAngle::Blur.Value) && pEntity == pLocal && F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup)
+			{
+				tGlow = GetStruct(Vars::Glow::FakeAngle::Stencil.Value, Vars::Glow::FakeAngle::Blur.Value);
+				mvEntities[tGlow].push_back({ pEntity, tColor, true });
+			}
+		}
+	}
+}
+
+void CGlow::RenderMain()
+{
+	const int w = H::Draw.m_nScreenW, h = H::Draw.m_nScreenH;
+	if (w < 1 || h < 1 || w > 4096 || h > 2160)
+		return;
+
+	auto pRenderContext = I::MaterialSystem->GetRenderContext();
 	auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
 	auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
 	auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
@@ -337,218 +370,110 @@ void CGlow::RenderMain(CTFPlayer* pLocal)
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
-
-
-	for (int n = 1; n < I::ClientEntityList->GetHighestEntityIndex(); n++)
+	for (auto& [tGlow, vInfo] : mvEntities)
 	{
-		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CBaseEntity>();
-		if (!pEntity)
-			continue;
-
-		Glow_t glow = {}; Color_t color = {};
-		if (GetGlow(pLocal, pEntity, &glow, &color) && SDK::IsOnScreen(pEntity))
-			mEntities[glow].push_back({ pEntity, color });
-	}
-
-	// main
-	for (const auto& [glow, entities] : mEntities)
-	{
-		SetupBegin(glow, pRenderContext, m_pMatBlurY);
-		for (auto& info : entities)
-			DrawModel(info.m_pEntity, true);
-
-		StencilEnd(pRenderContext);
-
-		SetupMid(pRenderContext, m_pMatGlowColor, w, h);
-		for (auto& info : entities)
+		SetupBegin(tGlow, pRenderContext, m_pMatGlowColor, m_pMatBlurY);
+		for (auto& tInfo : vInfo)
 		{
-			I::RenderView->SetColorModulation(float(info.m_Color.r) / 255.f, float(info.m_Color.g) / 255.f, float(info.m_Color.b) / 255.f);
-			I::RenderView->SetBlend(float(info.m_Color.a) / 255.f);
-			DrawModel(info.m_pEntity, false);
+			bExtra = tInfo.m_bExtra;
+			DrawModel(tInfo.m_pEntity, true);
+			bExtra = false;
 		}
 
-		SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
-	}
+		SetupMid(pRenderContext, w, h);
+		for (auto& tInfo : vInfo)
+		{
+			I::RenderView->SetColorModulation(float(tInfo.m_cColor.r) / 255.f, float(tInfo.m_cColor.g) / 255.f, float(tInfo.m_cColor.b) / 255.f);
+			I::RenderView->SetBlend(float(tInfo.m_cColor.a) / 255.f);
+			bExtra = tInfo.m_bExtra;
+			DrawModel(tInfo.m_pEntity, false);
+			bExtra = false;
+		}
 
-	// backtrack / fakeangle
-	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
-	{
-		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (!pPlayer->ShouldDraw() || pPlayer->IsDormant())
-			continue;
-
-		bRendering = bExtra = true;
-
-		const float flOldInvisibility = pPlayer->m_flInvisibility();
-		if (flOldInvisibility > 0.999f)
-			pPlayer->m_flInvisibility() = 0.f;
-
-		pPlayer->DrawModel(STUDIO_RENDER);
-
-		if (flOldInvisibility > 0.999f)
-			pPlayer->m_flInvisibility() = flOldInvisibility;
-
-		bRendering = bExtra = false;
+		SetupEnd(tGlow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
 	}
 }
 
-void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld,
-	int w, int h, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurX, IMaterial* m_pMatBlurY, IMaterial* m_pMatHaloAddToScreen)
+void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo)
 {
-	if (!Vars::Backtrack::Enabled.Value || !Vars::Glow::Backtrack::Enabled.Value || !Vars::Glow::Backtrack::Stencil.Value && !Vars::Glow::Backtrack::Blur.Value)
-		return;
-
-	const auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["ModelRender_DrawModelExecute"];
+	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 	if (!ModelRender_DrawModelExecute)
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(pInfo.entity_index)->As<CTFPlayer>();
-	if (!pEntity || !pEntity->IsPlayer() || !pEntity->IsAlive())
-		return;
-
-	auto pLocal = H::Entities.GetLocal();
-	auto pWeapon = H::Entities.GetWeapon();
-	if (!pLocal || !pWeapon || G::WeaponType == EWeaponType::PROJECTILE)
-		return;
-	if (pEntity == pLocal ||
-		pWeapon->m_iItemDefinitionIndex() != Soldier_t_TheDisciplinaryAction && pWeapon->m_iWeaponID() != TF_WEAPON_MEDIGUN && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ||
-		pWeapon->m_iWeaponID() == TF_WEAPON_MEDIGUN && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
+	if (!pEntity || !pEntity->IsPlayer())
 		return;
 
 
 
-	auto drawModel = [ModelRender_DrawModelExecute, pEntity](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
+	auto drawModel = [&](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 		{
 			if (!SDK::IsOnScreen(pEntity, vOrigin))
 				return;
 
-			ModelRender_DrawModelExecute->Original<void(__thiscall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
-		};
-	auto drawModels = [drawModel, pEntity, pState, pInfo](bool bModel)
-		{
-			if (bModel)
-				I::RenderView->SetBlend(0.f);
-
-			const auto& pRecords = F::Backtrack.GetRecords(pEntity);
-			auto vRecords = F::Backtrack.GetValidRecords(pRecords);
-			if (!vRecords.size())
-				return;
-
-			switch (Vars::Glow::Backtrack::Draw.Value)
-			{
-			case 0: // last
-			{
-				auto vLastRec = vRecords.end() - 1;
-				if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
-					drawModel(vLastRec->vOrigin, pState, pInfo, reinterpret_cast<matrix3x4*>(&vLastRec->BoneMatrix));
-				break;
-			}
-			case 1: // last + first
-			{
-				auto vFirstRec = vRecords.begin();
-				if (vFirstRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vFirstRec->vOrigin) > 0.1f)
-					drawModel(vFirstRec->vOrigin, pState, pInfo, reinterpret_cast<matrix3x4*>(&vFirstRec->BoneMatrix));
-				auto vLastRec = vRecords.end() - 1;
-				if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
-					drawModel(vLastRec->vOrigin, pState, pInfo, reinterpret_cast<matrix3x4*>(&vLastRec->BoneMatrix));
-				break;
-			}
-			case 2: // all
-			{
-				for (auto& record : vRecords)
-				{
-					if (pEntity->GetAbsOrigin().DistTo(record.vOrigin) < 0.1f)
-						continue;
-
-					drawModel(record.vOrigin, pState, pInfo, reinterpret_cast<matrix3x4*>(&record.BoneMatrix));
-				}
-			}
-			}
-
-			if (bModel)
-				I::RenderView->SetBlend(1.f);
+			ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
 		};
 
-
-
-	auto glow = GetStruct(Vars::Glow::Backtrack::Stencil.Value, Vars::Glow::Backtrack::Blur.Value, Vars::Glow::Backtrack::StencilScale.Value, Vars::Glow::Backtrack::BlurScale.Value);
-
-	SetupBegin(glow, pRenderContext, m_pMatBlurY);
-	drawModels(true);
-
-	StencilEnd(pRenderContext);
-
-	SetupMid(pRenderContext, m_pMatGlowColor, w, h);
-	auto color = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
-	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-	I::RenderView->SetBlend(float(color.a) / 255.f);
-	drawModels(false);
-
-	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
-}
-void CGlow::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld,
-	int w, int h, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurX, IMaterial* m_pMatBlurY, IMaterial* m_pMatHaloAddToScreen)
-{
-	if (!Vars::Glow::FakeAngle::Enabled.Value || !Vars::Glow::FakeAngle::Stencil.Value && !Vars::Glow::FakeAngle::Blur.Value || pInfo.entity_index != I::EngineClient->GetLocalPlayer() || !F::FakeAngle.DrawChams || !F::FakeAngle.BonesSetup)
+	const auto& pRecords = F::Backtrack.GetRecords(pEntity);
+	auto vRecords = F::Backtrack.GetValidRecords(pRecords);
+	if (!vRecords.size())
 		return;
 
-	const auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["ModelRender_DrawModelExecute"];
+	switch (Vars::Glow::Backtrack::Draw.Value)
+	{
+	case 0: // last
+	{
+		auto vLastRec = vRecords.end() - 1;
+		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
+			drawModel(vLastRec->vOrigin, pState, pInfo, vLastRec->BoneMatrix.aBones);
+		break;
+	}
+	case 1: // last + first
+	{
+		auto vFirstRec = vRecords.begin();
+		if (vFirstRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vFirstRec->vOrigin) > 0.1f)
+			drawModel(vFirstRec->vOrigin, pState, pInfo, vFirstRec->BoneMatrix.aBones);
+		auto vLastRec = vRecords.end() - 1;
+		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
+			drawModel(vLastRec->vOrigin, pState, pInfo, vLastRec->BoneMatrix.aBones);
+		break;
+	}
+	case 2: // all
+	{
+		for (auto& record : vRecords)
+		{
+			if (pEntity->GetAbsOrigin().DistTo(record.vOrigin) < 0.1f)
+				continue;
+
+			drawModel(record.vOrigin, pState, pInfo, record.BoneMatrix.aBones);
+		}
+	}
+	}
+}
+void CGlow::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo)
+{
+	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 	if (!ModelRender_DrawModelExecute)
 		return;
 
 
 
-	auto drawModel = [ModelRender_DrawModelExecute, pState, pInfo](bool bModel)
-		{
-			if (bModel)
-				I::RenderView->SetBlend(0.f);
-
-			ModelRender_DrawModelExecute->Original<void(__thiscall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, F::FakeAngle.BoneMatrix);
-
-			if (bModel)
-				I::RenderView->SetBlend(1.f);
-		};
-
-
-
-	auto glow = GetStruct(Vars::Glow::FakeAngle::Stencil.Value, Vars::Glow::FakeAngle::Blur.Value, Vars::Glow::FakeAngle::StencilScale.Value, Vars::Glow::FakeAngle::BlurScale.Value);
-
-	SetupBegin(glow, pRenderContext, m_pMatBlurY);
-	drawModel(true);
-
-	StencilEnd(pRenderContext);
-
-	SetupMid(pRenderContext, m_pMatGlowColor, w, h);
-	auto& color = Vars::Colors::Local.Value;
-	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-	I::RenderView->SetBlend(float(color.a) / 255.f);
-	drawModel(false);
-
-	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
+	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
 }
 void CGlow::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
 	if (!bExtra)
 	{
-		if (const auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["ModelRender_DrawModelExecute"])
-			ModelRender_DrawModelExecute->Original<void(__thiscall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+		static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+		if (ModelRender_DrawModelExecute)
+			ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
 	}
 	else
 	{
-		const int w = H::Draw.m_nScreenW, h = H::Draw.m_nScreenH;
-		if (w < 1 || h < 1 || w > 4096 || h > 2160)
-			return;
-
-		const auto pRenderContext = I::MaterialSystem->GetRenderContext();
-		auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
-		auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
-		auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
-		auto m_pMatHaloAddToScreen = F::Materials.mGlowMaterials["HaloAddToScreen"].pMaterial;
-		if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
-			return F::Materials.ReloadMaterials();
-
-		RenderBacktrack(pState, pInfo, pBoneToWorld, w, h, pRenderContext, m_pMatGlowColor, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen);
-		RenderFakeAngle(pState, pInfo, pBoneToWorld, w, h, pRenderContext, m_pMatGlowColor, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen);
+		if (pInfo.entity_index != I::EngineClient->GetLocalPlayer())
+			RenderBacktrack(pState, pInfo);
+		else
+			RenderFakeAngle(pState, pInfo);
 	}
 }
 
@@ -561,7 +486,7 @@ void CGlow::RenderViewmodel(void* ecx, int flags)
 	if (w < 1 || h < 1 || w > 4096 || h > 2160)
 		return;
 
-	const auto pRenderContext = I::MaterialSystem->GetRenderContext();
+	auto pRenderContext = I::MaterialSystem->GetRenderContext();
 	auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
 	auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
 	auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
@@ -569,39 +494,28 @@ void CGlow::RenderViewmodel(void* ecx, int flags)
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
-	const auto CBaseAnimating_DrawModel = U::Hooks.m_mHooks["CBaseAnimating_DrawModel"];
-	if (!CBaseAnimating_DrawModel)
+	static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
+	if (!CBaseAnimating_InternalDrawModel)
 		return;
 
 
 
-	auto drawModel = [CBaseAnimating_DrawModel, ecx, flags](bool bModel)
-		{
-			if (bModel)
-				I::RenderView->SetBlend(0.f);
+	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 
-			CBaseAnimating_DrawModel->Original<int(__thiscall*)(void*, int)>()(ecx, flags);
+	auto glow = GetStruct(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value);
 
-			if (bModel)
-				I::RenderView->SetBlend(1.f);
-		};
+	SetupBegin(glow, pRenderContext, m_pMatGlowColor, m_pMatBlurY);
+	CBaseAnimating_InternalDrawModel->Original<int(__fastcall*)(void*, int)>()(ecx, flags);
 
-
-
-	auto glow = GetStruct(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value, Vars::Glow::Viewmodel::StencilScale.Value, Vars::Glow::Viewmodel::BlurScale.Value);
-
-	SetupBegin(glow, pRenderContext, m_pMatBlurY);
-	drawModel(true);
-
-	StencilEnd(pRenderContext);
-
-	SetupMid(pRenderContext, m_pMatGlowColor, w, h);
+	SetupMid(pRenderContext, w, h);
 	auto& color = Vars::Colors::Local.Value;
 	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
 	I::RenderView->SetBlend(float(color.a) / 255.f);
-	drawModel(false);
+	CBaseAnimating_InternalDrawModel->Original<int(__fastcall*)(void*, int)>()(ecx, flags);
 
 	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
+
+	pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 }
 void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
@@ -612,7 +526,7 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 	if (w < 1 || h < 1 || w > 4096 || h > 2160)
 		return;
 
-	const auto pRenderContext = I::MaterialSystem->GetRenderContext();
+	auto pRenderContext = I::MaterialSystem->GetRenderContext();
 	auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
 	auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
 	auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
@@ -620,39 +534,28 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
-	const auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["ModelRender_DrawModelExecute"];
+	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 	if (!ModelRender_DrawModelExecute)
 		return;
 
 
 
-	auto drawModel = [ModelRender_DrawModelExecute, pState, pInfo, pBoneToWorld](bool bModel)
-		{
-			if (bModel)
-				I::RenderView->SetBlend(0.f);
+	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 
-			ModelRender_DrawModelExecute->Original<void(__thiscall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+	auto glow = GetStruct(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value);
 
-			if (bModel)
-				I::RenderView->SetBlend(1.f);
-		};
+	SetupBegin(glow, pRenderContext, m_pMatGlowColor, m_pMatBlurY);
+	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
 
-
-
-	auto glow = GetStruct(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value, Vars::Glow::Viewmodel::StencilScale.Value, Vars::Glow::Viewmodel::BlurScale.Value);
-
-	SetupBegin(glow, pRenderContext, m_pMatBlurY);
-	drawModel(true);
-
-	StencilEnd(pRenderContext);
-
-	SetupMid(pRenderContext, m_pMatGlowColor, w, h);
+	SetupMid(pRenderContext, w, h);
 	auto& color = Vars::Colors::Local.Value;
 	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
 	I::RenderView->SetBlend(float(color.a) / 255.f);
-	drawModel(false);
+	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
 
 	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
+
+	pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 }
 
 

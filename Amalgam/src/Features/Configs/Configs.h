@@ -7,29 +7,29 @@
 
 class CConfigs
 {
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, bool val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, int val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, float val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const IntRange_t& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const FloatRange_t& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const std::string& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const std::vector<std::string>& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const Color_t& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const Gradient_t& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const DragBox_t& val);
-	void SaveJson(boost::property_tree::ptree& mapTree, const char* name, const WindowBox_t& val);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, bool bVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, int iVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, float flVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const IntRange_t& irVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const FloatRange_t& frVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const std::string& sVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const std::vector<std::pair<std::string, Color_t>>& vVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const Color_t& tVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const Gradient_t& tVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const DragBox_t& tVal);
+	void SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const WindowBox_t& tVal);
 
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, bool& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, int& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, float& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, IntRange_t& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, FloatRange_t& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, std::string& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, std::vector<std::string>& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, Color_t& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, Gradient_t& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, DragBox_t& val);
-	void LoadJson(boost::property_tree::ptree& mapTree, const char* name, WindowBox_t& val);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, bool& bVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, int& iVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, float& flVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, IntRange_t& irVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, FloatRange_t& frVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, std::string& sVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, std::vector<std::pair<std::string, Color_t>>& vVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, Color_t& tVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, Gradient_t& tVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, DragBox_t& tVal);
+	void LoadJson(boost::property_tree::ptree& mapTree, std::string sName, WindowBox_t& tVal);
 
 public:
 	CConfigs();

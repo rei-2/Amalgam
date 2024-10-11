@@ -8,7 +8,6 @@ MAKE_SIGNATURE(CTFPlayer_IsPlayerOnSteamFriendsList, "client.dll", "40 57 48 81 
 MAKE_SIGNATURE(TeamFortress_CalculateMaxSpeed, "client.dll", "88 54 24 ? 53 55", 0x0);
 MAKE_SIGNATURE(CTFPlayer_UpdateClientSideAnimation, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B 00 48 8B CF FF 90 ? ? ? ? 84 C0 75 ? 33 FF 48 3B DF", 0x0);
 MAKE_SIGNATURE(CTFPlayer_UpdateWearables, "client.dll", "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B 03 48 8B CB FF 90 ? ? ? ? 4C 8D 0D ? ? ? ? C7 44 24 ? ? ? ? ? 48 8B C8 4C 8D 05 ? ? ? ? 33 D2 E8 ? ? ? ? 48 85 C0", 0x0);
-MAKE_SIGNATURE(CTFPlayer_ThirdPersonSwitch, "client.dll", "48 83 EC ? 48 8B 01 48 89 5C 24 ? 48 8B D9 48 89 7C 24", 0x0);
 
 class CTFPlayer : public CBasePlayer
 {
@@ -190,8 +189,11 @@ public:
 	NETVAR_OFF(m_flTankPressure, float, "CTFPlayer", "m_Shared", 636);
 	NETVAR_OFF(GetAnimState, CMultiPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
 	NETVAR_OFF(m_flPrevTauntYaw, float, "CTFPlayer", "m_flTauntYaw", 4);
+	NETVAR_OFF(m_flLastMovementStunChange, float, "CTFPlayer", "m_hItem", -180);
+	NETVAR_OFF(m_flStunLerpTarget, float, "CTFPlayer", "m_hItem", -184);
+	NETVAR_OFF(m_bStunNeedsFadeOut, bool, "CTFPlayer", "m_hItem", -188);
 
-	VIRTUAL(m_iMaxHealth, int, int(__thiscall*)(void*), this, 107);
+	VIRTUAL(GetMaxHealth, int, int(__fastcall*)(void*), this, 107);
 
 	CONDGET(IsSlowed, m_nPlayerCond(), TFCond_Slowed);
 	CONDGET(IsScoped, m_nPlayerCond(), TFCond_Zoomed);
@@ -425,31 +427,13 @@ public:
 	CTFWeaponBase* GetWeaponFromSlot(int nSlot)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseCombatCharacter", "m_hMyWeapons");
-		int hWeapon = *reinterpret_cast<int*>(reinterpret_cast<std::uintptr_t>(this) + nOffset + nSlot * 4);
+		int hWeapon = *reinterpret_cast<int*>(reinterpret_cast<uintptr_t>(this) + nOffset + nSlot * 4);
 		return I::ClientEntityList->GetClientEntityFromHandle(hWeapon)->As<CTFWeaponBase>();
 	}
 
 	float TeamFortress_CalculateMaxSpeed(bool bIgnoreSpecialAbility = false)
 	{
 		return S::TeamFortress_CalculateMaxSpeed.As<float(__fastcall*)(CTFPlayer*, bool)>()(this, bIgnoreSpecialAbility);
-	}
-
-	float& m_flLastMovementStunChange()
-	{
-		static int nOffset = 7072;
-		return *reinterpret_cast<float*>(reinterpret_cast<std::uintptr_t>(this) + nOffset);
-	}
-
-	float& m_flStunLerpTarget()
-	{
-		static int nOffset = 7068;
-		return *reinterpret_cast<float*>(reinterpret_cast<std::uintptr_t>(this) + nOffset);
-	}
-
-	bool& m_bStunNeedsFadeOut()
-	{
-		static int nOffset = 7064;
-		return *reinterpret_cast<bool*>(reinterpret_cast<std::uintptr_t>(this) + nOffset);
 	}
 
 	void UpdateClientSideAnimation()
@@ -464,13 +448,13 @@ public:
 
 	void UpdateWearables()
 	{
-		S::CTFPlayer_UpdateWearables.As<void(__thiscall*)(void*)>()(this);
+		S::CTFPlayer_UpdateWearables.As<void(__fastcall*)(void*)>()(this);
 	}
 
-	void ThirdPersonSwitch()
+	void ThirdPersonSwitch(/*bool bThirdperson*/)
 	{
-		reinterpret_cast<void(__thiscall*)(CTFPlayer*)>(S::CTFPlayer_ThirdPersonSwitch())(this);
-	}
+		return reinterpret_cast<void(__fastcall*)(void*/*, bool*/)>(U::Memory.GetVFunc(this, 255))(this/*, bThirdperson*/);
+	};
 };
 
 class CTFRagdoll : public CBaseFlex

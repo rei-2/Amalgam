@@ -52,114 +52,114 @@ public:
 	int GetPing(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iPing");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int GetKills(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iScore");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int GetDeaths(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iDeaths");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	bool GetConnected(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_bConnected");
-		return *reinterpret_cast<bool*>(std::uintptr_t(this) + nOffset + idx);
+		return *reinterpret_cast<bool*>(uintptr_t(this) + nOffset + idx);
 	}
 
 	int GetTeam(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iTeam");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	bool IsAlive(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_bAlive");
-		return *reinterpret_cast<bool*>(std::uintptr_t(this) + nOffset + idx);
+		return *reinterpret_cast<bool*>(uintptr_t(this) + nOffset + idx);
 	}
 
 	int GetHealth(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iHealth");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	unsigned GetAccountID(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iAccountID");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	bool GetValid(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_bValid");
-		return *reinterpret_cast<bool*>(std::uintptr_t(this) + nOffset + idx);
+		return *reinterpret_cast<bool*>(uintptr_t(this) + nOffset + idx);
 	}
 
 	int GetUserID(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iUserID");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	const char* GetPlayerName(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iPing") - 816;
-		return *reinterpret_cast<const char**>(std::uintptr_t(this) + nOffset + idx * 8);
+		return *reinterpret_cast<const char**>(uintptr_t(this) + nOffset + idx * 8);
 	}
 
 	int GetScore(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iTotalScore");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int GetLevel(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iPlayerLevel");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int GetDamage(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iDamage");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int GetClass(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iPlayerClass");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int GetMaxHealth(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iMaxHealth");
-		return *reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	int* GetStreaks(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_iStreaks");
-		return reinterpret_cast<int*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return reinterpret_cast<int*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	float GetConnectionTime(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_flConnectTime");
-		return *reinterpret_cast<float*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<float*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 
 	float GetNextRespawnTime(int idx)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CTFPlayerResource", "m_flNextRespawnTime");
-		return *reinterpret_cast<float*>(std::uintptr_t(this) + nOffset + idx * 4);
+		return *reinterpret_cast<float*>(uintptr_t(this) + nOffset + idx * 4);
 	}
 };

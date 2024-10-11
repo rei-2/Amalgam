@@ -4,6 +4,10 @@
 #include <unordered_map>
 #include <typeinfo>
 
+#define VA_LIST(...) __VA_ARGS__
+
+#define DEFAULT_BIND -1
+
 // forward declartion of ConfigVar
 template <class T>
 class ConfigVar;
@@ -17,7 +21,7 @@ public:
 
 	// getter for ConfigVar
 	template <class T>
-	ConfigVar<T>* GetVar()
+	ConfigVar<T>* As()
 	{
 		if (typeid(T).hash_code() != m_iType)
 			return nullptr;
@@ -32,7 +36,7 @@ class ConfigVar : public CVarBase
 public:
 	T Default;
 	T Value;
-	std::unordered_map<std::string, T> Map;
+	std::unordered_map<int, T> Map;
 	ConfigVar(T value, std::string name, int iFlags = 0);
 };
 
@@ -43,7 +47,7 @@ inline ConfigVar<T>::ConfigVar(T value, std::string name, int iFlags)
 {
 	Default = value;
 	Value = value;
-	Map["default"] = value;
+	Map[DEFAULT_BIND] = value;
 	m_iType = typeid(T).hash_code();
 	m_sName = name;
 	g_Vars.push_back(this);
@@ -94,7 +98,7 @@ namespace Vars
 
 		CVar(DPI, 1.f, NOCOND)
 
-		SUBNAMESPACE_BEGIN(Theme) // possibly reduce the amount of theme vars
+		SUBNAMESPACE_BEGIN(Theme)
 			CVar(Accent, Color_t(255, 101, 101, 255), VISUAL)
 			CVar(Background, Color_t(23, 23, 23, 250), VISUAL)
 			CVar(Foreground, Color_t(11, 11, 11, 250), VISUAL)
@@ -123,6 +127,7 @@ namespace Vars
 			CVar(PeekDTOnly, true, NOSAVE) // debug
 			CVar(NoSpreadOffset, 0.f, NOSAVE) // debug
 			CVar(NoSpreadAverage, 5, NOSAVE) // debug
+			CVar(AimHoldsFire, 2, NOSAVE) // debug
 		SUBNAMESPACE_END(Global)
 
 		SUBNAMESPACE_BEGIN(Hitscan)
@@ -137,23 +142,38 @@ namespace Vars
 			CVar(SplashPrediction, 0) // 0 - Off, 1 - Obstructed, 2 - Prefer, 3 - Only
 			CVar(AutoDetonate, 0b00) // { Flares, Stickies }
 			CVar(AutoAirblast, 0) // 0 - Off, 1 - Legit, 2 - Rage
-			CVar(Modifiers, 0b010) // { Bodyaim if lethal, Cancel charge, Charge weapon }
+			CVar(Modifiers, 0b1010) // { Use prime time, Bodyaim if lethal, Cancel charge, Charge weapon }
 			CVar(PredictionTime, 2.f)
 			CVar(Hitchance, 0.f)
 			CVar(AutodetRadius, 90.f)
 			CVar(SplashRadius, 90.f)
 			CVar(AutoRelease, 0.f)
 
-			CVar(GroundSamples, 5, NOSAVE) // debug
-			CVar(AirSamples, 5, NOSAVE) // debug
+			CVar(GroundSamples, 15, NOSAVE) // debug
+			CVar(GroundStraightFuzzyValue, 100.f, NOSAVE) // debug
+			CVar(GroundLowMinimumSamples, 5, NOSAVE) // debug
+			CVar(GroundHighMinimumSamples, 15, NOSAVE) // debug
+			CVar(GroundLowMinimumDistance, 0.f, NOSAVE) // debug
+			CVar(GroundHighMinimumDistance, 2500.f, NOSAVE) // debug
+
+			CVar(AirSamples, 15, NOSAVE) // debug
+			CVar(AirStraightFuzzyValue, 0.f, NOSAVE) // debug
+			CVar(AirLowMinimumSamples, 5, NOSAVE) // debug
+			CVar(AirHighMinimumSamples, 5, NOSAVE) // debug
+			CVar(AirLowMinimumDistance, 100000.f, NOSAVE) // debug
+			CVar(AirHighMinimumDistance, 100000.f, NOSAVE) // debug
+
+			CVar(VelocityAverageCount, 5, NOSAVE) // debug
 			CVar(VerticalShift, 5.f, NOSAVE) // debug
 			CVar(LatencyOffset, 0.f, NOSAVE) // debug
 			CVar(HullIncrease, 0.f, NOSAVE) // debug
 			CVar(DragOverride, 0.f, NOSAVE) // debug
 			CVar(TimeOverride, 0.f, NOSAVE) // debug
-			CVar(HuntsmanLerp, 50.f, NOSAVE) // debug
+			CVar(HuntsmanLerp, 100.f, NOSAVE) // debug
 			CVar(SplashPoints, 80, NOSAVE) // debug
 			CVar(SplashCount, 5, NOSAVE) // debug
+			CVar(DeltaCount, 5, NOSAVE) // debug
+			CVar(DeltaMode, 0, NOSAVE) // debug
 		SUBNAMESPACE_END(Projectile)
 
 		SUBNAMESPACE_BEGIN(Melee)
@@ -163,13 +183,21 @@ namespace Vars
 			CVar(WhipTeam, false)
 
 			CVar(SwingTicks, 13, NOSAVE) // debug
+			CVar(BackstabAccountPing, true, NOSAVE) // debug
+			CVar(BackstabDoubleTest, true, NOSAVE) // debug
 		SUBNAMESPACE_END(Melee)
+
+		SUBNAMESPACE_BEGIN(Healing)
+			CVar(AutoHeal, false)
+			CVar(FriendsOnly, false)
+			CVar(ActivateOnVoice, false)
+		SUBNAMESPACE_END(Healing)
 	NAMESPACE_END(AIMBOT)
 	
 	NAMESPACE_BEGIN(CritHack)
 		CVar(ForceCrits, false)
 		CVar(AvoidRandom, false)
-		CVar(AlwaysMelee, false)
+		CVar(AlwaysMeleeCrit, false)
 	NAMESPACE_END(CritHack)
 
 	NAMESPACE_BEGIN(Backtrack)
@@ -211,14 +239,16 @@ namespace Vars
 	NAMESPACE_BEGIN(AntiHack)
 		SUBNAMESPACE_BEGIN(AntiAim)
 			CVar(Enabled, false)
-			CVar(PitchReal, 0) // 0 - None, 1 - Up, 2 - Down, 3 - Zero
-			CVar(PitchFake, 0) // 0 - None, 1 - Up, 2 - Down
-			CVar(YawReal, 0) // 0 - Forward, 1 - Left, 2 - Right, 3 - Backwards, 4 - Spin, 5 - Edge
-			CVar(YawFake, 0) // 0 - Forward, 1 - Left, 2 - Right, 3 - Backwards, 4 - Spin, 5 - Edge
+			CVar(PitchReal, 0) // 0 - None, 1 - Up, 2 - Down, 3 - Zero, 4 - Jitter, 5 - Reverse jitter
+			CVar(PitchFake, 0) // 0 - None, 1 - Up, 2 - Down, 3 - Jitter, 4 - Reverse jitter
+			CVar(YawReal, 0) // 0 - Forward, 1 - Left, 2 - Right, 3 - Backwards, 4 - Edge, 5 - Jitter, 6 - Spin
+			CVar(YawFake, 0) // 0 - Forward, 1 - Left, 2 - Right, 3 - Backwards, 4 - Edge, 5 - Jitter, 6 - Spin
 			CVar(RealYawMode, 0) // 0 - View, 1 - Target
 			CVar(FakeYawMode, 0) // 0 - View, 1 - Target
 			CVar(RealYawOffset, 0)
 			CVar(FakeYawOffset, 0)
+			CVar(RealJitter, 0)
+			CVar(FakeJitter, 0)
 			CVar(SpinSpeed, 15.f)
 			CVar(MinWalk, true)
 			CVar(AntiOverlap, false)
@@ -233,7 +263,7 @@ namespace Vars
 	NAMESPACE_END(AntiHack)
 
 	NAMESPACE_BEGIN(CheaterDetection)
-		CVar(Methods, 0b00001) // { Duck Speed, Aim flicking, Packet choking, Invalid pitch }
+		CVar(Methods, 0b0001) // { Duck Speed, Aim flicking, Packet choking, Invalid pitch }
 		CVar(DetectionsRequired, 10)
 		CVar(MinimumChoking, 20)
 		CVar(MinimumFlick, 20.f) // min flick size to suspect
@@ -244,6 +274,8 @@ namespace Vars
 		CVar(Draw, 0, VISUAL)
 		CVar(Player, 0, VISUAL)
 		CVar(Building, 0, VISUAL)
+		CVar(Projectile, 0, VISUAL)
+		CVar(Objective, 0, VISUAL)
 
 		CVar(ActiveAlpha, 255, VISUAL)
 		CVar(DormantAlpha, 50, VISUAL)
@@ -258,10 +290,8 @@ namespace Vars
 			CVar(Ragdolls, false, VISUAL)
 			CVar(Projectiles, false, VISUAL)
 			
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, VISUAL)
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), VISUAL)
+			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
 		SUBNAMESPACE_END(Friendly)
 
 		SUBNAMESPACE_BEGIN(Enemy)
@@ -270,10 +300,8 @@ namespace Vars
 			CVar(Ragdolls, false, VISUAL)
 			CVar(Projectiles, false, VISUAL)
 
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, VISUAL)
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), VISUAL)
+			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
 		SUBNAMESPACE_END(Enemy)
 
 		SUBNAMESPACE_BEGIN(Player)
@@ -281,51 +309,43 @@ namespace Vars
 			CVar(Friend, false, VISUAL)
 			CVar(Priority, false, VISUAL)
 		
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, VISUAL)
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), VISUAL)
+			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
 		SUBNAMESPACE_END(Player)
 
 		SUBNAMESPACE_BEGIN(World)
 			CVar(NPCs, false, VISUAL)
 			CVar(Pickups, false, VISUAL)
+			CVar(Objective, false, VISUAL)
+			CVar(Powerups, false, VISUAL)
 			CVar(Bombs, false, VISUAL)
 			CVar(Halloween, false, VISUAL)
 		
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, VISUAL)
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), VISUAL)
+			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
 		SUBNAMESPACE_END(World)
 
 		SUBNAMESPACE_BEGIN(Backtrack)
 			CVar(Enabled, false, VISUAL)
 			CVar(Draw, 0, VISUAL)
 				
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, NOSAVE) // unused
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), NOSAVE) // unused
+			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			//CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL) // unused
 		SUBNAMESPACE_END(Backtrack)
 
 		SUBNAMESPACE_BEGIN(FakeAngle)
 			CVar(Enabled, false, VISUAL)
-		
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, NOSAVE) // unused
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), NOSAVE) // unused
+
+			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			//CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL) // unused
 		SUBNAMESPACE_END(FakeAngle)
 
 		SUBNAMESPACE_BEGIN(Viewmodel)
 			CVar(Weapon, false, VISUAL)
 			CVar(Hands, false, VISUAL)
 			
-			CVar(VisibleMaterial, std::vector<std::string> { "Original" }, VISUAL)
-			CVar(OccludedMaterial, std::vector<std::string> {}, NOSAVE) // unused
-			CVar(VisibleColor, Color_t(255, 255, 255, 255), VISUAL)
-			CVar(OccludedColor, Color_t(255, 255, 255, 255), NOSAVE) // unused
+			CVar(WeaponVisible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
+			CVar(HandsVisible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
 	NAMESPACE_END(Chams)
 
@@ -336,10 +356,8 @@ namespace Vars
 			CVar(Ragdolls, false, VISUAL)
 			CVar(Projectiles, false, VISUAL)
 				
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Friendly)
 
 		SUBNAMESPACE_BEGIN(Enemy)
@@ -348,10 +366,8 @@ namespace Vars
 			CVar(Ragdolls, false, VISUAL)
 			CVar(Projectiles, false, VISUAL)
 				
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Enemy)
 
 		SUBNAMESPACE_BEGIN(Player)
@@ -359,51 +375,43 @@ namespace Vars
 			CVar(Friend, false, VISUAL)
 			CVar(Priority, false, VISUAL)
 				
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Player)
 
 		SUBNAMESPACE_BEGIN(World)
 			CVar(NPCs, false, VISUAL)
 			CVar(Pickups, false, VISUAL)
+			CVar(Objective, false, VISUAL)
+			CVar(Powerups, false, VISUAL)
 			CVar(Bombs, false, VISUAL)
 			CVar(Halloween, false, VISUAL)
 				
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(World)
 
 		SUBNAMESPACE_BEGIN(Backtrack)
 			CVar(Enabled, false, VISUAL)
 			CVar(Draw, 0, VISUAL)
 				
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Backtrack)
 
 		SUBNAMESPACE_BEGIN(FakeAngle)
 			CVar(Enabled, false, VISUAL)
 				
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(FakeAngle)
 
 		SUBNAMESPACE_BEGIN(Viewmodel)
 			CVar(Weapon, false, VISUAL)
 			CVar(Hands, false, VISUAL)
 
-			CVar(Stencil, false, VISUAL)
-			CVar(Blur, false, VISUAL)
-			CVar(StencilScale, 1, VISUAL)
-			CVar(BlurScale, 1, VISUAL)
+			CVar(Stencil, 0, VISUAL)
+			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
 	NAMESPACE_END(GLOW)
 
@@ -424,12 +432,14 @@ namespace Vars
 		SUBNAMESPACE_END(Removals)
 
 		SUBNAMESPACE_BEGIN(UI)
+			CVar(StreamerMode, 0, VISUAL)
+			CVar(ChatTags, 0, VISUAL)
 			CVar(FieldOfView, 0, VISUAL)
 			CVar(ZoomFieldOfView, 0, VISUAL)
 			CVar(RevealScoreboard, false, VISUAL)
-			CVar(ScoreboardPlayerlist, false)
-			CVar(CleanScreenshots, true)
+			CVar(ScoreboardUtility, false)
 			CVar(ScoreboardColors, false, VISUAL)
+			CVar(CleanScreenshots, true)
 			CVar(SniperSightlines, false, VISUAL)
 			CVar(PickupTimers, false, VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
@@ -441,14 +451,19 @@ namespace Vars
 			CVar(OffsetY, 0, VISUAL)
 			CVar(OffsetZ, 0, VISUAL)
 			CVar(Roll, 0, VISUAL)
-			CVar(Sway, false, VISUAL)
-			CVar(SwayScale, 5.f, VISUAL)
-			CVar(SwayInterp, 0.05f, VISUAL)
+			CVar(SwayScale, 0.f, VISUAL)
+			CVar(SwayInterp, 0.f, VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
 
-		SUBNAMESPACE_BEGIN(Tracers)
-			CVar(ParticleTracer, std::string("Off"), VISUAL)
-			CVar(ParticleTracerCrits, std::string("Off"), VISUAL)
+		SUBNAMESPACE_BEGIN(Particles)
+			CVar(BulletTrail, std::string("Off"), VISUAL)
+			CVar(CritTrail, std::string("Off"), VISUAL)
+			CVar(MedigunBeam, std::string("Off"), VISUAL)
+			CVar(MedigunCharge, std::string("Off"), VISUAL)
+			CVar(ProjectileTrail, std::string("Off"), VISUAL)
+			CVar(SpellFootsteps, 0, VISUAL) // 0 - Off, 1 - Color, 2 - Team, 3 - Halloween
+			CVar(DrawIconsThroughWalls, false, VISUAL)
+			CVar(DrawDamageNumbersThroughWalls, false, VISUAL)
 		SUBNAMESPACE_END(Tracers)
 
 		SUBNAMESPACE_BEGIN(Beams) // as of now, these will stay out of the menu
@@ -485,9 +500,8 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Simulation)
 			CVar(Enabled, false, VISUAL)
 			CVar(Timed, false, VISUAL)
-			CVar(Separators, false, VISUAL)
-			CVar(SeparatorLength, 12, VISUAL)
-			CVar(SeparatorSpacing, 6, VISUAL)
+			CVar(Style, 0, VISUAL)
+			CVar(SplashRadius, 0, VISUAL)
 			CVar(ProjectileTrajectory, false, VISUAL)
 			CVar(ProjectileCamera, false, VISUAL)
 			CVar(ProjectileWindow, WindowBox_t(), NOCOND)
@@ -563,7 +577,7 @@ namespace Vars
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
 			CVar(IconType, 1, VISUAL) // 0 - Icons, 1 - Portraits, 2 - Avatars
-			CVar(Draw, 0b101010, VISUAL) // { Cloaked, Priority, Friends, Team, Enemy, Local }
+			CVar(Draw, 0b101010, VISUAL)
 			CVar(IconSize, 24, VISUAL)
 			CVar(Health, false, VISUAL)
 			CVar(Height, false, VISUAL)
@@ -572,7 +586,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Buildings)
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
-			CVar(Draw, 0b01011, VISUAL) // { Priority, Friends, Team, Enemy, Local }
+			CVar(Draw, 0b01011, VISUAL)
 			CVar(Health, false, VISUAL)
 			CVar(IconSize, 18, VISUAL)
 		SUBNAMESPACE_END(Buildings)
@@ -580,7 +594,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(World)
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
-			CVar(Draw, 0b00011, VISUAL) // { Halloween, Bombs, Money, Ammo, Health }
+			CVar(Draw, 0b0000011, VISUAL)
 			CVar(IconSize, 14, VISUAL)
 		SUBNAMESPACE_END(World)
 	NAMESPACE_END(Radar)
@@ -595,11 +609,12 @@ namespace Vars
 			CVar(AutoCTap, false)
 			CVar(FastStop, false)
 			CVar(FastAccel, false)
-			CVar(FastStrafe, false)
 			CVar(NoPush, false)
 			CVar(CrouchSpeed, false)
+			CVar(MovementLock, false)
 
-			CVar(TimingOffset, -1, NOSAVE) // debug
+			CVar(TimingOffset, 0, NOSAVE) // debug
+			CVar(ChokeCount, 1, NOSAVE) // debug
 			CVar(ApplyAbove, 0, NOSAVE) // debug
 		SUBNAMESPACE_END(Movement)
 
@@ -612,7 +627,7 @@ namespace Vars
 		SUBNAMESPACE_END(Exploits)
 
 		SUBNAMESPACE_BEGIN(Automation)
-			CVar(AntiBackstab, false)
+			CVar(AntiBackstab, 0)
 			CVar(AntiAFK, false)
 			CVar(AntiAutobalance, false)
 			CVar(AcceptItemDrops, false)
@@ -631,6 +646,7 @@ namespace Vars
 			CVar(NetworkFix, false)
 			CVar(PredictionErrorJitterFix, false)
 			CVar(SetupBonesOptimization, false)
+			CVar(F2PChatBypass, false)
 		SUBNAMESPACE_END(Game)
 
 		SUBNAMESPACE_BEGIN(Queueing)
@@ -643,10 +659,6 @@ namespace Vars
 			CVar(InstantRespawn, false)
 			CVar(InstantRevive, false)
 		SUBNAMESPACE_END(Sound)
-
-		SUBNAMESPACE_BEGIN(Chat)
-			CVar(Tags, false)
-		SUBNAMESPACE_END(Chat)
 
 		SUBNAMESPACE_BEGIN(Steam)
 			CVar(EnableRPC, false)
@@ -666,16 +678,16 @@ namespace Vars
 		CVar(Team, Color_t(75, 175, 225, 255), VISUAL)
 		CVar(Local, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(Target, Color_t(255, 0, 0, 255), VISUAL)
-		CVar(Invulnerable, Color_t(125, 100, 175, 255), VISUAL)
+		CVar(Invulnerable, Color_t(200, 200, 255, 255), VISUAL)
 		CVar(Cloak, Color_t(150, 175, 210, 255), VISUAL)
 		CVar(Overheal, Color_t(75, 175, 255, 255), VISUAL)
 		CVar(HealthBar, Gradient_t({ 255, 0, 0, 255 }, { 0, 200, 125, 255 }), VISUAL)
 		CVar(UberBar, Color_t( 127, 255, 255, 255 ), VISUAL)
 		CVar(Health, Color_t(0, 225, 75, 255), VISUAL)
-		CVar(Ammo, Color_t(175, 175, 175, 255), VISUAL)
-		CVar(NPC, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(Bomb, Color_t(255, 75, 0, 255), VISUAL)
+		CVar(Ammo, Color_t(127, 127, 127, 255), VISUAL)
 		CVar(Money, Color_t(0, 150, 75, 255), VISUAL)
+		CVar(Powerup, Color_t(255, 175, 0, 255), VISUAL)
+		CVar(NPC, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(Halloween, Color_t(100, 0, 255, 255), VISUAL)
 
 		CVar(WorldModulation, Color_t(255, 255, 255, 255), VISUAL)
@@ -690,11 +702,13 @@ namespace Vars
 		CVar(ClippedColor, Color_t(255, 255, 255, 0), VISUAL)
 		CVar(HitboxEdge, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(HitboxFace, Color_t(255, 255, 255, 0), VISUAL)
+
+		CVar(SpellFootstep, Color_t(255, 255, 255, 0), VISUAL)
 	NAMESPACE_END(Colors)
 
 	NAMESPACE_BEGIN(Logging)
-		CVar(Logs, 0b0011) // { Damage, Class Changes, Vote cast, Vote start, Cheat Detection, Tags }
-		// LogTo // { Console, Party, Chat, Toasts }
+		CVar(Logs, 0b0011) // { Damage, Class Changes, Vote cast, Vote start, Cheat Detection, Tags, Aliases }
+		// LogTo: { Console, Party, Chat, Toasts }
 		CVar(Lifetime, 5.f, VISUAL)
 
 		SUBNAMESPACE_BEGIN(VoteStart)
@@ -720,12 +734,16 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Tags)
 			CVar(LogTo, 0b0001)
 		SUBNAMESPACE_END(Tags)
+
+		SUBNAMESPACE_BEGIN(Aliases)
+			CVar(LogTo, 0b0001)
+		SUBNAMESPACE_END(Aliases)
 	NAMESPACE_END(Logging)
 
 	NAMESPACE_BEGIN(Debug)
 		CVar(Info, false, NOSAVE)
 		CVar(Logging, false, NOSAVE)
 		CVar(ServerHitbox, false, NOSAVE)
-		CVar(AntiAimLines, false, NOSAVE)
+		CVar(AntiAimLines, false)
 	NAMESPACE_END(Debug)
 }

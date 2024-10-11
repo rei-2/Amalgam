@@ -7,20 +7,19 @@ class CSpectatorList
 private:
 	struct Spectator_t
 	{
-		std::wstring Name;
-		std::wstring Mode;
-		int RespawnIn;
-		bool RespawnTimeIncreased;
-		bool IsFriend;
-		int Team;
-		int Index;
+		std::string m_sName;
+		std::string m_sMode;
+		int m_iRespawnIn;
+		bool m_bRespawnTimeIncreased;
+		bool m_bIsFriend;
+		int m_iTeam;
+		int m_iIndex;
 	};
 
-	std::vector<Spectator_t> Spectators;
-	std::unordered_map<int, float> RespawnCache;
+	std::vector<Spectator_t> m_vSpectators;
+	std::unordered_map<int, float> m_mRespawnCache;
 
 public:
-	int SpecListX = 30, SpecListY = 100;
 	bool GetSpectators(CTFPlayer* pLocal);
 	void Run(CTFPlayer* pLocal);
 };

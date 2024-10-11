@@ -196,67 +196,60 @@ public:
 	NETVAR_OFF(m_iCurrentSeed, int, "CTFWeaponBase", "m_flLastCritCheckTime", 8);
 	NETVAR_OFF(m_flLastRapidFireCritCheckTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", 12);
 
-	VIRTUAL(m_iSlot, int, int(__thiscall*)(void*), this, 330);
-	VIRTUAL(m_iWeaponID, int, int(__thiscall*)(void*), this, 381);
-	VIRTUAL(m_iDamageType, int, int(__thiscall*)(void*), this, 382);
-	VIRTUAL(m_bEnergyWeapon, bool, bool(__thiscall*)(void*), this, 432);
+	VIRTUAL(GetSlot, int, int(__fastcall*)(void*), this, 330);
+	VIRTUAL(GetWeaponID, int, int(__fastcall*)(void*), this, 381);
+	VIRTUAL(GetDamageType, int, int(__fastcall*)(void*), this, 382);
+	VIRTUAL(IsEnergyWeapon, bool, bool(__fastcall*)(void*), this, 432);
+	VIRTUAL(AreRandomCritsEnabled, bool, bool(__fastcall*)(void*), this, 402);
 
 	OFFSET(m_iWeaponMode, int, 996);
 
 	float GetSwingRange(CBaseEntity* pLocal)
 	{
-		return reinterpret_cast<int(__thiscall*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 455))(pLocal);
+		return reinterpret_cast<int(__fastcall*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 455))(pLocal);
 	}
 
 	float GetSwingRange()
 	{
-		return m_iWeaponID() == TF_WEAPON_SWORD ? 72.f : 48.f;
+		return GetWeaponID() == TF_WEAPON_SWORD ? 72.f : 48.f;
 	}
 
-	bool CanFireCriticalShot(CBasePlayer* pOwner, bool bIsHeadshot = false)
+	bool CanFireCriticalShot(bool bIsHeadshot = false)
 	{
-		bool bOut = false;
+		auto pOwner = m_hOwnerEntity().Get()->As<CBasePlayer>();
+		if (!pOwner)
+			return false;
 
-		if (pOwner)
-		{
-			int& iFOV = pOwner->m_iFOV(), nFovBackup = iFOV;
-			iFOV = 70;
-			bOut = reinterpret_cast<bool(__thiscall*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 425))(this, bIsHeadshot, nullptr);
-			iFOV = nFovBackup;
-		}
-
-		return bOut;
+		int& iFOV = pOwner->m_iFOV(), nFovBackup = iFOV;
+		iFOV = 70;
+		bool bReturn = reinterpret_cast<bool(__fastcall*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 425))(this, bIsHeadshot, nullptr);
+		iFOV = nFovBackup;
+		return bReturn;
 	}
 
-	bool CanPrimaryAttack(CBasePlayer* pOwner)
+	bool CanPrimaryAttack()
 	{
-		bool bOut = false;
+		auto pOwner = m_hOwnerEntity().Get()->As<CBasePlayer>();
+		if (!pOwner)
+			return false;
 
-		if (pOwner)
-		{
-			float flCurTime = static_cast<float>(pOwner->m_nTickBase()) * I::GlobalVars->interval_per_tick;
-			bOut = m_flNextPrimaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
-		}
-
-		return bOut;
+		float flCurTime = TICKS_TO_TIME(pOwner->m_nTickBase());
+		return m_flNextPrimaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
 	}
 
-	bool CanSecondaryAttack(CBasePlayer* pOwner)
+	bool CanSecondaryAttack()
 	{
-		bool bOut = false;
+		auto pOwner = m_hOwnerEntity().Get()->As<CBasePlayer>();
+		if (!pOwner)
+			return false;
 
-		if (pOwner)
-		{
-			float flCurTime = static_cast<float>(pOwner->m_nTickBase()) * I::GlobalVars->interval_per_tick;
-			bOut = m_flNextSecondaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
-		}
-
-		return bOut;
+		float flCurTime = TICKS_TO_TIME(pOwner->m_nTickBase());
+		return m_flNextSecondaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
 	}
 
 	bool HasPrimaryAmmoForShot()
 	{
-		if (m_bEnergyWeapon())
+		if (IsEnergyWeapon())
 			return m_flEnergy() > 0.f;
 
 		int nClip1 = m_iClip1();
@@ -266,11 +259,7 @@ public:
 			if (auto pOwner = m_hOwnerEntity().Get())
 			{
 				int nAmmoCount = pOwner->As<CBasePlayer>()->GetAmmoCount(m_iPrimaryAmmoType());
-
-				if (m_iItemDefinitionIndex() == Engi_m_TheWidowmaker)
-					return nAmmoCount > 29;
-
-				return nAmmoCount > 0;
+				return nAmmoCount > (m_iItemDefinitionIndex() == Engi_m_TheWidowmaker ? 29 : 0);
 			}
 		}
 
@@ -279,25 +268,18 @@ public:
 
 	bool IsInReload()
 	{
-		static int nOffset = U::NetVars.GetNetVar("CBaseCombatWeapon", "m_flNextPrimaryAttack") + 12;
-		bool m_bInReload = *reinterpret_cast<bool*>(std::uintptr_t(this) + nOffset);
-		return (m_bInReload || m_iReloadMode() != 0);
+		return m_bInReload() || m_iReloadMode() != 0;
 	}
 
-	bool IsStreamingWeapon()
+	bool IsRapidFire()
 	{
 		auto pWeaponInfo = GetWeaponInfo();
 		return pWeaponInfo && pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
 	}
 
-	bool CanHeadShot(CBasePlayer* pOwner)
+	bool CanHeadShot()
 	{
-		bool bOut = false;
-
-		if (pOwner)
-			bOut = (m_iDamageType() & DMG_USE_HITLOCATIONS) && CanFireCriticalShot(pOwner, true);
-
-		return bOut;
+		return GetDamageType() & DMG_USE_HITLOCATIONS && CanFireCriticalShot(true);
 	}
 
 	bool AmbassadorCanHeadshot()
@@ -309,13 +291,13 @@ public:
 
 	void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
 	{
-		using fn = void(__thiscall*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float);
+		using fn = void(__fastcall*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float);
 		reinterpret_cast<fn>(U::Memory.GetVFunc(this, 399))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
 	}
 
 	void GetSpreadAngles(Vec3& out)
 	{
-		S::CTFWeaponBase_GetSpreadAngles.As<void(__thiscall*)(void*, Vec3&)>()(this, out);
+		S::CTFWeaponBase_GetSpreadAngles.As<void(__fastcall*)(void*, Vec3&)>()(this, out);
 	}
 
 	Vec3 GetSpreadAngles()
@@ -327,17 +309,17 @@ public:
 
 	void UpdateAllViewmodelAddons()
 	{
-		return S::CTFWeaponBase_UpdateAllViewmodelAddons.As<void(__thiscall*)(void*)>()(this);
+		return S::CTFWeaponBase_UpdateAllViewmodelAddons.As<void(__fastcall*)(void*)>()(this);
 	}
 
 	float ApplyFireDelay(float flDelay)
 	{
-		return reinterpret_cast<float(__thiscall*)(void*, float)>(U::Memory.GetVFunc(this, 407))(this, flDelay);
+		return reinterpret_cast<float(__fastcall*)(void*, float)>(U::Memory.GetVFunc(this, 407))(this, flDelay);
 	}
 
 	bool CalcIsAttackCriticalHelperMelee()
 	{
-		return S::CTFWeaponBaseMelee_CalcIsAttackCriticalHelper.As<bool(__thiscall*)(void*)>()(this);
+		return S::CTFWeaponBaseMelee_CalcIsAttackCriticalHelper.As<bool(__fastcall*)(void*)>()(this);
 	}
 
 	bool CalcIsAttackCriticalHelper()
@@ -347,12 +329,12 @@ public:
 
 	CBaseAnimating* GetAppropriateWorldOrViewModel()
 	{
-		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.As<CBaseAnimating * (__thiscall*)(void*)>()(this);
+		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.As<CBaseAnimating * (__fastcall*)(void*)>()(this);
 	}
 
 	float GetWeaponSpread()
 	{
-		return S::CTFWeaponBaseGun_GetWeaponSpread.As<float(__thiscall*)(void*)>()(this);
+		return S::CTFWeaponBaseGun_GetWeaponSpread.As<float(__fastcall*)(void*)>()(this);
 	}
 
 	CHudTexture* GetWeaponIcon();

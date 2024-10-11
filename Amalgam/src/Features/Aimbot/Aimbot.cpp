@@ -5,9 +5,10 @@
 #include "AimbotMelee/AimbotMelee.h"
 #include "AutoDetonate/AutoDetonate.h"
 #include "AutoAirblast/AutoAirblast.h"
-#include "AutoUber/AutoUber.h"
+#include "AutoHeal/AutoHeal.h"
 #include "AutoRocketJump/AutoRocketJump.h"
 #include "../Misc/Misc.h"
+#include "../Visuals/Visuals.h"
 
 bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
@@ -21,7 +22,7 @@ bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		|| pLocal->IsAGhost())
 		return false;
 
-	switch (G::WeaponDefIndex)
+	switch (pWeapon->m_iItemDefinitionIndex())
 	{
 	case Soldier_m_RocketJumper:
 	case Demoman_s_StickyJumper:
@@ -34,38 +35,50 @@ bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	return true;
 }
 
-bool CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+void CAimbot::RunAimbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSecondaryType)
 {
-	G::AimPosition = Vec3();
-	if (pCmd->weaponselect)
-		return false;
+	EWeaponType eWeaponType = !bSecondaryType ? G::PrimaryWeaponType : G::SecondaryWeaponType;
 
-	F::AutoRocketJump.Run(pLocal, pWeapon, pCmd);
+	bool bOriginal;
+	if (bSecondaryType)
+		bOriginal = G::CanPrimaryAttack, G::CanPrimaryAttack = G::CanSecondaryAttack;
 
-	if (!ShouldRun(pLocal, pWeapon))
-		return false;
-
-	F::AutoDetonate.Run(pLocal, pWeapon, pCmd);
-	F::AutoAirblast.Run(pLocal, pWeapon, pCmd);
-	F::AutoUber.Run(pLocal, pWeapon, pCmd);
-
-	const bool bAttacking = G::IsAttacking;
-	switch (G::WeaponType)
+	switch (eWeaponType)
 	{
 	case EWeaponType::HITSCAN: F::AimbotHitscan.Run(pLocal, pWeapon, pCmd); break;
 	case EWeaponType::PROJECTILE: F::AimbotProjectile.Run(pLocal, pWeapon, pCmd); break;
 	case EWeaponType::MELEE: F::AimbotMelee.Run(pLocal, pWeapon, pCmd); break;
 	}
 
-	switch (pWeapon->m_iWeaponID())
+	if (bSecondaryType)
+		G::CanPrimaryAttack = bOriginal;
+}
+
+void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+{
+	if (F::AimbotProjectile.bLastTickCancel)
 	{
-	case TF_WEAPON_COMPOUND_BOW:
-	case TF_WEAPON_PIPEBOMBLAUNCHER:
-	case TF_WEAPON_STICKY_BALL_LAUNCHER:
-	case TF_WEAPON_GRENADE_STICKY_BALL:
-	case TF_WEAPON_CANNON:
-		if (!(G::Buttons & IN_ATTACK) && pCmd->buttons & IN_ATTACK)
-			return true;
+		pCmd->weaponselect = F::AimbotProjectile.bLastTickCancel;
+		F::AimbotProjectile.bLastTickCancel = 0;
 	}
-	return bAttacking != G::IsAttacking;
+
+	bRan = false;
+	G::AimPosition = Vec3();
+	if (pCmd->weaponselect)
+		return;
+
+	F::AutoRocketJump.Run(pLocal, pWeapon, pCmd);
+	if (!ShouldRun(pLocal, pWeapon))
+		return;
+
+	F::AutoDetonate.Run(pLocal, pWeapon, pCmd);
+	F::AutoAirblast.Run(pLocal, pWeapon, pCmd);
+	F::AutoHeal.Run(pLocal, pWeapon, pCmd);
+
+	bool bAttacking1 = G::IsAttacking;
+	RunAimbot(pLocal, pWeapon, pCmd);
+	RunAimbot(pLocal, pWeapon, pCmd, true);
+
+	if (Vars::Visuals::Simulation::TrajectoryOnShot.Value && G::IsAttacking && !bRan)
+		F::Visuals.ProjectileTrace(pLocal, pWeapon, false);
 }

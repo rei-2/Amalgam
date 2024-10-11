@@ -5,24 +5,23 @@
 
 void CAutoRocketJump::ManageAngle(CTFWeaponBase* pWeapon, CUserCmd* pCmd, Vec3& viewAngles)
 {
-	Vec3 wishVel = { pCmd->forwardmove, pCmd->sidemove, 0.f }, wishAng;
-	Math::VectorAngles(wishVel, wishAng);
+	Vec3 vWishVel = { pCmd->forwardmove, pCmd->sidemove, 0.f };
+	Vec3 vWishAng; Math::VectorAngles(vWishVel, vWishAng);
 
-	const bool bMoving = wishVel.Length2D() > 200.f;
+	const bool bMoving = vWishVel.Length2D() > 200.f;
 
-	float v_x = 0.f;
-	float v_y = bMoving ? viewAngles.y - wishAng.y : viewAngles.y;
+	Vec3 vAngle = { 0.f, bMoving ? viewAngles.y - vWishAng.y : viewAngles.y, 0.f };
 	if (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheOriginal)
 	{
-		v_x = bMoving ? 70.f : 89.f;
-		v_y -= 180.f;
+		vAngle.x = bMoving ? 70.f : 89.f;
+		vAngle.y -= 180.f;
 	}
 	else
 	{
-		v_x = bMoving ? 75.f : 89.f;
-		v_y -= bMoving ? 133.f : 81.5f;
+		vAngle.x = bMoving ? 75.f : 89.f;
+		vAngle.y -= bMoving ? 133.f : 81.5f;
 	}
-	viewAngles = { v_x, v_y, 0 };
+	viewAngles = vAngle;
 }
 
 void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
@@ -35,27 +34,27 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 
 	bool bValidWeapon = false;
 	{
-		switch (pWeapon->m_iWeaponID())
+		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_ROCKETLAUNCHER:
 		case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
 		case TF_WEAPON_PARTICLE_CANNON: bValidWeapon = true;
 		}
 	}
-	if (bValidWeapon && (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value))
-		pCmd->buttons &= ~IN_ATTACK2; // fix for retarded issue
 	if (!bValidWeapon)
 	{
 		iFrame = -1;
 		return;
 	}
+	else if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
+		pCmd->buttons &= ~IN_ATTACK2; // fix for retarded issue
 
-	const bool bCurrGrounded = pLocal->OnSolid();
+	static bool bStaticGrounded = false;
+	bool bLastGrounded = bStaticGrounded, bCurrGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
 
-	// doesn't seem 100% consistent, unsure if it's fps related, user error, or what
-	if (iFrame == -1 && (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka ? G::IsAttacking : G::CanPrimaryAttack))
+	const bool bReloading = pWeapon->IsInReload();
+	if (iFrame == -1 && (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka ? G::IsAttacking && !bReloading : G::CanPrimaryAttack))
 	{
-		const bool bReloading = pWeapon->IsInReload();
 		Vec3 viewAngles = pCmd->viewangles;
 		if (Vars::Misc::Movement::AutoRocketJump.Value)
 			ManageAngle(pWeapon, pCmd, viewAngles);
@@ -65,9 +64,12 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		{
 			PlayerStorage localStorage;
 			ProjectileInfo projInfo = {};
-			if (F::MoveSim.Initialize(pLocal, localStorage, false) && F::ProjSim.GetInfo(pLocal, pWeapon, viewAngles, projInfo) && F::ProjSim.Initialize(projInfo))
+
+			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, viewAngles, projInfo) && F::ProjSim.Initialize(projInfo);
+			bool bMoveSimSetup = F::MoveSim.Initialize(pLocal, localStorage, false); // do move sim after to not mess with proj sim
+			if (bMoveSimSetup && bProjSimSetup)
 			{
-				F::ProjSim.RunTick(projInfo); // run an initial time because dumb
+				Vec3 vOriginal = F::ProjSim.GetOrigin();
 				for (int n = 1; n < 10; n++)
 				{
 					Vec3 Old = F::ProjSim.GetOrigin();
@@ -77,8 +79,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 					F::MoveSim.RunTick(localStorage);
 
 					CGameTrace trace = {};
-					CTraceFilterProjectile filter = {};
-					filter.pSkip = pLocal;
+					CTraceFilterProjectile filter = {}; filter.pSkip = pLocal;
 					SDK::Trace(Old, New, MASK_SOLID, &filter, &trace);
 					if (trace.DidHit())
 					{
@@ -100,10 +101,10 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 							SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", iDelay, n).c_str(), { 255, 0, 0, 255 }, Vars::Debug::Logging.Value);
 							if (Vars::Debug::Info.Value)
 							{
-								G::LinesStorage.clear(); G::BoxesStorage.clear();
-								G::LinesStorage.push_back({ {{ pLocal->GetShootPos(), {} }, { trace.endpos, {} }}, I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value, true });
+								G::BulletsStorage.clear(); G::BoxesStorage.clear();
+								G::BulletsStorage.push_back({ { vOriginal, trace.endpos }, I::GlobalVars->curtime + 5.f, {}, true});
 								Vec3 angles; Math::VectorAngles(trace.plane.normal, angles);
-								G::BoxesStorage.push_back({ trace.endpos, { -1.f, -1.f, -1.f }, { 1.f, 1.f, 1.f }, angles, I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value, {}, true });
+								G::BoxesStorage.push_back({ trace.endpos, { -1.f, -1.f, -1.f }, { 1.f, 1.f, 1.f }, angles, I::GlobalVars->curtime + 5.f, {}, { 0, 0, 0, 0 }, true });
 							}
 						}
 
@@ -118,13 +119,10 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		{
 			if (bCurrGrounded && bCurrGrounded == bLastGrounded && !pLocal->IsDucking())
 			{
+				if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
+					iFrame = 0;
 				if (Vars::Misc::Movement::AutoRocketJump.Value)
-				{
-					iFrame = 0;
 					bFull = true;
-				}
-				else if (Vars::Misc::Movement::AutoCTap.Value)
-					iFrame = 0;
 			}
 			else if (!bCurrGrounded && pCmd->buttons & IN_DUCK)
 			{
@@ -133,12 +131,12 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 
 				if (Vars::Misc::Movement::AutoRocketJump.Value && !bReloading)
 				{
-					G::SilentAngles = true; // would use G::PSilentAngles but that would mess with timing
+					G::SilentAngles = true;
 					pCmd->viewangles = viewAngles;
 				}
 			}
 
-			if (iFrame != -1 && bReloading && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
+			if (iFrame != -1 && bReloading)
 			{
 				iFrame = -1;
 				bFull = false;
@@ -146,14 +144,13 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 			}
 		}
 
-		if (iFrame == -1 && pWeapon->m_iWeaponID() == TF_WEAPON_PARTICLE_CANNON && G::Buttons & IN_ATTACK2)
+		if (iFrame == -1 && pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON && G::Buttons & IN_ATTACK2)
 			pCmd->buttons |= IN_ATTACK2;
 	}
 
 	if (iFrame != -1)
 	{
 		iFrame++;
-		G::IsAttacking = true; // even if we aren't attacking, prevent other stuff from messing with timing, e.g. antiaim
 
 		if (iFrame == 1)
 		{
@@ -162,10 +159,13 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 
 			if (bFull)
 			{
-				G::SilentAngles = true; // would use G::PSilentAngles but that would mess with timing
+				G::SilentAngles = true;
 				ManageAngle(pWeapon, pCmd, pCmd->viewangles);
 			}
 		}
+
+		if (iFrame <= Vars::Misc::Movement::ChokeCount.Value)
+			G::PSilentAngles = true, G::SilentAngles = false; // only con to this is that you may not be able to choke depending on the ticks charged
 
 		if (iDelay > 1)
 		{
@@ -181,12 +181,12 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		else // won't ctap in time
 			pCmd->buttons |= IN_DUCK | IN_JUMP;
 
-		if (iFrame == iDelay + (iDelay > 1 ? 1 : 3))
+		if (iFrame == iDelay + 3)
 		{
 			iFrame = -1;
 			bFull = false;
 		}
 	}
 
-	bLastGrounded = bCurrGrounded;
+	bRunning = iFrame != -1; // prevent stuff like anti-aim messing with timing
 }

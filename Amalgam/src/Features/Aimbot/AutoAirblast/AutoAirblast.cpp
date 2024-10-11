@@ -2,7 +2,7 @@
 
 bool CAutoAirblast::CanAirblastEntity(CTFPlayer* pLocal, CBaseEntity* pEntity, Vec3& vAngle, Vec3& vPos)
 {
-	Vec3 vForward = {}; Math::AngleVectors(vAngle, &vForward);
+	Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 	const Vec3 vOrigin = pLocal->GetShootPos() + (vForward * 128.f);
 
 	CBaseEntity* pTarget;
@@ -22,8 +22,8 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 	if (!Vars::Aimbot::Projectile::AutoAirblast.Value || !G::CanSecondaryAttack /*|| Vars::Auto::Airblast::DisableOnAttack.Value && pCmd->buttons & IN_ATTACK*/)
 		return;
 
-	const int iWeaponID = pWeapon->m_iWeaponID();
-	if (iWeaponID != TF_WEAPON_FLAMETHROWER && iWeaponID != TF_WEAPON_FLAME_BALL || G::WeaponDefIndex == Pyro_m_ThePhlogistinator)
+	const int iWeaponID = pWeapon->GetWeaponID();
+	if (iWeaponID != TF_WEAPON_FLAMETHROWER && iWeaponID != TF_WEAPON_FLAME_BALL || pWeapon->m_iItemDefinitionIndex() == Pyro_m_ThePhlogistinator)
 		return;
 
 	const Vec3 vEyePos = pLocal->GetShootPos();
@@ -37,16 +37,17 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 		switch (pProjectile->GetClassID())
 		{
 		case ETFClassID::CTFGrenadePipebombProjectile:
+		case ETFClassID::CTFProjectile_Cleaver:
 		case ETFClassID::CTFStunBall:
 		{
 			if (pProjectile->As<CTFGrenadePipebombProjectile>()->m_bTouched())
-				continue; // Ignore landed stickies and sandman balls
+				continue; // ignore landed vphysics objects
 			break;
 		}
 		case ETFClassID::CTFProjectile_Arrow:
 		{
 			if (pProjectile->GetAbsVelocity().IsZero())
-				continue; // Ignore arrows with no velocity / not moving
+				continue; // ignore arrows with no velocity / not moving
 		}
 		}
 

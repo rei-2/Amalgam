@@ -92,7 +92,7 @@ struct EmitSound_t
 const static std::vector<std::string> NOISEMAKER_SOUNDS{ "items/halloween", "items/football_manager", "items/japan_fundraiser", "items/samurai", "items/summer", "misc/happy_birthday_tf", "misc/jingle_bells" };
 
 MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), void, __fastcall,
-	void* ecx, IRecipientFilter& filter, int entindex, const EmitSound_t& ep)
+	void* rcx, IRecipientFilter& filter, int entindex, const EmitSound_t& ep)
 {
 	if (ep.m_pSoundName)
 	{
@@ -117,5 +117,5 @@ MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), voi
 		}
 	}
 
-	return CALL_ORIGINAL(ecx, filter, entindex, ep);
+	return CALL_ORIGINAL(rcx, filter, entindex, ep);
 }

@@ -1,3 +1,7 @@
+#define TICK_INTERVAL I::GlobalVars->interval_per_tick
+#define TIME_TO_TICKS(dt) (static_cast<int>(0.5f + static_cast<float>(dt) / TICK_INTERVAL))
+#define TICKS_TO_TIME(t) (TICK_INTERVAL * (t))
+#define ROUND_TO_TICKS(t) (TICKS_TO_TIME(TIME_TO_TICKS(t)))
 #define MAKE_HOOK(name, address, type, callconvo, ...) namespace Hooks \
 {\
 	namespace name\
@@ -35,16 +39,16 @@ namespace MAKE_INTERFACE_SCOPE \
 #define NETVAR(_name, type, table, name) type& _name() \
 { \
 	static int nOffset = U::NetVars.GetNetVar(table, name); \
-	return *reinterpret_cast<type*>(std::uintptr_t(this) + nOffset); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset); \
 }
 #define NETVAR_OFF(_name, type, table, name, offset) type& _name() \
 { \
 	static int nOffset = U::NetVars.GetNetVar(table, name) + offset; \
-	return *reinterpret_cast<type*>(std::uintptr_t(this) + nOffset); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset); \
 }
 #define OFFSET(name, type, offset) type& name() \
 { \
-	return *reinterpret_cast<type*>(std::uintptr_t(this) + offset); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + offset); \
 }
 #define VIRTUAL(name, type, fn, base, index) type name() \
 { \
@@ -57,3 +61,7 @@ namespace MAKE_INTERFACE_SCOPE \
 #define MAKE_SIGNATURE(name, dll, sig, offset) namespace S { inline CSignature name(dll, sig, offset, #name); }
 #define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }
 #define ADD_FEATURE(type, name) ADD_FEATURE_CUSTOM(type, name, F)
+#define CVar(name, value, __VA_ARGS__) inline ConfigVar<decltype(value)> name{ value, GetNamespace() + GetSubname() + std::string(#name), __VA_ARGS__ };
+#define VISUAL (1 << 0)
+#define NOSAVE (1 << 1)
+#define NOCOND (1 << 2)

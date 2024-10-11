@@ -57,4 +57,4 @@ public:
 class CTFGameMovement : public CGameMovement {};
 
 MAKE_INTERFACE_VERSION(CGameMovement, GameMovement, "client.dll", "GameMovement001");
-//MAKE_INTERFACE_SIGNATURE(CTFGameMovement, TFGameMovement, "client.dll", "48 8D 0D ? ? ? ? E8 ? ? ? ? 48 8D 05 ? ? ? ? 48 C7 05 ? ? ? ? ? ? ? ? 48 8D 0D ? ? ? ? 48 89 05 ? ? ? ? C6 05", 0x0, 1);
+//MAKE_INTERFACE_SIGNATURE(CTFGameMovement, TFGameMovement, "client.dll", "48 8B 0D ? ? ? ? 48 8B 01 FF 50 ? EB ? 48 8B 03", 0x0, 1);

@@ -16,8 +16,8 @@ void CKeyHandler::StoreKey(int iKey, KeyStorage* pStorage)
 	const bool bPressed = bDown && !pStorage->bIsDown;
 
 	// double click
-	const auto iEpoch = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-	const bool bDouble = bPressed && iEpoch < pStorage->iPressTime + 250;
+	const double dFloatTime = SDK::PlatFloatTime();
+	const bool bDouble = bPressed && dFloatTime < pStorage->dPressTime + 0.25;
 
 	// released
 	const bool bReleased = !bDown && pStorage->bIsDown;
@@ -27,7 +27,7 @@ void CKeyHandler::StoreKey(int iKey, KeyStorage* pStorage)
 	pStorage->bIsDouble = bDouble;
 	pStorage->bIsReleased = bReleased;
 	if (bPressed)
-		pStorage->iPressTime = iEpoch;
+		pStorage->dPressTime = dFloatTime;
 }
 
 bool CKeyHandler::Down(int iKey, const bool bStore, KeyStorage* pStorage)

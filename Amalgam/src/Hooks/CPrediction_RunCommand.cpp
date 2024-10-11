@@ -1,14 +1,18 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/EnginePrediction/EnginePrediction.h"
+
 std::vector<Vec3> vAngles;
 
 MAKE_HOOK(CPrediction_RunCommand, U::Memory.GetVFunc(I::Prediction, 17), void, __fastcall,
-	void* ecx, CTFPlayer* pPlayer, CUserCmd* pCmd, IMoveHelper* moveHelper)
+	void* rcx, CTFPlayer* pPlayer, CUserCmd* pCmd, IMoveHelper* pMoveHelper)
 {
-	CALL_ORIGINAL(ecx, pPlayer, pCmd, moveHelper);
+	F::EnginePrediction.ScalePlayers(H::Entities.GetLocal());
+	CALL_ORIGINAL(rcx, pPlayer, pCmd, pMoveHelper);
+	F::EnginePrediction.RestorePlayers();
 
 	// credits: KGB
-	if (pPlayer != H::Entities.GetLocal() || G::Recharge || pCmd->hasbeenpredicted)
+	if (pCmd->hasbeenpredicted || G::Recharge)
 		return;
 
 	auto pAnimState = pPlayer->GetAnimState();

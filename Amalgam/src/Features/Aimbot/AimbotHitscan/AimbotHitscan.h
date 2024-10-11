@@ -7,6 +7,7 @@ class CAimbotHitscan
 {
 	bool PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo);
 	std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
+	std::vector<Target_t> GetTargetsMedigun(CTFPlayer* pLocal, CWeaponMedigun* pWeapon);
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	bool IsHitboxValid(int nHitbox);

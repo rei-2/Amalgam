@@ -1,15 +1,13 @@
 #include "../SDK/SDK.h"
 
-#include "../Features/Backtrack/Backtrack.h"
-
 MAKE_SIGNATURE(CBaseAnimating_SetupBones, "client.dll", "48 8B C4 44 89 40 ? 48 89 50 ? 55 53", 0x0);
 
 MAKE_HOOK(CBaseAnimating_SetupBones, S::CBaseAnimating_SetupBones(), bool, __fastcall,
-	void* ecx, matrix3x4* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime)
+	void* rcx, matrix3x4* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime)
 {
-	if (Vars::Misc::Game::SetupBonesOptimization.Value && !F::Backtrack.bSettingUpBones)
+	if (Vars::Misc::Game::SetupBonesOptimization.Value && !H::Entities.IsSettingUpBones())
 	{
-		auto pBaseEntity = reinterpret_cast<CBaseEntity*>(std::uintptr_t(ecx) - 8);
+		auto pBaseEntity = reinterpret_cast<CBaseEntity*>(uintptr_t(rcx) - 8);
 		if (pBaseEntity)
 		{
 			auto GetRootMoveParent = [&]()
@@ -47,5 +45,5 @@ MAKE_HOOK(CBaseAnimating_SetupBones, S::CBaseAnimating_SetupBones(), bool, __fas
 		}
 	}
 
-	return CALL_ORIGINAL(ecx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+	return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
 }

@@ -4,12 +4,8 @@
 
 DWORD WINAPI MainThread(LPVOID lpParam)
 {
-	while (!GetModuleHandleA("XAudio2_7.dll"))
-		Sleep(2000);
-
 	U::Core.Load();
-	while (!U::Core.ShouldUnload())
-		Sleep(50);
+	U::Core.Loop();
 	U::Core.Unload();
 
 #ifndef _DEBUG

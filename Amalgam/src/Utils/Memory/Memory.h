@@ -6,7 +6,7 @@
 class CMemory
 {
 public:
-	std::uintptr_t FindSignature(const char* szModule, const char* szPattern);
+	uintptr_t FindSignature(const char* szModule, const char* szPattern);
 	PVOID FindInterface(const char* szModule, const char* szObject);
 
 	inline void* GetVFunc(void* instance, size_t index)
@@ -15,7 +15,7 @@ public:
 		return vtable[index];
 	}
 
-	inline std::uintptr_t RelToAbs(const std::uintptr_t address)
+	inline uintptr_t RelToAbs(const uintptr_t address)
 	{
 		return *reinterpret_cast<std::int32_t*>(address + 0x3) + address + 0x7;
 	}

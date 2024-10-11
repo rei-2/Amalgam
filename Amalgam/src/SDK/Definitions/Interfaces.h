@@ -18,6 +18,7 @@
 #include "Interfaces/IMaterialSystem.h"
 #include "Interfaces/IMatSystemSurface.h"
 #include "Interfaces/IMoveHelper.h"
+#include "Interfaces/IPanel.h"
 #include "Interfaces/IStudioRender.h"
 #include "Interfaces/IUniformRandomStream.h"
 #include "Interfaces/IVEngineClient.h"
@@ -27,7 +28,6 @@
 #include "Interfaces/IVRenderView.h"
 #include "Interfaces/Prediction.h"
 #include "Interfaces/SteamInterfaces.h"
-#include "Interfaces/VGuiPanel.h"
 #include "Interfaces/ViewRenderBeams.h"
 #include "Interfaces/VPhysics.h"
 

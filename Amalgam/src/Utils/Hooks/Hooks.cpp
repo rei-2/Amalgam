@@ -1,7 +1,7 @@
 #include "Hooks.h"
 
 #include "../Assert/Assert.h"
-#include "../../Hooks/Direct3DDevice9_EndScene.h"
+#include "../../Hooks/Direct3DDevice9.h"
 
 CHook::CHook(std::string sName, void* pInitFunc)
 {
@@ -14,7 +14,7 @@ void CHooks::Initialize()
 	MH_Initialize();
 
 	WndProc::Initialize();
-	for (const auto& [_, pHook] : m_mHooks)
+	for (auto& [_, pHook] : m_mHooks)
 		reinterpret_cast<void(__cdecl*)()>(pHook->m_pInitFunc)();
 
 	AssertCustom(MH_EnableHook(MH_ALL_HOOKS) == MH_OK, "MH failed to enable all hooks!");

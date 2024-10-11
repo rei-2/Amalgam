@@ -5,10 +5,11 @@ class CCore
 {
 public:
 	void Load();
+	void Loop();
 	void Unload();
 
-	bool ShouldUnload();
 	bool bUnload = false;
+	bool bEarly = false;
 };
 
 ADD_FEATURE_CUSTOM(CCore, Core, U);

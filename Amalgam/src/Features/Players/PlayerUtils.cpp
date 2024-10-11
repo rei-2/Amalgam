@@ -11,72 +11,78 @@ uint32_t GetFriendsID(int iIndex)
 	return 0;
 }
 
-bool CPlayerlistUtils::GetTag(std::string sTag, PriorityLabel_t* plTag)
+PriorityLabel_t* CPlayerlistUtils::GetTag(int iID)
 {
-	if (!sTag.length())
-		return false;
+	if (iID > -1 && iID < m_vTags.size())
+		return &m_vTags[iID];
 
-	if (mTags.contains(sTag))
+	return nullptr;
+}
+
+int CPlayerlistUtils::GetTag(std::string sTag)
+{
+	auto uHash = FNV1A::Hash32(sTag.c_str());
+
+	int iID = -1;
+	for (auto& tTag : m_vTags)
 	{
-		*plTag = mTags[sTag];
-		return true;
+		iID++;
+		if (uHash == FNV1A::Hash32(tTag.Name.c_str()))
+			return iID;
 	}
 
-	return false;
+	return -1;
 }
 
 
 
-void CPlayerlistUtils::AddTag(uint32_t friendsID, std::string sTag, bool bSave, std::string sName)
+void CPlayerlistUtils::AddTag(uint32_t friendsID, int iID, bool bSave, std::string sName)
 {
 	if (!friendsID)
 		return;
 
-	if (!HasTag(friendsID, sTag))
+	if (!HasTag(friendsID, iID))
 	{
-		mPlayerTags[friendsID].push_back(sTag);
-		bSavePlayers = bSave;
+		m_mPlayerTags[friendsID].push_back(iID);
+		m_bSavePlayers = bSave;
 		if (sName.length())
 		{
-			PriorityLabel_t plTag;
-			if (GetTag(sTag, &plTag))
-				F::Records.TagsChanged(sName, "Added", plTag.Color.ToHexA(), sTag);
+			if (PriorityLabel_t* pTag = GetTag(iID))
+				F::Records.TagsChanged(sName, "Added", pTag->Color.ToHexA(), pTag->Name);
 		}
 	}
 }
-void CPlayerlistUtils::AddTag(int iIndex, std::string sTag, bool bSave, std::string sName)
+void CPlayerlistUtils::AddTag(int iIndex, int iID, bool bSave, std::string sName)
 {
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
-		AddTag(friendsID, sTag, bSave, sName);
+		AddTag(friendsID, iID, bSave, sName);
 }
 
-void CPlayerlistUtils::RemoveTag(uint32_t friendsID, std::string sTag, bool bSave, std::string sName)
+void CPlayerlistUtils::RemoveTag(uint32_t friendsID, int iID, bool bSave, std::string sName)
 {
 	if (!friendsID)
 		return;
 
-	auto uHash = FNV1A::Hash(sTag.c_str());
-	auto& mTags = mPlayerTags[friendsID];
-	for (auto it = mTags.begin(); it != mTags.end(); it++)
+	auto& _vTags = m_mPlayerTags[friendsID];
+	for (auto it = _vTags.begin(); it != _vTags.end(); it++)
 	{
-		if (uHash = FNV1A::Hash(it->c_str()))
+		if (iID == *it)
 		{
-			mTags.erase(it);
-			bSavePlayers = bSave;
+			_vTags.erase(it);
+			m_bSavePlayers = bSave;
 			if (sName.length())
 			{
-				PriorityLabel_t plTag;
-				if (GetTag(sTag, &plTag))
-					F::Records.TagsChanged(sName, "Removed", plTag.Color.ToHexA(), sTag);
+				if (auto pTag = GetTag(iID))
+					F::Records.TagsChanged(sName, "Removed", pTag->Color.ToHexA(), pTag->Name);
 			}
 			break;
 		}
 	}
 }
-void CPlayerlistUtils::RemoveTag(int iIndex, std::string sTag, bool bSave, std::string sName)
+void CPlayerlistUtils::RemoveTag(int iIndex, int iID, bool bSave, std::string sName)
 {
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
-		RemoveTag(friendsID, sTag, bSave, sName);
+		RemoveTag(friendsID, iID, bSave, sName);
 }
 
 bool CPlayerlistUtils::HasTags(uint32_t friendsID)
@@ -84,7 +90,7 @@ bool CPlayerlistUtils::HasTags(uint32_t friendsID)
 	if (!friendsID)
 		return false;
 
-	return mPlayerTags[friendsID].size();
+	return m_mPlayerTags[friendsID].size();
 }
 bool CPlayerlistUtils::HasTags(int iIndex)
 {
@@ -93,19 +99,18 @@ bool CPlayerlistUtils::HasTags(int iIndex)
 	return false;
 }
 
-bool CPlayerlistUtils::HasTag(uint32_t friendsID, std::string sTag)
+bool CPlayerlistUtils::HasTag(uint32_t friendsID, int iID)
 {
 	if (!friendsID)
 		return false;
 
-	auto uHash = FNV1A::Hash(sTag.c_str());
-	auto it = std::ranges::find_if(mPlayerTags[friendsID], [uHash](const auto& _sTag) { return uHash == FNV1A::Hash(_sTag.c_str()); });
-	return it != mPlayerTags[friendsID].end();
+	auto it = std::ranges::find_if(m_mPlayerTags[friendsID], [iID](const auto& _iID) { return iID == _iID; });
+	return it != m_mPlayerTags[friendsID].end();
 }
-bool CPlayerlistUtils::HasTag(int iIndex, std::string sTag)
+bool CPlayerlistUtils::HasTag(int iIndex, int iID)
 {
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
-		return HasTag(friendsID, sTag);
+		return HasTag(friendsID, iID);
 	return false;
 }
 
@@ -116,25 +121,25 @@ int CPlayerlistUtils::GetPriority(uint32_t friendsID, bool bCache)
 	if (bCache)
 		return H::Entities.GetPriority(friendsID);
 
-	const int iDefault = mTags["Default"].Priority;
+	const int iDefault = m_vTags[DEFAULT_TAG].Priority;
 	if (!friendsID)
 		return iDefault;
 
-	if (HasTag(friendsID, "Ignored"))
-		return mTags["Ignored"].Priority;
+	if (HasTag(friendsID, IGNORED_TAG))
+		return m_vTags[IGNORED_TAG].Priority;
 
 	std::vector<int> vPriorities;
-	for (const auto& sTag : mPlayerTags[friendsID])
+	for (auto& iID : m_mPlayerTags[friendsID])
 	{
-		PriorityLabel_t plTag;
-		if (F::PlayerUtils.GetTag(sTag, &plTag) && !plTag.Label)
-			vPriorities.push_back(plTag.Priority);
+		auto pTag = F::PlayerUtils.GetTag(iID);
+		if (pTag && !pTag->Label)
+			vPriorities.push_back(pTag->Priority);
 	}
 	if (H::Entities.IsFriend(friendsID))
 	{
-		auto& plTag = mTags["Friend"];
-		if (!plTag.Label)
-			vPriorities.push_back(plTag.Priority);
+		auto& tTag = m_vTags[FRIEND_TAG];
+		if (!tTag.Label)
+			vPriorities.push_back(tTag.Priority);
 	}
 
 	if (vPriorities.size())
@@ -151,72 +156,66 @@ int CPlayerlistUtils::GetPriority(int iIndex, bool bCache)
 
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
 		return GetPriority(friendsID);
-	return mTags["Default"].Priority;
+	return m_vTags[DEFAULT_TAG].Priority;
 }
 
-bool CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, std::string* sTag, PriorityLabel_t* plTag, int iMode)
+PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, int iMode)
 {
 	if (!friendsID)
-		return false;
+		return nullptr;
 
-	std::vector<std::pair<std::string, PriorityLabel_t>> vLabels;
+	std::vector<PriorityLabel_t*> vTags;
 	if (!iMode || iMode == 1)
 	{
-		if (HasTag(friendsID, "Ignored"))
-		{
-			*sTag = "Ignored";
-			*plTag = mTags["Ignored"];
-			return true;
-		}
+		if (HasTag(friendsID, IGNORED_TAG))
+			return &m_vTags[IGNORED_TAG];
 
-		for (const auto& _sTag : mPlayerTags[friendsID])
+		for (auto& iID : m_mPlayerTags[friendsID])
 		{
-			PriorityLabel_t _plTag;
-			if (F::PlayerUtils.GetTag(_sTag, &_plTag) && !_plTag.Label)
-				vLabels.push_back({ _sTag, _plTag });
+			PriorityLabel_t* _pTag = F::PlayerUtils.GetTag(iID);
+			if (_pTag && !_pTag->Label)
+				vTags.push_back(_pTag);
 		}
 		if (H::Entities.IsFriend(friendsID))
 		{
-			auto& _plTag = mTags["Friend"];
-			if (!_plTag.Label)
-				vLabels.push_back({ "Friend", _plTag });
+			auto _pTag = &m_vTags[FRIEND_TAG];
+			if (!_pTag->Label)
+				vTags.push_back(_pTag);
 		}
 	}
-	if ((!iMode || iMode == 2) && !vLabels.size())
+	if ((!iMode || iMode == 2) && !vTags.size())
 	{
-		for (const auto& _sTag : mPlayerTags[friendsID])
+		for (auto& iID : m_mPlayerTags[friendsID])
 		{
-			PriorityLabel_t _plTag;
-			if (F::PlayerUtils.GetTag(_sTag, &_plTag) && _plTag.Label)
-				vLabels.push_back({ _sTag, _plTag });
+			PriorityLabel_t* _pTag = F::PlayerUtils.GetTag(iID);
+			if (_pTag && _pTag->Label)
+				vTags.push_back(_pTag);
 		}
 		if (H::Entities.IsFriend(friendsID))
 		{
-			auto& _plTag = mTags["Friend"];
-			if (_plTag.Label)
-				vLabels.push_back({ "Friend", _plTag });
+			auto _pTag = &m_vTags[FRIEND_TAG];
+			if (_pTag->Label)
+				vTags.push_back(_pTag);
 		}
 	}
-	if (!vLabels.size())
-		return false;
+	if (!vTags.size())
+		return nullptr;
 
-	std::sort(vLabels.begin(), vLabels.end(), [&](const auto& a, const auto& b) -> bool
+	std::sort(vTags.begin(), vTags.end(), [&](const auto a, const auto b) -> bool
 		{
 			// sort by priority if unequal
-			if (a.second.Priority != b.second.Priority)
-				return a.second.Priority > b.second.Priority;
+			if (a->Priority != b->Priority)
+				return a->Priority > b->Priority;
 
-			return a.first < b.first;
+			return a->Name < b->Name;
 		});
-	*sTag = vLabels.begin()->first;
-	*plTag = vLabels.begin()->second;
-	return true;
+	return vTags.front();
 }
-bool CPlayerlistUtils::GetSignificantTag(int iIndex, std::string* sTag, PriorityLabel_t* plTag, int iMode)
+PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(int iIndex, int iMode)
 {
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
-		return GetSignificantTag(friendsID, sTag, plTag, iMode);
-	return false;
+		return GetSignificantTag(friendsID, iMode);
+	return nullptr;
 }
 
 bool CPlayerlistUtils::IsIgnored(uint32_t friendsID)
@@ -225,7 +224,7 @@ bool CPlayerlistUtils::IsIgnored(uint32_t friendsID)
 		return false;
 
 	const int iPriority = GetPriority(friendsID);
-	const int iIgnored = mTags["Ignored"].Priority;
+	const int iIgnored = m_vTags[IGNORED_TAG].Priority;
 	return iPriority <= iIgnored;
 }
 bool CPlayerlistUtils::IsIgnored(int iIndex)
@@ -235,6 +234,52 @@ bool CPlayerlistUtils::IsIgnored(int iIndex)
 	return false;
 }
 
+const char* CPlayerlistUtils::GetPlayerName(int iIndex, const char* sDefault, int* pType)
+{
+	if (Vars::Visuals::UI::StreamerMode.Value)
+	{
+		if (iIndex == I::EngineClient->GetLocalPlayer())
+		{
+			if (Vars::Visuals::UI::StreamerMode.Value > 0)
+			{
+				if (pType) *pType = 1;
+				return "Local";
+			}
+		}
+		else if (H::Entities.IsFriend(iIndex))
+		{
+			if (Vars::Visuals::UI::StreamerMode.Value > 1)
+			{
+				if (pType) *pType = 1;
+				return "Friend";
+			}
+		}
+		else if (Vars::Visuals::UI::StreamerMode.Value > 2)
+		{
+			if (auto pTag = GetSignificantTag(iIndex, 0))
+			{
+				if (pType) *pType = 1;
+				return pTag->Name.c_str();
+			}
+			else
+			{
+				if (pType) *pType = 1;
+				auto pResource = H::Entities.GetPR();
+				return !pResource || pResource->GetTeam(I::EngineClient->GetLocalPlayer()) != pResource->GetTeam(iIndex) ? "Enemy" : "Teammate";
+			}
+		}
+	}
+	if (const uint32_t friendsID = GetFriendsID(iIndex))
+	{
+		if (m_mPlayerAliases.contains(friendsID))
+		{
+			if (pType) *pType = 2;
+			return m_mPlayerAliases[friendsID].c_str();
+		}
+	}
+	return sDefault;
+}
+
 
 
 void CPlayerlistUtils::UpdatePlayers()
@@ -242,8 +287,8 @@ void CPlayerlistUtils::UpdatePlayers()
 	static Timer updateTimer{};
 	if (updateTimer.Run(1000))
 	{
-		std::lock_guard lock(mutex);
-		vPlayerCache.clear();
+		std::lock_guard lock(m_mutex);
+		m_vPlayerCache.clear();
 
 		auto pResource = H::Entities.GetPR();
 		if (!pResource)
@@ -262,7 +307,7 @@ void CPlayerlistUtils::UpdatePlayers()
 				bFriend = H::Entities.IsFriend(n);
 			}
 
-			vPlayerCache.push_back({
+			m_vPlayerCache.push_back({
 				pResource->GetPlayerName(n),
 				pResource->GetAccountID(n),
 				pResource->GetUserID(n),

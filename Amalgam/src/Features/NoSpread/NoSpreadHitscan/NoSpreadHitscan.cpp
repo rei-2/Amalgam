@@ -21,7 +21,7 @@ void CNoSpreadHitscan::Reset(bool bResetPrint)
 
 bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bCreateMove)
 {
-	if (G::WeaponType != EWeaponType::HITSCAN)
+	if (G::PrimaryWeaponType != EWeaponType::HITSCAN)
 		return false;
 
 	if (pWeapon->GetWeaponSpread() <= 0.f)
@@ -70,11 +70,11 @@ std::string CNoSpreadHitscan::GetFormat(int m_ServerTime)
 
 void CNoSpreadHitscan::AskForPlayerPerf()
 {
-	if (!Vars::Aimbot::General::NoSpread.Value)
+	if (!Vars::Aimbot::General::NoSpread.Value || !I::EngineClient->IsInGame())
 		return Reset();
 
 	static Timer playerperfTimer{};
-	if (playerperfTimer.Run(50) && !bWaitingForPlayerPerf && I::EngineClient->IsInGame())
+	if (playerperfTimer.Run(50) && !bWaitingForPlayerPerf)
 	{
 		I::ClientState->SendStringCmd("playerperf");
 		bWaitingForPlayerPerf = true;
@@ -142,8 +142,8 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 
 	// credits to cathook for average spread stuff
 	float flSpread = pWeapon->GetWeaponSpread();
-	auto tfWeaponInfo = pWeapon->GetWeaponInfo();
-	int iBulletsPerShot = tfWeaponInfo ? tfWeaponInfo->GetWeaponData(0).m_nBulletsPerShot : 1;
+	auto pWeaponInfo = pWeapon->GetWeaponInfo();
+	int iBulletsPerShot = pWeaponInfo ? pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot : 1;
 	iBulletsPerShot = static_cast<int>(SDK::AttribHookValue(static_cast<float>(iBulletsPerShot), "mult_bullets_per_shot", pWeapon));
 
 	std::vector<Vec3> vBulletCorrections = {};
@@ -156,10 +156,10 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 		{
 			bool bDoubletap = false; // if we are doubletapping and firerate fast enough, prioritize later bullets
 			int iTicks = F::Ticks.GetTicks(pLocal);
-			if (iTicks && tfWeaponInfo)
+			if (iTicks && pWeaponInfo)
 			{
 				float flDoubletapTime = TICKS_TO_TIME(iTicks);
-				float flFireRate = tfWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
+				float flFireRate = pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
 				bDoubletap = flDoubletapTime > flFireRate * 2;
 			}
 
@@ -174,10 +174,8 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 		const float x = SDK::RandomFloat(-0.5f, 0.5f) + SDK::RandomFloat(-0.5f, 0.5f);
 		const float y = SDK::RandomFloat(-0.5f, 0.5f) + SDK::RandomFloat(-0.5f, 0.5f);
 
-		Vec3 forward, right, up;
-		Math::AngleVectors(pCmd->viewangles, &forward, &right, &up);
-
-		Vec3 vFixedSpread = forward + (right * x * flSpread) + (up * y * flSpread);
+		Vec3 vForward, vRight, vUp; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, &vUp);
+		Vec3 vFixedSpread = vForward + (vRight * x * flSpread) + (vUp * y * flSpread);
 		vFixedSpread.Normalize();
 		vAverageSpread += vFixedSpread;
 

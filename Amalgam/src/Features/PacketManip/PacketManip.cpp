@@ -2,28 +2,17 @@
 
 #include "../Visuals/FakeAngle/FakeAngle.h"
 
-bool CPacketManip::WillTimeOut()
+bool AntiAimCheck(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	return I::ClientState->chokedcommands >= 21;
+	return F::AntiAim.YawOn() && F::AntiAim.ShouldRun(pLocal, pWeapon, pCmd) && I::ClientState->chokedcommands < 3 && !G::Recharge;
 }
 
-bool CPacketManip::AntiAimCheck(CTFPlayer* pLocal)
+void CPacketManip::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket)
 {
-	return F::AntiAim.YawOn() && pLocal && F::AntiAim.ShouldRun(pLocal) && I::ClientState->chokedcommands < 3 && !((G::DoubleTap || G::Warp) && G::ShiftedTicks == G::ShiftedGoal);
-}
-
-void CPacketManip::Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
-{
-	F::FakeAngle.DrawChams = Vars::CL_Move::Fakelag::Fakelag.Value || F::AntiAim.AntiAimOn();
+	F::FakeAngle.bDrawChams = Vars::CL_Move::Fakelag::Fakelag.Value || F::AntiAim.AntiAimOn();
 
 	*pSendPacket = true;
-	const bool bTimeout = WillTimeOut(); // prevent overchoking by just not running anything below if we believe it will cause us to time out
-
-	if (!bTimeout)
-		F::FakeLag.Run(pLocal, pCmd, pSendPacket);
-	else
-		G::ChokeAmount = 0;
-
-	if (!bTimeout && AntiAimCheck(pLocal) && !G::PSilentAngles)
+	F::FakeLag.Run(pLocal, pWeapon, pCmd, pSendPacket);
+	if (AntiAimCheck(pLocal, pWeapon, pCmd))
 		*pSendPacket = false;
 }

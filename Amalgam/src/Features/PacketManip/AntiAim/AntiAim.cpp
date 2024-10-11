@@ -1,6 +1,8 @@
 #include "AntiAim.h"
 
 #include "../../Players/PlayerUtils.h"
+#include "../../Misc/Misc.h"
+#include "../../Aimbot/AutoRocketJump/AutoRocketJump.h"
 
 bool CAntiAim::AntiAimOn()
 {
@@ -26,36 +28,43 @@ bool CAntiAim::YawOn()
 		|| Vars::AntiHack::AntiAim::FakeYawOffset.Value);
 }
 
-bool CAntiAim::ShouldRun(CTFPlayer* pLocal)
+bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	const bool bPlayerReady = pLocal->IsAlive() && !pLocal->IsTaunting() && !pLocal->IsInBumperKart() && !pLocal->IsAGhost() && !G::IsAttacking;
-	const bool bMovementReady = pLocal->m_MoveType() <= 5 && !pLocal->IsCharging();
+	if (!pLocal)
+		return false;
 
-	return bPlayerReady && bMovementReady && !G::Busy;
+	if (pLocal->IsCharging() || pCmd->buttons & IN_ATTACK2 && (pLocal->m_bShieldEquipped() && pLocal->m_flChargeMeter() == 100.f
+		|| pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX && G::PrimaryWeaponType == EWeaponType::PROJECTILE && pWeapon->HasPrimaryAmmoForShot()))
+		return false;
+
+	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->IsInBumperKart()
+		|| G::IsAttacking || F::AutoRocketJump.IsRunning()
+		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
+		return false;
+
+	return true;
 }
 
 
 
 void CAntiAim::FakeShotAngles(CUserCmd* pCmd)
 {
-	if (!Vars::AntiHack::AntiAim::InvalidShootPitch.Value || !G::IsAttacking || G::WeaponType != EWeaponType::HITSCAN)
+	if (!Vars::AntiHack::AntiAim::InvalidShootPitch.Value || !G::IsAttacking || G::PrimaryWeaponType != EWeaponType::HITSCAN)
 		return;
 
 	G::SilentAngles = true;
-	pCmd->viewangles.x = CalculateCustomRealPitch(-pCmd->viewangles.x, false) + 180;
+	pCmd->viewangles.x = CalculateCustomRealPitch(-pCmd->viewangles.x) + 180;
 	pCmd->viewangles.y += 180;
 }
 
 float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOffset)
 {
-	// Main ray tracing area
-	Vec3 forward, right;
-	Math::AngleVectors({ 0, flEdgeRayYaw, 0 }, &forward, &right, nullptr);
+	Vec3 vForward, vRight; Math::AngleVectors({ 0, flEdgeRayYaw, 0 }, &vForward, &vRight, nullptr);
 
-	Vec3 vCenter = pEntity->GetCenter() + right * flOffset;
-	Vec3 vEndPos = vCenter + forward * 300.f;
+	Vec3 vCenter = pEntity->GetCenter() + vRight * flOffset;
+	Vec3 vEndPos = vCenter + vForward * 300.f;
 
-	CGameTrace trace;
+	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {};
 	SDK::Trace(vCenter, vEndPos, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
 
@@ -66,6 +75,8 @@ float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOff
 
 bool CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw, bool bUpPitch)
 {
+	// we should probably make this dynamic for different head positions
+
 	float flSize = pEntity->m_vecMaxs().y - pEntity->m_vecMins().y;
 	float flEdgeLeftDist = EdgeDistance(pEntity, flEdgeOrigYaw, -flSize);
 	float flEdgeRightDist = EdgeDistance(pEntity, flEdgeOrigYaw, flSize);
@@ -93,11 +104,12 @@ float CAntiAim::GetYawOffset(CTFPlayer* pEntity, bool bFake)
 	switch (iMode)
 	{
 		case 0: return 0.f;
-		case 1: return 90.f;
-		case 2: return -90.f;
+		case 1: return 135.f;
+		case 2: return -135.f;
 		case 3: return 180.f;
-		case 4: return fmod(I::GlobalVars->tickcount * Vars::AntiHack::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
-		case 5: return (GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch) ? 1 : -1) * (bFake ? -90 : 90);
+		case 4: return (GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch) ? 1 : -1) * (bFake ? -135 : 135);
+		case 5: return (bFake ? Vars::AntiHack::AntiAim::FakeJitter.Value : Vars::AntiHack::AntiAim::RealJitter.Value) * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+		case 6: return fmod(I::GlobalVars->tickcount * Vars::AntiHack::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
 	}
 	return 0.f;
 }
@@ -140,31 +152,51 @@ float CAntiAim::GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 	return flYaw;
 }
 
-float CAntiAim::CalculateCustomRealPitch(float flWishPitch, bool bFakeDown)
+float CAntiAim::CalculateCustomRealPitch(float flWishPitch)
 {
-	return bFakeDown ? 720 + flWishPitch : -720 + flWishPitch;
+	switch (Vars::AntiHack::AntiAim::PitchFake.Value)
+	{
+	case 1: return flWishPitch - 360;
+	case 2: return flWishPitch + 360;
+	case 3: return flWishPitch - 360 * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	case 4: return flWishPitch + 360 * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	default: return flWishPitch;
+	}
 }
 
 float CAntiAim::GetPitch(float flCurPitch)
 {
-	const int iFake = Vars::AntiHack::AntiAim::PitchFake.Value, iReal = Vars::AntiHack::AntiAim::PitchReal.Value;
-	switch (iReal)
+	switch (Vars::AntiHack::AntiAim::PitchReal.Value)
 	{
-		case 1: return iFake ? CalculateCustomRealPitch(-89.f, iFake - 1) : -89.f;
-		case 2: return iFake ? CalculateCustomRealPitch(89.f, iFake - 1) : 89.f;
-		case 3: return iFake ? CalculateCustomRealPitch(0.f, iFake - 1) : 0.f;
+	case 1: return CalculateCustomRealPitch(-89.f);
+	case 2: return CalculateCustomRealPitch(89.f);
+	case 3: return CalculateCustomRealPitch(0.f);
+	case 4: return CalculateCustomRealPitch(-89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1));
+	case 5: return CalculateCustomRealPitch(89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1));
 	}
 
-	return iFake ? -89.f + (89.f * (iFake - 1)) : flCurPitch;
+	switch (Vars::AntiHack::AntiAim::PitchFake.Value)
+	{
+	case 1: return -89.f;
+	case 2: return 89.f;
+	case 3: return -89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	case 4: return 89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	}
+
+	return flCurPitch;
 }
 
 
 
-void CAntiAim::Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
+void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket)
 {
 	vEdgeTrace.clear();
-	G::AntiAim = pLocal && AntiAimOn() && ShouldRun(pLocal);
-	FakeShotAngles(pCmd);
+
+	G::AntiAim = AntiAimOn() && ShouldRun(pLocal, pWeapon, pCmd);
+
+	int iAntiBackstab = F::Misc.AntiBackstab(pLocal, pCmd, bSendPacket);
+	if (!iAntiBackstab)
+		FakeShotAngles(pCmd);
 
 	if (!G::AntiAim)
 	{
@@ -173,11 +205,9 @@ void CAntiAim::Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
 		return;
 	}
 
-	Vec2& vAngles = *pSendPacket ? vFakeAngles : vRealAngles;
-	vAngles = {
-		GetPitch(pCmd->viewangles.x),
-		GetYaw(pLocal, pCmd, *pSendPacket)
-	};
+	Vec2& vAngles = bSendPacket ? vFakeAngles : vRealAngles;
+	vAngles.x = iAntiBackstab != 2 ? GetPitch(pCmd->viewangles.x) : pCmd->viewangles.x;
+	vAngles.y = !iAntiBackstab ? GetYaw(pLocal, pCmd, bSendPacket) : pCmd->viewangles.y;
 
 	SDK::FixMovement(pCmd, vAngles);
 	pCmd->viewangles.x = vAngles.x;

@@ -71,12 +71,12 @@ public:
 
 	CUserCmd* GetCommands()
 	{
-		return *reinterpret_cast<CUserCmd**>(std::uintptr_t(this) + 264);
+		return *reinterpret_cast<CUserCmd**>(uintptr_t(this) + 264);
 	}
 
 	CVerifiedUserCmd* GetVerifiedCommands()
 	{
-		return *reinterpret_cast<CVerifiedUserCmd**>(std::uintptr_t(this) + 272);
+		return *reinterpret_cast<CVerifiedUserCmd**>(uintptr_t(this) + 272);
 	}
 };
 

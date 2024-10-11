@@ -5,11 +5,8 @@
 
 class CPacketManip
 {
-	bool WillTimeOut();
-	bool AntiAimCheck(CTFPlayer* pLocal);
-
 public:
-	void Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
+	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket);
 };
 
 ADD_FEATURE(CPacketManip, PacketManip)

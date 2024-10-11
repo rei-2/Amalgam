@@ -12,6 +12,6 @@ public:
 	__inline size_t* GetMyWeapons()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseCombatCharacter", "m_hMyWeapons");
-		return reinterpret_cast<size_t*>(std::uintptr_t(this) + nOffset);
+		return reinterpret_cast<size_t*>(uintptr_t(this) + nOffset);
 	}
 };

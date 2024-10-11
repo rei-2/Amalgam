@@ -65,12 +65,12 @@ std::optional<float> PResolver::PredictBaseYaw(CTFPlayer* pLocal, CTFPlayer* pEn
 
 bool PResolver::ShouldRun(CTFPlayer* pLocal)
 {
-	return Vars::AntiHack::Resolver::Resolver.Value && pLocal && pLocal->IsAlive() && !pLocal->IsAGhost() && G::WeaponType == EWeaponType::HITSCAN;
+	return Vars::AntiHack::Resolver::Resolver.Value && pLocal && pLocal->IsAlive() && !pLocal->IsAGhost() && G::PrimaryWeaponType == EWeaponType::HITSCAN;
 }
 
 bool PResolver::ShouldRunEntity(CTFPlayer* pEntity)
 {
-	if (!pEntity->OnSolid() && Vars::AntiHack::Resolver::IgnoreAirborne.Value)
+	if (!pEntity->IsOnGround() && Vars::AntiHack::Resolver::IgnoreAirborne.Value)
 		return false;
 	if (!pEntity->IsAlive() || pEntity->IsAGhost() || pEntity->IsTaunting())
 		return false;
@@ -176,7 +176,7 @@ void PResolver::FrameStageNotify(CTFPlayer* pLocal)
 		mResolverData[pPlayer].vOriginalAngles = { pPlayer->m_angEyeAnglesX(), pPlayer->m_angEyeAnglesY() };
 
 		if (abs(I::GlobalVars->tickcount - mResolverData[pPlayer].pLastFireAngles.first.first) >= 2)
-			mResolverData[pPlayer].pLastFireAngles.first.second = (pPlayer->m_flSimulationTime() == pPlayer->m_flOldSimulationTime()) ? mResolverData[pPlayer].pLastFireAngles.first.second : false;
+			mResolverData[pPlayer].pLastFireAngles.first.second = !H::Entities.GetDeltaTime(pPlayer) ? mResolverData[pPlayer].pLastFireAngles.first.second : false;
 
 		if (!ShouldRunEntity(pPlayer))
 			continue;

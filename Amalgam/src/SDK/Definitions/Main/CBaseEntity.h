@@ -2,6 +2,7 @@
 #include "CBaseHandle.h"
 #include "IClientEntity.h"
 #include "CCollisionProperty.h"
+#include "CParticleProperty.h"
 #include "../Main/UtlVector.h"
 #include "../Definitions.h"
 #include "../../../Utils/NetVars/NetVars.h"
@@ -89,8 +90,9 @@ public:
 	NETVAR(movetype, int, "CBaseEntity", "movetype");
 	
 	NETVAR_OFF(m_flOldSimulationTime, float, "CBaseEntity", "m_flSimulationTime", 4);
+	NETVAR_OFF(m_Particles, CParticleProperty*, "CBaseEntity", "m_flElasticity", -56);
 
-	VIRTUAL(UpdateVisibility, void, void(__thiscall*)(CBaseEntity*), this, 91);
+	VIRTUAL(UpdateVisibility, void, void(__fastcall*)(CBaseEntity*), this, 91);
 
 	Vec3 GetCenter()
 	{
@@ -126,7 +128,7 @@ public:
 	CBaseEntity* GetMoveParent()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 8;
-		auto m_pMoveParent = reinterpret_cast<EHANDLE*>(std::uintptr_t(this) + nOffset);
+		auto m_pMoveParent = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
 		if (!m_pMoveParent)
 			return nullptr;
@@ -137,7 +139,7 @@ public:
 	CBaseEntity* NextMovePeer()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 16;
-		auto m_pMovePeer = reinterpret_cast<EHANDLE*>(std::uintptr_t(this) + nOffset);
+		auto m_pMovePeer = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
 		if (!m_pMovePeer)
 			return nullptr;
@@ -148,7 +150,7 @@ public:
 	CBaseEntity* FirstMoveChild()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 24;
-		auto m_pMoveChild = reinterpret_cast<EHANDLE*>(std::uintptr_t(this) + nOffset);
+		auto m_pMoveChild = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
 		if (!m_pMoveChild)
 			return nullptr;
@@ -168,12 +170,12 @@ public:
 
 	void SetAbsVelocity(const Vec3& vecAbsVelocity)
 	{
-		S::CBaseEntity_SetAbsVelocity.As<void(__thiscall*)(void*, const Vec3&)>()(this, vecAbsVelocity);
+		S::CBaseEntity_SetAbsVelocity.As<void(__fastcall*)(void*, const Vec3&)>()(this, vecAbsVelocity);
 	}
 
 	void EstimateAbsVelocity(Vec3& vel)
 	{
-		S::CBaseEntity_EstimateAbsVelocity.As<void(__thiscall*)(void*, Vec3&)>()(this, vel);
+		S::CBaseEntity_EstimateAbsVelocity.As<void(__fastcall*)(void*, Vec3&)>()(this, vel);
 	}
 
 	Vec3 GetAbsVelocity()
@@ -185,7 +187,7 @@ public:
 
 	void CreateShadow()
 	{
-		S::CBaseEntity_CreateShadow.As<void(__thiscall*)(void*)>()(this);
+		S::CBaseEntity_CreateShadow.As<void(__fastcall*)(void*)>()(this);
 	}
 
 	void InvalidateBoneCache()

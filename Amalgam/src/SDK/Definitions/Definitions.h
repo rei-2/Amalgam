@@ -6,6 +6,8 @@
 #define TIME_TO_TICKS(dt) (static_cast<int>(0.5f + static_cast<float>(dt) / TICK_INTERVAL))
 #define TICKS_TO_TIME(t) (TICK_INTERVAL * (t))
 
+#define ROUND_TO_TICKS(t) (TICKS_TO_TIME(TIME_TO_TICKS(t)))
+
 #define ANIMATION_CYCLE_BITS 10
 #define ANIMATION_CYCLE_MINFRAC (1.0f / (1<<ANIMATION_CYCLE_BITS))
 

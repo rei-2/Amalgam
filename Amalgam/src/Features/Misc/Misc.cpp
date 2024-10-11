@@ -1,7 +1,6 @@
 #include "Misc.h"
 
 #include "../Backtrack/Backtrack.h"
-#include "../CheaterDetection/CheaterDetection.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
 #include "../TickHandler/TickHandler.h"
 #include "../Players/PlayerUtils.h"
@@ -24,8 +23,8 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 	AutoJump(pLocal, pCmd);
 	AutoJumpbug(pLocal, pCmd);
 	AutoStrafe(pLocal, pCmd);
-	AntiBackstab(pLocal, pCmd);
 	AutoPeek(pLocal, pCmd);
+	MovementLock(pLocal, pCmd);
 }
 
 void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
@@ -48,7 +47,7 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	static bool bStaticJump = false, bStaticGrounded = false, bLastAttempted = false;
 	const bool bLastJump = bStaticJump, bLastGrounded = bStaticGrounded;
-	const bool bCurJump = bStaticJump = pCmd->buttons & IN_JUMP, bCurGrounded = bStaticGrounded = pLocal->OnSolid();
+	const bool bCurJump = bStaticJump = pCmd->buttons & IN_JUMP, bCurGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
 
 	if (bCurJump && bLastJump)
 	{
@@ -64,12 +63,11 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!Vars::Misc::Movement::AutoJumpbug.Value || !(pCmd->buttons & IN_DUCK) || pLocal->OnSolid() || pLocal->m_vecVelocity().z > -650.f)
+	if (!Vars::Misc::Movement::AutoJumpbug.Value || !(pCmd->buttons & IN_DUCK) || pLocal->m_hGroundEntity() || pLocal->m_vecVelocity().z > -650.f)
 		return;
 
-	CGameTrace trace;
+	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {};
-	filter.pSkip = pLocal;
 
 	Vec3 origin = pLocal->m_vecOrigin();
 	SDK::TraceHull(origin, origin - Vec3(0, 0, 22), pLocal->m_vecMins(), pLocal->m_vecMaxs(), MASK_PLAYERSOLID, &filter, &trace);
@@ -86,7 +84,7 @@ void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!Vars::Misc::Movement::AutoStrafe.Value || pLocal->OnSolid() || !(pLocal->m_afButtonLast() & IN_JUMP) && (pCmd->buttons & IN_JUMP))
+	if (!Vars::Misc::Movement::AutoStrafe.Value || pLocal->m_hGroundEntity() || !(pLocal->m_afButtonLast() & IN_JUMP) && (pCmd->buttons & IN_JUMP))
 		return;
 
 	switch (Vars::Misc::Movement::AutoStrafe.Value)
@@ -112,8 +110,7 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 		float flForwardMove = pCmd->forwardmove;
 		float flSideMove = pCmd->sidemove;
 
-		Vec3 vForward = {}, vRight = {};
-		Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);
+		Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);
 
 		vForward.z = vRight.z = 0.f;
 
@@ -139,51 +136,6 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 }
 
-void CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd)
-{
-	G::Busy = false;
-	if (!Vars::Misc::Automation::AntiBackstab.Value || G::IsAttacking || pLocal->IsInBumperKart() || !Vars::Misc::Automation::AntiBackstab.Value)
-		return;
-
-	std::vector<Vec3> vTargets = {};
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
-	{
-		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked() || pPlayer->m_bFeignDeathReady())
-			continue;
-
-		if (auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>())
-		{
-			if (pWeapon->m_iWeaponID() != TF_WEAPON_KNIFE)
-				continue;
-		}
-
-		PlayerInfo_t pi{};
-		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && F::PlayerUtils.IsIgnored(pi.friendsID))
-			continue;
-
-		Vec3 vTargetPos = pPlayer->m_vecOrigin() + pPlayer->m_vecVelocity() * F::Backtrack.GetReal();
-		if (pLocal->m_vecOrigin().DistTo(vTargetPos) > 200.f || !SDK::VisPos(pLocal, pPlayer, pLocal->m_vecOrigin(), vTargetPos))
-			continue;
-
-		vTargets.push_back(vTargetPos);
-	}
-
-	std::sort(vTargets.begin(), vTargets.end(), [&](const auto& a, const auto& b) -> bool
-		{
-			return pLocal->m_vecOrigin().DistTo(a) < pLocal->m_vecOrigin().DistTo(b);
-		});
-
-	auto vTargetPos = vTargets.begin();
-	if (vTargetPos != vTargets.end())
-	{
-		const Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), *vTargetPos);
-		G::Busy = true;
-		SDK::FixMovement(pCmd, vAngleTo);
-		pCmd->viewangles.y = vAngleTo.y;
-	}
-}
-
 void CMisc::AutoPeek(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static bool bPosPlaced = false;
@@ -196,7 +148,7 @@ void CMisc::AutoPeek(CTFPlayer* pLocal, CUserCmd* pCmd)
 		// We just started peeking. Save the return position!
 		if (!bPosPlaced)
 		{
-			if (pLocal->OnSolid())
+			if (pLocal->m_hGroundEntity())
 			{
 				vPeekReturnPos = localPos;
 				bPosPlaced = true;
@@ -231,6 +183,28 @@ void CMisc::AutoPeek(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 }
 
+void CMisc::MovementLock(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	static bool bLock = false;
+
+	if (!Vars::Misc::Movement::MovementLock.Value)
+	{
+		bLock = false;
+		return;
+	}
+
+	static Vec3 vDir = {};
+	if (!bLock)
+	{
+		bLock = true;
+		vDir = Math::RotatePoint({ pCmd->forwardmove * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1), -pCmd->sidemove, 0.f }, {}, { 0, pCmd->viewangles.y, 0 });
+		vDir.z = pCmd->upmove;
+	}
+
+	Vec3 vMove = Math::RotatePoint(vDir, {}, { 0, -pCmd->viewangles.y, 0 });
+	pCmd->forwardmove = vMove.x * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1), pCmd->sidemove = -vMove.y, pCmd->upmove = vDir.z;
+}
+
 void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static Timer afkTimer{};
@@ -251,7 +225,7 @@ void CMisc::InstantRespawnMVM(CTFPlayer* pLocal)
 {
 	if (Vars::Misc::MannVsMachine::InstantRespawn.Value && I::EngineClient->IsInGame() && !pLocal->IsAlive())
 	{
-		auto kv = new KeyValues("MVM_Revive_Response");
+		KeyValues* kv = new KeyValues("MVM_Revive_Response");
 		kv->SetInt("accepted", 1);
 		I::EngineClient->ServerCmdKeyValues(kv);
 	}
@@ -285,18 +259,25 @@ void CMisc::PingReducer()
 	static auto cl_cmdrate = U::ConVars.FindVar("cl_cmdrate");
 	const int iCmdRate = cl_cmdrate ? cl_cmdrate->GetInt() : 66;
 
+	// force highest cl_updaterate command possible
+	static auto sv_maxupdaterate = U::ConVars.FindVar("sv_maxupdaterate");
+	const int iMaxUpdateRate = sv_maxupdaterate ? sv_maxupdaterate->GetInt() : 66;
+
 	static Timer updateRateTimer{};
 	if (updateRateTimer.Run(100))
 	{
+		if (iWishUpdaterate != iMaxUpdateRate)
+		{
+			NET_SetConVar cmd("cl_updaterate", std::to_string(iWishUpdaterate = iMaxUpdateRate).c_str());
+			pNetChan->SendNetMsg(cmd);
+		}
+
 		const int iTarget = Vars::Misc::Exploits::PingReducer.Value ? Vars::Misc::Exploits::PingTarget.Value : iCmdRate;
-		if (iTarget == iLastCmdrate)
-			return;
-		iLastCmdrate = iTarget;
-
-		SDK::Output("SendNetMsg", std::format("cl_cmdrate: {}", iTarget).c_str(), { 224, 255, 131, 255 }, Vars::Debug::Logging.Value);
-
-		NET_SetConVar cmd("cl_cmdrate", std::to_string(iTarget).c_str());
-		pNetChan->SendNetMsg(cmd);
+		if (iWishCmdrate != iTarget)
+		{
+			NET_SetConVar cmd("cl_cmdrate", std::to_string(iWishCmdrate = iTarget).c_str());
+			pNetChan->SendNetMsg(cmd);
+		}
 	}
 }
 
@@ -304,10 +285,12 @@ void CMisc::WeaponSway()
 {
 	static auto cl_wpn_sway_interp = U::ConVars.FindVar("cl_wpn_sway_interp");
 	static auto cl_wpn_sway_scale = U::ConVars.FindVar("cl_wpn_sway_scale");
+
+	bool bSway = Vars::Visuals::Viewmodel::SwayInterp.Value || Vars::Visuals::Viewmodel::SwayScale.Value;
 	if (cl_wpn_sway_interp)
-		cl_wpn_sway_interp->SetValue(Vars::Visuals::Viewmodel::Sway.Value ? Vars::Visuals::Viewmodel::SwayInterp.Value : 0.f);
+		cl_wpn_sway_interp->SetValue(bSway ? Vars::Visuals::Viewmodel::SwayInterp.Value : 0.f);
 	if (cl_wpn_sway_scale)
-		cl_wpn_sway_scale->SetValue(Vars::Visuals::Viewmodel::Sway.Value ? Vars::Visuals::Viewmodel::SwayScale.Value : 0.f);
+		cl_wpn_sway_scale->SetValue(bSway ? Vars::Visuals::Viewmodel::SwayScale.Value : 0.f);
 }
 
 
@@ -317,23 +300,14 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 	// Handle Taunt Slide
 	if (Vars::Misc::Automation::TauntControl.Value && pLocal->IsTaunting())
 	{
-		if (pCmd->buttons & IN_FORWARD)
-		{
-			pCmd->forwardmove = 450.f;
-			pCmd->viewangles.x = 0.f;
-		}
 		if (pCmd->buttons & IN_BACK)
-		{
-			pCmd->forwardmove = 450.f;
 			pCmd->viewangles.x = 91.f;
-		}
-		if (pCmd->buttons & IN_MOVELEFT)
-			pCmd->sidemove = -450.f;
-		if (pCmd->buttons & IN_MOVERIGHT)
-			pCmd->sidemove = 450.f;
-
-		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
+		else if (!(pCmd->buttons & IN_FORWARD))
 			pCmd->viewangles.x = 90.f;
+		if (pCmd->buttons & IN_MOVELEFT)
+			pCmd->sidemove = pCmd->viewangles.x != 90.f ? -50.f : -450.f;
+		else if (pCmd->buttons & IN_MOVERIGHT)
+			pCmd->sidemove = pCmd->viewangles.x != 90.f ? 50.f : 450.f;
 
 		Vec3 vAngle = I::EngineClient->GetViewAngles();
 		pCmd->viewangles.y = vAngle.y;
@@ -382,7 +356,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!pLocal->OnSolid() || pLocal->IsInBumperKart())
+	if (!pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
 		return;
 
 	const float flSpeed = pLocal->m_vecVelocity().Length2D();
@@ -396,24 +370,11 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 		if (!Vars::Misc::Movement::FastStop.Value || !flSpeed)
 			return;
 
-		if (G::ShiftedTicks != G::MaxShift && !G::IsAttacking && !G::AntiAim)
-		{
-			if (!SDK::StopMovement(pLocal, pCmd))
-				return;
-
-			if (!G::Recharge && !G::DoubleTap)
-				G::PSilentAngles = true;
-			else
-				G::SilentAngles = true;
-		}
-		else
-		{
-			Vec3 direction = pLocal->m_vecVelocity().toAngle();
-			direction.y = pCmd->viewangles.y - direction.y;
-			const Vec3 negatedDirection = direction.fromAngle() * -flSpeed;
-			pCmd->forwardmove = negatedDirection.x;
-			pCmd->sidemove = negatedDirection.y;
-		}
+		Vec3 direction = pLocal->m_vecVelocity().toAngle();
+		direction.y = pCmd->viewangles.y - direction.y;
+		const Vec3 negatedDirection = direction.fromAngle() * -flSpeed;
+		pCmd->forwardmove = negatedDirection.x;
+		pCmd->sidemove = negatedDirection.y;
 
 		break;
 	}
@@ -437,48 +398,6 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 		break;
 	}
-	case 2:
-	{
-		if (!Vars::Misc::Movement::FastStrafe.Value || G::IsAttacking)
-			return;
-
-		static bool bFwd = pCmd->forwardmove > 0;
-		static bool bSde = pCmd->sidemove > 0;
-		const bool bCurFwd = pCmd->forwardmove > 0;
-		const bool bCurSde = pCmd->sidemove > 0;
-
-		bool bChanged = false;
-		if (fabsf(pCmd->sidemove) > 400)
-		{
-			if (bSde != bCurSde)
-			{
-				pCmd->viewangles.x = 90.f;
-				pCmd->viewangles.y += bSde ? -90.f : 90.f;
-				pCmd->sidemove = bSde ? -pCmd->forwardmove : pCmd->forwardmove;
-
-				G::PSilentAngles = bChanged = true;
-			}
-
-			bSde = bCurSde;
-			if (bChanged)
-				return;
-		}
-		if (fabsf(pCmd->forwardmove) > 400)
-		{
-			if (bFwd != bCurFwd)
-			{
-				pCmd->viewangles.x = 90.f;
-				pCmd->viewangles.y += bFwd ? 0.f : 180.f;
-				pCmd->sidemove *= bFwd ? 1 : -1;
-
-				G::PSilentAngles = bChanged = true;
-			}
-
-			bFwd = bCurFwd;
-			if (bChanged)
-				return;
-		}
-	}
 	}
 }
 
@@ -489,15 +408,15 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 	{
 		const int iDoubletapTicks = F::Ticks.GetTicks(pLocal);
 
-		Vec3 angles = {}; Math::VectorAngles(vVelocity, angles);
-		angles.y = pCmd->viewangles.y - angles.y;
-		Vec3 forward = {}; Math::AngleVectors(angles, &forward);
-		forward *= vVelocity.Length();
+		Vec3 vAngles; Math::VectorAngles(vVelocity, vAngles);
+		vAngles.y = pCmd->viewangles.y - vAngles.y;
+		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+		vForward *= vVelocity.Length();
 
 		if (iDoubletapTicks > std::max(Vars::CL_Move::Doubletap::TickLimit.Value - 8, 3))
 		{
-			pCmd->forwardmove = -forward.x;
-			pCmd->sidemove = -forward.y;
+			pCmd->forwardmove = -vForward.x;
+			pCmd->sidemove = -vForward.y;
 		}
 		else if (iDoubletapTicks > 3)
 		{
@@ -506,8 +425,8 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 		}
 		else
 		{
-			pCmd->forwardmove = forward.x;
-			pCmd->sidemove = forward.y;
+			pCmd->forwardmove = vForward.x;
+			pCmd->sidemove = vForward.y;
 		}
 	}
 	else
@@ -534,7 +453,7 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::LegJitter(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 {
-	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::IsAttacking || G::DoubleTap || pSendPacket || !pLocal->OnSolid() || pLocal->IsInBumperKart())
+	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::IsAttacking || G::DoubleTap || pSendPacket || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
 		return;
 
 	static bool pos = true;
@@ -549,17 +468,17 @@ void CMisc::LegJitter(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 
 
 
-void CMisc::Event(IGameEvent* pEvent, FNV1A_t uHash)
+void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 {
 	switch (uHash)
 	{
-	case FNV1A::HashConst("teamplay_round_start"):
-	case FNV1A::HashConst("client_disconnect"):
-	case FNV1A::HashConst("client_beginconnect"):
-	case FNV1A::HashConst("game_newmap"):
-		iLastCmdrate = -1;
+	case FNV1A::Hash32Const("client_disconnect"):
+	case FNV1A::Hash32Const("client_beginconnect"):
+	case FNV1A::Hash32Const("game_newmap"):
+		iWishCmdrate = iWishUpdaterate = -1;
 		F::Backtrack.flWishInterp = 0.f;
-
+		[[fallthrough]];
+	case FNV1A::Hash32Const("teamplay_round_start"):
 		G::BulletsStorage.clear();
 		G::BoxesStorage.clear();
 		G::LinesStorage.clear();
@@ -568,32 +487,112 @@ void CMisc::Event(IGameEvent* pEvent, FNV1A_t uHash)
 
 void CMisc::DoubletapPacket(CUserCmd* pCmd, bool* pSendPacket)
 {
-	if (G::DoubleTap || G::Warp)
+	if (G::DoubleTap /*|| G::Warp*/)
 	{
 		*pSendPacket = G::ShiftedGoal == G::ShiftedTicks;
-		if ((G::DoubleTap || pCmd->buttons & IN_ATTACK) && I::ClientState->chokedcommands >= 21)
+		if (I::ClientState->chokedcommands >= 21 // prevent overchoking
+			|| G::ShiftedTicks == G::ShiftedGoal + Vars::CL_Move::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
 			*pSendPacket = true;
 	}
 }
 
-void CMisc::DetectChoke()
+int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 {
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::IsAttacking || pLocal->IsInBumperKart())
+		return 0;
+
+	std::vector<std::pair<Vec3, CBaseEntity*>> vTargets = {};
+	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 	{
-		if (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->IsDormant())
-		{
-			G::ChokeMap[pEntity->entindex()] = 0;
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked() || pPlayer->m_bFeignDeathReady())
 			continue;
+
+		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+		if (!pWeapon || pWeapon->GetWeaponID() != TF_WEAPON_KNIFE && pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch && pWeapon->m_iItemDefinitionIndex() != Pyro_m_TheBackburner && pWeapon->m_iItemDefinitionIndex() != Pyro_m_FestiveBackburner)
+			continue;
+
+		PlayerInfo_t pi{};
+		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && F::PlayerUtils.IsIgnored(pi.friendsID))
+			continue;
+
+		Vec3 vTargetPos = pPlayer->GetCenter() + pPlayer->m_vecVelocity() * F::Backtrack.GetReal();
+		if (pLocal->GetCenter().DistTo(vTargetPos) > pLocal->TeamFortress_CalculateMaxSpeed() || !SDK::VisPos(pLocal, pPlayer, pLocal->GetCenter(), vTargetPos))
+			continue;
+
+		vTargets.push_back({ vTargetPos, pEntity });
+	}
+
+	std::sort(vTargets.begin(), vTargets.end(), [&](const auto& a, const auto& b) -> bool
+		{
+			return pLocal->GetCenter().DistTo(a.first) < pLocal->GetCenter().DistTo(b.first);
+		});
+
+	auto vTargetPos = vTargets.begin();
+	if (vTargetPos == vTargets.end())
+		return 0;
+
+	switch (Vars::Misc::Automation::AntiBackstab.Value)
+	{
+	case 1:
+	{
+		Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), vTargetPos->first);
+		vAngleTo.x = pCmd->viewangles.x;
+		SDK::FixMovement(pCmd, vAngleTo);
+		pCmd->viewangles = vAngleTo;
+		
+		return 1;
+	}
+	case 2:
+	case 3:
+	{
+		bool bCheater = F::PlayerUtils.HasTag(vTargetPos->second->entindex(), CHEATER_TAG);
+		// if the closest spy is a cheater, assume auto stab is being used, otherwise don't do anything if target is in front
+		if (!bCheater)
+		{
+			auto TargetIsBehind = [&]()
+				{
+					Vec3 vToTarget = pLocal->m_vecOrigin() - vTargetPos->first;
+					vToTarget.z = 0.f;
+					const float flDist = vToTarget.Length();
+					if (!flDist)
+						return true;
+
+					Vec3 vTargetAngles = pCmd->viewangles;
+
+					vToTarget.Normalize();
+					float flTolerance = 0.0625f;
+					float flExtra = 2.f * flTolerance / flDist; // account for origin tolerance
+
+					float flPosVsTargetViewMinDot = 0.f - 0.0031f - flExtra;
+
+					Vec3 vTargetForward; Math::AngleVectors(vTargetAngles, &vTargetForward);
+					vTargetForward.z = 0.f;
+					vTargetForward.Normalize();
+
+					return vToTarget.Dot(vTargetForward) > flPosVsTargetViewMinDot;
+				};
+
+			if (!TargetIsBehind())
+				return 0;
 		}
 
-		if (pEntity->m_flSimulationTime() == pEntity->m_flOldSimulationTime())
-			G::ChokeMap[pEntity->entindex()]++;
-		else
+		switch (!bCheater ? 2 : Vars::Misc::Automation::AntiBackstab.Value)
 		{
-			F::CheaterDetection.ReportChoke(pEntity->As<CTFPlayer>(), G::ChokeMap[pEntity->entindex()]);
-			G::ChokeMap[pEntity->entindex()] = 0;
+		case 2:
+			pCmd->forwardmove *= -1;
+			pCmd->viewangles.x = 269.f;
+			break;
+		case 3:
+			pCmd->viewangles.x = 271.f;
 		}
+		// may slip up some auto backstabs depending on mode, though we are still able to be stabbed
+
+		return 2;
 	}
+	}
+
+	return 0;
 }
 
 void CMisc::UnlockAchievements()
@@ -611,7 +610,7 @@ void CMisc::UnlockAchievements()
 
 void CMisc::LockAchievements()
 {
-	const auto achievementmgr = reinterpret_cast<IAchievementMgr * (*)(void)>(U::Memory.GetVFunc(I::EngineClient, 114))();
+	const auto achievementmgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVFunc(I::EngineClient, 114))();
 	if (achievementmgr)
 	{
 		I::SteamUserStats->RequestCurrentStats();

@@ -25,7 +25,7 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 	pAnimState->m_flEyeYaw = F::AntiAim.vFakeAngles.y;
 	pAnimState->Update(F::AntiAim.vFakeAngles.y, F::AntiAim.vFakeAngles.x);
 
-	BonesSetup = pLocal->SetupBones(BoneMatrix, 128, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime);
+	bBonesSetup = pLocal->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime);
 
 	I::GlobalVars->frametime = flOldFrameTime;
 	pLocal->m_nSequence() = nOldSequence;

@@ -6,7 +6,7 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
 
-	auto pEntity = reinterpret_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
 
@@ -14,7 +14,7 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 	bool bSniperRifle = false;
 	if (pLocal && pLocal == pSkip && pWeapon)
 	{
-		switch (pWeapon->m_iWeaponID())
+		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_SNIPERRIFLE:
 		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
@@ -28,18 +28,12 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 	case ETFClassID::CTFAmmoPack:
 	case ETFClassID::CFuncAreaPortalWindow:
 	case ETFClassID::CFuncRespawnRoomVisualizer:
-	case ETFClassID::CSniperDot:
 	case ETFClassID::CTFReviveMarker: return false;
-	case ETFClassID::CTFMedigunShield:
-		if (iTargetTeam == iLocalTeam)
-			return false;
-		break;
+	case ETFClassID::CTFMedigunShield: return iTargetTeam != iLocalTeam;
 	case ETFClassID::CTFPlayer:
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
-	case ETFClassID::CObjectTeleporter:
-		if (bSniperRifle && iTargetTeam == iLocalTeam)
-			return false;
+	case ETFClassID::CObjectTeleporter: return bSniperRifle ? iTargetTeam != iLocalTeam : true;
 	}
 
 	return true;
@@ -54,12 +48,12 @@ bool CTraceFilterProjectile::ShouldHitEntity(IHandleEntity* pServerEntity, int n
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
 
-	auto pEntity = reinterpret_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
 
 	const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
-	const bool bCrossbow = (pLocal && pLocal == pSkip && pWeapon) ? pWeapon->m_iWeaponID() == TF_WEAPON_CROSSBOW : false;
+	const bool bCrossbow = (pLocal && pLocal == pSkip && pWeapon) ? pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW : false;
 
 	switch (pEntity->GetClassID())
 	{
@@ -88,7 +82,8 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
 
-	auto pEntity = reinterpret_cast<IClientEntity*>(pServerEntity)->As<CBaseEntity>();
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+
 	switch (pEntity->GetClassID())
 	{
 	case ETFClassID::CBaseEntity:

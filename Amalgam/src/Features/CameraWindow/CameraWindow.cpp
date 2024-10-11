@@ -6,7 +6,7 @@ void CCameraWindow::Init()
 	CameraTex = I::MaterialSystem->CreateNamedRenderTargetTextureEx("mirrorcam_rt", 1, 1, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_RGB888, MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT, CREATERENDERTARGETFLAGS_HDR);
 
 	// Create camera material
-	static auto* kv = new KeyValues("UnlitGeneric");
+	KeyValues* kv = new KeyValues("UnlitGeneric");
 	kv->SetString("$basetexture", "mirrorcam_rt");
 	CameraMat = I::MaterialSystem->CreateMaterial("m_cameraMat", kv);
 }
@@ -61,7 +61,7 @@ void CCameraWindow::RenderCustomView(void* ecx, const CViewSetup& pViewSetup, IT
 	renderCtx->PushRenderTargetAndViewport();
 	renderCtx->SetRenderTarget(pTexture);
 
-	static auto ViewRender_RenderView = U::Hooks.m_mHooks["ViewRender_RenderView"];
+	static auto ViewRender_RenderView = U::Hooks.m_mHooks["CViewRender_RenderView"];
 	if (ViewRender_RenderView)
 		ViewRender_RenderView->Original<void(__fastcall*)(void*, const CViewSetup&, int, int)>()(ecx, pViewSetup, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
 

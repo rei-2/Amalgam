@@ -7,8 +7,15 @@ enum struct EGroupType
 {
 	PLAYERS_ALL, PLAYERS_ENEMIES, PLAYERS_TEAMMATES,
 	BUILDINGS_ALL, BUILDINGS_ENEMIES, BUILDINGS_TEAMMATES,
-	WORLD_HEALTH, WORLD_AMMO, WORLD_PROJECTILES, WORLD_NPC, WORLD_BOMBS, WORLD_MONEY, WORLD_SPELLBOOK, WORLD_GARGOYLE,
+	PICKUPS_HEALTH, PICKUPS_AMMO, PICKUPS_MONEY, PICKUPS_POWERUP, PICKUPS_SPELLBOOK,
+	WORLD_PROJECTILES, WORLD_OBJECTIVE, WORLD_NPC, WORLD_BOMBS, WORLD_GARGOYLE,
 	MISC_LOCAL_STICKIES, MISC_LOCAL_FLARES, MISC_DOTS
+};
+
+struct DormantData
+{
+	Vec3 Location;
+	float LastUpdate = 0.f;
 };
 
 class CEntities
@@ -19,29 +26,54 @@ class CEntities
 	CTFPlayer* m_pObservedTarget = nullptr;
 
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
-	std::unordered_map<uint32_t, int> m_mIDIndex = {};
-	std::unordered_map<int, bool> m_mFriends;
-	std::unordered_map<uint32_t, int> m_mUPriorities;
+
+	std::unordered_map<CBaseEntity*, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes;
+	std::unordered_map<CBaseEntity*, int> m_mChokes, m_mSetTicks;
+	std::unordered_map<CBaseEntity*, DormantData> m_mDormancy;
+	std::unordered_map<CBaseEntity*, std::pair<int, matrix3x4[MAXSTUDIOBONES]>> m_mBones;
+	std::unordered_map<CBaseEntity*, Vec3> m_mEyeAngles, m_mPingAngles;
+	std::unordered_map<CBaseEntity*, bool> m_mLagCompensation;
+
+	std::unordered_map<int, bool> m_mIFriends;
+	std::unordered_map<uint32_t, int> m_mUFriends;
 	std::unordered_map<int, int> m_mIPriorities;
+	std::unordered_map<uint32_t, int> m_mUPriorities;
+
+	bool m_bSettingUpBones = false;
 
 public:
-	void Fill();
-	void Clear();
+	void Store();
+	void Clear(bool bShutdown = false);
+	void ManualNetwork(const StartSoundParams_t& params);
 
 	bool IsHealth(CBaseEntity* pEntity);
 	bool IsAmmo(CBaseEntity* pEntity);
+	bool IsPowerup(CBaseEntity* pEntity);
 	bool IsSpellbook(CBaseEntity* pEntity);
 
-	CTFPlayer* GetLocal() { return m_pLocal; }
-	CTFWeaponBase* GetWeapon() { return m_pLocalWeapon; }
-	CTFPlayerResource* GetPR() { return m_pPlayerResource; }
-	CTFPlayer* GetObservedTarget() { return m_pObservedTarget; }
+	CTFPlayer* GetLocal();
+	CTFWeaponBase* GetWeapon();
+	CTFPlayerResource* GetPR();
+	CTFPlayer* GetObservedTarget();
 
-	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group) { return m_mGroups[Group]; }
-	bool IsFriend(int iIndex) { return m_mFriends[iIndex]; }
-	bool IsFriend(uint32_t friendsID) { return m_mFriends[m_mIDIndex[friendsID]]; }
-	int GetPriority(uint32_t friendsID) { return m_mUPriorities[friendsID]; }
-	int GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
+	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group);
+
+	float GetSimTime(CBaseEntity* pEntity);
+	float GetOldSimTime(CBaseEntity* pEntity);
+	float GetDeltaTime(CBaseEntity* pEntity);
+	int GetChoke(CBaseEntity* pEntity);
+	matrix3x4* GetBones(CBaseEntity* pEntity);
+	Vec3 GetEyeAngles(CBaseEntity* pEntity);
+	Vec3 GetPingAngles(CBaseEntity* pEntity);
+	bool GetLagCompensation(CBaseEntity* pEntity);
+	void SetLagCompensation(CBaseEntity* pEntity, bool bLagComp);
+
+	bool IsFriend(int iIndex);
+	bool IsFriend(uint32_t friendsID);
+	int GetPriority(int iIndex);
+	int GetPriority(uint32_t friendsID);
+
+	bool IsSettingUpBones();
 };
 
 ADD_FEATURE_CUSTOM(CEntities, Entities, H);

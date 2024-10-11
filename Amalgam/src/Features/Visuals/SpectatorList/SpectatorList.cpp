@@ -1,8 +1,10 @@
 #include "SpectatorList.h"
 
+#include "../../Players/PlayerUtils.h"
+
 bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 {
-	Spectators.clear();
+	m_vSpectators.clear();
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
 	{
@@ -10,19 +12,17 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 
 		if (!pPlayer->IsAlive() && pPlayer->m_hObserverTarget().Get() == pLocal)
 		{
-			std::wstring szMode;
+			int iIndex = pPlayer->entindex();
+
+			std::string sMode;
 			switch (pPlayer->m_iObserverMode())
 			{
 				case OBS_MODE_FIRSTPERSON:
-				{
-					szMode = L"1st";
+					sMode = "1st";
 					break;
-				}
 				case OBS_MODE_THIRDPERSON:
-				{
-					szMode = L"3rd";
+					sMode = "3rd";
 					break;
-				}
 				default: 
 					continue;
 			}
@@ -30,43 +30,41 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 			int respawnIn = 0; float respawnTime = 0;
 			if (auto pResource = H::Entities.GetPR())
 			{
-				respawnTime = pResource->GetNextRespawnTime(pPlayer->entindex());
-				respawnIn = std::max(int(respawnTime - I::GlobalVars->curtime), 0);
+				respawnTime = pResource->GetNextRespawnTime(iIndex);
+				respawnIn = std::max(respawnTime - I::GlobalVars->curtime, 0.f);
 			}
 			bool respawnTimeIncreased = false; // theoretically the respawn times could be changed by the map but oh well
-			if (!RespawnCache.contains(pPlayer->entindex()))
-				RespawnCache[pPlayer->entindex()] = respawnTime;
-			if (RespawnCache[pPlayer->entindex()] + 0.9f < respawnTime)
+			if (!m_mRespawnCache.contains(iIndex))
+				m_mRespawnCache[iIndex] = respawnTime;
+			if (m_mRespawnCache[iIndex] + 0.9f < respawnTime)
 			{
 				respawnTimeIncreased = true;
-				RespawnCache[pPlayer->entindex()] = -1.f;
+				m_mRespawnCache[iIndex] = -1.f;
 			}
 
 			PlayerInfo_t pi{};
-			if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
+			if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 			{
-				Spectators.push_back({
-					SDK::ConvertUtf8ToWide(pi.name), szMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()),
-					pPlayer->m_iTeamNum(), pPlayer->entindex()
-				});
+				std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+				m_vSpectators.push_back({ sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), pPlayer->m_iTeamNum(), pPlayer->entindex() });
 			}
 		}
 		else
 		{
-			auto iter = RespawnCache.find(pPlayer->entindex());
-			if (iter != RespawnCache.end())
-				RespawnCache.erase(iter);
+			auto iter = m_mRespawnCache.find(pPlayer->entindex());
+			if (iter != m_mRespawnCache.end())
+				m_mRespawnCache.erase(iter);
 		}
 	}
 
-	return !Spectators.empty();
+	return !m_vSpectators.empty();
 }
 
 void CSpectatorList::Run(CTFPlayer* pLocal)
 {
 	if (!(Vars::Menu::Indicators.Value & (1 << 2)))
 	{
-		RespawnCache.clear();
+		m_mRespawnCache.clear();
 		return;
 	}
 
@@ -97,8 +95,8 @@ void CSpectatorList::Run(CTFPlayer* pLocal)
 
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
-	H::Draw.String(fFont, x, y, Vars::Menu::Theme::Accent.Value, align, L"Spectating You:");
-	for (const auto& Spectator : Spectators)
+	H::Draw.String(fFont, x, y, Vars::Menu::Theme::Accent.Value, align, "Spectating You:");
+	for (auto& Spectator : m_vSpectators)
 	{
 		y += fFont.m_nTall + 3;
 
@@ -107,16 +105,15 @@ void CSpectatorList::Run(CTFPlayer* pLocal)
 		{
 			int w, h;
 
-			I::MatSystemSurface->GetTextSize(H::Fonts.GetFont(FONT_INDICATORS).dwFont,
-				(Spectator.Name + Spectator.Mode + std::to_wstring(Spectator.RespawnIn) + std::wstring{L" -  (respawn s)"}).c_str(), w, h);
+			I::MatSystemSurface->GetTextSize(fFont.m_dwFont, SDK::ConvertUtf8ToWide(std::format("{} - {} (respawn {}s)", Spectator.m_sName, Spectator.m_sMode, Spectator.m_iRespawnIn)).c_str(), w, h);
 			switch (align)
 			{
-			case ALIGN_DEFAULT: w = 0; break;
-			case ALIGN_CENTERHORIZONTAL: w /= 2; break;
+			case ALIGN_TOPLEFT: w = 0; break;
+			case ALIGN_TOP: w /= 2; break;
 			}
 
 			PlayerInfo_t pi{};
-			if (!I::EngineClient->GetPlayerInfo(Spectator.Index, &pi))
+			if (!I::EngineClient->GetPlayerInfo(Spectator.m_iIndex, &pi))
 				continue;
 
 			H::Draw.Avatar(x - w - (36 - iconOffset), y, 24, 24, pi.friendsID);
@@ -126,13 +123,12 @@ void CSpectatorList::Run(CTFPlayer* pLocal)
 		*/
 
 		Color_t color = Vars::Menu::Theme::Active.Value;
-		if (Spectator.Mode == std::wstring{L"1st"})
-			color = { 255, 200, 127, 255 };
-		if (Spectator.RespawnTimeIncreased)
-			color = { 255, 100, 100, 255 };
-		if (Spectator.IsFriend)
+		if (Spectator.m_bIsFriend)
 			color = { 200, 255, 200, 255 };
-		H::Draw.String(fFont, x + iconOffset, y, color, align,
-			L"%ls - %ls (respawn %ds)", Spectator.Name.data(), Spectator.Mode.data(), Spectator.RespawnIn);
+		else if (Spectator.m_bRespawnTimeIncreased)
+			color = { 255, 100, 100, 255 };
+		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
+			color = { 255, 200, 127, 255 };
+		H::Draw.String(fFont, x + iconOffset, y, color, align, "%s - %s (respawn %ds)", Spectator.m_sName.c_str(), Spectator.m_sMode.c_str(), Spectator.m_iRespawnIn);
 	}
 }

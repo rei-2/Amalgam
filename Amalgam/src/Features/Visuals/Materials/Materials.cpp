@@ -4,12 +4,25 @@
 #include <filesystem>
 #include <fstream>
 
-IMaterial* CMaterials::CreateNRef(char const* szName, KeyValues* pKV)
+IMaterial* CMaterials::Create(char const* szName, KeyValues* pKV)
 {
-	IMaterial* returnMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
-	returnMaterial->IncrementReferenceCount();
-	mMatList[returnMaterial] = true;
-	return returnMaterial;
+	IMaterial* pMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
+	mMatList[pMaterial] = true;
+	return pMaterial;
+}
+
+void CMaterials::Remove(IMaterial* pMaterial)
+{
+	if (!pMaterial)
+		return;
+
+	auto it = mMatList.find(pMaterial);
+	if (it != mMatList.end())
+		mMatList.erase(it);
+
+	pMaterial->DecrementReferenceCount();
+	pMaterial->DeleteIfUnreferenced();
+	pMaterial = nullptr;
 }
 
 void CMaterials::LoadMaterials()
@@ -22,8 +35,8 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"UnlitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$color2 \"[0 0 0]\"";
-		mat.sVMT += "\n	$additive \"1\"";
+		mat.sVMT += "\n\t$color2 \"[0 0 0]\"";
+		mat.sVMT += "\n\t$additive \"1\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
@@ -34,7 +47,7 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"UnlitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$basetexture \"vgui/white_additive\"";
+		mat.sVMT += "\n\t$basetexture \"white\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
@@ -45,7 +58,7 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"VertexLitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$basetexture \"vgui/white_additive\"";
+		mat.sVMT += "\n\t$basetexture \"white\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
@@ -56,8 +69,8 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"UnlitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$basetexture \"vgui/white_additive\"";
-		mat.sVMT += "\n	$wireframe \"1\"";
+		mat.sVMT += "\n\t$basetexture \"white\"";
+		mat.sVMT += "\n\t$wireframe \"1\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
@@ -68,14 +81,14 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"VertexLitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$basetexture \"vgui/white_additive\"";
-		mat.sVMT += "\n	$bumpmap \"models/player/shared/shared_normal\"";
-		mat.sVMT += "\n	$color2 \"[0 0 0]\"";
-		mat.sVMT += "\n	$additive \"1\"";
-		mat.sVMT += "\n	$phong \"1\"";
-		mat.sVMT += "\n	$phongfresnelranges \"[0 0.5 1]\"";
-		mat.sVMT += "\n	$envmap \"skybox/sky_dustbowl_01\"";
-		mat.sVMT += "\n	$envmapfresnel \"1\"";
+		mat.sVMT += "\n\t$basetexture \"white\"";
+		mat.sVMT += "\n\t$bumpmap \"models/player/shared/shared_normal\"";
+		mat.sVMT += "\n\t$color2 \"[0 0 0]\"";
+		mat.sVMT += "\n\t$additive \"1\"";
+		mat.sVMT += "\n\t$phong \"1\"";
+		mat.sVMT += "\n\t$phongfresnelranges \"[0 0.5 1]\"";
+		mat.sVMT += "\n\t$envmap \"skybox/sky_dustbowl_01\"";
+		mat.sVMT += "\n\t$envmapfresnel \"1\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
@@ -86,9 +99,9 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"VertexLitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$additive \"1\"";
-		mat.sVMT += "\n	$envmap \"cubemaps/cubemap_sheen002.hdr\"";
-		mat.sVMT += "\n	$envmaptint \"[1 1 1]\"";
+		mat.sVMT += "\n\t$additive \"1\"";
+		mat.sVMT += "\n\t$envmap \"cubemaps/cubemap_sheen002.hdr\"";
+		mat.sVMT += "\n\t$envmaptint \"[1 1 1]\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
@@ -99,22 +112,22 @@ void CMaterials::LoadMaterials()
 
 		mat.sVMT = "\"VertexLitGeneric\"";
 		mat.sVMT += "\n{";
-		mat.sVMT += "\n	$basetexture \"models/player/shared/ice_player\"";
-		mat.sVMT += "\n	$bumpmap \"models/player/shared/shared_normal\"";
-		mat.sVMT += "\n	$additive \"1\"";
-		mat.sVMT += "\n	$phong \"1\"";
-		mat.sVMT += "\n	$phongfresnelranges \"[0 0.001 0.001]\"";
-		mat.sVMT += "\n	$envmap \"skybox/sky_dustbowl_01\"";
-		mat.sVMT += "\n	$envmapfresnel \"1\"";
-		mat.sVMT += "\n	$selfillum \"1\"";
-		mat.sVMT += "\n	$selfillumtint \"[0 0 0]\"";
+		mat.sVMT += "\n\t$basetexture \"models/player/shared/ice_player\"";
+		mat.sVMT += "\n\t$bumpmap \"models/player/shared/shared_normal\"";
+		mat.sVMT += "\n\t$additive \"1\"";
+		mat.sVMT += "\n\t$phong \"1\"";
+		mat.sVMT += "\n\t$phongfresnelranges \"[0 0.001 0.001]\"";
+		mat.sVMT += "\n\t$envmap \"skybox/sky_dustbowl_01\"";
+		mat.sVMT += "\n\t$envmapfresnel \"1\"";
+		mat.sVMT += "\n\t$selfillum \"1\"";
+		mat.sVMT += "\n\t$selfillumtint \"[0 0 0]\"";
 		mat.sVMT += "\n}";
 
 		mat.bLocked = true;
 		mChamMaterials["Tint"] = mat;
 	}
 	// user materials
-	for (const auto& entry : std::filesystem::directory_iterator(MaterialFolder))
+	for (auto& entry : std::filesystem::directory_iterator(MaterialFolder))
 	{
 		// Ignore all non-Material files
 		if (!entry.is_regular_file() || entry.path().extension() != std::string(".vmt"))
@@ -128,7 +141,7 @@ void CMaterials::LoadMaterials()
 		sName.erase(sName.end() - 4, sName.end());
 		const std::string sVMT((std::istreambuf_iterator(inStream)), std::istreambuf_iterator<char>());
 
-		if (FNV1A::Hash(sName.c_str()) == FNV1A::HashConst("Original"))
+		if (FNV1A::Hash32(sName.c_str()) == FNV1A::Hash32Const("Original"))
 			continue;
 
 		Material_t mat = {};
@@ -139,9 +152,10 @@ void CMaterials::LoadMaterials()
 	// create materials
 	for (auto& [sName, mat] : mChamMaterials)
 	{
-		const auto kv = new KeyValues(sName.c_str());
+		KeyValues* kv = new KeyValues(sName.c_str());
 		kv->LoadFromBuffer(sName.c_str(), mat.sVMT.c_str());
-		mat.pMaterial = CreateNRef(std::format("m_pMat%s", sName).c_str(), kv);
+		kv->SetString("$model", "1"); // prevent wacko chams
+		mat.pMaterial = Create(std::format("m_pMat%s", sName).c_str(), kv);
 	}
 
 	// glow materials
@@ -159,7 +173,7 @@ void CMaterials::LoadMaterials()
 
 		KeyValues* m_pMatBlurXKV = new KeyValues("BlurFilterX");
 		m_pMatBlurXKV->SetString("$basetexture", "glow_buffer_1");
-		mat.pMaterial = CreateNRef("m_pMatBlurX", m_pMatBlurXKV);
+		mat.pMaterial = Create("m_pMatBlurX", m_pMatBlurXKV);
 
 		mGlowMaterials["BlurX"] = mat;
 	}
@@ -168,7 +182,7 @@ void CMaterials::LoadMaterials()
 
 		KeyValues* m_pMatBlurYKV = new KeyValues("BlurFilterY");
 		m_pMatBlurYKV->SetString("$basetexture", "glow_buffer_2");
-		mat.pMaterial = CreateNRef("m_pMatBlurY", m_pMatBlurYKV);
+		mat.pMaterial = Create("m_pMatBlurY", m_pMatBlurYKV);
 
 		mGlowMaterials["BlurY"] = mat;
 	}
@@ -178,7 +192,7 @@ void CMaterials::LoadMaterials()
 		KeyValues* m_pMatHaloAddToScreenKV = new KeyValues("UnlitGeneric");
 		m_pMatHaloAddToScreenKV->SetString("$basetexture", "glow_buffer_1");
 		m_pMatHaloAddToScreenKV->SetString("$additive", "1");
-		mat.pMaterial = CreateNRef("m_pMatHaloAddToScreen", m_pMatHaloAddToScreenKV);
+		mat.pMaterial = Create("m_pMatHaloAddToScreen", m_pMatHaloAddToScreenKV);
 
 		mGlowMaterials["HaloAddToScreen"] = mat;
 	}
@@ -187,23 +201,9 @@ void CMaterials::LoadMaterials()
 void CMaterials::UnloadMaterials()
 {
 	for (auto& [_, mat] : mChamMaterials)
-	{
-		if (!mat.pMaterial)
-			continue;
-
-		mat.pMaterial->DecrementReferenceCount();
-		mat.pMaterial->DeleteIfUnreferenced();
-		mat.pMaterial = nullptr;
-	}
+		Remove(mat.pMaterial);
 	for (auto& [_, mat] : mGlowMaterials)
-	{
-		if (!mat.pMaterial)
-			continue;
-
-		mat.pMaterial->DecrementReferenceCount();
-		mat.pMaterial->DeleteIfUnreferenced();
-		mat.pMaterial = nullptr;
-	}
+		Remove(mat.pMaterial);
 	mChamMaterials.clear();
 	mGlowMaterials.clear();
 	mMatList.clear();
@@ -216,39 +216,27 @@ void CMaterials::ReloadMaterials()
 	LoadMaterials();
 }
 
-void CMaterials::SetColor(IMaterial* material, Color_t color, bool bSetColor)
+void CMaterials::SetColor(IMaterial* material, Color_t color)
 {
-	if (bSetColor)
+	if (material)
 	{
-		if (material)
-		{
-			if (auto $phongtint = material->FindVar("$phongtint", nullptr, false))
-				$phongtint->SetVecValue(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-			if (auto $envmaptint = material->FindVar("$envmaptint", nullptr, false))
-				$envmaptint->SetVecValue(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-		}
-		I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-		I::RenderView->SetBlend(float(color.a) / 255.f);
+		bool bFound; auto $phongtint = material->FindVar("$phongtint", &bFound, false);
+		if (bFound && $phongtint)
+			$phongtint->SetVecValue(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
+
+		auto $envmaptint = material->FindVar("$envmaptint", &bFound, false);
+		if (bFound && $envmaptint)
+			$envmaptint->SetVecValue(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
 	}
-	else
-	{
-		if (material)
-		{
-			if (auto $phongtint = material->FindVar("$phongtint", nullptr, false))
-				$phongtint->SetVecValue(1.f, 1.f, 1.f);
-			if (auto $envmaptint = material->FindVar("$envmaptint", nullptr, false))
-				$envmaptint->SetVecValue(1.f, 1.f, 1.f);
-		}
-		I::RenderView->SetColorModulation(1.f, 1.f, 1.f);
-		I::RenderView->SetBlend(1.f);
-	}
+	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
+	I::RenderView->SetBlend(float(color.a) / 255.f);
 }
 
 
 
 IMaterial* CMaterials::GetMaterial(std::string sName)
 {
-	if (FNV1A::Hash(sName.c_str()) == FNV1A::HashConst("Original"))
+	if (FNV1A::Hash32(sName.c_str()) == FNV1A::Hash32Const("Original"))
 		return nullptr;
 
 	return mChamMaterials.contains(sName) ? mChamMaterials[sName].pMaterial : nullptr;
@@ -265,15 +253,16 @@ std::string CMaterials::GetVMT(std::string sName)
 
 void CMaterials::AddMaterial(std::string sName)
 {
-	if (FNV1A::Hash(sName.c_str()) == FNV1A::HashConst("Original") || std::filesystem::exists(MaterialFolder + "\\" + sName + ".vmt") || mChamMaterials.contains(sName))
+	if (FNV1A::Hash32(sName.c_str()) == FNV1A::Hash32Const("Original") || std::filesystem::exists(MaterialFolder + "\\" + sName + ".vmt") || mChamMaterials.contains(sName))
 		return;
 
 	Material_t mat = {};
 	mat.sVMT = "\"VertexLitGeneric\"\n{\n\t\n}";
 
-	const auto kv = new KeyValues(sName.c_str());
+	KeyValues* kv = new KeyValues(sName.c_str());
 	kv->LoadFromBuffer(sName.c_str(), mat.sVMT.c_str());
-	mat.pMaterial = CreateNRef(std::format("m_pMat%s", sName).c_str(), kv);
+	kv->SetString("$model", "1");
+	mat.pMaterial = Create(std::format("m_pMat%s", sName).c_str(), kv);
 
 	mChamMaterials[sName] = mat;
 
@@ -293,11 +282,14 @@ void CMaterials::EditMaterial(std::string sName, std::string sVMT)
 		if (cham->second.bLocked)
 			return;
 
+		Remove(cham->second.pMaterial);
+
 		cham->second.sVMT = sVMT;
 
-		const auto kv = new KeyValues(sName.c_str());
+		KeyValues* kv = new KeyValues(sName.c_str());
 		kv->LoadFromBuffer(sName.c_str(), sVMT.c_str());
-		cham->second.pMaterial = CreateNRef(std::format("m_pMat%s", sName).c_str(), kv);
+		kv->SetString("$model", "1");
+		cham->second.pMaterial = Create(std::format("m_pMat%s", sName).c_str(), kv);
 
 		std::ofstream outStream(MaterialFolder + "\\" + sName + ".vmt");
 		outStream << sVMT;
@@ -316,38 +308,34 @@ void CMaterials::RemoveMaterial(std::string sName)
 		if (cham->second.bLocked)
 			return;
 
-		if (cham->second.pMaterial)
-		{
-			cham->second.pMaterial->DecrementReferenceCount();
-			cham->second.pMaterial->DeleteIfUnreferenced();
-			cham->second.pMaterial = nullptr;
-		}
+		Remove(cham->second.pMaterial);
 
 		mChamMaterials.erase(cham);
 	}
 
 	std::filesystem::remove(MaterialFolder + "\\" + sName + ".vmt");
 
-	auto removeFromVar = [sName](ConfigVar<std::vector<std::string>>& var)
+	auto removeFromVar = [sName](ConfigVar<std::vector<std::pair<std::string, Color_t>>>& var)
 		{
 			for (auto& [_, val] : var.Map)
 			{
 				for (auto it = val.begin(); it != val.end();)
 				{
-					if (*it == sName)
+					if (it->first == sName)
 						it = val.erase(it);
 					else
 						++it;
 				}
 			}
 		};
-	removeFromVar(Vars::Chams::Friendly::VisibleMaterial);
-	removeFromVar(Vars::Chams::Friendly::OccludedMaterial);
-	removeFromVar(Vars::Chams::Enemy::VisibleMaterial);
-	removeFromVar(Vars::Chams::Enemy::OccludedMaterial);
-	removeFromVar(Vars::Chams::World::VisibleMaterial);
-	removeFromVar(Vars::Chams::World::OccludedMaterial);
-	removeFromVar(Vars::Chams::Backtrack::VisibleMaterial);
-	removeFromVar(Vars::Chams::FakeAngle::VisibleMaterial);
-	removeFromVar(Vars::Chams::Viewmodel::VisibleMaterial);
+	removeFromVar(Vars::Chams::Friendly::Visible);
+	removeFromVar(Vars::Chams::Friendly::Occluded);
+	removeFromVar(Vars::Chams::Enemy::Visible);
+	removeFromVar(Vars::Chams::Enemy::Occluded);
+	removeFromVar(Vars::Chams::World::Visible);
+	removeFromVar(Vars::Chams::World::Occluded);
+	removeFromVar(Vars::Chams::Backtrack::Visible);
+	removeFromVar(Vars::Chams::FakeAngle::Visible);
+	removeFromVar(Vars::Chams::Viewmodel::WeaponVisible);
+	removeFromVar(Vars::Chams::Viewmodel::HandsVisible);
 }

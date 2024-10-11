@@ -1,21 +1,27 @@
 #include "FakeLag.h"
 
-bool CFakeLag::IsAllowed(CTFPlayer* pLocal)
+#include "../../Aimbot/AutoRocketJump/AutoRocketJump.h"
+
+bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	const int iMaxSend = std::min(24 - G::ShiftedTicks, 22);
-	const bool bVar = Vars::CL_Move::Fakelag::Fakelag.Value || bPreservingBlast || bUnducking;
-	const bool bChargePrio = (iMaxSend > 0 && G::ChokeAmount < iMaxSend) || !G::ShiftedTicks;
-	const bool bAttacking = G::IsAttacking && Vars::CL_Move::Fakelag::UnchokeOnAttack.Value;
-	const bool bNotAir = Vars::CL_Move::Fakelag::Options.Value & (1 << 2) && !pLocal->OnSolid();
-
-	if (!bVar || !bChargePrio || bAttacking || bNotAir)
+	if (!(Vars::CL_Move::Fakelag::Fakelag.Value || bPreservingBlast || bUnducking)
+		|| I::ClientState->chokedcommands >= std::min(24 - G::ShiftedTicks, 21)
+		|| G::ShiftedGoal != G::ShiftedTicks || G::Recharge)
 		return false;
 
-	if (bPreservingBlast || bUnducking)
+	if (bPreservingBlast)
+	{
+		G::PSilentAngles = true; // prevent unchoking while grounded
 		return true;
+	}
 
-	if (G::ShiftedGoal != G::ShiftedTicks)
+	if (G::IsAttacking && Vars::CL_Move::Fakelag::UnchokeOnAttack.Value || F::AutoRocketJump.IsRunning()
+		|| Vars::CL_Move::Fakelag::Options.Value & (1 << 2) && !pLocal->m_hGroundEntity()
+		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK)) // try to prevent issues
 		return false;
+
+	if (bUnducking)
+		return true;
 	
 	const bool bMoving = !(Vars::CL_Move::Fakelag::Options.Value & (1 << 0)) || pLocal->m_vecVelocity().Length2D() > 10.f;
 	if (!bMoving)
@@ -39,26 +45,23 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal)
 void CFakeLag::PreserveBlastJump(CTFPlayer* pLocal)
 {
 	bPreservingBlast = false;
-	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost() || !pLocal->IsPlayer() || G::ShiftedTicks == G::MaxShift)
+
+	if (!Vars::CL_Move::Fakelag::RetainBlastJump.Value || !Vars::Misc::Movement::Bunnyhop.Value || !(G::Buttons & IN_JUMP)
+		|| !pLocal->IsAlive() || pLocal->IsDucking() || !pLocal->m_hGroundEntity() || pLocal->m_iClass() != TF_CLASS_SOLDIER || !pLocal->InCond(TF_COND_BLASTJUMPING))
 		return;
 
-	const bool bVar = Vars::CL_Move::Fakelag::RetainBlastJump.Value && Vars::Misc::Movement::Bunnyhop.Value;
-	static bool bOldSolid = false; const bool bPlayerReady = pLocal->OnSolid() || bOldSolid; bOldSolid = pLocal->OnSolid();
-	const bool bCanPreserve = pLocal->m_iClass() == TF_CLASS_SOLDIER && pLocal->InCond(TF_COND_BLASTJUMPING);
-	const bool bValid = G::Buttons & IN_JUMP && !pLocal->IsDucking();
-
-	bPreservingBlast = bVar && bPlayerReady && bCanPreserve && bValid;
+	bPreservingBlast = true;
 }
 
 void CFakeLag::Unduck(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost())
+	bUnducking = false;
+
+	if (!(Vars::CL_Move::Fakelag::Options.Value & (1 << 1)) || !pLocal->IsAlive()
+		|| !(pLocal->m_hGroundEntity() && pLocal->IsDucking() && !(pCmd->buttons & IN_DUCK)))
 		return;
 
-	const bool bVar = Vars::CL_Move::Fakelag::Options.Value & (1 << 1);
-	const bool bPlayerReady = pLocal->IsPlayer() && pLocal->OnSolid() && pLocal->IsDucking() && !(pCmd->buttons & IN_DUCK);
-
-	bUnducking = bVar && bPlayerReady;
+	bUnducking = true;
 }
 
 void CFakeLag::Prediction(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -67,7 +70,7 @@ void CFakeLag::Prediction(CTFPlayer* pLocal, CUserCmd* pCmd)
 	Unduck(pLocal, pCmd);
 }
 
-void CFakeLag::Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
+void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket)
 {
 	if (!pLocal)
 		return;
@@ -83,11 +86,10 @@ void CFakeLag::Run(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
 	}
 
 	// Are we even allowed to choke?
-	if (!IsAllowed(pLocal))
+	if (!IsAllowed(pLocal, pWeapon, pCmd))
 	{
 		vLastPosition = pLocal->m_vecOrigin();
 		G::ChokeAmount = G::ChokeGoal = 0;
-		bUnducking = false;
 		return;
 	}
 
