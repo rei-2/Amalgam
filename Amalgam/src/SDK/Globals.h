@@ -12,7 +12,7 @@ struct VelFixRecord
 	float m_flSimulationTime;
 };
 
-struct DrawBullet
+struct DrawLine
 {
 	std::pair<Vec3, Vec3> m_line;
 	float m_flTime;
@@ -20,7 +20,7 @@ struct DrawBullet
 	bool m_bZBuffer = false;
 };
 
-struct DrawLine
+struct DrawPath
 {
 	std::deque<Vec3> m_line;
 	float m_flTime;
@@ -86,8 +86,8 @@ namespace G
 
 	inline std::unordered_map<int, std::deque<VelFixRecord>> VelocityMap = {};
 
-	inline std::vector<DrawBullet> LineStorage = {};
-	inline std::vector<DrawLine> PathStorage = {};
+	inline std::vector<DrawLine> LineStorage = {};
+	inline std::vector<DrawPath> PathStorage = {};
 	inline std::vector<DrawBox> BoxStorage = {};
 
 	inline int* RandomSeed()
