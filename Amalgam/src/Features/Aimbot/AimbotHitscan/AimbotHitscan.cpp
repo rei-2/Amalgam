@@ -407,7 +407,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 			if (!aBones)
 				continue;
 
-			std::vector<std::pair<const mstudiobbox_t*, int>> hitboxes;
+			std::vector<std::pair<const mstudiobbox_t*, int>> vHitboxes;
 			{
 				if (target.m_TargetType != ETargetType::SENTRY)
 				{
@@ -427,31 +427,30 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 						case 2: tertiary.push_back({ pBox, nHitbox }); break;
 						}
 					}
-					for (auto& pair : primary) hitboxes.push_back(pair);
-					for (auto& pair : secondary) hitboxes.push_back(pair);
-					for (auto& pair : tertiary) hitboxes.push_back(pair);
+					for (auto& pair : primary) vHitboxes.push_back(pair);
+					for (auto& pair : secondary) vHitboxes.push_back(pair);
+					for (auto& pair : tertiary) vHitboxes.push_back(pair);
 				}
 				else
 				{
+					Vec3 vCenter = target.m_pEntity->GetCenter();
+					std::vector<std::pair<float, std::pair<const mstudiobbox_t*, int>>> vCenters = {};
 					for (int nHitbox = 0; nHitbox < target.m_pEntity->As<CObjectSentrygun>()->GetNumOfHitboxes(); nHitbox++)
 					{
 						const mstudiobbox_t* pBox = pSet->pHitbox(nHitbox);
-						if (!pBox) continue;
-
-						hitboxes.push_back({ pBox, nHitbox });
+						if (pBox)
+							vCenters.push_back({ target.m_pEntity->As<CBaseAnimating>()->GetHitboxCenter(nHitbox).DistTo(vCenter), {pBox, nHitbox}});
 					}
-					std::sort(hitboxes.begin(), hitboxes.end(), [&](const auto& a, const auto& b) -> bool
+					std::sort(vCenters.begin(), vCenters.end(), [&](const auto& a, const auto& b) -> bool
 						{
-							Vec3 vCenter = target.m_pEntity->GetCenter();
-							Vec3 aCenter = target.m_pEntity->As<CBaseAnimating>()->GetHitboxCenter(a.second, aCenter);
-							Vec3 bCenter = target.m_pEntity->As<CBaseAnimating>()->GetHitboxCenter(b.second, bCenter);
-
-							return vCenter.DistTo(aCenter) < vCenter.DistTo(bCenter);
+							return a.first < b.first;
 						});
+					for (auto& pair : vCenters)
+						vHitboxes.push_back(pair.second);
 				}
 			}
 
-			for (auto& pair : hitboxes)
+			for (auto& pair : vHitboxes)
 			{
 				Vec3 vMins = pair.first->bbmin;
 				Vec3 vMaxs = pair.first->bbmax;
