@@ -488,6 +488,9 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 
 std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBaseAnimating* pEntity, const int iHitbox)
 {
+	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a)
+		return {};
+
 	std::vector<DrawBox> vBoxes = {};
 
 	auto pModel = pEntity->GetModel();

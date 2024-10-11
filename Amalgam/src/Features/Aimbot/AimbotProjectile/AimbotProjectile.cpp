@@ -776,6 +776,9 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 		target.m_vAngleTo = vAngleTo;
 		if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
 		{
+			if (!Vars::Colors::BoundHitboxEdge.Value.a && !Vars::Colors::BoundHitboxFace.Value.a)
+				return true;
+
 			pBoxes->push_back({ vPredicted, target.m_pEntity->m_vecMins(), target.m_pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + (Vars::Visuals::Simulation::Timed.Value ? flTime : 5.f), Vars::Colors::BoundHitboxEdge.Value, Vars::Colors::BoundHitboxFace.Value, true });
 
 			const float flSize = std::clamp(projInfo.m_vHull.x, 1.f, 3.f);
