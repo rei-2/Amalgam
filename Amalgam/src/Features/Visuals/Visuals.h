@@ -22,6 +22,7 @@ class CVisuals
 private:
 	int m_nHudZoom = 0;
 	std::vector<Sightline_t> m_vSightLines;
+	std::vector<PickupData> m_vPickups;
 
 public:
 	void DrawAimbotFOV(CTFPlayer* pLocal);
@@ -35,13 +36,13 @@ public:
 	void DrawDebugInfo(CTFPlayer* pLocal);
 
 	std::vector<DrawBox> GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBaseAnimating* pEntity, const int iHitbox = -1);
-	void DrawBulletLines();
-	void DrawSimLine(std::deque<Vec3>& Line, Color_t Color, int iStyle = 0, bool bZBuffer = false, float flTime = 0.f);
-	void DrawSimLines();
+	void DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle = 0, bool bZBuffer = false, float flTime = 0.f);
+	void DrawLines();
+	void DrawPaths();
 	void DrawBoxes();
-	void RevealSimLines();
-	void RevealBulletLines();
-	void RevealBoxes();
+	void RestoreLines();
+	void RestorePaths();
+	void RestoreBoxes();
 	void DrawServerHitboxes(CTFPlayer* pLocal);
 	void RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t cLine, bool bZBuffer = false);
 	void RenderBox(const Vec3& vPos, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vOrientation, Color_t cEdge, Color_t cFace, bool bZBuffer = false);
@@ -51,8 +52,7 @@ public:
 	void DrawSightlines();
 	void Store();
 	void PickupTimers();
-
-	std::vector<PickupData> m_vPickupDatas;
+	void Event(IGameEvent* pEvent, uint32_t uHash);
 
 	void OverrideWorldTextures();
 	void Modulate();

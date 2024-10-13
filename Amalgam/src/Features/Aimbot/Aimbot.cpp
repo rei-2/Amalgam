@@ -56,10 +56,10 @@ void CAimbot::RunAimbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 
 void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (F::AimbotProjectile.bLastTickCancel)
+	if (F::AimbotProjectile.m_bLastTickCancel)
 	{
-		pCmd->weaponselect = F::AimbotProjectile.bLastTickCancel;
-		F::AimbotProjectile.bLastTickCancel = 0;
+		pCmd->weaponselect = F::AimbotProjectile.m_bLastTickCancel;
+		F::AimbotProjectile.m_bLastTickCancel = 0;
 	}
 
 	bRan = false;

@@ -14,7 +14,7 @@ struct VelFixRecord
 
 struct DrawLine
 {
-	std::pair<Vec3, Vec3> m_line;
+	std::pair<Vec3, Vec3> m_vPair;
 	float m_flTime;
 	Color_t m_color;
 	bool m_bZBuffer = false;
@@ -22,7 +22,7 @@ struct DrawLine
 
 struct DrawPath
 {
-	std::deque<Vec3> m_line;
+	std::deque<Vec3> m_vPath;
 	float m_flTime;
 	Color_t m_color;
 	bool m_bZBuffer = false;

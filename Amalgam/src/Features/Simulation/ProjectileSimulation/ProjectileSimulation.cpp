@@ -378,13 +378,13 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 	return true;
 }
 
-void CProjectileSimulation::RunTick(ProjectileInfo& info, bool bLine)
+void CProjectileSimulation::RunTick(ProjectileInfo& info, bool bPath)
 {
 	if (!env)
 		return;
 
-	if (bLine)
-		info.PredictionLines.push_back(GetOrigin());
+	if (bPath)
+		info.m_vPath.push_back(GetOrigin());
 
 	env->Simulate(TICK_INTERVAL);
 

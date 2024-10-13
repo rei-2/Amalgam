@@ -594,7 +594,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 							const Vec3 vPos = trace.endpos + vForward * 16 + vOriginal - target.m_vPos;
 
 							//G::LineStorage.clear();
-							//G::LineStorage.push_back({ {pLocal->GetShootPos(), vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
+							//G::LineStorage.push_back({ { pLocal->GetShootPos(), vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Prediction.Value });
 
 							float closestDist; int closestId = -1;
 							for (int i = 0; i < pSet->numhitboxes; ++i)
@@ -644,8 +644,8 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 
 	if (bDidHit)
 	{
-		projInfo.PredictionLines.push_back(trace.endpos);
-		*pProjLines = projInfo.PredictionLines;
+		projInfo.m_vPath.push_back(trace.endpos);
+		*pProjectilePath = projInfo.m_vPath;
 	}
 
 	return bDidHit;
@@ -653,7 +653,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 
 
 
-int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::deque<Vec3>* pMoveLines, std::deque<Vec3>* pProjLines, std::vector<DrawBox>* pBoxes, float* pTimeTo)
+int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::deque<Vec3>* pPlayerPath, std::deque<Vec3>* pProjectilePath, std::vector<DrawBox>* pBoxes, float* pTimeTo)
 {
 	if (Vars::Aimbot::General::Ignore.Value & UNSIMULATED && H::Entities.GetChoke(target.m_pEntity) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
@@ -758,23 +758,23 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 				iLowestPriority = iPriority; flLowestDist = flDist;
 				vAngleTo = vAngles, vPredicted = target.m_vPos, vTarget = vOriginalPoint;
 				*pTimeTo = vPoint.m_Solution.m_flTime + flLatency;
-				*pMoveLines = storage.PredictionLines;
-				if (!pMoveLines->empty())
-					pMoveLines->push_back(storage.m_MoveData.m_vecAbsOrigin);
-				*pProjLines = vProjLines;
+				*pPlayerPath = storage.m_vPath;
+				if (!pPlayerPath->empty())
+					pPlayerPath->push_back(storage.m_MoveData.m_vecAbsOrigin);
+				*pProjectilePath = vProjLines;
 			}
 		}
 	}
 	F::MoveSim.Restore(storage);
 
-	const float flTime = TICKS_TO_TIME(pProjLines->size());
+	const float flTime = TICKS_TO_TIME(pProjectilePath->size());
 	target.m_vPos = vTarget;
 
 	if (iLowestPriority != std::numeric_limits<int>::max() &&
 		(target.m_TargetType == ETargetType::PLAYER ? !storage.m_bFailed : true)) // don't attempt to aim at players when movesim fails
 	{
 		target.m_vAngleTo = vAngleTo;
-		if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
+		if (Vars::Visuals::Hitbox::Enabled.Value & (1 << 0))
 		{
 			if (!Vars::Colors::BoundHitboxEdge.Value.a && !Vars::Colors::BoundHitboxFace.Value.a)
 				return true;
@@ -890,9 +890,9 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	}
 
 	if (!G::IsThrowing)
-		iAimType = Vars::Aimbot::General::AimType.Value;
-	else if (iAimType)
-		Vars::Aimbot::General::AimType.Value = iAimType;
+		m_iAimType = Vars::Aimbot::General::AimType.Value;
+	else if (m_iAimType)
+		Vars::Aimbot::General::AimType.Value = m_iAimType;
 
 	if (Vars::Aimbot::General::AimHoldsFire.Value == 2 && !G::CanPrimaryAttack && G::LastUserCmd->buttons & IN_ATTACK && Vars::Aimbot::General::AimType.Value && !pWeapon->IsInReload())
 		pCmd->buttons |= IN_ATTACK;
@@ -913,8 +913,8 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 
 	for (auto& target : targets)
 	{
-		float flTimeTo = 0.f; std::deque<Vec3> vMoveLines, vProjLines; std::vector<DrawBox> vBoxes = {};
-		const int result = CanHit(target, pLocal, pWeapon, &vMoveLines, &vProjLines, &vBoxes, &flTimeTo);
+		float flTimeTo = 0.f; std::deque<Vec3> vPlayerPath, vProjectilePath; std::vector<DrawBox> vBoxes = {};
+		const int result = CanHit(target, pLocal, pWeapon, &vPlayerPath, &vProjectilePath, &vBoxes, &flTimeTo);
 		if (!result) continue;
 
 		G::Target = { target.m_pEntity->entindex(), I::GlobalVars->tickcount };
@@ -969,23 +969,17 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 				if (Vars::Visuals::Simulation::Enabled.Value)
 				{
 					G::PathStorage.clear();
-					G::PathStorage.push_back({ vMoveLines, Vars::Visuals::Simulation::Timed.Value ? -int(vMoveLines.size()) : I::GlobalVars->curtime + 5.f, /*pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) :*/ Vars::Colors::PredictionColor.Value});
+					G::PathStorage.push_back({ vPlayerPath, Vars::Visuals::Simulation::Timed.Value ? -int(vPlayerPath.size()) : I::GlobalVars->curtime + 5.f, /*pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) :*/ Vars::Colors::Prediction.Value });
 					if (G::IsAttacking)
-						G::PathStorage.push_back({ vProjLines, Vars::Visuals::Simulation::Timed.Value ? -int(vProjLines.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) : Vars::Colors::ProjectileColor.Value });
+						G::PathStorage.push_back({ vProjectilePath, Vars::Visuals::Simulation::Timed.Value ? -int(vProjectilePath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, pWeapon->IsInReload() ? Color_t(0, 0, 0, 255) : Vars::Colors::Projectile.Value });
 				}
-				if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
+				if (Vars::Visuals::Hitbox::Enabled.Value & (1 << 0))
 				{
 					G::BoxStorage.clear();
-					//G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
-					for (auto& tBox : vBoxes)
-					{
-						if (pWeapon->IsInReload())
-							tBox.m_colorEdge.r = tBox.m_colorFace.r = tBox.m_colorEdge.g = tBox.m_colorFace.g = tBox.m_colorEdge.b = tBox.m_colorFace.b = 0;
-						G::BoxStorage.push_back(tBox);
-					}
+					G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 				}
-				//if (Vars::Visuals::Simulation::Enabled.Value || Vars::Visuals::Hitbox::ShowHitboxes.Value)
-				//	G::LineStorage.clear();
+				if (Vars::Visuals::Simulation::Enabled.Value || Vars::Visuals::Hitbox::Enabled.Value & (1 << 0))
+					G::LineStorage.clear();
 			}
 
 			if (!pWeapon->IsInReload())

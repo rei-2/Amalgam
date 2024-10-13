@@ -71,7 +71,8 @@ enum FColorPicker_
 	FColorPicker_Left = 1 << 0,
 	FColorPicker_Middle = 1 << 1,
 	FColorPicker_SameLine = 1 << 2,
-	FColorPicker_Dropdown = 1 << 3
+	FColorPicker_Dropdown = 1 << 3,
+	FColorPicker_Tooltip = 1 << 4
 };
 
 static inline ImVec2  operator*(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
@@ -285,7 +286,7 @@ namespace ImGui
 		pDrawList->PopClipRect();
 	}
 
-	__inline void HelpMarker(const char* sDescription, bool bCondition = IsItemHovered())
+	__inline void FTooltip(const char* sDescription, bool bCondition = IsItemHovered())
 	{
 		if (bCondition)
 			SetTooltip(sDescription);
@@ -1272,7 +1273,7 @@ namespace ImGui
 	}
 	*/
 
-	__inline bool ColorPicker(const char* sLabel, Color_t* tColor, bool bMarker = true, int iFlags = 0)
+	__inline bool ColorPicker(const char* sLabel, Color_t* tColor, bool bTooltip = true, int iFlags = 0)
 	{
 		ImVec2 vOriginalPos = GetCursorPos();
 		if (Disabled)
@@ -1293,8 +1294,8 @@ namespace ImGui
 		PopStyleVar(3);
 		if (!Disabled && IsItemHovered())
 			SetMouseCursor(ImGuiMouseCursor_Hand);
-		if (bMarker)
-			HelpMarker(sLabel);
+		if (bTooltip)
+			FTooltip(sLabel);
 
 		return bReturn;
 	}
@@ -1323,7 +1324,7 @@ namespace ImGui
 			ImVec2 vOriginalPos = GetCursorPos();
 			DebugShift({ 0, 6 });
 
-			bReturn = ColorPicker(sLabel, tColor, !(iFlags & (FColorPicker_Left | FColorPicker_Middle)));
+			bReturn = ColorPicker(sLabel, tColor, !(iFlags & (FColorPicker_Left | FColorPicker_Middle)) || iFlags & FColorPicker_Tooltip);
 			if (iFlags & (FColorPicker_Left | FColorPicker_Middle))
 			{
 				SetCursorPos({ vOriginalPos.x + 18, vOriginalPos.y + 5 });
@@ -1353,7 +1354,7 @@ namespace ImGui
 		{
 			SameLine(); DebugShift({ -8, 0 });
 			ImVec2 vOriginalPos = GetCursorPos(); DebugShift({ 0, 8 });
-			bReturn = ColorPicker(sLabel, tColor, false, iFlags);
+			bReturn = ColorPicker(sLabel, tColor, iFlags & FColorPicker_Tooltip, iFlags);
 			SetCursorPos(vOriginalPos); DebugDummy({ 10, 48 });
 
 			if (pHovered && !Disabled && CurrentBind == DEFAULT_BIND && IsWindowHovered())

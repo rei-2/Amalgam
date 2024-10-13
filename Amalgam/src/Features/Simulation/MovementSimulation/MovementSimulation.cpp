@@ -664,13 +664,13 @@ bool CMovementSimulation::StrafePrediction(PlayerStorage& playerStorage, const i
 	return true;
 }
 
-void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bLine)
+void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 {
 	if (playerStorage.m_bFailed || !playerStorage.m_pPlayer || !playerStorage.m_pPlayer->IsPlayer())
 		return;
 
-	if (bLine)
-		playerStorage.PredictionLines.push_back(playerStorage.m_MoveData.m_vecAbsOrigin);
+	if (bPath)
+		playerStorage.m_vPath.push_back(playerStorage.m_MoveData.m_vecAbsOrigin);
 
 	//make sure frametime and prediction vars are right
 	I::Prediction->m_bInPrediction = true;

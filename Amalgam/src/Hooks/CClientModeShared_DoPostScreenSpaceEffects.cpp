@@ -26,8 +26,8 @@ MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVFunc(I::Clie
 		return CALL_ORIGINAL(rcx, pSetup);
 
 	F::Visuals.DrawBoxes();
-	F::Visuals.DrawBulletLines();
-	F::Visuals.DrawSimLines();
+	F::Visuals.DrawPaths();
+	F::Visuals.DrawLines();
 	F::Visuals.DrawSightlines();
 	if (pLocal)
 	{

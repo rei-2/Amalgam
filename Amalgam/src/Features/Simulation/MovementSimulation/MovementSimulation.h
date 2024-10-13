@@ -67,7 +67,7 @@ struct PlayerStorage
 	bool m_bPredictNetworked = true;
 	Vec3 m_vPredictedOrigin = {};
 
-	std::deque<Vec3> PredictionLines;
+	std::deque<Vec3> m_vPath;
 
 	bool m_bFailed = false;
 	bool m_bInitFailed = false;
@@ -105,7 +105,7 @@ public:
 	void Store();
 
 	bool Initialize(CBaseEntity* pEntity, PlayerStorage& playerStorageOut, bool useHitchance = true, bool cancelStrafe = false);
-	void RunTick(PlayerStorage& playerStorage, bool bLine = true);
+	void RunTick(PlayerStorage& playerStorage, bool bPath = true);
 	void Restore(PlayerStorage& playerStorage);
 
 	float GetPredictedDelta(CBaseEntity* pEntity);

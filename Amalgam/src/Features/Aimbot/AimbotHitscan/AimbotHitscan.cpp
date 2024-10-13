@@ -849,12 +849,12 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 			if (!pWeapon->IsInReload())
 			{
-				if (Vars::Visuals::Bullet::BulletTracer.Value)
+				if (Vars::Visuals::Bullet::Enabled.Value)
 				{
 					G::LineStorage.clear();
-					G::LineStorage.push_back({ {pLocal->GetShootPos(), target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
+					G::LineStorage.push_back({ {pLocal->GetShootPos(), target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
 				}
-				if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
+				if (Vars::Visuals::Hitbox::Enabled.Value & (1 << 0))
 				{
 					G::BoxStorage.clear();
 					auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.BoneMatrix.aBones, target.m_pEntity->As<CBaseAnimating>());

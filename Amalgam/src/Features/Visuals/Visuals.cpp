@@ -200,7 +200,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 		return;
 
 	ProjectileInfo projInfo = {};
-	if (!F::ProjSim.GetInfo(pLocal, pWeapon, bQuick ? I::EngineClient->GetViewAngles() : G::CurrentUserCmd->viewangles, projInfo, true, bQuick, (bQuick && Vars::Aimbot::Projectile::AutoRelease.Value) ? Vars::Aimbot::Projectile::AutoRelease.Value / 100 : -1.f)
+	if (!F::ProjSim.GetInfo(pLocal, pWeapon, bQuick ? I::EngineClient->GetViewAngles() : G::CurrentUserCmd->viewangles, projInfo, ProjSim_Trace | ProjSim_InitCheck | ProjSim_Quick, (bQuick && Vars::Aimbot::Projectile::AutoRelease.Value) ? Vars::Aimbot::Projectile::AutoRelease.Value / 100 : -1.f)
 		|| !F::ProjSim.Initialize(projInfo))
 		return;
 
@@ -222,10 +222,10 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 		}
 	}
 
-	if (projInfo.PredictionLines.empty())
+	if (projInfo.m_vPath.empty())
 		return;
 
-	projInfo.PredictionLines.push_back(trace.endpos);
+	projInfo.m_vPath.push_back(trace.endpos);
 
 	std::deque<Vec3> vPoints = {};
 	if ((bQuick ? Vars::Visuals::Simulation::ProjectileTrajectory.Value : Vars::Visuals::Simulation::TrajectoryOnShot.Value) && Vars::Visuals::Simulation::SplashRadius.Value & (1 << 0))
@@ -282,9 +282,9 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 
 		if (Vars::Visuals::Simulation::ProjectileTrajectory.Value)
 		{
-			DrawSimLine(projInfo.PredictionLines, Vars::Colors::ProjectileColor.Value);
-			if (Vars::Colors::ClippedColor.Value.a)
-				DrawSimLine(projInfo.PredictionLines, Vars::Colors::ClippedColor.Value, 0, true);
+			DrawPath(projInfo.m_vPath, Vars::Colors::Projectile.Value);
+			if (Vars::Colors::ProjectileClipped.Value.a)
+				DrawPath(projInfo.m_vPath, Vars::Colors::ProjectileClipped.Value, 0, true);
 
 			if (pNormal)
 			{
@@ -292,23 +292,23 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 				const Vec3 vSize = { 1.f, flSize, flSize };
 				Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
 
-				RenderBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::ProjectileColor.Value, { 0, 0, 0, 0 });
-				if (Vars::Colors::ClippedColor.Value.a)
-					RenderBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::ClippedColor.Value, { 0, 0, 0, 0 }, true);
+				RenderBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::Projectile.Value, { 0, 0, 0, 0 });
+				if (Vars::Colors::ProjectileClipped.Value.a)
+					RenderBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::ProjectileClipped.Value, { 0, 0, 0, 0 }, true);
 			}
 
 			if (!vPoints.empty())
 			{
-				F::Visuals.DrawSimLine(vPoints, Vars::Colors::ProjectileColor.Value);
-				if (Vars::Colors::ClippedColor.Value.a)
-					F::Visuals.DrawSimLine(vPoints, Vars::Colors::ClippedColor.Value, 0, true);
+				DrawPath(vPoints, Vars::Colors::Projectile.Value);
+				if (Vars::Colors::ProjectileClipped.Value.a)
+					DrawPath(vPoints, Vars::Colors::ProjectileClipped.Value, 0, true);
 			}
 		}
 	}
 	else if (Vars::Visuals::Simulation::TrajectoryOnShot.Value)
 	{
 		G::PathStorage.clear();
-		G::PathStorage.push_back({ projInfo.PredictionLines, -float(projInfo.PredictionLines.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ProjectileColor.Value });
+		G::PathStorage.push_back({ projInfo.m_vPath, -float(projInfo.m_vPath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::Projectile.Value });
 
 		if (pNormal)
 		{
@@ -317,11 +317,11 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 			Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
 
 			G::BoxStorage.clear();
-			G::BoxStorage.push_back({ trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.PredictionLines.size()) + F::Backtrack.GetReal(), Vars::Colors::ProjectileColor.Value, { 0, 0, 0, 0 } });
+			G::BoxStorage.push_back({ trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::Projectile.Value, { 0, 0, 0, 0 } });
 		}
 
 		if (!vPoints.empty())
-			G::PathStorage.push_back({ vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.PredictionLines.size()) + F::Backtrack.GetReal(), Vars::Colors::ProjectileColor.Value });
+			G::PathStorage.push_back({ vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::Projectile.Value });
 	}
 }
 
@@ -419,9 +419,9 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 		}
 
 		auto vPoints = SplashTrace(pEntity->GetAbsOrigin(), flRadius, { 0, 0, 1 }, Vars::Visuals::Simulation::SplashRadius.Value & (1 << 10));
-		F::Visuals.DrawSimLine(vPoints, Vars::Colors::ProjectileColor.Value);
-		if (Vars::Colors::ClippedColor.Value.a)
-			F::Visuals.DrawSimLine(vPoints, Vars::Colors::ClippedColor.Value, 0, true);
+		DrawPath(vPoints, Vars::Colors::Projectile.Value);
+		if (Vars::Colors::ProjectileClipped.Value.a)
+			DrawPath(vPoints, Vars::Colors::ProjectileClipped.Value, 0, true);
 	}
 }
 
@@ -519,17 +519,7 @@ std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBa
 	return vBoxes;
 }
 
-void CVisuals::DrawBulletLines()
-{
-	for (auto& Line : G::LineStorage)
-	{
-		if (Line.m_flTime < I::GlobalVars->curtime) continue;
-
-		RenderLine(Line.m_line.first, Line.m_line.second, Line.m_color, Line.m_bZBuffer);
-	}
-}
-
-void CVisuals::DrawSimLine(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool bZBuffer, float flTime)
+void CVisuals::DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool bZBuffer, float flTime)
 {
 	for (size_t i = 1; i < Line.size(); i++)
 	{
@@ -569,43 +559,55 @@ void CVisuals::DrawSimLine(std::deque<Vec3>& Line, Color_t Color, int iStyle, bo
 	}
 }
 
-void CVisuals::DrawSimLines()
+void CVisuals::DrawLines()
 {
-	for (auto& Line : G::PathStorage)
+	for (auto& tLine : G::LineStorage)
 	{
-		if (Line.m_flTime >= 0.f && Line.m_flTime < I::GlobalVars->curtime)
+		if (tLine.m_flTime < I::GlobalVars->curtime)
 			continue;
 
-		DrawSimLine(Line.m_line, Line.m_color, Vars::Visuals::Simulation::Style.Value, Line.m_bZBuffer, Line.m_flTime);
+		RenderLine(tLine.m_vPair.first, tLine.m_vPair.second, tLine.m_color, tLine.m_bZBuffer);
+	}
+}
+
+void CVisuals::DrawPaths()
+{
+	for (auto& tPath : G::PathStorage)
+	{
+		if (tPath.m_flTime >= 0.f && tPath.m_flTime < I::GlobalVars->curtime)
+			continue;
+
+		DrawPath(tPath.m_vPath, tPath.m_color, Vars::Visuals::Simulation::Style.Value, tPath.m_bZBuffer, tPath.m_flTime);
 	}
 }
 
 void CVisuals::DrawBoxes()
 {
-	for (auto& Box : G::BoxStorage)
+	for (auto& tBox : G::BoxStorage)
 	{
-		if (Box.m_flTime < I::GlobalVars->curtime) continue;
+		if (tBox.m_flTime < I::GlobalVars->curtime)
+			continue;
 
-		RenderBox(Box.m_vecPos, Box.m_vecMins, Box.m_vecMaxs, Box.m_vecOrientation, Box.m_colorEdge, Box.m_colorFace, Box.m_bZBuffer);
+		RenderBox(tBox.m_vecPos, tBox.m_vecMins, tBox.m_vecMaxs, tBox.m_vecOrientation, tBox.m_colorEdge, tBox.m_colorFace, tBox.m_bZBuffer);
 	}
 }
 
-void CVisuals::RevealBulletLines()
+void CVisuals::RestoreLines()
 {
-	for (auto& Line : G::LineStorage)
-		Line.m_flTime = I::GlobalVars->curtime + 60.f;
+	for (auto& tLine : G::LineStorage)
+		tLine.m_flTime = I::GlobalVars->curtime + 60.f;
 }
 
-void CVisuals::RevealSimLines()
+void CVisuals::RestorePaths()
 {
-	for (auto& PredictionLine : G::PathStorage)
-		PredictionLine.m_flTime = I::GlobalVars->curtime + 60.f;
+	for (auto& tPath : G::PathStorage)
+		tPath.m_flTime = I::GlobalVars->curtime + 60.f;
 }
 
-void CVisuals::RevealBoxes()
+void CVisuals::RestoreBoxes()
 {
-	for (auto& Box : G::BoxStorage)
-		Box.m_flTime = I::GlobalVars->curtime + 60.f;
+	for (auto& tBox : G::BoxStorage)
+		tBox.m_flTime = I::GlobalVars->curtime + 60.f;
 }
 
 void CVisuals::DrawServerHitboxes(CTFPlayer* pLocal)
@@ -711,8 +713,8 @@ void CVisuals::DrawSightlines()
 {
 	if (Vars::Visuals::UI::SniperSightlines.Value)
 	{
-		for (auto& sightline : m_vSightLines)
-			RenderLine(sightline.m_vStart, sightline.m_vEnd, sightline.m_Color);
+		for (auto& tSightline : m_vSightLines)
+			RenderLine(tSightline.m_vStart, tSightline.m_vEnd, tSightline.m_Color);
 	}
 }
 
@@ -759,12 +761,12 @@ void CVisuals::PickupTimers()
 	if (!Vars::Visuals::UI::PickupTimers.Value)
 		return;
 
-	for (auto pickupData = m_vPickupDatas.begin(); pickupData != m_vPickupDatas.end();)
+	for (auto pickupData = m_vPickups.begin(); pickupData != m_vPickups.end();)
 	{
 		const float timeDiff = I::EngineClient->Time() - pickupData->Time;
 		if (timeDiff > 10.f)
 		{
-			pickupData = m_vPickupDatas.erase(pickupData);
+			pickupData = m_vPickups.erase(pickupData);
 			continue;
 		}
 
@@ -776,6 +778,63 @@ void CVisuals::PickupTimers()
 			H::Draw.String(H::Fonts.GetFont(FONT_ESP), vScreen.x, vScreen.y, color, ALIGN_CENTER, timerText.c_str());
 
 		++pickupData;
+	}
+}
+
+void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
+{
+	switch (uHash)
+	{
+	case FNV1A::Hash32Const("player_hurt"):
+	{
+		if (!(Vars::Visuals::Hitbox::Enabled.Value & (1 << 1)))
+			return;
+
+		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")) != I::EngineClient->GetLocalPlayer())
+			return;
+
+		const int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+		auto pEntity = I::ClientEntityList->GetClientEntity(iVictim)->As<CBaseAnimating>();
+		if (!pEntity || iVictim == I::EngineClient->GetLocalPlayer())
+			return;
+
+		switch (G::PrimaryWeaponType)
+		{
+		case EWeaponType::HITSCAN:
+		case EWeaponType::MELEE:
+		{
+			matrix3x4* aBones = H::Entities.GetBones(pEntity);
+			if (!aBones)
+				return;
+
+			auto vBoxes = F::Visuals.GetHitboxes(aBones, pEntity);
+			G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
+
+			return;
+		}
+		case EWeaponType::PROJECTILE:
+		{
+			G::BoxStorage.push_back({ pEntity->m_vecOrigin(), pEntity->m_vecMins(), pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + 5.f, Vars::Colors::BoundHitboxEdge.Value, Vars::Colors::BoundHitboxFace.Value, true });
+		}
+		}
+
+		return;
+	}
+	case FNV1A::Hash32Const("item_pickup"):
+	{
+		if (!Vars::Visuals::UI::PickupTimers.Value)
+			return;
+
+		auto pEntity = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")));
+		if (!pEntity)
+			return;
+
+		auto itemName = pEvent->GetString("item");
+		if (std::strstr(itemName, "medkit"))
+			m_vPickups.push_back({ 1, I::EngineClient->Time(), pEntity->GetAbsOrigin() });
+		else if (std::strstr(itemName, "ammopack"))
+			m_vPickups.push_back({ 0, I::EngineClient->Time(), pEntity->GetAbsOrigin() });
+	}
 	}
 }
 

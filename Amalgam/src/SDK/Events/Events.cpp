@@ -40,6 +40,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	F::Records.Event(pEvent, uHash, pLocal);
 	F::CritHack.Event(pEvent, uHash, pLocal);
 	F::Misc.Event(pEvent, uHash);
+	F::Visuals.Event(pEvent, uHash);
 	switch (uHash)
 	{
 	case FNV1A::Hash32Const("player_hurt"):
@@ -49,22 +50,6 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	case FNV1A::Hash32Const("player_spawn"):
 		F::Backtrack.SetLerp(pEvent);
 		break;
-	case FNV1A::Hash32Const("item_pickup"): // this is never sent!!!
-	{
-		if (!Vars::Visuals::UI::PickupTimers.Value)
-			break;
-
-		if (auto pEntity = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"))))
-		{
-			auto itemName = pEvent->GetString("item");
-			if (std::strstr(itemName, "medkit"))
-				F::Visuals.m_vPickupDatas.push_back({ 1, I::EngineClient->Time(), pEntity->GetAbsOrigin() });
-			else if (std::strstr(itemName, "ammopack"))
-				F::Visuals.m_vPickupDatas.push_back({ 0, I::EngineClient->Time(), pEntity->GetAbsOrigin() });
-		}
-
-		break;
-	}
 	case FNV1A::Hash32Const("revive_player_notify"):
 	{
 		if (!Vars::Misc::MannVsMachine::InstantRevive.Value || pEvent->GetInt("entindex") != I::EngineClient->GetLocalPlayer())

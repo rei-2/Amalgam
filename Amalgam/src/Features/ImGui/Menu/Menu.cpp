@@ -698,17 +698,17 @@ void CMenu::MenuVisuals()
 			TableNextColumn();
 			if (Section("Bullet"))
 			{
-				FColorPicker("Bullet tracer color", Vars::Colors::BulletTracer);
-				FToggle("Bullet tracers", Vars::Visuals::Bullet::BulletTracer);
+				FColorPicker("Bullet tracer color", Vars::Colors::Bullet);
+				FToggle("Bullet tracers", Vars::Visuals::Bullet::Enabled);
 			} EndSection();
 			if (Section("Simulation"))
 			{
-				FColorPicker("Prediction line color", Vars::Colors::PredictionColor, 1); FColorPicker("Projectile line color", Vars::Colors::ProjectileColor);
+				FColorPicker("Prediction line color", Vars::Colors::Prediction, 1); FColorPicker("Projectile line color", Vars::Colors::Projectile);
 				FToggle("Enabled", Vars::Visuals::Simulation::Enabled);
 				FToggle("Timed", Vars::Visuals::Simulation::Timed, FToggle_Middle);
 				FDropdown("Style", Vars::Visuals::Simulation::Style, { "Line", "Separators", "Spaced" }, {}, FDropdown_Left);
 				FDropdown("Splash radius", Vars::Visuals::Simulation::SplashRadius, { "Simulation", "##Divider", "Priority", "Enemy", "Team", "Local", "Friends", "##Divider", "Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace" }, {}, FDropdown_Right | FDropdown_Multi);
-				FColorPicker("Clipped line color", Vars::Colors::ClippedColor);
+				FColorPicker("Clipped line color", Vars::Colors::ProjectileClipped);
 				FToggle("Projectile trajectory", Vars::Visuals::Simulation::ProjectileTrajectory);
 				FToggle("Projectile camera", Vars::Visuals::Simulation::ProjectileCamera, FToggle_Middle);
 				FToggle("Trajectory on shot", Vars::Visuals::Simulation::TrajectoryOnShot);
@@ -745,9 +745,13 @@ void CMenu::MenuVisuals()
 			}
 			if (Section("Hitbox"))
 			{
-				FColorPicker("Bound edge color", Vars::Colors::BoundHitboxEdge, 1); FColorPicker("Bound face color", Vars::Colors::BoundHitboxFace);
-				FColorPicker("Bone edge color", Vars::Colors::BoneHitboxEdge, 4); FColorPicker("Bone face color", Vars::Colors::BoneHitboxFace, 3);
-				FToggle("Draw Hitboxes", Vars::Visuals::Hitbox::ShowHitboxes);
+				FDropdown("Enabled", Vars::Visuals::Hitbox::Enabled, { "On shot", "On hit" }, {}, FDropdown_Multi, 6);
+				SameLine(); Dummy({ 2, 0 });
+				FColorPicker("Bound edge color", Vars::Colors::BoundHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FColorPicker("Bound face color", Vars::Colors::BoundHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				SameLine(); Dummy({ 2, 0 });
+				FColorPicker("Bone edge color", Vars::Colors::BoneHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FColorPicker("Bone face color", Vars::Colors::BoneHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
 			} EndSection();
 			if (Section("Thirdperson"))
 			{
@@ -1276,7 +1280,7 @@ void CMenu::MenuSettings()
 			{
 				FToggle("Debug info", Vars::Debug::Info);
 				FToggle("Debug logging", Vars::Debug::Logging, FToggle_Middle);
-				FToggle("Show server hitboxes", Vars::Debug::ServerHitbox); HelpMarker("Only localhost servers");
+				FToggle("Show server hitboxes", Vars::Debug::ServerHitbox); FTooltip("Only localhost servers");
 				FToggle("Anti aim lines", Vars::Debug::AntiAimLines, FToggle_Middle);
 				FToggle("Visualize traces", Vars::Debug::VisualizeTraces);
 				FToggle("Visualize trace hits", Vars::Debug::VisualizeTraceHits, FToggle_Middle);
@@ -1330,12 +1334,12 @@ void CMenu::MenuSettings()
 				}
 				if (Vars::Debug::Info.Value)
 				{
-					if (FButton("Reveal bullet lines", FButton_Left))
-						F::Visuals.RevealBulletLines();
-					if (FButton("Reveal prediction lines", FButton_Right | FButton_SameLine))
-						F::Visuals.RevealSimLines();
-					if (FButton("Reveal boxes", FButton_Left))
-						F::Visuals.RevealBoxes();
+					if (FButton("Restore lines", FButton_Left))
+						F::Visuals.RestoreLines();
+					if (FButton("Restore paths", FButton_Right | FButton_SameLine))
+						F::Visuals.RestorePaths();
+					if (FButton("Restore boxes", FButton_Left))
+						F::Visuals.RestoreBoxes();
 				}
 			} EndSection();
 

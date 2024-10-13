@@ -139,7 +139,7 @@ int CAimbotMelee::GetSwingTime(CTFWeaponBase* pWeapon)
 
 void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> targets,
 								   Vec3& vEyePos, std::unordered_map<CBaseEntity*, std::deque<TickRecord>>& pRecordMap,
-								   std::unordered_map<CBaseEntity*, std::deque<Vec3>>& simLines)
+								   std::unordered_map<CBaseEntity*, std::deque<Vec3>>& mPaths)
 {
 	// swing prediction / auto warp
 	const int iSwingTicks = GetSwingTime(pWeapon);
@@ -188,16 +188,16 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
 			if (!bAlwaysDraw)
 			{
-				simLines[pLocal] = localStorage.PredictionLines;
+				mPaths[pLocal] = localStorage.m_vPath;
 				for (auto& target : targets)
-					simLines[target.m_pEntity] = targetStorage[target.m_pEntity].PredictionLines;
+					mPaths[target.m_pEntity] = targetStorage[target.m_pEntity].m_vPath;
 			}
 			else
 			{
 				G::PathStorage.clear();
-				G::PathStorage.push_back({ localStorage.PredictionLines, I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value });
+				G::PathStorage.push_back({ localStorage.m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::Projectile.Value });
 				for (auto& target : targets)
-					G::PathStorage.push_back({ targetStorage[target.m_pEntity].PredictionLines, I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
+					G::PathStorage.push_back({ targetStorage[target.m_pEntity].m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::Prediction.Value });
 			}
 		}
 
@@ -480,8 +480,8 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 
 	Vec3 vEyePos = pLocal->GetShootPos();
 	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> pRecordMap;
-	std::unordered_map<CBaseEntity*, std::deque<Vec3>> simLines;
-	SimulatePlayers(pLocal, pWeapon, targets, vEyePos, pRecordMap, simLines);
+	std::unordered_map<CBaseEntity*, std::deque<Vec3>> mPaths;
+	SimulatePlayers(pLocal, pWeapon, targets, vEyePos, pRecordMap, mPaths);
 
 	for (auto& target : targets)
 	{
@@ -515,12 +515,12 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.flSimTime) + TIME_TO_TICKS(F::Backtrack.flFakeInterp);
 			// bug: fast old records seem to be progressively more unreliable ?
 
-			if (Vars::Visuals::Bullet::BulletTracer.Value)
+			if (Vars::Visuals::Bullet::Enabled.Value)
 			{
 				G::LineStorage.clear();
-				G::LineStorage.push_back({ {vEyePos, target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::BulletTracer.Value, true });
+				G::LineStorage.push_back({ {vEyePos, target.m_vPos}, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
 			}
-			if (Vars::Visuals::Hitbox::ShowHitboxes.Value)
+			if (Vars::Visuals::Hitbox::Enabled.Value & (1 << 0))
 			{
 				G::BoxStorage.clear();
 				auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.BoneMatrix.aBones, target.m_pEntity->As<CBaseAnimating>());
@@ -533,8 +533,8 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			if (!bAlwaysDraw)
 			{
 				G::PathStorage.clear();
-				G::PathStorage.push_back({ simLines[pLocal], I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectileColor.Value });
-				G::PathStorage.push_back({ simLines[target.m_pEntity], I::GlobalVars->curtime + 5.f, Vars::Colors::PredictionColor.Value });
+				G::PathStorage.push_back({ mPaths[pLocal], I::GlobalVars->curtime + 5.f, Vars::Colors::Projectile.Value });
+				G::PathStorage.push_back({ mPaths[target.m_pEntity], I::GlobalVars->curtime + 5.f, Vars::Colors::Prediction.Value });
 			}
 		}
 

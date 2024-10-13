@@ -16,7 +16,7 @@ struct ProjectileInfo
 
 	float m_flLifetime = 60.f;
 
-	std::deque<Vec3> PredictionLines = {};
+	std::deque<Vec3> m_vPath = {};
 };
 
 class CProjectileSimulation
@@ -41,7 +41,7 @@ class CProjectileSimulation
 public:
 	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, bool bTrace = true, bool bQuick = false, float flAutoCharge = -1.f);
 	bool Initialize(ProjectileInfo& info, bool bSimulate = true);
-	void RunTick(ProjectileInfo& info, bool bLine = true);
+	void RunTick(ProjectileInfo& info, bool bPath = true);
 	Vec3 GetOrigin();
 	Vec3 GetVelocity();
 

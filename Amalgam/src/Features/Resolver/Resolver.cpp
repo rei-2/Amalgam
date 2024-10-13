@@ -304,21 +304,13 @@ void PResolver::FXFireBullet(int iIndex, const Vec3 vAngles)
 
 void PResolver::OnPlayerHurt(IGameEvent* pEvent)
 {
-	const bool bLocal = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")) == I::EngineClient->GetLocalPlayer();
-	if (!bLocal)
+	if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")) != I::EngineClient->GetLocalPlayer())
 		return;
 
-	auto pVictim = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")));
-
-	if (pVictim == pWaiting.second.first)
+	if (I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"))) == pWaiting.second.first)
 	{ 
-		if (pWaiting.second.second && G::CanHeadshot)
-		{	// should be headshot
-			const bool bCrit = pEvent->GetBool("crit");
-			if (!bCrit)
-				return;
-		}
-		pWaiting = {0, {nullptr, false}}; 
+		if (pWaiting.second.second && G::CanHeadshot && !pEvent->GetBool("crit"))
+			return;
+		pWaiting = { 0, { nullptr, false } }; 
 	}
-	return;
 }

@@ -494,7 +494,7 @@ namespace Vars
 		SUBNAMESPACE_END(RagdollEffects)
 
 		SUBNAMESPACE_BEGIN(Bullet)
-			CVar(BulletTracer, false, VISUAL)
+			CVar(Enabled, false, VISUAL)
 		SUBNAMESPACE_END(Bullet)
 
 		SUBNAMESPACE_BEGIN(Simulation)
@@ -536,7 +536,7 @@ namespace Vars
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Hitbox)
-			CVar(ShowHitboxes, false, VISUAL)
+			CVar(Enabled, 0b00, VISUAL) // { On hit, On shot }
 		SUBNAMESPACE_END(Hitbox)
 
 		SUBNAMESPACE_BEGIN(ThirdPerson)
@@ -696,10 +696,10 @@ namespace Vars
 		CVar(ParticleModulation, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(FogModulation, Color_t(255, 255, 255, 255), VISUAL)
 
-		CVar(BulletTracer, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(PredictionColor, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(ProjectileColor, Color_t(255, 100, 100, 255), VISUAL)
-		CVar(ClippedColor, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(Bullet, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(Prediction, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(Projectile, Color_t(255, 100, 100, 255), VISUAL)
+		CVar(ProjectileClipped, Color_t(255, 255, 255, 0), VISUAL)
 		CVar(BoneHitboxEdge, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(BoneHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
 		CVar(BoundHitboxEdge, Color_t(255, 255, 255, 255), VISUAL)

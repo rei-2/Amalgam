@@ -162,6 +162,7 @@ void CCheaterDetection::ReportDamage(IGameEvent* pEvent)
 		return;
 
 	const int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+
 	if (iIndex == I::EngineClient->GetLocalPlayer())
 		return;
 

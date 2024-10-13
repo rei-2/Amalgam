@@ -361,11 +361,8 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 
 		const int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
 		const int iAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
-
 		const bool bCrit = pEvent->GetBool("crit") || pEvent->GetBool("minicrit");
-		int iDamage = pEvent->GetInt("damageamount");
-		if (mHealthStorage.contains(iVictim))
-			iDamage = std::min(iDamage, mHealthStorage[iVictim]);
+		const int iDamage = mHealthStorage.contains(iVictim) ? std::min(pEvent->GetInt("damageamount"), mHealthStorage[iVictim]) : pEvent->GetInt("damageamount");
 		const auto iWeaponID = pEvent->GetInt("weaponid");
 
 		if (iVictim == iAttacker || iAttacker != pLocal->entindex() || iWeaponID != pWeapon->GetWeaponID() || pWeapon->GetSlot() == SLOT_MELEE) // weapon id stuff is dumb simplification
