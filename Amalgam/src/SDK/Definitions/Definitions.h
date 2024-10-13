@@ -2904,13 +2904,38 @@ enum
 	WL_Eyes
 };
 
+class CAudioSource;
+class CSfxTable
+{
+public:
+	CSfxTable();
+
+	virtual const char	*getname();
+	const char			*GetFileName();
+	void*				GetFileNameHandle();
+	void				SetNamePoolIndex( int index );
+	bool				IsPrecachedSound();
+	void				OnNameChanged( const char *pName );
+	int					m_namePoolIndex;
+	CAudioSource		*pSource;
+	bool				m_bUseErrorFilename : 1;
+	bool				m_bIsUISound : 1;
+	bool				m_bIsLateLoad : 1;
+	bool				m_bMixGroupsCached : 1;
+	byte				m_mixGroupCount;
+	byte				m_mixGroupList[8];
+
+private:
+	const char *m_pDebugName;
+};
+
 struct StartSoundParams_t
 {
 	bool			staticsound;
 	int				userdata;
 	int				soundsource;
 	int				entchannel;
-	void* pSfx; //CSfxTable
+	CSfxTable*		pSfx;
 	Vec3			origin;
 	Vec3			direction;
 	bool			bUpdatePositions;

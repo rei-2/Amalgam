@@ -3,6 +3,8 @@
 #include <boost/algorithm/string.hpp>
 
 MAKE_SIGNATURE(CSoundEmitterSystem_EmitSound, "client.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 41 56 48 81 EC ? ? ? ? 49 8B D9", 0x0);
+//MAKE_SIGNATURE(S_StartDynamicSound, "engine.dll", "4C 8B DC 57 48 81 EC", 0x0);
+MAKE_SIGNATURE(S_StartSound, "engine.dll", "40 53 48 83 EC ? 48 83 79 ? ? 48 8B D9 75 ? 33 C0", 0x0);
 
 class IRecipientFilter
 {
@@ -89,33 +91,61 @@ struct EmitSound_t
 	mutable short		m_hSoundScriptHandle;
 };
 
-const static std::vector<std::string> NOISEMAKER_SOUNDS{ "items/halloween", "items/football_manager", "items/japan_fundraiser", "items/samurai", "items/summer", "misc/happy_birthday_tf", "misc/jingle_bells" };
+const static std::vector<const char*> vNoisemaker = { "items/halloween", "items/football_manager", "items/japan_fundraiser", "items/samurai", "items/summer", "misc/happy_birthday_tf", "misc/jingle_bells" };
+
+bool ShouldBlockSound(const char* pSound)
+{
+	if (!Vars::Misc::Sound::Block.Value || !pSound)
+		return false;
+
+	std::string sSound = pSound;
+	boost::algorithm::to_lower(sSound);
+
+	if (Vars::Misc::Sound::Block.Value & (1 << 0) && sSound.find("footsteps") != std::string::npos) // Footsteps
+		return true;
+
+	if (Vars::Misc::Sound::Block.Value & (1 << 1)) // Noisemaker
+	{
+		for (auto& sNoise : vNoisemaker)
+		{
+			if (sSound.find(sNoise) != std::string::npos)
+				return true;
+		}
+	}
+
+	if (Vars::Misc::Sound::Block.Value & (1 << 2) && sSound.find("pan_") != std::string::npos) // Pan
+		return true;
+
+	return false;
+}
 
 MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), void, __fastcall,
 	void* rcx, IRecipientFilter& filter, int entindex, const EmitSound_t& ep)
 {
-	if (ep.m_pSoundName)
-	{
-		std::string soundName(ep.m_pSoundName);
-		boost::algorithm::to_lower(soundName);
-
-		// Footsteps
-		if (Vars::Misc::Sound::Block.Value & (1 << 0))
-		{
-			if (soundName.find("footsteps") != std::string::npos)
-				return;
-		}
-
-		// Noisemaker
-		if (Vars::Misc::Sound::Block.Value & (1 << 1))
-		{
-			for (auto& sound : NOISEMAKER_SOUNDS)
-			{
-				if (soundName.find(sound) != std::string::npos)
-					return;
-			}
-		}
-	}
+	if (ShouldBlockSound(ep.m_pSoundName))
+		return;
 
 	return CALL_ORIGINAL(rcx, filter, entindex, ep);
+}
+
+/*
+MAKE_HOOK(S_StartDynamicSound, S::S_StartDynamicSound(), int, __fastcall,
+	StartSoundParams_t& params)
+{
+	H::Entities.ManualNetwork(params);
+	if (ShouldBlockSound(params.pSfx->getname()))
+		return 0;
+
+	return CALL_ORIGINAL(params);
+}
+*/
+
+MAKE_HOOK(S_StartSound, S::S_StartSound(), int, __fastcall,
+	StartSoundParams_t& params)
+{
+	H::Entities.ManualNetwork(params);
+	if (ShouldBlockSound(params.pSfx->getname()))
+		return 0;
+
+	return CALL_ORIGINAL(params);
 }
