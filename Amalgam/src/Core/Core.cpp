@@ -39,6 +39,7 @@ void CCore::Load()
 	H::Events.Initialize();
 
 	F::Configs.LoadConfig(F::Configs.sCurrentConfig, false);
+	H::Fonts.Reload();
 	F::Menu.ConfigLoaded = true;
 
 	SDK::Output("Amalgam", "Loaded", { 175, 150, 255, 255 });

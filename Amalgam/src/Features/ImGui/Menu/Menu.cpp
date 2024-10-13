@@ -877,6 +877,32 @@ void CMenu::MenuVisuals()
 			/* Column 2 */
 			TableNextColumn();
 
+			if (Section("Fonts"))
+			{
+				static std::vector fontFlagNames{ "Italic", "Underline", "Strikeout", "Symbol", "Antialias", "Gaussian", "Rotary", "Dropshadow", "Additive", "Outline", "Custom" };
+				static std::vector fontFlagValues{ 0x001, 0x002, 0x004, 0x008, 0x010, 0x020, 0x040, 0x080, 0x100, 0x200, 0x400 };
+				FSDropdown("Name font", Vars::Fonts::FONT_NAME::szName, {}, FSDropdown_AutoUpdate | FDropdown_Left);
+				FDropdown("Name font flags", Vars::Fonts::FONT_NAME::nFlags, fontFlagNames, fontFlagValues, FDropdown_Multi | FDropdown_Right);
+				FSlider("Name font height", Vars::Fonts::FONT_NAME::nTall, 7, 15);
+				FSlider("Name font weight", Vars::Fonts::FONT_NAME::nWeight, 0, 900, 100);
+				FSDropdown("Conds font", Vars::Fonts::FONT_CONDS::szName, {}, FSDropdown_AutoUpdate | FDropdown_Left);
+				FDropdown("Conds font flags", Vars::Fonts::FONT_CONDS::nFlags, fontFlagNames, fontFlagValues, FDropdown_Multi | FDropdown_Right);
+				FSlider("Conds font height", Vars::Fonts::FONT_CONDS::nTall, 7, 15);
+				FSlider("Conds font weight", Vars::Fonts::FONT_CONDS::nWeight, 0, 900, 100);
+				FSDropdown("ESP font", Vars::Fonts::FONT_ESP::szName, {}, FSDropdown_AutoUpdate | FDropdown_Left);
+				FDropdown("ESP font flags", Vars::Fonts::FONT_ESP::nFlags, fontFlagNames, fontFlagValues, FDropdown_Multi | FDropdown_Right);
+
+				FSlider("ESP font height", Vars::Fonts::FONT_ESP::nTall, 7, 15);
+				FSlider("ESP font weight", Vars::Fonts::FONT_ESP::nWeight, 0, 900, 100);
+				FSDropdown("Indicator font", Vars::Fonts::FONT_INDICATORS::szName, {}, FSDropdown_AutoUpdate | FDropdown_Left);
+				FDropdown("Indicator font flags", Vars::Fonts::FONT_INDICATORS::nFlags, fontFlagNames, fontFlagValues, FDropdown_Multi | FDropdown_Right);
+				FSlider("Indicator font height", Vars::Fonts::FONT_INDICATORS::nTall, 7, 15);
+				FSlider("Indicator font weight", Vars::Fonts::FONT_INDICATORS::nWeight, 0, 900, 100);
+				if (FButton("Apply fonts"))
+					H::Fonts.Reload();
+			} EndSection();
+
+
 			EndTable();
 		}
 	}
