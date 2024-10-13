@@ -44,8 +44,6 @@ void CVisuals::DrawTickbaseText(CTFPlayer* pLocal)
 
 	const int offset = 7 + 12 * Vars::Menu::DPI.Value;
 	H::Draw.String(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Ticks %d / %d", iTicks, G::MaxShift);
-	if (G::WaitForShift)
-		H::Draw.String(fFont, dtPos.x, dtPos.y + fFont.m_nTall + offset, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Not Ready");
 
 	const float ratioCurrent = (float)iTicks / (float)G::MaxShift;
 	float sizeX = 100 * Vars::Menu::DPI.Value, sizeY = 12 * Vars::Menu::DPI.Value, posX = dtPos.x - sizeX / 2, posY = dtPos.y + 5 + fFont.m_nTall;

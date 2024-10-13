@@ -52,8 +52,7 @@ void CTickshiftHandler::Teleport()
 
 void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (G::ShiftedTicks < std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift)
-		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack
+	if (G::ShiftedTicks < G::Warp || G::Recharge || bSpeedhack
 		|| !G::CanPrimaryAttack || (G::PrimaryWeaponType == EWeaponType::MELEE ? !(pCmd->buttons & IN_ATTACK) : !G::IsAttacking) && !G::DoubleTap || F::AutoRocketJump.IsRunning())
 		return;
 
