@@ -42,14 +42,14 @@ std::vector<Target_t> CAimbotHitscan::GetTargetsMedigun(CTFPlayer* pLocal, CWeap
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED) || pWeapon->m_hHealingTarget().Get() == pPlayer)
+		if (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
 			continue;
 
 		if (Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pEntity->entindex()))
 			continue;
 
 		float flFOVTo; Vec3 vPos, vAngleTo;
-		if (!PlayerBoneInFOV(pPlayer, vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
+		if (!PlayerBoneInFOV(pPlayer, vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo) && pWeapon->m_hHealingTarget().Get() != pPlayer)
 			continue;
 
 		const float flDistTo = vLocalPos.DistTo(vPos);
@@ -783,6 +783,13 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 	for (auto& target : targets)
 	{
+		if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN && pWeapon->As<CWeaponMedigun>()->m_hHealingTarget().Get() == target.m_pEntity)
+		{
+			if (G::LastUserCmd->buttons & IN_ATTACK)
+				pCmd->buttons |= IN_ATTACK;
+			return;
+		}
+
 		const auto iResult = CanHit(target, pLocal, pWeapon);
 		if (!iResult) continue;
 		if (iResult == 2)
@@ -799,7 +806,8 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 		if (bShouldFire)
 		{
-			pCmd->buttons |= IN_ATTACK;
+			if (pWeapon->GetWeaponID() != TF_WEAPON_MEDIGUN || !(G::LastUserCmd->buttons & IN_ATTACK))
+				pCmd->buttons |= IN_ATTACK;
 
 			if (nWeaponID == TF_WEAPON_SNIPERRIFLE_CLASSIC && pWeapon->As<CTFSniperRifle>()->m_flChargedDamage())
 				pCmd->buttons &= ~IN_ATTACK;
