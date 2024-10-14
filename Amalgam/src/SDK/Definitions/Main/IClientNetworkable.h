@@ -36,7 +36,7 @@ public:
 	virtual void SetDestroyedOnRecreateEntities(void) = 0;
 	virtual void OnDataUnchangedInPVS() = 0;
 
-	ETFClassID GetClassID()
+	inline ETFClassID GetClassID()
 	{
 		if (auto pClientClass = GetClientClass())
 			return static_cast<ETFClassID>(pClientClass->m_ClassID);

@@ -86,43 +86,43 @@ public:
 	VIRTUAL(PostThink, void, void(__fastcall*)(void*), this, 262);
 	VIRTUAL(GetRenderedWeaponModel, CBaseAnimating*, CBaseAnimating*(__fastcall*)(void*), this, 251);
 	
-	void SelectItem(const char* ptr, int subtype)
+	inline void SelectItem(const char* ptr, int subtype)
 	{
 		reinterpret_cast<void(__fastcall*)(void*, const char*, int)>(U::Memory.GetVFunc(this, 271))(this, ptr, subtype);
 	}
 
-	bool IsAlive()
+	inline bool IsAlive()
 	{
 		return m_lifeState() == LIFE_ALIVE;
 	}
 
-	Vec3 GetShootPos()
+	inline Vec3 GetShootPos()
 	{
 		return m_vecOrigin() + m_vecViewOffset();
 	}
 
-	Vec3 GetEyePosition()
+	inline Vec3 GetEyePosition()
 	{
 		return GetAbsOrigin() + m_vecViewOffset();
 	}
 	
-	bool OnSolid()
+	inline bool OnSolid()
 	{
 		return m_hGroundEntity() || IsOnGround();
 	}
 
-	bool IsSwimming()
+	inline bool IsSwimming()
 	{
 		return m_nWaterLevel() > 1;
 	}
 
-	__inline void SetCurrentCmd(CUserCmd* pCmd)
+	inline void SetCurrentCmd(CUserCmd* pCmd)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBasePlayer", "m_hConstraintEntity") - 8;
 		*reinterpret_cast<CUserCmd**>(uintptr_t(this) + nOffset) = pCmd;
 	}
 
-	int GetAmmoCount(int iAmmoType)
+	inline int GetAmmoCount(int iAmmoType)
 	{
 		return S::CBasePlayer_GetAmmoCount.As<int(__fastcall*)(void*, int)>()(this, iAmmoType);
 	}

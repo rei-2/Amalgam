@@ -204,17 +204,17 @@ public:
 
 	OFFSET(m_iWeaponMode, int, 996);
 
-	float GetSwingRange(CBaseEntity* pLocal)
+	inline float GetSwingRange(CBaseEntity* pLocal)
 	{
 		return reinterpret_cast<int(__fastcall*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 455))(pLocal);
 	}
 
-	float GetSwingRange()
+	inline float GetSwingRange()
 	{
 		return GetWeaponID() == TF_WEAPON_SWORD ? 72.f : 48.f;
 	}
 
-	bool CanFireCriticalShot(bool bIsHeadshot = false)
+	inline bool CanFireCriticalShot(bool bIsHeadshot = false)
 	{
 		auto pOwner = m_hOwnerEntity().Get()->As<CBasePlayer>();
 		if (!pOwner)
@@ -227,7 +227,7 @@ public:
 		return bReturn;
 	}
 
-	bool CanPrimaryAttack()
+	inline bool CanPrimaryAttack()
 	{
 		auto pOwner = m_hOwnerEntity().Get()->As<CBasePlayer>();
 		if (!pOwner)
@@ -237,7 +237,7 @@ public:
 		return m_flNextPrimaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
 	}
 
-	bool CanSecondaryAttack()
+	inline bool CanSecondaryAttack()
 	{
 		auto pOwner = m_hOwnerEntity().Get()->As<CBasePlayer>();
 		if (!pOwner)
@@ -247,7 +247,7 @@ public:
 		return m_flNextSecondaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
 	}
 
-	bool HasPrimaryAmmoForShot()
+	inline bool HasPrimaryAmmoForShot()
 	{
 		if (IsEnergyWeapon())
 			return m_flEnergy() > 0.f;
@@ -266,73 +266,73 @@ public:
 		return nClip1 > 0;
 	}
 
-	bool IsInReload()
+	inline bool IsInReload()
 	{
 		return m_bInReload() || m_iReloadMode() != 0;
 	}
 
-	bool IsRapidFire()
+	inline bool IsRapidFire()
 	{
 		auto pWeaponInfo = GetWeaponInfo();
 		return pWeaponInfo && pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
 	}
 
-	bool CanHeadShot()
+	inline bool CanHeadShot()
 	{
 		return GetDamageType() & DMG_USE_HITLOCATIONS && CanFireCriticalShot(true);
 	}
 
-	bool AmbassadorCanHeadshot()
+	inline bool AmbassadorCanHeadshot()
 	{
 		if ((m_iItemDefinitionIndex() == Spy_m_TheAmbassador || m_iItemDefinitionIndex() == Spy_m_FestiveAmbassador) && I::GlobalVars->curtime - m_flLastFireTime() <= 1.f)
 			return false;
 		return true;
 	}
 
-	void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
+	inline void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
 	{
 		using fn = void(__fastcall*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float);
 		reinterpret_cast<fn>(U::Memory.GetVFunc(this, 399))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
 	}
 
-	void GetSpreadAngles(Vec3& out)
+	inline void GetSpreadAngles(Vec3& out)
 	{
 		S::CTFWeaponBase_GetSpreadAngles.As<void(__fastcall*)(void*, Vec3&)>()(this, out);
 	}
 
-	Vec3 GetSpreadAngles()
+	inline Vec3 GetSpreadAngles()
 	{
 		Vec3 vOut;
 		GetSpreadAngles(vOut);
 		return vOut;
 	}
 
-	void UpdateAllViewmodelAddons()
+	inline void UpdateAllViewmodelAddons()
 	{
 		return S::CTFWeaponBase_UpdateAllViewmodelAddons.As<void(__fastcall*)(void*)>()(this);
 	}
 
-	float ApplyFireDelay(float flDelay)
+	inline float ApplyFireDelay(float flDelay)
 	{
 		return reinterpret_cast<float(__fastcall*)(void*, float)>(U::Memory.GetVFunc(this, 407))(this, flDelay);
 	}
 
-	bool CalcIsAttackCriticalHelperMelee()
+	inline bool CalcIsAttackCriticalHelperMelee()
 	{
 		return S::CTFWeaponBaseMelee_CalcIsAttackCriticalHelper.As<bool(__fastcall*)(void*)>()(this);
 	}
 
-	bool CalcIsAttackCriticalHelper()
+	inline bool CalcIsAttackCriticalHelper()
 	{
 		return S::CTFWeaponBase_CalcIsAttackCriticalHelper.As<bool(__fastcall*)(void*)>()(this);
 	}
 
-	CBaseAnimating* GetAppropriateWorldOrViewModel()
+	inline CBaseAnimating* GetAppropriateWorldOrViewModel()
 	{
 		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.As<CBaseAnimating * (__fastcall*)(void*)>()(this);
 	}
 
-	float GetWeaponSpread()
+	inline float GetWeaponSpread()
 	{
 		return S::CTFWeaponBaseGun_GetWeaponSpread.As<float(__fastcall*)(void*)>()(this);
 	}
@@ -368,14 +368,14 @@ public:
 	NETVAR(m_hLastHealingTarget, EHANDLE, "CWeaponMedigun", "m_hLastHealingTarget");
 	NETVAR(m_flChargeLevel, float, "CWeaponMedigun", "m_flChargeLevel");
 
-	int GetMedigunType()
+	inline int GetMedigunType()
 	{
 		int iMode = 0;
 		iMode = static_cast<int>(SDK::AttribHookValue(static_cast<float>(iMode), "set_weapon_mode", this));
 		return iMode;
 	}
 
-	MedigunChargeTypes GetChargeType()
+	inline MedigunChargeTypes GetChargeType()
 	{
 		int iTmp = MEDIGUN_CHARGE_INVULN;
 		iTmp = static_cast<int>(SDK::AttribHookValue(static_cast<float>(iTmp), "set_charge_type", this));
@@ -386,7 +386,7 @@ public:
 		return MedigunChargeTypes(iTmp);
 	}
 
-	medigun_resist_types_t GetResistType()
+	inline medigun_resist_types_t GetResistType()
 	{
 		int nCurrentActiveResist = (GetChargeType() - MEDIGUN_CHARGE_BULLET_RESIST);
 		nCurrentActiveResist = nCurrentActiveResist % MEDIGUN_NUM_RESISTS;

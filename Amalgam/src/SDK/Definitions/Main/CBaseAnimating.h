@@ -33,7 +33,7 @@ public:
 
 	NETVAR_OFF(GetModelPtr, CStudioHdr*, "CBaseAnimating", "m_nMuzzleFlashParity", 12);
 
-	int GetHitboxGroup(int nHitbox)
+	inline int GetHitboxGroup(int nHitbox)
 	{
 		auto pModel = GetModel();
 		if (!pModel) return -1;
@@ -47,7 +47,7 @@ public:
 		return pBox->group;
 	}
 
-	int GetNumOfHitboxes()
+	inline int GetNumOfHitboxes()
 	{
 		auto pModel = GetModel();
 		if (!pModel) return 0;
@@ -59,7 +59,7 @@ public:
 		return pSet->numhitboxes;
 	}
 
-	Vec3 GetHitboxOrigin(int nHitbox, Vec3 vOffset = {})
+	inline Vec3 GetHitboxOrigin(int nHitbox, Vec3 vOffset = {})
 	{
 		auto pModel = GetModel();
 		if (!pModel) return {};
@@ -79,7 +79,7 @@ public:
 		return vOut;
 	}
 
-	Vec3 GetHitboxCenter(int nHitbox, Vec3 vOffset = {})
+	inline Vec3 GetHitboxCenter(int nHitbox, Vec3 vOffset = {})
 	{
 		auto pModel = GetModel();
 		if (!pModel) return {};
@@ -99,7 +99,7 @@ public:
 		return vOut;
 	}
 
-	void GetHitboxInfo(int nHitbox, Vec3* pCenter = nullptr, Vec3* pMins = nullptr, Vec3* pMaxs = nullptr, matrix3x4* pMatrix = nullptr, Vec3 vOffset = {})
+	inline void GetHitboxInfo(int nHitbox, Vec3* pCenter = nullptr, Vec3* pMins = nullptr, Vec3* pMaxs = nullptr, matrix3x4* pMatrix = nullptr, Vec3 vOffset = {})
 	{
 		auto pModel = GetModel();
 		if (!pModel) return;
@@ -127,29 +127,29 @@ public:
 			memcpy(*pMatrix, aBones[pBox->bone], sizeof(matrix3x4));
 	}
 
-	std::array<float, 24>& m_flPoseParameter()
+	inline std::array<float, 24>& m_flPoseParameter()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseAnimating", "m_flPoseParameter");
 		return *reinterpret_cast<std::array<float, 24>*>(uintptr_t(this) + nOffset);
 	}
 
-	CUtlVector<matrix3x4>* GetCachedBoneData()
+	inline CUtlVector<matrix3x4>* GetCachedBoneData()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseAnimating", "m_hLightingOrigin") - 88;
 		return reinterpret_cast<CUtlVector<matrix3x4>*>(uintptr_t(this) + nOffset);
 	}
 
-	float FrameAdvance(float flInterval)
+	inline float FrameAdvance(float flInterval)
 	{
 		return S::CBaseAnimating_FrameAdvance.As<float(__fastcall*)(void*, float)>()(this, flInterval);
 	}
 
-	void GetBonePosition(int iBone, Vector& origin, QAngle& angles)
+	inline void GetBonePosition(int iBone, Vector& origin, QAngle& angles)
 	{
 		S::CBaseAnimating_GetBonePosition.As<void(__fastcall*)(void*, int, Vector&, QAngle&)>()(this, iBone, origin, angles);
 	}
 
-	__inline bool GetAttachment(int number, Vec3& origin)
+	inline bool GetAttachment(int number, Vec3& origin)
 	{
 		return reinterpret_cast<bool(__fastcall*)(void*, int, Vec3&)>(U::Memory.GetVFunc(this, 71))(this, number, origin);
 	}

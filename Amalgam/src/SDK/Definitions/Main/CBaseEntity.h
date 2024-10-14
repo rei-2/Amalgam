@@ -94,19 +94,19 @@ public:
 
 	VIRTUAL(UpdateVisibility, void, void(__fastcall*)(CBaseEntity*), this, 91);
 
-	Vec3 GetCenter()
+	inline Vec3 GetCenter()
 	{
 		return m_vecOrigin() + Vec3(0, 0, (m_vecMins().z + m_vecMaxs().z) / 2);
 	}
 
-	Vec3 GetRenderCenter()
+	inline Vec3 GetRenderCenter()
 	{
 		Vec3 vMin = {}, vMax = {};
 		GetRenderBounds(vMin, vMax);
 		return GetRenderOrigin() + Vec3(0.f, 0.f, (vMin.z + vMax.z) / 2);
 	}
 
-	bool IsInValidTeam(int* pTeamNumOut = nullptr)
+	inline bool IsInValidTeam(int* pTeamNumOut = nullptr)
 	{
 		int nTeamNum = m_iTeamNum();
 
@@ -125,7 +125,7 @@ public:
 		}
 	}
 
-	CBaseEntity* GetMoveParent()
+	inline CBaseEntity* GetMoveParent()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 8;
 		auto m_pMoveParent = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
@@ -136,7 +136,7 @@ public:
 		return m_pMoveParent->Get();
 	}
 
-	CBaseEntity* NextMovePeer()
+	inline CBaseEntity* NextMovePeer()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 16;
 		auto m_pMovePeer = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
@@ -147,7 +147,7 @@ public:
 		return m_pMovePeer->Get();
 	}
 
-	CBaseEntity* FirstMoveChild()
+	inline CBaseEntity* FirstMoveChild()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 24;
 		auto m_pMoveChild = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
@@ -158,39 +158,39 @@ public:
 		return m_pMoveChild->Get();
 	}
 
-	void SetAbsOrigin(const Vec3& absOrigin)
+	inline void SetAbsOrigin(const Vec3& absOrigin)
 	{
 		S::CBaseEntity_SetAbsOrigin.As<void(__fastcall*)(void*, const Vec3&)>()(this, absOrigin);
 	}
 
-	void SetAbsAngles(const Vec3& absAngles)
+	inline void SetAbsAngles(const Vec3& absAngles)
 	{
 		S::CBaseEntity_SetAbsAngles.As<void(__fastcall*)(void*, const Vec3&)>()(this, absAngles);
 	}
 
-	void SetAbsVelocity(const Vec3& vecAbsVelocity)
+	inline void SetAbsVelocity(const Vec3& vecAbsVelocity)
 	{
 		S::CBaseEntity_SetAbsVelocity.As<void(__fastcall*)(void*, const Vec3&)>()(this, vecAbsVelocity);
 	}
 
-	void EstimateAbsVelocity(Vec3& vel)
+	inline void EstimateAbsVelocity(Vec3& vel)
 	{
 		S::CBaseEntity_EstimateAbsVelocity.As<void(__fastcall*)(void*, Vec3&)>()(this, vel);
 	}
 
-	Vec3 GetAbsVelocity()
+	inline Vec3 GetAbsVelocity()
 	{
 		Vec3 vOut;
 		EstimateAbsVelocity(vOut);
 		return vOut;
 	}
 
-	void CreateShadow()
+	inline void CreateShadow()
 	{
 		S::CBaseEntity_CreateShadow.As<void(__fastcall*)(void*)>()(this);
 	}
 
-	void InvalidateBoneCache()
+	inline void InvalidateBoneCache()
 	{
 		S::CBaseEntity_InvalidateBoneCache.As<void(__fastcall*)(void*)>()(this);
 	}

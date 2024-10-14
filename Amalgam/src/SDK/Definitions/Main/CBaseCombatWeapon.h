@@ -26,7 +26,7 @@ public:
 
 	VIRTUAL(GetName, const char*, const char* (__fastcall*)(void*), this, 332);
 
-	bool HasAmmo()
+	inline bool HasAmmo()
 	{
 		return S::CBaseCombatWeapon_HasAmmo.As<bool(__fastcall*)(void*)>()(this);
 	}

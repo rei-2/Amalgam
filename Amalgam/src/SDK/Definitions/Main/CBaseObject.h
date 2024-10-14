@@ -33,25 +33,25 @@ public:
 
 	VIRTUAL(GetNumBuildPoints, int, int(__fastcall*)(void*), IHasBuildPoints(), 0);
 
-	void* IHasBuildPoints()
+	inline void* IHasBuildPoints()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseObject", "m_iUpgradeLevel") - 340;
 		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
 	};
 
-	bool GetBuildPoint(int iPoint, Vec3& vecOrigin, Vec3& vecAngles)
+	inline bool GetBuildPoint(int iPoint, Vec3& vecOrigin, Vec3& vecAngles)
 	{
 		void* pPoints = IHasBuildPoints();
 		return reinterpret_cast<bool(__fastcall*)(void*, int, Vec3&, Vec3&)>(U::Memory.GetVFunc(pPoints, 1))(pPoints, iPoint, vecOrigin, vecAngles);
 	}
 
-	__inline int GetBuildPointAttachmentIndex(int iPoint)
+	inline int GetBuildPointAttachmentIndex(int iPoint)
 	{
 		void* pPoints = IHasBuildPoints();
 		return reinterpret_cast<int(__fastcall*)(void*, int)>(U::Memory.GetVFunc(pPoints, 2))(pPoints, iPoint);
 	}
 
-	bool IsDisabled()
+	inline bool IsDisabled()
 	{
 		return m_bDisabled() || m_bHasSapper();
 	}
@@ -71,7 +71,7 @@ public:
 	NETVAR(m_iKills, int, "CObjectSentrygun", "m_iKills");
 	NETVAR(m_iAssists, int, "CObjectSentrygun", "m_iAssists");
 
-	__inline int MaxAmmoShells()
+	inline int MaxAmmoShells()
 	{
 		if (m_iUpgradeLevel() == 1 || m_bMiniBuilding())
 			return 150;
@@ -79,7 +79,7 @@ public:
 			return 200;
 	}
 
-	__inline void GetAmmoCount(int& iShells, int& iMaxShells, int& iRockets, int& iMaxRockets)
+	inline void GetAmmoCount(int& iShells, int& iMaxShells, int& iRockets, int& iMaxRockets)
 	{
 		const bool bIsMini = m_bMiniBuilding();
 

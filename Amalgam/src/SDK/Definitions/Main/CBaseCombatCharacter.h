@@ -9,7 +9,7 @@ public:
 	NETVAR(m_hMyWeapons, EHANDLE, "CBaseCombatCharacter", "m_hMyWeapons");
 	NETVAR(m_bGlowEnabled, bool, "CBaseCombatCharacter", "m_bGlowEnabled");
 
-	__inline size_t* GetMyWeapons()
+	inline size_t* GetMyWeapons()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseCombatCharacter", "m_hMyWeapons");
 		return reinterpret_cast<size_t*>(uintptr_t(this) + nOffset);

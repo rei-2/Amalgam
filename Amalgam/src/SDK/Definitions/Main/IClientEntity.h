@@ -16,37 +16,37 @@ public:
 	virtual CMouthInfo* GetMouth(void) = 0;
 	virtual bool GetSoundSpatialization(SpatializationInfo_t& info) = 0;
 
-	bool IsPlayer()
+	inline bool IsPlayer()
 	{
 		return GetClassID() == ETFClassID::CTFPlayer;
 	}
 
-	bool IsSentrygun()
+	inline bool IsSentrygun()
 	{
 		return GetClassID() == ETFClassID::CObjectSentrygun;
 	}
 
-	bool IsDispenser()
+	inline bool IsDispenser()
 	{
 		return GetClassID() == ETFClassID::CObjectDispenser;
 	}
 
-	bool IsTeleporter()
+	inline bool IsTeleporter()
 	{
 		return GetClassID() == ETFClassID::CObjectTeleporter;
 	}
 
-	bool IsBaseCombatWeapon()
+	inline bool IsBaseCombatWeapon()
 	{
 		return GetClassID() == ETFClassID::CBaseCombatWeapon;
 	}
 
-	bool IsWearable()
+	inline bool IsWearable()
 	{
 		return GetClassID() == ETFClassID::CTFWearable;
 	}
 
-	bool IsBuilding()
+	inline bool IsBuilding()
 	{
 		switch (GetClassID())
 		{
@@ -57,7 +57,7 @@ public:
 		}
 	}
 
-	bool IsPickup()
+	inline bool IsPickup()
 	{
 		switch (GetClassID())
 		{
@@ -67,7 +67,7 @@ public:
 		}
 	}
 
-	bool IsNPC()
+	inline bool IsNPC()
 	{
 		switch (GetClassID())
 		{
@@ -81,7 +81,7 @@ public:
 		}
 	}
 
-	bool IsBomb()
+	inline bool IsBomb()
 	{
 		switch (GetClassID())
 		{

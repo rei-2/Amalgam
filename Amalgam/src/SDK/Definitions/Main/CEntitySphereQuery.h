@@ -19,12 +19,12 @@ public:
 		reinterpret_cast<void(__fastcall*)(void*, const Vec3&, float, int, int)>(dwAddress)(this, center, radius, flagMask, partitionMask);
 	}
 
-	CBaseEntity* GetCurrentEntity()
+	inline CBaseEntity* GetCurrentEntity()
 	{
 		return (m_nListIndex < m_nListCount) ? m_pList[m_nListIndex] : nullptr;
 	}
 
-	void NextEntity()
+	inline void NextEntity()
 	{
 		m_nListIndex++;
 	}

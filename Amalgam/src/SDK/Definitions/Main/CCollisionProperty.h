@@ -36,13 +36,13 @@ public:
 class CCollisionProperty : public ICollideable
 {
 public:
-	void SetCollisionBounds(const Vec3& mins, const Vec3& maxs)
+	inline void SetCollisionBounds(const Vec3& mins, const Vec3& maxs)
 	{
 		static auto func = S::CCollisionPropert_SetCollisionBounds.As<void(__fastcall*)(CCollisionProperty*, const Vec3&, const Vec3&)>();
 		func(this, mins, maxs);
 	}
 
-	void CalcNearestPoint(const Vec3& vecWorldPt, Vec3* pVecNearestWorldPt)
+	inline void CalcNearestPoint(const Vec3& vecWorldPt, Vec3* pVecNearestWorldPt)
 	{
 		static auto func = S::CCollisionProperty_CalcNearestPoint.As<void(__fastcall*)(CCollisionProperty*, const Vec3&, Vec3*)>();
 		func(this, vecWorldPt, pVecNearestWorldPt);

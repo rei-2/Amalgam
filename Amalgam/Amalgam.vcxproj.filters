@@ -138,7 +138,6 @@
     <ClCompile Include="src\Hooks\IVEngineClient_ClientCmd_Unrestricted.cpp" />
     <ClCompile Include="src\Hooks\FX_FireBullets.cpp" />
     <ClCompile Include="src\Hooks\NotificationQueue_Add.cpp" />
-    <ClCompile Include="src\Hooks\S_StartDynamicSound.cpp" />
     <ClCompile Include="src\Hooks\VGuiMenuBuilder_AddMenuItem.cpp" />
     <ClCompile Include="src\Hooks\IInput_GetUserCmd.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_IsPlayerClass.cpp" />

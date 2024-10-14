@@ -234,12 +234,12 @@ public:
 	CONDGET(IsSupernovaRune, m_nPlayerCondEx3(), TFCondEx3_SupernovaRune);
 	CONDGET(IsBuffedByKing, m_nPlayerCondEx3(), TFCondEx3_KingBuff);
 
-	Vec3 GetEyeAngles()
+	inline Vec3 GetEyeAngles()
 	{
 		return { m_angEyeAnglesX(), m_angEyeAnglesY(), 0.f };
 	}
 
-	Vec3 GetViewOffset() // use on nonlocal players
+	inline Vec3 GetViewOffset() // use on nonlocal players
 	{
 		auto getMainOffset = [this]() -> Vec3
 			{
@@ -270,12 +270,12 @@ public:
 		return getMainOffset() * flSize;
 	}
 
-	bool IsFriend()
+	inline bool IsFriend()
 	{
 		return S::CTFPlayer_IsPlayerOnSteamFriendsList.As<bool(__fastcall*)(void*, void*)>()(this, this);
 	}
 
-	bool InCond(const ETFCond cond)
+	inline bool InCond(const ETFCond cond)
 	{
 		const int iCond = static_cast<int>(cond);
 		switch (iCond / 32)
@@ -320,7 +320,7 @@ public:
 		return false;
 	}
 
-	bool IsInvisible()
+	inline bool IsInvisible()
 	{
 		if (this->InCond(TF_COND_BURNING)
 			|| this->InCond(TF_COND_BURNING_PYRO)
@@ -331,7 +331,7 @@ public:
 		return m_flInvisibility() >= 1.f;
 	}
 
-	float GetInvisPercentage()
+	inline float GetInvisPercentage()
 	{
 		static auto tf_spy_invis_time = I::CVar->FindVar("tf_spy_invis_time");
 		const float flInvisTime = tf_spy_invis_time ? tf_spy_invis_time->GetFloat() : 1.f;
@@ -340,12 +340,12 @@ public:
 		return GetInvisPercent;
 	}
 
-	bool IsZoomed()
+	inline bool IsZoomed()
 	{
 		return InCond(TF_COND_ZOOMED);
 	}
 
-	bool IsInvulnerable()
+	inline bool IsInvulnerable()
 	{
 		return InCond(TF_COND_INVULNERABLE)
 			|| InCond(TF_COND_INVULNERABLE_CARD_EFFECT)
@@ -354,7 +354,7 @@ public:
 			|| InCond(TF_COND_PHASE);
 	}
 
-	bool IsUbered()
+	inline bool IsUbered()
 	{
 		return InCond(TF_COND_INVULNERABLE)
 			|| InCond(TF_COND_INVULNERABLE_CARD_EFFECT)
@@ -362,7 +362,7 @@ public:
 			|| InCond(TF_COND_INVULNERABLE_USER_BUFF);
 	}
 
-	bool IsCritBoosted()
+	inline bool IsCritBoosted()
 	{
 		return InCond(TF_COND_CRITBOOSTED)
 			|| InCond(TF_COND_CRITBOOSTED_BONUS_TIME)
@@ -376,7 +376,7 @@ public:
 			|| InCond(TF_COND_CRITBOOSTED_USER_BUFF);
 	}
 
-	bool IsMiniCritBoosted()
+	inline bool IsMiniCritBoosted()
 	{
 		return InCond(TF_COND_MINICRITBOOSTED_ON_KILL)
 			|| InCond(TF_COND_NOHEALINGDAMAGEBUFF)
@@ -384,14 +384,14 @@ public:
 			/*|| InCond(TF_COND_CRITBOOSTED_DEMO_CHARGE)*/;
 	}
 
-	bool IsMarked()
+	inline bool IsMarked()
 	{
 		return InCond(TF_COND_URINE)
 			|| InCond(TF_COND_MARKEDFORDEATH)
 			|| InCond(TF_COND_MARKEDFORDEATH_SILENT);
 	}
 
-	bool CanAttack()
+	inline bool CanAttack()
 	{
 		if (!IsAlive() || IsTaunting() || IsBonked() || IsAGhost() || IsInBumperKart() || m_fFlags() & FL_FROZEN)
 			return false;
@@ -424,34 +424,34 @@ public:
 		return true;
 	}
 
-	CTFWeaponBase* GetWeaponFromSlot(int nSlot)
+	inline CTFWeaponBase* GetWeaponFromSlot(int nSlot)
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseCombatCharacter", "m_hMyWeapons");
 		int hWeapon = *reinterpret_cast<int*>(reinterpret_cast<uintptr_t>(this) + nOffset + nSlot * 4);
 		return I::ClientEntityList->GetClientEntityFromHandle(hWeapon)->As<CTFWeaponBase>();
 	}
 
-	float TeamFortress_CalculateMaxSpeed(bool bIgnoreSpecialAbility = false)
+	inline float TeamFortress_CalculateMaxSpeed(bool bIgnoreSpecialAbility = false)
 	{
 		return S::TeamFortress_CalculateMaxSpeed.As<float(__fastcall*)(CTFPlayer*, bool)>()(this, bIgnoreSpecialAbility);
 	}
 
-	void UpdateClientSideAnimation()
+	inline void UpdateClientSideAnimation()
 	{
 		S::CTFPlayer_UpdateClientSideAnimation.As<void(__fastcall*)(void*)>()(this);
 	}
 
-	float GetCritMult()
+	inline float GetCritMult()
 	{
 		return Math::RemapValClamped(static_cast<float>(m_iCritMult()), 0.f, 255.f, 1.f, 4.f);
 	}
 
-	void UpdateWearables()
+	inline void UpdateWearables()
 	{
 		S::CTFPlayer_UpdateWearables.As<void(__fastcall*)(void*)>()(this);
 	}
 
-	void ThirdPersonSwitch(/*bool bThirdperson*/)
+	inline void ThirdPersonSwitch(/*bool bThirdperson*/)
 	{
 		return reinterpret_cast<void(__fastcall*)(void*/*, bool*/)>(U::Memory.GetVFunc(this, 255))(this/*, bThirdperson*/);
 	};
