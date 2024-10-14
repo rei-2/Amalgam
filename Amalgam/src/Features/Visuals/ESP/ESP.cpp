@@ -60,7 +60,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 		PlayerCache& tCache = m_mPlayerCache[pEntity];
 		tCache.m_flAlpha = (pPlayer->IsDormant() ? Vars::ESP::DormantAlpha.Value : Vars::ESP::ActiveAlpha.Value) / 255.f;
-		tCache.m_tColor = H::Color.GetEntityDrawColor(pLocal, pPlayer, Vars::Colors::Relative.Value);
+		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), pPlayer->m_iTeamNum(), Vars::Colors::Relative.Value);
 		tCache.m_bBox = Vars::ESP::Player.Value & (1 << 6);
 		tCache.m_bBones = Vars::ESP::Player.Value & (1 << 8);
 
@@ -368,7 +368,7 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 
 		BuildingCache& tCache = m_mBuildingCache[pEntity];
 		tCache.m_flAlpha = Vars::ESP::ActiveAlpha.Value / 255.f;
-		tCache.m_tColor = H::Color.GetEntityDrawColor(pLocal, pOwner ? pOwner : pEntity, Vars::Colors::Relative.Value);
+		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), (pOwner ? pOwner : pEntity)->m_iTeamNum(), Vars::Colors::Relative.Value);
 		tCache.m_bBox = Vars::ESP::Building.Value & (1 << 6);
 
 		if (Vars::ESP::Building.Value & (1 << 7))
@@ -525,7 +525,7 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 
 		WorldCache& tCache = m_mWorldCache[pEntity];
 		tCache.m_flAlpha = Vars::ESP::ActiveAlpha.Value / 255.f;
-		tCache.m_tColor = H::Color.GetEntityDrawColor(pLocal, pOwner ? pOwner : pEntity, Vars::Colors::Relative.Value);
+		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), (pOwner ? pOwner : pEntity)->m_iTeamNum(), Vars::Colors::Relative.Value);
 		tCache.m_bBox = Vars::ESP::Projectile.Value & (1 << 6);
 
 		if (Vars::ESP::Projectile.Value & (1 << 7))
@@ -598,7 +598,7 @@ void CESP::StoreObjective(CTFPlayer* pLocal)
 
 		WorldCache& tCache = m_mWorldCache[pEntity];
 		tCache.m_flAlpha = Vars::ESP::ActiveAlpha.Value / 255.f;
-		tCache.m_tColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
+		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), pEntity->m_iTeamNum(), Vars::Colors::Relative.Value);
 		tCache.m_bBox = Vars::ESP::Objective.Value & (1 << 3);
 
 		if (Vars::ESP::Objective.Value & (1 << 4))
