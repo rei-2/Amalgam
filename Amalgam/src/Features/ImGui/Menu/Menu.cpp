@@ -280,8 +280,8 @@ void CMenu::MenuAimbot()
 				FToggle("Warp", Vars::CL_Move::Doubletap::Warp, FToggle_Middle);
 				FToggle("Recharge ticks", Vars::CL_Move::Doubletap::RechargeTicks);
 				FToggle("Anti-warp", Vars::CL_Move::Doubletap::AntiWarp, FToggle_Middle);
-				FSlider("Tick limit", Vars::CL_Move::Doubletap::TickLimit, 2, 24, 1, "%i", FSlider_Clamp);
-				FSlider("Warp rate", Vars::CL_Move::Doubletap::WarpRate, 2, 24, 1, "%i", FSlider_Clamp);
+				FSlider("Tick limit", Vars::CL_Move::Doubletap::TickLimit, 2, 22, 1, "%i", FSlider_Clamp);
+				FSlider("Warp rate", Vars::CL_Move::Doubletap::WarpRate, 2, 22, 1, "%i", FSlider_Clamp);
 				FSlider("Passive recharge", Vars::CL_Move::Doubletap::PassiveRecharge, 0, 67, 1, "%i", FSlider_Clamp);
 			} EndSection();
 			if (Section("Fakelag"))
@@ -289,10 +289,10 @@ void CMenu::MenuAimbot()
 				FDropdown("Fakelag", Vars::CL_Move::Fakelag::Fakelag, { "Off", "Plain", "Random", "Adaptive" }, {}, FSlider_Left);
 				FDropdown("Options", Vars::CL_Move::Fakelag::Options, { "Only moving", "On unduck", "Not airborne" }, {}, FDropdown_Multi | FSlider_Right);
 				PushTransparent(FGet(Vars::CL_Move::Fakelag::Fakelag) != 1);
-					FSlider("Plain ticks", Vars::CL_Move::Fakelag::PlainTicks, 1, 24, 1, "%i", FSlider_Clamp | FSlider_Left);
+					FSlider("Plain ticks", Vars::CL_Move::Fakelag::PlainTicks, 1, 22, 1, "%i", FSlider_Clamp | FSlider_Left);
 				PopTransparent();
 				PushTransparent(FGet(Vars::CL_Move::Fakelag::Fakelag) != 2);
-					FSlider("Random ticks", Vars::CL_Move::Fakelag::RandomTicks, 1, 24, 1, "%i - %i", FSlider_Clamp | FSlider_Right);
+					FSlider("Random ticks", Vars::CL_Move::Fakelag::RandomTicks, 1, 22, 1, "%i - %i", FSlider_Clamp | FSlider_Right);
 				PopTransparent();
 				FToggle("Unchoke on attack", Vars::CL_Move::Fakelag::UnchokeOnAttack);
 				FToggle("Retain blastjump", Vars::CL_Move::Fakelag::RetainBlastJump, FToggle_Middle);
