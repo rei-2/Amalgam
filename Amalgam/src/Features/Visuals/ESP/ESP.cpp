@@ -773,6 +773,8 @@ void CESP::DrawPlayers()
 		return;
 
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
+	const auto& fFontName = H::Fonts.GetFont(FONT_NAME);
+	const auto& fFontConds = H::Fonts.GetFont(FONT_CONDS);
 	for (auto& [pEntity, tCache] : m_mPlayerCache)
 	{
 		int x = 0, y = 0, w = 0, h = 0;
