@@ -529,6 +529,7 @@
     <ClCompile Include="src\Hooks\Direct3DDevice9.cpp" />
     <ClCompile Include="src\Hooks\DoEnginePostProcessing.cpp" />
     <ClCompile Include="src\Hooks\DSP_Process.cpp" />
+    <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Hooks\ISteamNetworkingUtils_GetDirectPingToPOP.cpp" />
     <ClCompile Include="src\Hooks\IVEngineClient_ClientCmd_Unrestricted.cpp" />
     <ClCompile Include="src\Hooks\IEngineVGui_Paint.cpp" />

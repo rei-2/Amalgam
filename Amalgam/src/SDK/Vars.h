@@ -170,8 +170,11 @@ namespace Vars
 			CVar(DragOverride, 0.f, NOSAVE) // debug
 			CVar(TimeOverride, 0.f, NOSAVE) // debug
 			CVar(HuntsmanLerp, 100.f, NOSAVE) // debug
-			CVar(SplashPoints, 80, NOSAVE) // debug
-			CVar(SplashCount, 5, NOSAVE) // debug
+			CVar(SplashGrates, true, NOSAVE) // debug
+			CVar(SplashRocket, false, NOSAVE) // debug
+			CVar(SplashPoints, 100, NOSAVE) // debug
+			CVar(SplashCountDirect, 100, NOSAVE) // debug
+			CVar(SplashCountArc, 5, NOSAVE) // debug
 			CVar(DeltaCount, 5, NOSAVE) // debug
 			CVar(DeltaMode, 0, NOSAVE) // debug
 		SUBNAMESPACE_END(Projectile)
@@ -747,7 +750,9 @@ namespace Vars
 		CVar(Logging, false, NOSAVE)
 		CVar(ServerHitbox, false, NOSAVE)
 		CVar(AntiAimLines, false)
+#ifdef DEBUG_TRACES
 		CVar(VisualizeTraces, false, NOSAVE)
 		CVar(VisualizeTraceHits, false, NOSAVE)
+#endif
 	NAMESPACE_END(Debug)
 }

@@ -24,12 +24,15 @@ void CVisuals::DrawAimbotFOV(CTFPlayer* pLocal)
 	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->IsStunned() || pLocal->IsInBumperKart())
 		return;
 
-	const float flR = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value) / 2.0f) / tanf(DEG2RAD(pLocal->m_iFOV()) / 2.0f) * H::Draw.m_nScreenW;
-	const Color_t clr = Vars::Colors::FOVCircle.Value;
-	H::Draw.LineCircle(H::Draw.m_nScreenW / 2, H::Draw.m_nScreenH / 2, flR, 68, clr);
+	if (Vars::Aimbot::General::AimFOV.Value >= 90.f)
+		return;
+
+	float flW = H::Draw.m_nScreenW, flH = H::Draw.m_nScreenH;
+	float flRadius = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value)) / tanf(DEG2RAD(pLocal->m_iFOV()) / 2) * flW * (4.f / 6.f) / (flW / flH);
+	H::Draw.LineCircle(H::Draw.m_nScreenW / 2, H::Draw.m_nScreenH / 2, flRadius, 68, Vars::Colors::FOVCircle.Value);
 }
 
-void CVisuals::DrawTickbaseText(CTFPlayer* pLocal)
+void CVisuals::DrawTicks(CTFPlayer* pLocal)
 {
 	if (!(Vars::Menu::Indicators.Value & (1 << 0)))
 		return;
@@ -37,20 +40,18 @@ void CVisuals::DrawTickbaseText(CTFPlayer* pLocal)
 	if (!pLocal->IsAlive())
 		return;
 
-	const int iTicks = std::clamp(G::ShiftedTicks + G::ChokeAmount, 0, G::MaxShift);
-
 	const DragBox_t dtPos = Vars::Menu::TicksDisplay.Value;
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	const int offset = 7 + 12 * Vars::Menu::DPI.Value;
-	H::Draw.String(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Ticks %d / %d", iTicks, G::MaxShift);
+	H::Draw.String(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Ticks %d / %d", G::ShiftedTicks, G::MaxShift);
 	if (G::WaitForShift)
 		H::Draw.String(fFont, dtPos.x, dtPos.y + fFont.m_nTall + offset, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Not Ready");
 
-	const float ratioCurrent = (float)iTicks / (float)G::MaxShift;
+	const float ratioCurrent = float(std::clamp(G::ShiftedTicks, 0, G::MaxShift)) / G::MaxShift;
 	float sizeX = 100 * Vars::Menu::DPI.Value, sizeY = 12 * Vars::Menu::DPI.Value, posX = dtPos.x - sizeX / 2, posY = dtPos.y + 5 + fFont.m_nTall;
 	H::Draw.LineRect(posX, dtPos.y + 5 + fFont.m_nTall, sizeX, sizeY, Vars::Menu::Theme::Accent.Value);
-	if (iTicks)
+	if (ratioCurrent)
 	{
 		sizeX -= 4, sizeY -= 4, posX = dtPos.x - sizeX / 2;
 		H::Draw.StartClipping(posX, posY, sizeX * ratioCurrent, sizeY + 2 /*?*/);
@@ -481,6 +482,7 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		}
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Round state: %i", SDK::GetRoundState());
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Tickcount: %i", pLocal->m_nTickBase());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Entities: %i (%i, %i)", I::ClientEntityList->GetMaxEntities(), I::ClientEntityList->GetHighestEntityIndex(), I::ClientEntityList->NumberOfEntities(false));
 	}
 }
 

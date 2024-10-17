@@ -1,4 +1,5 @@
 #include "TraceFilters.h"
+
 #include "../../SDK.h"
 
 bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)

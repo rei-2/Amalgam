@@ -178,16 +178,25 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	return false;
 }
 
-bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge)
+bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
 {
-	const float flOldCurrentTime = I::GlobalVars->curtime;
-	if (bQuick)
-		I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
-	const bool bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, bQuick, flAutoCharge);
-	I::GlobalVars->curtime = flOldCurrentTime;
+	bool bTrace = iFlags & ProjSim_Trace;
+	bool InitCheck = iFlags & ProjSim_InitCheck;
+	bool bQuick = iFlags & ProjSim_Quick;
 
-	if (!bReturn)
-		return false;
+	bool bReturn;
+	if (bQuick)
+	{
+		const float flOldCurrentTime = I::GlobalVars->curtime;
+		I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
+		bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, true, flAutoCharge);
+		I::GlobalVars->curtime = flOldCurrentTime;
+	}
+	else
+		bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, false, flAutoCharge);
+
+	if (!bReturn || !InitCheck)
+		return bReturn;
 
 	const Vec3 vStart = bQuick ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
 	const Vec3 vEnd = out.m_vPos;

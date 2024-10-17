@@ -11,59 +11,35 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 	if (!clientIndex || !I::EngineClient->GetPlayerInfo(clientIndex, &pi))
 		return CALL_ORIGINAL(rcx, buf, clientIndex);
 
-	bool bLocal = false, bFriend = false, bEnemy = false;
-	PriorityLabel_t* pTag = nullptr;
-	if (Vars::Visuals::UI::ChatTags.Value || Vars::Visuals::UI::StreamerMode.Value)
-	{
-		if (clientIndex == I::EngineClient->GetLocalPlayer())
-			bLocal = true;
-		else if (H::Entities.IsFriend(clientIndex))
-			bFriend = true;
-		else
-		{
-			auto pTag = F::PlayerUtils.GetSignificantTag(clientIndex, 0);
-			if (!pTag)
-			{
-				auto pResource = H::Entities.GetPR();
-				bEnemy = !pResource || pResource->GetTeam(I::EngineClient->GetLocalPlayer()) != pResource->GetTeam(clientIndex);
-			}
-		}
-	}
-
 	std::string sMessage = SDK::ConvertWideToUTF8(buf);
 	std::string sName = pi.name;
 	auto iFind = sMessage.find(pi.name);
 	bool bFound = iFind != std::string::npos;
 
-	if (bFound)
+	int iType = 0;
+	if (const char* sReplace = F::PlayerUtils.GetPlayerName(clientIndex, nullptr, &iType))
 	{
-		int iType = 0;
-		if (const char* sReplace = F::PlayerUtils.GetPlayerName(clientIndex, nullptr, &iType))
-		{
+		if (bFound)
 			sMessage = sMessage.replace(std::max(iFind - 1, 0ui64), sName.length() + 1, std::format("\x3{}\x1", sReplace));
-			if (iType == 1)
-				return CALL_ORIGINAL(rcx, const_cast<wchar_t*>(SDK::ConvertUtf8ToWide(sMessage).c_str()), clientIndex);
-			else
-				sName = sReplace;
-		}
+		if (iType == 1)
+			return CALL_ORIGINAL(rcx, const_cast<wchar_t*>(SDK::ConvertUtf8ToWide(sMessage).c_str()), clientIndex);
+		else
+			sName = sReplace;
 	}
 
 	if (Vars::Visuals::UI::ChatTags.Value)
 	{
 		std::string sTag, cColor;
-		if (bLocal)
+		if (clientIndex == I::EngineClient->GetLocalPlayer())
 		{
 			if (Vars::Visuals::UI::ChatTags.Value & (1 << 0))
 				sTag = "You", cColor = Vars::Colors::Local.Value.ToHexA();
 		}
-		else if (bFriend)
+		else if (Vars::Visuals::UI::ChatTags.Value & (1 << 1) && H::Entities.IsFriend(clientIndex))
+			sTag = "Friend", cColor = F::PlayerUtils.m_vTags[FRIEND_TAG].Color.ToHexA();
+		else if (Vars::Visuals::UI::ChatTags.Value & (1 << 2))
 		{
-			if (Vars::Visuals::UI::ChatTags.Value & (1 << 1))
-				sTag = "Friend", cColor = F::PlayerUtils.m_vTags[FRIEND_TAG].Color.ToHexA();
-		}
-		else if (pTag)
-		{
-			if (Vars::Visuals::UI::ChatTags.Value & (1 << 2))
+			if (auto pTag = F::PlayerUtils.GetSignificantTag(clientIndex, 0))
 				sTag = pTag->Name, cColor = pTag->Color.ToHexA();
 		}
 

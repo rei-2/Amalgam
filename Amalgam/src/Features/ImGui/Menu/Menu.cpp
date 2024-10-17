@@ -132,7 +132,7 @@ void CMenu::MenuAimbot()
 				FDropdown("Aim type", Vars::Aimbot::General::AimType, { "Off", "Plain", "Smooth", "Silent" }, {}, FDropdown_Left);
 				FDropdown("Target selection", Vars::Aimbot::General::TargetSelection, { "FOV", "Distance" }, {}, FDropdown_Right);
 				FDropdown("Target", Vars::Aimbot::General::Target, { "Players", "Sentries", "Dispensers", "Teleporters", "Stickies", "NPCs", "Bombs" }, {}, FDropdown_Multi | FDropdown_Left);
-				FDropdown("Ignore", Vars::Aimbot::General::Ignore, { "Invulnerable", "Cloaked", "Dead Ringer", "Vaccinator", "Unsimulated Players", "Disguised", "Taunting" }, {}, FDropdown_Multi | FDropdown_Right);
+				FDropdown("Ignore", Vars::Aimbot::General::Ignore, { "Invulnerable", "Cloaked", "Dead Ringer", "Vaccinator", "Unsimulated players", "Disguised", "Taunting" }, {}, FDropdown_Multi | FDropdown_Right);
 				FSlider("Aim FOV", Vars::Aimbot::General::AimFOV, 0.f, 180.f, 1.f, "%g", FSlider_Clamp | FSlider_Precision);
 				PushTransparent(FGet(Vars::Aimbot::General::AimType) != 2);
 					FSlider("Smoothing## Hitscan", Vars::Aimbot::General::Smoothing, 0.f, 100.f, 1.f, "%g%%", FSlider_Clamp | FSlider_Precision);
@@ -157,7 +157,8 @@ void CMenu::MenuAimbot()
 				if (Section("debug## aimbot"))
 				{
 					FSlider("hitscan peek", Vars::Aimbot::General::HitscanPeek, 0, 5);
-					FToggle("peek dt only", Vars::Aimbot::General::PeekDTOnly); // this should probably stay on if you want to be able to target hitboxes other than the highest priority one
+					FToggle("peek dt only", Vars::Aimbot::General::PeekDTOnly);
+					FTooltip("this should probably stay on if you want to be able to\ntarget hitboxes other than the highest priority one");
 					FSlider("offset## nospread", Vars::Aimbot::General::NoSpreadOffset, -1.f, 1.f, 0.5f, "%g", FSlider_Precision);
 					FSlider("average", Vars::Aimbot::General::NoSpreadAverage, 1, 25);
 					FDropdown("aim holds fire", Vars::Aimbot::General::AimHoldsFire, { "false", "minigun only", "true" });
@@ -217,7 +218,7 @@ void CMenu::MenuAimbot()
 			{
 				if (Section("debug## projectile"))
 				{
-					FText("ground");
+					FText("\nground");
 					FSlider("samples##ground", Vars::Aimbot::Projectile::GroundSamples, 3, 66, 1, "%i", FSlider_Left);
 					FSlider("straight fuzzy value##ground", Vars::Aimbot::Projectile::GroundStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 					FSlider("low min samples##ground", Vars::Aimbot::Projectile::GroundLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
@@ -241,10 +242,14 @@ void CMenu::MenuAimbot()
 					FSlider("hull increase", Vars::Aimbot::Projectile::HullIncrease, 0.f, 3.f, 0.5f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
 					FSlider("drag override", Vars::Aimbot::Projectile::DragOverride, 0.f, 1.f, 0.01f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 					FSlider("time override", Vars::Aimbot::Projectile::TimeOverride, 0.f, 1.f, 0.01f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
-					FSlider("splash points", Vars::Aimbot::Projectile::SplashPoints, 0, 100, 1, "%i", FSlider_Right);
-					FSlider("splash count", Vars::Aimbot::Projectile::SplashCount, 1, 5, 1, "%i", FSlider_Left);
-					FSlider("delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Right);
-					FDropdown("delta mode", Vars::Aimbot::Projectile::DeltaMode, { "average", "max" });
+					FToggle("splash grates", Vars::Aimbot::Projectile::SplashGrates);
+					FToggle("splash rocket", Vars::Aimbot::Projectile::SplashRocket, FToggle_Middle);
+					FTooltip("special splash type for rockets, more expensive");
+					FSlider("splash points", Vars::Aimbot::Projectile::SplashPoints, 1, 400, 5, "%i", FSlider_Min);
+					FSlider("direct splash count", Vars::Aimbot::Projectile::SplashCountDirect, 1, 100, 1, "%i", FSlider_Left | FSlider_Min);
+					FSlider("arc splash count", Vars::Aimbot::Projectile::SplashCountArc, 1, 100, 1, "%i", FSlider_Right | FSlider_Min);
+					FSlider("delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Left);
+					FDropdown("delta mode", Vars::Aimbot::Projectile::DeltaMode, { "average", "max" }, {}, FDropdown_Right);
 				} EndSection();
 			}
 			if (Section("Melee"))
@@ -968,7 +973,7 @@ void CMenu::MenuMisc()
 		TableNextColumn();
 		if (Section("Sound"))
 		{
-			FDropdown("Block", Vars::Misc::Sound::Block, { "Footsteps", "Noisemaker" }, {}, FDropdown_Multi);
+			FDropdown("Block", Vars::Misc::Sound::Block, { "Footsteps", "Noisemaker", "Frying pan" }, {}, FDropdown_Multi);
 			FToggle("Giant weapon sounds", Vars::Misc::Sound::GiantWeaponSounds);
 			FToggle("Hitsound always", Vars::Misc::Sound::HitsoundAlways, FToggle_Middle);
 		} EndSection();
@@ -1282,8 +1287,10 @@ void CMenu::MenuSettings()
 				FToggle("Debug logging", Vars::Debug::Logging, FToggle_Middle);
 				FToggle("Show server hitboxes", Vars::Debug::ServerHitbox); FTooltip("Only localhost servers");
 				FToggle("Anti aim lines", Vars::Debug::AntiAimLines, FToggle_Middle);
+#ifdef DEBUG_TRACES
 				FToggle("Visualize traces", Vars::Debug::VisualizeTraces);
 				FToggle("Visualize trace hits", Vars::Debug::VisualizeTraceHits, FToggle_Middle);
+#endif
 			} EndSection();
 			if (Section("Extra"))
 			{

@@ -66,15 +66,17 @@ bool SDK::IsGameWindowInFocus()
 
 std::wstring SDK::ConvertUtf8ToWide(const std::string& source)
 {
-	std::wstring result(source.length(), 0);
-	MultiByteToWideChar(CP_UTF8, 0, source.c_str(), -1, result.data(), int(source.length()));
+	int size = MultiByteToWideChar(CP_UTF8, 0, source.data(), -1, nullptr, 0);
+	std::wstring result(size, 0);
+	MultiByteToWideChar(CP_UTF8, 0, source.data(), -1, result.data(), size);
 	return result;
 }
 
 std::string SDK::ConvertWideToUTF8(const std::wstring& source)
 {
-	std::string result(source.length(), 0);
-	WideCharToMultiByte(CP_UTF8, 0, source.c_str(), -1, result.data(), int(source.length()), NULL, NULL);
+	int size = WideCharToMultiByte(CP_UTF8, 0, source.data(), -1, nullptr, 0, nullptr, nullptr);
+	std::string result(size, 0);
+	WideCharToMultiByte(CP_UTF8, 0, source.data(), -1, result.data(), size, nullptr, nullptr);
 	return result;
 }
 
@@ -254,8 +256,10 @@ void SDK::Trace(const Vec3& vecStart, const Vec3& vecEnd, unsigned int nMask, IT
 	ray.Init(vecStart, vecEnd);
 	I::EngineTrace->TraceRay(ray, nMask, pFilter, pTrace);
 
+#ifdef DEBUG_TRACES
 	if (Vars::Debug::VisualizeTraces.Value)
-		G::LineStorage.push_back({ { vecStart, Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd }, I::GlobalVars->curtime + 0.015f });
+		G::LineStorage.push_back({ { vecStart, Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd }, I::GlobalVars->curtime + 0.015f, {}, bool(GetAsyncKeyState(VK_MENU) & 0x8000) });
+#endif
 }
 
 void SDK::TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHullMin, const Vec3& vecHullMax, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace)
@@ -264,15 +268,17 @@ void SDK::TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHul
 	ray.Init(vecStart, vecEnd, vecHullMin, vecHullMax);
 	I::EngineTrace->TraceRay(ray, nMask, pFilter, pTrace);
 
+#ifdef DEBUG_TRACES
 	if (Vars::Debug::VisualizeTraces.Value)
 	{
-		G::LineStorage.push_back({ { vecStart, Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd }, I::GlobalVars->curtime + 0.015f });
+		G::LineStorage.push_back({ { vecStart, Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd }, I::GlobalVars->curtime + 0.015f, {}, bool(GetAsyncKeyState(VK_MENU) & 0x8000) });
 		if (!(vecHullMax - vecHullMin).IsZero())
 		{
-			G::BoxStorage.push_back({ vecStart, vecHullMin, vecHullMax, {}, I::GlobalVars->curtime + 0.015f, {}, { 0, 0, 0, 0 } });
-			G::BoxStorage.push_back({ Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd, vecHullMin, vecHullMax, {}, I::GlobalVars->curtime + 0.015f, {}, { 0, 0, 0, 0 } });
+			G::BoxStorage.push_back({ vecStart, vecHullMin, vecHullMax, {}, I::GlobalVars->curtime + 0.015f, {}, { 0, 0, 0, 0 }, bool(GetAsyncKeyState(VK_MENU) & 0x8000) });
+			G::BoxStorage.push_back({ Vars::Debug::VisualizeTraceHits.Value ? pTrace->endpos : vecEnd, vecHullMin, vecHullMax, {}, I::GlobalVars->curtime + 0.015f, {}, { 0, 0, 0, 0 }, bool(GetAsyncKeyState(VK_MENU) & 0x8000) });
 		}
 	}
+#endif
 }
 
 bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask)

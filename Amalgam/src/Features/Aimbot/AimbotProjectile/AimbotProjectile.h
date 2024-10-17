@@ -3,6 +3,13 @@
 
 #include "../AimbotGlobal/AimbotGlobal.h"
 
+enum PointType_
+{
+	PointType_None = 0,
+	PointType_Regular = (1 << 0),
+	PointType_Obscured = (1 << 1)
+};
+
 struct Solution_t
 {
 	float m_flPitch = 0.f;
@@ -17,14 +24,26 @@ struct Point_t
 };
 struct Info_t
 {
-	Vec3 vOffset = {};
-	float flVelocity = 0.f;
-	float flGravity = 0.f;
-	float flRadius = 0.f;
-	float flSphere = 0.f;
-	float flUpFix = 0.f;
-	float flOffset = 0.f;
-	int iPrimeTime = 0;
+	CTFPlayer* m_pLocal = nullptr;
+	CTFWeaponBase* m_pWeapon = nullptr;
+
+	Vec3 m_vLocalEye = {};
+	Vec3 m_vTargetEye = {};
+
+	float m_flLatency = 0.f;
+	int m_iLatency = 0;
+
+	Vec3 m_vOffset = {};
+	float m_flVelocity = 0.f;
+	float m_flGravity = 0.f;
+	float m_flRadius = 0.f;
+	float m_flRadiusTime = 0.f;
+	float m_flBoundingRadius = 0.f;
+	float m_flUpFix = 0.f;
+	float m_flOffsetTime = 0.f;
+	int m_iSplashCount = 0;
+	bool m_bRocket = false;
+	int m_iPrimeTime = 0;
 };
 
 class CAimbotProjectile
@@ -32,11 +51,11 @@ class CAimbotProjectile
 	std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
-	int GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Target_t& target, Info_t& tInfo);
-	std::unordered_map<int, Vec3> GetDirectPoints(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Info_t& tInfo);
-	std::vector<Point_t> GetSplashPoints(Target_t& target, std::vector<Vec3>& vSpherePoints, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Info_t& tInfo, int iSimTime);
+	int GetHitboxPriority(int nHitbox, Target_t& target, Info_t& tInfo);
+	std::unordered_map<int, Vec3> GetDirectPoints(Target_t& target, Info_t& tInfo);
+	std::vector<Point_t> GetSplashPoints(Target_t& target, std::vector<std::pair<Vec3, int>>& vSpherePoints, Info_t& tInfo, int iSimTime);
 
-	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, Info_t& tInfo, int iSimTime, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Solution_t& out, bool bAccuracy = true);
+	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, Info_t& tInfo, int iSimTime, Solution_t& out, bool bAccuracy = true);
 	bool TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Target_t& target, Vec3& vPoint, Vec3& vAngles, int iSimTime, bool bSplash, std::deque<Vec3>* pProjectilePath);
 
 	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::deque<Vec3>* pPlayerPath, std::deque<Vec3>* pProjectilePath, std::vector<DrawBox>* pBoxes, float* pTimeTo);

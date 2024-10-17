@@ -117,7 +117,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFProjectile_Flare:
 	{
 		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
+		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Projectiles.Value, Vars::Chams::Enemy::Projectiles.Value);
@@ -127,7 +127,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	//case ETFClassID::CTFProjectile_Syringe: // not drawn
 	{
 		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
+		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Projectiles.Value, Vars::Chams::Enemy::Projectiles.Value);

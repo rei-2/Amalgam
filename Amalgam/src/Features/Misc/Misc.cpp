@@ -334,7 +334,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 		}
 		else if (pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT))
 		{
-			if (flipVar)
+			if (flipVar || G::ShiftedTicks == G::MaxShift)
 			{	// you could just do this if you didn't care about viewangles
 				const Vec3 vecMove(pCmd->forwardmove, pCmd->sidemove, 0.f);
 				const float flLength = vecMove.Length();

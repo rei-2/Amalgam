@@ -96,7 +96,7 @@ public:
 
 	inline Vec3 GetCenter()
 	{
-		return m_vecOrigin() + Vec3(0, 0, (m_vecMins().z + m_vecMaxs().z) / 2);
+		return m_vecOrigin() + (m_vecMins() + m_vecMaxs()) / 2;
 	}
 
 	inline Vec3 GetRenderCenter()

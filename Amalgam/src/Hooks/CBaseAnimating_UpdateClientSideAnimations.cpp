@@ -9,7 +9,5 @@ MAKE_HOOK(CBaseAnimating_UpdateClientSideAnimation, S::CBaseAnimating_UpdateClie
 	if (!G::UpdatingAnims && (rcx && rcx == pLocal ? !pLocal->IsInBumperKart() : true))
 		return;
 
-	G::AnimateKart = true;
 	CALL_ORIGINAL(rcx);
-	G::AnimateKart = false;
 }

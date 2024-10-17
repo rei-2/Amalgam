@@ -1,6 +1,14 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
+enum ProjSim_
+{
+	ProjSim_None = 0,
+	ProjSim_Trace = 1 << 0,
+	ProjSim_InitCheck = 1 << 2,
+	ProjSim_Quick = 1 << 1
+};
+
 struct ProjectileInfo
 {
 	ProjectileType_t m_iType{};
@@ -39,7 +47,7 @@ class CProjectileSimulation
 	};
 
 public:
-	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, bool bTrace = true, bool bQuick = false, float flAutoCharge = -1.f);
+	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, int iFlags = ProjSim_Trace | ProjSim_InitCheck, float flAutoCharge = -1.f);
 	bool Initialize(ProjectileInfo& info, bool bSimulate = true);
 	void RunTick(ProjectileInfo& info, bool bPath = true);
 	Vec3 GetOrigin();

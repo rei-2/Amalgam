@@ -109,7 +109,7 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFProjectile_Flare:
 	{
 		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
+		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
@@ -119,7 +119,7 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	//case ETFClassID::CTFProjectile_Syringe: // not drawn
 	{
 		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
+		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);

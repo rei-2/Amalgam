@@ -13,8 +13,7 @@ void CEntities::Store()
 		return;
 
 	m_pLocal = pLocal->As<CTFPlayer>();
-	if (auto pEntity = m_pLocal->m_hActiveWeapon().Get())
-		m_pLocalWeapon = pEntity->As<CTFWeaponBase>();
+	m_pLocalWeapon = m_pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
 
 	switch (m_pLocal->m_iObserverMode())
 	{
@@ -28,36 +27,11 @@ void CEntities::Store()
 	default: break;
 	}
 	
-	for (int n = 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
+	for (int n = I::EngineClient->GetMaxClients() + 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
 	{
-		auto pClientEntity = I::ClientEntityList->GetClientEntity(n);
-		if (!pClientEntity)
+		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CBaseEntity>();
+		if (!pEntity || pEntity->IsDormant())
 			continue;
-
-		auto pEntity = pClientEntity->As<CBaseEntity>();
-
-		if (pEntity->IsDormant())
-		{
-			if (!pEntity->IsPlayer() || !m_mDormancy.contains(pEntity))
-				continue;
-
-			auto pPlayer = pEntity->As<CTFPlayer>();
-			auto& dormantData = m_mDormancy[pEntity];
-			float lastUpdate = dormantData.LastUpdate;
-
-			if (I::EngineClient->Time() - lastUpdate > Vars::ESP::DormantTime.Value)
-				continue;
-
-			pPlayer->SetAbsOrigin(dormantData.Location);
-			pPlayer->m_vecOrigin() = dormantData.Location;
-			pPlayer->m_lifeState() = LIFE_ALIVE;
-
-			auto playerResource = GetPR();
-			if (playerResource && playerResource->GetValid(n))
-				pPlayer->m_iHealth() = playerResource->GetHealth(n);
-		}
-		else if (pEntity->IsPlayer())
-			m_mDormancy[pEntity] = { pEntity->m_vecOrigin(), I::EngineClient->Time() };
 
 		auto nClassID = pEntity->GetClassID();
 		switch (nClassID)
@@ -65,16 +39,6 @@ void CEntities::Store()
 		case ETFClassID::CTFPlayerResource:
 			m_pPlayerResource = pEntity->As<CTFPlayerResource>();
 			break;
-		case ETFClassID::CTFPlayer:
-		{
-			m_mGroups[EGroupType::PLAYERS_ALL].push_back(pEntity);
-			m_mGroups[pEntity->m_iTeamNum() != m_pLocal->m_iTeamNum() ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_TEAMMATES].push_back(pEntity);
-
-			PlayerInfo_t pi{};
-			if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
-				m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
-			break;
-		}
 		case ETFClassID::CObjectSentrygun:
 		case ETFClassID::CObjectDispenser:
 		case ETFClassID::CObjectTeleporter:
@@ -181,6 +145,42 @@ void CEntities::Store()
 			m_mGroups[EGroupType::MISC_DOTS].push_back(pEntity);
 			break;
 		}
+	}
+	
+	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
+	{
+		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CBaseEntity>();
+		if (!pEntity || !pEntity->IsPlayer())
+			continue;
+
+		if (pEntity->IsDormant())
+		{
+			if (!m_mDormancy.contains(pEntity))
+				continue;
+
+			auto& dormantData = m_mDormancy[pEntity];
+
+			if (I::EngineClient->Time() - dormantData.LastUpdate > Vars::ESP::DormantTime.Value)
+				continue;
+
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			pPlayer->SetAbsOrigin(dormantData.Location);
+			pPlayer->m_vecOrigin() = dormantData.Location;
+			pPlayer->m_lifeState() = LIFE_ALIVE;
+
+			auto playerResource = GetPR();
+			if (playerResource && playerResource->GetValid(n))
+				pPlayer->m_iHealth() = playerResource->GetHealth(n);
+		}
+		else
+			m_mDormancy[pEntity] = { pEntity->m_vecOrigin(), I::EngineClient->Time() };
+
+		m_mGroups[EGroupType::PLAYERS_ALL].push_back(pEntity);
+		m_mGroups[pEntity->m_iTeamNum() != m_pLocal->m_iTeamNum() ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_TEAMMATES].push_back(pEntity);
+
+		PlayerInfo_t pi{};
+		if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
+			m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
 	}
 
 	int iLag;

@@ -1,8 +1,6 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
-#include "../AimbotGlobal/AimbotGlobal.h"
-
 class CAutoHeal
 {
 	bool ActivateOnVoice(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUserCmd* pCmd);

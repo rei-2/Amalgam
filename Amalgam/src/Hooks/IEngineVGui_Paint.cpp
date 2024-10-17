@@ -44,7 +44,7 @@ void Paint()
 		F::Visuals.DrawOnScreenPing(pLocal);
 		F::SpectatorList.Run(pLocal);
 		F::CritHack.Draw(pLocal);
-		F::Visuals.DrawTickbaseText(pLocal);
+		F::Visuals.DrawTicks(pLocal);
 		F::Visuals.DrawDebugInfo(pLocal);
 	}
 	I::MatSystemSurface->FinishDrawing();

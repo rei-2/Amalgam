@@ -6,91 +6,78 @@
 
 std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	std::vector<Target_t> validTargets;
+	std::vector<Target_t> vTargets;
 
 	const Vec3 vLocalPos = pLocal->GetShootPos();
 	const Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
 	if (Vars::Aimbot::General::Target.Value & PLAYER)
 	{
-		const bool bDisciplinary = Vars::Aimbot::Melee::WhipTeam.Value && pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheDisciplinaryAction;
+		bool bDisciplinary = Vars::Aimbot::Melee::WhipTeam.Value && pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheDisciplinaryAction;
 		for (auto pEntity : H::Entities.GetGroup(bDisciplinary ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_ENEMIES))
 		{
-			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (F::AimbotGlobal.ShouldIgnore(pPlayer, pLocal, pWeapon))
+			float flFOVTo; Vec3 vPos, vAngleTo;
+			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
-			Vec3 vPos = pPlayer->GetCenter();
-			Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPos);
-			const float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
-
-			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
-				continue;
-
-			const float flDistTo = vLocalPos.DistTo(vPos);
-			const int priority = F::AimbotGlobal.GetPriority(pPlayer->entindex());
-			validTargets.push_back({ pPlayer, ETargetType::PLAYER, vPos, vAngleTo, flFOVTo, flDistTo, priority });
+			float flDistTo = vLocalPos.DistTo(vPos);
+			vTargets.push_back({ pEntity, ETargetType::PLAYER, vPos, vAngleTo, flFOVTo, flDistTo, F::AimbotGlobal.GetPriority(pEntity->entindex()) });
 		}
 	}
 
 	if (Vars::Aimbot::General::Target.Value)
 	{
-		bool bHasWrench = pWeapon->GetWeaponID() == TF_WEAPON_WRENCH, bCanDestroySapper = false;
+		bool bWrench = pWeapon->GetWeaponID() == TF_WEAPON_WRENCH, bDestroySapper = false;
 		switch (pWeapon->m_iItemDefinitionIndex())
 		{
 		case Pyro_t_Homewrecker:
 		case Pyro_t_TheMaul:
 		case Pyro_t_NeonAnnihilator:
 		case Pyro_t_NeonAnnihilatorG:
-			bCanDestroySapper = true;
+			bDestroySapper = true;
 		}
 
-		for (auto pEntity : H::Entities.GetGroup(bHasWrench || bCanDestroySapper ? EGroupType::BUILDINGS_ALL : EGroupType::BUILDINGS_ENEMIES))
+		for (auto pEntity : H::Entities.GetGroup(bWrench || bDestroySapper ? EGroupType::BUILDINGS_ALL : EGroupType::BUILDINGS_ENEMIES))
 		{
-			auto pBuilding = pEntity->As<CBaseObject>();
-
-			bool bSentry = pBuilding->IsSentrygun(), bDispenser = pBuilding->IsDispenser(), bTeleporter = pBuilding->IsTeleporter();
-			if (bSentry && !(Vars::Aimbot::General::Target.Value & SENTRY)
-				|| bDispenser && !(Vars::Aimbot::General::Target.Value & DISPENSER)
-				|| bTeleporter && !(Vars::Aimbot::General::Target.Value & TELEPORTER))
+			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (pBuilding->m_iTeamNum() == pLocal->m_iTeamNum() && (bHasWrench && !AimFriendlyBuilding(pBuilding) || bCanDestroySapper && !pBuilding->m_bHasSapper()))
+			if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() && (bWrench && !AimFriendlyBuilding(pEntity->As<CBaseObject>()) || bDestroySapper && !pEntity->As<CBaseObject>()->m_bHasSapper()))
 				continue;
 
-			Vec3 vPos = pBuilding->GetCenter();
+			Vec3 vPos = pEntity->GetCenter();
 			Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPos);
-			const float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
-			const float flDistTo = vLocalPos.DistTo(vPos);
-
+			float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			validTargets.push_back({ pBuilding, bSentry ? ETargetType::SENTRY : bDispenser ? ETargetType::DISPENSER : ETargetType::TELEPORTER, vPos, vAngleTo, flFOVTo, flDistTo });
+			float flDistTo = vLocalPos.DistTo(vPos);
+			vTargets.push_back({ pEntity, pEntity->IsSentrygun() ? ETargetType::SENTRY : pEntity->IsDispenser() ? ETargetType::DISPENSER : ETargetType::TELEPORTER, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
 	if (Vars::Aimbot::General::Target.Value & NPC)
 	{
-		for (auto pNPC : H::Entities.GetGroup(EGroupType::WORLD_NPC))
+		for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_NPC))
 		{
-			Vec3 vPos = pNPC->GetCenter();
+			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
+				continue;
+
+			Vec3 vPos = pEntity->GetCenter();
 			Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPos);
-
-			const float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
-			const float flDistTo = vLocalPos.DistTo(vPos);
-
+			float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			validTargets.push_back({ pNPC, ETargetType::NPC, vPos, vAngleTo, flFOVTo, flDistTo });
+			float flDistTo = vLocalPos.DistTo(vPos);
+			vTargets.push_back({ pEntity, ETargetType::NPC, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
-	return validTargets;
+	return vTargets;
 }
 
 bool CAimbotMelee::AimFriendlyBuilding(CBaseObject* pBuilding)
@@ -110,22 +97,12 @@ bool CAimbotMelee::AimFriendlyBuilding(CBaseObject* pBuilding)
 
 std::vector<Target_t> CAimbotMelee::SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	auto validTargets = GetTargets(pLocal, pWeapon);
+	auto vTargets = GetTargets(pLocal, pWeapon);
 
-	const auto& sortMethod = ESortMethod::DISTANCE; //static_cast<ESortMethod>(Vars::Aimbot::Melee::SortMethod.Value);
-	F::AimbotGlobal.SortTargets(&validTargets, sortMethod);
-
-	std::vector<Target_t> sortedTargets = {};
-	int i = 0; for (auto& target : validTargets)
-	{
-		i++; if (i > Vars::Aimbot::General::MaxTargets.Value) break;
-
-		sortedTargets.push_back(target);
-	}
-
-	F::AimbotGlobal.SortPriority(&sortedTargets);
-
-	return sortedTargets;
+	F::AimbotGlobal.SortTargets(&vTargets, ESortMethod::DISTANCE);
+	vTargets.resize(std::min(size_t(Vars::Aimbot::General::MaxTargets.Value), vTargets.size()));
+	F::AimbotGlobal.SortPriority(&vTargets);
+	return vTargets;
 }
 
 

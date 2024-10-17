@@ -80,7 +80,6 @@ namespace G
 	inline bool Choking = false;
 
 	inline bool UpdatingAnims = false;
-	inline bool AnimateKart = false;
 	inline bool DrawingProps = false;
 	inline bool FlipViewmodels = false;
 

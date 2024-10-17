@@ -90,10 +90,10 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 								Vec3 vPos = {}; reinterpret_cast<CCollisionProperty*>(pLocal->GetCollideable())->CalcNearestPoint(vPoint, &vPos);
 								pLocal->SetAbsOrigin(vOriginal);
 
-								return vPoint.DistTo(vPos) < 120.f && SDK::VisPos(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
+								return vPoint.DistTo(vPos) < 120.f && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
 							};
 
-						bWillHit = WillHit(pLocal, localStorage.m_MoveData.m_vecAbsOrigin, trace.endpos);
+						bWillHit = WillHit(pLocal, localStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
 						iDelay = std::max(n + (n > Vars::Misc::Movement::ApplyAbove.Value ? Vars::Misc::Movement::TimingOffset.Value : 0), 0);
 
 						if (bWillHit)

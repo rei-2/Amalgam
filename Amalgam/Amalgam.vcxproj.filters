@@ -172,6 +172,7 @@
     <ClCompile Include="src\Hooks\CPlayerResource_GetPlayerName.cpp" />
     <ClCompile Include="src\Hooks\CTFGCClientSystem_UpdateAssignedLobby.cpp" />
     <ClCompile Include="src\Hooks\CTFBadgePanel_SetupBadge.cpp" />
+    <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

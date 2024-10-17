@@ -241,6 +241,9 @@ public:
 
 	inline Vec3 GetViewOffset() // use on nonlocal players
 	{
+		if (!IsPlayer())
+			return (m_vecMins() + m_vecMaxs()) / 2;
+
 		auto getMainOffset = [this]() -> Vec3
 			{
 				if (IsDucking())
