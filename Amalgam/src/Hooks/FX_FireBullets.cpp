@@ -10,7 +10,7 @@ MAKE_SIGNATURE(CTFWeaponBaseGun_FireBullet_FireBullets_Call, "client.dll", "0F 2
 MAKE_HOOK(FX_FireBullets, S::FX_FireBullets(), void, __cdecl,
 	void* pWpn, int iPlayer, const Vec3& vecOrigin, const Vec3& vecAngles, int iWeapon, int iMode, int iSeed, float flSpread, float flDamage, bool bCritical)
 {
-	static auto dwDesired = S::CTFWeaponBaseGun_FireBullet_FireBullets_Call();
+	static const auto dwDesired = S::CTFWeaponBaseGun_FireBullet_FireBullets_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	if (iPlayer != I::EngineClient->GetLocalPlayer())

@@ -9,9 +9,9 @@ MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect_CreateName_Call, "client.dll", 
 MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*, __fastcall,
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, const char* pszAttachmentName)
 {
-    static auto dwUpdateEffects1 = S::CWeaponMedigun_UpdateEffects_CreateName_Call1();
-    static auto dwUpdateEffects2 = S::CWeaponMedigun_UpdateEffects_CreateName_Call2();
-    static auto dwManageChargeEffect = S::CWeaponMedigun_ManageChargeEffect_CreateName_Call();
+    static const auto dwUpdateEffects1 = S::CWeaponMedigun_UpdateEffects_CreateName_Call1();
+    static const auto dwUpdateEffects2 = S::CWeaponMedigun_UpdateEffects_CreateName_Call2();
+    static const auto dwManageChargeEffect = S::CWeaponMedigun_ManageChargeEffect_CreateName_Call();
     const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
     bool bUpdateEffects = dwRetAddr == dwUpdateEffects1 || dwRetAddr == dwUpdateEffects2, bManageChargeEffect = dwRetAddr == dwManageChargeEffect;

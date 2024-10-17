@@ -23,7 +23,7 @@ MAKE_SIGNATURE(CTFPlayer_FireEvent_IsHolidayActive_Call, "client.dll", "E8 ? ? ?
 MAKE_HOOK(TF_IsHolidayActive, S::TF_IsHolidayActive(), bool, __fastcall,
 	int eHoliday)
 {
-	static auto dwDesired = S::CTFPlayer_FireEvent_IsHolidayActive_Call();
+	static const auto dwDesired = S::CTFPlayer_FireEvent_IsHolidayActive_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 	
 	return dwRetAddr == dwDesired ? true : CALL_ORIGINAL(eHoliday);

@@ -44,3 +44,17 @@ Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool
 
 	return out;
 }
+
+Color_t CColor::GetScoreboardColor(int iIndex)
+{
+	Color_t out = { 0, 0, 0, 0 };
+
+	if (iIndex == I::EngineClient->GetLocalPlayer())
+		out = Vars::Colors::Local.Value;
+	else if (H::Entities.IsFriend(iIndex))
+		out = F::PlayerUtils.m_vTags[FRIEND_TAG].Color;
+	else if (auto pTag = F::PlayerUtils.GetSignificantTag(iIndex))
+		out = pTag->Color;
+
+	return out;
+}

@@ -43,19 +43,21 @@ void CVisuals::DrawTicks(CTFPlayer* pLocal)
 	const DragBox_t dtPos = Vars::Menu::TicksDisplay.Value;
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
-	const int offset = 7 + 12 * Vars::Menu::DPI.Value;
-	H::Draw.String(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Ticks %d / %d", G::ShiftedTicks, G::MaxShift);
-	if (G::WaitForShift)
-		H::Draw.String(fFont, dtPos.x, dtPos.y + fFont.m_nTall + offset, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Not Ready");
+	int iTicks = G::ShiftedTicks + G::ChokeAmount;
+	int iOffset = 7 + 12 * Vars::Menu::DPI.Value;
+	float flRatio = float(std::clamp(iTicks, 0, G::MaxShift)) / G::MaxShift;
+	float flSizeX = 100 * Vars::Menu::DPI.Value, flSizeY = 12 * Vars::Menu::DPI.Value, flPosX = dtPos.x - flSizeX / 2, flPosY = dtPos.y + 5 + fFont.m_nTall;
 
-	const float ratioCurrent = float(std::clamp(G::ShiftedTicks, 0, G::MaxShift)) / G::MaxShift;
-	float sizeX = 100 * Vars::Menu::DPI.Value, sizeY = 12 * Vars::Menu::DPI.Value, posX = dtPos.x - sizeX / 2, posY = dtPos.y + 5 + fFont.m_nTall;
-	H::Draw.LineRect(posX, dtPos.y + 5 + fFont.m_nTall, sizeX, sizeY, Vars::Menu::Theme::Accent.Value);
-	if (ratioCurrent)
+	H::Draw.String(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Ticks %d / %d", iTicks, G::MaxShift);
+	if (G::WaitForShift)
+		H::Draw.String(fFont, dtPos.x, dtPos.y + fFont.m_nTall + iOffset, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Not Ready");
+
+	H::Draw.LineRect(flPosX, dtPos.y + 5 + fFont.m_nTall, flSizeX, flSizeY, Vars::Menu::Theme::Accent.Value);
+	if (flRatio)
 	{
-		sizeX -= 4, sizeY -= 4, posX = dtPos.x - sizeX / 2;
-		H::Draw.StartClipping(posX, posY, sizeX * ratioCurrent, sizeY + 2 /*?*/);
-		H::Draw.FillRect(posX, posY + 2, sizeX, sizeY, Vars::Menu::Theme::Accent.Value);
+		flSizeX -= 4, flSizeY -= 4, flPosX = dtPos.x - flSizeX / 2;
+		H::Draw.StartClipping(flPosX, flPosY, flSizeX * flRatio, flSizeY + 2 /*?*/);
+		H::Draw.FillRect(flPosX, flPosY + 2, flSizeX, flSizeY, Vars::Menu::Theme::Accent.Value);
 		H::Draw.EndClipping();
 	}
 }

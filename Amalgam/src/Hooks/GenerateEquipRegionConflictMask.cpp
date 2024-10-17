@@ -14,7 +14,7 @@ MAKE_HOOK(GenerateEquipRegionConflictMask, S::GenerateEquipRegionConflictMask(),
 MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_GetItemInLoadoutForClass(), void*, __fastcall,
 	void* rcx, int iClass, int iSlot, CSteamID* pID)
 {
-	static auto dwDesired = S::CEquipSlotItemSelectionPanel_UpdateModelPanelsForSelection_GetItemInLoadoutForClass_Call();
+	static const auto dwDesired = S::CEquipSlotItemSelectionPanel_UpdateModelPanelsForSelection_GetItemInLoadoutForClass_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	return dwRetAddr == dwDesired && Vars::Misc::Exploits::EquipRegionUnlock.Value ? nullptr : CALL_ORIGINAL(rcx, iClass, iSlot, pID);

@@ -6,7 +6,7 @@ MAKE_SIGNATURE(CTFRagdoll_CreateTFRagdoll_BRenderAsZombie_Call, "client.dll", "E
 MAKE_HOOK(CTFPlayer_BRenderAsZombie, S::CTFPlayer_BRenderAsZombie(), bool, __fastcall,
 	void* rcx, bool bWeaponsCheck)
 {
-	static auto dwDesired = S::CTFRagdoll_CreateTFRagdoll_BRenderAsZombie_Call();
+	static const auto dwDesired = S::CTFRagdoll_CreateTFRagdoll_BRenderAsZombie_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	if (Vars::Visuals::Ragdolls::NoGib.Value && dwRetAddr == dwDesired)

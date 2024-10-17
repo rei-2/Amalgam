@@ -7,8 +7,8 @@ MAKE_SIGNATURE(CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call2, "clien
 MAKE_HOOK(GetClientInterpAmount, S::GetClientInterpAmount(), float, __cdecl,
 	)
 {
-	static auto dwDesired1 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call1();
-	static auto dwDesired2 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call2();
+	static const auto dwDesired1 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call1();
+	static const auto dwDesired2 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call2();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 	
 	return dwRetAddr == dwDesired1 || dwRetAddr == dwDesired2 ? CALL_ORIGINAL() : 0.f;

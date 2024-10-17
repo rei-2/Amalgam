@@ -7,8 +7,8 @@ MAKE_SIGNATURE(CTFClientScoreBoardDialog_UpdatePlayerList_Jump, "client.dll", "8
 MAKE_HOOK(CTFPlayerShared_IsPlayerDominated, S::CTFPlayerShared_IsPlayerDominated(), bool, __fastcall,
 	void* rcx, int index)
 {
-	static auto dwDesired = S::CTFClientScoreBoardDialog_UpdatePlayerList_IsPlayerDominated_Call();
-	static auto dwJump = S::CTFClientScoreBoardDialog_UpdatePlayerList_Jump();
+	static const auto dwDesired = S::CTFClientScoreBoardDialog_UpdatePlayerList_IsPlayerDominated_Call();
+	static const auto dwJump = S::CTFClientScoreBoardDialog_UpdatePlayerList_Jump();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	const bool bResult = CALL_ORIGINAL(rcx, index);

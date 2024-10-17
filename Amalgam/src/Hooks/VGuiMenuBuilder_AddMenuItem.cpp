@@ -15,7 +15,7 @@ static std::string PlayerName;
 MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool, __fastcall,
     void* rcx, int playerIndex)
 {
-    static auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_IsPlayerBlocked_Call();
+    static const auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_IsPlayerBlocked_Call();
     const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
     if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired)
@@ -27,7 +27,7 @@ MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
 MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*, __fastcall,
     void* rcx, const char* pszButtonText, const char* pszCommand, const char* pszCategoryName)
 {
-    static auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuItem_Call();
+    static const auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuItem_Call();
     const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
     if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired && PlayerIndex != -1)

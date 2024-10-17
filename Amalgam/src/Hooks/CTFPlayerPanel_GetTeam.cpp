@@ -1,12 +1,17 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/Players/PlayerUtils.h"
+
 MAKE_SIGNATURE(CTFPlayerPanel_GetTeam, "client.dll", "8B 91 ? ? ? ? 83 FA ? 74 ? 48 8B 05", 0x0);
-MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_GetTeam_Call, "client.dll", "8B 9F ? ? ? ? 40 32 F6", 0x0);
+MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update, "client.dll", "40 56 57 48 83 EC ? 48 83 3D", 0x0);
+MAKE_SIGNATURE(vgui_Panel_SetBgColor, "client.dll", "89 91 ? ? ? ? C3 CC CC CC CC CC CC CC CC CC 48 8B 41", 0x0);
+MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_GetTeam_Call, "client.dll", "8B 9F ? ? ? ? 40 32 F6", 0x0);
+MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_SetBgColor_Call, "client.dll", "48 8B 8F ? ? ? ? 4C 8B 6C 24 ? 48 85 C9 0F 84 ? ? ? ? 40 38 B7", 0x0);
 
 MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int, __fastcall,
 	void* rcx)
 {
-	static auto dwDesired = S::CTFTeamStatusPlayerPanel_GetTeam_Call();
+	static const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_GetTeam_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	if (Vars::Visuals::UI::RevealScoreboard.Value && dwRetAddr == dwDesired)
@@ -16,4 +21,36 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int, __fastcall,
 	}
 
 	return CALL_ORIGINAL(rcx);
+}
+
+int CTFTeamStatusPlayerPanel_Update_PlayerIndex;
+
+MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(), bool, __fastcall,
+	void* rcx)
+{
+	CTFTeamStatusPlayerPanel_Update_PlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
+	return CALL_ORIGINAL(rcx);
+}
+
+MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void, __fastcall,
+	void* rcx, Color_t color)
+{
+	static const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_SetBgColor_Call();
+	const auto dwRetAddr = uintptr_t(_ReturnAddress());
+
+	if (dwRetAddr == dwDesired && Vars::Visuals::UI::ScoreboardColors.Value)
+	{
+		Color_t tColor = H::Color.GetScoreboardColor(CTFTeamStatusPlayerPanel_Update_PlayerIndex);
+		if (tColor.a)
+		{
+			tColor = tColor.Lerp({ 0, 0, 0, tColor.a }, 0.2f);
+			auto pResource = H::Entities.GetPR();
+			if (pResource && !pResource->IsAlive(CTFTeamStatusPlayerPanel_Update_PlayerIndex))
+				tColor = tColor.Lerp({ 100, 100, 100, tColor.a }, 0.5f);
+
+			color = tColor;
+		}
+	}
+
+	CALL_ORIGINAL(rcx, color);
 }

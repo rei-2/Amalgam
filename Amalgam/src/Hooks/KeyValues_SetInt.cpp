@@ -7,8 +7,8 @@ MAKE_SIGNATURE(CTFClientScoreBoardDialog_UpdatePlayerList_Jump, "client.dll", "8
 MAKE_HOOK(KeyValues_SetInt, S::KeyValues_SetInt(), void, __fastcall,
 	void* rcx, const char* keyName, int value)
 {
-	static auto dwDesired = S::CTFClientScoreBoardDialog_UpdatePlayerList_SetInt_Call();
-	static auto dwJump = S::CTFClientScoreBoardDialog_UpdatePlayerList_Jump();
+	static const auto dwDesired = S::CTFClientScoreBoardDialog_UpdatePlayerList_SetInt_Call();
+	static const auto dwJump = S::CTFClientScoreBoardDialog_UpdatePlayerList_Jump();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	CALL_ORIGINAL(rcx, keyName, value);
