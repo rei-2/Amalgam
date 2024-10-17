@@ -506,7 +506,6 @@
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
     <ClCompile Include="src\Hooks\COPRenderSprites_Render.cpp" />
-    <ClCompile Include="src\Hooks\CPlayerResource_GetTeamColor.cpp" />
     <ClCompile Include="src\Hooks\CPrediction_RunCommand.cpp" />
     <ClCompile Include="src\Hooks\CRendering3dView_EnableWorldFog.cpp" />
     <ClCompile Include="src\Hooks\CSkyboxView_Enable3dSkyboxFog.cpp" />

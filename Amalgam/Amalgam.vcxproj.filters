@@ -124,7 +124,6 @@
     <ClCompile Include="src\Hooks\CClientState_GetClientInterpAmount.cpp" />
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
-    <ClCompile Include="src\Hooks\CPlayerResource_GetTeamColor.cpp" />
     <ClCompile Include="src\Hooks\CSoundEmitterSystem_EmitSound.cpp" />
     <ClCompile Include="src\Hooks\CStudioRender_DrawModelStaticProp.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_AvoidPlayers.cpp" />
