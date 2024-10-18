@@ -160,7 +160,7 @@
     <ClCompile Include="src\Hooks\TF_IsHolidayActive.cpp" />
     <ClCompile Include="src\Hooks\CParticleProperty_Create.cpp" />
     <ClCompile Include="src\Hooks\R_DrawSkyBox.cpp" />
-    <ClCompile Include="src\Hooks\CBaseClientState_ForceFullUpdate.cpp" />
+    <ClCompile Include="src\Hooks\CL_ProcessPacketEntities.cpp" />
     <ClCompile Include="src\Hooks\GenerateEquipRegionConflictMask.cpp" />
     <ClCompile Include="src\Hooks\CTFGameRules_AllowThirdPersonCamera.cpp" />
     <ClCompile Include="src\Hooks\CBaseViewModel_ShouldFlipViewModel.cpp" />
