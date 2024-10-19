@@ -32,12 +32,12 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 		std::string sTag, cColor;
 		if (clientIndex == I::EngineClient->GetLocalPlayer())
 		{
-			if (Vars::Visuals::UI::ChatTags.Value & (1 << 0))
+			if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Local)
 				sTag = "You", cColor = Vars::Colors::Local.Value.ToHexA();
 		}
-		else if (Vars::Visuals::UI::ChatTags.Value & (1 << 1) && H::Entities.IsFriend(clientIndex))
+		else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Friends && H::Entities.IsFriend(clientIndex))
 			sTag = "Friend", cColor = F::PlayerUtils.m_vTags[FRIEND_TAG].Color.ToHexA();
-		else if (Vars::Visuals::UI::ChatTags.Value & (1 << 2))
+		else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Assigned)
 		{
 			if (auto pTag = F::PlayerUtils.GetSignificantTag(clientIndex, 0))
 				sTag = pTag->Name, cColor = pTag->Color.ToHexA();

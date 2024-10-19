@@ -2,6 +2,8 @@
 #define TIME_TO_TICKS(dt) (static_cast<int>(0.5f + static_cast<float>(dt) / TICK_INTERVAL))
 #define TICKS_TO_TIME(t) (TICK_INTERVAL * (t))
 #define ROUND_TO_TICKS(t) (TICKS_TO_TIME(TIME_TO_TICKS(t)))
+
+#define MAKE_SIGNATURE(name, dll, sig, offset) namespace S { inline CSignature name(dll, sig, offset, #name); }
 #define MAKE_HOOK(name, address, type, callconvo, ...) namespace Hooks \
 {\
 	namespace name\
@@ -36,6 +38,7 @@ namespace MAKE_INTERFACE_SCOPE \
 {\
 	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, signature, offset, deref, true); \
 }
+
 #define NETVAR(_name, type, table, name) inline type& _name() \
 { \
 	static int nOffset = U::NetVars.GetNetVar(table, name); \
@@ -58,10 +61,30 @@ namespace MAKE_INTERFACE_SCOPE \
 { \
 	return (conditions & cond); \
 }
-#define MAKE_SIGNATURE(name, dll, sig, offset) namespace S { inline CSignature name(dll, sig, offset, #name); }
-#define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }
-#define ADD_FEATURE(type, name) ADD_FEATURE_CUSTOM(type, name, F)
-#define CVar(name, value, __VA_ARGS__) inline ConfigVar<decltype(value)> name{ value, GetNamespace() + GetSubname() + std::string(#name), __VA_ARGS__ };
+
+#define VA_LIST(...) __VA_ARGS__
+#define NAMESPACE_BEGIN(name)\
+	namespace name {\
+		inline std::string GetNamespace() { return "Vars::" + std::string(#name) + "::"; }\
+		inline std::string GetSubname() { return ""; }
+#define SUBNAMESPACE_BEGIN(name)\
+	namespace name {\
+		inline std::string GetSubname() { return std::string(#name) + "::"; }
+#define NAMESPACE_END(name)\
+	}
+#define SUBNAMESPACE_END(name)\
+	}
+#define CVar(name, value, ...)\
+	inline ConfigVar<decltype(value)> name = { value, GetNamespace() + GetSubname() + std::string(#name), __VA_ARGS__ };
+#define Enum(name, ...)\
+	namespace name##Enum { enum name##Enum { __VA_ARGS__ }; };
+#define CVarEnum(name, value, flags, ...)\
+	CVar(name, value, flags)\
+	Enum(name, __VA_ARGS__)
+#define NONE 0
 #define VISUAL (1 << 0)
 #define NOSAVE (1 << 1)
 #define NOCOND (1 << 2)
+
+#define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }
+#define ADD_FEATURE(type, name) ADD_FEATURE_CUSTOM(type, name, F)

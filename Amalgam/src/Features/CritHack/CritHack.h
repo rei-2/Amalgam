@@ -4,18 +4,18 @@
 typedef int                i32;
 typedef unsigned int       u32;
 
-struct WeaponStorage
+struct WeaponStorage_t
 {
-	float Damage = 0.f;
-	float Cost = 0.f;
-	int AvailableCrits = 0;
-	int PotentialCrits = 0;
+	int m_iEntIndex = -1;
+	int m_iDefIndex = -1;
 
-	int EntIndex = -1;
-	int DefIndex = -1;
+	float m_flDamage = 0.f;
+	float m_flCost = 0.f;
+	int m_iAvailableCrits = 0;
+	int m_iPotentialCrits = 0;
 
-	std::deque<int> CritCommands = {};
-	std::deque<int> SkipCommands = {};
+	std::deque<int> m_vCritCommands = {};
+	std::deque<int> m_vSkipCommands = {};
 };
 
 class CCritHack
@@ -33,14 +33,14 @@ private:
 	void ResetWeapons(CTFPlayer* pLocal);
 	void Reset();
 
-	int CritDamage = 0.f;
-	int AllDamage = 0.f;
-	std::unordered_map<int, int> mHealthStorage = {};
+	int m_iCritDamage = 0.f;
+	int m_iAllDamage = 0.f;
+	std::unordered_map<int, int> m_mHealthStorage = {};
 
-	bool CritBanned = false;
-	int DamageTilUnban = 0;
-	float CritChance = 0.f;
-	int WishRandomSeed = 0;
+	bool m_bCritBanned = false;
+	int m_iDamageTilUnban = 0;
+	float m_flCritChance = 0.f;
+	int m_iWishRandomSeed = 0;
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
@@ -49,7 +49,7 @@ public:
 	void Store();
 	void Draw(CTFPlayer* pLocal);
 
-	std::unordered_map<int, WeaponStorage> Storage = {};
+	std::unordered_map<int, WeaponStorage_t> m_mStorage = {};
 };
 
 ADD_FEATURE(CCritHack, CritHack)

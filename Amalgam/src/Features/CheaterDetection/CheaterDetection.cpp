@@ -24,7 +24,7 @@ bool CCheaterDetection::ShouldScan()
 
 bool CCheaterDetection::InvalidPitch(CTFPlayer* pEntity)
 {
-	return Vars::CheaterDetection::Methods.Value & (1 << 0) && fabsf(pEntity->m_angEyeAnglesX()) > 89.9f;
+	return Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::InvalidPitch && fabsf(pEntity->m_angEyeAnglesX()) > 89.9f;
 }
 
 bool CCheaterDetection::IsChoking(CTFPlayer* pEntity)
@@ -32,13 +32,13 @@ bool CCheaterDetection::IsChoking(CTFPlayer* pEntity)
 	const bool bReturn = mData[pEntity].bChoke;
 	mData[pEntity].bChoke = false;
 
-	return Vars::CheaterDetection::Methods.Value & (1 << 1) && bReturn;
+	return Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::PacketChoking && bReturn;
 }
 
 bool CCheaterDetection::IsFlicking(CTFPlayer* pEntity) // this is aggravating
 {
 	auto& vAngles = mData[pEntity].vAngles;
-	if (!(Vars::CheaterDetection::Methods.Value & (1 << 2)))
+	if (!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::AimFlicking))
 	{
 		vAngles.clear();
 		return false;
@@ -59,7 +59,7 @@ bool CCheaterDetection::IsFlicking(CTFPlayer* pEntity) // this is aggravating
 
 bool CCheaterDetection::IsDuckSpeed(CTFPlayer* pEntity)
 {
-	if (!(Vars::CheaterDetection::Methods.Value & (1 << 3))
+	if (!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::DuckSpeed)
 		|| !pEntity->IsDucking() || !pEntity->IsOnGround() // this may break on movement sim
 		|| pEntity->m_vecVelocity().Length2D() < pEntity->m_flMaxspeed() * 0.5f)
 	{
@@ -138,7 +138,7 @@ void CCheaterDetection::Reset()
 
 void CCheaterDetection::ReportChoke(CTFPlayer* pEntity, int iChoke)
 {
-	if (Vars::CheaterDetection::Methods.Value & (1 << 1))
+	if (Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::PacketChoking)
 	{
 		mData[pEntity].vChokes.push_back(iChoke);
 		if (mData[pEntity].vChokes.size() == 3)
@@ -158,7 +158,7 @@ void CCheaterDetection::ReportChoke(CTFPlayer* pEntity, int iChoke)
 
 void CCheaterDetection::ReportDamage(IGameEvent* pEvent)
 {
-	if (!(Vars::CheaterDetection::Methods.Value & (1 << 2)))
+	if (!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::AimFlicking))
 		return;
 
 	const int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));

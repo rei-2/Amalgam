@@ -2,80 +2,74 @@
 
 #include "../../Players/PlayerUtils.h"
 
-void CAimbotGlobal::SortTargets(std::vector<Target_t>* targets, ESortMethod method)
+void CAimbotGlobal::SortTargets(std::vector<Target_t>* targets, int iMethod)
 {	// Sort by preference
-	std::sort((*targets).begin(), (*targets).end(), [&](const Target_t& a, const Target_t& b) -> bool
-			  {
-				  switch (method)
-				  {
-					  case ESortMethod::FOV: return a.m_flFOVTo < b.m_flFOVTo;
-					  case ESortMethod::DISTANCE: return a.m_flDistTo < b.m_flDistTo;
-					  default: return false;
-				  }
-			  });
+	std::sort(targets->begin(), targets->end(), [&](const Target_t& a, const Target_t& b) -> bool
+		{
+			switch (iMethod)
+			{
+			case Vars::Aimbot::General::TargetSelectionEnum::FOV: return a.m_flFOVTo < b.m_flFOVTo;
+			case Vars::Aimbot::General::TargetSelectionEnum::Distance: return a.m_flDistTo < b.m_flDistTo;
+			default: return false;
+			}
+		});
 }
 
 void CAimbotGlobal::SortPriority(std::vector<Target_t>* targets)
 {	// Sort by priority
-	std::sort((*targets).begin(), (*targets).end(), [&](const Target_t& a, const Target_t& b) -> bool
-			  {
-				  return a.m_nPriority > b.m_nPriority;
-			  });
+	std::sort(targets->begin(), targets->end(), [&](const Target_t& a, const Target_t& b) -> bool
+		{
+			return a.m_nPriority > b.m_nPriority;
+		});
 }
 
 // this won't prevent shooting bones outside of fov
-bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo)
+bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes)
 {
-	bool bReturn = false;
-
 	float flMinFOV = 180.f;
 	for (int nHitbox = 0; nHitbox < pTarget->GetNumOfHitboxes(); nHitbox++)
 	{
-		if (!IsHitboxValid(nHitbox))
+		if (!IsHitboxValid(nHitbox, iHitboxes))
 			continue;
 
 		Vec3 vCurPos = pTarget->GetHitboxCenter(nHitbox);
 		Vec3 vCurAngleTo = Math::CalcAngle(vLocalPos, vCurPos);
 		float flCurFOVTo = Math::CalcFov(vLocalAngles, vCurAngleTo);
 
-		if (flCurFOVTo < flMinFOV && flCurFOVTo < Vars::Aimbot::General::AimFOV.Value)
+		if (flCurFOVTo < flMinFOV)
 		{
-			bReturn = true;
 			vPos = vCurPos;
 			vAngleTo = vCurAngleTo;
 			flFOVTo = flMinFOV = flCurFOVTo;
 		}
 	}
 
-	return bReturn;
+	return flMinFOV < Vars::Aimbot::General::AimFOV.Value;
 }
 
-bool CAimbotGlobal::IsHitboxValid(int nHitbox)
+bool CAimbotGlobal::IsHitboxValid(int nHitbox, int iHitboxes)
 {
-	const int iHitboxes = Vars::Aimbot::Hitscan::Hitboxes.Value;
 	switch (nHitbox)
 	{
 	case -1: return true;
-	case HITBOX_HEAD: return iHitboxes & (1 << 0);
-	case HITBOX_NECK: return iHitboxes & (1 << 1);
-	case HITBOX_LOWER_NECK:
-	case HITBOX_PELVIS:
+	case HITBOX_HEAD: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Head;
+	case HITBOX_PELVIS: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Pelvis;
 	case HITBOX_BODY:
-	case HITBOX_THORAX: return iHitboxes & (1 << 2);
+	case HITBOX_THORAX:
 	case HITBOX_CHEST:
-	case HITBOX_UPPER_CHEST:
-	case HITBOX_RIGHT_THIGH:
-	case HITBOX_LEFT_THIGH:
-	case HITBOX_RIGHT_CALF:
-	case HITBOX_LEFT_CALF: return iHitboxes & (1 << 3);
-	case HITBOX_RIGHT_FOOT:
-	case HITBOX_LEFT_FOOT:
+	case HITBOX_UPPER_CHEST: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Body;
 	case HITBOX_RIGHT_HAND:
 	case HITBOX_LEFT_HAND:
 	case HITBOX_RIGHT_UPPER_ARM:
 	case HITBOX_RIGHT_FOREARM:
 	case HITBOX_LEFT_UPPER_ARM:
-	case HITBOX_LEFT_FOREARM: return iHitboxes & (1 << 4);
+	case HITBOX_LEFT_FOREARM: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Arms;
+	case HITBOX_RIGHT_THIGH:
+	case HITBOX_LEFT_THIGH:
+	case HITBOX_RIGHT_CALF:
+	case HITBOX_LEFT_CALF:
+	case HITBOX_RIGHT_FOOT:
+	case HITBOX_LEFT_FOOT: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Legs;
 	}
 
 	return false;
@@ -106,15 +100,15 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 		if (F::PlayerUtils.IsIgnored(pPlayer->entindex()))
 			return true;
 
-		if (Vars::Aimbot::General::Ignore.Value & INVUL && pPlayer->IsInvulnerable() && pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch)
+		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Invulnerable && pPlayer->IsInvulnerable() && pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch)
 			return true;
-		if (Vars::Aimbot::General::Ignore.Value & CLOAKED && pPlayer->IsInvisible() && pPlayer->GetInvisPercentage() >= Vars::Aimbot::General::IgnoreCloakPercentage.Value)
+		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Cloaked && pPlayer->IsInvisible() && pPlayer->GetInvisPercentage() >= Vars::Aimbot::General::IgnoreCloakPercentage.Value)
 			return true;
-		if (Vars::Aimbot::General::Ignore.Value & DEADRINGER && pPlayer->m_bFeignDeathReady())
+		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::DeadRinger && pPlayer->m_bFeignDeathReady())
 			return true;
-		if (Vars::Aimbot::General::Ignore.Value & TAUNTING && pPlayer->IsTaunting())
+		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Taunting && pPlayer->IsTaunting())
 			return true;
-		if (Vars::Aimbot::General::Ignore.Value & VACCINATOR)
+		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Vaccinator)
 		{
 			switch (G::PrimaryWeaponType)
 			{
@@ -140,7 +134,7 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 				}
 			}
 		}
-		if (Vars::Aimbot::General::Ignore.Value & DISGUISED && pPlayer->IsDisguised())
+		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Disguised && pPlayer->IsDisguised())
 			return true;
 
 		return false;
@@ -158,9 +152,9 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 		if (pOwner && F::PlayerUtils.IsIgnored(pOwner->entindex()))
 			return true;
 
-		if (!(Vars::Aimbot::General::Target.Value & SENTRY) && pBuilding->IsSentrygun()
-			|| !(Vars::Aimbot::General::Target.Value & DISPENSER) && pBuilding->IsDispenser()
-			|| !(Vars::Aimbot::General::Target.Value & TELEPORTER) && pBuilding->IsTeleporter())
+		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry) && pBuilding->IsSentrygun()
+			|| !(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser) && pBuilding->IsDispenser()
+			|| !(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter) && pBuilding->IsTeleporter())
 			return true;
 
 		return false;
@@ -228,11 +222,11 @@ bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEn
 		if (vOrigin.DistTo(vPos) > 300.f)
 			continue;
 
-		bool isPlayer = pEntity->IsPlayer() && Vars::Aimbot::General::Target.Value & PLAYER;
-		bool isSentry = pEntity->IsSentrygun() && Vars::Aimbot::General::Target.Value & SENTRY;
-		bool isDispenser = pEntity->IsDispenser() && Vars::Aimbot::General::Target.Value & DISPENSER;
-		bool isTeleporter = pEntity->IsTeleporter() && Vars::Aimbot::General::Target.Value & TELEPORTER;
-		bool isNPC = pEntity->IsNPC() && Vars::Aimbot::General::Target.Value & NPC;
+		bool isPlayer = pEntity->IsPlayer() && Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players;
+		bool isSentry = pEntity->IsSentrygun() && Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry;
+		bool isDispenser = pEntity->IsDispenser() && Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser;
+		bool isTeleporter = pEntity->IsTeleporter() && Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter;
+		bool isNPC = pEntity->IsNPC() && Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs;
 		if (isPlayer || isSentry || isDispenser || isTeleporter || isNPC)
 		{
 			if (isPlayer && ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon))

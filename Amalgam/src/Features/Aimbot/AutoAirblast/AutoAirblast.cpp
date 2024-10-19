@@ -60,7 +60,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 			bShouldBlast = true;
 			break;
 		}
-		if (!bShouldBlast && Vars::Aimbot::Projectile::AutoAirblast.Value == 2) // possibly implement proj aimbot somehow ?
+		if (!bShouldBlast && Vars::Aimbot::Projectile::AutoAirblast.Value == Vars::Aimbot::Projectile::AutoAirblastEnum::Rage) // possibly implement proj aimbot somehow ?
 		{
 			Vec3 vAngle = Math::CalcAngle(vEyePos, vPos);
 			if (CanAirblastEntity(pLocal, pProjectile, vAngle, vPos))
@@ -91,7 +91,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 				bShouldBlast = true;
 				break;
 			}
-			if (!bShouldBlast && Vars::Aimbot::Projectile::AutoAirblast.Value == 2)
+			if (!bShouldBlast && Vars::Aimbot::Projectile::AutoAirblast.Value == Vars::Aimbot::Projectile::AutoAirblastEnum::Rage)
 			{
 				Vec3 vAngle = Math::CalcAngle(vEyePos, pPlayer->GetCenter());
 				if (CanAirblastEntity(pLocal, pPlayer, vAngle, vPos))

@@ -3,11 +3,6 @@
 
 class CChams
 {
-	Chams_t GetStruct(
-		std::vector<std::pair<std::string, Color_t>> Visible = { { "Original", {} } },
-		std::vector<std::pair<std::string, Color_t>> Occluded = {}
-	);
-	bool GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy);
 	bool GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams);
 
 	void StencilBegin(IMatRenderContext* pRenderContext, bool bTwoModels = false);

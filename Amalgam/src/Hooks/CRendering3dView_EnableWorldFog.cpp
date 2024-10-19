@@ -5,7 +5,7 @@ MAKE_SIGNATURE(CRendering3dView_EnableWorldFog, "client.dll", "40 53 48 83 EC ? 
 MAKE_HOOK(CRendering3dView_EnableWorldFog, S::CRendering3dView_EnableWorldFog(), void, __cdecl,
 	)
 {
-	if (!(Vars::Visuals::World::Modulations.Value & (1 << 4)) || I::EngineClient->IsTakingScreenshot() && Vars::Visuals::UI::CleanScreenshots.Value)
+	if (!(Vars::Visuals::World::Modulations.Value & Vars::Visuals::World::ModulationsEnum::Fog) || I::EngineClient->IsTakingScreenshot() && Vars::Visuals::UI::CleanScreenshots.Value)
 		return CALL_ORIGINAL();
 
 	if (!Vars::Colors::FogModulation.Value.a)

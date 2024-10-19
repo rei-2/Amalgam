@@ -260,7 +260,7 @@ void CBacktrack::Run(CUserCmd* pCmd)
 
 	// might not even be necessary
 	G::AnticipatedChoke = 0;
-	if (G::ShiftedTicks != G::MaxShift && G::PrimaryWeaponType != EWeaponType::HITSCAN && Vars::Aimbot::General::AimType.Value == 3)
+	if (G::ShiftedTicks != G::MaxShift && G::PrimaryWeaponType != EWeaponType::HITSCAN && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
 		G::AnticipatedChoke = 1;
 	if (G::ChokeAmount && !Vars::CL_Move::Fakelag::UnchokeOnAttack.Value && G::ShiftedTicks == G::ShiftedGoal && !G::DoubleTap)
 		G::AnticipatedChoke = G::ChokeGoal - G::ChokeAmount; // iffy, unsure if there is a good way to get it to work well without unchoking

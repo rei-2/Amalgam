@@ -4,48 +4,20 @@
 
 enum struct ETargetType
 {
-	UNKNOWN,
-	PLAYER,
-	SENTRY,
-	DISPENSER,
-	TELEPORTER,
-	STICKY,
+	Unknown,
+	Player,
+	Sentry,
+	Dispenser,
+	Teleporter,
+	Sticky,
 	NPC,
-	BOMBS
-};
-
-enum struct ESortMethod
-{
-	FOV,
-	DISTANCE
-};
-
-enum Target
-{
-	PLAYER = 1 << 0,
-	SENTRY = 1 << 1,
-	DISPENSER = 1 << 2,
-	TELEPORTER = 1 << 3,
-	STICKY = 1 << 4,
-	NPC = 1 << 5,
-	BOMB = 1 << 6
-};
-
-enum Ignored
-{
-	INVUL = 1 << 0,
-	CLOAKED = 1 << 1,
-	DEADRINGER = 1 << 2,
-	VACCINATOR = 1 << 3,
-	UNSIMULATED = 1 << 4,
-	DISGUISED = 1 << 5,
-	TAUNTING = 1 << 6
+	Bomb
 };
 
 struct Target_t
 {
 	CBaseEntity* m_pEntity = nullptr;
-	ETargetType m_TargetType = ETargetType::UNKNOWN;
+	ETargetType m_TargetType = ETargetType::Unknown;
 	Vec3 m_vPos = {};
 	Vec3 m_vAngleTo = {};
 	float m_flFOVTo = std::numeric_limits<float>::max();
@@ -60,11 +32,11 @@ struct Target_t
 class CAimbotGlobal
 {
 public:
-	void SortTargets(std::vector<Target_t>*, ESortMethod method);
+	void SortTargets(std::vector<Target_t>*, int iMethod);
 	void SortPriority(std::vector<Target_t>*);
 
-	bool PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo);
-	bool IsHitboxValid(int nHitbox);
+	bool PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes = Vars::Aimbot::Hitscan::HitboxesEnum::Head | Vars::Aimbot::Hitscan::HitboxesEnum::Body | Vars::Aimbot::Hitscan::HitboxesEnum::Pelvis | Vars::Aimbot::Hitscan::HitboxesEnum::Arms | Vars::Aimbot::Hitscan::HitboxesEnum::Legs);
+	bool IsHitboxValid(int nHitbox, int iHitboxes = Vars::Aimbot::Hitscan::HitboxesEnum::Head | Vars::Aimbot::Hitscan::HitboxesEnum::Body | Vars::Aimbot::Hitscan::HitboxesEnum::Pelvis | Vars::Aimbot::Hitscan::HitboxesEnum::Arms | Vars::Aimbot::Hitscan::HitboxesEnum::Legs);
 
 	bool ShouldIgnore(CBaseEntity* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	int GetPriority(int targetIdx);

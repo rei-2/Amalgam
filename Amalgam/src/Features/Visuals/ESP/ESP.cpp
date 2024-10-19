@@ -24,7 +24,7 @@ void CESP::Store(CTFPlayer* pLocal)
 
 void CESP::StorePlayers(CTFPlayer* pLocal)
 {
-	if (!(Vars::ESP::Draw.Value & (1 << 0)) || !Vars::ESP::Player.Value)
+	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Players) || !Vars::ESP::Player.Value)
 		return;
 
 	auto pResource = H::Entities.GetPR();
@@ -35,7 +35,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 		if (iIndex == I::EngineClient->GetLocalPlayer())
 		{
-			if (!(Vars::ESP::Player.Value & (1 << 2)) || !I::Input->CAM_IsThirdPerson())
+			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Local) || !I::Input->CAM_IsThirdPerson())
 				continue;
 		}
 		else
@@ -49,9 +49,9 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					continue;
 			}
 
-			if (!(Vars::ESP::Player.Value & (1 << 3) && H::Entities.IsFriend(iIndex))
-				&& !(Vars::ESP::Player.Value & (1 << 4) && F::PlayerUtils.GetPriority(iIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
-				&& pPlayer->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Player.Value & (1 << 1)) : !(Vars::ESP::Player.Value & (1 << 0)))
+			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Friends && H::Entities.IsFriend(iIndex))
+				&& !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Prioritized && F::PlayerUtils.GetPriority(iIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+				&& pPlayer->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Team) : !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Enemy))
 				continue;
 		}
 
@@ -61,10 +61,10 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		PlayerCache& tCache = m_mPlayerCache[pEntity];
 		tCache.m_flAlpha = (pPlayer->IsDormant() ? Vars::ESP::DormantAlpha.Value : Vars::ESP::ActiveAlpha.Value) / 255.f;
 		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), pPlayer->m_iTeamNum(), Vars::Colors::Relative.Value);
-		tCache.m_bBox = Vars::ESP::Player.Value & (1 << 6);
-		tCache.m_bBones = Vars::ESP::Player.Value & (1 << 8);
+		tCache.m_bBox = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Box;
+		tCache.m_bBones = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Bones;
 
-		if (Vars::ESP::Player.Value & (1 << 7) && pPlayer != pLocal)
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Distance && pPlayer != pLocal)
 		{
 			Vec3 vDelta = pPlayer->m_vecOrigin() - pLocal->m_vecOrigin();
 			tCache.m_vText.push_back({ TextBottom, std::format("[{:.0f}M]", vDelta.Length2D() / 41), Vars::Menu::Theme::Active.Value });
@@ -73,16 +73,16 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		PlayerInfo_t pi{};
 		if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 		{
-			if (Vars::ESP::Player.Value & (1 << 5))
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Name)
 				tCache.m_vText.push_back({ TextTop, F::PlayerUtils.GetPlayerName(iIndex, pi.name), Vars::Menu::Theme::Active.Value });
 
-			if (Vars::ESP::Player.Value & (1 << 17))
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Priority)
 			{
 				if (auto pTag = F::PlayerUtils.GetSignificantTag(pi.friendsID, 1))
 					tCache.m_vText.push_back({ TextTop, pTag->Name, pTag->Color });
 			}
 
-			if (Vars::ESP::Player.Value & (1 << 18))
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Labels)
 			{
 				std::vector<PriorityLabel_t*> vTags = {};
 				for (auto& iID : F::PlayerUtils.m_mPlayerTags[pi.friendsID])
@@ -116,7 +116,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		}
 
 		float flHealth = pPlayer->m_iHealth(), flMaxHealth = pPlayer->GetMaxHealth();
-		if (tCache.m_bHealthBar = Vars::ESP::Player.Value & (1 << 9))
+		if (tCache.m_bHealthBar = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::HealthBar)
 		{
 			if (flHealth > flMaxHealth)
 			{
@@ -126,7 +126,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			else
 				tCache.m_flHealth = std::clamp(flHealth / flMaxHealth, 0.f, 1.f);
 		}
-		if (Vars::ESP::Player.Value & (1 << 10))
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::HealthText)
 			tCache.m_vText.push_back({ TextHealth, std::format("{}", flHealth), flHealth > flMaxHealth ? Vars::Colors::Overheal.Value : Vars::Menu::Theme::Active.Value});
 
 		if (iClassNum == TF_CLASS_MEDIC)
@@ -134,20 +134,20 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			if (auto pMediGun = pPlayer->GetWeaponFromSlot(SLOT_SECONDARY))
 			{
 				tCache.m_flUber = std::clamp(pMediGun->As<CWeaponMedigun>()->m_flChargeLevel(), 0.f, 1.f);
-				tCache.m_bUberBar = Vars::ESP::Player.Value & (1 << 11);
-				if (Vars::ESP::Player.Value & (1 << 12))
+				tCache.m_bUberBar = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::UberBar;
+				if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::UberText)
 					tCache.m_vText.push_back({ TextUber, std::format("{:.0f}%%", tCache.m_flUber * 100.f), Vars::Menu::Theme::Active.Value });
 			}
 		}
 
-		if (Vars::ESP::Player.Value & (1 << 13))
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::ClassIcon)
 			tCache.m_iClassIcon = iClassNum - 1;
-		if (Vars::ESP::Player.Value & (1 << 14))
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::ClassText)
 			tCache.m_vText.push_back({ TextRight, GetPlayerClass(iClassNum), Vars::Menu::Theme::Active.Value });
 
-		if (Vars::ESP::Player.Value & (1 << 15) && pWeapon)
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::WeaponIcon && pWeapon)
 			tCache.m_pWeaponIcon = pWeapon->GetWeaponIcon();
-		if (Vars::ESP::Player.Value & (1 << 16) && pWeapon)
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::WeaponText && pWeapon)
 		{
 			static auto fnGetEconItemViewByLoadoutSlot = reinterpret_cast<void*(__fastcall*)(void*, int, void**)>(S::CTFPlayerSharedUtils_GetEconItemViewByLoadoutSlot());
 			static auto fnGetItemName = reinterpret_cast<const wchar_t*(__fastcall*)(void*)>(S::CEconItemView_GetItemName());
@@ -188,13 +188,13 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		}
 
 		{
-			if (Vars::ESP::Player.Value & (1 << 22) && !pPlayer->IsDormant() && pPlayer != pLocal)
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::LagCompensation && !pPlayer->IsDormant() && pPlayer != pLocal)
 			{
 				if (H::Entities.GetLagCompensation(pPlayer))
 					tCache.m_vText.push_back({ TextRight, "LAGCOMP", { 255, 100, 100, 255 } });
 			}
 
-			if (Vars::ESP::Player.Value & (1 << 23) && pResource && pPlayer != pLocal)
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Ping && pResource && pPlayer != pLocal)
 			{
 				auto pNetChan = I::EngineClient->GetNetChannelInfo();
 				if (pNetChan && !pNetChan->IsLoopback())
@@ -205,7 +205,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 				}
 			}
 
-			if (Vars::ESP::Player.Value & (1 << 24) && pResource && pPlayer != pLocal)
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::KDR && pResource && pPlayer != pLocal)
 			{
 				int iKills = pResource->GetKills(pPlayer->entindex()), iDeaths = pResource->GetDeaths(pPlayer->entindex());
 				if (iKills >= 20)
@@ -217,7 +217,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			}
 
 			// Buffs
-			if (Vars::ESP::Player.Value & (1 << 19))
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Buffs)
 			{
 				bool bCrits = false, bMiniCrits = false;
 				if (pPlayer->IsCritBoosted())
@@ -275,7 +275,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			}
 
 			// Debuffs
-			if (Vars::ESP::Player.Value & (1 << 20))
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Debuffs)
 			{
 				if (pPlayer->InCond(TF_COND_STUNNED))
 					tCache.m_vText.push_back({ TextRight, "STUNNED", { 255, 175, 0, 255 } });
@@ -294,7 +294,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			}
 
 			// Misc
-			if (Vars::ESP::Player.Value & (1 << 21))
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Misc)
 			{
 				if (Vars::Visuals::Removals::Taunts.Value && pPlayer->InCond(TF_COND_TAUNTING))
 					tCache.m_vText.push_back({ TextRight, "TAUNT", { 255, 100, 200, 255 } });
@@ -332,7 +332,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 void CESP::StoreBuildings(CTFPlayer* pLocal)
 {
-	if (!(Vars::ESP::Draw.Value & (1 << 1)) || !Vars::ESP::Building.Value)
+	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Buildings) || !Vars::ESP::Building.Value)
 		return;
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::BUILDINGS_ALL))
@@ -345,23 +345,18 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 		{
 			if (iIndex == I::EngineClient->GetLocalPlayer())
 			{
-				if (!(Vars::ESP::Building.Value & (1 << 2)))
+				if (!(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Local))
 					continue;
 			}
 			else
 			{
-				if (!(Vars::ESP::Building.Value & (1 << 3) && H::Entities.IsFriend(iIndex))
-					&& !(Vars::ESP::Building.Value & (1 << 4) && F::PlayerUtils.GetPriority(iIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
-					&& pOwner->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Building.Value & (1 << 1)) : !(Vars::ESP::Building.Value & (1 << 0)))
-				{
-					if (!(Vars::ESP::Building.Value & (1 << 0)) && pOwner->m_iTeamNum() != pLocal->m_iTeamNum())
-						continue;
-					if (!(Vars::ESP::Building.Value & (1 << 1)) && pOwner->m_iTeamNum() == pLocal->m_iTeamNum())
-						continue;
-				}
+				if (!(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Friends && H::Entities.IsFriend(iIndex))
+					&& !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Prioritized && F::PlayerUtils.GetPriority(iIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+					&& pOwner->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Team) : !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Enemy))
+					continue;
 			}
 		}
-		else if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Building.Value & (1 << 1)) : !(Vars::ESP::Building.Value & (1 << 0)))
+		else if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Team) : !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Enemy))
 			continue;
 
 		bool bIsMini = pBuilding->m_bMiniBuilding();
@@ -369,15 +364,15 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 		BuildingCache& tCache = m_mBuildingCache[pEntity];
 		tCache.m_flAlpha = Vars::ESP::ActiveAlpha.Value / 255.f;
 		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), (pOwner ? pOwner : pEntity)->m_iTeamNum(), Vars::Colors::Relative.Value);
-		tCache.m_bBox = Vars::ESP::Building.Value & (1 << 6);
+		tCache.m_bBox = Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Box;
 
-		if (Vars::ESP::Building.Value & (1 << 7))
+		if (Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Distance)
 		{
 			Vec3 vDelta = pEntity->m_vecOrigin() - pLocal->m_vecOrigin();
 			tCache.m_vText.push_back({ TextBottom, std::format("[{:.0f}M]", vDelta.Length2D() / 41), Vars::Menu::Theme::Active.Value });
 		}
 
-		if (Vars::ESP::Building.Value & (1 << 5))
+		if (Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Name)
 		{
 			const char* szName = "Building";
 			switch (pEntity->GetClassID())
@@ -390,22 +385,22 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 		}
 
 		float flHealth = pBuilding->m_iHealth(), flMaxHealth = pBuilding->m_iMaxHealth();
-		if (tCache.m_bHealthBar = Vars::ESP::Building.Value & (1 << 8))
+		if (tCache.m_bHealthBar = Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::HealthBar)
 			tCache.m_flHealth = flHealth / flMaxHealth;
-		if (Vars::ESP::Building.Value & (1 << 9))
+		if (Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::HealthText)
 			tCache.m_vText.push_back({ TextHealth, std::format("{}", flHealth), Vars::Menu::Theme::Active.Value });
 
-		if (Vars::ESP::Building.Value & (1 << 10) && !pBuilding->m_bWasMapPlaced() && pOwner)
+		if (Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Owner && !pBuilding->m_bWasMapPlaced() && pOwner)
 		{
 			PlayerInfo_t pi{};
 			if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 				tCache.m_vText.push_back({ TextTop, F::PlayerUtils.GetPlayerName(iIndex, pi.name), Vars::Menu::Theme::Active.Value });
 		}
 
-		if (Vars::ESP::Building.Value & (1 << 11) && !bIsMini)
+		if (Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Level && !bIsMini)
 			tCache.m_vText.push_back({ TextRight, std::format("{} / {}", pBuilding->m_iUpgradeLevel(), bIsMini ? 1 : 3), Vars::Menu::Theme::Active.Value});
 
-		if (Vars::ESP::Building.Value & (1 << 12))
+		if (Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Flags)
 		{
 			float flConstructed = pBuilding->m_flPercentageConstructed();
 			if (flConstructed < 1.f)
@@ -433,7 +428,7 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 
 void CESP::StoreProjectiles(CTFPlayer* pLocal)
 {
-	if (!(Vars::ESP::Draw.Value & (1 << 2)) || !Vars::ESP::Projectile.Value)
+	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Projectiles) || !Vars::ESP::Projectile.Value)
 		return;
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
@@ -504,37 +499,32 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 
 			if (iIndex == I::EngineClient->GetLocalPlayer())
 			{
-				if (!(Vars::ESP::Projectile.Value & (1 << 2)))
+				if (!(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Local))
 					continue;
 			}
 			else
 			{
-				if (!(Vars::ESP::Projectile.Value & (1 << 3) && H::Entities.IsFriend(iIndex))
-					&& !(Vars::ESP::Projectile.Value & (1 << 4) && F::PlayerUtils.GetPriority(iIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
-					&& pOwner->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Projectile.Value & (1 << 1)) : !(Vars::ESP::Projectile.Value & (1 << 0)))
-				{
-					if (!(Vars::ESP::Projectile.Value & (1 << 0)) && pOwner->m_iTeamNum() != pLocal->m_iTeamNum())
-						continue;
-					if (!(Vars::ESP::Projectile.Value & (1 << 1)) && pOwner->m_iTeamNum() == pLocal->m_iTeamNum())
-						continue;
-				}
+				if (!(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Friends && H::Entities.IsFriend(iIndex))
+					&& !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Prioritized && F::PlayerUtils.GetPriority(iIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+					&& pOwner->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Team) : !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Enemy))
+					continue;
 			}
 		}
-		else if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Projectile.Value & (1 << 1)) : !(Vars::ESP::Projectile.Value & (1 << 0)))
+		else if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Team) : !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Enemy))
 			continue;
 
 		WorldCache& tCache = m_mWorldCache[pEntity];
 		tCache.m_flAlpha = Vars::ESP::ActiveAlpha.Value / 255.f;
 		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), (pOwner ? pOwner : pEntity)->m_iTeamNum(), Vars::Colors::Relative.Value);
-		tCache.m_bBox = Vars::ESP::Projectile.Value & (1 << 6);
+		tCache.m_bBox = Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Box;
 
-		if (Vars::ESP::Projectile.Value & (1 << 7))
+		if (Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Distance)
 		{
 			Vec3 vDelta = pEntity->m_vecOrigin() - pLocal->m_vecOrigin();
 			tCache.m_vText.push_back({ TextBottom, std::format("[{:.0f}M]", vDelta.Length2D() / 41), Vars::Menu::Theme::Active.Value });
 		}
 
-		if (Vars::ESP::Projectile.Value & (1 << 5))
+		if (Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Name)
 		{
 			const char* szName = "Projectile";
 			switch (pEntity->GetClassID())
@@ -583,25 +573,30 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			}
 			tCache.m_vText.push_back({ TextTop, szName, Vars::Menu::Theme::Active.Value });
 		}
+
+		if (Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Flags)
+		{
+			// do stuff like crit here
+		}
 	}
 }
 
 void CESP::StoreObjective(CTFPlayer* pLocal)
 {
-	if (!(Vars::ESP::Draw.Value & (1 << 3)) || !Vars::ESP::Objective.Value)
+	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Objective) || !Vars::ESP::Objective.Value)
 		return;
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_OBJECTIVE))
 	{
-		if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Objective.Value & (1 << 1)) : !(Vars::ESP::Objective.Value & (1 << 0)))
+		if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Team) : !(Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Enemy))
 			continue;
 
 		WorldCache& tCache = m_mWorldCache[pEntity];
 		tCache.m_flAlpha = Vars::ESP::ActiveAlpha.Value / 255.f;
 		tCache.m_tColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), pEntity->m_iTeamNum(), Vars::Colors::Relative.Value);
-		tCache.m_bBox = Vars::ESP::Objective.Value & (1 << 3);
+		tCache.m_bBox = Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Box;
 
-		if (Vars::ESP::Objective.Value & (1 << 4))
+		if (Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Distance)
 		{
 			Vec3 vDelta = pEntity->m_vecOrigin() - pLocal->m_vecOrigin();
 			tCache.m_vText.push_back({ TextBottom, std::format("[{:.0f}M]", vDelta.Length2D() / 41), Vars::Menu::Theme::Active.Value });
@@ -613,10 +608,10 @@ void CESP::StoreObjective(CTFPlayer* pLocal)
 		{
 			auto pIntel = pEntity->As<CCaptureFlag>();
 
-			if (Vars::ESP::Objective.Value & (1 << 2))
+			if (Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Name)
 				tCache.m_vText.push_back({ TextTop, "Intel", Vars::Menu::Theme::Active.Value });
 
-			if (Vars::ESP::Objective.Value & (1 << 5))
+			if (Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Flags)
 			{
 				switch (pIntel->m_nFlagStatus())
 				{
@@ -631,7 +626,7 @@ void CESP::StoreObjective(CTFPlayer* pLocal)
 				}
 			}
 
-			if (Vars::ESP::Objective.Value & (1 << 6) && pIntel->m_nFlagStatus() == TF_FLAGINFO_DROPPED)
+			if (Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::IntelReturnTime && pIntel->m_nFlagStatus() == TF_FLAGINFO_DROPPED)
 			{
 				float flReturnTime = std::max(pIntel->m_flResetTime() - TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick), 0.f);
 				tCache.m_vText.push_back({ TextRight, std::format("RETURN {:.1f}S", pIntel->m_flResetTime() - TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick)).c_str(), { 255, 175, 0, 255 } });
@@ -645,7 +640,7 @@ void CESP::StoreObjective(CTFPlayer* pLocal)
 
 void CESP::StoreWorld()
 {
-	if (Vars::ESP::Draw.Value & (1 << 4))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::NPCs)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_NPC))
 		{
@@ -665,7 +660,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 5))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Health)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PICKUPS_HEALTH))
 		{
@@ -675,7 +670,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 6))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Ammo)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PICKUPS_AMMO))
 		{
@@ -685,7 +680,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 7))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Money)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PICKUPS_MONEY))
 		{
@@ -695,7 +690,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 8))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Powerups)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PICKUPS_POWERUP))
 		{
@@ -726,7 +721,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 9))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Bombs)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_BOMBS))
 		{
@@ -736,7 +731,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 10))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Spellbook)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PICKUPS_SPELLBOOK))
 		{
@@ -746,7 +741,7 @@ void CESP::StoreWorld()
 		}
 	}
 
-	if (Vars::ESP::Draw.Value & (1 << 11))
+	if (Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Gargoyle)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_GARGOYLE))
 		{
@@ -769,7 +764,7 @@ void CESP::Draw()
 
 void CESP::DrawPlayers()
 {
-	if (!(Vars::ESP::Draw.Value & (1 << 0)) || !Vars::ESP::Player.Value)
+	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Players) || !Vars::ESP::Player.Value)
 		return;
 
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
@@ -864,7 +859,7 @@ void CESP::DrawPlayers()
 
 void CESP::DrawBuildings()
 {
-	if (!(Vars::ESP::Draw.Value & (1 << 1)) || !Vars::ESP::Building.Value)
+	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Buildings) || !Vars::ESP::Building.Value)
 		return;
 
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);

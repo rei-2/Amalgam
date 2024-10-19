@@ -240,7 +240,7 @@ const char* CPlayerlistUtils::GetPlayerName(int iIndex, const char* sDefault, in
 	{
 		if (iIndex == I::EngineClient->GetLocalPlayer())
 		{
-			if (Vars::Visuals::UI::StreamerMode.Value > 0)
+			if (Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Local)
 			{
 				if (pType) *pType = 1;
 				return "Local";
@@ -248,13 +248,13 @@ const char* CPlayerlistUtils::GetPlayerName(int iIndex, const char* sDefault, in
 		}
 		else if (H::Entities.IsFriend(iIndex))
 		{
-			if (Vars::Visuals::UI::StreamerMode.Value > 1)
+			if (Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Friends)
 			{
 				if (pType) *pType = 1;
 				return "Friend";
 			}
 		}
-		else if (Vars::Visuals::UI::StreamerMode.Value > 2)
+		else if (Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::All)
 		{
 			if (auto pTag = GetSignificantTag(iIndex, 0))
 			{

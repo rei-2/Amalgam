@@ -5,28 +5,20 @@
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
 
-Chams_t CChams::GetStruct(std::vector<std::pair<std::string, Color_t>> Visible, std::vector<std::pair<std::string, Color_t>> Occluded)
-{
-	return Chams_t{
-		Visible,
-		Occluded
-	};
-}
-
-bool CChams::GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
+inline bool GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
 {
 	if (Vars::Chams::Player::Local.Value && pEntity == pLocal
 		|| Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
 		|| Vars::Chams::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
 	{
-		*pChams = GetStruct(Vars::Chams::Player::Visible.Value, Vars::Chams::Player::Occluded.Value);
+		*pChams = Chams_t(Vars::Chams::Player::Visible.Value, Vars::Chams::Player::Occluded.Value);
 		return true;
 	}
 
 	const bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 	*pChams = bTeam
-		? GetStruct(Vars::Chams::Friendly::Visible.Value, Vars::Chams::Friendly::Occluded.Value)
-		: GetStruct(Vars::Chams::Enemy::Visible.Value, Vars::Chams::Enemy::Occluded.Value);
+		? Chams_t(Vars::Chams::Friendly::Visible.Value, Vars::Chams::Friendly::Occluded.Value)
+		: Chams_t(Vars::Chams::Enemy::Visible.Value, Vars::Chams::Enemy::Occluded.Value);
 	return bTeam ? bFriendly : bEnemy;
 }
 
@@ -134,7 +126,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	}
 	// objective chams
 	case ETFClassID::CCaptureFlag:
-		*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::Objective.Value;
 	// npc chams
 	case ETFClassID::CHeadlessHatman:
@@ -142,29 +134,29 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CMerasmus:
 	case ETFClassID::CZombie:
 	case ETFClassID::CEyeballBoss:
-		*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::NPCs.Value;
 	// pickup chams
 	case ETFClassID::CTFAmmoPack:
 	case ETFClassID::CCurrencyPack:
 	case ETFClassID::CHalloweenGiftPickup:
-		*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::Pickups.Value;
 	case ETFClassID::CBaseAnimating:
 	{
 		if (H::Entities.IsAmmo(pEntity) || H::Entities.IsHealth(pEntity))
 		{
-			*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+			*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 			return Vars::Chams::World::Pickups.Value;
 		}
 		else if (H::Entities.IsPowerup(pEntity))
 		{
-			*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+			*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 			return Vars::Chams::World::Powerups.Value;
 		}
 		else if (H::Entities.IsSpellbook(pEntity))
 		{
-			*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+			*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 			return Vars::Chams::World::Halloween.Value;
 		}
 		break;
@@ -172,16 +164,16 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	// bomb chams
 	case ETFClassID::CTFPumpkinBomb:
 	case ETFClassID::CTFGenericBomb:
-		*pChams = GetStruct(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
+		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::Bombs.Value;
 	}
 
 	// player chams
 	auto pOwner = pEntity->m_hOwnerEntity().Get();
-	if (!pOwner || !pOwner->IsPlayer())
-		return false;
-		
-	return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Players.Value, Vars::Chams::Enemy::Players.Value);
+	if (pOwner && pOwner->IsPlayer())
+		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Players.Value, Vars::Chams::Enemy::Players.Value);
+
+	return false;
 }
 
 void CChams::StencilBegin(IMatRenderContext* pRenderContext, bool bTwoModels)
@@ -228,8 +220,6 @@ void CChams::StencilEnd(IMatRenderContext* pRenderContext, bool bTwoModels)
 
 void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* pRenderContext, bool bExtra)
 {
-	bRendering = true;
-
 	auto visibleMaterials = chams.Visible.size() ? chams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
 	auto occludedMaterials = chams.Occluded.size() ? chams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
 
@@ -253,7 +243,11 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 
 		if (bInvert)
 			pRenderContext->CullMode(MATERIAL_CULLMODE_CW);
+
+		bRendering = true;
 		pEntity->DrawModel(STUDIO_RENDER);
+		bRendering = false;
+
 		if (bInvert)
 			pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
 	}
@@ -277,7 +271,11 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 
 			if (bInvert)
 				pRenderContext->CullMode(MATERIAL_CULLMODE_CW);
+
+			bRendering = true;
 			pEntity->DrawModel(STUDIO_RENDER);
+			bRendering = false;
+
 			if (bInvert)
 				pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
 		}
@@ -287,8 +285,6 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 	I::RenderView->SetColorModulation(1.f, 1.f, 1.f);
 	I::RenderView->SetBlend(1.f);
 	I::ModelRender->ForcedMaterialOverride(nullptr);
-
-	bRendering = false;
 
 	if (!bExtra)
 		mEntities[pEntity->entindex()] = true;
@@ -328,7 +324,7 @@ void CChams::Store(CTFPlayer* pLocal)
 
 					if (bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() || bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
 					{
-						tChams = GetStruct(Vars::Chams::Backtrack::Visible.Value, {});
+						tChams = Chams_t(Vars::Chams::Backtrack::Visible.Value, {});
 						vEntities.push_back({ pEntity, tChams, true });
 					}
 				}
@@ -337,7 +333,7 @@ void CChams::Store(CTFPlayer* pLocal)
 			// fakeangle
 			if (Vars::Chams::FakeAngle::Enabled.Value && pEntity == pLocal && F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup)
 			{
-				tChams = GetStruct(Vars::Chams::FakeAngle::Visible.Value, {});
+				tChams = Chams_t(Vars::Chams::FakeAngle::Visible.Value, {});
 				vEntities.push_back({ pEntity, tChams, true });
 			}
 		}
@@ -403,14 +399,14 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 
 	switch (Vars::Chams::Backtrack::Draw.Value)
 	{
-	case 0: // last
+	case Vars::Chams::Backtrack::DrawEnum::Last: // last
 	{
 		auto vLastRec = vRecords.end() - 1;
 		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
 			drawModel(vLastRec->vOrigin, pState, pInfo, vLastRec->BoneMatrix.aBones);
 		break;
 	}
-	case 1: // last + first
+	case Vars::Chams::Backtrack::DrawEnum::LastFirst: // last + first
 	{
 		auto vFirstRec = vRecords.begin();
 		if (vFirstRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vFirstRec->vOrigin) > 0.1f)
@@ -420,7 +416,7 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 			drawModel(vLastRec->vOrigin, pState, pInfo, vLastRec->BoneMatrix.aBones);
 		break;
 	}
-	case 2: // all
+	case Vars::Chams::Backtrack::DrawEnum::All: // all
 	{
 		for (auto& record : vRecords)
 		{

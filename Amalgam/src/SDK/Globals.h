@@ -25,6 +25,7 @@ struct DrawPath
 	std::deque<Vec3> m_vPath;
 	float m_flTime;
 	Color_t m_color;
+	int m_iStyle;
 	bool m_bZBuffer = false;
 };
 

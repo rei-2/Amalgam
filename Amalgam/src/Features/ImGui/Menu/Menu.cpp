@@ -161,7 +161,7 @@ void CMenu::MenuAimbot()
 					FTooltip("this should probably stay on if you want to be able to\ntarget hitboxes other than the highest priority one");
 					FSlider("offset## nospread", Vars::Aimbot::General::NoSpreadOffset, -1.f, 1.f, 0.5f, "%g", FSlider_Precision);
 					FSlider("average", Vars::Aimbot::General::NoSpreadAverage, 1, 25);
-					FDropdown("aim holds fire", Vars::Aimbot::General::AimHoldsFire, { "false", "minigun only", "true" });
+					FDropdown("aim holds fire", Vars::Aimbot::General::AimHoldsFire, { "false", "minigun only", "always" });
 				} EndSection();
 			}
 			if (Section("Backtrack"))
@@ -674,11 +674,12 @@ void CMenu::MenuVisuals()
 			if (Section("Particles"))
 			{
 				// https://developer.valvesoftware.com/wiki/Team_Fortress_2/Particles
+				// https://forums.alliedmods.net/showthread.php?t=127111
 				FSDropdown("Bullet trail", Vars::Visuals::Particles::BulletTrail, { "Off", "Machina", "C.A.P.P.E.R", "Short Circuit", "Merasmus ZAP", "Merasmus ZAP 2", "Big Nasty", "Distortion Trail", "Black Ink", "Line", "Beam" }, FDropdown_Left | FSDropdown_Custom);
 				FSDropdown("Crit trail", Vars::Visuals::Particles::CritTrail, { "Off", "Machina", "C.A.P.P.E.R", "Short Circuit", "Merasmus ZAP", "Merasmus ZAP 2", "Big Nasty", "Distortion Trail", "Black Ink", "Line", "Beam" }, FDropdown_Right | FSDropdown_Custom);
-				FSDropdown("Medigun beam", Vars::Visuals::Particles::MedigunBeam, { "Off", "None", "Uber", "Dispenser", "Passtime", "Bombonomicon", "White" }, FDropdown_Left | FSDropdown_Custom);
-				FSDropdown("Medigun charge", Vars::Visuals::Particles::MedigunCharge, { "Off", "None", "Electrocuted", "Halloween", "Fireball", "Burning", "Scorching", "Purple energy", "Green energy", "Nebula", "Purple stars", "Green stars", "Sunbeams", "Spellbound", "Purple sparks", "Yellow sparks", "Green zap", "Yellow zap", "Plasma", "Frostbite", "Time warp", "Purple souls", "Green souls", "Bubbles", "Hearts" }, FDropdown_Right | FSDropdown_Custom);
-				FSDropdown("Projectile trail", Vars::Visuals::Particles::ProjectileTrail, { "Off", "None", "Rocket", "Critical", "Energy", "Charged", "Ray", "Fireball", "Fire", "Flame", "Sparks", "Flare", "Trail", "Health", "Smoke", "Bubbles", "Halloween", "Monoculus", "Sparkles", "Rainbow" }, FDropdown_Left | FSDropdown_Custom);
+				FSDropdown("Medigun beam", Vars::Visuals::Particles::MedigunBeam, { "Off", "None", "Uber", "Dispenser", "Passtime", "Bombonomicon", "White", "Orange" }, FDropdown_Left | FSDropdown_Custom);
+				FSDropdown("Medigun charge", Vars::Visuals::Particles::MedigunCharge, { "Off", "None", "Electrocuted", "Halloween", "Fireball", "Teleport", "Burning", "Scorching", "Purple energy", "Green energy", "Nebula", "Purple stars", "Green stars", "Sunbeams", "Spellbound", "Purple sparks", "Yellow sparks", "Green zap", "Yellow zap", "Plasma", "Frostbite", "Time warp", "Purple souls", "Green souls", "Bubbles", "Hearts" }, FDropdown_Right | FSDropdown_Custom);
+				FSDropdown("Projectile trail", Vars::Visuals::Particles::ProjectileTrail, { "Off", "None", "Rocket", "Critical", "Energy", "Charged", "Ray", "Fireball", "Teleport", "Fire", "Flame", "Sparks", "Flare", "Trail", "Health", "Smoke", "Bubbles", "Halloween", "Monoculus", "Sparkles", "Rainbow" }, FDropdown_Left | FSDropdown_Custom);
 				FDropdown("Spell footsteps", Vars::Visuals::Particles::SpellFootsteps, { "Off", "Color", "Team", "Halloween" }, {}, FDropdown_Right, 1);
 				FColorPicker("Spell footstep", Vars::Colors::SpellFootstep, 0, FColorPicker_Dropdown);
 				FToggle("Draw icons through walls", Vars::Visuals::Particles::DrawIconsThroughWalls);
@@ -708,16 +709,20 @@ void CMenu::MenuVisuals()
 			} EndSection();
 			if (Section("Simulation"))
 			{
-				FColorPicker("Prediction line color", Vars::Colors::Prediction, 1); FColorPicker("Projectile line color", Vars::Colors::Projectile);
-				FToggle("Enabled", Vars::Visuals::Simulation::Enabled);
-				FToggle("Timed", Vars::Visuals::Simulation::Timed, FToggle_Middle);
-				FDropdown("Style", Vars::Visuals::Simulation::Style, { "Line", "Separators", "Spaced" }, {}, FDropdown_Left);
-				FDropdown("Splash radius", Vars::Visuals::Simulation::SplashRadius, { "Simulation", "##Divider", "Priority", "Enemy", "Team", "Local", "Friends", "##Divider", "Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace" }, {}, FDropdown_Right | FDropdown_Multi);
-				FColorPicker("Clipped line color", Vars::Colors::ProjectileClipped);
-				FToggle("Projectile trajectory", Vars::Visuals::Simulation::ProjectileTrajectory);
+				FDropdown("Player path", Vars::Visuals::Simulation::PlayerPath, { "Off", "Line", "Separators", "Spaced" }, {}, FDropdown_Left, 2);
+				FColorPicker("Player path", Vars::Colors::PlayerPath, 0, FColorPicker_Dropdown | FColorPicker_Tooltip); FColorPicker("Player path clipped", Vars::Colors::PlayerPathClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FDropdown("Projectile path", Vars::Visuals::Simulation::ProjectilePath, { "Off", "Line", "Separators", "Spaced" }, {}, FDropdown_Right, 2);
+				FColorPicker("Projectile path", Vars::Colors::ProjectilePath, 0, FColorPicker_Dropdown | FColorPicker_Tooltip); FColorPicker("Projectile path clipped", Vars::Colors::ProjectilePathClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FDropdown("Trajectory path", Vars::Visuals::Simulation::TrajectoryPath, { "Off", "Line", "Separators", "Spaced" }, {}, FDropdown_Left, 2);
+				FColorPicker("Trajectory path", Vars::Colors::TrajectoryPath, 0, FColorPicker_Dropdown | FColorPicker_Tooltip); FColorPicker("Trajectory path clipped", Vars::Colors::TrajectoryPathClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FDropdown("Shot path", Vars::Visuals::Simulation::ShotPath, { "Off", "Line", "Separators", "Spaced" }, {}, FDropdown_Right, 2);
+				FColorPicker("Shot path", Vars::Colors::ShotPath, 0, FColorPicker_Dropdown | FColorPicker_Tooltip); FColorPicker("Shot path clipped", Vars::Colors::ShotPathClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FDropdown("Splash radius", Vars::Visuals::Simulation::SplashRadius, { "Simulation", "##Divider", "Priority", "Enemy", "Team", "Local", "Friends", "##Divider", "Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace" }, {}, FDropdown_Multi, 2);
+				FColorPicker("Splash radius", Vars::Colors::SplashRadius, 0, FColorPicker_Dropdown | FColorPicker_Tooltip); FColorPicker("Splash radius clipped", Vars::Colors::SplashRadiusClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FToggle("Timed", Vars::Visuals::Simulation::Timed);
+				FToggle("Box", Vars::Visuals::Simulation::Box, FToggle_Middle);
+				FToggle("Swing prediction lines", Vars::Visuals::Simulation::SwingLines);
 				FToggle("Projectile camera", Vars::Visuals::Simulation::ProjectileCamera, FToggle_Middle);
-				FToggle("Trajectory on shot", Vars::Visuals::Simulation::TrajectoryOnShot);
-				FToggle("Swing prediction lines", Vars::Visuals::Simulation::SwingLines, FToggle_Middle);
 			} EndSection();
 			if (Vars::Debug::Info.Value)
 			{
@@ -750,13 +755,15 @@ void CMenu::MenuVisuals()
 			}
 			if (Section("Hitbox"))
 			{
-				FDropdown("Enabled", Vars::Visuals::Hitbox::Enabled, { "On shot", "On hit" }, {}, FDropdown_Multi, 6);
-				SameLine(); Dummy({ 2, 0 });
-				FColorPicker("Bound edge color", Vars::Colors::BoundHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
-				FColorPicker("Bound face color", Vars::Colors::BoundHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FDropdown("Enabled", Vars::Visuals::Hitbox::Enabled, { "On shot", "On hit" }, {}, FDropdown_Multi, 8);
+				FColorPicker("Target edge color", Vars::Colors::TargetHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FColorPicker("Target face color", Vars::Colors::TargetHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
 				SameLine(); Dummy({ 2, 0 });
 				FColorPicker("Bone edge color", Vars::Colors::BoneHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
 				FColorPicker("Bone face color", Vars::Colors::BoneHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				SameLine(); Dummy({ 2, 0 });
+				FColorPicker("Bound edge color", Vars::Colors::BoundHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+				FColorPicker("Bound face color", Vars::Colors::BoundHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
 			} EndSection();
 			if (Section("Thirdperson"))
 			{

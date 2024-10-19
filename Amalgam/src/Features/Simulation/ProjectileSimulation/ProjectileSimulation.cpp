@@ -27,7 +27,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, int(SDK::AttribHookValue(0, "centerfire_projectile", pWeapon)) == 1 ? 0.f : 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		float flSpeed = pPlayer->IsPrecisionRune() ? 3000.f : SDK::AttribHookValue(1100.f, "mult_projectile_speed", pWeapon);
-		out = { TF_PROJECTILE_ROCKET, vPos, vAngle, { 0.f, 0.f, 0.f }, bQuick ? 3783722.f : flSpeed, 0.f, true, bQuick ? 0.015f : 60.f };
+		out = { TF_PROJECTILE_ROCKET, vPos, vAngle, { 0.f, 0.f, 0.f }, flSpeed, 0.f, true };
 		return true;
 	}
 	case TF_WEAPON_PARTICLE_CANNON:
@@ -38,7 +38,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		if (pWeapon->GetWeaponID() == TF_WEAPON_DRG_POMSON)
 			vPos.z -= 13.f;
 		float flSpeed = pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON ? 1100.f : 1200.f;
-		out = { TF_PROJECTILE_ENERGY_RING, vPos, vAngle, { 1.f, 1.f, 1.f }, bQuick ? 3783722.f : flSpeed, 0.f, true, bQuick ? 0.015f : 60.f };
+		out = { TF_PROJECTILE_ENERGY_RING, vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, 0.f, true };
 		return true;
 	}
 	case TF_WEAPON_GRENADELAUNCHER: // vphysics projectiles affected by server start gravity

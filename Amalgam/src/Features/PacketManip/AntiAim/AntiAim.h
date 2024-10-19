@@ -12,7 +12,6 @@ private:
 	float GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake);
 	float GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake);
 
-	float CalculateCustomRealPitch(float flWishPitch);
 	float GetPitch(float flCurPitch);
 
 public:

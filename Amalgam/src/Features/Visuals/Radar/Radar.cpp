@@ -14,7 +14,7 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 
 	switch (Vars::Radar::Main::Style.Value)
 	{
-	case 0:
+	case Vars::Radar::Main::StyleEnum::Circle:
 	{
 		const float flDist = vDelta.Length2D();
 		if (flDist > flRange)
@@ -26,7 +26,7 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 		}
 		break;
 	}
-	case 1:
+	case Vars::Radar::Main::StyleEnum::Rectangle:
 		if (fabs(vPos.x) > flRange || fabs(vPos.y) > flRange)
 		{
 			if (!Vars::Radar::Main::AlwaysDraw.Value)
@@ -56,14 +56,14 @@ void CRadar::DrawBackground()
 
 	switch (Vars::Radar::Main::Style.Value)
 	{
-	case 0:
+	case Vars::Radar::Main::StyleEnum::Circle:
 	{
 		const float flRadius = info.w / 2.f;
 		H::Draw.FillCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, backgroundColor);
 		H::Draw.LineCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, accentColor);
 		break;
 	}
-	case 1:
+	case Vars::Radar::Main::StyleEnum::Rectangle:
 		H::Draw.FillRect(info.x, info.y, info.w, info.w, backgroundColor);
 		H::Draw.LineRect(info.x, info.y, info.w, info.w, accentColor);
 	}
@@ -79,7 +79,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 	{
 		const int iSize = Vars::Radar::World::IconSize.Value;
 
-		if (Vars::Radar::World::Draw.Value & (1 << 6))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Gargoyle)
 		{
 			for (auto pGargy : H::Entities.GetGroup(EGroupType::WORLD_GARGOYLE))
 			{
@@ -97,7 +97,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & (1 << 5))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Spellbook)
 		{
 			for (auto pBook : H::Entities.GetGroup(EGroupType::PICKUPS_SPELLBOOK))
 			{
@@ -115,7 +115,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & (1 << 4))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Powerup)
 		{
 			for (auto pPower : H::Entities.GetGroup(EGroupType::PICKUPS_POWERUP))
 			{
@@ -133,7 +133,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & (1 << 3))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Bombs)
 		{
 			for (auto bBomb : H::Entities.GetGroup(EGroupType::WORLD_BOMBS))
 			{
@@ -151,7 +151,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & (1 << 2))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Money)
 		{
 			for (auto pBook : H::Entities.GetGroup(EGroupType::PICKUPS_MONEY))
 			{
@@ -169,7 +169,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & (1 << 1))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Ammo)
 		{
 			for (auto pAmmo : H::Entities.GetGroup(EGroupType::PICKUPS_AMMO))
 			{
@@ -187,7 +187,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			}
 		}
 
-		if (Vars::Radar::World::Draw.Value & (1 << 0))
+		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Health)
 		{
 			for (auto pHealth : H::Entities.GetGroup(EGroupType::PICKUPS_HEALTH))
 			{
@@ -223,16 +223,12 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int nIndex = pOwner->entindex();
 					if (nIndex != I::EngineClient->GetLocalPlayer() && pOwner != H::Entities.GetObservedTarget())
 					{
-						if (!(Vars::Radar::Buildings::Draw.Value & (1 << 3) && H::Entities.IsFriend(nIndex))
-							&& !(Vars::Radar::Buildings::Draw.Value & (1 << 4) && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority))
-						{
-							if (!(Vars::Radar::Buildings::Draw.Value & (1 << 1)) && pOwner->As<CTFPlayer>()->m_iTeamNum() != pLocal->m_iTeamNum())
-								continue;
-							if (!(Vars::Radar::Buildings::Draw.Value & (1 << 2)) && pOwner->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum())
-								continue;
-						}
+						if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
+							&& !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Prioritized && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+							&& pOwner->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Team) : !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Enemy))
+							continue;
 					}
-					else if (!(Vars::Radar::Buildings::Draw.Value & (1 << 0)))
+					else if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Local))
 						continue;
 				}
 			}
@@ -297,18 +293,14 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			const int nIndex = pPlayer->entindex();
 			if (nIndex != I::EngineClient->GetLocalPlayer() && pPlayer != H::Entities.GetObservedTarget())
 			{
-				if (!(Vars::Radar::Players::Draw.Value & (1 << 3) && H::Entities.IsFriend(nIndex))
-					&& !(Vars::Radar::Players::Draw.Value & (1 << 4) && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority))
-				{
-					if (!(Vars::Radar::Players::Draw.Value & (1 << 1)) && pPlayer->m_iTeamNum() != pLocal->m_iTeamNum())
-						continue;
-					if (!(Vars::Radar::Players::Draw.Value & (1 << 2)) && pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
-						continue;
-				}
+				if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
+					&& !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Prioritized && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+					&& pPlayer->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Team) : !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Enemy))
+					continue;
 			}
-			else if (!(Vars::Radar::Players::Draw.Value & (1 << 0)))
+			else if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Local))
 				continue;
-			if (!(Vars::Radar::Players::Draw.Value & (1 << 5)) && pPlayer->m_flInvisibility() >= 1.f)
+			if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Cloaked) && pPlayer->m_flInvisibility() >= 1.f)
 				continue;
 
 			int x, y, z;
@@ -326,7 +318,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 
 				switch (Vars::Radar::Players::IconType.Value)
 				{
-				case 2:
+				case Vars::Radar::Players::IconTypeEnum::Avatars:
 				{
 					PlayerInfo_t pi{};
 					if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && !pi.fakeplayer)
@@ -336,14 +328,14 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					}
 					[[fallthrough]];
 				}
-				case 1:
+				case Vars::Radar::Players::IconTypeEnum::Portraits:
 					if (pPlayer->IsInValidTeam())
 					{
 						H::Draw.Texture(x, y, iSize, iSize, pPlayer->m_iClass() + (pPlayer->m_iTeamNum() == TF_TEAM_RED ? 9 : 18) - 1);
 						break;
 					}
 					[[fallthrough]];
-				case 0:
+				case Vars::Radar::Players::IconTypeEnum::Icons:
 					H::Draw.Texture(x, y, iSize, iSize, pPlayer->m_iClass() - 1);
 					break;
 				}

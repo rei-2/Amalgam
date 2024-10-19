@@ -7,7 +7,7 @@
 MAKE_HOOK(IVModelRender_ForcedMaterialOverride, U::Memory.GetVFunc(I::ModelRender, 1), void, __fastcall,
 	IVModelRender* rcx, IMaterial* mat, OverrideType_t type)
 {
-	if (F::Chams.bRendering && mat && !F::Materials.mMatList.contains(mat) || F::Glow.bRendering)
+	if (F::Chams.bRendering || F::Glow.bRendering)
 		return;
 
 	CALL_ORIGINAL(rcx, mat, type);

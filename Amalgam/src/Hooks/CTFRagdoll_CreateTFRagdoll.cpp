@@ -21,12 +21,12 @@ MAKE_HOOK(CTFRagdoll_CreateTFRagdoll, S::CTFRagdoll_CreateTFRagdoll(), void, __f
 		}
 
 		pRagdoll->m_bGib() = false;
-		pRagdoll->m_bBurning() = Vars::Visuals::Ragdolls::Effects.Value & (1 << 0);
-		pRagdoll->m_bElectrocuted() = Vars::Visuals::Ragdolls::Effects.Value & (1 << 1);
-		pRagdoll->m_bBecomeAsh() = Vars::Visuals::Ragdolls::Effects.Value & (1 << 2);
-		pRagdoll->m_bDissolving() = Vars::Visuals::Ragdolls::Effects.Value & (1 << 3);
-		pRagdoll->m_bGoldRagdoll() = Vars::Visuals::Ragdolls::Type.Value == 1;
-		pRagdoll->m_bIceRagdoll() = Vars::Visuals::Ragdolls::Type.Value == 2;
+		pRagdoll->m_bBurning() = Vars::Visuals::Ragdolls::Effects.Value & Vars::Visuals::Ragdolls::EffectsEnum::Burning;
+		pRagdoll->m_bElectrocuted() = Vars::Visuals::Ragdolls::Effects.Value & Vars::Visuals::Ragdolls::EffectsEnum::Electrocuted;
+		pRagdoll->m_bBecomeAsh() = Vars::Visuals::Ragdolls::Effects.Value & Vars::Visuals::Ragdolls::EffectsEnum::Ash;
+		pRagdoll->m_bDissolving() = Vars::Visuals::Ragdolls::Effects.Value & Vars::Visuals::Ragdolls::EffectsEnum::Dissolve;
+		pRagdoll->m_bGoldRagdoll() = Vars::Visuals::Ragdolls::Type.Value == Vars::Visuals::Ragdolls::TypeEnum::Gold;
+		pRagdoll->m_bIceRagdoll() = Vars::Visuals::Ragdolls::Type.Value == Vars::Visuals::Ragdolls::TypeEnum::Ice;
 
 		pRagdoll->m_vecForce() *= Vars::Visuals::Ragdolls::Force.Value;
 		pRagdoll->m_vecForce().x *= Vars::Visuals::Ragdolls::ForceHorizontal.Value;

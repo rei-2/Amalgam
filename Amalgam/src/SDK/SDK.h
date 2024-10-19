@@ -58,53 +58,6 @@
 #define VK_Y              0x59
 #define VK_Z              0x5A
 
-enum DataCenter_t // i'm not sure all of these are actually used for tf2 servers
-{
-	// North America
-	DC_ATL = 1 << 0, // Atlanta
-	DC_ORD = 1 << 1, // Chicago
-	DC_DFW = 1 << 2, // Texas
-	DC_LAX = 1 << 3, // Los Angeles
-	DC_EAT = 1 << 4, // Moses Lake
-	DC_JFK = 1 << 5, // New York
-	DC_SEA = 1 << 6, // Seattle
-	DC_IAD = 1 << 7, // Virginia
-
-	// Europe
-	DC_AMS = 1 << 8, // Amsterdam
-	DC_FRA = 1 << 9, // Frankfurt
-	DC_HEL = 1 << 10, // Helsinki
-	DC_LHR = 1 << 11, // London
-	DC_MAD = 1 << 12, // Madrid
-	DC_PAR = 1 << 13, // Paris
-	DC_STO = 1 << 14, /*& DC_STO2*/ // Stockholm
-	DC_VIE = 1 << 15, // Vienna
-	DC_WAW = 1 << 16, // Warsaw
-
-	// South America
-	DC_EZE = 1 << 17, // Buenos Aires
-	DC_LIM = 1 << 18, // Lima
-	DC_SCL = 1 << 19, // Santiago
-	DC_GRU = 1 << 20, // Sao Paulo
-
-	// Asia
-	DC_BOM2 = 1 << 21, // Bombay
-	DC_MAA = 1 << 22, // Chennai
-	DC_DXB = 1 << 23, // Dubai
-	DC_HKG = 1 << 24, // Hong Kong
-	DC_MAA2 = 1 << 25, // Madras
-	DC_BOM = 1 << 26, // Mumbai
-	DC_SEO = 1 << 27, // Seoul
-	DC_SGP = 1 << 28, // Singapore
-	DC_TYO = 1 << 29, // Tokyo
-
-	// Australia
-	DC_SYD = 1 << 30, // Sydney
-
-	// Africa
-	DC_JNB = 1 << 31, // Johannesburg
-};
-
 template <typename T> int sign(T val)
 {
 	return (val > T(0)) - (val < T(0));

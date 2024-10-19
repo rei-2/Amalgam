@@ -53,7 +53,7 @@ void CAntiAim::FakeShotAngles(CUserCmd* pCmd)
 		return;
 
 	G::SilentAngles = true;
-	pCmd->viewangles.x = CalculateCustomRealPitch(-pCmd->viewangles.x) + 180;
+	pCmd->viewangles.x = -pCmd->viewangles.x + 180;
 	pCmd->viewangles.y += 180;
 }
 
@@ -100,16 +100,16 @@ void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealY
 float CAntiAim::GetYawOffset(CTFPlayer* pEntity, bool bFake)
 {
 	const int iMode = bFake ? Vars::AntiHack::AntiAim::YawFake.Value : Vars::AntiHack::AntiAim::YawReal.Value;
-	const bool bUpPitch = bFake ? Vars::AntiHack::AntiAim::PitchFake.Value == 1 : Vars::AntiHack::AntiAim::PitchReal.Value == 1;
+	const bool bUpPitch = (bFake ? Vars::AntiHack::AntiAim::PitchFake.Value : Vars::AntiHack::AntiAim::PitchReal.Value) == Vars::AntiHack::AntiAim::PitchRealEnum::Up;
 	switch (iMode)
 	{
-		case 0: return 0.f;
-		case 1: return 135.f;
-		case 2: return -135.f;
-		case 3: return 180.f;
-		case 4: return (GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch) ? 1 : -1) * (bFake ? -135 : 135);
-		case 5: return (bFake ? Vars::AntiHack::AntiAim::FakeJitter.Value : Vars::AntiHack::AntiAim::RealJitter.Value) * (I::GlobalVars->tickcount % 2 ? -1 : 1);
-		case 6: return fmod(I::GlobalVars->tickcount * Vars::AntiHack::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Forward: return 0.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Left: return 135.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Right: return -135.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Backwards: return 180.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Edge: return (GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch) ? 1 : -1) * (bFake ? -135 : 135);
+	case Vars::AntiHack::AntiAim::YawEnum::Jitter: return (bFake ? Vars::AntiHack::AntiAim::FakeJitter.Value : Vars::AntiHack::AntiAim::RealJitter.Value) * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	case Vars::AntiHack::AntiAim::YawEnum::Spin: return fmod(I::GlobalVars->tickcount * Vars::AntiHack::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
 	}
 	return 0.f;
 }
@@ -120,27 +120,27 @@ float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 	const float flOffset = bFake ? Vars::AntiHack::AntiAim::FakeYawOffset.Value : Vars::AntiHack::AntiAim::RealYawOffset.Value;
 	switch (iMode) // 0 offset, 1 at player
 	{
-		case 0: return pCmd->viewangles.y + flOffset;
-		case 1:
+	case Vars::AntiHack::AntiAim::YawModeEnum::View: return pCmd->viewangles.y + flOffset;
+	case Vars::AntiHack::AntiAim::YawModeEnum::Target:
+	{
+		float flSmallestAngleTo = 0.f; float flSmallestFovTo = 360.f;
+		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 		{
-			float flSmallestAngleTo = 0.f; float flSmallestFovTo = 360.f;
-			for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
-			{
-				auto pPlayer = pEntity->As<CTFPlayer>();
-				if (!pPlayer->IsAlive() || pPlayer->IsDormant())
-					continue;
-
-				PlayerInfo_t pi{};
-				if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && F::PlayerUtils.IsIgnored(pi.friendsID))
-					continue;
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (!pPlayer->IsAlive() || pPlayer->IsDormant() || F::PlayerUtils.IsIgnored(pPlayer->entindex()))
+				continue;
 			
-				const Vec3 vAngleTo = Math::CalcAngle(pLocal->GetAbsOrigin(), pPlayer->GetAbsOrigin());
-				const float flFOVTo = Math::CalcFov(I::EngineClient->GetViewAngles(), vAngleTo);
+			const Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), pPlayer->m_vecOrigin());
+			const float flFOVTo = Math::CalcFov(I::EngineClient->GetViewAngles(), vAngleTo);
 
-				if (flFOVTo < flSmallestFovTo) { flSmallestAngleTo = vAngleTo.y; flSmallestFovTo = flFOVTo; }
+			if (flFOVTo < flSmallestFovTo)
+			{
+				flSmallestAngleTo = vAngleTo.y;
+				flSmallestFovTo = flFOVTo;
 			}
-			return (flSmallestFovTo == 360.f ? pCmd->viewangles.y + flOffset : flSmallestAngleTo + flOffset);
 		}
+		return (flSmallestFovTo == 360.f ? pCmd->viewangles.y + flOffset : flSmallestAngleTo + flOffset);
+	}
 	}
 	return pCmd->viewangles.y;
 }
@@ -152,38 +152,35 @@ float CAntiAim::GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 	return flYaw;
 }
 
-float CAntiAim::CalculateCustomRealPitch(float flWishPitch)
-{
-	switch (Vars::AntiHack::AntiAim::PitchFake.Value)
-	{
-	case 1: return flWishPitch - 360;
-	case 2: return flWishPitch + 360;
-	case 3: return flWishPitch - 360 * (I::GlobalVars->tickcount % 2 ? -1 : 1);
-	case 4: return flWishPitch + 360 * (I::GlobalVars->tickcount % 2 ? -1 : 1);
-	default: return flWishPitch;
-	}
-}
-
 float CAntiAim::GetPitch(float flCurPitch)
 {
+	float flRealPitch = 0.f, flFakePitch = 0.f;
+
 	switch (Vars::AntiHack::AntiAim::PitchReal.Value)
 	{
-	case 1: return CalculateCustomRealPitch(-89.f);
-	case 2: return CalculateCustomRealPitch(89.f);
-	case 3: return CalculateCustomRealPitch(0.f);
-	case 4: return CalculateCustomRealPitch(-89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1));
-	case 5: return CalculateCustomRealPitch(89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1));
+	case Vars::AntiHack::AntiAim::PitchRealEnum::Up: flRealPitch = -89.f; break;
+	case Vars::AntiHack::AntiAim::PitchRealEnum::Down: flRealPitch = 89.f; break;
+	case Vars::AntiHack::AntiAim::PitchRealEnum::Zero: flRealPitch = 0.f; break;
+	case Vars::AntiHack::AntiAim::PitchRealEnum::Jitter: flRealPitch = -89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
+	case Vars::AntiHack::AntiAim::PitchRealEnum::ReverseJitter: flRealPitch = 89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
 	}
 
 	switch (Vars::AntiHack::AntiAim::PitchFake.Value)
 	{
-	case 1: return -89.f;
-	case 2: return 89.f;
-	case 3: return -89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1);
-	case 4: return 89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	case Vars::AntiHack::AntiAim::PitchFakeEnum::Up: flFakePitch = -89.f; break;
+	case Vars::AntiHack::AntiAim::PitchFakeEnum::Down: flFakePitch = 89.f; break;
+	case Vars::AntiHack::AntiAim::PitchFakeEnum::Jitter: flFakePitch = -89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
+	case Vars::AntiHack::AntiAim::PitchFakeEnum::ReverseJitter: flFakePitch = 89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
 	}
 
-	return flCurPitch;
+	if (Vars::AntiHack::AntiAim::PitchReal.Value && Vars::AntiHack::AntiAim::PitchFake.Value)
+		return flRealPitch + (flFakePitch > 0.f ? 360 : -360);
+	else if (Vars::AntiHack::AntiAim::PitchReal.Value)
+		return flRealPitch;
+	else if (Vars::AntiHack::AntiAim::PitchFake.Value)
+		return flFakePitch;
+	else
+		return flCurPitch;
 }
 
 

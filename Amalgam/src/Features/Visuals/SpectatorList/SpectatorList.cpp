@@ -62,7 +62,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 
 void CSpectatorList::Run(CTFPlayer* pLocal)
 {
-	if (!(Vars::Menu::Indicators.Value & (1 << 2)))
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Spectators))
 	{
 		m_mRespawnCache.clear();
 		return;

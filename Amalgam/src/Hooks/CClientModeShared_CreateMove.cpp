@@ -22,7 +22,6 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 
 	bool* pSendPacket = reinterpret_cast<bool*>(uintptr_t(_AddressOfReturnAddress()) + 0x128);
 
-	//bool bOldAttacking = G::IsAttacking; // removeme
 	G::PSilentAngles = G::SilentAngles = G::IsAttacking = G::IsThrowing = false;
 	G::LastUserCmd = G::CurrentUserCmd ? G::CurrentUserCmd : pCmd;
 	G::CurrentUserCmd = pCmd;
@@ -97,38 +96,6 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				}
 			}
 		}
-
-		/*
-		if (Vars::Aimbot::General::AimType.Value && Vars::Debug::Info.Value) // removeme
-		{
-			float flAttack1 = pWeapon->m_flNextPrimaryAttack();
-			float flAttack2 = pLocal->m_flNextAttack();
-			float flTime = TICKS_TO_TIME(pLocal->m_nTickBase());
-			int iChoked = I::ClientState->chokedcommands;
-			bool bAttack = G::LastUserCmd->buttons & IN_ATTACK;
-
-			bool bTime = flAttack1 <= flTime && flAttack2 <= flTime;
-			float flDiff1 = flTime - flAttack1;
-			float flDiff2 = flTime - flAttack2;
-
-			auto tColor = Vars::Menu::Theme::Accent.Value;
-			tColor.a = bOldAttacking ? 255 : G::CanPrimaryAttack ? 127 : bTime ? 10 : 0;
-
-			SDK::Output(
-				"Can attack",
-				std::format(
-					"\n\t({} | {}) <= {}\n\t{} ({}, {})",
-					flAttack1, flAttack2, flTime,
-					bTime, flDiff1, flDiff2
-				).c_str(),
-				tColor
-			);
-			I::CVar->ConsoleColorPrintf(iChoked ? Vars::Menu::Theme::Accent.Value : Color_t(), std::format("\t{}", iChoked).c_str());
-			I::CVar->ConsolePrintf(", ");
-			I::CVar->ConsoleColorPrintf(bAttack ? Vars::Menu::Theme::Accent.Value : Color_t(), std::format("{}\n", bAttack).c_str());
-			I::CVar->ConsoleColorPrintf(Color_t(), std::format("\t{}, {}\n", pWeapon->m_bInReload(), pWeapon->m_iReloadMode()).c_str());
-		}
-		*/
 
 		G::IsAttacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);
 		G::PrimaryWeaponType = SDK::GetWeaponType(pWeapon, &G::SecondaryWeaponType);

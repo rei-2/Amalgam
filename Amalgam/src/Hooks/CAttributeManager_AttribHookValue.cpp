@@ -21,9 +21,9 @@ MAKE_HOOK(CAttributeManager_AttribHookInt, S::CAttributeManager_AttribHookInt(),
 	{
 		switch (Vars::Visuals::Particles::SpellFootsteps.Value)
 		{
-		case 2: return 1;
-		case 3: return 2;
-		default: return ColorToInt(Vars::Colors::SpellFootstep.Value);
+		case Vars::Visuals::Particles::SpellFootstepsEnum::Color: return ColorToInt(Vars::Colors::SpellFootstep.Value);
+		case Vars::Visuals::Particles::SpellFootstepsEnum::Team: return 1;
+		case Vars::Visuals::Particles::SpellFootstepsEnum::Halloween: return 2;
 		}
 	}
 

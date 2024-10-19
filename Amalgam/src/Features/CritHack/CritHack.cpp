@@ -11,40 +11,40 @@ void CCritHack::Fill(const CUserCmd* pCmd, int n)
 {
 	static int iStart = pCmd->command_number;
 
-	for (auto& [iSlot, tStorage] : Storage)
+	for (auto& [iSlot, tStorage] : m_mStorage)
 	{
-		for (auto it = tStorage.CritCommands.begin(); it != tStorage.CritCommands.end();)
+		for (auto it = tStorage.m_vCritCommands.begin(); it != tStorage.m_vCritCommands.end();)
 		{
 			if (*it <= pCmd->command_number)
-				it = tStorage.CritCommands.erase(it);
+				it = tStorage.m_vCritCommands.erase(it);
 			else
 				++it;
 		}
-		for (auto it = tStorage.SkipCommands.begin(); it != tStorage.SkipCommands.end();)
+		for (auto it = tStorage.m_vSkipCommands.begin(); it != tStorage.m_vSkipCommands.end();)
 		{
 			if (*it <= pCmd->command_number)
-				it = tStorage.SkipCommands.erase(it);
+				it = tStorage.m_vSkipCommands.erase(it);
 			else
 				++it;
 		}
 
 		for (int i = 0; i < n; i++)
 		{
-			if (tStorage.CritCommands.size() >= unsigned(n))
+			if (tStorage.m_vCritCommands.size() >= unsigned(n))
 				break;
 
 			const int iCmdNum = iStart + i;
-			if (IsCritCommand(iSlot, tStorage.EntIndex, iCmdNum))
-				tStorage.CritCommands.push_back(iCmdNum);
+			if (IsCritCommand(iSlot, tStorage.m_iEntIndex, iCmdNum))
+				tStorage.m_vCritCommands.push_back(iCmdNum);
 		}
 		for (int i = 0; i < n; i++)
 		{
-			if (tStorage.SkipCommands.size() >= unsigned(n))
+			if (tStorage.m_vSkipCommands.size() >= unsigned(n))
 				break;
 
 			const int iCmdNum = iStart + i;
-			if (IsCritCommand(iSlot, tStorage.EntIndex, iCmdNum, false))
-				tStorage.SkipCommands.push_back(iCmdNum);
+			if (IsCritCommand(iSlot, tStorage.m_iEntIndex, iCmdNum, false))
+				tStorage.m_vSkipCommands.push_back(iCmdNum);
 		}
 	}
 
@@ -63,7 +63,7 @@ bool CCritHack::IsCritCommand(int iSlot, int iIndex, const i32 command_number, c
 		return bCrit ? iRandom < 100 : !(iRandom < 6000);
 	else
 	{
-		const int iRange = (CritChance - 0.1f) * WEAPON_RANDOM_RANGE;
+		const int iRange = (m_flCritChance - 0.1f) * WEAPON_RANDOM_RANGE;
 		return bCrit ? iRandom < iRange : !(iRandom < iRange);
 	}
 }
@@ -79,11 +79,12 @@ u32 CCritHack::DecryptOrEncryptSeed(int iSlot, int iIndex, u32 uSeed)
 
 void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	const int iSlot = pWeapon->GetSlot();
+	int iSlot = pWeapon->GetSlot();
+	auto& tStorage = m_mStorage[iSlot];
 
 	static float flOldBucket = 0.f; static int iOldID = 0, iOldCritChecks = 0, iOldCritSeedRequests = 0;
 	const float flBucket = pWeapon->m_flCritTokenBucket(); const int iID = pWeapon->GetWeaponID(), iCritChecks = pWeapon->m_nCritChecks(), iCritSeedRequests = pWeapon->m_nCritSeedRequests();
-	const bool bMatch = Storage[iSlot].Damage > 0 && flOldBucket == flBucket && iOldID == iID && iOldCritChecks == iCritChecks && iOldCritSeedRequests == iCritSeedRequests;
+	const bool bMatch = tStorage.m_flDamage > 0 && flOldBucket == flBucket && iOldID == iID && iOldCritChecks == iCritChecks && iOldCritSeedRequests == iCritSeedRequests;
 
 	auto pWeaponInfo = pWeapon->GetWeaponInfo();
 	if (bMatch || !pWeaponInfo)
@@ -102,7 +103,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		nProjectilesPerShot = SDK::AttribHookValue(nProjectilesPerShot, "mult_bullets_per_shot", pWeapon);
 	else
 		nProjectilesPerShot = 1;
-	Storage[iSlot].Damage = flDamage *= nProjectilesPerShot;
+	tStorage.m_flDamage = flDamage *= nProjectilesPerShot;
 
 	if (tWeaponData.m_bUseRapidFireCrits)
 	{
@@ -112,22 +113,22 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	}
 
 	float flMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapValClamped(float(iCritSeedRequests + 1) / (iCritChecks + 1), 0.1f, 1.f, 1.f, 3.f);
-	Storage[iSlot].Cost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER * flMult;
+	tStorage.m_flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER * flMult;
 
 	if (flBucketCap)
-		Storage[iSlot].PotentialCrits = (flBucketCap - Storage[iSlot].Damage) / (3 * flDamage / (iSlot == SLOT_MELEE ? 2 : 1) - Storage[iSlot].Damage);
+		tStorage.m_iPotentialCrits = (flBucketCap - tStorage.m_flDamage) / (3 * flDamage / (iSlot == SLOT_MELEE ? 2 : 1) - tStorage.m_flDamage);
 
 	int iCrits = 0;
 	{
 		int shots = iCritChecks, crits = iCritSeedRequests;
 		float bucket = flBucket, flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER;
-		const int iAttempts = std::min(Storage[iSlot].PotentialCrits + 1, 100);
+		const int iAttempts = std::min(tStorage.m_iPotentialCrits + 1, 100);
 		for (int i = 0; i < iAttempts; i++)
 		{
 			shots++; crits++;
 
 			flMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapValClamped(float(crits) / shots, 0.1f, 1.f, 1.f, 3.f);
-			bucket = std::min(bucket + Storage[iSlot].Damage, flBucketCap) - flCost * flMult;
+			bucket = std::min(bucket + tStorage.m_flDamage, flBucketCap) - flCost * flMult;
 			if (bucket < 0.f)
 				break;
 
@@ -138,7 +139,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	if (!iCrits)
 	{
 		int shots = iCritChecks + 1, crits = iCritSeedRequests + 1;
-		float bucket = std::min(flBucket + Storage[iSlot].Damage, flBucketCap), flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER;
+		float bucket = std::min(flBucket + tStorage.m_flDamage, flBucketCap), flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER;
 		for (int i = 0; i < 100; i++)
 		{
 			iCrits--;
@@ -146,39 +147,39 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 				shots++;
 
 			flMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapValClamped(float(crits) / shots, 0.1f, 1.f, 1.f, 3.f);
-			bucket = std::min(bucket + Storage[iSlot].Damage, flBucketCap);
+			bucket = std::min(bucket + tStorage.m_flDamage, flBucketCap);
 			if (bucket >= flCost * flMult)
 				break;
 		}
 	}
 
-	Storage[iSlot].AvailableCrits = iCrits;
+	tStorage.m_iAvailableCrits = iCrits;
 }
 
 void CCritHack::CanFireCritical(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	CritBanned = false;
-	DamageTilUnban = 0;
+	m_bCritBanned = false;
+	m_iDamageTilUnban = 0;
 
 	if (pWeapon->GetSlot() == SLOT_MELEE)
-		CritChance = TF_DAMAGE_CRIT_CHANCE_MELEE * pLocal->GetCritMult();
+		m_flCritChance = TF_DAMAGE_CRIT_CHANCE_MELEE * pLocal->GetCritMult();
 	else if (pWeapon->IsRapidFire())
 	{
-		CritChance = TF_DAMAGE_CRIT_CHANCE_RAPID * pLocal->GetCritMult();
-		float flNonCritDuration = (TF_DAMAGE_CRIT_DURATION_RAPID / CritChance) - TF_DAMAGE_CRIT_DURATION_RAPID;
-		CritChance = 1.f / flNonCritDuration;
+		m_flCritChance = TF_DAMAGE_CRIT_CHANCE_RAPID * pLocal->GetCritMult();
+		float flNonCritDuration = (TF_DAMAGE_CRIT_DURATION_RAPID / m_flCritChance) - TF_DAMAGE_CRIT_DURATION_RAPID;
+		m_flCritChance = 1.f / flNonCritDuration;
 	}
 	else
-		CritChance = TF_DAMAGE_CRIT_CHANCE * pLocal->GetCritMult();
-	CritChance = SDK::AttribHookValue(CritChance, "mult_crit_chance", pWeapon) + 0.1f;
+		m_flCritChance = TF_DAMAGE_CRIT_CHANCE * pLocal->GetCritMult();
+	m_flCritChance = SDK::AttribHookValue(m_flCritChance, "mult_crit_chance", pWeapon) + 0.1f;
 
-	if (!AllDamage || !CritDamage || pWeapon->GetSlot() == SLOT_MELEE)
+	if (!m_iAllDamage || !m_iCritDamage || pWeapon->GetSlot() == SLOT_MELEE)
 		return;
 
-	const float flNormalizedDamage = (float)CritDamage / TF_DAMAGE_CRIT_MULTIPLIER;
-	const float flObservedCritChance = flNormalizedDamage / (flNormalizedDamage + AllDamage - CritDamage);
-	if (CritBanned = flObservedCritChance > CritChance)
-		DamageTilUnban = flNormalizedDamage / CritChance + CritDamage - flNormalizedDamage - AllDamage;
+	const float flNormalizedDamage = m_iCritDamage / TF_DAMAGE_CRIT_MULTIPLIER;
+	const float flObservedCritChance = flNormalizedDamage / (flNormalizedDamage + m_iAllDamage - m_iCritDamage);
+	if (m_bCritBanned = flObservedCritChance > m_flCritChance)
+		m_iDamageTilUnban = flNormalizedDamage / m_flCritChance + m_iCritDamage - flNormalizedDamage - m_iAllDamage;
 }
 
 bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon)
@@ -231,37 +232,37 @@ void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 		if (!pWeapon)
 			break;
 
-		const int iSlot = pWeapon->GetSlot();
-		const int iDefIndex = pWeapon->m_iItemDefinitionIndex();
+		int iSlot = pWeapon->GetSlot();
+		auto& tStorage = m_mStorage[iSlot];
 		mWeapons[iSlot] = true;
+		int iEntIndex = pWeapon->entindex();
+		int iDefIndex = pWeapon->m_iItemDefinitionIndex();
 
-		if (Storage[iSlot].DefIndex == iDefIndex)
-			continue;
+		if (tStorage.m_iEntIndex != iEntIndex || tStorage.m_iDefIndex != iDefIndex)
+		{
+			tStorage = { iEntIndex, iDefIndex };
 
-		Storage[iSlot] = {};
-		Storage[iSlot].EntIndex = pWeapon->entindex();
-		Storage[iSlot].DefIndex = iDefIndex;
-
-		SDK::Output("Crithack", std::format("Resetting weapon {}", iDefIndex).c_str(), { 0, 255, 255, 255 }, Vars::Debug::Logging.Value);
+			SDK::Output("Crithack", std::format("Resetting weapon {}", iDefIndex).c_str(), { 0, 255, 255, 255 }, Vars::Debug::Logging.Value);
+		}
 	}
 
-	for (auto& [iSlot, _] : Storage)
+	for (auto& [iSlot, _] : m_mStorage)
 	{
 		if (!mWeapons[iSlot])
-			Storage[iSlot] = {};
+			m_mStorage[iSlot] = {};
 	}
 }
 
 void CCritHack::Reset()
 {
-	Storage = {};
+	m_mStorage = {};
 
-	CritDamage = 0;
-	AllDamage = 0;
+	m_iCritDamage = 0;
+	m_iAllDamage = 0;
 
-	CritBanned = false;
-	DamageTilUnban = 0;
-	CritChance = 0.f;
+	m_bCritBanned = false;
+	m_iDamageTilUnban = 0;
+	m_flCritChance = 0.f;
 
 	SDK::Output("Crithack", "Resetting all", { 0, 255, 255, 255 }, Vars::Debug::Logging.Value);
 }
@@ -293,12 +294,13 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	else if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && !(G::LastUserCmd->buttons & IN_ATTACK))
 		bAttacking = false;
 
-	const int iSlot = pWeapon->GetSlot();
-	const bool bRapidFire = pWeapon->IsRapidFire();
-	const bool bStreamWait = pWeapon->IsRapidFire() && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
+	int iSlot = pWeapon->GetSlot();
+	auto& tStorage = m_mStorage[iSlot];
+	bool bRapidFire = pWeapon->IsRapidFire();
+	bool bStreamWait = pWeapon->IsRapidFire() && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
 
-	const int closestCrit = !Storage[iSlot].CritCommands.empty() ? Storage[iSlot].CritCommands.front() : 0;
-	const int closestSkip = !Storage[iSlot].SkipCommands.empty() ? Storage[iSlot].SkipCommands.front() : 0;
+	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
+	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
 
 	static bool bFirstTimePredicted = true;
 	if (!I::ClientState->chokedcommands)
@@ -307,7 +309,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	{
 		bFirstTimePredicted = false;
 
-		const bool bCanCrit = Storage[pWeapon->GetSlot()].AvailableCrits > 0 && (!CritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
+		const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
 		const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
 		if (bCanCrit && bPressed && closestCrit)
 			pCmd->command_number = closestCrit;
@@ -318,12 +320,12 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	//	pCmd->command_number = closestSkip;
 
 	//if (pCmd->command_number == closestCrit || pCmd->command_number == closestSkip)
-	WishRandomSeed = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
+	m_iWishRandomSeed = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
 
 	if (pCmd->command_number == closestCrit)
-		Storage[iSlot].CritCommands.pop_front();
+		tStorage.m_vCritCommands.pop_front();
 	else if (pCmd->command_number == closestSkip)
-		Storage[iSlot].SkipCommands.pop_front();
+		tStorage.m_vSkipCommands.pop_front();
 }
 
 bool CCritHack::CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
@@ -340,10 +342,10 @@ bool CCritHack::CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pW
 			return false;
 	}
 
-	if (WishRandomSeed)
+	if (m_iWishRandomSeed)
 	{
-		*G::RandomSeed() = WishRandomSeed;
-		WishRandomSeed = 0;
+		*G::RandomSeed() = m_iWishRandomSeed;
+		m_iWishRandomSeed = 0;
 	}
 
 	return true;
@@ -362,20 +364,20 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		const int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
 		const int iAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
 		const bool bCrit = pEvent->GetBool("crit") || pEvent->GetBool("minicrit");
-		const int iDamage = mHealthStorage.contains(iVictim) ? std::min(pEvent->GetInt("damageamount"), mHealthStorage[iVictim]) : pEvent->GetInt("damageamount");
+		const int iDamage = m_mHealthStorage.contains(iVictim) ? std::min(pEvent->GetInt("damageamount"), m_mHealthStorage[iVictim]) : pEvent->GetInt("damageamount");
 		const auto iWeaponID = pEvent->GetInt("weaponid");
 
 		if (iVictim == iAttacker || iAttacker != pLocal->entindex() || iWeaponID != pWeapon->GetWeaponID() || pWeapon->GetSlot() == SLOT_MELEE) // weapon id stuff is dumb simplification
 			return;
 
-		AllDamage += iDamage;
+		m_iAllDamage += iDamage;
 		if (bCrit && !pLocal->IsCritBoosted())
-			CritDamage += iDamage;
+			m_iCritDamage += iDamage;
 
 		return;
 	}
 	case FNV1A::Hash32Const("teamplay_round_start"):
-		AllDamage = CritDamage = 0;
+		m_iAllDamage = m_iCritDamage = 0;
 		return;
 	case FNV1A::Hash32Const("client_beginconnect"):
 	case FNV1A::Hash32Const("client_disconnect"):
@@ -390,18 +392,18 @@ void CCritHack::Store()
 	if (!pResource)
 		return;
 
-	for (auto it = mHealthStorage.begin(); it != mHealthStorage.end();)
+	for (auto it = m_mHealthStorage.begin(); it != m_mHealthStorage.end();)
 	{
 		if (I::ClientEntityList->GetClientEntity(it->first))
 			++it;
 		else
-			it = mHealthStorage.erase(it);
+			it = m_mHealthStorage.erase(it);
 	}
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		if (pPlayer->IsAlive() && !pPlayer->IsAGhost())
-			mHealthStorage[pPlayer->entindex()] = pPlayer->IsDormant() ? pResource->GetHealth(pPlayer->entindex()) : pPlayer->m_iHealth();
+			m_mHealthStorage[pPlayer->entindex()] = pPlayer->IsDormant() ? pResource->GetHealth(pPlayer->entindex()) : pPlayer->m_iHealth();
 	}
 }
 
@@ -409,7 +411,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 {
 	static auto tf_weapon_criticals = U::ConVars.FindVar("tf_weapon_criticals");
 	const bool bWeaponCriticals = tf_weapon_criticals ? tf_weapon_criticals->GetBool() : true;
-	if (!(Vars::Menu::Indicators.Value & (1 << 1)) || !I::EngineClient->IsInGame() || !bWeaponCriticals)
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::CritHack) || !I::EngineClient->IsInGame() || !bWeaponCriticals)
 		return;
 
 	auto pWeapon = H::Entities.GetWeapon();
@@ -440,7 +442,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		const auto bRapidFire = pWeapon->IsRapidFire();
 		const float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
 
-		if (Storage[iSlot].Damage > 0)
+		if (m_mStorage[iSlot].m_flDamage > 0)
 		{
 			if (pLocal->IsCritBoosted())
 				H::Draw.String(fFont, x, y, { 100, 255, 255, 255 }, align, "Crit Boosted");
@@ -449,9 +451,9 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				const float flTime = pWeapon->m_flCritTime() - flTickBase;
 				H::Draw.String(fFont, x, y, { 100, 255, 255, 255 }, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
 			}
-			else if (!CritBanned)
+			else if (!m_bCritBanned)
 			{
-				if (Storage[iSlot].AvailableCrits > 0)
+				if (m_mStorage[iSlot].m_iAvailableCrits > 0)
 				{
 					if (bRapidFire && flTickBase < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
 					{
@@ -463,27 +465,27 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				}
 				else
 				{
-					const int shots = -Storage[iSlot].AvailableCrits;
+					const int shots = -m_mStorage[iSlot].m_iAvailableCrits;
 					H::Draw.String(fFont, x, y, { 255, 150, 150, 255 }, align, shots == 1 ? std::format("Crit in {} shot", shots).c_str() : std::format("Crit in {}{} shots", shots, shots == 100 ? "+" : "").c_str());
 				}
 			}
 			else
-				H::Draw.String(fFont, x, y, { 255, 150, 150, 255 }, align, std::format("Deal {} damage", DamageTilUnban).c_str());
+				H::Draw.String(fFont, x, y, { 255, 150, 150, 255 }, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
 
-			H::Draw.String(fFont, x, y + fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, align, std::format("{} / {} potential crits", std::max(Storage[iSlot].AvailableCrits, 0), Storage[iSlot].PotentialCrits).c_str());
+			H::Draw.String(fFont, x, y + fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, align, std::format("{} / {} potential crits", std::max(m_mStorage[iSlot].m_iAvailableCrits, 0), m_mStorage[iSlot].m_iPotentialCrits).c_str());
 		}
 		else
 			H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Calculating");
 
 		if (Vars::Debug::Info.Value)
 		{
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 3, {}, align, std::format("AllDamage: {}, CritDamage: {}", AllDamage, CritDamage).c_str());
+			H::Draw.String(fFont, x, y + fFont.m_nTall * 3, {}, align, std::format("AllDamage: {}, CritDamage: {}", m_iAllDamage, m_iCritDamage).c_str());
 			H::Draw.String(fFont, x, y + fFont.m_nTall * 4, {}, align, std::format("Bucket: {}", pWeapon->m_flCritTokenBucket()).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 5, {}, align, std::format("Damage: {}, Cost: {}", Storage[iSlot].Damage, Storage[iSlot].Cost).c_str());
+			H::Draw.String(fFont, x, y + fFont.m_nTall * 5, {}, align, std::format("Damage: {}, Cost: {}", m_mStorage[iSlot].m_flDamage, m_mStorage[iSlot].m_flCost).c_str());
 			H::Draw.String(fFont, x, y + fFont.m_nTall * 6, {}, align, std::format("Shots: {}, Crits: {}", pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 7, {}, align, std::format("CritBanned: {}, DamageTilUnban: {}", CritBanned, DamageTilUnban).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 8, {}, align, std::format("CritChance: {:.2f} ({:.2f})", CritChance, CritChance - 0.1f).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 9, {}, align, std::format("Force: {}, Skip: {}", Storage[iSlot].CritCommands.size(), Storage[iSlot].SkipCommands.size()).c_str());
+			H::Draw.String(fFont, x, y + fFont.m_nTall * 7, {}, align, std::format("CritBanned: {}, DamageTilUnban: {}", m_bCritBanned, m_iDamageTilUnban).c_str());
+			H::Draw.String(fFont, x, y + fFont.m_nTall * 8, {}, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance - 0.1f).c_str());
+			H::Draw.String(fFont, x, y + fFont.m_nTall * 9, {}, align, std::format("Force: {}, Skip: {}", m_mStorage[iSlot].m_vCritCommands.size(), m_mStorage[iSlot].m_vSkipCommands.size()).c_str());
 		}
 	}
 }

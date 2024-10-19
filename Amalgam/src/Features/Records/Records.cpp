@@ -11,13 +11,13 @@ static std::string yellow =	{ '\x7', 'C', '8', 'A', '9', '0', '0' }; //C8A900
 
 void CRecords::OutputInfo(int flags, std::string sName, std::string sOutput, std::string sChat)
 {
-	if (flags & (1 << 0))
+	if (flags & Vars::Logging::LogToEnum::Toasts)
 		F::Notifications.Add(sOutput);
-	if (flags & (1 << 1))
+	if (flags & Vars::Logging::LogToEnum::Chat)
 		I::ClientModeShared->m_pChatElement->ChatPrintf(0, std::format("{}{}\x1 {}", Vars::Menu::Theme::Accent.Value.ToHex(), Vars::Menu::CheatPrefix.Value, sChat).c_str());
-	if (flags & (1 << 2))
+	if (flags & Vars::Logging::LogToEnum::Party)
 		I::EngineClient->ClientCmd_Unrestricted(std::format("tf_party_chat \"{}\"", sOutput).c_str());
-	if (flags & (1 << 3))
+	if (flags & Vars::Logging::LogToEnum::Console)
 		SDK::Output(sName.c_str(), sOutput.c_str(), Vars::Menu::Theme::Accent.Value);
 }
 
@@ -37,7 +37,7 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 	{
 	case FNV1A::Hash32Const("vote_cast"): // Voting
 	{
-		if (!(Vars::Logging::Logs.Value & (1 << 1)))
+		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::VoteCast))
 			return;
 
 		const int iIndex = pEvent->GetInt("entityid");
@@ -60,7 +60,7 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 	}
 	case FNV1A::Hash32Const("player_changeclass"): // Class change
 	{
-		if (!(Vars::Logging::Logs.Value & (1 << 2)))
+		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::ClassChanges))
 			return;
 
 		const int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
@@ -82,7 +82,7 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 	}
 	case FNV1A::Hash32Const("player_hurt"): // Damage
 	{
-		if (!(Vars::Logging::Logs.Value & (1 << 3)))
+		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Damage))
 			return;
 
 		const int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
@@ -109,7 +109,7 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 	}
 	case FNV1A::Hash32Const("player_connect_client"): // tags/alias (player join)
 	{
-		if (!(Vars::Logging::Logs.Value & (1 << 5)) && !(Vars::Logging::Logs.Value & (1 << 6)) || m_bInfoOnJoin)
+		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags) && !(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases) || m_bInfoOnJoin)
 			return;
 
 		std::string sID = pEvent->GetString("networkid");
@@ -126,7 +126,6 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			auto sName = pEvent->GetString("name");
 			TagsOnJoin(sName, iID);
 			AliasOnJoin(sName, iID);
-			
 		}
 		catch (...) {}
 
@@ -157,7 +156,7 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 // Vote start
 void CRecords::UserMessage(bf_read& msgData)
 {
-	if (!(Vars::Logging::Logs.Value & (1 << 0)))
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::VoteStart))
 		return;
 
 	auto pLocal = H::Entities.GetLocal();
@@ -185,7 +184,7 @@ void CRecords::UserMessage(bf_read& msgData)
 // Cheat detection
 void CRecords::CheatDetection(std::string name, std::string action, std::string reason)
 {
-	if (!(Vars::Logging::Logs.Value & (1 << 4)))
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::CheatDetection))
 		return;
 
 	std::string sOutput = std::format("{} {} for {}", (name), (action), (reason));
@@ -196,7 +195,7 @@ void CRecords::CheatDetection(std::string name, std::string action, std::string 
 // Tags
 void CRecords::TagsOnJoin(std::string sName, uint32_t friendsID)
 {
-	if (!(Vars::Logging::Logs.Value & (1 << 5)))
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
 
 	std::vector<std::pair<std::string, std::string>> vColorsTags = {};
@@ -249,7 +248,7 @@ void CRecords::TagsOnJoin(std::string sName, uint32_t friendsID)
 }
 void CRecords::TagsChanged(std::string sName, std::string sAction, std::string sColor, std::string sTag)
 {
-	if (!(Vars::Logging::Logs.Value & (1 << 5)))
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
 
 	auto uHash = FNV1A::Hash32(sAction.c_str());
@@ -261,7 +260,7 @@ void CRecords::TagsChanged(std::string sName, std::string sAction, std::string s
 // Aliases
 void CRecords::AliasOnJoin(std::string sName, uint32_t friendsID)
 {
-	if (!(Vars::Logging::Logs.Value & (1 << 6)))
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
 
 	if (!F::PlayerUtils.m_mPlayerAliases.contains(friendsID))
@@ -275,7 +274,7 @@ void CRecords::AliasOnJoin(std::string sName, uint32_t friendsID)
 }
 void CRecords::AliasChanged(std::string sName, std::string sAction, std::string sAlias)
 {
-	if (!(Vars::Logging::Logs.Value & (1 << 6)))
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
 
 	auto uHash = FNV1A::Hash32(sAction.c_str());

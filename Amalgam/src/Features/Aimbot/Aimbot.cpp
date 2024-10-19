@@ -79,6 +79,6 @@ void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	RunAimbot(pLocal, pWeapon, pCmd);
 	RunAimbot(pLocal, pWeapon, pCmd, true);
 
-	if (Vars::Visuals::Simulation::TrajectoryOnShot.Value && G::IsAttacking && !bRan)
+	if (Vars::Visuals::Simulation::ShotPath.Value && G::IsAttacking && !bRan)
 		F::Visuals.ProjectileTrace(pLocal, pWeapon, false);
 }

@@ -50,13 +50,13 @@ bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, E
 			if (vOrigin.DistTo(vPos) > flRadius)
 				continue;
 
-			const bool isPlayer = Vars::Aimbot::General::Target.Value & PLAYER && pEntity->IsPlayer() && !F::AimbotGlobal.ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon);
-			const bool isSentry = Vars::Aimbot::General::Target.Value & SENTRY && pEntity->IsSentrygun();
-			const bool isDispenser = Vars::Aimbot::General::Target.Value & DISPENSER && pEntity->IsDispenser();
-			const bool isTeleporter = Vars::Aimbot::General::Target.Value & TELEPORTER && pEntity->IsTeleporter();
-			const bool isSticky = Vars::Aimbot::General::Target.Value & STICKY && pEntity->GetClassID() == ETFClassID::CTFGrenadePipebombProjectile && (pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheQuickiebombLauncher || pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance);
-			const bool isNPC = Vars::Aimbot::General::Target.Value & NPC && pEntity->IsNPC();
-			const bool isBomb = Vars::Aimbot::General::Target.Value & BOMB && pEntity->IsBomb();
+			const bool isPlayer = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players && pEntity->IsPlayer() && !F::AimbotGlobal.ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon);
+			const bool isSentry = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry && pEntity->IsSentrygun();
+			const bool isDispenser = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser && pEntity->IsDispenser();
+			const bool isTeleporter = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter && pEntity->IsTeleporter();
+			const bool isSticky = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Stickies && pEntity->GetClassID() == ETFClassID::CTFGrenadePipebombProjectile && (pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheQuickiebombLauncher || pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance);
+			const bool isNPC = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs && pEntity->IsNPC();
+			const bool isBomb = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Bombs && pEntity->IsBomb();
 			if (isPlayer || isSentry || isDispenser || isTeleporter || isNPC || isBomb || isSticky)
 			{
 				if (!SDK::VisPosProjectile(pProjectile, pEntity, vOrigin, isPlayer ? pEntity->m_vecOrigin() + pEntity->As<CTFPlayer>()->GetViewOffset() : pEntity->GetCenter(), MASK_SHOT))
@@ -82,11 +82,7 @@ void CAutoDetonate::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 	if (!Vars::Aimbot::Projectile::AutoDetonate.Value)
 		return;
 
-	// Check sticky detonation
-	if (Vars::Aimbot::Projectile::AutoDetonate.Value & (1 << 0) && CheckDetonation(pLocal, pWeapon, EGroupType::MISC_LOCAL_STICKIES, Vars::Aimbot::Projectile::AutodetRadius.Value / 100, pCmd))
-		pCmd->buttons |= IN_ATTACK2;
-
-	// Check flare detonation
-	if (Vars::Aimbot::Projectile::AutoDetonate.Value & (1 << 1) && CheckDetonation(pLocal, pWeapon, EGroupType::MISC_LOCAL_FLARES, Vars::Aimbot::Projectile::AutodetRadius.Value / 100, pCmd))
+	if ((Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::Stickies && CheckDetonation(pLocal, pWeapon, EGroupType::MISC_LOCAL_STICKIES, Vars::Aimbot::Projectile::AutodetRadius.Value / 100, pCmd))
+		|| (Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::Flares && CheckDetonation(pLocal, pWeapon, EGroupType::MISC_LOCAL_FLARES, Vars::Aimbot::Projectile::AutodetRadius.Value / 100, pCmd)))
 		pCmd->buttons |= IN_ATTACK2;
 }

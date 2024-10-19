@@ -16,23 +16,23 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 	}
 
 	if (G::IsAttacking && Vars::CL_Move::Fakelag::UnchokeOnAttack.Value || F::AutoRocketJump.IsRunning()
-		|| Vars::CL_Move::Fakelag::Options.Value & (1 << 2) && !pLocal->m_hGroundEntity()
+		|| Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileAirborne && !pLocal->m_hGroundEntity()
 		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK)) // try to prevent issues
 		return false;
 
 	if (bUnducking)
 		return true;
 	
-	const bool bMoving = !(Vars::CL_Move::Fakelag::Options.Value & (1 << 0)) || pLocal->m_vecVelocity().Length2D() > 10.f;
+	const bool bMoving = !(Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileMoving) || pLocal->m_vecVelocity().Length2D() > 10.f;
 	if (!bMoving)
 		return false;
 
 	switch (Vars::CL_Move::Fakelag::Fakelag.Value) 
 	{
-	case 1:
-	case 2:
+	case Vars::CL_Move::Fakelag::FakelagEnum::Plain:
+	case Vars::CL_Move::Fakelag::FakelagEnum::Random:
 		return G::ChokeAmount < G::ChokeGoal;
-	case 3:
+	case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive:
 	{
 		const Vec3 vDelta = vLastPosition - pLocal->m_vecOrigin();
 		return vDelta.Length2DSqr() < 4096.f;
@@ -57,7 +57,7 @@ void CFakeLag::Unduck(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	bUnducking = false;
 
-	if (!(Vars::CL_Move::Fakelag::Options.Value & (1 << 1)) || !pLocal->IsAlive()
+	if (!(Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileUnducking) || !pLocal->IsAlive()
 		|| !(pLocal->m_hGroundEntity() && pLocal->IsDucking() && !(pCmd->buttons & IN_DUCK)))
 		return;
 
@@ -80,9 +80,9 @@ void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	// Set the selected choke amount (if not random)
 	switch (Vars::CL_Move::Fakelag::Fakelag.Value)
 	{
-	case 1: G::ChokeGoal = Vars::CL_Move::Fakelag::PlainTicks.Value; break;
-	case 2: if (!G::ChokeGoal) G::ChokeGoal = SDK::StdRandomInt(Vars::CL_Move::Fakelag::RandomTicks.Value.Min, Vars::CL_Move::Fakelag::RandomTicks.Value.Max); break;
-	case 3: G::ChokeGoal = 22; break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Plain: G::ChokeGoal = Vars::CL_Move::Fakelag::PlainTicks.Value; break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Random: if (!G::ChokeGoal) G::ChokeGoal = SDK::StdRandomInt(Vars::CL_Move::Fakelag::RandomTicks.Value.Min, Vars::CL_Move::Fakelag::RandomTicks.Value.Max); break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive: G::ChokeGoal = 22; break;
 	}
 
 	// Are we even allowed to choke?

@@ -656,7 +656,9 @@ float CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, const int
 
 bool CMovementSimulation::StrafePrediction(PlayerStorage& playerStorage, const int iSamples)
 {
-	if (playerStorage.m_pPlayer->IsOnGround() ? !(Vars::Aimbot::Projectile::StrafePrediction.Value & (1 << 1)) : !(Vars::Aimbot::Projectile::StrafePrediction.Value & (1 << 0)))
+	if (playerStorage.m_pPlayer->IsOnGround()
+		? !(Vars::Aimbot::Projectile::StrafePrediction.Value & Vars::Aimbot::Projectile::StrafePredictionEnum::Ground)
+		: !(Vars::Aimbot::Projectile::StrafePrediction.Value & Vars::Aimbot::Projectile::StrafePredictionEnum::Air))
 		return false;
 
 	playerStorage.m_flAverageYaw = GetAverageYaw(playerStorage, iSamples);

@@ -5,11 +5,6 @@
 
 class CGlow
 {
-	Glow_t GetStruct(
-		int Stencil = 0,
-		int Blur = 0
-	);
-	bool GetPlayerGlow(CBaseEntity* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy);
 	bool GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Color_t* pColor);
 
 	void SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurY);

@@ -89,7 +89,7 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	switch (Vars::Misc::Movement::AutoStrafe.Value)
 	{
-	case 1:
+	case Vars::Misc::Movement::AutoStrafeEnum::Legit:
 	{
 		static auto cl_sidespeed = U::ConVars.FindVar("cl_sidespeed");
 		const float flSideSpeed = cl_sidespeed ? cl_sidespeed->GetFloat() : 450.f;
@@ -101,9 +101,9 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 		}
 		break;
 	}
-	case 2:
+	case Vars::Misc::Movement::AutoStrafeEnum::Directional:
 	{
-		//credits: KGB
+		// credits: KGB
 		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 			break;
 
@@ -534,7 +534,7 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 
 	switch (Vars::Misc::Automation::AntiBackstab.Value)
 	{
-	case 1:
+	case Vars::Misc::Automation::AntiBackstabEnum::Yaw:
 	{
 		Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), vTargetPos->first);
 		vAngleTo.x = pCmd->viewangles.x;
@@ -543,8 +543,8 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		
 		return 1;
 	}
-	case 2:
-	case 3:
+	case Vars::Misc::Automation::AntiBackstabEnum::Pitch:
+	case Vars::Misc::Automation::AntiBackstabEnum::Fake:
 	{
 		bool bCheater = F::PlayerUtils.HasTag(vTargetPos->second->entindex(), CHEATER_TAG);
 		// if the closest spy is a cheater, assume auto stab is being used, otherwise don't do anything if target is in front
@@ -577,13 +577,13 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 				return 0;
 		}
 
-		switch (!bCheater ? 2 : Vars::Misc::Automation::AntiBackstab.Value)
+		if (!bCheater || Vars::Misc::Automation::AntiBackstab.Value == Vars::Misc::Automation::AntiBackstabEnum::Pitch)
 		{
-		case 2:
 			pCmd->forwardmove *= -1;
 			pCmd->viewangles.x = 269.f;
-			break;
-		case 3:
+		}
+		else
+		{
 			pCmd->viewangles.x = 271.f;
 		}
 		// may slip up some auto backstabs depending on mode, though we are still able to be stabbed
@@ -650,12 +650,11 @@ bool CMisc::SteamRPC()
 
 		switch (Vars::Misc::Steam::MatchGroup.Value)
 		{
-		case 0: I::SteamFriends->SetRichPresence("matchgrouploc", "SpecialEvent"); break;
-		case 1: I::SteamFriends->SetRichPresence("matchgrouploc", "MannUp"); break;
-		case 2: I::SteamFriends->SetRichPresence("matchgrouploc", "Competitive6v6"); break;
-		case 3: I::SteamFriends->SetRichPresence("matchgrouploc", "Casual"); break;
-		case 4: I::SteamFriends->SetRichPresence("matchgrouploc", "BootCamp"); break;
-		default: I::SteamFriends->SetRichPresence("matchgrouploc", "SpecialEvent"); break;
+		case Vars::Misc::Steam::MatchGroupEnum::SpecialEvent: I::SteamFriends->SetRichPresence("matchgrouploc", "SpecialEvent"); break;
+		case Vars::Misc::Steam::MatchGroupEnum::MvMMannUp: I::SteamFriends->SetRichPresence("matchgrouploc", "MannUp"); break;
+		case Vars::Misc::Steam::MatchGroupEnum::Competitive: I::SteamFriends->SetRichPresence("matchgrouploc", "Competitive6v6"); break;
+		case Vars::Misc::Steam::MatchGroupEnum::Casual: I::SteamFriends->SetRichPresence("matchgrouploc", "Casual"); break;
+		case Vars::Misc::Steam::MatchGroupEnum::MvMBootCamp: I::SteamFriends->SetRichPresence("matchgrouploc", "BootCamp"); break;
 		}
 	}
 	I::SteamFriends->SetRichPresence("currentmap", Vars::Misc::Steam::MapText.Value.c_str());

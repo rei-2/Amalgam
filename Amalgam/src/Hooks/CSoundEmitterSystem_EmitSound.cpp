@@ -101,10 +101,10 @@ bool ShouldBlockSound(const char* pSound)
 	std::string sSound = pSound;
 	boost::algorithm::to_lower(sSound);
 
-	if (Vars::Misc::Sound::Block.Value & (1 << 0) && sSound.find("footsteps") != std::string::npos) // Footsteps
+	if (Vars::Misc::Sound::Block.Value & Vars::Misc::Sound::BlockEnum::Footsteps && sSound.find("footsteps") != std::string::npos) // Footsteps
 		return true;
 
-	if (Vars::Misc::Sound::Block.Value & (1 << 1)) // Noisemaker
+	if (Vars::Misc::Sound::Block.Value & Vars::Misc::Sound::BlockEnum::Noisemaker) // Noisemaker
 	{
 		for (auto& sNoise : vNoisemaker)
 		{
@@ -113,7 +113,7 @@ bool ShouldBlockSound(const char* pSound)
 		}
 	}
 
-	if (Vars::Misc::Sound::Block.Value & (1 << 2) && sSound.find("pan_") != std::string::npos) // Pan
+	if (Vars::Misc::Sound::Block.Value & Vars::Misc::Sound::BlockEnum::FryingPan && sSound.find("pan_") != std::string::npos) // Pan
 		return true;
 
 	return false;
@@ -143,7 +143,8 @@ MAKE_HOOK(S_StartDynamicSound, S::S_StartDynamicSound(), int, __fastcall,
 MAKE_HOOK(S_StartSound, S::S_StartSound(), int, __fastcall,
 	StartSoundParams_t& params)
 {
-	H::Entities.ManualNetwork(params);
+	if (!params.staticsound)
+		H::Entities.ManualNetwork(params);
 	if (ShouldBlockSound(params.pSfx->getname()))
 		return 0;
 

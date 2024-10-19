@@ -610,8 +610,6 @@ typedef CThreadMutex CSourceMutex;
 enum ETFHitboxes
 {
 	HITBOX_HEAD,
-	HITBOX_NECK,
-	HITBOX_LOWER_NECK,
 	HITBOX_PELVIS,
 	HITBOX_BODY,
 	HITBOX_THORAX,

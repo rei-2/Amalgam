@@ -43,6 +43,7 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
             case FNV1A::Hash32Const("Passtime"): pszParticleName = "passtime_beam"; break;
             case FNV1A::Hash32Const("Bombonomicon"): pszParticleName = "bombonomicon_spell_trail"; break;
             case FNV1A::Hash32Const("White"): pszParticleName = "medicgun_beam_machinery_stage3"; break;
+            case FNV1A::Hash32Const("Orange"): pszParticleName = "medicgun_beam_red_trail_stage3"; break;
             default: pszParticleName = Vars::Visuals::Particles::MedigunBeam.Value.c_str();
             }
         }
@@ -55,6 +56,7 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
             case FNV1A::Hash32Const("Electrocuted"): pszParticleName = bBlue ? "electrocuted_blue" : "electrocuted_red"; break;
             case FNV1A::Hash32Const("Halloween"): pszParticleName = "ghost_pumpkin"; break;
             case FNV1A::Hash32Const("Fireball"): pszParticleName = bBlue ? "spell_fireball_small_trail_blue" : "spell_fireball_small_trail_red"; break;
+            case FNV1A::Hash32Const("Teleport"): pszParticleName = bBlue ? "spell_teleport_blue" : "spell_teleport_red"; break;
             case FNV1A::Hash32Const("Burning"): pszParticleName = "superrare_burning1"; break;
             case FNV1A::Hash32Const("Scorching"): pszParticleName = "superrare_burning2"; break;
             case FNV1A::Hash32Const("Purple energy"): pszParticleName = "superrare_purpleenergy"; break;
@@ -205,6 +207,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
             case FNV1A::Hash32Const("Charged"): pszParticleName = bBlue ? "drg_cow_rockettrail_charged_blue" : "drg_cow_rockettrail_charged"; break;
             case FNV1A::Hash32Const("Ray"): pszParticleName = "drg_manmelter_projectile"; break;
             case FNV1A::Hash32Const("Fireball"): pszParticleName = bBlue ? "spell_fireball_small_trail_blue" : "spell_fireball_small_trail_red"; break;
+            case FNV1A::Hash32Const("Teleport"): pszParticleName = bBlue ? "spell_teleport_blue" : "spell_teleport_red"; break;
             case FNV1A::Hash32Const("Fire"): pszParticleName = "flamethrower"; break;
             case FNV1A::Hash32Const("Flame"): pszParticleName = "flying_flaming_arrow"; break;
             case FNV1A::Hash32Const("Sparks"): pszParticleName = bBlue ? "critical_rocket_bluesparks" : "critical_rocket_redsparks"; break;

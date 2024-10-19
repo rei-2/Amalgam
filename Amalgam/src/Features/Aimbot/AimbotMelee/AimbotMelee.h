@@ -22,7 +22,6 @@ class CAimbotMelee
 	bool FindNearestBuildPoint(CBaseObject* pBuilding, CTFPlayer* pLocal, Vec3& vPoint);
 	bool RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
-	int iAimType = 0;
 	int iDoubletapTicks = 0;
 	int iDoubletapMax = 0;
 
