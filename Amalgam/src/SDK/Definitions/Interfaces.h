@@ -6,6 +6,7 @@
 #include "Interfaces/CClientState.h"
 #include "Interfaces/CGlobalVarsBase.h"
 #include "Interfaces/CTFGameRules.h"
+#include "Interfaces/CTFGCClientSystem.h"
 #include "Interfaces/CTFPartyClient.h"
 #include "Interfaces/IClientEntityList.h"
 #include "Interfaces/ICVar.h"

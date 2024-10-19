@@ -1,5 +1,7 @@
 #include "../SDK/SDK.h"
 
+MAKE_SIGNATURE(CTFGCClientSystem_PingThink, "client.dll", "48 89 4C 24 ? 55 41 54 41 55 48 8D AC 24 ? ? ? ? 48 81 EC", 0x0);
+
 void POPID_ToString(SteamNetworkingPOPID popID, char* out)
 {
 	out[0] = static_cast<char>(popID >> 16);
@@ -50,17 +52,26 @@ unsigned int GetDatacenter(uint32_t uHash)
 	return 0;
 }
 
-MAKE_HOOK(ISteamNetworkingUtils_GetDirectPingToPOP, U::Memory.GetVFunc(I::SteamNetworkingUtils, 9), int, __fastcall,
-	void* rcx, SteamNetworkingPOPID popID)
+MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::SteamNetworkingUtils, 8), int, __fastcall,
+	void* rcx, SteamNetworkingPOPID popID, SteamNetworkingPOPID* pViaRelayPoP)
 {
-	int iOriginal = CALL_ORIGINAL(rcx, popID);
+	int iReturn = CALL_ORIGINAL(rcx, popID, pViaRelayPoP);
 	if (!Vars::Misc::Queueing::ForceRegions.Value)
-		return iOriginal;
+		return iReturn;
 
 	char popIDName[5];
 	POPID_ToString(popID, popIDName);
 	if (auto uDatacenter = GetDatacenter(FNV1A::Hash32(popIDName)))
 		return Vars::Misc::Queueing::ForceRegions.Value & uDatacenter ? 1 : 999999;
 
-	return iOriginal;
+	return iReturn;
+}
+
+MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueForMatch(), void, __fastcall,
+	void* rcx, int eMatchGroup)
+{
+	*reinterpret_cast<bool*>(uintptr_t(I::TFGCClientSystem) + 1116) = true;
+	S::CTFGCClientSystem_PingThink.As<void(__fastcall*)(void*)>()(I::TFGCClientSystem);
+
+	return CALL_ORIGINAL(rcx, eMatchGroup);
 }

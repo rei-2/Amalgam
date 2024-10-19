@@ -154,7 +154,7 @@
     <ClCompile Include="src\Hooks\CNetChannel_SendDatagram.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendNetMsg.cpp" />
     <ClCompile Include="src\Hooks\ClientModeTFNormal_UpdateSteamRichPresence.cpp" />
-    <ClCompile Include="src\Hooks\ISteamNetworkingUtils_GetDirectPingToPOP.cpp" />
+    <ClCompile Include="src\Hooks\ISteamNetworkingUtils_GetPingToDataCenter.cpp" />
     <ClCompile Include="src\Hooks\RecvProxy_SimulationTime.cpp" />
     <ClCompile Include="src\Hooks\CAttributeManager_AttribHookValue.cpp" />
     <ClCompile Include="src\Hooks\TF_IsHolidayActive.cpp" />
@@ -437,6 +437,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\UtlIntrusiveList.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CCaptureFlag.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IPanel.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGCClientSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
