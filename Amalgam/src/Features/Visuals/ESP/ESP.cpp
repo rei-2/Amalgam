@@ -828,22 +828,22 @@ void CESP::DrawPlayers()
 			switch (iMode)
 			{
 			case TextTop:
-				H::Draw.String(fFont, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
-				tOffset += fFont.m_nTall + 2;
+				H::Draw.String(fFontName, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
+				tOffset += fFontName.m_nTall + 2;
 				break;
 			case TextBottom:
-				H::Draw.String(fFont, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
-				bOffset += fFont.m_nTall + 2;
+				H::Draw.String(fFontName, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
+				bOffset += fFontName.m_nTall + 2;
 				break;
 			case TextRight:
-				H::Draw.String(fFont, r, y + rOffset, tColor, ALIGN_TOPLEFT, sText.c_str());
-				rOffset += fFont.m_nTall + 2;
+				H::Draw.String(fFontConds, r, y + rOffset, tColor, ALIGN_TOPLEFT, sText.c_str());
+				rOffset += fFontConds.m_nTall + 2;
 				break;
 			case TextHealth:
-				H::Draw.String(fFont, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, ALIGN_TOPRIGHT, sText.c_str());
+				H::Draw.String(fFontConds, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, ALIGN_TOPRIGHT, sText.c_str());
 				break;
 			case TextUber:
-				H::Draw.String(fFont, x + w + 4, y + h, tColor, ALIGN_TOPLEFT, sText.c_str());
+				H::Draw.String(fFontConds, x + w + 4, y + h, tColor, ALIGN_TOPLEFT, sText.c_str());
 			}
 		}
 
