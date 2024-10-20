@@ -870,6 +870,9 @@ void CESP::DrawBuildings()
 		return;
 
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
+	const auto& fFontName = H::Fonts.GetFont(FONT_NAME);
+	const auto& fFontConds = H::Fonts.GetFont(FONT_CONDS);
+
 	for (auto& [pEntity, tCache] : m_mBuildingCache)
 	{
 		int x = 0, y = 0, w = 0, h = 0;
@@ -896,19 +899,19 @@ void CESP::DrawBuildings()
 			switch (iMode)
 			{
 			case TextTop:
-				H::Draw.String(fFont, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
+				H::Draw.String(fFontName, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
 				tOffset += fFont.m_nTall + 2;
 				break;
 			case TextBottom:
-				H::Draw.String(fFont, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
+				H::Draw.String(fFontConds, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
 				bOffset += fFont.m_nTall + 2;
 				break;
 			case TextRight:
-				H::Draw.String(fFont, r, y + rOffset, tColor, ALIGN_TOPLEFT, sText.c_str());
+				H::Draw.String(fFontConds, r, y + rOffset, tColor, ALIGN_TOPLEFT, sText.c_str());
 				rOffset += fFont.m_nTall + 2;
-				break;
+				break;H::Draw.String(fFont, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
 			case TextHealth:
-				H::Draw.String(fFont, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, ALIGN_TOPRIGHT, sText.c_str());
+				H::Draw.String(fFontName, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, ALIGN_TOPRIGHT, sText.c_str());
 				break;
 			}
 		}
@@ -920,6 +923,9 @@ void CESP::DrawBuildings()
 void CESP::DrawWorld()
 {
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
+	const auto& fFontName = H::Fonts.GetFont(FONT_NAME);
+	const auto& fFontConds = H::Fonts.GetFont(FONT_CONDS);
+
 	for (auto& [pEntity, tCache] : m_mWorldCache)
 	{
 		int x = 0, y = 0, w = 0, h = 0;
@@ -939,15 +945,15 @@ void CESP::DrawWorld()
 			switch (iMode)
 			{
 			case TextTop:
-				H::Draw.String(fFont, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
+				H::Draw.String(fFontName, m, y - tOffset, tColor, ALIGN_BOTTOM, sText.c_str());
 				tOffset += fFont.m_nTall + 2;
 				break;
 			case TextBottom:
-				H::Draw.String(fFont, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
+				H::Draw.String(fFontConds, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
 				bOffset += fFont.m_nTall + 2;
 				break;
 			case TextRight:
-				H::Draw.String(fFont, r, y + rOffset, tColor, ALIGN_TOPLEFT, sText.c_str());
+				H::Draw.String(fFontConds, r, y + rOffset, tColor, ALIGN_TOPLEFT, sText.c_str());
 				rOffset += fFont.m_nTall + 2;
 			}
 		}
