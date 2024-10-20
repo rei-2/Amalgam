@@ -832,7 +832,7 @@ void CESP::DrawPlayers()
 				tOffset += fFontName.m_nTall + 2;
 				break;
 			case TextBottom:
-				H::Draw.String(fFontName, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
+				H::Draw.String(fFontConds, m, b + bOffset, tColor, ALIGN_TOP, sText.c_str());
 				bOffset += fFontName.m_nTall + 2;
 				break;
 			case TextRight:
@@ -840,10 +840,10 @@ void CESP::DrawPlayers()
 				rOffset += fFontConds.m_nTall + 2;
 				break;
 			case TextHealth:
-				H::Draw.String(fFontConds, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, ALIGN_TOPRIGHT, sText.c_str());
+				H::Draw.String(fFontName, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, ALIGN_TOPRIGHT, sText.c_str());
 				break;
 			case TextUber:
-				H::Draw.String(fFontConds, x + w + 4, y + h, tColor, ALIGN_TOPLEFT, sText.c_str());
+				H::Draw.String(fFontName, x + w + 4, y + h, tColor, ALIGN_TOPLEFT, sText.c_str());
 			}
 		}
 
