@@ -40,7 +40,7 @@ void CCore::Load()
 
 	F::Configs.LoadConfig(F::Configs.sCurrentConfig, false);
 
-	sleep(150);
+	Sleep(250);
 
 	H::Fonts.Reload();
 	F::Menu.ConfigLoaded = true;
