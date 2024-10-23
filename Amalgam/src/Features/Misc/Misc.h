@@ -33,7 +33,6 @@ public:
 	void RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket);
 
 	void Event(IGameEvent* pEvent, uint32_t uNameHash);
-	void DoubletapPacket(CUserCmd* pCmd, bool* pSendPacket);
 	int AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket);
 
 	void UnlockAchievements();

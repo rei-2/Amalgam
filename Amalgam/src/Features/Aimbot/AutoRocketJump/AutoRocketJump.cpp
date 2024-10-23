@@ -52,8 +52,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 	static bool bStaticGrounded = false;
 	bool bLastGrounded = bStaticGrounded, bCurrGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
 
-	const bool bReloading = pWeapon->IsInReload();
-	if (iFrame == -1 && (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka ? G::IsAttacking && !bReloading : G::CanPrimaryAttack))
+	if (iFrame == -1 && (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka ? G::Attacking == 1 : G::CanPrimaryAttack || G::Reloading))
 	{
 		Vec3 viewAngles = pCmd->viewangles;
 		if (Vars::Misc::Movement::AutoRocketJump.Value)
@@ -96,7 +95,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 						bWillHit = WillHit(pLocal, localStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
 						iDelay = std::max(n + (n > Vars::Misc::Movement::ApplyAbove.Value ? Vars::Misc::Movement::TimingOffset.Value : 0), 0);
 
-						if (bWillHit)
+						if (bWillHit && G::CanPrimaryAttack)
 						{
 							SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", iDelay, n).c_str(), { 255, 0, 0, 255 }, Vars::Debug::Logging.Value);
 							if (Vars::Debug::Info.Value)
@@ -129,14 +128,14 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 				if (pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
 					pCmd->buttons |= IN_ATTACK;
 
-				if (Vars::Misc::Movement::AutoRocketJump.Value && !bReloading)
+				if (Vars::Misc::Movement::AutoRocketJump.Value && G::CanPrimaryAttack)
 				{
 					G::SilentAngles = true;
 					pCmd->viewangles = viewAngles;
 				}
 			}
 
-			if (iFrame != -1 && bReloading)
+			if (iFrame != -1 && G::Reloading)
 			{
 				iFrame = -1;
 				bFull = false;

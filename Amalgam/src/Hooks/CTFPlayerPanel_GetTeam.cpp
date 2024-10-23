@@ -43,10 +43,9 @@ MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void, __fastcall,
 		Color_t tColor = H::Color.GetScoreboardColor(CTFTeamStatusPlayerPanel_Update_PlayerIndex);
 		if (tColor.a)
 		{
-			tColor = tColor.Lerp({ 0, 0, 0, tColor.a }, 0.2f);
 			auto pResource = H::Entities.GetPR();
 			if (pResource && !pResource->IsAlive(CTFTeamStatusPlayerPanel_Update_PlayerIndex))
-				tColor = tColor.Lerp({ 100, 100, 100, tColor.a }, 0.5f);
+				tColor = tColor.Lerp({ 127, 127, 127, tColor.a }, 0.5f);
 
 			color = tColor;
 		}

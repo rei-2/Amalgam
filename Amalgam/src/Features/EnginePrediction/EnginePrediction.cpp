@@ -89,7 +89,7 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	else
 		pLocal->m_fFlags() &= ~FL_ONGROUND;
 
-	m_bDoubletap = F::Ticks.GetTicks(pLocal) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity(); // hopefully more accurate eyepos while dting
+	m_bDoubletap = F::Ticks.GetTicks() && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity(); // hopefully more accurate eyepos while dting
 
 	if (m_bDoubletap)
 	{

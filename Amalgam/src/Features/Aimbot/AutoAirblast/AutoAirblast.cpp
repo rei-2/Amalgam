@@ -109,7 +109,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 
 	if (bShouldBlast)
 	{
-		G::IsAttacking = true;
+		G::Attacking = true;
 		pCmd->buttons |= IN_ATTACK2;
 	}
 }

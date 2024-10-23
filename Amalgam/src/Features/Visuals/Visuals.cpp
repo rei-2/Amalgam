@@ -72,9 +72,17 @@ void CVisuals::DrawOnScreenPing(CTFPlayer* pLocal)
 	if (!pResource || !pNetChan)
 		return;
 
-	const float flFake = std::min(F::Backtrack.flFakeLatency + (F::Backtrack.flFakeInterp > G::Lerp ? F::Backtrack.flFakeInterp : 0.f), F::Backtrack.flMaxUnlag) * 1000.f;
-	const float flLatency = F::Backtrack.GetReal() * 1000.f;
-	const int iLatencyScoreboard = pResource->GetPing(pLocal->entindex());
+	static float flFakeLatency = 0.f;
+	{
+		static Timer updateTimer{};
+		if (updateTimer.Run(500))
+			flFakeLatency = F::Backtrack.m_flFakeLatency;
+	}
+	float flFakeLerp = F::Backtrack.m_flFakeInterp > G::Lerp ? F::Backtrack.m_flFakeInterp : 0.f;
+
+	float flFake = std::min(flFakeLatency + flFakeLerp, F::Backtrack.m_flMaxUnlag) * 1000.f;
+	float flLatency = std::max(pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - flFakeLatency, 0.f) * 1000.f;
+	int iLatencyScoreboard = pResource->GetPing(pLocal->entindex());
 
 	int x = Vars::Menu::PingDisplay.Value.x;
 	int y = Vars::Menu::PingDisplay.Value.y + 8;
@@ -93,12 +101,7 @@ void CVisuals::DrawOnScreenPing(CTFPlayer* pLocal)
 	}
 
 	if (flFake || Vars::Backtrack::Interp.Value && Vars::Backtrack::Enabled.Value)
-	{
-		if (flLatency > 0.f)
-			H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Real %.0f (+ %.0f) ms", flLatency, flFake);
-		else
-			H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Syncing");
-	}
+		H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Real %.0f (+ %.0f) ms", flLatency, flFake);
 	else
 		H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Real %.0f ms", flLatency);
 	H::Draw.String(fFont, x, y += fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, align, "Scoreboard %d ms", iLatencyScoreboard);
@@ -326,7 +329,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 			Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
 
 			if (Vars::Colors::ShotPath.Value.a || Vars::Colors::TrajectoryPathClipped.Value.a)
-			G::BoxStorage.clear();
+				G::BoxStorage.clear();
 			if (Vars::Colors::ShotPath.Value.a)
 				G::BoxStorage.push_back({ trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, { 0, 0, 0, 0 } });
 			if (Vars::Colors::ShotPathClipped.Value.a)
@@ -339,8 +342,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const 
 				G::PathStorage.push_back({ vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadius.Value, Vars::Visuals::Simulation::StyleEnum::Line });
 			if (Vars::Colors::SplashRadiusClipped.Value.a)
 				G::PathStorage.push_back({ vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(projInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadiusClipped.Value, Vars::Visuals::Simulation::StyleEnum::Line, true });
+		}
 	}
-}
 }
 
 void CVisuals::SplashRadius(CTFPlayer* pLocal)
@@ -474,22 +477,21 @@ void CVisuals::DrawAntiAim(CTFPlayer* pLocal)
 
 void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 {
-	// Debug info
 	if (Vars::Debug::Info.Value)
 	{
+		auto pWeapon = H::Entities.GetWeapon();
+		auto pCmd = G::LastUserCmd;
+
 		int x = 10, y = 10;
 		const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 		y -= fFont.m_nTall + 1;
 
-		if (auto pCmd = G::LastUserCmd)
+		if (pCmd)
 		{
 			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "View: (%.3f, %.3f, %.3f)", pCmd->viewangles.x, pCmd->viewangles.y, pCmd->viewangles.z);
 			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Move: (%.0f, %.0f, %.0f)", pCmd->forwardmove, pCmd->sidemove, pCmd->upmove);
 			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Buttons: %i", pCmd->buttons);
 		}
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", G::ShiftedTicks, G::ShiftedGoal).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Attacking: {} ({}, {})", G::IsAttacking, G::CanPrimaryAttack, G::CanSecondaryAttack).c_str());
 		{
 			Vec3 vOrigin = pLocal->m_vecOrigin();
 			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Origin: (%.3f, %.3f, %.3f)", vOrigin.x, vOrigin.y, vOrigin.z);
@@ -498,9 +500,25 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 			Vec3 vVelocity = pLocal->m_vecVelocity();
 			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Velocity: %.3f (%.3f, %.3f, %.3f)", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z);
 		}
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", G::ShiftedTicks, G::ShiftedGoal).c_str());
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Round state: %i", SDK::GetRoundState());
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Tickcount: %i", pLocal->m_nTickBase());
 		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Entities: %i (%i, %i)", I::ClientEntityList->GetMaxEntities(), I::ClientEntityList->GetHighestEntityIndex(), I::ClientEntityList->NumberOfEntities(false));
+	
+		if (!pWeapon || !pCmd)
+			return;
+
+		float flTime = TICKS_TO_TIME(pLocal->m_nTickBase());
+		float flPrimaryAttack = pWeapon->m_flNextPrimaryAttack();
+		float flSecondaryAttack = pWeapon->m_flNextSecondaryAttack();
+		float flAttack = pLocal->m_flNextAttack();
+
+		H::Draw.String(fFont, x, y += (fFont.m_nTall + 1) * 2, {}, ALIGN_TOPLEFT, std::format("Attacking: {} ({})", G::Attacking, bool(pCmd->buttons & IN_ATTACK)).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("CanPrimaryAttack: {} ([{:.3f} | {:.3f}] <= {:.3f})", G::CanPrimaryAttack, flPrimaryAttack, flAttack, flTime).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("CanSecondaryAttack: {} ([{:.3f} | {:.3f}] <= {:.3f})", G::CanSecondaryAttack, flSecondaryAttack, flAttack, flTime).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Attack: {:.3f}, {:.3f}; {:.3f}", flTime - flPrimaryAttack, flTime - flSecondaryAttack, flTime - flAttack).c_str());
+		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Reload: {} ({} || {} != 0)", G::Reloading, pWeapon->m_bInReload(), pWeapon->m_iReloadMode()).c_str());
 	}
 }
 

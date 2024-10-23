@@ -404,7 +404,7 @@ const char* SDK::GetClassByIndex(const int nClass)
 	return (nClass < 10 && nClass > 0) ? szClasses[nClass] : szClasses[0];
 }
 
-bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase)
+int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase)
 {
 	if (pCmd->weaponselect)
 		return false;
@@ -417,7 +417,7 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_KNIFE:
-			return ((pCmd->buttons & IN_ATTACK) && G::CanPrimaryAttack);
+			return pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
 		case TF_WEAPON_BAT_WOOD:
 		case TF_WEAPON_BAT_GIFTWRAP:
 		{
@@ -425,7 +425,7 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 			if (G::CanSecondaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & IN_ATTACK2 && iThrowTick + 5 < iTickBase)
 				iThrowTick = iTickBase + 11;
 			if (iThrowTick >= iTickBase)
-				G::CanPrimaryAttack = G::CanSecondaryAttack = G::IsThrowing = true;
+				G::CanPrimaryAttack = G::CanSecondaryAttack = G::Throwing = true;
 			if (iThrowTick == iTickBase)
 				return true;
 		}
@@ -451,7 +451,7 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 	{
 		float flMortar = SDK::AttribHookValue(0.f, "grenade_launcher_mortar_mode", pWeapon);
 		if (!flMortar)
-			return pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
+			return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
 
 		float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? flMortar - (pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - flTickBase) : 0.f;
 		const float flAmount = Math::RemapValClamped(flCharge, 0.f, SDK::AttribHookValue(0.f, "grenade_launcher_mortar_mode", pWeapon), 0.f, 1.f);
@@ -465,7 +465,7 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 		if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & (IN_ATTACK | IN_ATTACK2) && iThrowTick < iTickBase)
 			iThrowTick = iTickBase + 11;
 		if (iThrowTick >= iTickBase)
-			G::CanPrimaryAttack = G::IsThrowing = true;
+			G::CanPrimaryAttack = G::Throwing = true;
 		return iThrowTick == iTickBase;
 	}
 	case TF_WEAPON_JAR:
@@ -476,7 +476,7 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 		if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & IN_ATTACK && iThrowTick < iTickBase)
 			iThrowTick = iTickBase + 11;
 		if (iThrowTick >= iTickBase)
-			G::CanPrimaryAttack = G::IsThrowing = true;
+			G::CanPrimaryAttack = G::Throwing = true;
 		return iThrowTick == iTickBase;
 	}
 	case TF_WEAPON_GRAPPLINGHOOK:
@@ -498,31 +498,37 @@ bool SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd*
 		return trace.DidHit() && !(trace.surface.flags & 0x0004 /*SURF_SKY*/);
 	}
 	case TF_WEAPON_MINIGUN:
-		return (pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_FIRING || pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_SPINNING) &&
-			pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
+	{
+		int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState();
+		if ((iState == AC_STATE_FIRING || iState == AC_STATE_SPINNING) && pWeapon->HasPrimaryAmmoForShot())
+			return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
+
+		return false;
+	}
 	}
 
 	if (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka)
 	{
 		static bool bLoading = false, bFiring = false;
 
-		if (pWeapon->m_iClip1() == 0)
+		bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
+		if (!bAmmo)
 			bLoading = false,
 			bFiring = false;
 		else if (!bFiring)
 			bLoading = true;
 
-		if ((bFiring || bLoading && !(pCmd->buttons & IN_ATTACK)) && G::CanPrimaryAttack)
+		if ((bFiring || bLoading && !(pCmd->buttons & IN_ATTACK)) && bAmmo)
 		{
 			bFiring = true;
 			bLoading = false;
-			return true; //!pWeapon->IsInReload();
+			return G::CanPrimaryAttack ? 1 : G::Reloading ? 2 : 0;
 		}
 
 		return false;
 	}
 
-	return pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
+	return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
 }
 
 float SDK::MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch, bool bIgnoreSpecialAbility)
@@ -561,7 +567,7 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return false;
 	}
 
-	if (!G::IsAttacking)
+	if (G::Attacking != 1)
 	{
 		const float direction = Math::VelocityToAngles(pLocal->m_vecVelocity() * -1).y;
 		pCmd->viewangles = { 90, direction, 0 };

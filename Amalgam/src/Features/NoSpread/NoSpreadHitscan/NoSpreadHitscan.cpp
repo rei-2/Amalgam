@@ -27,7 +27,7 @@ bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool
 	if (pWeapon->GetWeaponSpread() <= 0.f)
 		return false;
 
-	return bCreateMove ? G::IsAttacking : true;
+	return bCreateMove ? G::Attacking == 1 : true;
 }
 
 int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
@@ -155,7 +155,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 		if (!iBullet) // Check if we'll get a guaranteed perfect shot
 		{
 			bool bDoubletap = false; // if we are doubletapping and firerate fast enough, prioritize later bullets
-			int iTicks = F::Ticks.GetTicks(pLocal);
+			int iTicks = F::Ticks.GetTicks();
 			if (iTicks && pWeaponInfo)
 			{
 				float flDoubletapTime = TICKS_TO_TIME(iTicks);

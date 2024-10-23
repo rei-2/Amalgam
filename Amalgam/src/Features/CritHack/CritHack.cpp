@@ -275,7 +275,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		return;
 
 	ResetWeapons(pLocal);
-	Fill(pCmd, 15);
+	Fill(pCmd, 25);
 	GetTotalCrits(pLocal, pWeapon);
 	CanFireCritical(pLocal, pWeapon);
 	if (pLocal->IsCritBoosted() || !WeaponCanCrit(pWeapon))
@@ -284,7 +284,9 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && pCmd->buttons & IN_ATTACK)
 		pCmd->buttons &= ~IN_ATTACK2;
 
-	bool bAttacking = G::IsAttacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, false);
+	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, false);
+	
+	bool bAttacking = G::Attacking /*== 1*/ || G::DoubleTap;
 	if (G::PrimaryWeaponType == EWeaponType::MELEE)
 	{
 		bAttacking = G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK;

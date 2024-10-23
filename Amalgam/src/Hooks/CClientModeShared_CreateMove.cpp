@@ -22,14 +22,14 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 
 	bool* pSendPacket = reinterpret_cast<bool*>(uintptr_t(_AddressOfReturnAddress()) + 0x128);
 
-	G::PSilentAngles = G::SilentAngles = G::IsAttacking = G::IsThrowing = false;
+	G::PSilentAngles = G::SilentAngles = G::Attacking = G::Throwing = false;
 	G::LastUserCmd = G::CurrentUserCmd ? G::CurrentUserCmd : pCmd;
 	G::CurrentUserCmd = pCmd;
 
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
 
 	// correct tick_count for fakeinterp / nointerp
-	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.flFakeInterp) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
+	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.m_flFakeInterp) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
 	if (G::Buttons & IN_DUCK) // lol
 		pCmd->buttons |= IN_DUCK;
 
@@ -46,7 +46,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				G::WaitForShift = 1;
 		}
 
-		G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+		G::CanPrimaryAttack = G::CanSecondaryAttack = G::Reloading = false;
 		bool bCanAttack = pLocal->CanAttack();
 		switch (SDK::GetRoundState())
 		{
@@ -71,7 +71,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				case TF_WEAPON_MINIGUN:
 				{
 					int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState();
-					if (iState != AC_STATE_FIRING && iState != AC_STATE_SPINNING)
+					if (iState != AC_STATE_FIRING && iState != AC_STATE_SPINNING || !pWeapon->HasPrimaryAmmoForShot())
 						G::CanPrimaryAttack = false;
 					break;
 				}
@@ -88,16 +88,23 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				default:
 					if (pWeapon->GetSlot() != SLOT_MELEE)
 					{
+						/*
 						if (pWeapon->IsInReload())
 							G::CanPrimaryAttack = pWeapon->HasPrimaryAmmoForShot();
-						else if (pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka && !pWeapon->HasPrimaryAmmoForShot())
-							G::CanPrimaryAttack = false;
+						*/
+
+						bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
+						bool bReload = pWeapon->IsInReload();
+						if (!bAmmo && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
+							G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+						if (bReload && bAmmo && !G::CanPrimaryAttack)
+							G::Reloading = true;
 					}
 				}
 			}
 		}
 
-		G::IsAttacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);
+		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);
 		G::PrimaryWeaponType = SDK::GetWeaponType(pWeapon, &G::SecondaryWeaponType);
 		G::CanHeadshot = pWeapon->CanHeadShot();
 	}
@@ -126,7 +133,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		else if (bWasSet || bOverchoking)
 			*pSendPacket = true, bWasSet = false;
 	}
-	F::Misc.DoubletapPacket(pCmd, pSendPacket);
+	F::Ticks.ManagePacket(pCmd, pSendPacket);
 	F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
 	G::Choking = !*pSendPacket;
 	if (*pSendPacket)

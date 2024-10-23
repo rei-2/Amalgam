@@ -15,7 +15,7 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		return true;
 	}
 
-	if (G::IsAttacking && Vars::CL_Move::Fakelag::UnchokeOnAttack.Value || F::AutoRocketJump.IsRunning()
+	if (G::Attacking == 1 && Vars::CL_Move::Fakelag::UnchokeOnAttack.Value || F::AutoRocketJump.IsRunning()
 		|| Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileAirborne && !pLocal->m_hGroundEntity()
 		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK)) // try to prevent issues
 		return false;

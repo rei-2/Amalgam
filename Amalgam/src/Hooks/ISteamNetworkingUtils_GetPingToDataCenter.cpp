@@ -56,7 +56,7 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 	void* rcx, SteamNetworkingPOPID popID, SteamNetworkingPOPID* pViaRelayPoP)
 {
 	int iReturn = CALL_ORIGINAL(rcx, popID, pViaRelayPoP);
-	if (!Vars::Misc::Queueing::ForceRegions.Value)
+	if (!Vars::Misc::Queueing::ForceRegions.Value || iReturn < 0)
 		return iReturn;
 
 	char popIDName[5];
@@ -70,8 +70,11 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueForMatch(), void, __fastcall,
 	void* rcx, int eMatchGroup)
 {
-	*reinterpret_cast<bool*>(uintptr_t(I::TFGCClientSystem) + 1116) = true;
-	S::CTFGCClientSystem_PingThink.As<void(__fastcall*)(void*)>()(I::TFGCClientSystem);
+	if (Vars::Misc::Queueing::ForceRegions.Value)
+	{
+		*reinterpret_cast<bool*>(uintptr_t(I::TFGCClientSystem) + 1116) = true;
+		S::CTFGCClientSystem_PingThink.As<void(__fastcall*)(void*)>()(I::TFGCClientSystem);
+	}
 
-	return CALL_ORIGINAL(rcx, eMatchGroup);
+	CALL_ORIGINAL(rcx, eMatchGroup);
 }

@@ -19,7 +19,7 @@ public:
 	bool YawOn();
 	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
-	bool GetEdge(CTFPlayer* pEntity, float flEdgeOrigYaw, bool bUpPitch);
+	int GetEdge(CTFPlayer* pEntity, float flEdgeOrigYaw, bool bUpPitch);
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket);
 
 	Vec2 vFakeAngles = {};

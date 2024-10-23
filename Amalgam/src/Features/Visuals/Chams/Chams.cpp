@@ -402,28 +402,28 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 	case Vars::Chams::Backtrack::DrawEnum::Last: // last
 	{
 		auto vLastRec = vRecords.end() - 1;
-		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
-			drawModel(vLastRec->vOrigin, pState, pInfo, vLastRec->BoneMatrix.aBones);
+		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->m_vOrigin) > 0.1f)
+			drawModel(vLastRec->m_vOrigin, pState, pInfo, vLastRec->m_BoneMatrix.m_aBones);
 		break;
 	}
 	case Vars::Chams::Backtrack::DrawEnum::LastFirst: // last + first
 	{
 		auto vFirstRec = vRecords.begin();
-		if (vFirstRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vFirstRec->vOrigin) > 0.1f)
-			drawModel(vFirstRec->vOrigin, pState, pInfo, vFirstRec->BoneMatrix.aBones);
+		if (vFirstRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vFirstRec->m_vOrigin) > 0.1f)
+			drawModel(vFirstRec->m_vOrigin, pState, pInfo, vFirstRec->m_BoneMatrix.m_aBones);
 		auto vLastRec = vRecords.end() - 1;
-		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->vOrigin) > 0.1f)
-			drawModel(vLastRec->vOrigin, pState, pInfo, vLastRec->BoneMatrix.aBones);
+		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->m_vOrigin) > 0.1f)
+			drawModel(vLastRec->m_vOrigin, pState, pInfo, vLastRec->m_BoneMatrix.m_aBones);
 		break;
 	}
 	case Vars::Chams::Backtrack::DrawEnum::All: // all
 	{
 		for (auto& record : vRecords)
 		{
-			if (pEntity->GetAbsOrigin().DistTo(record.vOrigin) < 0.1f)
+			if (pEntity->GetAbsOrigin().DistTo(record.m_vOrigin) < 0.1f)
 				continue;
 
-			drawModel(record.vOrigin, pState, pInfo, record.BoneMatrix.aBones);
+			drawModel(record.m_vOrigin, pState, pInfo, record.m_BoneMatrix.m_aBones);
 		}
 	}
 	}

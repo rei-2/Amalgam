@@ -292,7 +292,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 		flPreferredRecord = 0;
 	if (flPreferredRecord)
 	{
-		auto pivot = std::find_if(vRecords.begin(), vRecords.end(), [](auto& s) -> bool { return s.flSimTime == flPreferredRecord; });
+		auto pivot = std::find_if(vRecords.begin(), vRecords.end(), [](auto& s) -> bool { return s.m_flSimTime == flPreferredRecord; });
 		if (pivot != vRecords.end())
 			std::rotate(vRecords.begin(), pivot, pivot + 1);
 	}
@@ -308,11 +308,11 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 	int iReturn = false;
 	for (auto& pTick : vRecords)
 	{
-		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pLocal) : true) && Vars::Aimbot::General::HitscanPeek.Value;
+		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks() : true) && Vars::Aimbot::General::HitscanPeek.Value;
 
 		if (target.m_TargetType == ETargetType::Player || target.m_TargetType == ETargetType::Sentry)
 		{
-			auto aBones = pTick.BoneMatrix.aBones;
+			auto aBones = pTick.m_BoneMatrix.m_aBones;
 			if (!aBones)
 				continue;
 
@@ -423,7 +423,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 							}
 							if (bWillHit)
 							{
-								flPreferredRecord = pTick.flSimTime;
+								flPreferredRecord = pTick.m_flSimTime;
 
 								target.m_Tick = pTick;
 								target.m_vPos = vTransformed;
@@ -580,22 +580,6 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	return true;
 }
 
-// assume angle calculated outside with other overload
-void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle)
-{
-	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
-	{
-		pCmd->viewangles = vAngle;
-		I::EngineClient->SetViewAngles(pCmd->viewangles); // remove these if uncommenting l124 of createmove
-	}
-	else if (G::IsAttacking)
-	{
-		SDK::FixMovement(pCmd, vAngle);
-		pCmd->viewangles = vAngle;
-		G::SilentAngles = true;
-	}
-}
-
 Vec3 CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 {
 	Vec3 vReturn = {};
@@ -627,6 +611,23 @@ Vec3 CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 	return vReturn;
 }
 
+// assume angle calculated outside with other overload
+void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle)
+{
+	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks();
+	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
+	{
+		pCmd->viewangles = vAngle;
+		I::EngineClient->SetViewAngles(pCmd->viewangles);
+	}
+	else if (G::Attacking == 1 || bDoubleTap)
+	{
+		SDK::FixMovement(pCmd, vAngle);
+		pCmd->viewangles = vAngle;
+		G::SilentAngles = true;
+	}
+}
+
 void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	const int nWeaponID = pWeapon->GetWeaponID();
@@ -639,13 +640,13 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 	switch (nWeaponID)
 	{
 	case TF_WEAPON_SNIPERRIFLE_CLASSIC:
-		if (!iRealAimType && iLastAimType && G::IsAttacking)
+		if (!iRealAimType && iLastAimType && G::Attacking)
 			Vars::Aimbot::General::AimType.Value = iLastAimType;
 	}
 
 	if ((Vars::Aimbot::General::AimHoldsFire.Value == Vars::Aimbot::General::AimHoldsFireEnum::Always || Vars::Aimbot::General::AimHoldsFire.Value == 1 && nWeaponID == TF_WEAPON_MINIGUN) && !G::CanPrimaryAttack && G::LastUserCmd->buttons & IN_ATTACK && Vars::Aimbot::General::AimType.Value && !pWeapon->IsInReload())
 		pCmd->buttons |= IN_ATTACK;
-	if (!Vars::Aimbot::General::AimType.Value || !G::CanPrimaryAttack && Vars::Aimbot::General::AimType.Value == 3 && (nWeaponID == TF_WEAPON_MINIGUN ? pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_FIRING || pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_SPINNING : true))
+	if (!Vars::Aimbot::General::AimType.Value || !G::CanPrimaryAttack && !G::Reloading && !G::DoubleTap && Vars::Aimbot::General::AimType.Value == 3 && (nWeaponID == TF_WEAPON_MINIGUN ? pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_FIRING || pWeapon->As<CTFMinigun>()->m_iWeaponState() == AC_STATE_SPINNING : true))
 		return;
 
 	switch (nWeaponID)
@@ -744,17 +745,17 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			}
 		}
 
-		G::IsAttacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
+		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
 
-		if (G::IsAttacking)
+		if (G::Attacking == 1)
 		{
 			if (target.m_pEntity->IsPlayer())
 				F::Resolver.Aimbot(target.m_pEntity->As<CTFPlayer>(), target.m_nAimedHitbox == HITBOX_HEAD);
 
 			if (target.m_bBacktrack)
-				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.flSimTime) + TIME_TO_TICKS(F::Backtrack.flFakeInterp);
+				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 
-			if (!pWeapon->IsInReload())
+			if (G::CanPrimaryAttack)
 			{
 				if (Vars::Visuals::Bullet::Enabled.Value)
 				{
@@ -764,14 +765,13 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 				if (Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
 				{
 					G::BoxStorage.clear();
-					auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.BoneMatrix.aBones, target.m_pEntity->As<CBaseAnimating>(), {}, target.m_nAimedHitbox);
+					auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>(), {}, target.m_nAimedHitbox);
 					G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 				}
 			}
 		}
 
-		if (!pWeapon->IsInReload())
-			Aim(pCmd, target.m_vAngleTo);
+		Aim(pCmd, target.m_vAngleTo);
 		break;
 	}
 }

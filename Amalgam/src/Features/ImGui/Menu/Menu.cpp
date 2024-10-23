@@ -134,14 +134,14 @@ void CMenu::MenuAimbot()
 				FDropdown("Target", Vars::Aimbot::General::Target, { "Players", "Sentries", "Dispensers", "Teleporters", "Stickies", "NPCs", "Bombs" }, {}, FDropdown_Multi | FDropdown_Left);
 				FDropdown("Ignore", Vars::Aimbot::General::Ignore, { "Invulnerable", "Cloaked", "Dead Ringer", "Vaccinator", "Unsimulated players", "Disguised", "Taunting" }, {}, FDropdown_Multi | FDropdown_Right);
 				FSlider("Aim FOV", Vars::Aimbot::General::AimFOV, 0.f, 180.f, 1.f, "%g", FSlider_Clamp | FSlider_Precision);
-				PushTransparent(FGet(Vars::Aimbot::General::AimType) != 2);
+				PushTransparent(FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Smooth);
 					FSlider("Smoothing## Hitscan", Vars::Aimbot::General::Smoothing, 0.f, 100.f, 1.f, "%g%%", FSlider_Clamp | FSlider_Precision);
 				PopTransparent();
 				FSlider("Max targets", Vars::Aimbot::General::MaxTargets, 1, 6, 1, "%i", FSlider_Min);
-				PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & (1 << 1)));
+				PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & Vars::Aimbot::General::IgnoreEnum::Cloaked));
 					FSlider("Ignore cloak", Vars::Aimbot::General::IgnoreCloakPercentage, 0, 100, 10, "%d%%", FSlider_Clamp);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & (1 << 4)));
+				PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & Vars::Aimbot::General::IgnoreEnum::Unsimulated));
 					FSlider("Tick tolerance", Vars::Aimbot::General::TickTolerance, 0, 21, 1, "%i", FSlider_Clamp);
 				PopTransparent();
 				FColorPicker("Aimbot FOV circle", Vars::Colors::FOVCircle);
@@ -168,8 +168,8 @@ void CMenu::MenuAimbot()
 			{
 				FToggle("Enabled", Vars::Backtrack::Enabled);
 				FToggle("Prefer on shot", Vars::Backtrack::PreferOnShot, FToggle_Middle);
-				FSlider("Fake latency", Vars::Backtrack::Latency, 0, F::Backtrack.flMaxUnlag * 1000, 5, "%i", FSlider_Clamp); // unreliable above 1000 - ping probably
-				FSlider("Fake interp", Vars::Backtrack::Interp, 0, F::Backtrack.flMaxUnlag * 1000, 5, "%i", FSlider_Clamp | FSlider_Precision);
+				FSlider("Fake latency", Vars::Backtrack::Latency, 0, F::Backtrack.m_flMaxUnlag * 1000, 5, "%i", FSlider_Clamp); // unreliable above 1000 - ping probably
+				FSlider("Fake interp", Vars::Backtrack::Interp, 0, F::Backtrack.m_flMaxUnlag * 1000, 5, "%i", FSlider_Clamp | FSlider_Precision);
 				FSlider("Window", Vars::Backtrack::Window, 1, 200, 5, "%i", FSlider_Clamp);
 			} EndSection();
 			if (Vars::Debug::Info.Value)
@@ -193,9 +193,9 @@ void CMenu::MenuAimbot()
 				FDropdown("Hitboxes", Vars::Aimbot::Hitscan::Hitboxes, { "Head", "Body", "Pelvis", "Arms", "Legs" }, { 1 << 0, 1 << 2, 1 << 1, 1 << 3, 1 << 4 }, FDropdown_Multi);
 				FDropdown("Modifiers## Hitscan", Vars::Aimbot::Hitscan::Modifiers, { "Tapfire", "Wait for heatshot", "Wait for charge", "Scoped only", "Auto scope", "Bodyaim if lethal", "Extinguish team" }, {}, FDropdown_Multi);
 				FSlider("Point scale", Vars::Aimbot::Hitscan::PointScale, 0.f, 100.f, 5.f, "%g%%", FSlider_Clamp | FSlider_Precision);
-				PushTransparent(!(FGet(Vars::Aimbot::Hitscan::Modifiers) & (1 << 0)));
+				PushTransparent(!(FGet(Vars::Aimbot::Hitscan::Modifiers) & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire));
 					FSlider("Tapfire distance", Vars::Aimbot::Hitscan::TapFireDist, 250.f, 1000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
-					PopTransparent();
+				PopTransparent();
 			} EndSection();
 			if (Section("Projectile"))
 			{
@@ -220,7 +220,7 @@ void CMenu::MenuAimbot()
 				{
 					FText("\nground");
 					FSlider("samples##ground", Vars::Aimbot::Projectile::GroundSamples, 3, 66, 1, "%i", FSlider_Left);
-					FSlider("straight fuzzy value##ground", Vars::Aimbot::Projectile::GroundStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
+					FSlider("straight fuzzy value##ground", Vars::Aimbot::Projectile::GroundStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Precision);
 					FSlider("low min samples##ground", Vars::Aimbot::Projectile::GroundLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
 					FSlider("high min samples##ground", Vars::Aimbot::Projectile::GroundHighMinimumSamples, 3, 66, 1, "%i", FSlider_Right);
 					FSlider("low min distance##ground", Vars::Aimbot::Projectile::GroundLowMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
@@ -228,7 +228,7 @@ void CMenu::MenuAimbot()
 
 					FText("air");
 					FSlider("samples##air", Vars::Aimbot::Projectile::AirSamples, 3, 66, 1, "%i", FSlider_Left);
-					FSlider("straight fuzzy value##air", Vars::Aimbot::Projectile::AirStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
+					FSlider("straight fuzzy value##air", Vars::Aimbot::Projectile::AirStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Precision);
 					FSlider("low min samples##air", Vars::Aimbot::Projectile::AirLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
 					FSlider("high min samples##air", Vars::Aimbot::Projectile::AirHighMinimumSamples, 3, 66, 1, "%i", FSlider_Right);
 					FSlider("low min distance##air", Vars::Aimbot::Projectile::AirLowMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
@@ -293,10 +293,10 @@ void CMenu::MenuAimbot()
 			{
 				FDropdown("Fakelag", Vars::CL_Move::Fakelag::Fakelag, { "Off", "Plain", "Random", "Adaptive" }, {}, FSlider_Left);
 				FDropdown("Options", Vars::CL_Move::Fakelag::Options, { "Only moving", "On unduck", "Not airborne" }, {}, FDropdown_Multi | FSlider_Right);
-				PushTransparent(FGet(Vars::CL_Move::Fakelag::Fakelag) != 1);
+				PushTransparent(FGet(Vars::CL_Move::Fakelag::Fakelag) != Vars::CL_Move::Fakelag::FakelagEnum::Plain);
 					FSlider("Plain ticks", Vars::CL_Move::Fakelag::PlainTicks, 1, 22, 1, "%i", FSlider_Clamp | FSlider_Left);
 				PopTransparent();
-				PushTransparent(FGet(Vars::CL_Move::Fakelag::Fakelag) != 2);
+				PushTransparent(FGet(Vars::CL_Move::Fakelag::Fakelag) != Vars::CL_Move::Fakelag::FakelagEnum::Random);
 					FSlider("Random ticks", Vars::CL_Move::Fakelag::RandomTicks, 1, 22, 1, "%i - %i", FSlider_Clamp | FSlider_Right);
 				PopTransparent();
 				FToggle("Unchoke on attack", Vars::CL_Move::Fakelag::UnchokeOnAttack);
@@ -313,13 +313,13 @@ void CMenu::MenuAimbot()
 				FDropdown("Fake offset", Vars::AntiHack::AntiAim::FakeYawMode, { "View", "Target" }, {}, FDropdown_Right);
 				FSlider("Real offset## Offset", Vars::AntiHack::AntiAim::RealYawOffset, -180, 180, 5, "%i", FSlider_Left | FSlider_Clamp | FSlider_Precision);
 				FSlider("Fake offset## Offset", Vars::AntiHack::AntiAim::FakeYawOffset, -180, 180, 5, "%i", FSlider_Right | FSlider_Clamp | FSlider_Precision);
-				PushTransparent(FGet(Vars::AntiHack::AntiAim::YawReal) != 5);
-					FSlider("Real jitter", Vars::AntiHack::AntiAim::RealJitter, -90.f, 90.f, 1.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+				PushTransparent(FGet(Vars::AntiHack::AntiAim::YawReal) != Vars::AntiHack::AntiAim::YawEnum::Edge && FGet(Vars::AntiHack::AntiAim::YawReal) != Vars::AntiHack::AntiAim::YawEnum::Jitter);
+					FSlider("Real value", Vars::AntiHack::AntiAim::RealYawValue, -180, 180.f, 5.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
 				PopTransparent();
-				PushTransparent(FGet(Vars::AntiHack::AntiAim::YawFake) != 5);
-					FSlider("Fake jitter", Vars::AntiHack::AntiAim::FakeJitter, -90.f, 90.f, 1.f, "%g", FSlider_Right | FSlider_Clamp | FSlider_Precision);
+				PushTransparent(FGet(Vars::AntiHack::AntiAim::YawFake) != Vars::AntiHack::AntiAim::YawEnum::Edge && FGet(Vars::AntiHack::AntiAim::YawFake) != Vars::AntiHack::AntiAim::YawEnum::Jitter);
+					FSlider("Fake value", Vars::AntiHack::AntiAim::FakeYawValue, -180.f, 180.f, 5.f, "%g", FSlider_Right | FSlider_Clamp | FSlider_Precision);
 				PopTransparent();
-				PushTransparent(FGet(Vars::AntiHack::AntiAim::YawFake) != 6 && FGet(Vars::AntiHack::AntiAim::YawReal) != 6);
+				PushTransparent(FGet(Vars::AntiHack::AntiAim::YawFake) != Vars::AntiHack::AntiAim::YawEnum::Spin && FGet(Vars::AntiHack::AntiAim::YawReal) != Vars::AntiHack::AntiAim::YawEnum::Spin);
 					FSlider("Spin speed", Vars::AntiHack::AntiAim::SpinSpeed, -30.f, 30.f, 1.f, "%g", FSlider_Left | FSlider_Precision);
 				PopTransparent();
 				SetCursorPos({ GetWindowSize().x / 2 + 4, GetCursorPosY() - 24 });
@@ -354,11 +354,11 @@ void CMenu::MenuAimbot()
 					FDropdown("Detection methods", Vars::CheaterDetection::Methods, { "Invalid pitch", "Packet choking", "Aim flicking", "Duck Speed" }, {}, FDropdown_Multi);
 					FSlider("Detections required", Vars::CheaterDetection::DetectionsRequired, 10, 50, 1);
 
-					PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & (1 << 1)));
+					PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::PacketChoking));
 						FSlider("Minimum choking", Vars::CheaterDetection::MinimumChoking, 4, 22, 1);
 					PopTransparent();
 
-					PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & (1 << 2)));
+					PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::AimFlicking));
 						FSlider("Minimum flick angle", Vars::CheaterDetection::MinimumFlick, 10.f, 30.f, 1.f, "%.0f", FSlider_Left);
 						FSlider("Maximum noise", Vars::CheaterDetection::MaximumNoise, 1.f, 10.f, 1.f, "%.0f", FSlider_Right);
 					PopTransparent();
@@ -387,16 +387,16 @@ void CMenu::MenuVisuals()
 			if (Section("ESP"))
 			{
 				FDropdown("Draw", Vars::ESP::Draw, { "Players", "Buildings", "Projectiles", "Objective", "NPCs", "Health", "Ammo", "Money", "Powerups", "Bombs", "Spellbook", "Gargoyle" }, {}, FDropdown_Multi);
-				PushTransparent(!(FGet(Vars::ESP::Draw) & (1 << 0)));
+				PushTransparent(!(FGet(Vars::ESP::Draw) & Vars::ESP::DrawEnum::Players));
 					FDropdown("Player", Vars::ESP::Player, { "Enemy", "Team", "Local", "Friends", "Prioritized", "##Divider", "Name", "Box", "Distance", "Bones", "Health bar", "Health text", "Uber bar", "Uber text", "Class icon", "Class text", "Weapon icon", "Weapon text", "Priority", "Labels", "Buffs", "Debuffs", "Misc", "Lag compensation", "Ping", "KDR" }, {}, FDropdown_Multi);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::ESP::Draw) & (1 << 1)));
+				PushTransparent(!(FGet(Vars::ESP::Draw) & Vars::ESP::DrawEnum::Buildings));
 					FDropdown("Building", Vars::ESP::Building, { "Enemy", "Team", "Local", "Friends", "Prioritized", "##Divider", "Name", "Box", "Distance", "Health bar", "Health text", "Owner", "Level", "Flags" }, {}, FDropdown_Multi);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::ESP::Draw) & (1 << 2)));
+				PushTransparent(!(FGet(Vars::ESP::Draw) & Vars::ESP::DrawEnum::Projectiles));
 					FDropdown("Projectile", Vars::ESP::Projectile, { "Enemy", "Team", "Local", "Friends", "Prioritized", "##Divider", "Name", "Box", "Distance", "Flags" }, {}, FDropdown_Multi);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::ESP::Draw) & (1 << 3)));
+				PushTransparent(!(FGet(Vars::ESP::Draw) & Vars::ESP::DrawEnum::Objective));
 					FDropdown("Objective", Vars::ESP::Objective, { "Enemy", "Team", "##Divider", "Name", "Box", "Distance", "Flags", "Intel return time" }, {}, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
@@ -789,19 +789,19 @@ void CMenu::MenuVisuals()
 					"sky_harvest_01", "sky_harvest_night_01", "sky_halloween", "sky_halloween_night_01", "sky_halloween_night2014_01", "sky_island_01", "sky_rainbow_01"
 				};
 				FSDropdown("Skybox changer", Vars::Visuals::World::SkyboxChanger, skyNames, FSDropdown_Custom | FDropdown_Right);
-				PushTransparent(!(FGet(Vars::Visuals::World::Modulations)& (1 << 0)));
+				PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
 					FColorPicker("World modulation", Vars::Colors::WorldModulation, 0, FColorPicker_Left);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::Visuals::World::Modulations)& (1 << 1)));
+				PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Sky));
 					FColorPicker("Sky modulation", Vars::Colors::SkyModulation, 0, FColorPicker_Middle | FColorPicker_SameLine);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::Visuals::World::Modulations)& (1 << 2)));
+				PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Prop));
 					FColorPicker("Prop modulation", Vars::Colors::PropModulation, 0, FColorPicker_Left);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::Visuals::World::Modulations)& (1 << 3)));
+				PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Particle));
 					FColorPicker("Particle modulation", Vars::Colors::ParticleModulation, 0, FColorPicker_Middle | FColorPicker_SameLine);
 				PopTransparent();
-				PushTransparent(!(FGet(Vars::Visuals::World::Modulations)& (1 << 4)));
+				PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Fog));
 					FColorPicker("Fog modulation", Vars::Colors::FogModulation, 0, FColorPicker_Left);
 				PopTransparent();
 				FToggle("Near prop fade", Vars::Visuals::World::NearPropFade);
@@ -911,7 +911,7 @@ void CMenu::MenuMisc()
 		if (Section("Movement"))
 		{
 			FDropdown("Autostrafe", Vars::Misc::Movement::AutoStrafe, { "Off", "Legit", "Directional" });
-			PushTransparent(FGet(Vars::Misc::Movement::AutoStrafe) != 2);
+			PushTransparent(FGet(Vars::Misc::Movement::AutoStrafe) != Vars::Misc::Movement::AutoStrafeEnum::Directional);
 				FSlider("Autostrafe turn scale", Vars::Misc::Movement::AutoStrafeTurnScale, 0.f, 1.f, 0.1f, "%g", FSlider_Clamp | FSlider_Precision);
 			PopTransparent();
 			FToggle("Bunnyhop", Vars::Misc::Movement::Bunnyhop);
@@ -1042,19 +1042,19 @@ void CMenu::MenuLogs()
 			} EndSection();
 			if (Section("Vote Start"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 0)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::VoteStart));
 					FDropdown("Log to", Vars::Logging::VoteStart::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
 			if (Section("Vote Cast"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 1)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::VoteCast));
 					FDropdown("Log to", Vars::Logging::VoteCast::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
 			if (Section("Class Change"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 2)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::ClassChanges));
 					FDropdown("Log to", Vars::Logging::ClassChange::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
@@ -1063,25 +1063,25 @@ void CMenu::MenuLogs()
 			TableNextColumn();
 			if (Section("Damage"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 3)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::Damage));
 					FDropdown("Log to", Vars::Logging::Damage::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
 			if (Section("Cheat Detection"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 4)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::CheatDetection));
 					FDropdown("Log to", Vars::Logging::CheatDetection::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
 			if (Section("Tags"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 5)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::Tags));
 					FDropdown("Log to", Vars::Logging::Tags::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();
 			if (Section("Aliases"))
 			{
-				PushTransparent(!(FGet(Vars::Logging::Logs) & (1 << 6)));
+				PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::Aliases));
 					FDropdown("Log to", Vars::Logging::Aliases::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 				PopTransparent();
 			} EndSection();

@@ -162,7 +162,7 @@ void CMisc::AutoPeek(CTFPlayer* pLocal, CUserCmd* pCmd)
 		}
 
 		// We've just attacked. Let's return!
-		if (G::LastUserCmd->buttons & IN_ATTACK || G::IsAttacking)
+		if (G::LastUserCmd->buttons & IN_ATTACK || G::Attacking)
 			bReturning = true;
 
 		if (bReturning)
@@ -380,7 +380,7 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 	case 1:
 	{
-		if ((pLocal->IsDucking() ? !Vars::Misc::Movement::CrouchSpeed.Value : !Vars::Misc::Movement::FastAccel.Value) || G::IsAttacking || G::DoubleTap || G::Recharge || G::AntiAim || pCmd->command_number % 2)
+		if ((pLocal->IsDucking() ? !Vars::Misc::Movement::CrouchSpeed.Value : !Vars::Misc::Movement::FastAccel.Value) || G::Attacking == 1 || G::DoubleTap || G::Recharge || G::AntiAim || pCmd->command_number % 2)
 			return;
 
 		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
@@ -406,7 +406,7 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 	static Vec3 vVelocity = {};
 	if (G::AntiWarp)
 	{
-		const int iDoubletapTicks = F::Ticks.GetTicks(pLocal);
+		const int iDoubletapTicks = F::Ticks.GetTicks();
 
 		Vec3 vAngles; Math::VectorAngles(vVelocity, vAngles);
 		vAngles.y = pCmd->viewangles.y - vAngles.y;
@@ -441,7 +441,7 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 	}
 
-	if (!G::IsAttacking && !bSet)
+	if (G::Attacking != 1 && !bSet)
 	{
 		bSet = true;
 		SDK::StopMovement(pLocal, pCmd);
@@ -453,7 +453,7 @@ void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::LegJitter(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 {
-	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::IsAttacking || G::DoubleTap || pSendPacket || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
+	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::Attacking == 1 || G::DoubleTap || pSendPacket || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
 		return;
 
 	static bool pos = true;
@@ -476,7 +476,7 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 	case FNV1A::Hash32Const("client_beginconnect"):
 	case FNV1A::Hash32Const("game_newmap"):
 		iWishCmdrate = iWishUpdaterate = -1;
-		F::Backtrack.flWishInterp = 0.f;
+		F::Backtrack.m_flWishInterp = 0.f;
 		[[fallthrough]];
 	case FNV1A::Hash32Const("teamplay_round_start"):
 		G::LineStorage.clear();
@@ -485,20 +485,9 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 	}
 }
 
-void CMisc::DoubletapPacket(CUserCmd* pCmd, bool* pSendPacket)
-{
-	if (G::DoubleTap /*|| G::Warp*/)
-	{
-		*pSendPacket = G::ShiftedGoal == G::ShiftedTicks;
-		if (I::ClientState->chokedcommands >= 21 // prevent overchoking
-			|| G::ShiftedTicks == G::ShiftedGoal + Vars::CL_Move::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
-			*pSendPacket = true;
-	}
-}
-
 int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 {
-	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::IsAttacking || pLocal->IsInBumperKart())
+	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || pLocal->IsInBumperKart())
 		return 0;
 
 	std::vector<std::pair<Vec3, CBaseEntity*>> vTargets = {};

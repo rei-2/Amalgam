@@ -156,15 +156,15 @@ namespace Vars
 			CVar(SplashRadius, 90.f)
 			CVar(AutoRelease, 0.f)
 
-			CVar(GroundSamples, 15, NOSAVE) // debug
+			CVar(GroundSamples, 66, NOSAVE) // debug
 			CVar(GroundStraightFuzzyValue, 100.f, NOSAVE) // debug
 			CVar(GroundLowMinimumSamples, 5, NOSAVE) // debug
 			CVar(GroundHighMinimumSamples, 15, NOSAVE) // debug
 			CVar(GroundLowMinimumDistance, 0.f, NOSAVE) // debug
 			CVar(GroundHighMinimumDistance, 2500.f, NOSAVE) // debug
 
-			CVar(AirSamples, 15, NOSAVE) // debug
-			CVar(AirStraightFuzzyValue, 0.f, NOSAVE) // debug
+			CVar(AirSamples, 66, NOSAVE) // debug
+			CVar(AirStraightFuzzyValue, 10.f, NOSAVE) // debug
 			CVar(AirLowMinimumSamples, 5, NOSAVE) // debug
 			CVar(AirHighMinimumSamples, 5, NOSAVE) // debug
 			CVar(AirLowMinimumDistance, 100000.f, NOSAVE) // debug
@@ -259,8 +259,8 @@ namespace Vars
 			CVar(FakeYawMode, 0)
 			CVar(RealYawOffset, 0)
 			CVar(FakeYawOffset, 0)
-			CVar(RealJitter, 0)
-			CVar(FakeJitter, 0)
+			CVar(RealYawValue, 0)
+			CVar(FakeYawValue, 0)
 			CVar(SpinSpeed, 15.f)
 			CVar(MinWalk, true)
 			CVar(AntiOverlap, false)

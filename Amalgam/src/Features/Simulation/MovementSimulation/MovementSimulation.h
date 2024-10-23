@@ -90,7 +90,7 @@ private:
 	void Reset(PlayerStorage& playerStorage);
 
 	bool SetupMoveData(PlayerStorage& playerStorage);
-	bool GetYawDifference(const std::deque<MoveData>& vRecords, size_t i, float* flYaw, float flStraightFuzzyValue = 0.f);
+	bool GetYawDifference(PlayerStorage& playerStorage, size_t i, float* flYaw, float flStraightFuzzyValue = 0.f);
 	float GetAverageYaw(PlayerStorage& playerStorage, const int iSamples);
 	bool StrafePrediction(PlayerStorage& playerStorage, const int iSamples);
 

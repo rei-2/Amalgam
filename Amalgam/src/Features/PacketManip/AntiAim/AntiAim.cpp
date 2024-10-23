@@ -38,7 +38,7 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		return false;
 
 	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->IsInBumperKart()
-		|| G::IsAttacking || F::AutoRocketJump.IsRunning()
+		|| G::Attacking == 1 || F::AutoRocketJump.IsRunning()
 		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
 		return false;
 
@@ -49,7 +49,7 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 void CAntiAim::FakeShotAngles(CUserCmd* pCmd)
 {
-	if (!Vars::AntiHack::AntiAim::InvalidShootPitch.Value || !G::IsAttacking || G::PrimaryWeaponType != EWeaponType::HITSCAN)
+	if (!Vars::AntiHack::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN)
 		return;
 
 	G::SilentAngles = true;
@@ -73,7 +73,7 @@ float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOff
 	return (trace.startpos - trace.endpos).Length2D();
 }
 
-bool CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw, bool bUpPitch)
+int CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw, bool bUpPitch)
 {
 	// we should probably make this dynamic for different head positions
 
@@ -82,8 +82,8 @@ bool CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw, bool bUpPi
 	float flEdgeRightDist = EdgeDistance(pEntity, flEdgeOrigYaw, flSize);
 
 	if (flEdgeLeftDist > 299.f && flEdgeRightDist > 299.f)
-		return bUpPitch;
-	return bUpPitch ? flEdgeLeftDist > flEdgeRightDist : flEdgeLeftDist < flEdgeRightDist;
+		return bUpPitch ? 1 : -1;
+	return (bUpPitch ? flEdgeLeftDist > flEdgeRightDist : flEdgeLeftDist < flEdgeRightDist) ? 1 : -1;
 }
 
 void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealYaw, bool bFake, float flEpsilon)
@@ -97,18 +97,29 @@ void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealY
 		flRealYaw += flYawDiff > 0 ? flEpsilon : -flEpsilon;
 }
 
+inline int GetJitter(uint32_t uHash)
+{
+	static std::unordered_map<uint32_t, bool> mJitter = {};
+
+	if (!I::ClientState->chokedcommands)
+		mJitter[uHash] = !mJitter[uHash];
+	return mJitter[uHash] ? 1 : -1;
+}
+
 float CAntiAim::GetYawOffset(CTFPlayer* pEntity, bool bFake)
 {
 	const int iMode = bFake ? Vars::AntiHack::AntiAim::YawFake.Value : Vars::AntiHack::AntiAim::YawReal.Value;
 	const bool bUpPitch = (bFake ? Vars::AntiHack::AntiAim::PitchFake.Value : Vars::AntiHack::AntiAim::PitchReal.Value) == Vars::AntiHack::AntiAim::PitchRealEnum::Up;
+	int iJitter = GetJitter(FNV1A::Hash32Const("Yaw"));
+
 	switch (iMode)
 	{
 	case Vars::AntiHack::AntiAim::YawEnum::Forward: return 0.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Left: return 135.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Right: return -135.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Left: return 90.f;
+	case Vars::AntiHack::AntiAim::YawEnum::Right: return -90.f;
 	case Vars::AntiHack::AntiAim::YawEnum::Backwards: return 180.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Edge: return (GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch) ? 1 : -1) * (bFake ? -135 : 135);
-	case Vars::AntiHack::AntiAim::YawEnum::Jitter: return (bFake ? Vars::AntiHack::AntiAim::FakeJitter.Value : Vars::AntiHack::AntiAim::RealJitter.Value) * (I::GlobalVars->tickcount % 2 ? -1 : 1);
+	case Vars::AntiHack::AntiAim::YawEnum::Edge: return (bFake ? Vars::AntiHack::AntiAim::FakeYawValue.Value : Vars::AntiHack::AntiAim::RealYawValue.Value) * GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch);
+	case Vars::AntiHack::AntiAim::YawEnum::Jitter: return (bFake ? Vars::AntiHack::AntiAim::FakeYawValue.Value : Vars::AntiHack::AntiAim::RealYawValue.Value) * iJitter;
 	case Vars::AntiHack::AntiAim::YawEnum::Spin: return fmod(I::GlobalVars->tickcount * Vars::AntiHack::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
 	}
 	return 0.f;
@@ -155,22 +166,23 @@ float CAntiAim::GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 float CAntiAim::GetPitch(float flCurPitch)
 {
 	float flRealPitch = 0.f, flFakePitch = 0.f;
+	int iJitter = GetJitter(FNV1A::Hash32Const("Pitch"));
 
 	switch (Vars::AntiHack::AntiAim::PitchReal.Value)
 	{
 	case Vars::AntiHack::AntiAim::PitchRealEnum::Up: flRealPitch = -89.f; break;
 	case Vars::AntiHack::AntiAim::PitchRealEnum::Down: flRealPitch = 89.f; break;
 	case Vars::AntiHack::AntiAim::PitchRealEnum::Zero: flRealPitch = 0.f; break;
-	case Vars::AntiHack::AntiAim::PitchRealEnum::Jitter: flRealPitch = -89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
-	case Vars::AntiHack::AntiAim::PitchRealEnum::ReverseJitter: flRealPitch = 89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
+	case Vars::AntiHack::AntiAim::PitchRealEnum::Jitter: flRealPitch = -89.f * iJitter; break;
+	case Vars::AntiHack::AntiAim::PitchRealEnum::ReverseJitter: flRealPitch = 89.f * iJitter; break;
 	}
 
 	switch (Vars::AntiHack::AntiAim::PitchFake.Value)
 	{
 	case Vars::AntiHack::AntiAim::PitchFakeEnum::Up: flFakePitch = -89.f; break;
 	case Vars::AntiHack::AntiAim::PitchFakeEnum::Down: flFakePitch = 89.f; break;
-	case Vars::AntiHack::AntiAim::PitchFakeEnum::Jitter: flFakePitch = -89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
-	case Vars::AntiHack::AntiAim::PitchFakeEnum::ReverseJitter: flFakePitch = 89.f * (I::GlobalVars->tickcount % 2 ? -1 : 1); break;
+	case Vars::AntiHack::AntiAim::PitchFakeEnum::Jitter: flFakePitch = -89.f * iJitter; break;
+	case Vars::AntiHack::AntiAim::PitchFakeEnum::ReverseJitter: flFakePitch = 89.f * iJitter; break;
 	}
 
 	if (Vars::AntiHack::AntiAim::PitchReal.Value && Vars::AntiHack::AntiAim::PitchFake.Value)

@@ -61,10 +61,9 @@ class CAimbotProjectile
 	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::deque<Vec3>* pPlayerPath, std::deque<Vec3>* pProjectilePath, std::vector<DrawBox>* pBoxes, float* pTimeTo);
 	bool RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
-	void Aim(CUserCmd* pCmd, Vec3& vAngle);
 	Vec3 Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod = Vars::Aimbot::General::AimType.Value);
+	void Aim(CUserCmd* pCmd, Vec3& vAngle);
 
-	int m_iAimType = 0;
 	bool m_bLastTickHeld = false;
 
 public:

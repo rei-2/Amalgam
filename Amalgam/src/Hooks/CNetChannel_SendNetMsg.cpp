@@ -21,7 +21,7 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool, __fastcall,
 			// intercept and change any vars we want to control
 			switch (FNV1A::Hash32(localCvar->Name))
 			{
-			case FNV1A::Hash32Const("cl_interp"): strncpy_s(localCvar->Value, std::to_string(F::Backtrack.flWishInterp).c_str(), MAX_OSPATH); break;
+			case FNV1A::Hash32Const("cl_interp"): strncpy_s(localCvar->Value, std::to_string(F::Backtrack.m_flWishInterp).c_str(), MAX_OSPATH); break;
 			case FNV1A::Hash32Const("cl_interp_ratio"): strncpy_s(localCvar->Value, "1.0", MAX_OSPATH); break;
 			case FNV1A::Hash32Const("cl_interpolate"): strncpy_s(localCvar->Value, "1", MAX_OSPATH); break;
 			case FNV1A::Hash32Const("cl_cmdrate"): strncpy_s(localCvar->Value, std::to_string(F::Misc.iWishCmdrate).c_str(), MAX_OSPATH); break;

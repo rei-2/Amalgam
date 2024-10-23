@@ -3,6 +3,7 @@
 #include "../Aimbot.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
+#include "../../TickHandler/TickHandler.h"
 #include "../../Visuals/Visuals.h"
 
 std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
@@ -895,22 +896,6 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 
 
 
-// assume angle calculated outside with other overload
-void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle)
-{
-	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
-	{
-		pCmd->viewangles = vAngle;
-		I::EngineClient->SetViewAngles(pCmd->viewangles);
-	}
-	else if (G::IsAttacking)
-	{
-		SDK::FixMovement(pCmd, vAngle);
-		pCmd->viewangles = vAngle;
-		G::PSilentAngles = true;
-	}
-}
-
 Vec3 CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 {
 	Vec3 vReturn = {};
@@ -940,6 +925,23 @@ Vec3 CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 	return vReturn;
 }
 
+// assume angle calculated outside with other overload
+void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle)
+{
+	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks();
+	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
+	{
+		pCmd->viewangles = vAngle;
+		I::EngineClient->SetViewAngles(pCmd->viewangles);
+	}
+	else if (G::Attacking == 1 || bDoubleTap)
+	{
+		SDK::FixMovement(pCmd, vAngle);
+		pCmd->viewangles = vAngle;
+		G::PSilentAngles = true;
+	}
+}
+
 bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	const int nWeaponID = pWeapon->GetWeaponID();
@@ -953,18 +955,20 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	case TF_WEAPON_COMPOUND_BOW:
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 	case TF_WEAPON_CANNON:
-		if (!Vars::Aimbot::General::AutoShoot.Value && !iRealAimType && iLastAimType && G::IsAttacking)
+		if (!Vars::Aimbot::General::AutoShoot.Value && !iRealAimType && iLastAimType && G::Attacking)
 			Vars::Aimbot::General::AimType.Value = iLastAimType;
 	}
 
-	if (!G::IsThrowing)
-		m_iAimType = Vars::Aimbot::General::AimType.Value;
-	else if (m_iAimType)
-		Vars::Aimbot::General::AimType.Value = m_iAimType;
+	static int iAimType = 0;
+	if (!G::Throwing)
+		iAimType = Vars::Aimbot::General::AimType.Value;
+	else if (iAimType)
+		Vars::Aimbot::General::AimType.Value = iAimType;
 
 	if (Vars::Aimbot::General::AimHoldsFire.Value == Vars::Aimbot::General::AimHoldsFireEnum::Always && !G::CanPrimaryAttack && G::LastUserCmd->buttons & IN_ATTACK && Vars::Aimbot::General::AimType.Value && !pWeapon->IsInReload())
 		pCmd->buttons |= IN_ATTACK;
-	if (!Vars::Aimbot::General::AimType.Value || !G::CanPrimaryAttack && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent && nWeaponID != TF_WEAPON_PIPEBOMBLAUNCHER && nWeaponID != TF_WEAPON_CANNON)
+	// the G::DoubleTap condition is not a great fix here and actually properly predicting when shots will be fired should likely be done over this, but it's fine for now
+	if (!Vars::Aimbot::General::AimType.Value || !G::CanPrimaryAttack && !G::Reloading && !G::DoubleTap && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent && nWeaponID != TF_WEAPON_PIPEBOMBLAUNCHER && nWeaponID != TF_WEAPON_CANNON)
 		return true;
 
 	auto targets = SortTargets(pLocal, pWeapon);
@@ -975,7 +979,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		&& (nWeaponID == TF_WEAPON_COMPOUND_BOW || nWeaponID == TF_WEAPON_PIPEBOMBLAUNCHER || nWeaponID == TF_WEAPON_CANNON))
 	{
 		pCmd->buttons |= IN_ATTACK;
-		if (!G::CanPrimaryAttack && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
+		if (!G::CanPrimaryAttack && !G::Reloading && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
 			return true;
 	}
 
@@ -1028,53 +1032,52 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			}
 		}
 
-		G::IsAttacking = F::Aimbot.bRan = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
+		F::Aimbot.bRan = G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
 
-		if (!pWeapon->IsInReload() /*|| pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW*/)
+		if (G::Attacking == 1 || !Vars::Aimbot::General::AutoShoot.Value)
 		{
-			if (G::IsAttacking || !Vars::Aimbot::General::AutoShoot.Value)
+			if (Vars::Visuals::Simulation::PlayerPath.Value
+				|| Vars::Visuals::Simulation::ProjectilePath.Value && G::Attacking == 1
+				|| Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
 			{
-				if (Vars::Visuals::Simulation::PlayerPath.Value
-					|| Vars::Visuals::Simulation::ProjectilePath.Value && G::IsAttacking
-					|| Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
-					G::LineStorage.clear();
-
-				if (Vars::Visuals::Simulation::PlayerPath.Value)
-				{
-					if (Vars::Colors::PlayerPath.Value.a)
-						G::PathStorage.push_back({ vPlayerPath, Vars::Visuals::Simulation::Timed.Value ? -int(vPlayerPath.size()) : I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
-					if (Vars::Colors::PlayerPathClipped.Value.a)
-						G::PathStorage.push_back({ vPlayerPath, Vars::Visuals::Simulation::Timed.Value ? -int(vPlayerPath.size()) : I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
-				}
-				if (Vars::Visuals::Simulation::ProjectilePath.Value && G::IsAttacking)
-				{
-					if (Vars::Colors::ProjectilePath.Value.a)
-						G::PathStorage.push_back({ vProjectilePath, Vars::Visuals::Simulation::Timed.Value ? -int(vProjectilePath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectilePath.Value, Vars::Visuals::Simulation::ProjectilePath.Value });
-					if (Vars::Colors::ProjectilePathClipped.Value.a)
-						G::PathStorage.push_back({ vProjectilePath, Vars::Visuals::Simulation::Timed.Value ? -int(vProjectilePath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectilePathClipped.Value, Vars::Visuals::Simulation::ProjectilePath.Value, true });
-				}
-				if (Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
-				{
-					G::BoxStorage.clear();
-					G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
-				}
+				G::PathStorage.clear();
+				G::LineStorage.clear();
 			}
 
-			if (!pWeapon->IsInReload())
-				Aim(pCmd, target.m_vAngleTo);
-			if (G::PSilentAngles)
+			if (Vars::Visuals::Simulation::PlayerPath.Value)
 			{
-				switch (pWeapon->GetWeaponID())
-				{
-				case TF_WEAPON_FLAMETHROWER: // angles show up anyways
-				case TF_WEAPON_CLEAVER: // can't psilent with these weapons, they use SetContextThink
-				case TF_WEAPON_JAR:
-				case TF_WEAPON_JAR_MILK:
-				case TF_WEAPON_JAR_GAS:
-				case TF_WEAPON_BAT_WOOD:
-				case TF_WEAPON_BAT_GIFTWRAP:
-					G::PSilentAngles = false, G::SilentAngles = true;
-				}
+				if (Vars::Colors::PlayerPath.Value.a)
+					G::PathStorage.push_back({ vPlayerPath, Vars::Visuals::Simulation::Timed.Value ? -int(vPlayerPath.size()) : I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
+				if (Vars::Colors::PlayerPathClipped.Value.a)
+					G::PathStorage.push_back({ vPlayerPath, Vars::Visuals::Simulation::Timed.Value ? -int(vPlayerPath.size()) : I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
+			}
+			if (Vars::Visuals::Simulation::ProjectilePath.Value && G::Attacking == 1)
+			{
+				if (Vars::Colors::ProjectilePath.Value.a)
+					G::PathStorage.push_back({ vProjectilePath, Vars::Visuals::Simulation::Timed.Value ? -int(vProjectilePath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectilePath.Value, Vars::Visuals::Simulation::ProjectilePath.Value });
+				if (Vars::Colors::ProjectilePathClipped.Value.a)
+					G::PathStorage.push_back({ vProjectilePath, Vars::Visuals::Simulation::Timed.Value ? -int(vProjectilePath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()) : I::GlobalVars->curtime + 5.f, Vars::Colors::ProjectilePathClipped.Value, Vars::Visuals::Simulation::ProjectilePath.Value, true });
+			}
+			if (Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
+			{
+				G::BoxStorage.clear();
+				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
+			}
+		}
+
+		Aim(pCmd, target.m_vAngleTo);
+		if (G::PSilentAngles)
+		{
+			switch (pWeapon->GetWeaponID())
+			{
+			case TF_WEAPON_FLAMETHROWER: // angles show up anyways
+			case TF_WEAPON_CLEAVER: // can't psilent with these weapons, they use SetContextThink
+			case TF_WEAPON_JAR:
+			case TF_WEAPON_JAR_MILK:
+			case TF_WEAPON_JAR_GAS:
+			case TF_WEAPON_BAT_WOOD:
+			case TF_WEAPON_BAT_GIFTWRAP:
+				G::PSilentAngles = false, G::SilentAngles = true;
 			}
 		}
 		break;

@@ -52,9 +52,10 @@ void CTickshiftHandler::Teleport()
 
 void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
+	bool bAttacking = G::PrimaryWeaponType == EWeaponType::MELEE ? pCmd->buttons & IN_ATTACK : G::Attacking;
 	if (G::ShiftedTicks < std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift)
 		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack
-		|| !G::CanPrimaryAttack || (G::PrimaryWeaponType == EWeaponType::MELEE ? !(pCmd->buttons & IN_ATTACK) : !G::IsAttacking) && !G::DoubleTap || F::AutoRocketJump.IsRunning())
+		|| !G::CanPrimaryAttack && !G::Reloading || !bAttacking && !G::DoubleTap || F::AutoRocketJump.IsRunning())
 		return;
 
 	G::DoubleTap = Vars::CL_Move::Doubletap::Doubletap.Value;
@@ -64,7 +65,7 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 		G::ShiftedGoal = G::ShiftedTicks - std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift);
 }
 
-int CTickshiftHandler::GetTicks(CTFPlayer* pLocal)
+int CTickshiftHandler::GetTicks()
 {
 	if (G::DoubleTap && G::ShiftedGoal < G::ShiftedTicks)
 		return G::ShiftedTicks - G::ShiftedGoal;
@@ -144,7 +145,7 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 		{
 			if (!ValidWeapon(pWeapon))
 				G::WaitForShift = 2;
-			else if (G::IsAttacking || !G::CanPrimaryAttack)
+			else if (G::Attacking || !G::CanPrimaryAttack && !G::Reloading)
 				G::WaitForShift = Vars::CL_Move::Doubletap::TickLimit.Value;
 		}
 	}
@@ -213,4 +214,15 @@ void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CT
 
 	MovePre(pLocal);
 	MoveMain(accumulated_extra_samples, bFinalTick);
+}
+
+void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
+{
+	if (!G::DoubleTap /*&& !G::Warp*/)
+		return;
+
+	*pSendPacket = G::ShiftedGoal == G::ShiftedTicks;
+	if (I::ClientState->chokedcommands >= 21 // prevent overchoking
+		|| G::ShiftedTicks == G::ShiftedGoal + Vars::CL_Move::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
+		*pSendPacket = true;
 }

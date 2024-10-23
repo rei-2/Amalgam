@@ -315,10 +315,10 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 		for (TickRecord& pTick : newRecords)
 		{
 			vRecords.pop_back();
-			vRecords.push_front({ pTick.flSimTime, {}, pTick.vOrigin });
+			vRecords.push_front({ pTick.m_flSimTime, {}, pTick.m_vOrigin });
 		}
 		for (TickRecord& pTick : vRecords)
-			pTick.flSimTime -= TICKS_TO_TIME(newRecords.size());
+			pTick.m_flSimTime -= TICKS_TO_TIME(newRecords.size());
 	}
 	std::deque<TickRecord> validRecords = target.m_TargetType == ETargetType::Player ? F::Backtrack.GetValidRecords(&vRecords, pLocal, true) : vRecords;
 	if (!Vars::Backtrack::Enabled.Value && !validRecords.empty())
@@ -341,9 +341,9 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 	for (auto& pTick : validRecords)
 	{
 		const Vec3 vRestore = target.m_pEntity->GetAbsOrigin();
-		target.m_pEntity->SetAbsOrigin(pTick.vOrigin);
+		target.m_pEntity->SetAbsOrigin(pTick.m_vOrigin);
 
-		target.m_vPos = pTick.vOrigin + vDiff;
+		target.m_vPos = pTick.m_vOrigin + vDiff;
 		target.m_vAngleTo = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, target.m_vPos));
 
 		Vec3 vForward; Math::AngleVectors(target.m_vAngleTo, &vForward);
@@ -397,22 +397,6 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 
 
 
-// assume angle calculated outside with other overload
-void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
-{
-	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
-	{
-		pCmd->viewangles = vAngle;
-		I::EngineClient->SetViewAngles(pCmd->viewangles);
-	}
-	else if (G::IsAttacking)
-	{
-		SDK::FixMovement(pCmd, vAngle);
-		pCmd->viewangles = vAngle;
-		G::PSilentAngles = true;
-	}
-}
-
 Vec3 CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 {
 	Vec3 vReturn = {};
@@ -442,6 +426,23 @@ Vec3 CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 	return vReturn;
 }
 
+// assume angle calculated outside with other overload
+void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
+{
+	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks();
+	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
+	{
+		pCmd->viewangles = vAngle;
+		I::EngineClient->SetViewAngles(pCmd->viewangles);
+	}
+	else if (G::Attacking == 1 || bDoubleTap)
+	{
+		SDK::FixMovement(pCmd, vAngle);
+		pCmd->viewangles = vAngle;
+		G::PSilentAngles = true;
+	}
+}
+
 void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	static int iAimType = 0;
@@ -462,7 +463,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	if (targets.empty())
 		return;
 
-	iDoubletapTicks = F::Ticks.GetTicks(pLocal);
+	iDoubletapTicks = F::Ticks.GetTicks();
 	const bool bShouldSwing = iDoubletapTicks <= (GetSwingTime(pWeapon) ? 14 : 0) || Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
 
 	Vec3 vEyePos = pLocal->GetShootPos();
@@ -493,13 +494,12 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 				G::DoubleTap = true;
 		}
 
-		const bool bAttacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
-		G::IsAttacking = bAttacking || bShouldSwing && G::DoubleTap; // dumb but works
+		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
 
-		if (G::IsAttacking)
+		if (G::Attacking == 1)
 		{
 			if (target.m_bBacktrack)
-				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.flSimTime) + TIME_TO_TICKS(F::Backtrack.flFakeInterp);
+				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 			// bug: fast old records seem to be progressively more unreliable ?
 
 			if (Vars::Visuals::Bullet::Enabled.Value)
@@ -510,7 +510,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			if (Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
 			{
 				G::BoxStorage.clear();
-				auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.BoneMatrix.aBones, target.m_pEntity->As<CBaseAnimating>());
+				auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
 				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 			}
 		}
@@ -534,7 +534,6 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 		}
 
 		Aim(pCmd, target.m_vAngleTo);
-		G::IsAttacking = bAttacking;
 		break;
 	}
 }
@@ -614,7 +613,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 
 		if (pCmd->buttons & IN_ATTACK)
 		{
-			G::IsAttacking = true;
+			G::Attacking = true;
 			target.m_vAngleTo = Aim(pCmd->viewangles, Math::CalcAngle(vLocalPos, target.m_vPos));
 			target.m_vAngleTo.x = pCmd->viewangles.x; // we don't need to care about pitch
 			Aim(pCmd, target.m_vAngleTo);

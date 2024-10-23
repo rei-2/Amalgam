@@ -13,8 +13,8 @@ class CAimbotHitscan
 	float GetMaxRange(CTFWeaponBase* pWeapon);
 	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
-	void Aim(CUserCmd* pCmd, Vec3& vAngle);
 	Vec3 Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod = Vars::Aimbot::General::AimType.Value);
+	void Aim(CUserCmd* pCmd, Vec3& vAngle);
 	bool ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, const Target_t& target);
 
 public:

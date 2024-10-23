@@ -6,30 +6,30 @@
 class CIncomingSequence
 {
 public:
-	int InReliableState;
-	int SequenceNr;
-	float CurTime;
+	int m_nInReliableState;
+	int m_nSequenceNr;
+	float m_flTime;
 
-	CIncomingSequence(int inState, int seqNr, float time)
+	CIncomingSequence(int iState, int iSequence, float flTime)
 	{
-		InReliableState = inState;
-		SequenceNr = seqNr;
-		CurTime = time;
+		m_nInReliableState = iState;
+		m_nSequenceNr = iSequence;
+		m_flTime = flTime;
 	}
 };
 
 struct BoneMatrix
 {
-	matrix3x4 aBones[128];
+	matrix3x4 m_aBones[128];
 };
 
 struct TickRecord
 {
-	float flSimTime = 0.f;
-	BoneMatrix BoneMatrix = {};
-	Vec3 vOrigin = {};
-	bool bOnShot = false;
-	bool bInvalid = false;
+	float m_flSimTime = 0.f;
+	BoneMatrix m_BoneMatrix = {};
+	Vec3 m_vOrigin = {};
+	bool m_bOnShot = false;
+	bool m_bInvalid = false;
 };
 
 class CBacktrack
@@ -44,18 +44,20 @@ class CBacktrack
 	void CleanRecords();
 
 	// data
-	std::unordered_map<int, bool> mDidShoot;
+	std::unordered_map<int, bool> m_mDidShoot;
 
 	// data - fake latency
-	std::deque<CIncomingSequence> dSequences;
-	int iLastInSequence = 0;
-
-	bool bLastTickHeld = false;
+	std::deque<CIncomingSequence> m_dSequences;
+	int m_iLastInSequence = 0;
+	int m_nInSequenceNr = 0;
+	int m_nInReliableState = 0;
+	int m_nOldInSequenceNr = 0;
+	int m_nOldTickBase = 0;
 
 public:
 	float GetLerp();
 	float GetFake();
-	float GetReal(int iFlow = -1);
+	float GetReal(int iFlow = -1, bool bNoFake = true);
 
 	std::deque<TickRecord>* GetRecords(CBaseEntity* pEntity);
 	std::deque<TickRecord> GetValidRecords(std::deque<TickRecord>* pRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false);
@@ -67,15 +69,16 @@ public:
 	void ResolverUpdate(CBaseEntity* pEntity);
 	void ReportShot(int iIndex);
 	void AdjustPing(CNetChannel* netChannel);
+	void RestorePing(CNetChannel* netChannel);
 
-	int iTickCount = 0;
-	float flMaxUnlag = 1.f;
+	int m_iTickCount = 0;
+	float m_flMaxUnlag = 1.f;
 
-	float flFakeLatency = 0.f;
-	float flFakeInterp = 0.015f;
-	float flWishInterp = 0.015f;
+	float m_flFakeLatency = 0.f;
+	float m_flFakeInterp = 0.015f;
+	float m_flWishInterp = 0.015f;
 
-	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> mRecords;
+	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> m_mRecords;
 };
 
 ADD_FEATURE(CBacktrack, Backtrack)

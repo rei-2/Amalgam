@@ -10,14 +10,8 @@ MAKE_HOOK(CNetChannel_SendDatagram, S::CNetChannel_SendDatagram(), int, __fastca
 	if (!pNetChan || datagram)
 		return CALL_ORIGINAL(pNetChan, datagram);
 
-	F::Backtrack.flFakeLatency = std::min(F::Backtrack.flFakeLatency + TICKS_TO_TIME(1), F::Backtrack.GetFake());
-	if (!Vars::Backtrack::Enabled.Value || !Vars::Backtrack::Latency.Value || !H::Entities.GetLocal())
-		return CALL_ORIGINAL(pNetChan, datagram);
-
-	const int nInSequenceNr = pNetChan->m_nInSequenceNr, nInReliableState = pNetChan->m_nInReliableState;
 	F::Backtrack.AdjustPing(pNetChan);
 	const int iReturn = CALL_ORIGINAL(pNetChan, datagram);
-	pNetChan->m_nInSequenceNr = nInSequenceNr, pNetChan->m_nInReliableState = nInReliableState;
-
+	F::Backtrack.RestorePing(pNetChan);
 	return iReturn;
 }

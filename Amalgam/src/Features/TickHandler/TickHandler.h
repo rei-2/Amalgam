@@ -20,9 +20,10 @@ class CTickshiftHandler
 	bool bGoalReached = true;
 
 public:
-	int GetTicks(CTFPlayer* pLocal);
+	int GetTicks();
 	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
 	void MovePost(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void ManagePacket(CUserCmd* pCmd, bool* pSendPacket);
 	void Reset();
 
 	int iDeficit = 0;

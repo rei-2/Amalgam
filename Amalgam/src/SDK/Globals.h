@@ -45,11 +45,12 @@ namespace G
 {
 	inline bool Unload = false;
 
-	inline bool IsAttacking = false;
+	inline int Attacking = 0;
+	inline bool Reloading = false;
 	inline bool CanPrimaryAttack = false;
 	inline bool CanSecondaryAttack = false;
 	inline bool CanHeadshot = false;
-	inline bool IsThrowing = false;
+	inline bool Throwing = false;
 	inline float Lerp = 0.015f;
 
 	inline EWeaponType PrimaryWeaponType = {}, SecondaryWeaponType = {};
