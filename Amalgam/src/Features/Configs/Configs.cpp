@@ -277,7 +277,7 @@ CConfigs::CConfigs()
 			if (!bLegacy)\
 			{\
 				int iBind = std::stoi(it.first);\
-				if ((F::Binds.vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOCOND) && iBind != DEFAULT_BIND)\
+				if ((F::Binds.vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
 					continue;\
 				LoadJson(*mapTree, it.first, var->As<type>()->Map[iBind]);\
 			}\
@@ -298,7 +298,7 @@ CConfigs::CConfigs()
 						}\
 					}\
 				}\
-				if (iBind == -2 || (F::Binds.vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOCOND) && iBind != DEFAULT_BIND)\
+				if (iBind == -2 || (F::Binds.vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
 					continue;\
 				LoadJson(*mapTree, it.first, var->As<type>()->Map[iBind]);\
 			}\

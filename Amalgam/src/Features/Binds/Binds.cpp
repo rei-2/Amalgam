@@ -21,7 +21,7 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 			const bool bDefault = iBind == DEFAULT_BIND;
 			for (auto var : g_Vars)
 			{
-				if (var->m_iFlags & (NOSAVE | NOCOND) && !bDefault)
+				if (var->m_iFlags & (NOSAVE | NOBIND) && !bDefault)
 					continue;
 
 				SetT(bool, iBind)
@@ -148,6 +148,8 @@ void CBinds::AddBind(int iBind, Bind_t tBind)
 		vBinds[iBind] = tBind;
 }
 
+#define HasType(type, bind) IsType(type) && var->As<type>()->Map.find(bind) != var->As<type>()->Map.end()
+
 #define RemoveType(type, bind)\
 {\
 	std::unordered_map<int, type> mMap = {};\
@@ -165,9 +167,33 @@ void CBinds::AddBind(int iBind, Bind_t tBind)
 }
 #define RemoveT(type, bind) if (IsType(type)) RemoveType(type, bind)
 
-void CBinds::RemoveBind(int iBind)
+void CBinds::RemoveBind(int iBind, bool bForce)
 {
-	
+	if (!bForce)
+	{
+		for (auto var : g_Vars)
+		{
+			if (HasType(bool, iBind)
+				|| HasType(int, iBind)
+				|| HasType(float, iBind)
+				|| HasType(IntRange_t, iBind)
+				|| HasType(FloatRange_t, iBind)
+				|| HasType(std::string, iBind)
+				|| HasType(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iBind)
+				|| HasType(Color_t, iBind)
+				|| HasType(Gradient_t, iBind)
+				|| HasType(Vec3, iBind)
+				|| HasType(DragBox_t, iBind)
+				|| HasType(WindowBox_t, iBind))
+				return;
+		}
+		for (auto& tBind : F::Binds.vBinds)
+		{
+			if (tBind.Parent == iBind)
+				return;
+		}
+	}
+
 	auto removeBind = [&](int iIndex)
 		{
 			auto it = vBinds.begin() + iIndex;

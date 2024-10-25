@@ -84,7 +84,8 @@ namespace MAKE_INTERFACE_SCOPE \
 #define NONE 0
 #define VISUAL (1 << 0)
 #define NOSAVE (1 << 1)
-#define NOCOND (1 << 2)
+#define NOBIND (1 << 2)
+#define DEFAULT_BIND -1
 
 #define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }
 #define ADD_FEATURE(type, name) ADD_FEATURE_CUSTOM(type, name, F)

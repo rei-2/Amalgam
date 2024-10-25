@@ -28,7 +28,7 @@ public:
 	bool HasChildren(int iBind);
 	int GetParent(int iBind);
 	void AddBind(int iBind, Bind_t tCond);
-	void RemoveBind(int iBind);
+	void RemoveBind(int iBind, bool bForce = true);
 
 	std::vector<Bind_t> vBinds = {};
 };

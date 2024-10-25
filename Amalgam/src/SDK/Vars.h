@@ -79,31 +79,31 @@ inline ConfigVar<T>::ConfigVar(T value, std::string name, int iFlags)
 #define NONE 0
 #define VISUAL (1 << 0)
 #define NOSAVE (1 << 1)
-#define NOCOND (1 << 2)
+#define NOBIND (1 << 2)
 
 namespace Vars
 {
 	NAMESPACE_BEGIN(Menu)
 		CVar(CheatName, std::string("Amalgam"), VISUAL)
 		CVar(CheatPrefix, std::string("[Amalgam]"), VISUAL)
-		CVar(MenuPrimaryKey, VK_INSERT, NOCOND)
-		CVar(MenuSecondaryKey, VK_F3, NOCOND)
+		CVar(MenuPrimaryKey, VK_INSERT, NOBIND)
+		CVar(MenuSecondaryKey, VK_F3, NOBIND)
 
 		CVar(ShowBinds, false)
-		CVar(BindsDisplay, DragBox_t(), NOCOND)
-		CVar(MenuShowsBinds, false, NOCOND)
+		CVar(BindsDisplay, DragBox_t(), NOBIND)
+		CVar(MenuShowsBinds, false, NOBIND)
 
 		CVarEnum(Indicators, 0b00000, NONE, Ticks = 1 << 0, CritHack = 1 << 1, Spectators = 1 << 2, Ping = 1 << 3, Conditions = 1 << 4, SeedPrediction = 1 << 5)
 		//CVar(SpectatorAvatars, false, VISUAL)
 
-		CVar(TicksDisplay, DragBox_t(), NOCOND)
-		CVar(CritsDisplay, DragBox_t(), NOCOND)
-		CVar(SpectatorsDisplay, DragBox_t(), NOCOND)
-		CVar(PingDisplay, DragBox_t(), NOCOND)
-		CVar(ConditionsDisplay, DragBox_t(), NOCOND)
-		CVar(SeedPredictionDisplay, DragBox_t(), NOCOND)
+		CVar(TicksDisplay, DragBox_t(), NOBIND)
+		CVar(CritsDisplay, DragBox_t(), NOBIND)
+		CVar(SpectatorsDisplay, DragBox_t(), NOBIND)
+		CVar(PingDisplay, DragBox_t(), NOBIND)
+		CVar(ConditionsDisplay, DragBox_t(), NOBIND)
+		CVar(SeedPredictionDisplay, DragBox_t(), NOBIND)
 
-		CVar(DPI, 1.f, NOCOND)
+		CVar(DPI, 1.f, NOBIND)
 
 		SUBNAMESPACE_BEGIN(Theme)
 			CVar(Accent, Color_t(255, 101, 101, 255), VISUAL)
@@ -520,7 +520,7 @@ namespace Vars
 			CVar(Box, true, VISUAL)
 			CVar(SwingLines, false, VISUAL)
 			CVar(ProjectileCamera, false, VISUAL)
-			CVar(ProjectileWindow, WindowBox_t(), NOCOND)
+			CVar(ProjectileWindow, WindowBox_t(), NOBIND)
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Trajectory)
@@ -581,7 +581,7 @@ namespace Vars
 			CVar(Enabled, false, VISUAL)
 			CVar(AlwaysDraw, true, VISUAL)
 			CVarEnum(Style, 0, VISUAL, Circle, Rectangle)
-			CVar(Window, WindowBox_t(), NOCOND)
+			CVar(Window, WindowBox_t(), NOBIND)
 			CVar(Range, 1500, VISUAL)
 			CVar(BackAlpha, 128, VISUAL)
 			CVar(LineAlpha, 255, VISUAL)
