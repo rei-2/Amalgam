@@ -191,7 +191,7 @@ void CMenu::MenuAimbot()
 			if (Section("Hitscan"))
 			{
 				FDropdown("Hitboxes", Vars::Aimbot::Hitscan::Hitboxes, { "Head", "Body", "Pelvis", "Arms", "Legs" }, { 1 << 0, 1 << 2, 1 << 1, 1 << 3, 1 << 4 }, FDropdown_Multi);
-				FDropdown("Modifiers## Hitscan", Vars::Aimbot::Hitscan::Modifiers, { "Tapfire", "Wait for heatshot", "Wait for charge", "Scoped only", "Auto scope", "Bodyaim if lethal", "Extinguish team" }, {}, FDropdown_Multi);
+				FDropdown("Modifiers## Hitscan", Vars::Aimbot::Hitscan::Modifiers, { "Tapfire", "Wait for headshot", "Wait for charge", "Scoped only", "Auto scope", "Bodyaim if lethal", "Extinguish team" }, {}, FDropdown_Multi);
 				FSlider("Point scale", Vars::Aimbot::Hitscan::PointScale, 0.f, 100.f, 5.f, "%g%%", FSlider_Clamp | FSlider_Precision);
 				PushTransparent(!(FGet(Vars::Aimbot::Hitscan::Modifiers) & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire));
 					FSlider("Tapfire distance", Vars::Aimbot::Hitscan::TapFireDist, 250.f, 1000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
@@ -1098,7 +1098,7 @@ void CMenu::MenuSettings()
 
 	switch (CurrentConfigTab)
 	{
-		// Settings
+	// Settings
 	case 0:
 		if (BeginTable("ConfigSettingsTable", 2))
 		{
@@ -1360,7 +1360,7 @@ void CMenu::MenuSettings()
 			EndTable();
 		}
 		break;
-		// Binds
+	// Binds
 	case 1:
 		if (Section("Settings"))
 		{
@@ -1372,6 +1372,10 @@ void CMenu::MenuSettings()
 			static int iBind = DEFAULT_BIND;
 			static Bind_t tBind = {};
 
+			static int bParent = false;
+			if (bParent)
+				SetMouseCursor(ImGuiMouseCursor_Hand);
+
 			if (BeginTable("BindsTable", 2))
 			{
 				/* Column 1 */
@@ -1379,7 +1383,11 @@ void CMenu::MenuSettings()
 				if (BeginChild("BindsTableTable1", { GetColumnWidth() + 4, 104 }, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoBackground))
 				{
 					FSDropdown("Name", &tBind.Name, {}, FSDropdown_AutoUpdate | FDropdown_Left);
-					//FSDropdown("Parent", &tBind.Parent, {}, FSDropdown_AutoUpdate | FDropdown_Right);
+					{
+						auto sParent = bParent ? "..." : tBind.Parent != DEFAULT_BIND && tBind.Parent < F::Binds.vBinds.size() ? F::Binds.vBinds[tBind.Parent].Name : "None";
+						if (FButton(std::format("Parent: {}", sParent).c_str(), FButton_Right | FButton_SameLine | FButton_Large | FButton_NoUpper))
+							bParent = 2;
+					}
 					FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type" }, {}, FDropdown_Left);
 					switch (tBind.Type)
 					{
@@ -1393,14 +1401,14 @@ void CMenu::MenuSettings()
 				TableNextColumn(); SetCursorPos({ GetCursorPos().x - 4, GetCursorPos().y - 8 });
 				if (BeginChild("BindsTableTable2", { GetColumnWidth() + 8, 104 }, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoBackground))
 				{
-					SetCursorPos({ 8, 24 });
-					FToggle("Not", &tBind.Not); // change to dropdown
-					FToggle("Visible", &tBind.Visible, FToggle_Middle);
+					int iNot = tBind.Not;
+					FDropdown("While", &iNot, { "Active", "Not active" }, {}, FDropdown_Left);
+					tBind.Not = iNot;
+					int iVisible = tBind.Visible;
+					FDropdown("Visibility", &iVisible, { "Visible", "Hidden" }, { 1, 0 }, FDropdown_Right);
+					tBind.Visible = iVisible;
 					if (tBind.Type == 0)
-					{
-						SetCursorPos({ 8, 56 });
 						FKeybind("Key", tBind.Key, FButton_Large, -96);
-					}
 
 					// create/modify button
 					bool bCreate = false, bClear = false, bMatch = false, bParent = true;
@@ -1472,50 +1480,49 @@ void CMenu::MenuSettings()
 
 						y++;
 
-						std::string info; std::string state;
+						std::string sType; std::string sBehavior;
 						switch (_tBind.Type)
 						{
 							// key
 						case 0:
 							switch (_tBind.Info)
 							{
-							case 0: { info = "hold"; break; }
-							case 1: { info = "toggle"; break; }
-							case 2: { info = "double"; break; }
+							case 0: { sType = "hold"; break; }
+							case 1: { sType = "toggle"; break; }
+							case 2: { sType = "double"; break; }
 							}
-							state = VK2STR(_tBind.Key);
+							sBehavior = VK2STR(_tBind.Key);
 							break;
 							// class
 						case 1:
-							info = "class";
+							sType = "class";
 							switch (_tBind.Info)
 							{
-							case 0: { state = "scout"; break; }
-							case 1: { state = "soldier"; break; }
-							case 2: { state = "pyro"; break; }
-							case 3: { state = "demoman"; break; }
-							case 4: { state = "heavy"; break; }
-							case 5: { state = "engineer"; break; }
-							case 6: { state = "medic"; break; }
-							case 7: { state = "sniper"; break; }
-							case 8: { state = "spy"; break; }
+							case 0: { sBehavior = "scout"; break; }
+							case 1: { sBehavior = "soldier"; break; }
+							case 2: { sBehavior = "pyro"; break; }
+							case 3: { sBehavior = "demoman"; break; }
+							case 4: { sBehavior = "heavy"; break; }
+							case 5: { sBehavior = "engineer"; break; }
+							case 6: { sBehavior = "medic"; break; }
+							case 7: { sBehavior = "sniper"; break; }
+							case 8: { sBehavior = "spy"; break; }
 							}
 							break;
 							// weapon type
 						case 2:
-							info = "weapon";
+							sType = "weapon";
 							switch (_tBind.Info)
 							{
-							case 0: { state = "hitscan"; break; }
-							case 1: { state = "projectile"; break; }
-							case 2: { state = "melee"; break; }
+							case 0: { sBehavior = "hitscan"; break; }
+							case 1: { sBehavior = "projectile"; break; }
+							case 2: { sBehavior = "melee"; break; }
 							}
 						}
 						if (_tBind.Not)
-							info = std::format("not {}", info);
-						std::string str = std::format("{}, {}", info, state);
+							sType = std::format("not {}", sType);
 
-						bool bClicked = false, bDelete = false, bEdit = false;
+						bool bClicked = false, bDelete = false, bEdit = false, bVisibility = false, bNot = false;
 
 						const ImVec2 restorePos = { 8.f + 28 * x, 108.f + 36.f * y };
 
@@ -1527,8 +1534,11 @@ void CMenu::MenuSettings()
 						SetCursorPos({ restorePos.x + 10, restorePos.y + 7 });
 						TextUnformatted(_tBind.Name.c_str());
 
-						SetCursorPos({ restorePos.x + width / 2 - CalcTextSize(str.c_str()).x / 2, restorePos.y + 7 });
-						TextUnformatted(str.c_str());
+						SetCursorPos({ restorePos.x + (width - 105) * (1.f / 3), restorePos.y + 7 });
+						TextUnformatted(sType.c_str());
+
+						SetCursorPos({ restorePos.x + (width - 105) * (2.f / 3), restorePos.y + 7 });
+						TextUnformatted(sBehavior.c_str());
 
 						// buttons
 						SetCursorPos({ restorePos.x + width - 22, restorePos.y + 5 });
@@ -1537,13 +1547,27 @@ void CMenu::MenuSettings()
 						SetCursorPos({ restorePos.x + width - 47, restorePos.y + 5 });
 						bEdit = IconButton(ICON_MD_EDIT);
 
+						SetCursorPos({ restorePos.x + width - 72, restorePos.y + 5 });
+						bVisibility = IconButton(_tBind.Visible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF);
+
+						SetCursorPos({ restorePos.x + width - 97, restorePos.y + 5 });
+						bNot = IconButton(!_tBind.Not ? ICON_MD_CODE : ICON_MD_CODE_OFF);
+
 						SetCursorPos(restorePos);
 						bClicked = Button(std::format("##{}", _iBind).c_str(), { width, 28 });
 
 						if (bClicked)
 						{
-							iBind = _iBind;
-							tBind = _tBind;
+							if (bParent)
+							{
+								bParent = false;
+								tBind.Parent = _iBind;
+							}
+							else
+							{
+								iBind = _iBind;
+								tBind = _tBind;
+							}
 						}
 						if (bDelete)
 							OpenPopup(std::format("Confirmation## DeleteCond{}", _iBind).c_str());
@@ -1566,6 +1590,10 @@ void CMenu::MenuSettings()
 						}
 						if (bEdit)
 							CurrentBind = CurrentBind != _iBind ? _iBind : DEFAULT_BIND;
+						if (bVisibility)
+							F::Binds.vBinds[_iBind].Visible = !_tBind.Visible;
+						if (bNot)
+							F::Binds.vBinds[_iBind].Not = !_tBind.Not;
 
 						y = getBinds(_iBind, x + 1, y);
 					}
@@ -1573,9 +1601,17 @@ void CMenu::MenuSettings()
 					return y;
 				};
 			getBinds(DEFAULT_BIND, 0, 0);
+
+			if (bParent == 2) // dumb
+				bParent = 1;
+			else if (bParent && IsMouseReleased(ImGuiMouseButton_Left))
+			{
+				bParent = false;
+				tBind.Parent = DEFAULT_BIND;
+			}
 		} EndSection();
 		break;
-		// PlayerList
+	// PlayerList
 	case 2:
 		if (Section("Players"))
 		{
@@ -2062,7 +2098,7 @@ void CMenu::MenuSettings()
 			SetCursorPos({ 0, 60.f + 36.f * std::max(iPriorities, iLabels) }); DebugDummy({ 0, 28 });
 		} EndSection();
 		break;
-		// MaterialManager
+	// Materials
 	case 3:
 		if (BeginTable("MaterialsTable", 2))
 		{
