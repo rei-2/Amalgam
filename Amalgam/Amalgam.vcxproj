@@ -564,11 +564,11 @@
     <ClCompile Include="src\SDK\Helpers\TraceFilters\TraceFilters.cpp" />
     <ClCompile Include="src\SDK\SDK.cpp" />
     <ClCompile Include="src\Utils\ConVars\ConVars.cpp" />
+    <ClCompile Include="src\Utils\CrashLog\CrashLog.cpp" />
     <ClCompile Include="src\Utils\Hooks\Hooks.cpp" />
     <ClCompile Include="src\Utils\Interfaces\Interfaces.cpp" />
     <ClCompile Include="src\Utils\KeyHandler\KeyHandler.cpp" />
     <ClCompile Include="src\Utils\Memory\Memory.cpp" />
-    <ClCompile Include="src\Utils\Minidump\Minidump.cpp" />
     <ClCompile Include="src\Utils\NetVars\NetVars.cpp" />
     <ClCompile Include="src\Utils\Signatures\Signatures.cpp" />
     <ClCompile Include="src\Utils\Timer\Timer.cpp" />
@@ -826,6 +826,7 @@
     <ClInclude Include="src\SDK\Vars.h" />
     <ClInclude Include="src\Utils\Assert\Assert.h" />
     <ClInclude Include="src\Utils\ConVars\ConVars.h" />
+    <ClInclude Include="src\Utils\CrashLog\CrashLog.h" />
     <ClInclude Include="src\Utils\Feature\Feature.h" />
     <ClInclude Include="src\Utils\Hash\FNV1A.h" />
     <ClInclude Include="src\Utils\Hooks\Hooks.h" />
@@ -833,7 +834,6 @@
     <ClInclude Include="src\Utils\KeyHandler\KeyHandler.h" />
     <ClInclude Include="src\Utils\Math\Math.h" />
     <ClInclude Include="src\Utils\Memory\Memory.h" />
-    <ClInclude Include="src\Utils\Minidump\Minidump.h" />
     <ClInclude Include="src\Utils\NetVars\NetVars.h" />
     <ClInclude Include="src\Utils\Signatures\Signatures.h" />
     <ClInclude Include="src\Utils\Timer\Timer.h" />
