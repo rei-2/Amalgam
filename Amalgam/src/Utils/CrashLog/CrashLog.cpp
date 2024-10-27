@@ -23,11 +23,9 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 	HANDLE hProcess = GetCurrentProcess();
 	HANDLE hThread = GetCurrentThread();
 
-		OutputDebugStringA("StackTrace\n");
 	if (!SymInitialize(hProcess, nullptr, TRUE))
 		return {};
 	
-		OutputDebugStringA("Frame\n");
 	SymSetOptions(SYMOPT_LOAD_LINES);
 
 	STACKFRAME64 frame = {};
@@ -41,7 +39,6 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 	std::deque<Frame> vTrace = {};
 	while (StackWalk64(IMAGE_FILE_MACHINE_AMD64, hProcess, hThread, &frame, context, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
 	{
-			OutputDebugStringA("StackWalk\n");
 		Frame tFrame = {};
 
 		tFrame.m_pAddress = frame.AddrPC.Offset;
