@@ -2,8 +2,8 @@
 
 void CFonts::Reload(float flDPI)
 {
-	m_mapFonts[FONT_ESP] = { "Verdana", int(12.f * flDPI), FONTFLAG_OUTLINE, 0 };
-	m_mapFonts[FONT_INDICATORS] = { "Verdana", int(13.f * flDPI), FONTFLAG_OUTLINE, 0 };
+	m_mapFonts[FONT_ESP] = { "Verdana", int(12.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
+	m_mapFonts[FONT_INDICATORS] = { "Verdana", int(13.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
 
 	for (auto& [_, fFont] : m_mapFonts)
 	{

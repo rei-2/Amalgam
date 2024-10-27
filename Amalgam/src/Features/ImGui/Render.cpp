@@ -44,9 +44,9 @@ void CRender::LoadColors()
 
 	Accent = ColorToVec(Vars::Menu::Theme::Accent.Value);
 	AccentLight = ImColor(Accent.Value.x * 1.1f, Accent.Value.y * 1.1f, Accent.Value.z * 1.1f, Accent.Value.w);
-	Background = ColorToVec(Vars::Menu::Theme::Background.Value);
-	Foreground = ColorToVec(Vars::Menu::Theme::Foreground.Value);
-	Foremost = ColorToVec(Vars::Menu::Theme::Foremost.Value);
+	Background = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 1.f / 9));
+	Foreground = ColorToVec(Vars::Menu::Theme::Background.Value);
+	Foremost = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 2.f / 9));
 	ForemostLight = ImColor(Foremost.Value.x * 1.1f, Foremost.Value.y * 1.1f, Foremost.Value.z * 1.1f, Foremost.Value.w);
 	Inactive = ColorToVec(Vars::Menu::Theme::Inactive.Value);
 	Active = ColorToVec(Vars::Menu::Theme::Active.Value);
@@ -70,7 +70,7 @@ void CRender::LoadColors()
 	colors[ImGuiCol_SliderGrab] = Accent;
 	colors[ImGuiCol_SliderGrabActive] = AccentLight;
 	colors[ImGuiCol_Text] = Active;
-	colors[ImGuiCol_WindowBg] = Background;
+	colors[ImGuiCol_WindowBg] = Foreground;
 }
 
 void CRender::LoadStyle()
@@ -117,7 +117,6 @@ void CRender::Initialize(IDirect3DDevice9* pDevice)
 		FontBold = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", 13.f, &fontConfig, fontRange);
 		FontLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", 15.f, &fontConfig, fontRange);
 		FontBlack = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", 15.f, &fontConfig, fontRange);
-		FontTitle = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", 20.f, &fontConfig, fontRange);
 		FontMono = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", 15.f, &fontConfig, fontRange);
 
 		//FontSmall = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, 11.f, &fontConfig, fontRange);
@@ -125,7 +124,6 @@ void CRender::Initialize(IDirect3DDevice9* pDevice)
 		//FontBold = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoBold_compressed_data, RobotoBold_compressed_size, 13.f, &fontConfig, fontRange);
 		//FontLarge = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, 15.f, &fontConfig, fontRange);
 		//FontBlack = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoBlack_compressed_data, RobotoBlack_compressed_size, 15.f, &fontConfig, fontRange);
-		//FontTitle = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, 20.f, &fontConfig, fontRange);
 		//FontMono = io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data, CascadiaMono_compressed_size, 15.f, &fontConfig, fontRange);
 
 		ImFontConfig iconConfig;

@@ -1,5 +1,6 @@
 #include "Draw.h"
 
+#include "../../Vars.h"
 #include "Icons.h"
 #include "../../Definitions/Interfaces.h"
 #include "../../../Utils/Math/Math.h"
@@ -26,6 +27,11 @@ void CDraw::UpdateW2SMatrix()
 
 		I::RenderView->GetMatricesForView(ViewSetup, &WorldToView, &ViewToProjection, &m_WorldToProjection, &WorldToPixels);
 	}
+}
+
+bool CDraw::IsColorBright(const Color_t& clr)
+{
+	return clr.r + clr.g + clr.b > 510;
 }
 
 void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const char* str, ...)
@@ -98,12 +104,113 @@ void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const E
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
 
-void CDraw::Line(int x, int y, int x1, int y1, const Color_t& clr)
+void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr, const Color_t& out, const EAlign& align, const char* str, ...)
+{
+	if (str == nullptr)
+		return;
+
+	va_list va_alist;
+	char cbuffer[1024] = { '\0' };
+	wchar_t wstr[1024] = { '\0' };
+
+	va_start(va_alist, str);
+	vsprintf_s(cbuffer, str, va_alist);
+	va_end(va_alist);
+
+	wsprintfW(wstr, L"%hs", cbuffer);
+
+	const auto dwFont = font.m_dwFont;
+
+	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
+	switch (align)
+	{
+	case ALIGN_TOPLEFT: break;
+	case ALIGN_TOP: x -= w / 2; break;
+	case ALIGN_TOPRIGHT: x -= w; break;
+	case ALIGN_LEFT: y -= h / 2; break;
+	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
+	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= h; break;
+	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
+	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	}
+
+	auto outline = out;
+	std::vector<std::pair<int, int>> vOutline = { { 1, 1 } };
+	if (!Vars::Menu::CheapText.Value)
+	{
+		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
+		outline.a /= 2;
+	}
+	for (auto& [x2, y2] : vOutline)
+	{
+		I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
+		I::MatSystemSurface->DrawSetTextFont(dwFont);
+		I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
+		I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+	}
+
+	I::MatSystemSurface->DrawSetTextPos(x, y);
+	I::MatSystemSurface->DrawSetTextFont(dwFont);
+	I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+}
+void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr, const Color_t& out, const EAlign& align, const wchar_t* str, ...)
+{
+	if (str == nullptr)
+		return;
+
+	va_list va_alist;
+	wchar_t wstr[1024] = { '\0' };
+
+	va_start(va_alist, str);
+	vswprintf_s(wstr, str, va_alist);
+	va_end(va_alist);
+
+	const auto dwFont = font.m_dwFont;
+
+	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
+	switch (align)
+	{
+	case ALIGN_TOPLEFT: break;
+	case ALIGN_TOP: x -= w / 2; break;
+	case ALIGN_TOPRIGHT: x -= w; break;
+	case ALIGN_LEFT: y -= h / 2; break;
+	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
+	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= h; break;
+	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
+	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	}
+
+	auto outline = out;
+	std::vector<std::pair<int, int>> vOutline = { { 1, 1 } };
+	if (!Vars::Menu::CheapText.Value)
+	{
+		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
+		outline.a /= 2;
+	}
+	for (auto& [x2, y2] : vOutline)
+	{
+		I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
+		I::MatSystemSurface->DrawSetTextFont(dwFont);
+		I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
+		I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+	}
+
+	I::MatSystemSurface->DrawSetTextPos(x, y);
+	I::MatSystemSurface->DrawSetTextFont(dwFont);
+	I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+}
+
+void CDraw::Line(int x1, int y1, int x2, int y2, const Color_t& clr)
 {
 	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
-	I::MatSystemSurface->DrawLine(x, y, x1, y1);
+	I::MatSystemSurface->DrawLine(x1, y1, x2, y2);
 }
-void CDraw::Polygon(int count, Vertex_t* vertices, const Color_t& clr)
+
+void CDraw::FillPolygon(std::vector<Vertex_t> vertices, const Color_t& clr)
 {
 	static int id = 0;
 	if (!I::MatSystemSurface->IsTextureIDValid(id))
@@ -111,19 +218,17 @@ void CDraw::Polygon(int count, Vertex_t* vertices, const Color_t& clr)
 
 	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
 	I::MatSystemSurface->DrawSetTexture(id);
-	I::MatSystemSurface->DrawTexturedPolygon(count, vertices);
+	I::MatSystemSurface->DrawTexturedPolygon(int(vertices.size()), vertices.data());
 }
+void CDraw::LinePolygon(std::vector<Vertex_t> vertices, const Color_t& clr)
+{
+	static int id = 0;
+	if (!I::MatSystemSurface->IsTextureIDValid(id))
+		id = I::MatSystemSurface->CreateNewTextureID();
 
-void CDraw::DrawFillTriangle(const std::array<Vec2, 3>& points, const Color_t& clr)
-{
-	std::array<Vertex_t, 3> vertices{ Vertex_t(points.at(0)), Vertex_t(points.at(1)), Vertex_t(points.at(2)) };
-	Polygon(3, vertices.data(), clr);
-}
-void CDraw::DrawLineTriangle(const std::array<Vec2, 3>& points, const Color_t& clr)
-{
-	Line(points.at(0).x, points.at(0).y, points.at(1).x, points.at(1).y, clr);
-	Line(points.at(1).x, points.at(1).y, points.at(2).x, points.at(2).y, clr);
-	Line(points.at(2).x, points.at(2).y, points.at(0).x, points.at(0).y, clr);
+	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetTexture(id);
+	I::MatSystemSurface->DrawTexturedPolyLine(vertices.data(), int(vertices.size()));
 }
 
 void CDraw::FillRect(int x, int y, int w, int h, const Color_t& clr)
@@ -171,37 +276,59 @@ void CDraw::FillRectPercent(int x, int y, int w, int h, float t, const Color_t& 
 		FillRect(x - 1, y - 1, nw + 2, nh + 2, out);
 	FillRect(x, y, nw, nh, clr);
 }
-void CDraw::RoundRect(int x, int y, int w, int h, int radius, const Color_t& clr)
+void CDraw::FillRoundRect(int x, int y, int w, int h, int radius, const Color_t& clr, int iCount)
 {
-	Vertex_t roundsquare[64];
+	std::vector<Vertex_t> vertices = {};
 
+	int _iCount = iCount / 4;
+	float flDelta = 90.f / _iCount;
 	for (int i = 0; i < 4; i++)
 	{
 		const int _x = x + ((i < 2) ? (w - radius) : radius);
 		const int _y = y + ((i % 3) ? (h - radius) : radius);
 
 		const float a = 90.f * i;
-
-		for (int j = 0; j < 16; j++)
+		for (int j = 0; j <= _iCount; j++)
 		{
-			const float _a = DEG2RAD(a + j * 6.f);
-
-			roundsquare[(i * 16) + j] = Vertex_t(Vector2D(_x + radius * sin(_a), _y - radius * cos(_a)));
+			const float _a = DEG2RAD(a + j * flDelta);
+			vertices.emplace_back(Vertex_t({ { _x + radius * sinf(_a), _y - radius * cosf(_a) } }));
 		}
 	}
 
-	Polygon(64, roundsquare, clr);
+	FillPolygon(vertices, clr);
+}
+void CDraw::LineRoundRect(int x, int y, int w, int h, int radius, const Color_t& clr, int iCount)
+{
+	std::vector<Vertex_t> vertices = {};
+
+	w -= 1, h -= 1;
+	int _iCount = iCount / 4;
+	float flDelta = 90.f / _iCount;
+	for (int i = 0; i < 4; i++)
+	{
+		const int _x = x + ((i < 2) ? (w - radius) : radius);
+		const int _y = y + ((i % 3) ? (h - radius) : radius);
+
+		const float a = 90.f * i;
+		for (int j = 0; j <= _iCount; j++)
+		{
+			const float _a = DEG2RAD(a + j * flDelta);
+			vertices.emplace_back(Vertex_t({ { _x + radius * sinf(_a), _y - radius * cosf(_a) } }));
+		}
+	}
+
+	LinePolygon(vertices, clr);
 }
 
 void CDraw::FillCircle(int x, int y, float radius, int segments, const Color_t clr)
 {
-	static std::vector<Vertex_t> vertices = {};
+	std::vector<Vertex_t> vertices = {};
 
 	const float step = static_cast<float>(PI) * 2.0f / segments;
 	for (float a = 0; a < PI * 2.0f; a += step)
-		vertices.emplace_back(Vertex_t{ { radius * cosf(a) + x, radius * sinf(a) + y } });
+		vertices.emplace_back(Vertex_t({ radius * cosf(a) + x, radius * sinf(a) + y }));
 
-	Polygon(segments, vertices.data(), clr);
+	FillPolygon(vertices, clr);
 
 	vertices.clear();
 }

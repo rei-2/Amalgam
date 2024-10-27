@@ -103,7 +103,8 @@ namespace Vars
 		CVar(ConditionsDisplay, DragBox_t(), NOBIND)
 		CVar(SeedPredictionDisplay, DragBox_t(), NOBIND)
 
-		CVar(DPI, 1.f, NOBIND)
+		CVar(Scale, 1.f, NOBIND)
+		CVar(CheapText, false)
 
 		SUBNAMESPACE_BEGIN(Theme)
 			CVar(Accent, Color_t(255, 101, 101, 255), VISUAL)

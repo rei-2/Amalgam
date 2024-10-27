@@ -21,7 +21,7 @@ void Paint()
 		// dumb FUCKN+IG CHeck for fonts
 		int w = 0, h = 0; I::MatSystemSurface->GetTextSize(H::Fonts.GetFont(FONT_ESP).m_dwFont, L"", w, h);
 		if (!h)
-			H::Fonts.Reload(Vars::Menu::DPI.Map[DEFAULT_BIND]);
+			H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
 
 		F::Notifications.Draw();
 

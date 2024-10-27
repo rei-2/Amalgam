@@ -437,14 +437,14 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::DPI.Value))
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x -= 42 * Vars::Menu::DPI.Value;
+		x -= 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::DPI.Value))
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x += 42 * Vars::Menu::DPI.Value;
+		x += 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPRIGHT;
 	}
 
@@ -458,11 +458,11 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		if (tStorage.m_flDamage > 0)
 		{
 			if (pLocal->IsCritBoosted())
-				H::Draw.String(fFont, x, y, { 100, 255, 255, 255 }, align, "Crit Boosted");
+				H::Draw.StringOutlined(fFont, x, y, { 100, 255, 255, 255 }, { 0, 0, 0, 255 }, align, "Crit Boosted");
 			else if (pWeapon->m_flCritTime() > flTickBase)
 			{
 				const float flTime = pWeapon->m_flCritTime() - flTickBase;
-				H::Draw.String(fFont, x, y, { 100, 255, 255, 255 }, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
+				H::Draw.StringOutlined(fFont, x, y, { 100, 255, 255, 255 }, { 0, 0, 0, 255 }, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
 			}
 			else if (!m_bCritBanned)
 			{
@@ -471,34 +471,34 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 					if (bRapidFire && flTickBase < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
 					{
 						const float flTime = pWeapon->m_flLastRapidFireCritCheckTime() + 1.f - flTickBase;
-						H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, std::format("Wait {:.1f}s", flTime).c_str());
+						H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Wait {:.1f}s", flTime).c_str());
 					}
 					else
-						H::Draw.String(fFont, x, y, { 150, 255, 150, 255 }, align, "Crit Ready");
+						H::Draw.StringOutlined(fFont, x, y, { 150, 255, 150, 255 }, { 0, 0, 0, 255 }, align, "Crit Ready");
 				}
 				else
 				{
 					const int shots = -tStorage.m_iAvailableCrits;
-					H::Draw.String(fFont, x, y, { 255, 150, 150, 255 }, align, shots == 1 ? std::format("Crit in {} shot", shots).c_str() : std::format("Crit in {}{} shots", shots, shots == 100 ? "+" : "").c_str());
+					H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, shots == 1 ? std::format("Crit in {} shot", shots).c_str() : std::format("Crit in {}{} shots", shots, shots == 100 ? "+" : "").c_str());
 				}
 			}
 			else
-				H::Draw.String(fFont, x, y, { 255, 150, 150, 255 }, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
+				H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
 
-			H::Draw.String(fFont, x, y + fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, align, std::format("{} / {} potential crits", std::max(tStorage.m_iAvailableCrits, 0), tStorage.m_iPotentialCrits).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("{} / {} potential crits", std::max(tStorage.m_iAvailableCrits, 0), tStorage.m_iPotentialCrits).c_str());
 		}
 		else
-			H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Calculating");
+			H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Calculating");
 
 		if (Vars::Debug::Info.Value)
 		{
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 3, {}, align, std::format("AllDamage: {}, CritDamage: {}", m_iAllDamage, m_iCritDamage).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 4, {}, align, std::format("Bucket: {}", pWeapon->m_flCritTokenBucket()).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 5, {}, align, std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 6, {}, align, std::format("Shots: {}, Crits: {}", pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 7, {}, align, std::format("CritBanned: {}, DamageTilUnban: {}", m_bCritBanned, m_iDamageTilUnban).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 8, {}, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance + 0.1f).c_str());
-			H::Draw.String(fFont, x, y + fFont.m_nTall * 9, {}, align, std::format("Force: {}, Skip: {}", tStorage.m_vCritCommands.size(), tStorage.m_vSkipCommands.size()).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 3, {}, { 0, 0, 0, 255 }, align, std::format("AllDamage: {}, CritDamage: {}", m_iAllDamage, m_iCritDamage).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 4, {}, { 0, 0, 0, 255 }, align, std::format("Bucket: {}", pWeapon->m_flCritTokenBucket()).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 5, {}, { 0, 0, 0, 255 }, align, std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 6, {}, { 0, 0, 0, 255 }, align, std::format("Shots: {}, Crits: {}", pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 7, {}, { 0, 0, 0, 255 }, align, std::format("CritBanned: {}, DamageTilUnban: {}", m_bCritBanned, m_iDamageTilUnban).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 8, {}, { 0, 0, 0, 255 }, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance + 0.1f).c_str());
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall * 9, {}, { 0, 0, 0, 255 }, align, std::format("Force: {}, Skip: {}", tStorage.m_vCritCommands.size(), tStorage.m_vSkipCommands.size()).c_str());
 		}
 	}
 }

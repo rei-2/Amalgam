@@ -44,20 +44,20 @@ void CVisuals::DrawTicks(CTFPlayer* pLocal)
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	int iTicks = G::ShiftedTicks + G::ChokeAmount;
-	int iOffset = 7 + 12 * Vars::Menu::DPI.Value;
+	int iOffset = 7 + 12 * Vars::Menu::Scale.Value;
 	float flRatio = float(std::clamp(iTicks, 0, G::MaxShift)) / G::MaxShift;
-	float flSizeX = 100 * Vars::Menu::DPI.Value, flSizeY = 12 * Vars::Menu::DPI.Value, flPosX = dtPos.x - flSizeX / 2, flPosY = dtPos.y + 5 + fFont.m_nTall;
+	float flSizeX = 100 * Vars::Menu::Scale.Value, flSizeY = 12 * Vars::Menu::Scale.Value, flPosX = dtPos.x - flSizeX / 2, flPosY = dtPos.y + 5 + fFont.m_nTall;
 
-	H::Draw.String(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Ticks %d / %d", iTicks, G::MaxShift);
+	H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, "Ticks %d / %d", iTicks, G::MaxShift);
 	if (G::WaitForShift)
-		H::Draw.String(fFont, dtPos.x, dtPos.y + fFont.m_nTall + iOffset, Vars::Menu::Theme::Active.Value, ALIGN_TOP, "Not Ready");
+		H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + fFont.m_nTall + iOffset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, "Not Ready");
 
-	H::Draw.LineRect(flPosX, dtPos.y + 5 + fFont.m_nTall, flSizeX, flSizeY, Vars::Menu::Theme::Accent.Value);
+	H::Draw.LineRoundRect(flPosX, dtPos.y + 5 + fFont.m_nTall, flSizeX, flSizeY, 3 * Vars::Menu::Scale.Value, Vars::Menu::Theme::Accent.Value, 16);
 	if (flRatio)
 	{
-		flSizeX -= 4, flSizeY -= 4, flPosX = dtPos.x - flSizeX / 2;
-		H::Draw.StartClipping(flPosX, flPosY, flSizeX * flRatio, flSizeY + 2 /*?*/);
-		H::Draw.FillRect(flPosX, flPosY + 2, flSizeX, flSizeY, Vars::Menu::Theme::Accent.Value);
+		flSizeX -= 4, flSizeY -= 4, flPosX = dtPos.x - flSizeX / 2, flPosY += 2;
+		H::Draw.StartClipping(flPosX, flPosY, flSizeX * flRatio, flSizeY);
+		H::Draw.FillRoundRect(flPosX, flPosY, flSizeX, flSizeY, 3 * Vars::Menu::Scale.Value, Vars::Menu::Theme::Accent.Value, 16);
 		H::Draw.EndClipping();
 	}
 }
@@ -89,22 +89,22 @@ void CVisuals::DrawOnScreenPing(CTFPlayer* pLocal)
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::DPI.Value))
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x -= 42 * Vars::Menu::DPI.Value;
+		x -= 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::DPI.Value))
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x += 42 * Vars::Menu::DPI.Value;
+		x += 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPRIGHT;
 	}
 
 	if (flFake || Vars::Backtrack::Interp.Value && Vars::Backtrack::Enabled.Value)
-		H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Real %.0f (+ %.0f) ms", flLatency, flFake);
+		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Real %.0f (+ %.0f) ms", flLatency, flFake);
 	else
-		H::Draw.String(fFont, x, y, Vars::Menu::Theme::Active.Value, align, "Real %.0f ms", flLatency);
-	H::Draw.String(fFont, x, y += fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, align, "Scoreboard %d ms", iLatencyScoreboard);
+		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Real %.0f ms", flLatency);
+	H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Scoreboard %d ms", iLatencyScoreboard);
 }
 
 void CVisuals::DrawOnScreenConditions(CTFPlayer* pLocal)
@@ -117,14 +117,14 @@ void CVisuals::DrawOnScreenConditions(CTFPlayer* pLocal)
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::DPI.Value))
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x -= 42 * Vars::Menu::DPI.Value;
+		x -= 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::DPI.Value))
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x += 42 * Vars::Menu::DPI.Value;
+		x += 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPRIGHT;
 	}
 	
@@ -133,7 +133,7 @@ void CVisuals::DrawOnScreenConditions(CTFPlayer* pLocal)
 	int offset = 0;
 	for (const std::wstring& cond : conditionsVec)
 	{
-		H::Draw.String(fFont, x, y + offset, Vars::Menu::Theme::Active.Value, align, cond.data());
+		H::Draw.StringOutlined(fFont, x, y + offset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, cond.data());
 		offset += fFont.m_nTall + 1;
 	}
 }
@@ -154,21 +154,21 @@ void CVisuals::DrawSeedPrediction(CTFPlayer* pLocal)
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::DPI.Value))
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x -= 42 * Vars::Menu::DPI.Value;
+		x -= 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::DPI.Value))
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x += 42 * Vars::Menu::DPI.Value;
+		x += 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPRIGHT;
 	}
 
 	const auto& cColor = F::NoSpreadHitscan.bSynced ? Vars::Menu::Theme::Active.Value : Vars::Menu::Theme::Inactive.Value;
 
-	H::Draw.String(fFont, x, y, cColor, align, std::format("Uptime {}", F::NoSpreadHitscan.GetFormat(F::NoSpreadHitscan.flServerTime)).c_str());
-	H::Draw.String(fFont, x, y += fFont.m_nTall + 1, cColor, align, std::format("Mantissa step {}", F::NoSpreadHitscan.flMantissaStep).c_str());
+	H::Draw.StringOutlined(fFont, x, y, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Uptime {}", F::NoSpreadHitscan.GetFormat(F::NoSpreadHitscan.flServerTime)).c_str());
+	H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", F::NoSpreadHitscan.flMantissaStep).c_str());
 }
 
 std::deque<Vec3> SplashTrace(Vec3 vOrigin, float flRadius, Vec3 vNormal = { 0, 0, 1 }, bool bTrace = true, int iSegments = 32)
@@ -488,23 +488,23 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 
 		if (pCmd)
 		{
-			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "View: (%.3f, %.3f, %.3f)", pCmd->viewangles.x, pCmd->viewangles.y, pCmd->viewangles.z);
-			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Move: (%.0f, %.0f, %.0f)", pCmd->forwardmove, pCmd->sidemove, pCmd->upmove);
-			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Buttons: %i", pCmd->buttons);
+			H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "View: (%.3f, %.3f, %.3f)", pCmd->viewangles.x, pCmd->viewangles.y, pCmd->viewangles.z);
+			H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Move: (%.0f, %.0f, %.0f)", pCmd->forwardmove, pCmd->sidemove, pCmd->upmove);
+			H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Buttons: %i", pCmd->buttons);
 		}
 		{
 			Vec3 vOrigin = pLocal->m_vecOrigin();
-			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Origin: (%.3f, %.3f, %.3f)", vOrigin.x, vOrigin.y, vOrigin.z);
+			H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Origin: (%.3f, %.3f, %.3f)", vOrigin.x, vOrigin.y, vOrigin.z);
 		}
 		{
 			Vec3 vVelocity = pLocal->m_vecVelocity();
-			H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Velocity: %.3f (%.3f, %.3f, %.3f)", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z);
+			H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Velocity: %.3f (%.3f, %.3f, %.3f)", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z);
 		}
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", G::ShiftedTicks, G::ShiftedGoal).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Round state: %i", SDK::GetRoundState());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Tickcount: %i", pLocal->m_nTickBase());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, "Entities: %i (%i, %i)", I::ClientEntityList->GetMaxEntities(), I::ClientEntityList->GetHighestEntityIndex(), I::ClientEntityList->NumberOfEntities(false));
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", G::ShiftedTicks, G::ShiftedGoal).c_str());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Round state: %i", SDK::GetRoundState());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Tickcount: %i", pLocal->m_nTickBase());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, "Entities: %i (%i, %i)", I::ClientEntityList->GetMaxEntities(), I::ClientEntityList->GetHighestEntityIndex(), I::ClientEntityList->NumberOfEntities(false));
 	
 		if (!pWeapon || !pCmd)
 			return;
@@ -514,11 +514,11 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		float flSecondaryAttack = pWeapon->m_flNextSecondaryAttack();
 		float flAttack = pLocal->m_flNextAttack();
 
-		H::Draw.String(fFont, x, y += (fFont.m_nTall + 1) * 2, {}, ALIGN_TOPLEFT, std::format("Attacking: {} ({})", G::Attacking, bool(pCmd->buttons & IN_ATTACK)).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("CanPrimaryAttack: {} ([{:.3f} | {:.3f}] <= {:.3f})", G::CanPrimaryAttack, flPrimaryAttack, flAttack, flTime).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("CanSecondaryAttack: {} ([{:.3f} | {:.3f}] <= {:.3f})", G::CanSecondaryAttack, flSecondaryAttack, flAttack, flTime).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Attack: {:.3f}, {:.3f}; {:.3f}", flTime - flPrimaryAttack, flTime - flSecondaryAttack, flTime - flAttack).c_str());
-		H::Draw.String(fFont, x, y += fFont.m_nTall + 1, {}, ALIGN_TOPLEFT, std::format("Reload: {} ({} || {} != 0)", G::Reloading, pWeapon->m_bInReload(), pWeapon->m_iReloadMode()).c_str());
+		H::Draw.StringOutlined(fFont, x, y += (fFont.m_nTall + 1) * 2, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("Attacking: {} ({})", G::Attacking, bool(pCmd->buttons & IN_ATTACK)).c_str());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("CanPrimaryAttack: {} ([{:.3f} | {:.3f}] <= {:.3f})", G::CanPrimaryAttack, flPrimaryAttack, flAttack, flTime).c_str());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("CanSecondaryAttack: {} ([{:.3f} | {:.3f}] <= {:.3f})", G::CanSecondaryAttack, flSecondaryAttack, flAttack, flTime).c_str());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("Attack: {:.3f}, {:.3f}; {:.3f}", flTime - flPrimaryAttack, flTime - flSecondaryAttack, flTime - flAttack).c_str());
+		H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, {}, { 0, 0, 0, 255 }, ALIGN_TOPLEFT, std::format("Reload: {} ({} || {} != 0)", G::Reloading, pWeapon->m_bInReload(), pWeapon->m_iReloadMode()).c_str());
 	}
 }
 
@@ -820,7 +820,7 @@ void CVisuals::PickupTimers()
 
 		Vec3 vScreen;
 		if (SDK::W2S(pickupData->Location, vScreen))
-			H::Draw.String(H::Fonts.GetFont(FONT_ESP), vScreen.x, vScreen.y, color, ALIGN_CENTER, timerText.c_str());
+			H::Draw.StringOutlined(H::Fonts.GetFont(FONT_ESP), vScreen.x, vScreen.y, color, Vars::Menu::Theme::Background.Value, ALIGN_CENTER, timerText.c_str());
 
 		++pickupData;
 	}

@@ -23,14 +23,16 @@ public:
 	void UpdateScreenSize();
 	void UpdateW2SMatrix();
 
+	bool IsColorBright(const Color_t& clr);
+
 	void String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const char* str, ...);
 	void String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const wchar_t* str, ...);
+	void StringOutlined(const Font_t& font, int x, int y, const Color_t& clr, const Color_t& out, const EAlign& align, const char* str, ...);
+	void StringOutlined(const Font_t& font, int x, int y, const Color_t& clr, const Color_t& out, const EAlign& align, const wchar_t* str, ...);
 
-	void Line(int x, int y, int x1, int y1, const Color_t& clr);
-	void Polygon(int count, Vertex_t* vertices, const Color_t& clr);
-
-	void DrawFillTriangle(const std::array<Vec2, 3>& points, const Color_t& clr);
-	void DrawLineTriangle(const std::array<Vec2, 3>& points, const Color_t& clr);
+	void Line(int x1, int y1, int x2, int y2, const Color_t& clr);
+	void FillPolygon(std::vector<Vertex_t> vertices, const Color_t& clr);
+	void LinePolygon(std::vector<Vertex_t> vertices, const Color_t& clr);
 
 	void FillRect(int x, int y, int w, int h, const Color_t& clr);
 	void LineRect(int x, int y, int w, int h, const Color_t& clr);
@@ -38,7 +40,8 @@ public:
 	void FillRectOutline(int x, int y, int w, int h, const Color_t& clr, const Color_t& out = { 0, 0, 0, 255 });
 	void LineRectOutline(int x, int y, int w, int h, const Color_t& clr, const Color_t& out = { 0, 0, 0, 255 }, bool inside = true);
 	void FillRectPercent(int x, int y, int w, int h, float t, const Color_t& clr, const Color_t& out = { 0, 0, 0, 255 }, const EAlign& align = ALIGN_LEFT, bool adjust = false);
-	void RoundRect(int x, int y, int w, int h, int radius, const Color_t& clr);
+	void FillRoundRect(int x, int y, int w, int h, int radius, const Color_t& clr, int iCount = 64);
+	void LineRoundRect(int x, int y, int w, int h, int radius, const Color_t& clr, int iCount = 64);
 
 	void FillCircle(int x, int y, float radius, int segments, Color_t clr);
 	void LineCircle(int x, int y, float radius, int segments, const Color_t& clr);

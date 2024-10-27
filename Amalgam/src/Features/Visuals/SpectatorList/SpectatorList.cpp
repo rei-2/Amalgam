@@ -76,15 +76,15 @@ void CSpectatorList::Run(CTFPlayer* pLocal)
 	int y = Vars::Menu::SpectatorsDisplay.Value.y + 8;
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::DPI.Value))
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
 	{
 	//	iconOffset = 36;
-		x -= 42 * Vars::Menu::DPI.Value;
+		x -= 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::DPI.Value))
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
 	{
-		x += 42 * Vars::Menu::DPI.Value;
+		x += 42 * Vars::Menu::Scale.Value;
 		align = ALIGN_TOPRIGHT;
 	}
 	//else
@@ -95,7 +95,7 @@ void CSpectatorList::Run(CTFPlayer* pLocal)
 
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
-	H::Draw.String(fFont, x, y, Vars::Menu::Theme::Accent.Value, align, "Spectating You:");
+	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, "Spectating You:");
 	for (auto& Spectator : m_vSpectators)
 	{
 		y += fFont.m_nTall + 3;
@@ -129,6 +129,6 @@ void CSpectatorList::Run(CTFPlayer* pLocal)
 			color = { 255, 100, 100, 255 };
 		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
 			color = { 255, 200, 127, 255 };
-		H::Draw.String(fFont, x + iconOffset, y, color, align, "%s - %s (respawn %ds)", Spectator.m_sName.c_str(), Spectator.m_sMode.c_str(), Spectator.m_iRespawnIn);
+		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, "%s - %s (respawn %ds)", Spectator.m_sName.c_str(), Spectator.m_sMode.c_str(), Spectator.m_iRespawnIn);
 	}
 }

@@ -250,8 +250,8 @@ void CGlow::SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* 
 		}
 		pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, -side, 0, w, h, 0.f, 0.f, w - 1, h - 1, w, h);
 		pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, 0, -side, w, h, 0.f, 0.f, w - 1, h - 1, w, h);
-		pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, 0, side, w, h, 0.f, 0.f, w - 1, h - 1, w, h);
 		pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, side, 0, w, h, 0.f, 0.f, w - 1, h - 1, w, h);
+		pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, 0, side, w, h, 0.f, 0.f, w - 1, h - 1, w, h);
 	}
 	if (glow.Blur)
 		pRenderContext->DrawScreenSpaceRectangle(m_pMatHaloAddToScreen, 0, 0, w, h, 0.f, 0.f, w - 1, h - 1, w, h);

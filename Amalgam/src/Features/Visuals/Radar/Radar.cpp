@@ -363,7 +363,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int iOffset = z < 0 ? -5 : 5;
 					const int yPos = z < 0 ? y - iBounds / 2 - 2 : y + iBounds / 2 + 2;
 
-					H::Draw.DrawFillTriangle({ Vec2(m, yPos), Vec2(m + iSize * 0.5f, yPos + iOffset), Vec2(m + iSize, yPos) }, drawColor);
+					H::Draw.FillPolygon({ Vec2(m, yPos), Vec2(m + iSize * 0.5f, yPos + iOffset), Vec2(m + iSize, yPos) }, drawColor);
 				}
 			}
 		}

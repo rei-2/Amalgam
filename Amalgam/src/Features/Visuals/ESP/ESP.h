@@ -13,7 +13,7 @@ enum TextMode
 struct PlayerCache
 {
 	float m_flAlpha = 1.f;
-	std::vector<std::tuple<TextMode, std::string, Color_t>> m_vText = {};
+	std::vector<std::tuple<TextMode, std::string, Color_t, Color_t>> m_vText = {};
 	Color_t m_tColor = {};
 	bool m_bBox = false;
 	bool m_bBones = false;
@@ -29,7 +29,7 @@ struct PlayerCache
 struct BuildingCache
 {
 	float m_flAlpha = 1.f;
-	std::vector<std::tuple<TextMode, std::string, Color_t>> m_vText = {};
+	std::vector<std::tuple<TextMode, std::string, Color_t, Color_t>> m_vText = {};
 	Color_t m_tColor = {};
 	bool m_bBox = false;
 
@@ -40,7 +40,7 @@ struct BuildingCache
 struct WorldCache
 {
 	float m_flAlpha = 1.f;
-	std::vector<std::tuple<TextMode, std::string, Color_t>> m_vText = {};
+	std::vector<std::tuple<TextMode, std::string, Color_t, Color_t>> m_vText = {};
 	Color_t m_tColor = {};
 	bool m_bBox = false;
 };

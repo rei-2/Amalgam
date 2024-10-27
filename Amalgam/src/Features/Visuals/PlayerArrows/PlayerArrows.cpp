@@ -65,12 +65,10 @@ void CPlayerArrows::DrawArrowTo(const Vec3& vecFromPos, const Vec3& vecToPos, Co
 	const float _cos = cos(deg);
 	const float _sin = sin(deg);
 
-	Vertex_t t1, t2, t3;
-		t1.Init({ cx + p1.x * _cos - p1.y * _sin, cy + p1.y * _cos + p1.x * _sin });
-		t2.Init({ cx + p2.x * _cos - p2.y * _sin, cy + p2.y * _cos + p2.x * _sin });
-		t3.Init({ cx + p3.x * _cos - p3.y * _sin, cy + p3.y * _cos + p3.x * _sin });
-	std::array<Vertex_t, 3> verts{ t1, t2, t3 };
-	H::Draw.Polygon(3, verts.data(), color);
+	Vertex_t t1 = { { cx + p1.x * _cos - p1.y * _sin, cy + p1.y * _cos + p1.x * _sin } };
+	Vertex_t t2 = { { cx + p2.x * _cos - p2.y * _sin, cy + p2.y * _cos + p2.x * _sin } };
+	Vertex_t t3 = { { cx + p3.x * _cos - p3.y * _sin, cy + p3.y * _cos + p3.x * _sin } };
+	H::Draw.FillPolygon({ t1, t2, t3 }, color);
 }
 
 void CPlayerArrows::Run(CTFPlayer* pLocal)

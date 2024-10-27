@@ -7,6 +7,14 @@
 #include <ImGui/imgui_internal.h>
 #include <ImGui/imgui_stdlib.h>
 
+enum FTabs_
+{
+	FTabs_None = 0,
+	FTabs_Vertical = 1 << 0,
+	FTabs_HorizontalIcons = 1 << 1,
+	//FTabs_PageStyle = 1 << 2
+};
+
 enum FText_
 {
 	FText_None = 0,
@@ -103,18 +111,32 @@ namespace ImGui
 	{
 		vDisabled.push_back(Disabled = bDisabled);
 	}
-	inline void PopDisabled()
+	inline void PopDisabled(int count = 1)
 	{
-		vDisabled.pop_back();
+		int iSize = int(vDisabled.size());
+		if (iSize < count)
+		{
+			IM_ASSERT_USER_ERROR(iSize > count, "Calling PopDisabled() too many times: stack underflow.");
+			count = iSize;
+		}
+		for (int i = 0; i < count; i++)
+			vDisabled.pop_back();
 		Disabled = !vDisabled.empty() ? vDisabled.back() : false;
 	}
 	inline void PushTransparent(bool bTransparent)
 	{
 		vTransparent.push_back(Transparent = bTransparent);
 	}
-	inline void PopTransparent()
+	inline void PopTransparent(int count = 1)
 	{
-		vTransparent.pop_back();
+		int iSize = int(vTransparent.size());
+		if (iSize < count)
+		{
+			IM_ASSERT_USER_ERROR(iSize > count, "Calling PopTransparent() too many times: stack underflow.");
+			count = iSize;
+		}
+		for (int i = 0; i < count; i++)
+			vTransparent.pop_back();
 		Transparent = !vTransparent.empty() ? vTransparent.back() : false;
 	}
 
@@ -379,13 +401,17 @@ namespace ImGui
 	}
 
 	// widgets
-	inline bool FTabs(std::vector<const char*> vEntries, int* pVar, const ImVec2 vSize, const ImVec2 vPos, bool bVertical = false, std::vector<const char*> vIcons = {})
+	inline bool FTabs(std::vector<const char*> vEntries, int* pVar, const ImVec2 vSize, const ImVec2 vPos, int iFlags = FTabs_None, std::vector<const char*> vIcons = {})
 	{
 		if (vIcons.size() && vIcons.size() != vEntries.size())
 			return false;
 
 		ImDrawList* pDrawList = GetWindowDrawList();
 		const int iOriginalTab = pVar ? *pVar : 0;
+
+		bool bVertical = iFlags & FTabs_Vertical;
+		bool bHorizontalIcons = iFlags & FTabs_HorizontalIcons;
+		//bool bPageStyle = iFlags & FTabs_PageStyle;
 
 		for (size_t i = 0; i < vEntries.size(); i++)
 		{
@@ -414,13 +440,29 @@ namespace ImGui
 			ImVec2 vOriginalPos = GetCursorPos();
 			std::string sStripped = StripDoubleHash(vEntries[i]);
 			ImVec2 vTextSize = CalcTextSize(sStripped.c_str());
-			ImVec2 vTextPos = { vNewPos.x + (vSize.x - vTextSize.x) / 2, vNewPos.y + (vSize.y - vTextSize.y) / 2 + (vIcons.empty() ? 0 : 10) };
-			SetCursorPos(vTextPos);
-			TextUnformatted(sStripped.c_str());
 			if (!vIcons.empty())
 			{
-				SetCursorPos({ vNewPos.x + vSize.x / 2 - 8, vNewPos.y + vSize.x / 2 - 14 });
-				IconImage(vIcons[i]);
+				if (!bHorizontalIcons)
+				{
+					SetCursorPos({ vNewPos.x + (vSize.x - vTextSize.x) / 2, vNewPos.y + (vSize.y - vTextSize.y) / 2 + 10 });
+					TextUnformatted(sStripped.c_str());
+
+					SetCursorPos({ vNewPos.x + vSize.x / 2 - 8, vNewPos.y + vSize.y / 2 - 18 });
+					IconImage(vIcons[i]);
+				}
+				else
+				{
+					SetCursorPos({ vNewPos.x + (vSize.x - vTextSize.x) / 2 + 10, vNewPos.y + (vSize.y - vTextSize.y) / 2 });
+					TextUnformatted(sStripped.c_str());
+
+					SetCursorPos({ vNewPos.x + vSize.x / 2 - vTextSize.x / 2 - 12, vNewPos.y + vSize.y / 2 - 9 });
+					IconImage(vIcons[i]);
+				}
+			}
+			else
+			{
+				SetCursorPos({ vNewPos.x + (vSize.x - vTextSize.x) / 2, vNewPos.y + (vSize.y - vTextSize.y) / 2 });
+				TextUnformatted(sStripped.c_str());
 			}
 			SetCursorPos(vOriginalPos);
 
@@ -869,7 +911,7 @@ namespace ImGui
 					{
 						ImVec2 vOriginalPos2 = GetCursorPos();
 						SetCursorPos({ vOriginalPos2.x + 16, vOriginalPos2.y - 1 });
-						if (IconButton(vValues[i] == -1 ? ICON_MD_ADD_CIRCLE : ICON_MD_REMOVE_CIRCLE, false, { 0, 0, 0, 0 }) && pModified)
+						if (IconButton(vValues[i] == -1 ? ICON_MD_ADD_CIRCLE : ICON_MD_REMOVE_CIRCLE, false, {}) && pModified)
 							*pModified = vValues[i];
 						SetCursorPos(vOriginalPos2);
 					}
@@ -1901,8 +1943,8 @@ namespace ImGui
 				OpenPopup(var.m_sName.c_str());\
 				staticVal = val;\
 			}\
-			SetNextWindowSize({ 300, 0 });\
 			PushStyleColor(ImGuiCol_PopupBg, F::Render.Foreground.Value);\
+			SetNextWindowSize({ 300, 0 });\
 			bool bPopup = BeginPopup(var.m_sName.c_str());\
 			PopStyleColor();\
 			if (bPopup)\
@@ -1933,7 +1975,6 @@ namespace ImGui
 				PopTransparent();\
 				EndPopup();\
 			}\
-			SetNextWindowSize({ 0, 0 });\
 		}\
 		if (pHovered) *pHovered = bHovered;\
 		return bReturn;\
