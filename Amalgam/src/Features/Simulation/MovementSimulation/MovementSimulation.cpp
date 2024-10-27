@@ -427,7 +427,6 @@ void CMovementSimulation::Store()
 
 bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& playerStorageOut, bool useHitchance, bool cancelStrafe)
 {
-	G::LineStorage.clear();
 	if (!pEntity || !pEntity->IsPlayer() || !pEntity->As<CTFPlayer>()->IsAlive())
 	{
 		playerStorageOut.m_bInitFailed = playerStorageOut.m_bFailed = true;

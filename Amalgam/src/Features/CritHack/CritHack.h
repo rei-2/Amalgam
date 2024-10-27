@@ -8,6 +8,7 @@ struct WeaponStorage_t
 {
 	int m_iEntIndex = -1;
 	int m_iDefIndex = -1;
+	float m_flMultCritChance = 1.f;
 
 	float m_flDamage = 0.f;
 	float m_flCost = 0.f;
@@ -23,7 +24,7 @@ class CCritHack
 private:
 	void Fill(const CUserCmd* pCmd, int n = 10);
 
-	bool IsCritCommand(int iSlot, int iIndex, const i32 command_number, const bool bCrit = true, const bool bSafe = true);
+	bool IsCritCommand(int iSlot, int iIndex, float flMultCritChance, const i32 command_number, const bool bCrit = true, const bool bSafe = true);
 	u32 DecryptOrEncryptSeed(int iSlot, int iIndex, const u32 uSeed);
 
 	void GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
