@@ -1,9 +1,9 @@
 #include "BytePatches.h"
 
-BytePatch::BytePatch(const char* sModule, const char* sAddress, int iOffset, const char* sPatch)
+BytePatch::BytePatch(const char* sModule, const char* sSignature, int iOffset, const char* sPatch)
 {
 	m_sModule = sModule;
-	m_sAddress = sAddress;
+	m_sSignature = sSignature;
 	m_iOffset = iOffset;
 
 	auto vPatch = U::Memory.PatternToByte(sPatch);
@@ -25,9 +25,12 @@ void BytePatch::Initialize()
 	if (m_bIsPatched)
 		return;
 
-	m_pAddress = LPVOID(U::Memory.FindSignature(m_sModule, m_sAddress));
+	m_pAddress = LPVOID(U::Memory.FindSignature(m_sModule, m_sSignature));
 	if (!m_pAddress)
+	{
+		OutputDebugStringA(std::format("BytePatch::Initialize() failed to initialize:\n  {}\n  {}\n", m_sModule, m_sSignature).c_str());
 		return;
+	}
 
 	m_pAddress = LPVOID(uintptr_t(m_pAddress) + m_iOffset);
 

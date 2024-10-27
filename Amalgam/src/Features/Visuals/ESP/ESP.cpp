@@ -78,8 +78,8 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Priority)
 			{
-				if (auto pTag = F::PlayerUtils.GetSignificantTag(pi.friendsID, 1))
-					tCache.m_vText.push_back({ TextTop, pTag->Name, pTag->Color, H::Draw.IsColorBright(pTag->Color) ? Color_t(0, 0, 0, 255) : Color_t() });
+				if (auto pTag = F::PlayerUtils.GetSignificantTag(pi.friendsID, 1)) // 50 alpha as white outline tends to be more apparent
+					tCache.m_vText.push_back({ TextTop, pTag->Name, pTag->Color, H::Draw.IsColorDark(pTag->Color) ? Color_t(255, 255, 255, 50) : Color_t(0, 0, 0, 255) });
 			}
 
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Labels)
@@ -109,8 +109,8 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 							return a->Name < b->Name;
 						});
 
-					for (auto& pTag : vTags)
-						tCache.m_vText.push_back({ TextRight, pTag->Name, pTag->Color, H::Draw.IsColorBright(pTag->Color) ? Color_t(0, 0, 0, 255) : Color_t() });
+					for (auto& pTag : vTags) // 50 alpha as white outline tends to be more apparent
+						tCache.m_vText.push_back({ TextRight, pTag->Name, pTag->Color, H::Draw.IsColorDark(pTag->Color) ? Color_t(255, 255, 255, 50) : Color_t(0, 0, 0, 255) });
 				}
 			}
 		}

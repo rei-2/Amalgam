@@ -4,7 +4,7 @@
 class BytePatch
 {
 	const char* m_sModule = nullptr;
-	const char* m_sAddress = nullptr;
+	const char* m_sSignature = nullptr;
 	int m_iOffset = 0x0;
 	std::vector<byte> m_vPatch = {};
 	std::vector<byte> m_vOriginal = {};
@@ -15,7 +15,7 @@ class BytePatch
 	void Write(std::vector<byte>& bytes);
 
 public:
-	BytePatch(const char* sModule, const char* sAddress, int iOffset, const char* sPatch);
+	BytePatch(const char* sModule, const char* sSignature, int iOffset, const char* sPatch);
 
 	void Initialize();
 	void Unload();

@@ -24,6 +24,7 @@ public:
 	void UpdateW2SMatrix();
 
 	bool IsColorBright(const Color_t& clr);
+	bool IsColorDark(const Color_t& clr);
 
 	void String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const char* str, ...);
 	void String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const wchar_t* str, ...);

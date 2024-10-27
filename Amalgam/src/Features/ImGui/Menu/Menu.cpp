@@ -20,8 +20,8 @@ void CMenu::DrawMenu()
 	ImVec2 vMainWindowPos = {};
 	ImVec2 vMainWindowSize = {};
 
-	SetNextWindowSize({ 762, 512 }, ImGuiCond_FirstUseEver);
-	PushStyleVar(ImGuiStyleVar_WindowMinSize, { 762, 512 });
+	SetNextWindowSize({ 750, 500 }, ImGuiCond_FirstUseEver);
+	PushStyleVar(ImGuiStyleVar_WindowMinSize, { 750, 500 });
 	if (Begin("Background", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar))
 	{
 		auto vWindowPos = vMainWindowPos = GetWindowPos();
@@ -40,13 +40,17 @@ void CMenu::DrawMenu()
 				auto vDrawPos = GetDrawPos();
 				auto pDrawList = GetWindowDrawList();
 
+				PushFont(F::Render.FontBold);
 				const auto textSize = CalcTextSize(Vars::Menu::CheatName.Value.c_str());
 				pDrawList->AddRectFilled({ vDrawPos.x + vWindowSize.x - textSize.x - 24, vDrawPos.y + 8 }, { vDrawPos.x + vWindowSize.x - 8, vDrawPos.y + 32 }, F::Render.Foreground, 3);
-				pDrawList->AddText(F::Render.FontRegular, F::Render.FontRegular->FontSize, { vDrawPos.x + vWindowSize.x - textSize.x - 16.f, vDrawPos.y + 13.f }, F::Render.Accent, Vars::Menu::CheatName.Value.c_str());
+				pDrawList->AddText(F::Render.FontBold, F::Render.FontBold->FontSize, { vDrawPos.x + vWindowSize.x - textSize.x - 16.f, vDrawPos.y + 13.f }, F::Render.Accent, Vars::Menu::CheatName.Value.c_str());
+				PopFont();
 			}
 
 			static int iCurrentTab = 0;
+			PushFont(F::Render.FontBold);
 			FTabs({ "AIMBOT", "VISUALS", "MISC", "LOGS", "SETTINGS" }, &iCurrentTab, { 100, 40 }, { 0, 0 }, FTabs_HorizontalIcons, { ICON_MD_GROUP, ICON_MD_IMAGE, ICON_MD_PUBLIC, ICON_MD_MENU_BOOK, ICON_MD_SETTINGS });
+			PopFont();
 
 			SetCursorPos({ 0, 40 });
 			PushStyleColor(ImGuiCol_ChildBg, {});
@@ -96,14 +100,15 @@ void CMenu::DrawMenu()
 }
 
 #pragma region Tabs
-/* Tab: Aimbot */
 void CMenu::MenuAimbot()
 {
 	using namespace ImGui;
 
 	const auto vWindowSize = GetWindowSize();
 	static int iCurrentTab = 0;
+	PushFont(F::Render.FontBold);
 	FTabs({ "GENERAL", "HVH" }, &iCurrentTab, { 100, 40 }, { 0, 0 });
+	PopFont();
 
 	SetCursorPos({ 0, 40 });
 	PushStyleVar(ImGuiStyleVar_WindowPadding, { 8.f, 8.f });
@@ -367,14 +372,15 @@ void CMenu::MenuAimbot()
 	PopStyleVar();
 }
 
-/* Tab: Visuals */
 void CMenu::MenuVisuals()
 {
 	using namespace ImGui;
 
 	const auto vWindowSize = GetWindowSize();
 	static int iCurrentTab = 0;
+	PushFont(F::Render.FontBold);
 	FTabs({ "ESP", "CHAMS", "GLOW", "MISC##", "RADAR", "MENU" }, &iCurrentTab, { 100, 40 }, { 0, 0 });
+	PopFont();
 
 	SetCursorPos({ 0, 40 });
 	PushStyleVar(ImGuiStyleVar_WindowPadding, { 8.f, 8.f });
@@ -909,14 +915,15 @@ void CMenu::MenuVisuals()
 	PopStyleVar();
 }
 
-/* Tab: Misc */
 void CMenu::MenuMisc()
 {
 	using namespace ImGui;
 
 	const auto vWindowSize = GetWindowSize();
 	static int iCurrentTab = 0;
+	PushFont(F::Render.FontBold);
 	FTabs({ "MISC##" }, &iCurrentTab, { 100, 40 }, { 0, 0 });
+	PopFont();
 
 	SetCursorPos({ 0, 40 });
 	PushStyleVar(ImGuiStyleVar_WindowPadding, { 8.f, 8.f });
@@ -1046,14 +1053,15 @@ void CMenu::MenuMisc()
 	PopStyleVar();
 }
 
-/* Tab: Settings */
 void CMenu::MenuLogs()
 {
 	using namespace ImGui;
 
 	const auto vWindowSize = GetWindowSize();
 	static int iCurrentTab = 0;
+	PushFont(F::Render.FontBold);
 	FTabs({ "LOGS##", "SETTINGS##" }, &iCurrentTab, { 100, 40 }, { 0, 0 });
+	PopFont();
 
 	SetCursorPos({ 0, 40 });
 	PushStyleVar(ImGuiStyleVar_WindowPadding, { 8.f, 8.f });
@@ -1133,14 +1141,15 @@ void CMenu::MenuLogs()
 	PopStyleVar();
 }
 
-/* Tab: Config */
 void CMenu::MenuSettings()
 {
 	using namespace ImGui;
 
 	const auto vWindowSize = GetWindowSize();
 	static int iCurrentTab = 0;
+	PushFont(F::Render.FontBold);
 	FTabs({ "CONFIG", "BINDS", "PLAYERLIST", "MATERIALS" }, &iCurrentTab, { 100, 40 }, { 0, 0 });
+	PopFont();
 
 	SetCursorPos({ 0, 40 });
 	PushStyleVar(ImGuiStyleVar_WindowPadding, { 8.f, 8.f });
@@ -2324,7 +2333,7 @@ void CMenu::AddDraggable(const char* sTitle, ConfigVar<DragBox_t>& var, bool bSh
 		info.x = vWindowPos.x + sizeX / 2; info.y = vWindowPos.y; old[sTitle] = { info, sizeX };
 		FSet(var, info);
 
-		PushFont(F::Render.FontBlack);
+		PushFont(F::Render.FontBold);
 		auto size = CalcTextSize(sTitle);
 		SetCursorPos({ (sizeX - size.x) * 0.5f, (sizeY - size.y) * 0.5f });
 		Text(sTitle);
@@ -2496,7 +2505,7 @@ void CMenu::DrawCameraWindow()
 		info.x = vWindowPos.x; info.y = vWindowPos.y; info.w = winSize.x; info.h = winSize.y; old = info;
 		FSet(Vars::Visuals::Simulation::ProjectileWindow, info);
 
-		PushFont(F::Render.FontBlack);
+		PushFont(F::Render.FontBold);
 		auto size = CalcTextSize("Camera");
 		SetCursorPos({ (winSize.x - size.x) * 0.5f, (winSize.y - size.y) * 0.5f });
 		Text("Camera");
@@ -2537,7 +2546,7 @@ void CMenu::DrawRadar()
 		info.x = vWindowPos.x; info.y = vWindowPos.y; info.w = winSize.x; old = info;
 		FSet(Vars::Radar::Main::Window, info);
 
-		PushFont(F::Render.FontBlack);
+		PushFont(F::Render.FontBold);
 		auto size = CalcTextSize("Radar");
 		SetCursorPos({ (winSize.x - size.x) * 0.5f, (winSize.y - size.y) * 0.5f });
 		Text("Radar");
