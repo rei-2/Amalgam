@@ -1,6 +1,5 @@
 #include "Memory.h"
 #include <format>
-#include <vector>
 #include <Psapi.h>
 
 #define INRANGE(x, a, b) (x >= a && x <= b) 
@@ -16,33 +15,36 @@ struct InterfaceInit_t
 	InterfaceInit_t* m_pNextInterface = nullptr;
 };
 
-std::vector<int> pattern_to_byte(const char* pattern)
+std::vector<byte> CMemory::PatternToByte(const char* szPattern)
 {
-	// Prerequisites
-	auto              bytes = std::vector<int>{};
-	const auto        start = const_cast<char*>(pattern);
-	const char* const end = const_cast<char*>(pattern) + strlen(pattern);
+	std::vector<byte> bytes = {};
+	const auto start = const_cast<char*>(szPattern);
+	const auto end = const_cast<char*>(szPattern) + strlen(szPattern);
 
-	// Convert signature into corresponding bytes
+	for (char* current = start; current < end; ++current)
+		bytes.push_back(byte(std::strtoul(current, &current, 16)));
+
+	return bytes;
+}
+
+std::vector<int> CMemory::PatternToInt(const char* szPattern)
+{
+	std::vector<int> bytes = {};
+	const auto start = const_cast<char*>(szPattern);
+	const auto end = const_cast<char*>(szPattern) + strlen(szPattern);
+
 	for (char* current = start; current < end; ++current)
 	{
-		// Is current byte a wildcard? Simply ignore that that byte later
-		if (*current == '?')
+		if (*current == '?') // Is current byte a wildcard? Simply ignore that that byte later
 		{
 			++current;
-
-			// Check if following byte is also a wildcard
-			if (*current == '?')
+			if (*current == '?') // Check if following byte is also a wildcard
 				++current;
 
-			// Dummy byte
 			bytes.push_back(-1);
 		}
 		else
-		{
-			// Convert character to byte on hexadecimal base
 			bytes.push_back(std::strtoul(current, &current, 16));
-		}
 	}
 
 	return bytes;
@@ -65,12 +67,11 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 			return {};
 
 		// Convert IDA-Style signature to a byte sequence
-		const auto pattern_bytes = pattern_to_byte(szPattern);
-
-		const auto image_bytes = reinterpret_cast<byte*>(hMod);
-
+		const auto pattern_bytes = PatternToInt(szPattern);
 		const auto signature_size = pattern_bytes.size();
 		const int* signature_bytes = pattern_bytes.data();
+
+		const auto image_bytes = reinterpret_cast<byte*>(hMod);
 
 		// Now loop through all bytes and check if the byte sequence matches
 		for (auto i = 0ul; i < image_size - signature_size; ++i)
@@ -81,19 +82,17 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 			for (auto j = 0ul; j < signature_size; ++j)
 			{
 				if (image_bytes[i + j] != signature_bytes[j] // Bytes don't match
-					&& signature_bytes[j] != -1)             // Byte isn't a wildcard either, WHAT THE HECK
+					&& signature_bytes[j] != -1)             // Byte isn't a wildcard either
 				{
 					byte_sequence_found = false;
 					break;
 				}
 			}
 
-			// All good, now return the right address
 			if (byte_sequence_found)
 				return { reinterpret_cast<uintptr_t>(&image_bytes[i]) };
 		}
 
-		// Byte sequence wasn't found
 		return {};
 	}
 

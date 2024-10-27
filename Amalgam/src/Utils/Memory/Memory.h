@@ -2,10 +2,13 @@
 #include "../Feature/Feature.h"
 #include <Windows.h>
 #include <cstdint>
+#include <vector>
 
 class CMemory
 {
 public:
+	std::vector<byte> PatternToByte(const char* szPattern);
+	std::vector<int> PatternToInt(const char* szPattern);
 	uintptr_t FindSignature(const char* szModule, const char* szPattern);
 	PVOID FindInterface(const char* szModule, const char* szObject);
 

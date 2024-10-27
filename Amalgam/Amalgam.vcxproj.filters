@@ -172,6 +172,7 @@
     <ClCompile Include="src\Hooks\CTFBadgePanel_SetupBadge.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Utils\CrashLog\CrashLog.cpp" />
+    <ClCompile Include="src\BytePatches\BytePatches.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -438,6 +439,7 @@
     <ClInclude Include="src\SDK\Definitions\Interfaces\IPanel.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGCClientSystem.h" />
     <ClInclude Include="src\Utils\CrashLog\CrashLog.h" />
+    <ClInclude Include="src\BytePatches\BytePatches.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

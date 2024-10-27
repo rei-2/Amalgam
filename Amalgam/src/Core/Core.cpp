@@ -1,6 +1,7 @@
 #include "Core.h"
 
 #include "../SDK/SDK.h"
+#include "../BytePatches/BytePatches.h"
 #include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Configs/Configs.h"
 #include "../Features/Commands/Commands.h"
@@ -31,6 +32,7 @@ void CCore::Load()
 	U::Signatures.Initialize();
 	U::Interfaces.Initialize();
 	U::Hooks.Initialize();
+	U::BytePatches.Initialize();
 	U::ConVars.Initialize();
 	F::Materials.LoadMaterials();
 	F::Glow.Initialize();
@@ -67,6 +69,7 @@ void CCore::Unload()
 	G::Unload = true;
 
 	U::Hooks.Unload();
+	U::BytePatches.Unload();
 	H::Events.Unload();
 	U::ConVars.Unload();
 
