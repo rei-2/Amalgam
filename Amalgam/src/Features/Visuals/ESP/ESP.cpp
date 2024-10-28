@@ -141,7 +141,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		}
 
 		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::ClassIcon)
-			tCache.m_iClassIcon = iClassNum - 1;
+			tCache.m_iClassIcon = iClassNum;
 		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::ClassText)
 			tCache.m_vText.push_back({ TextRight, GetPlayerClass(iClassNum), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value });
 
@@ -843,7 +843,7 @@ void CESP::DrawPlayers()
 		if (tCache.m_iClassIcon)
 		{
 			int size = 18 * Vars::Menu::Scale.Value;
-			H::Draw.Texture(x + w / 2, y - tOffset, size, size, tCache.m_iClassIcon, ALIGN_BOTTOM);
+			H::Draw.Texture(x + w / 2, y - tOffset, size, size, tCache.m_iClassIcon - 1, ALIGN_BOTTOM);
 		}
 
 		if (tCache.m_pWeaponIcon)
