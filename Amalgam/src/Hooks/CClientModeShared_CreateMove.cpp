@@ -145,11 +145,29 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	}
 	F::Ticks.ManagePacket(pCmd, pSendPacket);
 	F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
-	G::Choking = !*pSendPacket;
 	if (*pSendPacket)
 		F::FakeAngle.Run(pLocal);
 
-	G::ViewAngles = pCmd->viewangles;
+	if (pLocal)
+	{
+		static std::vector<Vec3> vAngles;
+		vAngles.push_back(pCmd->viewangles);
+		auto pAnimState = pLocal->GetAnimState();
+		if (pAnimState && *pSendPacket)
+		{
+			float flOldFrametime = I::GlobalVars->frametime;
+			I::GlobalVars->frametime = TICK_INTERVAL;
+			for (auto& vAngle : vAngles)
+			{
+				pAnimState->Update(vAngle.y, vAngle.x);
+				pLocal->FrameAdvance(TICK_INTERVAL);
+			}
+			I::GlobalVars->frametime = flOldFrametime;
+			vAngles.clear();
+		}
+	}
+
+	G::Choking = !*pSendPacket;
 	G::LastUserCmd = pCmd;
 
 	//const bool bShouldSkip = G::PSilentAngles || G::SilentAngles || G::AntiAim || G::AvoidingBackstab;

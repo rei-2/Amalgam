@@ -61,7 +61,6 @@ namespace G
 
 	inline std::pair<int, int> Target = { 0, 0 };
 	inline Vec3 AimPosition = {};
-	inline Vec3 ViewAngles = {};
 
 	inline bool SilentAngles = false;
 	inline bool PSilentAngles = false;
