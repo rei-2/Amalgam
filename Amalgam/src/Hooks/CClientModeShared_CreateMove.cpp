@@ -11,6 +11,8 @@
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Visuals/FakeAngle/FakeAngle.h"
 
+MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
+
 MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 21), bool, __fastcall,
 	CClientModeShared* rcx, float flInputSampleTime, CUserCmd* pCmd)
 {
@@ -56,50 +58,58 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		}
 		if (bCanAttack)
 		{
+			G::CanPrimaryAttack = pWeapon->CanPrimaryAttack();
+			G::CanSecondaryAttack = pWeapon->CanSecondaryAttack();
+
 			switch (pWeapon->GetWeaponID())
 			{
 			case TF_WEAPON_FLAME_BALL:
-				G::CanPrimaryAttack = G::CanSecondaryAttack = pLocal->m_flTankPressure() >= 100.f; break;
-			case TF_WEAPON_BUILDER:
-				G::CanPrimaryAttack = true; break;
-			default:
-				G::CanPrimaryAttack = pWeapon->CanPrimaryAttack();
-				G::CanSecondaryAttack = pWeapon->CanSecondaryAttack();
+				if (G::CanPrimaryAttack)
+				{
+					// do this, otherwise it will be a tick behind
+					float flFrametime = TICK_INTERVAL * 100;
+					float flMeterMult = S::IHasGenericMeter_GetMeterMultiplier.As<float(__fastcall*)(void*)>()(reinterpret_cast<void*>(uintptr_t(pWeapon) + 3928));
+					float flRate = SDK::AttribHookValue(1.f, "item_meter_charge_rate", pWeapon) - 1;
+					float flMult = SDK::AttribHookValue(1.f, "mult_item_meter_charge_rate", pWeapon);
+					float flTankPressure = pLocal->m_flTankPressure() + flFrametime * flMeterMult / (flRate * flMult);
 
-				switch (pWeapon->GetWeaponID())
-				{
-				case TF_WEAPON_MINIGUN:
-				{
-					int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState();
-					if (iState != AC_STATE_FIRING && iState != AC_STATE_SPINNING || !pWeapon->HasPrimaryAmmoForShot())
-						G::CanPrimaryAttack = false;
-					break;
+					if (G::CanPrimaryAttack && flTankPressure < 100.f)
+						G::CanPrimaryAttack = G::CanSecondaryAttack = false;
 				}
-				case TF_WEAPON_FLAREGUN_REVENGE:
-					if (pCmd->buttons & IN_ATTACK2)
-						G::CanPrimaryAttack = false;
-					break;
-				case TF_WEAPON_BAT_WOOD:
-				case TF_WEAPON_BAT_GIFTWRAP:
-					if (!pWeapon->HasPrimaryAmmoForShot())
-						G::CanSecondaryAttack = false;
-					break;
-				case TF_WEAPON_MEDIGUN: break;
-				default:
-					if (pWeapon->GetSlot() != SLOT_MELEE)
-					{
-						/*
-						if (pWeapon->IsInReload())
-							G::CanPrimaryAttack = pWeapon->HasPrimaryAmmoForShot();
-						*/
+				break;
+			case TF_WEAPON_MINIGUN:
+			{
+				int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState();
+				if (iState != AC_STATE_FIRING && iState != AC_STATE_SPINNING || !pWeapon->HasPrimaryAmmoForShot())
+					G::CanPrimaryAttack = false;
+				break;
+			}
+			case TF_WEAPON_FLAREGUN_REVENGE:
+				if (pCmd->buttons & IN_ATTACK2)
+					G::CanPrimaryAttack = false;
+				break;
+			case TF_WEAPON_BAT_WOOD:
+			case TF_WEAPON_BAT_GIFTWRAP:
+				if (!pWeapon->HasPrimaryAmmoForShot())
+					G::CanSecondaryAttack = false;
+				break;
+			case TF_WEAPON_MEDIGUN:
+			case TF_WEAPON_BUILDER:
+				break;
+			default:
+				if (pWeapon->GetSlot() != SLOT_MELEE)
+				{
+					/*
+					if (pWeapon->IsInReload())
+						G::CanPrimaryAttack = pWeapon->HasPrimaryAmmoForShot();
+					*/
 
-						bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
-						bool bReload = pWeapon->IsInReload();
-						if (!bAmmo && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
-							G::CanPrimaryAttack = G::CanSecondaryAttack = false;
-						if (bReload && bAmmo && !G::CanPrimaryAttack)
-							G::Reloading = true;
-					}
+					bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
+					bool bReload = pWeapon->IsInReload();
+					if (!bAmmo && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
+						G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+					if (bReload && bAmmo && !G::CanPrimaryAttack)
+						G::Reloading = true;
 				}
 			}
 		}
