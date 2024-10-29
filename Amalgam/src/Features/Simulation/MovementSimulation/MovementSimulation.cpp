@@ -120,7 +120,7 @@ void CMovementSimulation::Reset(PlayerStorage& playerStorage)
 }
 
 
-inline float GetPlayerGravity(CTFPlayer* pEntity)
+static inline float GetPlayerGravity(CTFPlayer* pEntity)
 {
 	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
 

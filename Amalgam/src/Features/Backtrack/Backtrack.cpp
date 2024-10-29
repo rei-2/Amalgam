@@ -1,7 +1,5 @@
 #include "Backtrack.h"
 
-//#include "../Simulation/MovementSimulation/MovementSimulation.h"
-
 void CBacktrack::Restart()
 {
 	m_mRecords.clear();

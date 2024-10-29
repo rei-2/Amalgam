@@ -5,7 +5,7 @@
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
 
-inline bool GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
+static inline bool GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
 {
 	if (Vars::Chams::Player::Local.Value && pEntity == pLocal
 		|| Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())

@@ -374,12 +374,12 @@ void CPlayerConditions::Draw(CTFPlayer* pLocal)
 		align = ALIGN_TOPRIGHT;
 	}
 
-	std::vector<std::wstring> conditionsVec = Get(pLocal);
+	std::vector<std::wstring> vConditions = Get(pLocal);
 
-	int offset = 0;
-	for (const std::wstring& cond : conditionsVec)
+	int iOffset = 0;
+	for (const std::wstring& sCondition : vConditions)
 	{
-		H::Draw.StringOutlined(fFont, x, y + offset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, cond.data());
-		offset += fFont.m_nTall + 1;
+		H::Draw.StringOutlined(fFont, x, y + iOffset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, sCondition.c_str());
+		iOffset += fFont.m_nTall + 1;
 	}
 }

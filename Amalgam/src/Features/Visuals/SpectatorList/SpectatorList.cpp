@@ -129,6 +129,6 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 			color = { 255, 100, 100, 255 };
 		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
 			color = { 255, 200, 127, 255 };
-		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, "%s - %s (respawn %ds)", Spectator.m_sName.c_str(), Spectator.m_sMode.c_str(), Spectator.m_iRespawnIn);
+		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, std::format("{} - {} (respawn {}s)", Spectator.m_sName, Spectator.m_sMode, Spectator.m_iRespawnIn).c_str());
 	}
 }

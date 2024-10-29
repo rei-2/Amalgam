@@ -122,7 +122,7 @@ std::vector<Target_t> CAimbotProjectile::SortTargets(CTFPlayer* pLocal, CTFWeapo
 
 
 
-float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pLocal = nullptr)
+static inline float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pLocal = nullptr)
 {
 	float flRadius = 0.f;
 	switch (pWeapon->GetWeaponID())
@@ -150,7 +150,7 @@ float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pLocal = nullptr)
 	return flRadius * Vars::Aimbot::Projectile::SplashRadius.Value / 100;
 }
 
-float PrimeTime(CTFWeaponBase* pWeapon)
+static inline float PrimeTime(CTFWeaponBase* pWeapon)
 {
 	if (Vars::Aimbot::Projectile::Modifiers.Value & Vars::Aimbot::Projectile::ModifiersEnum::UsePrimeTime && pWeapon->GetWeaponID() == TF_WEAPON_PIPEBOMBLAUNCHER)
 	{
@@ -232,7 +232,7 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& targe
 }
 
 // seode
-std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, int iSamples)
+static inline std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, int iSamples)
 {
 	std::vector<std::pair<Vec3, int>> vPoints;
 	vPoints.reserve(iSamples);
@@ -385,7 +385,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& target, std::v
 	return vPoints;
 }
 
-float AABBLine(Vec3 vMins, Vec3 vMaxs, Vec3 vStart, Vec3 vDir)
+static inline float AABBLine(Vec3 vMins, Vec3 vMaxs, Vec3 vStart, Vec3 vDir)
 {
 	Vec3 a = {
 		(vMins.x - vStart.x) / vDir.x,
@@ -404,7 +404,7 @@ float AABBLine(Vec3 vMins, Vec3 vMaxs, Vec3 vStart, Vec3 vDir)
 	};
 	return std::max(std::max(c.x, c.y), c.z);
 }
-Vec3 PullPoint(Vec3 vPoint, Vec3 vLocalPos, Info_t& tInfo, Vec3 vMins, Vec3 vMaxs, Vec3 vTargetPos)
+static inline Vec3 PullPoint(Vec3 vPoint, Vec3 vLocalPos, Info_t& tInfo, Vec3 vMins, Vec3 vMaxs, Vec3 vTargetPos)
 {
 	auto HeightenLocalPos = [&]()
 		{	// basic trajectory pass
@@ -432,7 +432,7 @@ Vec3 PullPoint(Vec3 vPoint, Vec3 vLocalPos, Info_t& tInfo, Vec3 vMins, Vec3 vMax
 
 
 
-void SolveProjectileSpeed(CTFWeaponBase* pWeapon, const Vec3& vLocalPos, const Vec3& vTargetPos, float& flVelocity, float& flDragTime, const float flGravity)
+static inline void SolveProjectileSpeed(CTFWeaponBase* pWeapon, const Vec3& vLocalPos, const Vec3& vTargetPos, float& flVelocity, float& flDragTime, const float flGravity)
 {
 	if (F::ProjSim.obj->m_dragBasis.IsZero())
 		return;
@@ -649,7 +649,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 							//G::LineStorage.clear();
 							//G::LineStorage.push_back({ { pLocal->GetShootPos(), vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Prediction.Value });
 
-							float closestDist; int closestId = -1;
+							float closestDist = 0.f; int closestId = -1;
 							for (int i = 0; i < pSet->numhitboxes; ++i)
 							{
 								auto pBox = pSet->pHitbox(i);

@@ -478,8 +478,8 @@
     <ClCompile Include="src\Hooks\CAttributeManager_AttribHookValue.cpp" />
     <ClCompile Include="src\Hooks\CParticleProperty_Create.cpp" />
     <ClCompile Include="src\Hooks\CPlayerResource_GetPlayerName.cpp" />
-    <ClCompile Include="src\Hooks\CTFGameRules_AllowThirdPersonCamera.cpp" />
     <ClCompile Include="src\Hooks\CTFGCClientSystem_UpdateAssignedLobby.cpp" />
+    <ClCompile Include="src\Hooks\CThirdPersonManager_Update.cpp" />
     <ClCompile Include="src\Hooks\CViewRender_PerformScreenOverlay.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_DispatchUserMessage.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_FrameStageNotify.cpp" />

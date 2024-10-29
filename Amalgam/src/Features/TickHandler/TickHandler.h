@@ -3,28 +3,28 @@
 
 class CTickshiftHandler
 {
-	// logic
 	void Recharge(CTFPlayer* pLocal);
 	void Teleport();
 	void Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void Speedhack();
 	bool ValidWeapon(CTFWeaponBase* pWeapon);
+	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
-	// utils
 	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
-
-	void MovePre(CTFPlayer* pLocal);
-	void MoveMain(float accumulated_extra_samples, bool bFinalTick);
 
 	bool bSpeedhack = false;
 	bool bGoalReached = true;
 
 public:
-	int GetTicks();
 	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
-	void MovePost(CTFPlayer* pLocal, CUserCmd* pCmd);
-	void ManagePacket(CUserCmd* pCmd, bool* pSendPacket);
 	void Reset();
+
+	void MovePre(CTFPlayer* pLocal);
+	void MoveMain(float accumulated_extra_samples, bool bFinalTick);
+	void MovePost(CTFPlayer* pLocal, CUserCmd* pCmd);
+
+	int GetTicks();
+	void ManagePacket(CUserCmd* pCmd, bool* pSendPacket);
 
 	int iDeficit = 0;
 };

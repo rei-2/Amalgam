@@ -5,7 +5,7 @@
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
 
-inline bool GetPlayerGlow(CBaseEntity* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy)
+static inline bool GetPlayerGlow(CBaseEntity* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy)
 {
 	if (Vars::Glow::Player::Local.Value && pEntity == pLocal
 		|| Vars::Glow::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())

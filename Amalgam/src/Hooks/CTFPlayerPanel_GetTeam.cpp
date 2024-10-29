@@ -23,7 +23,7 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int, __fastcall,
 	return CALL_ORIGINAL(rcx);
 }
 
-int CTFTeamStatusPlayerPanel_Update_PlayerIndex;
+static int CTFTeamStatusPlayerPanel_Update_PlayerIndex;
 
 MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(), bool, __fastcall,
 	void* rcx)

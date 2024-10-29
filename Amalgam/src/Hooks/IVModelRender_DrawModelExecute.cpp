@@ -43,7 +43,7 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVFunc(I::ModelRender, 19)
 	CALL_ORIGINAL(rcx, pState, pInfo, pBoneToWorld);
 }
 
-bool bDrawingViewmodel = false;
+static bool bDrawingViewmodel = false;
 
 MAKE_HOOK(CBaseAnimating_DrawModel, S::CBaseAnimating_DrawModel(), int, __fastcall,
 	void* rcx, int flags)

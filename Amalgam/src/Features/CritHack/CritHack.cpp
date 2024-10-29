@@ -128,7 +128,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	{
 		int shots = iCritChecks, crits = iCritSeedRequests;
 		float bucket = flBucket, flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER;
-		const int iAttempts = std::min(tStorage.m_iPotentialCrits + 1, 100);
+		const int iAttempts = std::min(tStorage.m_iPotentialCrits + 1, 1000);
 		for (int i = 0; i < iAttempts; i++)
 		{
 			shots++; crits++;
@@ -146,7 +146,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	{
 		int shots = iCritChecks + 1, crits = iCritSeedRequests + 1;
 		float bucket = std::min(flBucket + tStorage.m_flDamage, flBucketCap), flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER;
-		for (int i = 0; i < 100; i++)
+		for (int i = 0; i < 1000; i++)
 		{
 			iCrits--;
 			if (!tWeaponData.m_bUseRapidFireCrits || !(i % int(tWeaponData.m_flTimeFireDelay / TICK_INTERVAL)))
@@ -478,14 +478,15 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				}
 				else
 				{
-					const int shots = -tStorage.m_iAvailableCrits;
-					H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, shots == 1 ? std::format("Crit in {} shot", shots).c_str() : std::format("Crit in {}{} shots", shots, shots == 100 ? "+" : "").c_str());
+					const int iShots = -tStorage.m_iAvailableCrits;
+					H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, std::format("Crit in {}{} shot{}", iShots, iShots == 1000 ? "+" : "", iShots == 1 ? "" : "s").c_str());
 				}
 			}
 			else
 				H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
 
-			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("{} / {} potential crits", std::max(tStorage.m_iAvailableCrits, 0), tStorage.m_iPotentialCrits).c_str());
+			int iCrits = std::max(tStorage.m_iAvailableCrits, 0);
+			H::Draw.StringOutlined(fFont, x, y + fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("{}{} / {} potential crits", iCrits, iCrits == 1000 ? "+" : "", tStorage.m_iPotentialCrits).c_str());
 		}
 		else
 			H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Calculating");

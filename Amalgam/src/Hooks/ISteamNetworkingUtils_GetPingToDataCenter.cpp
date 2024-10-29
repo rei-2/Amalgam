@@ -2,7 +2,7 @@
 
 MAKE_SIGNATURE(CTFGCClientSystem_PingThink, "client.dll", "48 89 4C 24 ? 55 41 54 41 55 48 8D AC 24 ? ? ? ? 48 81 EC", 0x0);
 
-void POPID_ToString(SteamNetworkingPOPID popID, char* out)
+static void POPID_ToString(SteamNetworkingPOPID popID, char* out)
 {
 	out[0] = static_cast<char>(popID >> 16);
 	out[1] = static_cast<char>(popID >> 8);

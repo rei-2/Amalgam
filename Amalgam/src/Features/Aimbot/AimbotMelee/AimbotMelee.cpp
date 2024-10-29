@@ -538,7 +538,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	}
 }
 
-int GetAttachment(CBaseObject* pBuilding, int i)
+static inline int GetAttachment(CBaseObject* pBuilding, int i)
 {
 	int iAttachment = pBuilding->GetBuildPointAttachmentIndex(i);
 	if (pBuilding->IsSentrygun() && pBuilding->m_iUpgradeLevel() > 1) // idk why i need this

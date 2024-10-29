@@ -161,7 +161,6 @@
     <ClCompile Include="src\Hooks\R_DrawSkyBox.cpp" />
     <ClCompile Include="src\Hooks\CL_ProcessPacketEntities.cpp" />
     <ClCompile Include="src\Hooks\GenerateEquipRegionConflictMask.cpp" />
-    <ClCompile Include="src\Hooks\CTFGameRules_AllowThirdPersonCamera.cpp" />
     <ClCompile Include="src\Hooks\CBaseViewModel_ShouldFlipViewModel.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_WorldSpaceCenter.cpp" />
     <ClCompile Include="src\Hooks\IPanel_PaintTraverse.cpp" />
@@ -174,6 +173,7 @@
     <ClCompile Include="src\Utils\CrashLog\CrashLog.cpp" />
     <ClCompile Include="src\BytePatches\BytePatches.cpp" />
     <ClCompile Include="src\Hooks\CBaseAnimating_DoAnimationEvents.cpp" />
+    <ClCompile Include="src\Hooks\CThirdPersonManager_Update.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

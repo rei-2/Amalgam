@@ -34,8 +34,6 @@ void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 
 	TauntKartControl(pLocal, pCmd);
 	FastMovement(pLocal, pCmd);
-	AntiWarp(pLocal, pCmd);
-	LegJitter(pLocal, pCmd, pSendPacket);
 }
 
 
@@ -202,7 +200,8 @@ void CMisc::MovementLock(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 
 	Vec3 vMove = Math::RotatePoint(vDir, {}, { 0, -pCmd->viewangles.y, 0 });
-	pCmd->forwardmove = vMove.x * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1), pCmd->sidemove = -vMove.y, pCmd->upmove = vDir.z;
+	pCmd->forwardmove = vMove.x * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1);
+	pCmd->sidemove = -vMove.y, pCmd->upmove = vDir.z;
 }
 
 void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -401,71 +400,6 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 }
 
-void CMisc::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
-{
-	static Vec3 vVelocity = {};
-	if (G::AntiWarp)
-	{
-		const int iDoubletapTicks = F::Ticks.GetTicks();
-
-		Vec3 vAngles; Math::VectorAngles(vVelocity, vAngles);
-		vAngles.y = pCmd->viewangles.y - vAngles.y;
-		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-		vForward *= vVelocity.Length();
-
-		if (iDoubletapTicks > std::max(Vars::CL_Move::Doubletap::TickLimit.Value - 8, 3))
-		{
-			pCmd->forwardmove = -vForward.x;
-			pCmd->sidemove = -vForward.y;
-		}
-		else if (iDoubletapTicks > 3)
-		{
-			pCmd->forwardmove = pCmd->sidemove = 0.f;
-			pCmd->buttons &= ~(IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT);
-		}
-		else
-		{
-			pCmd->forwardmove = vForward.x;
-			pCmd->sidemove = vForward.y;
-		}
-	}
-	else
-		vVelocity = pLocal->m_vecVelocity();
-
-	/*
-	static bool bSet = false;
-
-	if (!G::AntiWarp)
-	{
-		bSet = false;
-		return;
-	}
-
-	if (G::Attacking != 1 && !bSet)
-	{
-		bSet = true;
-		SDK::StopMovement(pLocal, pCmd);
-	}
-	else
-		pCmd->forwardmove = pCmd->sidemove = 0.f;
-	*/
-}
-
-void CMisc::LegJitter(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
-{
-	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::Attacking == 1 || G::DoubleTap || pSendPacket || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
-		return;
-
-	static bool pos = true;
-	const float scale = pLocal->IsDucking() ? 14.f : 1.f;
-	if (pCmd->forwardmove == 0.f && pCmd->sidemove == 0.f && pLocal->m_vecVelocity().Length2D() < 10.f)
-	{
-		pos ? pCmd->forwardmove = scale : pCmd->forwardmove = -scale;
-		pos ? pCmd->sidemove = scale : pCmd->sidemove = -scale;
-		pos = !pos;
-	}
-}
-
 
 
 void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
@@ -487,7 +421,7 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 
 int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 {
-	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || pLocal->IsInBumperKart())
+	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsInBumperKart())
 		return 0;
 
 	std::vector<std::pair<Vec3, CBaseEntity*>> vTargets = {};

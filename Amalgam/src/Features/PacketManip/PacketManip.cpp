@@ -2,7 +2,7 @@
 
 #include "../Visuals/FakeAngle/FakeAngle.h"
 
-bool AntiAimCheck(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+static inline bool AntiAimCheck(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	return F::AntiAim.YawOn() && F::AntiAim.ShouldRun(pLocal, pWeapon, pCmd) && I::ClientState->chokedcommands < 3 && !G::Recharge;
 }

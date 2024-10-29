@@ -10,7 +10,7 @@
 #include "../Features/Visuals/SpectatorList/SpectatorList.h"
 #include "../Features/Visuals/Visuals.h"
 
-void Paint()
+static void Paint()
 {
 	H::Draw.UpdateW2SMatrix();
 	H::Draw.UpdateScreenSize();

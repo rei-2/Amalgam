@@ -2,7 +2,7 @@
 
 #include "../Features/EnginePrediction/EnginePrediction.h"
 
-std::vector<Vec3> vAngles;
+static std::vector<Vec3> vAngles;
 
 MAKE_HOOK(CPrediction_RunCommand, U::Memory.GetVFunc(I::Prediction, 17), void, __fastcall,
 	void* rcx, CTFPlayer* pPlayer, CUserCmd* pCmd, IMoveHelper* pMoveHelper)

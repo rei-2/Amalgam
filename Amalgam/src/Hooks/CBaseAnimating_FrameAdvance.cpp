@@ -2,7 +2,7 @@
 
 // don't really see any benefit to keeping this
 
-std::unordered_map<void*, std::pair<int, float>> pAnimatingInfo;
+static std::unordered_map<void*, std::pair<int, float>> pAnimatingInfo;
 
 MAKE_HOOK(CBaseAnimating_FrameAdvance, S::CBaseAnimating_FrameAdvance(), float, __fastcall,
 	void* rcx, float flInterval)

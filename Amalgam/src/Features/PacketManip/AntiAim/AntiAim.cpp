@@ -30,16 +30,13 @@ bool CAntiAim::YawOn()
 
 bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!pLocal)
+	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsInBumperKart()
+		|| G::Attacking == 1 || F::AutoRocketJump.IsRunning()
+		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
 		return false;
 
 	if (pLocal->IsCharging() || pCmd->buttons & IN_ATTACK2 && (pLocal->m_bShieldEquipped() && pLocal->m_flChargeMeter() == 100.f
 		|| pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX && G::PrimaryWeaponType == EWeaponType::PROJECTILE && pWeapon->HasPrimaryAmmoForShot()))
-		return false;
-
-	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->IsInBumperKart()
-		|| G::Attacking == 1 || F::AutoRocketJump.IsRunning()
-		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
 		return false;
 
 	return true;
@@ -195,6 +192,23 @@ float CAntiAim::GetPitch(float flCurPitch)
 		return flCurPitch;
 }
 
+void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
+{
+	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::DoubleTap || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
+		return;
+
+	static bool bVar = true;
+	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 10.f)
+	{
+		float flMove = (pLocal->IsDucking() ? 14.f : 1.f) * ((bVar = !bVar) ? 1 : -1);
+		Vec3 vDir = { flMove, flMove, 0 };
+
+		Vec3 vMove = Math::RotatePoint(vDir, {}, { 0, -pCmd->viewangles.y, 0 });
+		pCmd->forwardmove = vMove.x * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1);
+		pCmd->sidemove = -vMove.y;
+	}
+}
+
 
 
 void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket)
@@ -204,7 +218,7 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	G::AntiAim = AntiAimOn() && ShouldRun(pLocal, pWeapon, pCmd);
 
 	int iAntiBackstab = F::Misc.AntiBackstab(pLocal, pCmd, bSendPacket);
-	if (!iAntiBackstab)
+	if (!iAntiBackstab && pLocal->m_MoveType() == MOVETYPE_WALK)
 		FakeShotAngles(pCmd);
 
 	if (!G::AntiAim)
@@ -221,4 +235,6 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	SDK::FixMovement(pCmd, vAngles);
 	pCmd->viewangles.x = vAngles.x;
 	pCmd->viewangles.y = vAngles.y;
+
+	MinWalk(pLocal, pCmd, bSendPacket);
 }
