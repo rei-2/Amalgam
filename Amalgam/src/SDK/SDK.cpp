@@ -379,6 +379,7 @@ EWeaponType SDK::GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryTy
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 	case TF_WEAPON_JAR:
 	case TF_WEAPON_JAR_MILK:
+	case TF_WEAPON_JAR_GAS:
 	case TF_WEAPON_LUNCHBOX:
 		return EWeaponType::PROJECTILE;
 	}

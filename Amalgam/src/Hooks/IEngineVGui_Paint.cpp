@@ -1,9 +1,11 @@
 #include "../SDK/SDK.h"
 #include "../Features/CameraWindow/CameraWindow.h"
 #include "../Features/CritHack/CritHack.h"
+#include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/Visuals/PlayerArrows/PlayerArrows.h"
+#include "../Features/Visuals/PlayerConditions/PlayerConditions.h"
 #include "../Features/Visuals/Radar/Radar.h"
 #include "../Features/Visuals/SpectatorList/SpectatorList.h"
 #include "../Features/Visuals/Visuals.h"
@@ -23,29 +25,29 @@ void Paint()
 		if (!h)
 			H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
 
-		F::Notifications.Draw();
-
 		auto pLocal = H::Entities.GetLocal();
-		if (I::EngineVGui->IsGameUIVisible() || !pLocal)
-			return I::MatSystemSurface->FinishDrawing();
+		if (pLocal && !I::EngineVGui->IsGameUIVisible())
+		{
+			F::CameraWindow.Draw();
+			F::Visuals.DrawServerHitboxes(pLocal);
+			F::Visuals.DrawAntiAim(pLocal);
 
-		F::CameraWindow.Draw();
-		F::Visuals.DrawServerHitboxes(pLocal);
-		F::Visuals.DrawAntiAim(pLocal);
+			F::Visuals.DrawPickupTimers();
+			F::ESP.Draw();
+			F::PlayerArrows.Run(pLocal);
+			F::Visuals.DrawFOV(pLocal);
+			F::Radar.Run(pLocal);
 
-		F::Visuals.PickupTimers();
-		F::ESP.Draw();
-		F::PlayerArrows.Run(pLocal);
-		F::Radar.Run(pLocal);
+			F::NoSpreadHitscan.Draw(pLocal);
+			F::PlayerConditions.Draw(pLocal);
+			F::Visuals.DrawPing(pLocal);
+			F::SpectatorList.Draw(pLocal);
+			F::CritHack.Draw(pLocal);
+			F::Visuals.DrawTicks(pLocal);
+			F::Visuals.DrawDebugInfo(pLocal);
+		}
 
-		F::Visuals.DrawAimbotFOV(pLocal);
-		F::Visuals.DrawSeedPrediction(pLocal);
-		F::Visuals.DrawOnScreenConditions(pLocal);
-		F::Visuals.DrawOnScreenPing(pLocal);
-		F::SpectatorList.Run(pLocal);
-		F::CritHack.Draw(pLocal);
-		F::Visuals.DrawTicks(pLocal);
-		F::Visuals.DrawDebugInfo(pLocal);
+		F::Notifications.Draw();
 	}
 	I::MatSystemSurface->FinishDrawing();
 }

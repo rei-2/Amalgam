@@ -810,6 +810,7 @@ namespace Vars
 		CVar(Logging, false, NOSAVE)
 		CVar(ServerHitbox, false, NOSAVE)
 		CVar(AntiAimLines, false)
+		CVar(CrashLogging, true)
 #ifdef DEBUG_TRACES
 		CVar(VisualizeTraces, false, NOSAVE)
 		CVar(VisualizeTraceHits, false, NOSAVE)

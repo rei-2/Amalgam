@@ -25,11 +25,9 @@ private:
 	std::vector<PickupData> m_vPickups;
 
 public:
-	void DrawAimbotFOV(CTFPlayer* pLocal);
+	void DrawFOV(CTFPlayer* pLocal);
 	void DrawTicks(CTFPlayer* pLocal);
-	void DrawOnScreenPing(CTFPlayer* pLocal);
-	void DrawOnScreenConditions(CTFPlayer* pLocal);
-	void DrawSeedPrediction(CTFPlayer* pLocal);
+	void DrawPing(CTFPlayer* pLocal);
 	void ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const bool bQuick = true);
 	void SplashRadius(CTFPlayer* pLocal);
 	void DrawAntiAim(CTFPlayer* pLocal);
@@ -51,7 +49,7 @@ public:
 	void ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView);
 	void DrawSightlines();
 	void Store();
-	void PickupTimers();
+	void DrawPickupTimers();
 	void Event(IGameEvent* pEvent, uint32_t uHash);
 
 	void OverrideWorldTextures();

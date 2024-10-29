@@ -21,7 +21,7 @@ private:
 
 public:
 	bool GetSpectators(CTFPlayer* pLocal);
-	void Run(CTFPlayer* pLocal);
+	void Draw(CTFPlayer* pLocal);
 };
 
 ADD_FEATURE(CSpectatorList, SpectatorList)

@@ -15,7 +15,7 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void, __f
 
 	F::Backtrack.Restart();
 	F::Ticks.Reset();
-	F::NoSpreadHitscan.Reset(true);
+	F::NoSpreadHitscan.Reset();
 	F::CheaterDetection.Reset();
 
 	CALL_ORIGINAL(rcx);

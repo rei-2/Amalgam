@@ -60,7 +60,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 	return !m_vSpectators.empty();
 }
 
-void CSpectatorList::Run(CTFPlayer* pLocal)
+void CSpectatorList::Draw(CTFPlayer* pLocal)
 {
 	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Spectators))
 	{

@@ -4,19 +4,17 @@
 #include <regex>
 #include <numeric>
 
-void CNoSpreadHitscan::Reset(bool bResetPrint)
+void CNoSpreadHitscan::Reset()
 {
-	bWaitingForPlayerPerf = false;
-	flServerTime = 0.f;
-	vTimeDeltas.clear();
-	dTimeDelta = 0.f;
+	m_bWaitingForPlayerPerf = false;
+	m_flServerTime = 0.f;
+	m_vTimeDeltas.clear();
+	m_dTimeDelta = 0.0;
 
-	iSeed = 0;
-	flMantissaStep = 0;
+	m_iSeed = 0;
+	m_flMantissaStep = 0.f;
 
-	bSynced = false;
-	if (bResetPrint)
-		iBestSync = 0;
+	m_bSynced = false;
 }
 
 bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bCreateMove)
@@ -35,7 +33,7 @@ int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
 	static auto sv_usercmd_custom_random_seed = U::ConVars.FindVar("sv_usercmd_custom_random_seed");
 	if (sv_usercmd_custom_random_seed ? sv_usercmd_custom_random_seed->GetBool() : true)
 	{
-		double dFloatTime = SDK::PlatFloatTime() + dTimeDelta;
+		double dFloatTime = SDK::PlatFloatTime() + m_dTimeDelta;
 		float flTime = float(dFloatTime * 1000.0);
 		return std::bit_cast<int32_t>(flTime) & 255;
 	}
@@ -74,11 +72,11 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 		return Reset();
 
 	static Timer playerperfTimer{};
-	if (playerperfTimer.Run(50) && !bWaitingForPlayerPerf)
+	if (playerperfTimer.Run(50) && !m_bWaitingForPlayerPerf)
 	{
 		I::ClientState->SendStringCmd("playerperf");
-		bWaitingForPlayerPerf = true;
-		dRequestTime = SDK::PlatFloatTime();
+		m_bWaitingForPlayerPerf = true;
+		m_dRequestTime = SDK::PlatFloatTime();
 	}
 }
 
@@ -100,33 +98,32 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 
 	if (matches.size() == 2)
 	{
-		bWaitingForPlayerPerf = false;
+		m_bWaitingForPlayerPerf = false;
 
 		// credits to kgb for idea
 		float flNewServerTime = std::stof(matches[1].str());
-		if (flNewServerTime < flServerTime)
+		if (flNewServerTime < m_flServerTime)
 			return true;
 
-		flServerTime = flNewServerTime;
+		m_flServerTime = flNewServerTime;
 
 		double dRecieveTime = SDK::PlatFloatTime();
-		double dResponseTime = dRecieveTime - dRequestTime;
+		double dResponseTime = dRecieveTime - m_dRequestTime;
 
-		vTimeDeltas.push_back(flServerTime - dRecieveTime + dResponseTime);
-		while (!vTimeDeltas.empty() && vTimeDeltas.size() > Vars::Aimbot::General::NoSpreadAverage.Value)
-			vTimeDeltas.pop_front();
-		dTimeDelta = std::reduce(vTimeDeltas.begin(), vTimeDeltas.end()) / vTimeDeltas.size() + TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value);
+		m_vTimeDeltas.push_back(m_flServerTime - dRecieveTime + dResponseTime);
+		while (!m_vTimeDeltas.empty() && m_vTimeDeltas.size() > Vars::Aimbot::General::NoSpreadAverage.Value)
+			m_vTimeDeltas.pop_front();
+		m_dTimeDelta = std::reduce(m_vTimeDeltas.begin(), m_vTimeDeltas.end()) / m_vTimeDeltas.size() + TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value);
 
-		flMantissaStep = CalcMantissaStep(flServerTime);
-		const int iSynced = flMantissaStep < /*4*/1.f ? 2 : 1;
-		bSynced = iSynced == 1;
+		float flMantissaStep = CalcMantissaStep(m_flServerTime);
+		m_bSynced = flMantissaStep >= 1.f;
 
-		if (!iBestSync || iBestSync == 2 && bSynced)
+		if (flMantissaStep > m_flMantissaStep && (m_bSynced || !m_flMantissaStep))
 		{
-			iBestSync = iSynced;
-			SDK::Output("Seed Prediction", bSynced ? std::format("Synced ({})", dTimeDelta).c_str() : "Not synced, step too low", Vars::Menu::Theme::Accent.Value);
-			SDK::Output("Seed Prediction", std::format("Age {}; Step {}", GetFormat(flServerTime), CalcMantissaStep(flServerTime)).c_str(), Vars::Menu::Theme::Accent.Value);
+			SDK::Output("Seed Prediction", m_bSynced ? std::format("Synced ({})", m_dTimeDelta).c_str() : "Not synced, step too low", Vars::Menu::Theme::Accent.Value);
+			SDK::Output("Seed Prediction", std::format("Age {}; Step {}", GetFormat(m_flServerTime), flMantissaStep).c_str(), Vars::Menu::Theme::Accent.Value);
 		}
+		m_flMantissaStep = flMantissaStep;
 
 		return true;
 	}
@@ -136,8 +133,8 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 
 void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	iSeed = GetSeed(pCmd);
-	if (!bSynced || !ShouldRun(pLocal, pWeapon, true))
+	m_iSeed = GetSeed(pCmd);
+	if (!m_bSynced || !ShouldRun(pLocal, pWeapon, true))
 		return;
 
 	// credits to cathook for average spread stuff
@@ -150,7 +147,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 	Vec3 vAverageSpread = {};
 	for (int iBullet = 0; iBullet < iBulletsPerShot; iBullet++)
 	{
-		SDK::RandomSeed(iSeed + iBullet);
+		SDK::RandomSeed(m_iSeed + iBullet);
 
 		if (!iBullet) // Check if we'll get a guaranteed perfect shot
 		{
@@ -199,4 +196,37 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 	Math::ClampAngles(pCmd->viewangles);
 
 	G::SilentAngles = true;
+}
+
+void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
+{
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !pLocal || !pLocal->IsAlive() || !Vars::Aimbot::General::NoSpread.Value)
+		return;
+
+	{
+		auto pWeapon = H::Entities.GetWeapon();
+		if (!pWeapon || !ShouldRun(pLocal, pWeapon))
+			return;
+	}
+
+	int x = Vars::Menu::SeedPredictionDisplay.Value.x;
+	int y = Vars::Menu::SeedPredictionDisplay.Value.y + 8;
+	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+
+	EAlign align = ALIGN_TOP;
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
+	{
+		x -= 42 * Vars::Menu::Scale.Value;
+		align = ALIGN_TOPLEFT;
+	}
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
+	{
+		x += 42 * Vars::Menu::Scale.Value;
+		align = ALIGN_TOPRIGHT;
+	}
+
+	const auto& cColor = m_bSynced ? Vars::Menu::Theme::Active.Value : Vars::Menu::Theme::Inactive.Value;
+
+	H::Draw.StringOutlined(fFont, x, y, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Uptime {}", GetFormat(m_flServerTime)).c_str());
+	H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", m_flMantissaStep).c_str());
 }

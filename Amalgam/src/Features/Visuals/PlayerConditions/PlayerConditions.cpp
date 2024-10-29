@@ -1,6 +1,6 @@
 #include "PlayerConditions.h"
 
-std::vector<std::wstring> CPlayerConditions::GetPlayerConditions(CTFPlayer* pEntity) const
+std::vector<std::wstring> CPlayerConditions::Get(CTFPlayer* pEntity)
 {
 	std::vector<std::wstring> vConditions = {};
 
@@ -351,4 +351,35 @@ std::vector<std::wstring> CPlayerConditions::GetPlayerConditions(CTFPlayer* pEnt
 	}
 	
 	return vConditions;
+}
+
+void CPlayerConditions::Draw(CTFPlayer* pLocal)
+{
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Conditions) || !pLocal->IsAlive())
+		return;
+
+	int x = Vars::Menu::ConditionsDisplay.Value.x;
+	int y = Vars::Menu::ConditionsDisplay.Value.y + 8;
+	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+
+	EAlign align = ALIGN_TOP;
+	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
+	{
+		x -= 42 * Vars::Menu::Scale.Value;
+		align = ALIGN_TOPLEFT;
+	}
+	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
+	{
+		x += 42 * Vars::Menu::Scale.Value;
+		align = ALIGN_TOPRIGHT;
+	}
+
+	std::vector<std::wstring> conditionsVec = Get(pLocal);
+
+	int offset = 0;
+	for (const std::wstring& cond : conditionsVec)
+	{
+		H::Draw.StringOutlined(fFont, x, y + offset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, cond.data());
+		offset += fFont.m_nTall + 1;
+	}
 }

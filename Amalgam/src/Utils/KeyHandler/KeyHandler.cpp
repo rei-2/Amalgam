@@ -2,7 +2,6 @@
 
 #include "../../SDK/SDK.h"
 #include <Windows.h>
-#include <chrono>
 
 void CKeyHandler::StoreKey(int iKey, KeyStorage* pStorage)
 {

@@ -147,12 +147,15 @@ void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr,
 		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
 		outline.a /= 2;
 	}
-	for (auto& [x2, y2] : vOutline)
+	if (outline.a)
 	{
-		I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
-		I::MatSystemSurface->DrawSetTextFont(dwFont);
-		I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
-		I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+		for (auto& [x2, y2] : vOutline)
+		{
+			I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
+			I::MatSystemSurface->DrawSetTextFont(dwFont);
+			I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
+			I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+		}
 	}
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
@@ -195,12 +198,15 @@ void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr,
 		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
 		outline.a /= 2;
 	}
-	for (auto& [x2, y2] : vOutline)
+	if (outline.a)
 	{
-		I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
-		I::MatSystemSurface->DrawSetTextFont(dwFont);
-		I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
-		I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+		for (auto& [x2, y2] : vOutline)
+		{
+			I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
+			I::MatSystemSurface->DrawSetTextFont(dwFont);
+			I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
+			I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+		}
 	}
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
@@ -285,15 +291,15 @@ void CDraw::FillRoundRect(int x, int y, int w, int h, int radius, const Color_t&
 {
 	std::vector<Vertex_t> vertices = {};
 
-	int _iCount = iCount / 4;
-	float flDelta = 90.f / _iCount;
+	int _iCount = std::max(iCount / 4, 2);
+	float flDelta = 90.f / (_iCount - 1);
 	for (int i = 0; i < 4; i++)
 	{
 		const int _x = x + ((i < 2) ? (w - radius) : radius);
 		const int _y = y + ((i % 3) ? (h - radius) : radius);
 
 		const float a = 90.f * i;
-		for (int j = 0; j <= _iCount; j++)
+		for (int j = 0; j < _iCount; j++)
 		{
 			const float _a = DEG2RAD(a + j * flDelta);
 			vertices.emplace_back(Vertex_t({ { _x + radius * sinf(_a), _y - radius * cosf(_a) } }));
@@ -307,15 +313,15 @@ void CDraw::LineRoundRect(int x, int y, int w, int h, int radius, const Color_t&
 	std::vector<Vertex_t> vertices = {};
 
 	w -= 1, h -= 1;
-	int _iCount = iCount / 4;
-	float flDelta = 90.f / _iCount;
+	int _iCount = std::max(iCount / 4, 2);
+	float flDelta = 90.f / (_iCount - 1);
 	for (int i = 0; i < 4; i++)
 	{
 		const int _x = x + ((i < 2) ? (w - radius) : radius);
 		const int _y = y + ((i % 3) ? (h - radius) : radius);
 
 		const float a = 90.f * i;
-		for (int j = 0; j <= _iCount; j++)
+		for (int j = 0; j < _iCount; j++)
 		{
 			const float _a = DEG2RAD(a + j * flDelta);
 			vertices.emplace_back(Vertex_t({ { _x + radius * sinf(_a), _y - radius * cosf(_a) } }));

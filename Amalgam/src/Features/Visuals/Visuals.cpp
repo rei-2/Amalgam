@@ -19,7 +19,7 @@ MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects, "client.dll", "40 57 48 81 EC ? ? ?
 MAKE_SIGNATURE(CWeaponMedigun_StopChargeEffect, "client.dll", "40 53 48 83 EC ? 44 0F B6 C2", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 81 EC ? ? ? ? 48 8B F1 E8 ? ? ? ? 48 8B D8", 0x0);
 
-void CVisuals::DrawAimbotFOV(CTFPlayer* pLocal)
+void CVisuals::DrawFOV(CTFPlayer* pLocal)
 {
 	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->IsStunned() || pLocal->IsInBumperKart())
 		return;
@@ -62,7 +62,7 @@ void CVisuals::DrawTicks(CTFPlayer* pLocal)
 	}
 }
 
-void CVisuals::DrawOnScreenPing(CTFPlayer* pLocal)
+void CVisuals::DrawPing(CTFPlayer* pLocal)
 {
 	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Ping) || !pLocal || !pLocal->IsAlive())
 		return;
@@ -105,70 +105,6 @@ void CVisuals::DrawOnScreenPing(CTFPlayer* pLocal)
 	else
 		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Real %.0f ms", flLatency);
 	H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Scoreboard %d ms", iLatencyScoreboard);
-}
-
-void CVisuals::DrawOnScreenConditions(CTFPlayer* pLocal)
-{
-	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Conditions) || !pLocal->IsAlive())
-		return;
-
-	int x = Vars::Menu::ConditionsDisplay.Value.x;
-	int y = Vars::Menu::ConditionsDisplay.Value.y + 8;
-	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
-
-	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
-	{
-		x -= 42 * Vars::Menu::Scale.Value;
-		align = ALIGN_TOPLEFT;
-	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
-	{
-		x += 42 * Vars::Menu::Scale.Value;
-		align = ALIGN_TOPRIGHT;
-	}
-	
-	std::vector<std::wstring> conditionsVec = F::PlayerConditions.GetPlayerConditions(pLocal);
-
-	int offset = 0;
-	for (const std::wstring& cond : conditionsVec)
-	{
-		H::Draw.StringOutlined(fFont, x, y + offset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, cond.data());
-		offset += fFont.m_nTall + 1;
-	}
-}
-
-void CVisuals::DrawSeedPrediction(CTFPlayer* pLocal)
-{
-	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !pLocal || !pLocal->IsAlive() || !Vars::Aimbot::General::NoSpread.Value)
-		return;
-
-	{
-		auto pWeapon = H::Entities.GetWeapon();
-		if (!pWeapon || !F::NoSpreadHitscan.ShouldRun(pLocal, pWeapon))
-			return;
-	}
-
-	int x = Vars::Menu::SeedPredictionDisplay.Value.x;
-	int y = Vars::Menu::SeedPredictionDisplay.Value.y + 8;
-	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
-
-	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
-	{
-		x -= 42 * Vars::Menu::Scale.Value;
-		align = ALIGN_TOPLEFT;
-	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
-	{
-		x += 42 * Vars::Menu::Scale.Value;
-		align = ALIGN_TOPRIGHT;
-	}
-
-	const auto& cColor = F::NoSpreadHitscan.bSynced ? Vars::Menu::Theme::Active.Value : Vars::Menu::Theme::Inactive.Value;
-
-	H::Draw.StringOutlined(fFont, x, y, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Uptime {}", F::NoSpreadHitscan.GetFormat(F::NoSpreadHitscan.flServerTime)).c_str());
-	H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", F::NoSpreadHitscan.flMantissaStep).c_str());
 }
 
 std::deque<Vec3> SplashTrace(Vec3 vOrigin, float flRadius, Vec3 vNormal = { 0, 0, 1 }, bool bTrace = true, int iSegments = 32)
@@ -801,7 +737,7 @@ void CVisuals::Store()
 	}
 }
 
-void CVisuals::PickupTimers()
+void CVisuals::DrawPickupTimers()
 {
 	if (!Vars::Visuals::UI::PickupTimers.Value)
 		return;

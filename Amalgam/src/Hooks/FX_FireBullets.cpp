@@ -23,7 +23,7 @@ MAKE_HOOK(FX_FireBullets, S::FX_FireBullets(), void, __cdecl,
 		return;
 
 	if (Vars::Aimbot::General::NoSpread.Value)
-		iSeed = F::NoSpreadHitscan.iSeed;
+		iSeed = F::NoSpreadHitscan.m_iSeed;
 
 	return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
 }
