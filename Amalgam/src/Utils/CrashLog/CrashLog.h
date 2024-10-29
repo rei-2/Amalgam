@@ -3,5 +3,5 @@
 
 namespace CrashLog
 {
-	LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS Info);
+	void Setup();
 }

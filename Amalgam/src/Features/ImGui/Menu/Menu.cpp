@@ -1367,6 +1367,7 @@ void CMenu::MenuSettings()
 					FToggle("Visualize traces", Vars::Debug::VisualizeTraces, FToggle_Left);
 					FToggle("Visualize trace hits", Vars::Debug::VisualizeTraceHits, FToggle_Right);
 	#endif
+					FToggle("Crash logging", Vars::Debug::CrashLogging);
 				} EndSection();
 				if (Section("Extra"))
 				{

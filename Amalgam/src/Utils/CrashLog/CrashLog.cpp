@@ -9,6 +9,9 @@
 #include <format>
 #pragma comment(lib, "imagehlp.lib")
 
+static LPVOID pLastAddress = nullptr;
+static bool bException = false;
+
 struct Frame
 {
 	std::string m_sModule = "";
@@ -43,23 +46,25 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 
 		tFrame.m_pAddress = frame.AddrPC.Offset;
 
+		if (auto hBase = HINSTANCE(SymGetModuleBase64(hProcess, frame.AddrPC.Offset)))
 		{
-			auto base = HINSTANCE(SymGetModuleBase64(hProcess, frame.AddrPC.Offset));
 			char buf[MAX_PATH];
-			if (base && GetModuleFileNameA(base, buf, MAX_PATH))
+			if (GetModuleFileNameA(hBase, buf, MAX_PATH))
 			{
-				tFrame.m_sModule = std::format("{}, {:#x}", buf, uintptr_t(base));
+				tFrame.m_sModule = std::format("{}, {:#x}", buf, uintptr_t(hBase));
 				auto find = tFrame.m_sModule.rfind("\\");
 				if (find != std::string::npos)
 					tFrame.m_sModule.replace(0, find + 1, "");
 			}
+			else
+				tFrame.m_sModule = std::format("{:#x}", uintptr_t(hBase));
 		}
 
 		{
-			DWORD offset = 0;
+			DWORD dwOffset = 0;
 			IMAGEHLP_LINE64 line = {};
 			line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-			if (SymGetLineFromAddr64(hProcess, frame.AddrPC.Offset, &offset, &line))
+			if (SymGetLineFromAddr64(hProcess, frame.AddrPC.Offset, &dwOffset, &line))
 			{
 				tFrame.m_sFile = line.FileName;
 				tFrame.m_uLine = line.LineNumber;
@@ -70,12 +75,12 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 		}
 
 		{
-			uintptr_t offset = 0;
+			uintptr_t dwOffset = 0;
 			char buf[sizeof(IMAGEHLP_SYMBOL64) + 255];
 			auto symbol = PIMAGEHLP_SYMBOL64(buf);
 			symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64) + 255;
 			symbol->MaxNameLength = 254;
-			if (SymGetSymFromAddr64(hProcess, frame.AddrPC.Offset, &offset, symbol))
+			if (SymGetSymFromAddr64(hProcess, frame.AddrPC.Offset, &dwOffset, symbol))
 				tFrame.m_sName = symbol->Name;
 		}
 
@@ -89,51 +94,63 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 	return vTrace;
 }
 
-LONG APIENTRY CrashLog::ExceptionFilter(PEXCEPTION_POINTERS Info)
+static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 {
-	if (Info->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
+	// unsure of a way to filter nonfatal exceptions
+	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION
+		|| ExceptionInfo->ExceptionRecord->ExceptionAddress && ExceptionInfo->ExceptionRecord->ExceptionAddress == pLastAddress
+		|| !Vars::Debug::CrashLogging.Value
+		|| bException && GetAsyncKeyState(VK_SHIFT) & 0x8000 && GetAsyncKeyState(VK_RETURN) & 0x8000)
 		return EXCEPTION_EXECUTE_HANDLER;
+	pLastAddress = ExceptionInfo->ExceptionRecord->ExceptionAddress;
 
-	std::stringstream error;
-	error << std::format("Error: {:#X}\n", Info->ExceptionRecord->ExceptionCode);
-	error << std::format("Address: {:#X}\n\n", uintptr_t(Info->ExceptionRecord->ExceptionAddress));
-	error << std::format("RIP: {:#x}\n", Info->ContextRecord->Rip);
-	error << std::format("EFLAGS: {:#x}\n", Info->ContextRecord->EFlags);
-	error << std::format("RAX: {:#x}\n", Info->ContextRecord->Rax);
-	error << std::format("RCX: {:#x}\n", Info->ContextRecord->Rcx);
-	error << std::format("RDX: {:#x}\n", Info->ContextRecord->Rdx);
-	error << std::format("RBX: {:#x}\n", Info->ContextRecord->Rbx);
-	error << std::format("RSP: {:#x}\n", Info->ContextRecord->Rsp);
-	error << std::format("RBP: {:#x}\n", Info->ContextRecord->Rbp);
-	error << std::format("RSI: {:#x}\n", Info->ContextRecord->Rsi);
-	error << std::format("RDI: {:#x}\n\n", Info->ContextRecord->Rdi);
+	std::stringstream ssErrorStream;
+	ssErrorStream << std::format("Error: {:#X}\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+	ssErrorStream << std::format("Address: {:#X}\n\n", uintptr_t(ExceptionInfo->ExceptionRecord->ExceptionAddress));
+	ssErrorStream << std::format("RIP: {:#x}\n", ExceptionInfo->ContextRecord->Rip);
+	ssErrorStream << std::format("RAX: {:#x}\n", ExceptionInfo->ContextRecord->Rax);
+	ssErrorStream << std::format("RCX: {:#x}\n", ExceptionInfo->ContextRecord->Rcx);
+	ssErrorStream << std::format("RDX: {:#x}\n", ExceptionInfo->ContextRecord->Rdx);
+	ssErrorStream << std::format("RBX: {:#x}\n", ExceptionInfo->ContextRecord->Rbx);
+	ssErrorStream << std::format("RSP: {:#x}\n", ExceptionInfo->ContextRecord->Rsp);
+	ssErrorStream << std::format("RBP: {:#x}\n", ExceptionInfo->ContextRecord->Rbp);
+	ssErrorStream << std::format("RSI: {:#x}\n", ExceptionInfo->ContextRecord->Rsi);
+	ssErrorStream << std::format("RDI: {:#x}\n\n", ExceptionInfo->ContextRecord->Rdi);
 
-	auto vTrace = StackTrace(Info->ContextRecord);
+	auto vTrace = StackTrace(ExceptionInfo->ContextRecord);
 	if (!vTrace.empty())
 	{
 		for (auto& tFrame : vTrace)
 		{
-			error << std::format("{:#x}", tFrame.m_pAddress);
+			ssErrorStream << std::format("{:#x}", tFrame.m_pAddress);
 			if (!tFrame.m_sModule.empty())
-				error << std::format(" ({})", tFrame.m_sModule);
+				ssErrorStream << std::format(" ({})", tFrame.m_sModule);
 			if (!tFrame.m_sFile.empty())
-				error << std::format(" ({} L{})", tFrame.m_sFile, tFrame.m_uLine);
+				ssErrorStream << std::format(" ({} L{})", tFrame.m_sFile, tFrame.m_uLine);
 			if (!tFrame.m_sName.empty())
-				error << std::format(" ({})", tFrame.m_sName);
-			error << "\n";
+				ssErrorStream << std::format(" ({})", tFrame.m_sName);
+			ssErrorStream << "\n";
 		}
-		error << "\n";
+		ssErrorStream << "\n";
 	}
 
-	error << "Ctrl + C to copy. Logged to Amalgam\\crash_log.txt. ";
+	ssErrorStream << "Ctrl + C to copy. Logged to Amalgam\\crash_log.txt. ";
+	if (bException)
+		ssErrorStream << "\nShift + Enter to skip repetitive exceptions. ";
+	bException = true;
 
-	MessageBox(nullptr, error.str().c_str(), "Unhandled exception", MB_OK | MB_ICONERROR);
+	MessageBox(nullptr, ssErrorStream.str().c_str(), "Unhandled exception", MB_OK | MB_ICONERROR);
 
-	error << "\n\n\n\n";
+	ssErrorStream << "\n\n\n\n";
 	std::ofstream file;
 	file.open(F::Configs.sConfigPath + "\\crash_log.txt", std::ios_base::app);
-	file << error.str();
+	file << ssErrorStream.str();
 	file.close();
 
 	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+void CrashLog::Setup()
+{
+	AddVectoredExceptionHandler(1, ExceptionFilter);
 }
