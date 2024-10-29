@@ -463,6 +463,7 @@
     <ClCompile Include="src\Features\Visuals\Radar\Radar.cpp" />
     <ClCompile Include="src\Features\Visuals\SpectatorList\SpectatorList.cpp" />
     <ClCompile Include="src\Features\Visuals\Visuals.cpp" />
+    <ClCompile Include="src\Hooks\CBaseAnimating_DoAnimationEvents.cpp" />
     <ClCompile Include="src\Hooks\CL_ProcessPacketEntities.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_BaseInterpolatePart1.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_WorldSpaceCenter.cpp" />

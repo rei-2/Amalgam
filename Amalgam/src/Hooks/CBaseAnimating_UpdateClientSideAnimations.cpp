@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseAnimating_UpdateClientSideAnimation, S::CBaseAnimating_UpdateClie
 	void* rcx)
 {
 	auto pLocal = H::Entities.GetLocal();
-	if (!G::UpdatingAnims && (rcx && rcx == pLocal ? !pLocal->IsInBumperKart() : true))
+	if (!G::UpdatingAnims && (rcx == pLocal ? !pLocal->IsInBumperKart() : true))
 		return;
 
 	CALL_ORIGINAL(rcx);

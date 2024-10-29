@@ -173,6 +173,7 @@
     <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Utils\CrashLog\CrashLog.cpp" />
     <ClCompile Include="src\BytePatches\BytePatches.cpp" />
+    <ClCompile Include="src\Hooks\CBaseAnimating_DoAnimationEvents.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

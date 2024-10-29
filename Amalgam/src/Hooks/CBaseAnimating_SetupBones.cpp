@@ -31,7 +31,7 @@ MAKE_HOOK(CBaseAnimating_SetupBones, S::CBaseAnimating_SetupBones(), bool, __fas
 
 			auto pOwner = GetRootMoveParent();
 			auto pEntity = pOwner ? pOwner : pBaseEntity;
-			if (pEntity->GetClassID() == ETFClassID::CTFPlayer && pEntity != H::Entities.GetLocal())
+			if (pEntity->IsPlayer() && pEntity != H::Entities.GetLocal())
 			{
 				if (pBoneToWorldOut)
 				{
