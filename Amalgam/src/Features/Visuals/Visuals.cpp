@@ -934,6 +934,16 @@ void CVisuals::RestoreWorldModulation()
 
 void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
+	{
+		static float flStaticRatio = 0.f;
+		float flOldRatio = flStaticRatio;
+		float flNewRatio = flStaticRatio = Vars::Visuals::UI::AspectRatio.Value;
+
+		static auto r_aspectratio = U::ConVars.FindVar("r_aspectratio");
+		if (r_aspectratio && (flNewRatio || flOldRatio))
+			r_aspectratio->SetValue(Vars::Visuals::UI::AspectRatio.Value);
+	}
+
 	if (pLocal && Vars::Visuals::Particles::SpellFootsteps.Value && (G::DoubleTap || G::Warp))
 	{
 		static auto fnFireEvent = S::CTFPlayer_FireEvent.As<void(__fastcall*)(void*, const Vector, const QAngle, int, const char*)>();

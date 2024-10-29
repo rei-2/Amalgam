@@ -661,8 +661,15 @@ void CMenu::MenuVisuals()
 				{
 					FDropdown("Streamer mode", Vars::Visuals::UI::StreamerMode, { "Off", "Local", "Friends", "All" }, {}, FDropdown_Left);
 					FDropdown("Chat tags", Vars::Visuals::UI::ChatTags, { "Local", "Friends", "Assigned" }, {}, FDropdown_Right | FDropdown_Multi);
-					FSlider("Field of view", Vars::Visuals::UI::FieldOfView, 0, 160, 1, "%i");
-					FSlider("Zoomed field of view", Vars::Visuals::UI::ZoomFieldOfView, 0, 160, 1, "%i");
+					PushTransparent(!FGet(Vars::Visuals::UI::FieldOfView));
+						FSlider("Field of view", Vars::Visuals::UI::FieldOfView, 0, 160, 1, "%i", FSlider_Min);
+					PopTransparent();
+					PushTransparent(!FGet(Vars::Visuals::UI::ZoomFieldOfView));
+						FSlider("Zoomed field of view", Vars::Visuals::UI::ZoomFieldOfView, 0, 160, 1, "%i", FSlider_Min);
+					PopTransparent();
+					PushTransparent(!FGet(Vars::Visuals::UI::AspectRatio));
+						FSlider("Aspect ratio", Vars::Visuals::UI::AspectRatio, 0.f, 5.f, 0.01f, "%g", FSlider_Min | FSlider_Precision);
+					PopTransparent();
 					FToggle("Reveal scoreboard", Vars::Visuals::UI::RevealScoreboard, FToggle_Left);
 					FToggle("Scoreboard utility", Vars::Visuals::UI::ScoreboardUtility, FToggle_Right);
 					FToggle("Scoreboard colors", Vars::Visuals::UI::ScoreboardColors, FToggle_Left);

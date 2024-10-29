@@ -44,9 +44,10 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 
 
-void CAntiAim::FakeShotAngles(CUserCmd* pCmd)
+void CAntiAim::FakeShotAngles(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!Vars::AntiHack::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN)
+	if (!pLocal || pLocal->m_MoveType() == MOVETYPE_WALK
+		|| !Vars::AntiHack::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN)
 		return;
 
 	G::SilentAngles = true;
@@ -218,8 +219,8 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	G::AntiAim = AntiAimOn() && ShouldRun(pLocal, pWeapon, pCmd);
 
 	int iAntiBackstab = F::Misc.AntiBackstab(pLocal, pCmd, bSendPacket);
-	if (!iAntiBackstab && pLocal->m_MoveType() == MOVETYPE_WALK)
-		FakeShotAngles(pCmd);
+	if (!iAntiBackstab)
+		FakeShotAngles(pLocal, pCmd);
 
 	if (!G::AntiAim)
 	{

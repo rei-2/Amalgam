@@ -4,7 +4,7 @@
 class CAntiAim
 {
 private:
-	void FakeShotAngles(CUserCmd* pCmd);
+	void FakeShotAngles(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	float EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOffset);
 	void RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealYaw, bool bFake, float flEpsilon = 45.f);

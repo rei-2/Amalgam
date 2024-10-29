@@ -447,6 +447,7 @@ namespace Vars
 			CVarEnum(ChatTags, 0, VISUAL, Local = 1 << 0, Friends = 1 << 1, Assigned = 1 << 2)
 			CVar(FieldOfView, 0, VISUAL)
 			CVar(ZoomFieldOfView, 0, VISUAL)
+			CVar(AspectRatio, 0.f, VISUAL)
 			CVar(RevealScoreboard, false, VISUAL)
 			CVar(ScoreboardUtility, false)
 			CVar(ScoreboardColors, false, VISUAL)
