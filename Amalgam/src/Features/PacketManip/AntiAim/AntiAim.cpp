@@ -198,10 +198,10 @@ void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::DoubleTap || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
 		return;
 
-	static bool bVar = true;
 	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 10.f)
 	{
-		float flMove = (pLocal->IsDucking() ? 14.f : 1.f) * ((bVar = !bVar) ? 1 : -1);
+		static bool bVar = true;
+		float flMove = (pLocal->IsDucking() ? 3 : 1) * ((bVar = !bVar) ? 1 : -1);
 		Vec3 vDir = { flMove, flMove, 0 };
 
 		Vec3 vMove = Math::RotatePoint(vDir, {}, { 0, -pCmd->viewangles.y, 0 });

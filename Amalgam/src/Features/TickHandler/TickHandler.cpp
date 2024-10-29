@@ -205,7 +205,7 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
 	G::MaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
 	if (F::AntiAim.YawOn())
-		G::MaxShift -= 3;
+		G::MaxShift -= F::AntiAim.AntiAimTicks();
 
 	while (G::ShiftedTicks > G::MaxShift)
 		CLMoveFunc(accumulated_extra_samples, false); // skim any excess ticks

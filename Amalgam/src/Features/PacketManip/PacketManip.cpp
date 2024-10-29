@@ -4,7 +4,8 @@
 
 static inline bool AntiAimCheck(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	return F::AntiAim.YawOn() && F::AntiAim.ShouldRun(pLocal, pWeapon, pCmd) && I::ClientState->chokedcommands < 3 && !G::Recharge;
+	return F::AntiAim.YawOn() && F::AntiAim.ShouldRun(pLocal, pWeapon, pCmd) && !G::Recharge
+		&& I::ClientState->chokedcommands < F::AntiAim.AntiAimTicks();
 }
 
 void CPacketManip::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket)

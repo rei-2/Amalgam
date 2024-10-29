@@ -23,6 +23,8 @@ public:
 	int GetEdge(CTFPlayer* pEntity, float flEdgeOrigYaw, bool bUpPitch);
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket);
 
+	inline int AntiAimTicks() { return 3; }
+
 	Vec2 vFakeAngles = {};
 	Vec2 vRealAngles = {};
 	std::vector<std::pair<Vec3, Vec3>> vEdgeTrace = {};
