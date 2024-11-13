@@ -361,16 +361,17 @@ void CPlayerConditions::Draw(CTFPlayer* pLocal)
 	int x = Vars::Menu::ConditionsDisplay.Value.x;
 	int y = Vars::Menu::ConditionsDisplay.Value.y + 8;
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+	const int nTall = fFont.m_nTall + H::Draw.Scale(1);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
+	if (x <= 100 + H::Draw.Scale(50, Scale_Round))
 	{
-		x -= 42 * Vars::Menu::Scale.Value;
+		x -= H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
+	else if (x >= H::Draw.m_nScreenW - 100 - H::Draw.Scale(50, Scale_Round))
 	{
-		x += 42 * Vars::Menu::Scale.Value;
+		x += H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPRIGHT;
 	}
 
@@ -380,6 +381,6 @@ void CPlayerConditions::Draw(CTFPlayer* pLocal)
 	for (const std::wstring& sCondition : vConditions)
 	{
 		H::Draw.StringOutlined(fFont, x, y + iOffset, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, sCondition.c_str());
-		iOffset += fFont.m_nTall + 1;
+		iOffset += nTall;
 	}
 }

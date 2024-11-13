@@ -55,8 +55,7 @@ public:
 		Breakpoint()
 			: mLine(-1)
 			, mEnabled(false)
-		{
-		}
+		{}
 	};
 
 	// Represents a character coordinate from the user's point of view,
@@ -70,18 +69,12 @@ public:
 	{
 		int mLine, mColumn;
 		Coordinates() : mLine(0), mColumn(0) {}
-
 		Coordinates(int aLine, int aColumn) : mLine(aLine), mColumn(aColumn)
 		{
 			assert(aLine >= 0);
 			assert(aColumn >= 0);
 		}
-
-		static Coordinates Invalid()
-		{
-			static Coordinates invalid(-1, -1);
-			return invalid;
-		}
+		static Coordinates Invalid() { static Coordinates invalid(-1, -1); return invalid; }
 
 		bool operator ==(const Coordinates& o) const
 		{
@@ -100,36 +93,28 @@ public:
 		bool operator <(const Coordinates& o) const
 		{
 			if (mLine != o.mLine)
-			{
 				return mLine < o.mLine;
-			}
 			return mColumn < o.mColumn;
 		}
 
 		bool operator >(const Coordinates& o) const
 		{
 			if (mLine != o.mLine)
-			{
 				return mLine > o.mLine;
-			}
 			return mColumn > o.mColumn;
 		}
 
 		bool operator <=(const Coordinates& o) const
 		{
 			if (mLine != o.mLine)
-			{
 				return mLine < o.mLine;
-			}
 			return mColumn <= o.mColumn;
 		}
 
 		bool operator >=(const Coordinates& o) const
 		{
 			if (mLine != o.mLine)
-			{
 				return mLine > o.mLine;
-			}
 			return mColumn >= o.mColumn;
 		}
 	};
@@ -140,13 +125,13 @@ public:
 		std::string mDeclaration;
 	};
 
-	using String = std::string;
-	using Identifiers = std::unordered_map<std::string, Identifier>;
-	using Keywords = std::unordered_set<std::string>;
-	using ErrorMarkers = std::map<int, std::string>;
-	using Breakpoints = std::unordered_set<int>;
-	using Palette = std::array<ImU32, static_cast<unsigned>(PaletteIndex::Max)>;
-	using Char = uint8_t;
+	typedef std::string String;
+	typedef std::unordered_map<std::string, Identifier> Identifiers;
+	typedef std::unordered_set<std::string> Keywords;
+	typedef std::map<int, std::string> ErrorMarkers;
+	typedef std::unordered_set<int> Breakpoints;
+	typedef std::array<ImU32, (unsigned)PaletteIndex::Max> Palette;
+	typedef uint8_t Char;
 
 	struct Glyph
 	{
@@ -157,19 +142,17 @@ public:
 		bool mPreprocessor : 1;
 
 		Glyph(Char aChar, PaletteIndex aColorIndex) : mChar(aChar), mColorIndex(aColorIndex),
-			mComment(false), mMultiLineComment(false), mPreprocessor(false)
-		{
-		}
+			mComment(false), mMultiLineComment(false), mPreprocessor(false) {}
 	};
 
-	using Line = std::vector<Glyph>;
-	using Lines = std::vector<Line>;
+	typedef std::vector<Glyph> Line;
+	typedef std::vector<Line> Lines;
 
 	struct LanguageDefinition
 	{
-		using TokenRegexString = std::pair<std::string, PaletteIndex>;
-		using TokenRegexStrings = std::vector<TokenRegexString>;
-		using TokenizeCallback = bool(*)(const char* in_begin, const char* in_end, const char*& out_begin, const char*& out_end, PaletteIndex& paletteIndex);
+		typedef std::pair<std::string, PaletteIndex> TokenRegexString;
+		typedef std::vector<TokenRegexString> TokenRegexStrings;
+		typedef bool(*TokenizeCallback)(const char * in_begin, const char * in_end, const char *& out_begin, const char *& out_end, PaletteIndex & paletteIndex);
 
 		std::string mName;
 		Keywords mKeywords;
@@ -219,9 +202,9 @@ public:
 	std::vector<std::string> GetTextLines() const;
 
 	std::string GetSelectedText() const;
-	std::string GetCurrentLineText() const;
+	std::string GetCurrentLineText()const;
 
-	int GetTotalLines() const { return static_cast<int>(mLines.size()); }
+	int GetTotalLines() const { return (int)mLines.size(); }
 	bool IsOverwrite() const { return mOverwrite; }
 
 	void SetReadOnly(bool aValue);
@@ -235,20 +218,20 @@ public:
 	Coordinates GetCursorPosition() const { return GetActualCursorCoordinates(); }
 	void SetCursorPosition(const Coordinates& aPosition);
 
-	void SetHandleMouseInputs(bool aValue) { mHandleMouseInputs = aValue; }
-	bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
+	inline void SetHandleMouseInputs    (bool aValue){ mHandleMouseInputs    = aValue;}
+	inline bool IsHandleMouseInputsEnabled() const { return mHandleKeyboardInputs; }
 
-	void SetHandleKeyboardInputs(bool aValue) { mHandleKeyboardInputs = aValue; }
-	bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
+	inline void SetHandleKeyboardInputs (bool aValue){ mHandleKeyboardInputs = aValue;}
+	inline bool IsHandleKeyboardInputsEnabled() const { return mHandleKeyboardInputs; }
 
-	void SetImGuiChildIgnored(bool aValue) { mIgnoreImGuiChild = aValue; }
-	bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
+	inline void SetImGuiChildIgnored    (bool aValue){ mIgnoreImGuiChild     = aValue;}
+	inline bool IsImGuiChildIgnored() const { return mIgnoreImGuiChild; }
 
-	void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
-	bool IsShowingWhitespaces() const { return mShowWhitespaces; }
+	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
+	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
 	void SetTabSize(int aValue);
-	int GetTabSize() const { return mTabSize; }
+	inline int GetTabSize() const { return mTabSize; }
 
 	void InsertText(const std::string& aValue);
 	void InsertText(const char* aValue);
@@ -284,7 +267,7 @@ public:
 	static const Palette& GetRetroBluePalette();
 
 private:
-	using RegexList = std::vector<std::pair<std::regex, PaletteIndex>>;
+	typedef std::vector<std::pair<std::regex, PaletteIndex>> RegexList;
 
 	struct EditorState
 	{
@@ -301,15 +284,15 @@ private:
 
 		UndoRecord(
 			const std::string& aAdded,
-			Coordinates aAddedStart,
-			Coordinates aAddedEnd,
+			const TextEditor::Coordinates aAddedStart,
+			const TextEditor::Coordinates aAddedEnd,
 
 			const std::string& aRemoved,
-			Coordinates aRemovedStart,
-			Coordinates aRemovedEnd,
+			const TextEditor::Coordinates aRemovedStart,
+			const TextEditor::Coordinates aRemovedEnd,
 
-			EditorState& aBefore,
-			EditorState& aAfter);
+			TextEditor::EditorState& aBefore,
+			TextEditor::EditorState& aAfter);
 
 		void Undo(TextEditor* aEditor);
 		void Redo(TextEditor* aEditor);
@@ -326,7 +309,7 @@ private:
 		EditorState mAfter;
 	};
 
-	using UndoBuffer = std::vector<UndoRecord>;
+	typedef std::vector<UndoRecord> UndoBuffer;
 
 	void ProcessInputs();
 	void Colorize(int aFromLine = 0, int aCount = -1);
@@ -379,8 +362,8 @@ private:
 	bool mScrollToTop;
 	bool mTextChanged;
 	bool mColorizerEnabled;
-	float mTextStart; // position (in pixels) where a code line starts relative to the left of the TextEditor.
-	int mLeftMargin;
+	float mTextStart;                   // position (in pixels) where a code line starts relative to the left of the TextEditor.
+	int  mLeftMargin;
 	bool mCursorPositionChanged;
 	int mColorRangeMin, mColorRangeMax;
 	SelectionMode mSelectionMode;
@@ -389,8 +372,8 @@ private:
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
 
-	Palette mPaletteBase{};
-	Palette mPalette{};
+	Palette mPaletteBase;
+	Palette mPalette;
 	LanguageDefinition mLanguageDefinition;
 	RegexList mRegexList;
 

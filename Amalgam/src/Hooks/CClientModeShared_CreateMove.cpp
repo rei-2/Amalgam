@@ -153,12 +153,15 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		static std::vector<Vec3> vAngles;
 		vAngles.push_back(pCmd->viewangles);
 		auto pAnimState = pLocal->GetAnimState();
-		if (pAnimState && *pSendPacket)
+		if (*pSendPacket && pAnimState)
 		{
 			float flOldFrametime = I::GlobalVars->frametime;
 			I::GlobalVars->frametime = TICK_INTERVAL;
 			for (auto& vAngle : vAngles)
 			{
+				if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
+					pLocal->m_flTauntYaw() = vAngle.y;
+				pAnimState->m_flEyeYaw = vAngle.y;
 				pAnimState->Update(vAngle.y, vAngle.x);
 				pLocal->FrameAdvance(TICK_INTERVAL);
 			}

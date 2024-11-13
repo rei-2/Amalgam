@@ -9,9 +9,6 @@
 #include <format>
 #pragma comment(lib, "imagehlp.lib")
 
-static LPVOID pLastAddress = nullptr;
-static bool bException = false;
-
 struct Frame
 {
 	std::string m_sModule = "";
@@ -96,6 +93,9 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 
 static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 {
+	static LPVOID pLastAddress = nullptr;
+	static bool bException = false;
+
 	// unsure of a way to filter nonfatal exceptions
 	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION
 		|| ExceptionInfo->ExceptionRecord->ExceptionAddress && ExceptionInfo->ExceptionRecord->ExceptionAddress == pLastAddress
@@ -134,7 +134,8 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 		ssErrorStream << "\n";
 	}
 
-	ssErrorStream << "Ctrl + C to copy. Logged to Amalgam\\crash_log.txt. ";
+	ssErrorStream << "Ctrl + C to copy. Logged to Amalgam\\crash_log.txt. \n";
+	ssErrorStream << "Built @ " __DATE__ ", " __TIME__;
 	if (bException)
 		ssErrorStream << "\nShift + Enter to skip repetitive exceptions. ";
 	bException = true;

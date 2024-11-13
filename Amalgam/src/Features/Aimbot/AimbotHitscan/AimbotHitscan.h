@@ -10,7 +10,6 @@ class CAimbotHitscan
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	int GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pTarget);
-	float GetMaxRange(CTFWeaponBase* pWeapon);
 	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	Vec3 Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod = Vars::Aimbot::General::AimType.Value);

@@ -207,19 +207,19 @@ void CMovementSimulation::Store()
 			auto pPlayer = pEntity->As<CTFPlayer>();
 			auto& vRecords = mRecords[pPlayer->entindex()];
 
+			if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_vecVelocity().IsZero())
+			{
+				vRecords.clear();
+				continue;
+			}
+			else if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
+				continue;
+
 			bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer();
 			Vec3 vVelocity = bLocal ? F::EnginePrediction.vVelocity : pPlayer->m_vecVelocity();
 			Vec3 vOrigin = bLocal ? F::EnginePrediction.vOrigin : pPlayer->m_vecOrigin();
 			Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.vDirection, {}, { 0, F::EnginePrediction.vAngles.y, 0 }) : Vec3(pPlayer->m_vecVelocity().x, pPlayer->m_vecVelocity().y, 0.f);
 			Vec3 vAngles = bLocal ? F::EnginePrediction.vAngles : pPlayer->GetEyeAngles();
-
-			if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant() || vVelocity.IsZero())
-			{
-				vRecords.clear();
-				continue;
-			}
-			else if (!H::Entities.GetDeltaTime(pPlayer))
-				continue;
 
 			MoveData tRecord = {
 				vDirection,
@@ -407,13 +407,13 @@ void CMovementSimulation::Store()
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		auto& vSimTimes = mSimTimes[pPlayer->entindex()];
 
-		if (pEntity == H::Entities.GetLocal() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant())
+		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 		{
 			vSimTimes.clear();
 			continue;
 		}
 
-		float flDeltaTime = H::Entities.GetDeltaTime(pPlayer);
+		float flDeltaTime = H::Entities.GetDeltaTime(pPlayer->entindex());
 		if (!flDeltaTime)
 			continue;
 
@@ -536,7 +536,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 		}
 	}
 
-	for (int i = 0; i < H::Entities.GetChoke(pPlayer); i++)
+	for (int i = 0; i < H::Entities.GetChoke(pPlayer->entindex()); i++)
 		RunTick(playerStorageOut);
 
 	return true;

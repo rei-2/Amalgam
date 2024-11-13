@@ -228,7 +228,7 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 	StencilVisible(pRenderContext, !bExtra);
 	for (auto it = visibleMaterials.begin(); it != visibleMaterials.end(); it++)
 	{
-		auto material = F::Materials.GetMaterial(it->first);
+		auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
 		F::Materials.SetColor(material, it->second);
 		I::ModelRender->ForcedMaterialOverride(material);
@@ -256,7 +256,7 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 		StencilOccluded(pRenderContext);
 		for (auto it = occludedMaterials.begin(); it != occludedMaterials.end(); it++)
 		{
-			auto material = F::Materials.GetMaterial(it->first);
+			auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
 			F::Materials.SetColor(material, it->second);
 			I::ModelRender->ForcedMaterialOverride(material);
@@ -474,7 +474,7 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 
 	for (auto it = vMaterials.begin(); it != vMaterials.end(); it++)
 	{
-		auto material = F::Materials.GetMaterial(it->first);
+		auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
 		bool bInvert = false;
 		if (material)
@@ -516,7 +516,7 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 
 	for (auto it = vMaterials.begin(); it != vMaterials.end(); it++)
 	{
-		auto material = F::Materials.GetMaterial(it->first);
+		auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
 		bool bInvert = false;
 		if (material)

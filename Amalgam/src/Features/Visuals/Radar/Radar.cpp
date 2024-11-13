@@ -287,7 +287,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (!pPlayer->IsAlive() || pPlayer->IsAGhost())
+			if (pPlayer->IsDormant() && !H::Entities.GetDormancy(pPlayer->entindex()) || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 				continue;
 
 			const int nIndex = pPlayer->entindex();

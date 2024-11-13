@@ -22,7 +22,7 @@ struct PlayerCache
 	bool m_bUberBar = false;
 	int m_iClassIcon = 0;
 	CHudTexture* m_pWeaponIcon = nullptr;
-	float m_flHealth = 0.f;
+	float m_flHealth = 1.f;
 	float m_flUber = 0.f;
 };
 
@@ -34,7 +34,7 @@ struct BuildingCache
 	bool m_bBox = false;
 
 	bool m_bHealthBar = false;
-	float m_flHealth = 0.f;
+	float m_flHealth = 1.f;
 };
 
 struct WorldCache
@@ -58,7 +58,7 @@ private:
 	void DrawBuildings();
 	void DrawWorld();
 
-	bool GetDrawBounds(CBaseEntity* pEntity, int& x, int& y, int& w, int& h);
+	bool GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h);
 	const char* GetPlayerClass(int nClassNum);
 	void DrawBones(CTFPlayer* pPlayer, std::vector<int> vecBones, Color_t clr);
 

@@ -136,7 +136,7 @@ float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (!pPlayer->IsAlive() || pPlayer->IsDormant() || F::PlayerUtils.IsIgnored(pPlayer->entindex()))
+			if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || F::PlayerUtils.IsIgnored(pPlayer->entindex()))
 				continue;
 			
 			const Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), pPlayer->m_vecOrigin());

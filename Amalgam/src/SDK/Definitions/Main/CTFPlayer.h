@@ -187,11 +187,12 @@ public:
 	NETVAR_OFF(m_nWaterType, byte, "CTFPlayer", "m_nWaterLevel", 1);
 	NETVAR_OFF(m_flInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -8);
 	NETVAR_OFF(m_flTankPressure, float, "CTFPlayer", "m_Shared", 636);
-	NETVAR_OFF(GetAnimState, CMultiPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
+	NETVAR_OFF(GetAnimState, CTFPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
 	NETVAR_OFF(m_flPrevTauntYaw, float, "CTFPlayer", "m_flTauntYaw", 4);
 	NETVAR_OFF(m_flLastMovementStunChange, float, "CTFPlayer", "m_hItem", -180);
 	NETVAR_OFF(m_flStunLerpTarget, float, "CTFPlayer", "m_hItem", -184);
 	NETVAR_OFF(m_bStunNeedsFadeOut, bool, "CTFPlayer", "m_hItem", -188);
+	NETVAR_OFF(m_bTauntForceMoveForward, bool, "CTFPlayer", "m_bAllowMoveDuringTaunt", 1);
 
 	VIRTUAL(GetMaxHealth, int, int(__fastcall*)(void*), this, 107);
 

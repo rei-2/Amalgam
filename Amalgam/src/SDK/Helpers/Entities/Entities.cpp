@@ -149,31 +149,29 @@ void CEntities::Store()
 	
 	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 	{
-		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CBaseEntity>();
+		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CTFPlayer>();
 		if (!pEntity || !pEntity->IsPlayer())
 			continue;
 
-		if (pEntity->IsDormant())
+		auto pResource = GetPR();
+		if (pResource && pResource->GetValid(n))
 		{
-			if (!m_mDormancy.contains(pEntity))
-				continue;
-
-			auto& dormantData = m_mDormancy[pEntity];
-
-			if (I::EngineClient->Time() - dormantData.LastUpdate > Vars::ESP::DormantTime.Value)
-				continue;
-
-			auto pPlayer = pEntity->As<CTFPlayer>();
-			pPlayer->SetAbsOrigin(dormantData.Location);
-			pPlayer->m_vecOrigin() = dormantData.Location;
-			pPlayer->m_lifeState() = LIFE_ALIVE;
-
-			auto playerResource = GetPR();
-			if (playerResource && playerResource->GetValid(n))
-				pPlayer->m_iHealth() = playerResource->GetHealth(n);
+			if (pEntity->IsDormant())
+			{
+				pEntity->m_lifeState() = pResource->IsAlive(n) ? LIFE_ALIVE : LIFE_DEAD;
+				pEntity->m_iHealth() = pResource->GetHealth(n);
+				if (m_mDormancy.contains(n))
+				{
+					auto& tDormancy = m_mDormancy[n];
+					if (I::EngineClient->Time() - tDormancy.LastUpdate < Vars::ESP::DormantTime.Value)
+						pEntity->SetAbsOrigin(pEntity->m_vecOrigin() = tDormancy.Location);
+					else
+						m_mDormancy.erase(n);
+				}
+			}
+			else if (pResource->IsAlive(n))
+				m_mDormancy[n] = { pEntity->m_vecOrigin(), I::EngineClient->Time() };
 		}
-		else
-			m_mDormancy[pEntity] = { pEntity->m_vecOrigin(), I::EngineClient->Time() };
 
 		m_mGroups[EGroupType::PLAYERS_ALL].push_back(pEntity);
 		m_mGroups[pEntity->m_iTeamNum() != m_pLocal->m_iTeamNum() ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_TEAMMATES].push_back(pEntity);
@@ -200,32 +198,32 @@ void CEntities::Store()
 
 		bool bDormant = pPlayer->IsDormant();
 
-		float flOldSimTime = m_mOldSimTimes[pPlayer] = m_mSimTimes.contains(pPlayer) ? m_mSimTimes[pPlayer] : pPlayer->m_flOldSimulationTime();
-		float flSimTime = m_mSimTimes[pPlayer] = (bDormant ? m_pLocal : pPlayer)->m_flSimulationTime(); // lol
-		float flDeltaTime = m_mDeltaTimes[pPlayer] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 0, iMaxShift));
+		float flOldSimTime = m_mOldSimTimes[n] = m_mSimTimes.contains(n) ? m_mSimTimes[n] : pPlayer->m_flOldSimulationTime();
+		float flSimTime = m_mSimTimes[n] = (bDormant ? m_pLocal : pPlayer)->m_flSimulationTime(); // lol
+		float flDeltaTime = m_mDeltaTimes[n] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 0, iMaxShift));
 		if (flDeltaTime)
 		{
 			if (pPlayer->IsAlive() && !bDormant)
-				F::CheaterDetection.ReportChoke(pPlayer, m_mChokes[pPlayer]);
-			m_mSetTicks[pPlayer] = I::GlobalVars->tickcount;
+				F::CheaterDetection.ReportChoke(pPlayer, m_mChokes[n]);
+			m_mSetTicks[n] = I::GlobalVars->tickcount;
 		}
-		m_mChokes[pPlayer] = I::GlobalVars->tickcount - m_mSetTicks[pPlayer];
+		m_mChokes[n] = I::GlobalVars->tickcount - m_mSetTicks[n];
 
 		if (!flDeltaTime)
 			continue;
 		else if (bDormant)
 		{
-			m_mBones[pPlayer].first = false;
+			m_mBones[n].first = false;
 			continue;
 		}
 
 		m_bSettingUpBones = true;
-		m_mBones[pPlayer].first = pPlayer->SetupBones(m_mBones[pPlayer].second, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, flSimTime);
+		m_mBones[n].first = pPlayer->SetupBones(m_mBones[n].second, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, flSimTime);
 		m_bSettingUpBones = false;
 
-		Vec3 vOldAngles = m_mEyeAngles[pPlayer], vNewAngles = pPlayer->As<CTFPlayer>()->GetEyeAngles();
-		m_mEyeAngles[pPlayer] = vNewAngles;
-		m_mPingAngles[pPlayer] = (vNewAngles - vOldAngles) / (flSimTime - flOldSimTime) * (F::Backtrack.GetReal() + TICKS_TO_TIME(G::AnticipatedChoke));
+		Vec3 vOldAngles = m_mEyeAngles[n], vNewAngles = pPlayer->As<CTFPlayer>()->GetEyeAngles();
+		m_mEyeAngles[n] = vNewAngles;
+		m_mPingAngles[n] = (vNewAngles - vOldAngles) / (flSimTime - flOldSimTime) * (F::Backtrack.GetReal() + TICKS_TO_TIME(G::AnticipatedChoke));
 	}
 
 	for (auto pEntity : GetGroup(EGroupType::PLAYERS_ALL))
@@ -270,11 +268,9 @@ void CEntities::ManualNetwork(const StartSoundParams_t& params)
 	if (params.soundsource <= 0 || params.soundsource == I::EngineClient->GetLocalPlayer())
 		return;
 
-	Vector vOrigin = params.origin;
 	auto pEntity = I::ClientEntityList->GetClientEntity(params.soundsource)->As<CBaseEntity>();
-
 	if (pEntity && pEntity->IsDormant() && pEntity->IsPlayer())
-		m_mDormancy[pEntity] = { vOrigin, I::EngineClient->Time() };
+		m_mDormancy[params.soundsource] = { params.origin, I::EngineClient->Time() };
 }
 
 bool CEntities::IsHealth(CBaseEntity* pEntity)
@@ -369,15 +365,16 @@ CTFPlayer* CEntities::GetObservedTarget() { return m_pObservedTarget; }
 
 const std::vector<CBaseEntity*>& CEntities::GetGroup(const EGroupType& Group) { return m_mGroups[Group]; }
 
-float CEntities::GetSimTime(CBaseEntity* pEntity) { return m_mSimTimes.contains(pEntity) ? m_mSimTimes[pEntity] : pEntity->m_flSimulationTime(); }
-float CEntities::GetOldSimTime(CBaseEntity* pEntity) { return m_mOldSimTimes.contains(pEntity) ? m_mOldSimTimes[pEntity] : pEntity->m_flOldSimulationTime(); }
-float CEntities::GetDeltaTime(CBaseEntity* pEntity) { return m_mDeltaTimes.contains(pEntity) ? m_mDeltaTimes[pEntity] : TICK_INTERVAL; }
-int CEntities::GetChoke(CBaseEntity* pEntity) { return m_mChokes.contains(pEntity) ? m_mChokes[pEntity] : 0; }
-matrix3x4* CEntities::GetBones(CBaseEntity* pEntity) { return m_mBones[pEntity].first ? m_mBones[pEntity].second : nullptr; }
-Vec3 CEntities::GetEyeAngles(CBaseEntity* pEntity) { return m_mEyeAngles.contains(pEntity) ? m_mEyeAngles[pEntity] : Vec3(); }
-Vec3 CEntities::GetPingAngles(CBaseEntity* pEntity) { return m_mPingAngles.contains(pEntity) ? m_mPingAngles[pEntity] : Vec3(); }
-bool CEntities::GetLagCompensation(CBaseEntity* pEntity) { return m_mLagCompensation[pEntity]; }
-void CEntities::SetLagCompensation(CBaseEntity* pEntity, bool bLagComp) { m_mLagCompensation[pEntity] = bLagComp; }
+float CEntities::GetSimTime(CBaseEntity* pEntity) { int iIndex = pEntity->entindex(); return m_mSimTimes.contains(iIndex) ? m_mSimTimes[iIndex] : pEntity->m_flSimulationTime(); }
+float CEntities::GetOldSimTime(CBaseEntity* pEntity) { int iIndex = pEntity->entindex(); return m_mOldSimTimes.contains(iIndex) ? m_mOldSimTimes[iIndex] : pEntity->m_flOldSimulationTime(); }
+float CEntities::GetDeltaTime(int iIndex) { return m_mDeltaTimes.contains(iIndex) ? m_mDeltaTimes[iIndex] : TICK_INTERVAL; }
+int CEntities::GetChoke(int iIndex) { return m_mChokes.contains(iIndex) ? m_mChokes[iIndex] : 0; }
+bool CEntities::GetDormancy(int iIndex) { return m_mDormancy.contains(iIndex); }
+matrix3x4* CEntities::GetBones(int iIndex) { return m_mBones[iIndex].first ? m_mBones[iIndex].second : nullptr; }
+Vec3 CEntities::GetEyeAngles(int iIndex) { return m_mEyeAngles.contains(iIndex) ? m_mEyeAngles[iIndex] : Vec3(); }
+Vec3 CEntities::GetPingAngles(int iIndex) { return m_mPingAngles.contains(iIndex) ? m_mPingAngles[iIndex] : Vec3(); }
+bool CEntities::GetLagCompensation(int iIndex) { return m_mLagCompensation[iIndex]; }
+void CEntities::SetLagCompensation(int iIndex, bool bLagComp) { m_mLagCompensation[iIndex] = bLagComp; }
 
 bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
 bool CEntities::IsFriend(uint32_t friendsID) { return m_mUFriends[friendsID]; }

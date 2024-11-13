@@ -1,10 +1,10 @@
 #pragma once
-#include "CBaseProjectile.h"
+#include "CEconEntity.h"
 #include "../../../Utils/Signatures/Signatures.h"
 
 MAKE_SIGNATURE(CBaseCombatWeapon_HasAmmo, "client.dll", "40 53 48 83 EC ? 83 B9 ? ? ? ? ? 48 8B D9 75 ? 83 B9 ? ? ? ? ? 74 ? 48 8B 01", 0x0);
 
-class CBaseCombatWeapon : public CBaseAnimating
+class CBaseCombatWeapon : public CEconEntity
 {
 public:
 	NETVAR(m_iClip1, int, "CBaseCombatWeapon", "m_iClip1");

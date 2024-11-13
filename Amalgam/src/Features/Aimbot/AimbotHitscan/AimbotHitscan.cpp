@@ -18,7 +18,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargetsMedigun(CTFPlayer* pLocal, CWeap
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
+		if (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
 			continue;
 
 		if (Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pEntity->entindex()))
@@ -233,25 +233,13 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 	return 2;
 };
 
-float CAimbotHitscan::GetMaxRange(CTFWeaponBase* pWeapon)
-{
-	switch (pWeapon->GetWeaponID())
-	{
-	case TF_WEAPON_MEDIGUN: return 450.f;
-	case TF_WEAPON_MECHANICAL_ARM: return 256.f;
-	}
-
-	auto pWeaponInfo = pWeapon->GetWeaponInfo();
-	return pWeaponInfo ? pWeaponInfo->GetWeaponData(0).m_flRange : 8192.f;
-}
-
 int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity) > Vars::Aimbot::General::TickTolerance.Value)
+	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
 
 	Vec3 vEyePos = pLocal->GetShootPos(), vPeekPos = {};
-	const float flMaxRange = powf(GetMaxRange(pWeapon), 2.f);
+	const float flMaxRange = powf(pWeapon->GetRange(), 2.f);
 
 	auto pModel = target.m_pEntity->GetModel();
 	if (!pModel) return false;
@@ -308,7 +296,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 	int iReturn = false;
 	for (auto& pTick : vRecords)
 	{
-		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks() : true) && Vars::Aimbot::General::HitscanPeek.Value;
+		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pWeapon) : true) && Vars::Aimbot::General::HitscanPeek.Value;
 
 		if (target.m_TargetType == ETargetType::Player || target.m_TargetType == ETargetType::Sentry)
 		{
@@ -614,7 +602,7 @@ Vec3 CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 // assume angle calculated outside with other overload
 void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle)
 {
-	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks();
+	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks(H::Entities.GetWeapon());
 	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
 	{
 		pCmd->viewangles = vAngle;
@@ -733,8 +721,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 				{
 					const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
 
-					auto pWeaponInfo = pWeapon->GetWeaponInfo();
-					if (pWeaponInfo && pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot > 1)
+					if (pWeapon->GetBulletsPerShot() > 1)
 					{
 						if (flTimeSinceLastShot <= 0.25f)
 							pCmd->buttons &= ~IN_ATTACK;

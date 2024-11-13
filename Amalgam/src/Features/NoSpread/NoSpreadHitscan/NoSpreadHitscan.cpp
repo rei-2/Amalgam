@@ -139,9 +139,8 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 
 	// credits to cathook for average spread stuff
 	float flSpread = pWeapon->GetWeaponSpread();
-	auto pWeaponInfo = pWeapon->GetWeaponInfo();
-	int iBulletsPerShot = pWeaponInfo ? pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot : 1;
-	iBulletsPerShot = static_cast<int>(SDK::AttribHookValue(static_cast<float>(iBulletsPerShot), "mult_bullets_per_shot", pWeapon));
+	int iBulletsPerShot = pWeapon->GetBulletsPerShot();
+	float flFireRate = std::ceilf(pWeapon->GetFireRate() / TICK_INTERVAL) * TICK_INTERVAL;
 
 	std::vector<Vec3> vBulletCorrections = {};
 	Vec3 vAverageSpread = {};
@@ -149,20 +148,13 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 	{
 		SDK::RandomSeed(m_iSeed + iBullet);
 
-		if (!iBullet) // Check if we'll get a guaranteed perfect shot
+		if (!iBullet) // check if we'll get a guaranteed perfect shot
 		{
-			bool bDoubletap = false; // if we are doubletapping and firerate fast enough, prioritize later bullets
+			// if we are doubletapping and firerate is fast enough, prioritize later bullets
 			int iTicks = F::Ticks.GetTicks();
-			if (iTicks && pWeaponInfo)
+			if (!iTicks || iTicks < TIME_TO_TICKS(flFireRate) * 2)
 			{
-				float flDoubletapTime = TICKS_TO_TIME(iTicks);
-				float flFireRate = pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
-				bDoubletap = flDoubletapTime > flFireRate * 2;
-			}
-
-			if (!bDoubletap)
-			{
-				float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
+				float flTimeSinceLastShot = TICKS_TO_TIME(pLocal->m_nTickBase()) - pWeapon->m_flLastFireTime();
 				if ((iBulletsPerShot == 1 && flTimeSinceLastShot > 1.25f) || (iBulletsPerShot > 1 && flTimeSinceLastShot > 0.25f))
 					return;
 			}
@@ -212,21 +204,22 @@ void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
 	int x = Vars::Menu::SeedPredictionDisplay.Value.x;
 	int y = Vars::Menu::SeedPredictionDisplay.Value.y + 8;
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+	const int nTall = fFont.m_nTall + H::Draw.Scale(1);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
+	if (x <= 100 + H::Draw.Scale(50, Scale_Round))
 	{
-		x -= 42 * Vars::Menu::Scale.Value;
+		x -= H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
+	else if (x >= H::Draw.m_nScreenW - 100 - H::Draw.Scale(50, Scale_Round))
 	{
-		x += 42 * Vars::Menu::Scale.Value;
+		x += H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPRIGHT;
 	}
 
 	const auto& cColor = m_bSynced ? Vars::Menu::Theme::Active.Value : Vars::Menu::Theme::Inactive.Value;
 
 	H::Draw.StringOutlined(fFont, x, y, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Uptime {}", GetFormat(m_flServerTime)).c_str());
-	H::Draw.StringOutlined(fFont, x, y += fFont.m_nTall + 1, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", m_flMantissaStep).c_str());
+	H::Draw.StringOutlined(fFont, x, y += nTall, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", m_flMantissaStep).c_str());
 }

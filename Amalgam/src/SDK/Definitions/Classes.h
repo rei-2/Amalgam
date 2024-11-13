@@ -11,6 +11,8 @@
 #include "Main/CBaseProjectile.h"
 #include "Main/CCaptureFlag.h"
 #include "Main/CEconDefinition.h"
+#include "Main/CEconEntity.h"
+#include "Main/CEconWearable.h"
 #include "Main/CEntitySphereQuery.h"
 #include "Main/CHalloweenPickup.h"
 #include "Main/CMultiPlayerAnimState.h"

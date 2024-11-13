@@ -521,6 +521,8 @@ namespace Vars
 			CVar(SwingLines, false, VISUAL)
 			CVar(ProjectileCamera, false, VISUAL)
 			CVar(ProjectileWindow, WindowBox_t(), NOBIND)
+			CVar(SeparatorSpacing, 4, NOSAVE) // debug
+			CVar(SeparatorLength, 12, NOSAVE) // debug
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Trajectory)
@@ -617,6 +619,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Movement)
 			CVarEnum(AutoStrafe, 0, NONE, Off, Legit, Directional)
 			CVar(AutoStrafeTurnScale, 0.5f)
+			CVar(AutoStrafeMaxDelta, 180.f)
 			CVar(Bunnyhop, false)
 			CVar(AutoJumpbug, false)
 			CVar(AutoRocketJump, false)

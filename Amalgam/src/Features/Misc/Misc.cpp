@@ -105,31 +105,24 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 			break;
 
-		float flForwardMove = pCmd->forwardmove;
-		float flSideMove = pCmd->sidemove;
+		float flForward = pCmd->forwardmove, flSide = pCmd->sidemove;
 
 		Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);
-
 		vForward.z = vRight.z = 0.f;
+		vForward.Normalize(), vRight.Normalize();
 
-		vForward.Normalize();
-		vRight.Normalize();
-
-		Vec3 vWishDir = {};
-		Math::VectorAngles({ (vForward.x * flForwardMove) + (vRight.x * flSideMove), (vForward.y * flForwardMove) + (vRight.y * flSideMove), 0.f }, vWishDir);
-
-		Vec3 vCurDir = {};
-		Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);
-
+		Vec3 vWishDir = {}; Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f }, vWishDir);
+		Vec3 vCurDir = {}; Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);
 		float flDirDelta = Math::NormalizeAngle(vWishDir.y - vCurDir.y);
+		if (fabsf(flDirDelta) > Vars::Misc::Movement::AutoStrafeMaxDelta.Value)
+			break;
+
 		float flTurnScale = Math::RemapValClamped(Vars::Misc::Movement::AutoStrafeTurnScale.Value, 0.f, 1.f, 0.9f, 1.f);
-		float flRotation = DEG2RAD((flDirDelta > 0.f ? -90.f : 90.f) + (flDirDelta * flTurnScale));
+		float flRotation = DEG2RAD((flDirDelta > 0.f ? -90.f : 90.f) + flDirDelta * flTurnScale);
+		float flCosRot = cosf(flRotation), flSinRot = sinf(flRotation);
 
-		float flCosRot = cosf(flRotation);
-		float flSinRot = sinf(flRotation);
-
-		pCmd->forwardmove = (flCosRot * flForwardMove) - (flSinRot * flSideMove);
-		pCmd->sidemove = (flSinRot * flForwardMove) + (flCosRot * flSideMove);
+		pCmd->forwardmove = flCosRot * flForward - flSinRot * flSide;
+		pCmd->sidemove = flSinRot * flForward + flCosRot * flSide;
 	}
 	}
 }
@@ -297,12 +290,15 @@ void CMisc::WeaponSway()
 void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	// Handle Taunt Slide
-	if (Vars::Misc::Automation::TauntControl.Value && pLocal->IsTaunting())
+	if (Vars::Misc::Automation::TauntControl.Value && pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
 	{
-		if (pCmd->buttons & IN_BACK)
-			pCmd->viewangles.x = 91.f;
-		else if (!(pCmd->buttons & IN_FORWARD))
-			pCmd->viewangles.x = 90.f;
+		if (pLocal->m_bTauntForceMoveForward())
+		{
+			if (pCmd->buttons & IN_BACK)
+				pCmd->viewangles.x = 91.f;
+			else if (!(pCmd->buttons & IN_FORWARD))
+				pCmd->viewangles.x = 90.f;
+		}
 		if (pCmd->buttons & IN_MOVELEFT)
 			pCmd->sidemove = pCmd->viewangles.x != 90.f ? -50.f : -450.f;
 		else if (pCmd->buttons & IN_MOVERIGHT)
@@ -428,7 +424,7 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked() || pPlayer->m_bFeignDeathReady())
+		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked() || pPlayer->m_bFeignDeathReady())
 			continue;
 
 		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();

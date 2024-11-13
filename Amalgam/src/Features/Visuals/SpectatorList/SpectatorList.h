@@ -12,7 +12,6 @@ private:
 		int m_iRespawnIn;
 		bool m_bRespawnTimeIncreased;
 		bool m_bIsFriend;
-		int m_iTeam;
 		int m_iIndex;
 	};
 

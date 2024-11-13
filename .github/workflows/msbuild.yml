@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        configuration: [Release, ReleaseAVX2]
+        configuration: [Release, ReleaseAVX2, ReleaseFreetype, ReleaseFreetypeAVX2]
         platform: [x64]
 
     steps:

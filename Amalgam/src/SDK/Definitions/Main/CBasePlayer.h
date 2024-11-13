@@ -1,5 +1,6 @@
 #pragma once
 #include "CBaseCombatCharacter.h"
+#include "CEconWearable.h"
 #include "CUserCmd.h"
 #include "../../../Utils/Signatures/Signatures.h"
 
@@ -76,6 +77,7 @@ public:
 	NETVAR_OFF(m_pSurfaceData, void*, "CBasePlayer", "m_szLastPlaceName", 24);
 	NETVAR_OFF(m_surfaceFriction, float, "CBasePlayer", "m_szLastPlaceName", 32);
 	NETVAR_OFF(m_chTextureType, char, "CBasePlayer", "m_szLastPlaceName", 36);
+	NETVAR_OFF(m_hMyWearables, CUtlVector<CHandle<CEconWearable>>, "CBasePlayer", "m_szLastPlaceName", 56);
 
 	CONDGET(IsOnGround, m_fFlags(), FL_ONGROUND);
 	CONDGET(IsInWater, m_fFlags(), FL_INWATER);

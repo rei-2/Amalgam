@@ -98,8 +98,7 @@ void CCheaterDetection::Run()
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-
-		if (!H::Entities.GetDeltaTime(pPlayer))
+		if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
 		PlayerInfo_t pi{};

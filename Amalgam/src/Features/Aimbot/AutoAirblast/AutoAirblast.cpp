@@ -79,7 +79,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 	{
 		for (auto pPlayer : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
 		{
-			if (!pPlayer->IsOnFire() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+			if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || !pPlayer->IsOnFire())
 				continue;
 
 			Vec3 vPos = pPlayer->m_vecOrigin() + pPlayer->GetViewOffset(); // this seems to like to overpredict ?

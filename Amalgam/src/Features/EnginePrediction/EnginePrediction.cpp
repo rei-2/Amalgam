@@ -12,7 +12,7 @@ void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
-		if (pEntity == pLocal)
+		if (pEntity == pLocal || pEntity->IsDormant() || pEntity->As<CTFPlayer>()->IsAlive())
 			continue;
 
 		m_mRestore[pEntity] = { pEntity->m_vecMins(), pEntity->m_vecMaxs() };
@@ -89,7 +89,8 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	else
 		pLocal->m_fFlags() &= ~FL_ONGROUND;
 
-	m_bDoubletap = F::Ticks.GetTicks() && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity(); // hopefully more accurate eyepos while dting
+	// hopefully more accurate eyepos while dting
+	m_bDoubletap = F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
 
 	if (m_bDoubletap)
 	{
@@ -122,11 +123,6 @@ MAKE_SIGNATURE(CPredictableId_ResetInstanceCounters, "client.dll", "33 D2 C7 05 
 MAKE_SIGNATURE(CBaseEntity_UpdateButtonState, "client.dll", "44 8B 81 ? ? ? ? 89 91", 0x0);
 MAKE_SIGNATURE(CBaseEntity_PhysicsRunThink, "client.dll", "4C 8B DC 49 89 73 ? 57 48 81 EC ? ? ? ? 8B 81", 0x0);
 MAKE_SIGNATURE(CBaseEntity_SetNextThink, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F 2E 0D", 0x0);
-
-void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
-{
-
-}
 
 void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 {

@@ -18,11 +18,6 @@ class CMenu
 	void DrawCameraWindow();
 	void DrawRadar();
 
-	// material editor stuff
-	TextEditor TextEditor;
-	std::string CurrentMaterial;
-	bool LockedMaterial;
-
 public:
 	void Render();
 

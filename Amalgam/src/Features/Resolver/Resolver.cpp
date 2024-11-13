@@ -43,7 +43,7 @@ std::optional<float> PResolver::PredictBaseYaw(CTFPlayer* pLocal, CTFPlayer* pEn
 	for (auto pTarget : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pTarget->As<CTFPlayer>();
-		if (!pPlayer || pPlayer->IsAGhost() || !pPlayer->IsAlive() || pPlayer->m_iTeamNum() == pEntity->m_iTeamNum())
+		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_iTeamNum() == pEntity->m_iTeamNum())
 			continue;
 
 		const Vec3 vAngleTo = Math::CalcAngle(pEntity->m_vecOrigin(), pPlayer->m_vecOrigin());
@@ -176,7 +176,7 @@ void PResolver::FrameStageNotify(CTFPlayer* pLocal)
 		mResolverData[pPlayer].vOriginalAngles = { pPlayer->m_angEyeAnglesX(), pPlayer->m_angEyeAnglesY() };
 
 		if (abs(I::GlobalVars->tickcount - mResolverData[pPlayer].pLastFireAngles.first.first) >= 2)
-			mResolverData[pPlayer].pLastFireAngles.first.second = !H::Entities.GetDeltaTime(pPlayer) ? mResolverData[pPlayer].pLastFireAngles.first.second : false;
+			mResolverData[pPlayer].pLastFireAngles.first.second = !H::Entities.GetDeltaTime(pPlayer->entindex()) ? mResolverData[pPlayer].pLastFireAngles.first.second : false;
 
 		if (!ShouldRunEntity(pPlayer))
 			continue;

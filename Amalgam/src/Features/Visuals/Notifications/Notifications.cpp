@@ -32,7 +32,7 @@ void CNotifications::Draw()
 	{
 		int x = 8;
 		int w, h; I::MatSystemSurface->GetTextSize(fFont.m_dwFont, SDK::ConvertUtf8ToWide(tNotification.m_sText).c_str(), w, h);
-		w += 23; h = 32;
+		w += H::Draw.Scale(23, Scale_Round); h = H::Draw.Scale(32, Scale_Round);
 
 		float flEase = 0.f;
 		if (float flPan = tNotification.m_flPanTime)
@@ -49,10 +49,10 @@ void CNotifications::Draw()
 		}
 
 		auto& cAccent = Vars::Menu::Theme::Accent.Value, & cActive = Vars::Menu::Theme::Active.Value, & cBackground = Vars::Menu::Theme::Background.Value;
-		H::Draw.FillRect(x + 1, y + 1, 2, h - 2, { cAccent.r, cAccent.g, cAccent.b, 255 });
-		H::Draw.GradientRect(x + 3, y + 1, w - 4, h - 2, { cBackground.r, cBackground.g, cBackground.b, 255 }, { cBackground.r, cBackground.g, cBackground.b, 127 }, true);
+		H::Draw.GradientRect(x + 1, y + 1, w - 2, h - 2, { cBackground.r, cBackground.g, cBackground.b, 255 }, { cBackground.r, cBackground.g, cBackground.b, 127 }, true);
+		H::Draw.FillRect(x + 1, y + 1, H::Draw.Scale(2, Scale_Round), h - 2, { cAccent.r, cAccent.g, cAccent.b, 255 });
 		H::Draw.LineRect(x, y, w, h, { cBackground.r, cBackground.g, cBackground.b, 255 });
-		H::Draw.StringOutlined(fFont, x + 13, y + 9, { cActive.r, cActive.g, cActive.b, 255 }, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, tNotification.m_sText.c_str());
+		H::Draw.StringOutlined(fFont, x + H::Draw.Scale(13, Scale_Round), y + H::Draw.Scale(9, Scale_Round), { cActive.r, cActive.g, cActive.b, 255 }, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, tNotification.m_sText.c_str());
 
 		y += (h + 8) * (1.f - flEase);
 	}

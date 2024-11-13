@@ -7,19 +7,23 @@ class CGlow
 {
 	bool GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Color_t* pColor);
 
-	void SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurY);
-	void SetupMid(IMatRenderContext* pRenderContext, int w, int h);
-	void SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatBlurX, IMaterial* m_pMatBlurY, IMaterial* m_pMatHaloAddToScreen, int w, int h);
-
 	void StencilBegin(IMatRenderContext* pRenderContext);
 	void StencilPreDraw(IMatRenderContext* pRenderContext);
 	void StencilEnd(IMatRenderContext* pRenderContext);
+
+	void SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurY);
+	void SetupMid(IMatRenderContext* pRenderContext, int w, int h);
+	void SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatBlurX, IMaterial* m_pMatBlurY, IMaterial* m_pMatHaloAddToScreen, int w, int h);
 
 	void DrawModel(CBaseEntity* pEntity, bool bModel = false);
 
 	void RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 	void RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 
+	IMaterial* m_pMatGlowColor;
+	IMaterial* m_pMatBlurX;
+	IMaterial* m_pMatBlurY;
+	IMaterial* m_pMatHaloAddToScreen;
 	ITexture* m_pRtFullFrame;
 	ITexture* m_pRenderBuffer1;
 	ITexture* m_pRenderBuffer2;

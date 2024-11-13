@@ -1,6 +1,7 @@
 #pragma once
 #include "CBaseCombatWeapon.h"
 #include "CBasePlayer.h"
+#include "CBaseProjectile.h"
 
 MAKE_SIGNATURE(CTFWeaponBase_GetSpreadAngles, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F 29 74 24 ? 48 8B DA 48 8B F9 E8 ? ? ? ? 48 8B C8", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_UpdateAllViewmodelAddons, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B F8", 0x0);
@@ -185,7 +186,6 @@ public:
 	NETVAR(m_flInspectAnimEndTime, float, "CTFWeaponBase", "m_flInspectAnimEndTime");
 	NETVAR(m_nInspectStage, int, "CTFWeaponBase", "m_nInspectStage");
 	NETVAR(m_iConsecutiveShots, int, "CTFWeaponBase", "m_iConsecutiveShots");
-	NETVAR(m_iItemDefinitionIndex, int, "CEconEntity", "m_iItemDefinitionIndex");
 
 	NETVAR_OFF(GetWeaponInfo, CTFWeaponInfo*, "CTFWeaponBase", "m_flEffectBarRegenTime", 16);
 	NETVAR_OFF(m_flSmackTime, float, "CTFWeaponBase", "m_nInspectStage", 28);
@@ -271,10 +271,57 @@ public:
 		return m_bInReload() || m_iReloadMode() != 0;
 	}
 
+	inline float GetDamage(bool bAttribHookValue = true)
+	{
+		if (auto pWeaponInfo = GetWeaponInfo())
+		{
+			if (!bAttribHookValue)
+				return pWeaponInfo->GetWeaponData(0).m_nDamage;
+			return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nDamage, "mult_dmg", this);
+		}
+		return 0.f;
+	}
+
+	inline float GetFireRate(bool bAttribHookValue = true)
+	{
+		if (auto pWeaponInfo = GetWeaponInfo())
+		{
+			if (!bAttribHookValue)
+				return pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
+			return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay, "mult_postfiredelay", this);
+		}
+		return 0.315f;
+	}
+
+	inline int GetBulletsPerShot(bool bAttribHookValue = true)
+	{
+		if (auto pWeaponInfo = GetWeaponInfo())
+		{
+			if (!bAttribHookValue)
+				return pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot;
+			return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot, "mult_bullets_per_shot", this);
+		}
+		return 1;
+	}
+
 	inline bool IsRapidFire()
 	{
-		auto pWeaponInfo = GetWeaponInfo();
-		return pWeaponInfo && pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
+		if (auto pWeaponInfo = GetWeaponInfo())
+			return pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
+		return false;
+	}
+
+	inline float GetRange()
+	{
+		switch (GetWeaponID())
+		{
+		case TF_WEAPON_MEDIGUN: return 450.f;
+		case TF_WEAPON_MECHANICAL_ARM: return 256.f;
+		}
+
+		if (auto pWeaponInfo = GetWeaponInfo())
+			return pWeaponInfo->GetWeaponData(0).m_flRange;
+		return 8192.f;
 	}
 
 	inline bool CanHeadShot()

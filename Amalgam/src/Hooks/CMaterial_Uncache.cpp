@@ -7,7 +7,7 @@ MAKE_SIGNATURE(CMaterial_Uncache, "materialsystem.dll", "48 89 5C 24 ? 48 89 6C 
 MAKE_HOOK(CMaterial_Uncache, S::CMaterial_Uncache(), void, __fastcall,
 	IMaterial* rcx, bool bPreserveVars)
 {
-	if (rcx && F::Materials.mMatList.contains(rcx))
+	if (rcx && F::Materials.m_mMatList.contains(rcx))
 		return;
 
 	CALL_ORIGINAL(rcx, bPreserveVars);

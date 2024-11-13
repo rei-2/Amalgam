@@ -10,6 +10,7 @@ public:
 	void Initialize(IDirect3DDevice9* pDevice);
 
 	void LoadColors();
+	void LoadFonts();
 	void LoadStyle();
 
 	int Cursor = 2;
@@ -31,8 +32,7 @@ public:
 	ImFont* FontLarge = nullptr;
 	ImFont* FontMono = nullptr;
 
-	ImFont* IconFontRegular = nullptr;
-	ImFont* IconFontLarge = nullptr;
+	ImFont* IconFont = nullptr;
 };
 
 ADD_FEATURE(CRender, Render);

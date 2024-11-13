@@ -133,7 +133,7 @@ MAKE_HOOK(S_StartDynamicSound, S::S_StartDynamicSound(), int, __fastcall,
 	StartSoundParams_t& params)
 {
 	H::Entities.ManualNetwork(params);
-	if (ShouldBlockSound(params.pSfx->getname()))
+	if (params.pSfx && ShouldBlockSound(params.pSfx->getname()))
 		return 0;
 
 	return CALL_ORIGINAL(params);
@@ -145,7 +145,7 @@ MAKE_HOOK(S_StartSound, S::S_StartSound(), int, __fastcall,
 {
 	if (!params.staticsound)
 		H::Entities.ManualNetwork(params);
-	if (ShouldBlockSound(params.pSfx->getname()))
+	if (/*params.pSfx &&*/ ShouldBlockSound(params.pSfx->getname()))
 		return 0;
 
 	return CALL_ORIGINAL(params);

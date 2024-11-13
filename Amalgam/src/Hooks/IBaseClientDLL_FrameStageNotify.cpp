@@ -58,17 +58,18 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 
 		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 		{
-			if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive())
 				continue; // local player managed in CPrediction_RunCommand
 
-			if (auto iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pEntity)))
+			if (auto iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))
 			{
 				float flOldFrameTime = I::GlobalVars->frametime;
 				I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
 				for (int i = 0; i < iDeltaTicks; i++)
 				{
 					G::UpdatingAnims = true;
-					pEntity->As<CTFPlayer>()->UpdateClientSideAnimation();
+					pPlayer->UpdateClientSideAnimation();
 					G::UpdatingAnims = false;
 				}
 				I::GlobalVars->frametime = flOldFrameTime;

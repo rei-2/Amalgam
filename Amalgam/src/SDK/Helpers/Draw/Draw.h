@@ -1,6 +1,7 @@
 #pragma once
 #include "../Fonts/Fonts.h"
 #include "../../Definitions/Definitions.h"
+#include "../../Vars.h"
 
 enum EAlign
 {
@@ -15,16 +16,42 @@ enum EAlign
 	ALIGN_BOTTOMRIGHT
 };
 
+enum Scale_
+{
+	Scale_None = 0,
+	Scale_Round = 1,
+	Scale_Floor = 2,
+	Scale_Ceil = 3
+};
+
 class CDraw
 {
 	std::unordered_map<uint64, int> m_Avatars = {};
 
 public:
+	inline bool IsColorBright(const Color_t& clr)
+	{
+		return clr.r + clr.g + clr.b > 510;
+	}
+	inline bool IsColorDark(const Color_t& clr)
+	{
+		return clr.r + clr.g + clr.b < 201;
+	}
+
+	inline float Scale(float flN = 1.f, int iFlags = Scale_None, float flScale = Vars::Menu::Scale.Value)
+	{
+		flN *= flScale;
+		switch (iFlags)
+		{
+		case Scale_Round: flN = roundf(flN); break;
+		case Scale_Floor: flN = floorf(flN); break;
+		case Scale_Ceil: flN = ceilf(flN); break;
+		}
+		return flN;
+	}
+
 	void UpdateScreenSize();
 	void UpdateW2SMatrix();
-
-	bool IsColorBright(const Color_t& clr);
-	bool IsColorDark(const Color_t& clr);
 
 	void String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const char* str, ...);
 	void String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const wchar_t* str, ...);

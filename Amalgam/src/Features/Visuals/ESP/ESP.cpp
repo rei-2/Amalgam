@@ -45,7 +45,8 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 			if (pPlayer->IsDormant())
 			{
-				if (!Vars::ESP::DormantAlpha.Value || Vars::ESP::DormantPriority.Value && F::PlayerUtils.GetPriority(iIndex) <= F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+				if (!H::Entities.GetDormancy(iIndex) || !Vars::ESP::DormantAlpha.Value
+					|| Vars::ESP::DormantPriority.Value && F::PlayerUtils.GetPriority(iIndex) <= F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
 					continue;
 			}
 
@@ -183,14 +184,14 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		if (Vars::Debug::Info.Value && !pPlayer->IsDormant() && pPlayer->entindex() != I::EngineClient->GetLocalPlayer())
 		{
 			int iAverage = TIME_TO_TICKS(F::MoveSim.GetPredictedDelta(pPlayer));
-			int iCurrent = H::Entities.GetChoke(pPlayer);
+			int iCurrent = H::Entities.GetChoke(pPlayer->entindex());
 			tCache.m_vText.push_back({ TextRight, std::format("Lag {}, {}", iAverage, iCurrent), {}, { 0, 0, 0, 255 } });
 		}
 
 		{
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::LagCompensation && !pPlayer->IsDormant() && pPlayer != pLocal)
 			{
-				if (H::Entities.GetLagCompensation(pPlayer))
+				if (H::Entities.GetLagCompensation(pPlayer->entindex()))
 					tCache.m_vText.push_back({ TextRight, "LAGCOMP", { 255, 100, 100, 255 }, { 0, 0, 0, 255 } });
 			}
 
@@ -768,13 +769,15 @@ void CESP::DrawPlayers()
 		return;
 
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
+	const int nTall = fFont.m_nTall + H::Draw.Scale(2);
 	for (auto& [pEntity, tCache] : m_mPlayerCache)
 	{
-		int x = 0, y = 0, w = 0, h = 0;
+		float x, y, w, h;
 		if (!GetDrawBounds(pEntity, x, y, w, h))
 			continue;
 
-		int m = x + w / 2, r = x + w + 4, b = y + h + 4;
+		int l = x - H::Draw.Scale(6), r = x + w + H::Draw.Scale(6), m = x + w / 2;
+		int t = y - H::Draw.Scale(5), b = y + h + H::Draw.Scale(5);
 		int lOffset = 0, rOffset = 0, bOffset = 0, tOffset = 0;
 
 		I::MatSystemSurface->DrawSetAlphaMultiplier(tCache.m_flAlpha);
@@ -797,60 +800,61 @@ void CESP::DrawPlayers()
 			if (tCache.m_flHealth > 1.f)
 			{
 				Color_t cColor = Vars::Colors::HealthBar.Value.EndColor;
-				H::Draw.FillRectPercent(x - 6, y, 2, h, 1.f, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
+				H::Draw.FillRectPercent(x - H::Draw.Scale(6), y, H::Draw.Scale(2, Scale_Round), h, 1.f, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
 
 				cColor = Vars::Colors::Overheal.Value;
-				H::Draw.FillRectPercent(x - 6, y, 2, h, tCache.m_flHealth - 1.f, cColor, { 0, 0, 0, 0 }, ALIGN_BOTTOM, true);
+				H::Draw.FillRectPercent(x - H::Draw.Scale(6), y, H::Draw.Scale(2, Scale_Round), h, tCache.m_flHealth - 1.f, cColor, { 0, 0, 0, 0 }, ALIGN_BOTTOM, true);
 			}
 			else
 			{
 				Color_t cColor = Vars::Colors::HealthBar.Value.StartColor.Lerp(Vars::Colors::HealthBar.Value.EndColor, tCache.m_flHealth);
-				H::Draw.FillRectPercent(x - 6, y, 2, h, tCache.m_flHealth, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
+				H::Draw.FillRectPercent(x - H::Draw.Scale(6), y, H::Draw.Scale(2, Scale_Round), h, tCache.m_flHealth, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
 			}
-			lOffset += 5;
+			lOffset += H::Draw.Scale(6);
 		}
 
 		if (tCache.m_bUberBar)
 		{
-			H::Draw.FillRectPercent(x, y + h + 4, w, 2, tCache.m_flUber, Vars::Colors::UberBar.Value);
-			bOffset += 5;
+			H::Draw.FillRectPercent(x, y + h + H::Draw.Scale(4), w, H::Draw.Scale(2, Scale_Round), tCache.m_flUber, Vars::Colors::UberBar.Value);
+			bOffset += H::Draw.Scale(6);
 		}
 
+		int iVerticalOffset = H::Draw.Scale(3, Scale_Floor) - 1;
 		for (auto& [iMode, sText, tColor, tOutline] : tCache.m_vText)
 		{
 			switch (iMode)
 			{
 			case TextTop:
-				H::Draw.StringOutlined(fFont, m, y - tOffset, tColor, tOutline, ALIGN_BOTTOM, sText.c_str());
-				tOffset += fFont.m_nTall + 2;
+				H::Draw.StringOutlined(fFont, m, t - tOffset, tColor, tOutline, ALIGN_BOTTOM, sText.c_str());
+				tOffset += nTall;
 				break;
 			case TextBottom:
 				H::Draw.StringOutlined(fFont, m, b + bOffset, tColor, tOutline, ALIGN_TOP, sText.c_str());
-				bOffset += fFont.m_nTall + 2;
+				bOffset += nTall;
 				break;
 			case TextRight:
-				H::Draw.StringOutlined(fFont, r, y + rOffset, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
-				rOffset += fFont.m_nTall + 2;
+				H::Draw.StringOutlined(fFont, r, t + iVerticalOffset + rOffset, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
+				rOffset += nTall;
 				break;
 			case TextHealth:
-				H::Draw.StringOutlined(fFont, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, tOutline, ALIGN_TOPRIGHT, sText.c_str());
+				H::Draw.StringOutlined(fFont, l - lOffset, t + iVerticalOffset + h - h * std::min(tCache.m_flHealth, 1.f), tColor, tOutline, ALIGN_TOPRIGHT, sText.c_str());
 				break;
 			case TextUber:
-				H::Draw.StringOutlined(fFont, x + w + 4, y + h, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
+				H::Draw.StringOutlined(fFont, r, y + h, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
 			}
 		}
 
 		if (tCache.m_iClassIcon)
 		{
-			int size = 18 * Vars::Menu::Scale.Value;
-			H::Draw.Texture(x + w / 2, y - tOffset, size, size, tCache.m_iClassIcon - 1, ALIGN_BOTTOM);
+			int size = H::Draw.Scale(18, Scale_Round);
+			H::Draw.Texture(m, t - tOffset, size, size, tCache.m_iClassIcon - 1, ALIGN_BOTTOM);
 		}
 
 		if (tCache.m_pWeaponIcon)
 		{
-			const float iw = tCache.m_pWeaponIcon->Width(), ih = tCache.m_pWeaponIcon->Height();
-			const float scale = std::clamp(float(w) / std::max(iw, ih * 2), 0.25f, 0.75f) * Vars::Menu::Scale.Value;
-			H::Draw.DrawHudTexture(x + float(w) / 2.f - iw / 2.f * scale, y + h + 1 + bOffset, scale, tCache.m_pWeaponIcon, Vars::Menu::Theme::Active.Value);
+			float flW = tCache.m_pWeaponIcon->Width(), flH = tCache.m_pWeaponIcon->Height();
+			float flScale = H::Draw.Scale(std::min((w + 40) / 2.f, 80.f) / std::max(flW, flH * 2));
+			H::Draw.DrawHudTexture(m - flW / 2.f * flScale, b + bOffset, flScale, tCache.m_pWeaponIcon, Vars::Menu::Theme::Active.Value);
 		}
 	}
 
@@ -863,13 +867,15 @@ void CESP::DrawBuildings()
 		return;
 
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
+	const int nTall = fFont.m_nTall + H::Draw.Scale(2);
 	for (auto& [pEntity, tCache] : m_mBuildingCache)
 	{
-		int x = 0, y = 0, w = 0, h = 0;
+		float x, y, w, h;
 		if (!GetDrawBounds(pEntity, x, y, w, h))
 			continue;
 
-		int m = x + w / 2, r = x + w + 4, b = y + h + 4;
+		int l = x - H::Draw.Scale(6), r = x + w + H::Draw.Scale(6), m = x + w / 2;
+		int t = y - H::Draw.Scale(5), b = y + h + H::Draw.Scale(5);
 		int lOffset = 0, rOffset = 0, bOffset = 0, tOffset = 0;
 
 		I::MatSystemSurface->DrawSetAlphaMultiplier(tCache.m_flAlpha);
@@ -880,28 +886,29 @@ void CESP::DrawBuildings()
 		if (tCache.m_bHealthBar)
 		{
 			Color_t cColor = Vars::Colors::HealthBar.Value.StartColor.Lerp(Vars::Colors::HealthBar.Value.EndColor, tCache.m_flHealth);
-			H::Draw.FillRectPercent(x - 6, y, 2, h, tCache.m_flHealth, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
-			lOffset += 5;
+			H::Draw.FillRectPercent(x - H::Draw.Scale(6), y, H::Draw.Scale(2, Scale_Round), h, tCache.m_flHealth, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
+			lOffset += H::Draw.Scale(6);
 		}
 
+		int iVerticalOffset = H::Draw.Scale(3, Scale_Floor) - 1;
 		for (auto& [iMode, sText, tColor, tOutline] : tCache.m_vText)
 		{
 			switch (iMode)
 			{
 			case TextTop:
-				H::Draw.StringOutlined(fFont, m, y - tOffset, tColor, tOutline, ALIGN_BOTTOM, sText.c_str());
-				tOffset += fFont.m_nTall + 2;
+				H::Draw.StringOutlined(fFont, m, t - tOffset, tColor, tOutline, ALIGN_BOTTOM, sText.c_str());
+				tOffset += nTall;
 				break;
 			case TextBottom:
 				H::Draw.StringOutlined(fFont, m, b + bOffset, tColor, tOutline, ALIGN_TOP, sText.c_str());
-				bOffset += fFont.m_nTall + 2;
+				bOffset += nTall;
 				break;
 			case TextRight:
-				H::Draw.StringOutlined(fFont, r, y + rOffset, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
-				rOffset += fFont.m_nTall + 2;
+				H::Draw.StringOutlined(fFont, r, t + iVerticalOffset + rOffset, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
+				rOffset += nTall;
 				break;
 			case TextHealth:
-				H::Draw.StringOutlined(fFont, x - 5 - lOffset, y + h - h * std::min(tCache.m_flHealth, 1.f) - 2, tColor, tOutline, ALIGN_TOPRIGHT, sText.c_str());
+				H::Draw.StringOutlined(fFont, l - lOffset, t + iVerticalOffset + h - h * std::min(tCache.m_flHealth, 1.f), tColor, tOutline, ALIGN_TOPRIGHT, sText.c_str());
 				break;
 			}
 		}
@@ -913,13 +920,15 @@ void CESP::DrawBuildings()
 void CESP::DrawWorld()
 {
 	const auto& fFont = H::Fonts.GetFont(FONT_ESP);
+	const int nTall = fFont.m_nTall + H::Draw.Scale(2);
 	for (auto& [pEntity, tCache] : m_mWorldCache)
 	{
-		int x = 0, y = 0, w = 0, h = 0;
+		float x, y, w, h;
 		if (!GetDrawBounds(pEntity, x, y, w, h))
 			continue;
 
-		int m = x + w / 2, r = x + w + 4, b = y + h + 4;
+		int l = x - H::Draw.Scale(6), r = x + w + H::Draw.Scale(6), m = x + w / 2;
+		int t = y - H::Draw.Scale(5), b = y + h + H::Draw.Scale(5);
 		int lOffset = 0, rOffset = 0, bOffset = 0, tOffset = 0;
 
 		I::MatSystemSurface->DrawSetAlphaMultiplier(tCache.m_flAlpha);
@@ -927,21 +936,22 @@ void CESP::DrawWorld()
 		if (tCache.m_bBox)
 			H::Draw.LineRectOutline(x, y, w, h, tCache.m_tColor, { 0, 0, 0, 255 });
 
+		int iVerticalOffset = H::Draw.Scale(3, Scale_Floor) - 1;
 		for (auto& [iMode, sText, tColor, tOutline] : tCache.m_vText)
 		{
 			switch (iMode)
 			{
 			case TextTop:
-				H::Draw.StringOutlined(fFont, m, y - tOffset, tColor, tOutline, ALIGN_BOTTOM, sText.c_str());
-				tOffset += fFont.m_nTall + 2;
+				H::Draw.StringOutlined(fFont, m, t - tOffset, tColor, tOutline, ALIGN_BOTTOM, sText.c_str());
+				tOffset += nTall;
 				break;
 			case TextBottom:
 				H::Draw.StringOutlined(fFont, m, b + bOffset, tColor, tOutline, ALIGN_TOP, sText.c_str());
-				bOffset += fFont.m_nTall + 2;
+				bOffset += nTall;
 				break;
 			case TextRight:
-				H::Draw.StringOutlined(fFont, r, y + rOffset, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
-				rOffset += fFont.m_nTall + 2;
+				H::Draw.StringOutlined(fFont, r, t + iVerticalOffset + rOffset, tColor, tOutline, ALIGN_TOPLEFT, sText.c_str());
+				rOffset += nTall;
 			}
 		}
 	}
@@ -949,7 +959,7 @@ void CESP::DrawWorld()
 	I::MatSystemSurface->DrawSetAlphaMultiplier(1.f);
 }
 
-bool CESP::GetDrawBounds(CBaseEntity* pEntity, int& x, int& y, int& w, int& h)
+bool CESP::GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h)
 {
 	auto& transform = const_cast<matrix3x4&>(pEntity->RenderableToWorldTransform());
 	if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())

@@ -27,12 +27,12 @@ class CEntities
 
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
 
-	std::unordered_map<CBaseEntity*, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes;
-	std::unordered_map<CBaseEntity*, int> m_mChokes, m_mSetTicks;
-	std::unordered_map<CBaseEntity*, DormantData> m_mDormancy;
-	std::unordered_map<CBaseEntity*, std::pair<int, matrix3x4[MAXSTUDIOBONES]>> m_mBones;
-	std::unordered_map<CBaseEntity*, Vec3> m_mEyeAngles, m_mPingAngles;
-	std::unordered_map<CBaseEntity*, bool> m_mLagCompensation;
+	std::unordered_map<int, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes;
+	std::unordered_map<int, int> m_mChokes, m_mSetTicks;
+	std::unordered_map<int, std::pair<bool, matrix3x4[MAXSTUDIOBONES]>> m_mBones;
+	std::unordered_map<int, Vec3> m_mEyeAngles, m_mPingAngles;
+	std::unordered_map<int, bool> m_mLagCompensation;
+	std::unordered_map<int, DormantData> m_mDormancy;
 
 	std::unordered_map<int, bool> m_mIFriends;
 	std::unordered_map<uint32_t, int> m_mUFriends;
@@ -60,13 +60,14 @@ public:
 
 	float GetSimTime(CBaseEntity* pEntity);
 	float GetOldSimTime(CBaseEntity* pEntity);
-	float GetDeltaTime(CBaseEntity* pEntity);
-	int GetChoke(CBaseEntity* pEntity);
-	matrix3x4* GetBones(CBaseEntity* pEntity);
-	Vec3 GetEyeAngles(CBaseEntity* pEntity);
-	Vec3 GetPingAngles(CBaseEntity* pEntity);
-	bool GetLagCompensation(CBaseEntity* pEntity);
-	void SetLagCompensation(CBaseEntity* pEntity, bool bLagComp);
+	float GetDeltaTime(int iIndex);
+	int GetChoke(int iIndex);
+	matrix3x4* GetBones(int iIndex);
+	Vec3 GetEyeAngles(int iIndex);
+	Vec3 GetPingAngles(int iIndex);
+	bool GetLagCompensation(int iIndex);
+	void SetLagCompensation(int iIndex, bool bLagComp);
+	bool GetDormancy(int iIndex);
 
 	bool IsFriend(int iIndex);
 	bool IsFriend(uint32_t friendsID);

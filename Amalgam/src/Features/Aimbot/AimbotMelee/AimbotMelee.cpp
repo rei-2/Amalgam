@@ -241,7 +241,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 			return flPosVsTargetViewDot > flPosVsTargetViewMinDot && flPosVsOwnerViewDot > flPosVsOwnerViewMinDot && flViewAnglesDot > flViewAnglesMinDot;
 		};
 
-	Vec3 vTargetAngles = { 0.f, H::Entities.GetEyeAngles(pTarget).y, 0.f };
+	Vec3 vTargetAngles = { 0.f, H::Entities.GetEyeAngles(pTarget->entindex()).y, 0.f };
 	if (!Vars::Aimbot::Melee::BackstabAccountPing.Value)
 	{
 		if (!TestDots(vTargetAngles))
@@ -252,7 +252,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 		if (Vars::Aimbot::Melee::BackstabDoubleTest.Value && !TestDots(vTargetAngles))
 			return false;
 
-		vTargetAngles.y += H::Entities.GetPingAngles(pTarget).y;
+		vTargetAngles.y += H::Entities.GetPingAngles(pTarget->entindex()).y;
 		if (!TestDots(vTargetAngles))
 			return false;
 	}
@@ -262,7 +262,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 
 int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord> newRecords)
 {
-	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity) > Vars::Aimbot::General::TickTolerance.Value)
+	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
 
 	float flHull = SDK::AttribHookValue(18, "melee_bounds_multiplier", pWeapon);
@@ -429,7 +429,7 @@ Vec3 CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 // assume angle calculated outside with other overload
 void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 {
-	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks();
+	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks(H::Entities.GetWeapon());
 	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
 	{
 		pCmd->viewangles = vAngle;
@@ -463,7 +463,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	if (targets.empty())
 		return;
 
-	iDoubletapTicks = F::Ticks.GetTicks();
+	iDoubletapTicks = F::Ticks.GetTicks(pWeapon);
 	const bool bShouldSwing = iDoubletapTicks <= (GetSwingTime(pWeapon) ? 14 : 0) || Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
 
 	Vec3 vEyePos = pLocal->GetShootPos();

@@ -147,22 +147,22 @@ int SDK::HandleToIDX(unsigned int pHandle)
 	return pHandle & 0xFFF;
 }
 
-bool SDK::W2S(const Vec3& vOrigin, Vec3& m_vScreen)
+bool SDK::W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways)
 {
 	const auto& worldToScreen = H::Draw.m_WorldToProjection.As3x4();
 
-	float w = worldToScreen[3][0] * vOrigin[0] + worldToScreen[3][1] * vOrigin[1] + worldToScreen[3][2] * vOrigin[2] + worldToScreen[3][3];
-	m_vScreen.z = 0;
+	float flW = worldToScreen[3][0] * vOrigin.x + worldToScreen[3][1] * vOrigin.y + worldToScreen[3][2] * vOrigin.z + worldToScreen[3][3];
+	vScreen.z = 0;
 
-	if (w > 0.001f)
+	bool bOnScreen = flW > 0.f;
+	if (bAlways || bOnScreen)
 	{
-		const float fl1DBw = 1 / w;
-		m_vScreen.x = (H::Draw.m_nScreenW / 2.f) + (0.5 * ((worldToScreen[0][0] * vOrigin[0] + worldToScreen[0][1] * vOrigin[1] + worldToScreen[0][2] * vOrigin[2] + worldToScreen[0][3]) * fl1DBw) * H::Draw.m_nScreenW + 0.5);
-		m_vScreen.y = (H::Draw.m_nScreenH / 2.f) - (0.5 * ((worldToScreen[1][0] * vOrigin[0] + worldToScreen[1][1] * vOrigin[1] + worldToScreen[1][2] * vOrigin[2] + worldToScreen[1][3]) * fl1DBw) * H::Draw.m_nScreenH + 0.5);
-		return true;
+		const float fl1DBw = 1 / fabs(flW);
+		vScreen.x = (H::Draw.m_nScreenW / 2.f) + ((worldToScreen[0][0] * vOrigin.x + worldToScreen[0][1] * vOrigin.y + worldToScreen[0][2] * vOrigin.z + worldToScreen[0][3]) * fl1DBw) * H::Draw.m_nScreenW / 2 + 0.5f;
+		vScreen.y = (H::Draw.m_nScreenH / 2.f) - ((worldToScreen[1][0] * vOrigin.x + worldToScreen[1][1] * vOrigin.y + worldToScreen[1][2] * vOrigin.z + worldToScreen[1][3]) * fl1DBw) * H::Draw.m_nScreenH / 2 + 0.5f;
 	}
 
-	return false;
+	return bOnScreen;
 }
 
 bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& transform, float* pLeft, float* pRight, float* pTop, float* pBottom)

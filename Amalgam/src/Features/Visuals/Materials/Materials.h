@@ -5,10 +5,11 @@
 
 struct Material_t
 {
-	IMaterial* pMaterial;
+	IMaterial* m_pMaterial;
 
-	std::string sVMT = ""; // will be shown to user through material editor, for glow this won't matter
-	bool bLocked = false;
+	std::string m_sName;
+	std::string m_sVMT;
+	bool m_bLocked = false;
 };
 
 class CMaterials
@@ -21,18 +22,19 @@ public:
 	void UnloadMaterials();
 	void ReloadMaterials();
 
-	IMaterial* GetMaterial(std::string sName);
-	std::string GetVMT(std::string sName);
+	IMaterial* GetMaterial(uint32_t uHash);
+	std::string GetVMT(uint32_t uHash);
 
-	void AddMaterial(std::string sName);
-	void EditMaterial(std::string sName, std::string sVMT);
-	void RemoveMaterial(std::string sName);
+	void AddMaterial(const char* sName);
+	void EditMaterial(const char* sName, const char* sVMT);
+	void RemoveMaterial(const char* sName);
 
 	void SetColor(IMaterial* material, Color_t color);
 
-	std::unordered_map<std::string, Material_t> mChamMaterials;
-	std::unordered_map<std::string, Material_t> mGlowMaterials;
-	std::unordered_map<IMaterial*, bool> mMatList;
+	std::unordered_map<uint32_t, Material_t> m_mMaterials;
+	std::unordered_map<IMaterial*, bool> m_mMatList;
+
+	bool m_bLoaded = false;
 };
 
 ADD_FEATURE(CMaterials, Materials)

@@ -196,6 +196,34 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	return false;
 }
 
+void CGlow::StencilBegin(IMatRenderContext* pRenderContext)
+{
+	pRenderContext->ClearBuffers(false, false, false);
+	pRenderContext->SetStencilEnable(true);
+	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS);
+	pRenderContext->SetStencilPassOperation(STENCILOPERATION_REPLACE);
+	pRenderContext->SetStencilFailOperation(STENCILOPERATION_KEEP);
+	pRenderContext->SetStencilZFailOperation(STENCILOPERATION_REPLACE);
+	pRenderContext->SetStencilReferenceValue(1);
+	pRenderContext->SetStencilWriteMask(0xFF);
+	pRenderContext->SetStencilTestMask(0x0);
+}
+void CGlow::StencilPreDraw(IMatRenderContext* pRenderContext)
+{
+	pRenderContext->SetStencilEnable(true);
+	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL);
+	pRenderContext->SetStencilPassOperation(STENCILOPERATION_KEEP);
+	pRenderContext->SetStencilFailOperation(STENCILOPERATION_KEEP);
+	pRenderContext->SetStencilZFailOperation(STENCILOPERATION_KEEP);
+	pRenderContext->SetStencilReferenceValue(0);
+	pRenderContext->SetStencilWriteMask(0x0);
+	pRenderContext->SetStencilTestMask(0xFF);
+}
+void CGlow::StencilEnd(IMatRenderContext* pRenderContext)
+{
+	pRenderContext->SetStencilEnable(false);
+}
+
 void CGlow::SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatGlowColor, IMaterial* m_pMatBlurY)
 {
 	bool bFound; auto $bloomamount = m_pMatBlurY->FindVar("$bloomamount", &bFound, false);
@@ -211,8 +239,6 @@ void CGlow::SetupBegin(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial
 }
 void CGlow::SetupMid(IMatRenderContext* pRenderContext, int w, int h)
 {
-	I::RenderView->SetBlend(flSavedBlend);
-
 	pRenderContext->PushRenderTargetAndViewport();
 	pRenderContext->SetRenderTarget(m_pRenderBuffer1);
 	pRenderContext->Viewport(0, 0, w, h);
@@ -258,36 +284,9 @@ void CGlow::SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* 
 
 	StencilEnd(pRenderContext);
 
+	I::RenderView->SetBlend(flSavedBlend);
 	I::RenderView->SetColorModulation(1.f, 1.f, 1.f);
 	I::ModelRender->ForcedMaterialOverride(nullptr);
-}
-
-void CGlow::StencilBegin(IMatRenderContext* pRenderContext)
-{
-	pRenderContext->ClearBuffers(false, false, false);
-	pRenderContext->SetStencilEnable(true);
-	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS);
-	pRenderContext->SetStencilPassOperation(STENCILOPERATION_REPLACE);
-	pRenderContext->SetStencilFailOperation(STENCILOPERATION_KEEP);
-	pRenderContext->SetStencilZFailOperation(STENCILOPERATION_REPLACE);
-	pRenderContext->SetStencilReferenceValue(1);
-	pRenderContext->SetStencilWriteMask(0xFF);
-	pRenderContext->SetStencilTestMask(0x0);
-}
-void CGlow::StencilPreDraw(IMatRenderContext* pRenderContext)
-{
-	pRenderContext->SetStencilEnable(true);
-	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL);
-	pRenderContext->SetStencilPassOperation(STENCILOPERATION_KEEP);
-	pRenderContext->SetStencilFailOperation(STENCILOPERATION_KEEP);
-	pRenderContext->SetStencilZFailOperation(STENCILOPERATION_KEEP);
-	pRenderContext->SetStencilReferenceValue(0);
-	pRenderContext->SetStencilWriteMask(0x0);
-	pRenderContext->SetStencilTestMask(0xFF);
-}
-void CGlow::StencilEnd(IMatRenderContext* pRenderContext)
-{
-	pRenderContext->SetStencilEnable(false);
 }
 
 void CGlow::DrawModel(CBaseEntity* pEntity, bool bModel)
@@ -361,10 +360,6 @@ void CGlow::RenderMain()
 		return;
 
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
-	auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
-	auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
-	auto m_pMatHaloAddToScreen = F::Materials.mGlowMaterials["HaloAddToScreen"].pMaterial;
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
@@ -381,8 +376,8 @@ void CGlow::RenderMain()
 		SetupMid(pRenderContext, w, h);
 		for (auto& tInfo : vInfo)
 		{
-			I::RenderView->SetColorModulation(float(tInfo.m_cColor.r) / 255.f, float(tInfo.m_cColor.g) / 255.f, float(tInfo.m_cColor.b) / 255.f);
-			I::RenderView->SetBlend(float(tInfo.m_cColor.a) / 255.f);
+			I::RenderView->SetColorModulation(tInfo.m_cColor.r / 255.f, tInfo.m_cColor.g / 255.f, tInfo.m_cColor.b / 255.f);
+			I::RenderView->SetBlend(tInfo.m_cColor.a / 255.f);
 			bExtra = tInfo.m_bExtra;
 			DrawModel(tInfo.m_pEntity, false);
 			bExtra = false;
@@ -485,10 +480,6 @@ void CGlow::RenderViewmodel(void* ecx, int flags)
 		return;
 
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
-	auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
-	auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
-	auto m_pMatHaloAddToScreen = F::Materials.mGlowMaterials["HaloAddToScreen"].pMaterial;
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
@@ -525,10 +516,6 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 		return;
 
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	auto m_pMatGlowColor = F::Materials.mGlowMaterials["GlowColor"].pMaterial;
-	auto m_pMatBlurX = F::Materials.mGlowMaterials["BlurX"].pMaterial;
-	auto m_pMatBlurY = F::Materials.mGlowMaterials["BlurY"].pMaterial;
-	auto m_pMatHaloAddToScreen = F::Materials.mGlowMaterials["HaloAddToScreen"].pMaterial;
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
@@ -560,45 +547,119 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 
 void CGlow::Initialize()
 {
-	m_pRtFullFrame = I::MaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
-	m_pRtFullFrame->IncrementReferenceCount();
+	if (!m_pMatGlowColor)
+	{
+		m_pMatGlowColor = I::MaterialSystem->FindMaterial("dev/glow_color", TEXTURE_GROUP_OTHER);
+		m_pMatGlowColor->IncrementReferenceCount();
+	}
 
-	m_pRenderBuffer1 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
-		"glow_buffer_1",
-		m_pRtFullFrame->GetActualWidth(),
-		m_pRtFullFrame->GetActualHeight(),
-		RT_SIZE_LITERAL,
-		IMAGE_FORMAT_RGB888,
-		MATERIAL_RT_DEPTH_SHARED,
-		TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT | TEXTUREFLAGS_EIGHTBITALPHA,
-		CREATERENDERTARGETFLAGS_HDR
-	);
-	m_pRenderBuffer1->IncrementReferenceCount();
+	if (!m_pMatBlurX)
+	{
+		KeyValues* m_pMatBlurXKV = new KeyValues("BlurFilterX");
+		m_pMatBlurXKV->SetString("$basetexture", "glow_buffer_1");
+		m_pMatBlurX = I::MaterialSystem->CreateMaterial("m_pMatBlurX", m_pMatBlurXKV);
+	}
 
-	m_pRenderBuffer2 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
-		"glow_buffer_2",
-		m_pRtFullFrame->GetActualWidth(),
-		m_pRtFullFrame->GetActualHeight(),
-		RT_SIZE_LITERAL,
-		IMAGE_FORMAT_RGB888,
-		MATERIAL_RT_DEPTH_SHARED,
-		TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT | TEXTUREFLAGS_EIGHTBITALPHA,
-		CREATERENDERTARGETFLAGS_HDR
-	);
-	m_pRenderBuffer2->IncrementReferenceCount();
+	if (!m_pMatBlurY)
+	{
+		KeyValues* m_pMatBlurYKV = new KeyValues("BlurFilterY");
+		m_pMatBlurYKV->SetString("$basetexture", "glow_buffer_2");
+		m_pMatBlurY = I::MaterialSystem->CreateMaterial("m_pMatBlurY", m_pMatBlurYKV);
+	}
+
+	if (!m_pMatHaloAddToScreen)
+	{
+		KeyValues* m_pMatHaloAddToScreenKV = new KeyValues("UnlitGeneric");
+		m_pMatHaloAddToScreenKV->SetString("$basetexture", "glow_buffer_1");
+		m_pMatHaloAddToScreenKV->SetString("$additive", "1");
+		m_pMatHaloAddToScreen = I::MaterialSystem->CreateMaterial("m_pMatHaloAddToScreen", m_pMatHaloAddToScreenKV);
+	}
+
+	if (!m_pRtFullFrame)
+	{
+		m_pRtFullFrame = I::MaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
+		m_pRtFullFrame->IncrementReferenceCount();
+	}
+
+	if (!m_pRenderBuffer1)
+	{
+		m_pRenderBuffer1 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
+			"glow_buffer_1",
+			m_pRtFullFrame->GetActualWidth(),
+			m_pRtFullFrame->GetActualHeight(),
+			RT_SIZE_LITERAL,
+			IMAGE_FORMAT_RGB888,
+			MATERIAL_RT_DEPTH_SHARED,
+			TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT | TEXTUREFLAGS_EIGHTBITALPHA,
+			CREATERENDERTARGETFLAGS_HDR
+		);
+		m_pRenderBuffer1->IncrementReferenceCount();
+	}
+
+	if (!m_pRenderBuffer2)
+	{
+		m_pRenderBuffer2 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
+			"glow_buffer_2",
+			m_pRtFullFrame->GetActualWidth(),
+			m_pRtFullFrame->GetActualHeight(),
+			RT_SIZE_LITERAL,
+			IMAGE_FORMAT_RGB888,
+			MATERIAL_RT_DEPTH_SHARED,
+			TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT | TEXTUREFLAGS_EIGHTBITALPHA,
+			CREATERENDERTARGETFLAGS_HDR
+		);
+		m_pRenderBuffer2->IncrementReferenceCount();
+	}
 }
 
 void CGlow::Unload()
 {
-	m_pRtFullFrame->DecrementReferenceCount();
-	m_pRtFullFrame->DeleteIfUnreferenced();
-	m_pRtFullFrame = nullptr;
+	if (m_pMatGlowColor)
+	{
+		m_pMatGlowColor->DecrementReferenceCount();
+		m_pMatGlowColor->DeleteIfUnreferenced();
+		m_pMatGlowColor = nullptr;
+	}
 
-	m_pRenderBuffer1->DecrementReferenceCount();
-	m_pRenderBuffer1->DeleteIfUnreferenced();
-	m_pRenderBuffer1 = nullptr;
+	if (m_pMatBlurX)
+	{
+		m_pMatBlurX->DecrementReferenceCount();
+		m_pMatBlurX->DeleteIfUnreferenced();
+		m_pMatBlurX = nullptr;
+	}
 
-	m_pRenderBuffer2->DecrementReferenceCount();
-	m_pRenderBuffer2->DeleteIfUnreferenced();
-	m_pRenderBuffer2 = nullptr;
+	if (m_pMatBlurY)
+	{
+		m_pMatBlurY->DecrementReferenceCount();
+		m_pMatBlurY->DeleteIfUnreferenced();
+		m_pMatBlurY = nullptr;
+	}
+
+	if (m_pMatHaloAddToScreen)
+	{
+		m_pMatHaloAddToScreen->DecrementReferenceCount();
+		m_pMatHaloAddToScreen->DeleteIfUnreferenced();
+		m_pMatHaloAddToScreen = nullptr;
+	}
+
+	if (m_pRtFullFrame)
+	{
+		m_pRtFullFrame->DecrementReferenceCount();
+		m_pRtFullFrame->DeleteIfUnreferenced();
+		m_pRtFullFrame = nullptr;
+	}
+
+	if (m_pRenderBuffer1)
+	{
+		m_pRenderBuffer1->DecrementReferenceCount();
+		m_pRenderBuffer1->DeleteIfUnreferenced();
+		m_pRenderBuffer1 = nullptr;
+	}
+
+	if (m_pRenderBuffer2)
+	{
+		m_pRenderBuffer2->DecrementReferenceCount();
+		m_pRenderBuffer2->DeleteIfUnreferenced();
+		m_pRenderBuffer2 = nullptr;
+	}
 }

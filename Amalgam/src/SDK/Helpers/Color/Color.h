@@ -5,8 +5,8 @@
 class CColor
 {
 public:
-	Color_t GetTeamColor(int iLocalTeam, int iTargetTeam, bool bOther);
-	Color_t GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool enableOtherColors);
+	Color_t GetTeamColor(int iLocalTeam, int iTargetTeam, bool bRelative);
+	Color_t GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool bRelative, int* pType = nullptr);
 	Color_t GetScoreboardColor(int iIndex);
 };
 

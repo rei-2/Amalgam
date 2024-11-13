@@ -14,6 +14,7 @@ struct WeaponStorage_t
 	float m_flCost = 0.f;
 	int m_iAvailableCrits = 0;
 	int m_iPotentialCrits = 0;
+	int m_iNextCrit = 0;
 
 	std::deque<int> m_vCritCommands = {};
 	std::deque<int> m_vSkipCommands = {};

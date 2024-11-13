@@ -3,7 +3,7 @@
 // Draws camera to the screen
 void CCameraWindow::Draw()
 {
-	if (!m_bShouldDraw || !m_pCameraMaterial || !I::EngineClient->IsInGame())
+	if (!m_pCameraMaterial || !m_bShouldDraw || !I::EngineClient->IsInGame())
 		return;
 
 	const WindowBox_t& info = Vars::Visuals::Simulation::ProjectileWindow.Value;
@@ -64,20 +64,42 @@ void CCameraWindow::RenderCustomView(void* ecx, const CViewSetup& pViewSetup, IT
 
 void CCameraWindow::Initialize()
 {
-	m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx("m_pCameraTexture", 1, 1, RT_SIZE_FULL_FRAME_BUFFER, IMAGE_FORMAT_RGB888, MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT, CREATERENDERTARGETFLAGS_HDR);
+	if (!m_pCameraMaterial)
+	{
+		KeyValues* m_pCameraMaterialKV = new KeyValues("UnlitGeneric");
+		m_pCameraMaterialKV->SetString("$basetexture", "m_pCameraTexture");
+		m_pCameraMaterial = I::MaterialSystem->CreateMaterial("m_pCameraMaterial", m_pCameraMaterialKV);
+	}
 
-	KeyValues* kv = new KeyValues("UnlitGeneric");
-	kv->SetString("$basetexture", "m_pCameraTexture");
-	m_pCameraMaterial = I::MaterialSystem->CreateMaterial("m_pCameraMaterial", kv);
+	if (!m_pCameraTexture)
+	{
+		m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
+			"m_pCameraTexture",
+			1,
+			1,
+			RT_SIZE_FULL_FRAME_BUFFER,
+			IMAGE_FORMAT_RGB888,
+			MATERIAL_RT_DEPTH_SHARED,
+			TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
+			CREATERENDERTARGETFLAGS_HDR
+		);
+		m_pCameraTexture->IncrementReferenceCount();
+	}
 }
 
 void CCameraWindow::Unload()
 {
-	m_pCameraTexture->DecrementReferenceCount();
-	m_pCameraTexture->DeleteIfUnreferenced();
-	m_pCameraTexture = nullptr;
+	if (m_pCameraMaterial)
+	{
+		m_pCameraMaterial->DecrementReferenceCount();
+		m_pCameraMaterial->DeleteIfUnreferenced();
+		m_pCameraMaterial = nullptr;
+	}
 
-	m_pCameraMaterial->DecrementReferenceCount();
-	m_pCameraMaterial->DeleteIfUnreferenced();
-	m_pCameraMaterial = nullptr;
+	if (m_pCameraTexture)
+	{
+		m_pCameraTexture->DecrementReferenceCount();
+		m_pCameraTexture->DeleteIfUnreferenced();
+		m_pCameraTexture = nullptr;
+	}
 }

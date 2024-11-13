@@ -11,8 +11,6 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 	if (!pAnimState)
 		return;
 
-	F::AntiAim.vFakeAngles.x = std::clamp(F::AntiAim.vFakeAngles.x, -89.f, 89.f);
-
 	float flOldFrameTime = I::GlobalVars->frametime;
 	int nOldSequence = pLocal->m_nSequence();
 	float flOldCycle = pLocal->m_flCycle();
@@ -21,10 +19,11 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 	memcpy(pOldAnimState, pAnimState, sizeof(CTFPlayerAnimState));
 
 	I::GlobalVars->frametime = 0.f;
-	pAnimState->m_flCurrentFeetYaw = F::AntiAim.vFakeAngles.y;
-	pAnimState->m_flEyeYaw = F::AntiAim.vFakeAngles.y;
-	pAnimState->Update(F::AntiAim.vFakeAngles.y, F::AntiAim.vFakeAngles.x);
-
+	Vec2 vAngle = { std::clamp(F::AntiAim.vFakeAngles.x, -89.f, 89.f), F::AntiAim.vFakeAngles.y };
+	if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
+		pLocal->m_flTauntYaw() = vAngle.y;
+	pAnimState->Update(pAnimState->m_flCurrentFeetYaw = /*pAnimState->m_flEyeYaw =*/ vAngle.y, vAngle.x);
+	pLocal->InvalidateBoneCache(); // fix issue with certain cosmetics
 	bBonesSetup = pLocal->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime);
 
 	I::GlobalVars->frametime = flOldFrameTime;

@@ -70,7 +70,7 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueForMatch(), void, __fastcall,
 	void* rcx, int eMatchGroup)
 {
-	if (Vars::Misc::Queueing::ForceRegions.Value)
+	//if (Vars::Misc::Queueing::ForceRegions.Value)
 	{
 		*reinterpret_cast<bool*>(uintptr_t(I::TFGCClientSystem) + 1116) = true;
 		S::CTFGCClientSystem_PingThink.As<void(__fastcall*)(void*)>()(I::TFGCClientSystem);

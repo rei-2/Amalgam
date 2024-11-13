@@ -113,7 +113,6 @@ std::deque<TickRecord>* CBacktrack::GetRecords(CBaseEntity* pEntity)
 
 std::deque<TickRecord> CBacktrack::GetValidRecords(std::deque<TickRecord>* pRecords, CTFPlayer* pLocal, bool bDistance)
 {
-
 	std::deque<TickRecord> validRecords = {};
 	if (!pRecords)
 		return validRecords;
@@ -166,31 +165,33 @@ void CBacktrack::MakeRecords()
 {
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
-		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || pEntity->IsDormant() || !H::Entities.GetBones(pEntity) || !H::Entities.GetDeltaTime(pEntity))
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
+			|| !H::Entities.GetBones(pPlayer->entindex()) || !H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
 		const TickRecord curRecord = {
-			pEntity->m_flSimulationTime(),
-			*reinterpret_cast<BoneMatrix*>(H::Entities.GetBones(pEntity)),
-			pEntity->m_vecOrigin(),
-			m_mDidShoot[pEntity->entindex()]
+			pPlayer->m_flSimulationTime(),
+			*reinterpret_cast<BoneMatrix*>(H::Entities.GetBones(pPlayer->entindex())),
+			pPlayer->m_vecOrigin(),
+			m_mDidShoot[pPlayer->entindex()]
 		};
 
 		bool bLagComp = false;
-		if (!m_mRecords[pEntity].empty())
+		if (!m_mRecords[pPlayer].empty())
 		{
-			const Vec3 vDelta = curRecord.m_vOrigin - m_mRecords[pEntity].front().m_vOrigin;
+			const Vec3 vDelta = curRecord.m_vOrigin - m_mRecords[pPlayer].front().m_vOrigin;
 			
 			static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
 			const float flDist = powf(sv_lagcompensation_teleport_dist ? sv_lagcompensation_teleport_dist->GetFloat() : 64.f, 2.f);
 			if (vDelta.Length2DSqr() > flDist)
 			{
 				bLagComp = true;
-				for (auto& pRecord : m_mRecords[pEntity])
+				for (auto& pRecord : m_mRecords[pPlayer])
 					pRecord.m_bInvalid = true;
 			}
 
-			for (auto& pRecord : m_mRecords[pEntity])
+			for (auto& pRecord : m_mRecords[pPlayer])
 			{
 				if (!pRecord.m_bInvalid)
 					continue;
@@ -201,10 +202,10 @@ void CBacktrack::MakeRecords()
 			}
 		}
 
-		m_mRecords[pEntity].push_front(curRecord);
-		H::Entities.SetLagCompensation(pEntity, bLagComp);
+		m_mRecords[pPlayer].push_front(curRecord);
+		H::Entities.SetLagCompensation(pPlayer->entindex(), bLagComp);
 
-		m_mDidShoot[pEntity->entindex()] = false;
+		m_mDidShoot[pPlayer->entindex()] = false;
 	}
 }
 
@@ -213,24 +214,24 @@ void CBacktrack::CleanRecords()
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
+		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer())
 			continue;
 
-		if (!pEntity->IsPlayer() || pEntity->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 		{
-			m_mRecords[pEntity].clear();
+			m_mRecords[pPlayer].clear();
 			continue;
 		}
 
 		//const int iOldSize = pRecords.size();
 
 		const int flDeadtime = I::GlobalVars->curtime + GetReal() - m_flMaxUnlag; // int ???
-		while (!m_mRecords[pEntity].empty())
+		while (!m_mRecords[pPlayer].empty())
 		{
-			if (m_mRecords[pEntity].back().m_flSimTime >= flDeadtime)
+			if (m_mRecords[pPlayer].back().m_flSimTime >= flDeadtime)
 				break;
 
-			m_mRecords[pEntity].pop_back();
+			m_mRecords[pPlayer].pop_back();
 		}
 
 		//const int iNewSize = pRecords.size();

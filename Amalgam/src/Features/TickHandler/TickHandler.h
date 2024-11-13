@@ -4,11 +4,11 @@
 class CTickshiftHandler
 {
 	void Recharge(CTFPlayer* pLocal);
-	void Teleport();
+	void Warp();
 	void Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void Speedhack();
-	bool ValidWeapon(CTFWeaponBase* pWeapon);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
+	bool ValidWeapon(CTFWeaponBase* pWeapon);
 
 	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
 
@@ -23,8 +23,10 @@ public:
 	void MoveMain(float accumulated_extra_samples, bool bFinalTick);
 	void MovePost(CTFPlayer* pLocal, CUserCmd* pCmd);
 
-	int GetTicks();
 	void ManagePacket(CUserCmd* pCmd, bool* pSendPacket);
+	int GetTicks(CTFWeaponBase* pWeapon = nullptr);
+	int GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks = Vars::CL_Move::Doubletap::TickLimit.Value);
+	int GetMinimumTicksNeeded(CTFWeaponBase* pWeapon);
 
 	int iDeficit = 0;
 };

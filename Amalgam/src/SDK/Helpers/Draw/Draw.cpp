@@ -1,6 +1,5 @@
 #include "Draw.h"
 
-#include "../../Vars.h"
 #include "Icons.h"
 #include "../../Definitions/Interfaces.h"
 #include "../../../Utils/Math/Math.h"
@@ -27,16 +26,6 @@ void CDraw::UpdateW2SMatrix()
 
 		I::RenderView->GetMatricesForView(ViewSetup, &WorldToView, &ViewToProjection, &m_WorldToProjection, &WorldToPixels);
 	}
-}
-
-bool CDraw::IsColorBright(const Color_t& clr)
-{
-	return clr.r + clr.g + clr.b > 510;
-}
-
-bool CDraw::IsColorDark(const Color_t& clr)
-{
-	return clr.r + clr.g + clr.b < 201;
 }
 
 void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const char* str, ...)

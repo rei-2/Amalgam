@@ -4,8 +4,7 @@
 class CPlayerArrows
 {
 private:
-	bool ShouldRun(CTFPlayer* pLocal);
-	void DrawArrowTo(const Vec3& vecFromPos, const Vec3& vecToPos, Color_t color);
+	void DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_t tColor);
 
 public:
 	void Run(CTFPlayer* pLocal);

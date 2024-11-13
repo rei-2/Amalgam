@@ -639,7 +639,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 							auto pSet = pHDR->pHitboxSet(target.m_pEntity->As<CTFPlayer>()->m_nHitboxSet());
 							if (!pSet) break;
 
-							matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity);
+							matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity->entindex());
 							if (!aBones)
 								break;
 
@@ -709,7 +709,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon,
 	std::deque<Vec3>* pPlayerPath, std::deque<Vec3>* pProjectilePath, std::vector<DrawBox>* pBoxes, float* pTimeTo)
 {
-	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity) > Vars::Aimbot::General::TickTolerance.Value)
+	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
 
 	PlayerStorage storage;
@@ -858,7 +858,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			{
 				const Vec3 vOriginOffset = target.m_pEntity->m_vecOrigin() - vPredicted;
 
-				matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity);
+				matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity->entindex());
 				if (!aBones)
 					return true;
 
@@ -874,7 +874,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			{
 				const Vec3 vOriginOffset = target.m_pEntity->m_vecOrigin() - vPredicted;
 
-				matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity);
+				matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity->entindex());
 				if (!aBones)
 					return true;
 
@@ -928,7 +928,7 @@ Vec3 CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 // assume angle calculated outside with other overload
 void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle)
 {
-	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks();
+	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks(H::Entities.GetWeapon());
 	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
 	{
 		pCmd->viewangles = vAngle;

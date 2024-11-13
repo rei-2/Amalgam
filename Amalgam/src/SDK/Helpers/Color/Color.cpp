@@ -3,9 +3,9 @@
 #include "../../Vars.h"
 #include "../../../Features/Players/PlayerUtils.h"
 
-Color_t CColor::GetTeamColor(int iLocalTeam, int iTargetTeam, bool bOther)
+Color_t CColor::GetTeamColor(int iLocalTeam, int iTargetTeam, bool bRelative)
 {
-	if (bOther)
+	if (bRelative)
 		return iLocalTeam == iTargetTeam ? Vars::Colors::Team.Value : Vars::Colors::Enemy.Value;
 	else
 	{
@@ -19,28 +19,47 @@ Color_t CColor::GetTeamColor(int iLocalTeam, int iTargetTeam, bool bOther)
 	return { 255, 255, 255, 255 };
 }
 
-Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool enableOtherColors)
+Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool bRelative, int* pType)
 {
-	Color_t out = GetTeamColor(pLocal->m_iTeamNum(), pEntity->m_iTeamNum(), enableOtherColors);
+	Color_t out = GetTeamColor(pLocal->m_iTeamNum(), pEntity->m_iTeamNum(), bRelative);
+	if (pType) *pType = 1;
 
 	if (pEntity->IsPlayer())
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 
 		if (pLocal == pPlayer)
+		{
 			out = Vars::Colors::Local.Value;
+			if (pType) *pType = 2;
+		}
 		else if (H::Entities.IsFriend(pPlayer->entindex()))
+		{
 			out = F::PlayerUtils.m_vTags[FRIEND_TAG].Color;
+			if (pType) *pType = 3;
+		}
 		else if (auto pTag = F::PlayerUtils.GetSignificantTag(pPlayer->entindex()))
+		{
 			out = pTag->Color;
+			if (pType) *pType = 4;
+		}
 		else if (pPlayer->IsCloaked())
+		{
 			out = Vars::Colors::Cloak.Value;
+			if (pType) *pType = 5;
+		}
 		else if (pPlayer->IsInvulnerable())
+		{
 			out = Vars::Colors::Invulnerable.Value;
+			if (pType) *pType = 6;
+		}
 	}
 
 	if (pEntity->entindex() == G::Target.first && abs(G::Target.second - I::GlobalVars->tickcount) < 32)
+	{
 		out = Vars::Colors::Target.Value;
+		if (pType) *pType = 7;
+	}
 
 	return out;
 }

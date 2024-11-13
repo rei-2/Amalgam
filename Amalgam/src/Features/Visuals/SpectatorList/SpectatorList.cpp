@@ -17,14 +17,9 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 			std::string sMode;
 			switch (pPlayer->m_iObserverMode())
 			{
-				case OBS_MODE_FIRSTPERSON:
-					sMode = "1st";
-					break;
-				case OBS_MODE_THIRDPERSON:
-					sMode = "3rd";
-					break;
-				default: 
-					continue;
+				case OBS_MODE_FIRSTPERSON: sMode = "1st"; break;
+				case OBS_MODE_THIRDPERSON: sMode = "3rd"; break;
+				default: continue;
 			}
 
 			int respawnIn = 0; float respawnTime = 0;
@@ -46,7 +41,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
 			if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 			{
 				std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-				m_vSpectators.push_back({ sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), pPlayer->m_iTeamNum(), pPlayer->entindex() });
+				m_vSpectators.push_back({ sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), pPlayer->entindex() });
 			}
 		}
 		else
@@ -72,19 +67,21 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 		return;
 
 	int x = Vars::Menu::SpectatorsDisplay.Value.x;
-	int iconOffset = 0;
 	int y = Vars::Menu::SpectatorsDisplay.Value.y + 8;
+	int iconOffset = 0;
+	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+	const int nTall = fFont.m_nTall + H::Draw.Scale(3);
 
 	EAlign align = ALIGN_TOP;
-	if (x <= (100 + 50 * Vars::Menu::Scale.Value))
+	if (x <= 100 + H::Draw.Scale(50, Scale_Round))
 	{
 	//	iconOffset = 36;
-		x -= 42 * Vars::Menu::Scale.Value;
+		x -= H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPLEFT;
 	}
-	else if (x >= H::Draw.m_nScreenW - (100 + 50 * Vars::Menu::Scale.Value))
+	else if (x >= H::Draw.m_nScreenW - 100 + H::Draw.Scale(50, Scale_Round))
 	{
-		x += 42 * Vars::Menu::Scale.Value;
+		x += H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPRIGHT;
 	}
 	//else
@@ -93,12 +90,10 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 	//if (!Vars::Menu::SpectatorAvatars.Value)
 	//	iconOffset = 0;
 
-	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
-
 	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, "Spectating You:");
 	for (auto& Spectator : m_vSpectators)
 	{
-		y += fFont.m_nTall + 3;
+		y += nTall;
 
 		/*
 		if (Vars::Visuals::SpectatorAvatars.Value)
