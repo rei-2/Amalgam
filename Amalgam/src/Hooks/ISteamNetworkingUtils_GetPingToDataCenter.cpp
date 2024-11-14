@@ -1,6 +1,6 @@
 #include "../SDK/SDK.h"
 
-MAKE_SIGNATURE(CTFGCClientSystem_PingThink, "client.dll", "48 89 4C 24 ? 55 41 54 41 55 48 8D AC 24 ? ? ? ? 48 81 EC", 0x0);
+MAKE_SIGNATURE(CTFGCClientSystem_PingThink, "client.dll", "40 55 41 55 41 56 41 57 48 8D AC 24", 0x0);
 
 static void POPID_ToString(SteamNetworkingPOPID popID, char* out)
 {

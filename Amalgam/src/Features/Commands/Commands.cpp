@@ -24,7 +24,12 @@ void CCommands::Initialize()
 {
 	Register("queue", [](const std::deque<std::string>& args)
 		{
-			I::TFPartyClient->LoadSavedCasualCriteria();
+			static bool bHasLoaded = false;
+			if (!bHasLoaded)
+			{
+				I::TFPartyClient->LoadSavedCasualCriteria();
+				bHasLoaded = true;
+			}
 			I::TFPartyClient->RequestQueueForMatch(k_eTFMatchGroup_Casual_Default);
 		});
 
