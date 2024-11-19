@@ -62,7 +62,7 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 	char popIDName[5];
 	POPID_ToString(popID, popIDName);
 	if (auto uDatacenter = GetDatacenter(FNV1A::Hash32(popIDName)))
-		return Vars::Misc::Queueing::ForceRegions.Value & uDatacenter ? 1 : 999999;
+		return Vars::Misc::Queueing::ForceRegions.Value & uDatacenter ? 1 : 1000;
 
 	return iReturn;
 }

@@ -10,7 +10,6 @@
 #include "../../Resolver/Resolver.h"
 #include "../../Misc/Misc.h"
 #include "../../Records/Records.h"
-#include <mutex>
 
 /* The main menu */
 void CMenu::DrawMenu()

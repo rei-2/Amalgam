@@ -477,10 +477,10 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 
 	if (WeaponCanCrit(pWeapon))
 	{
-		const auto iSlot = pWeapon->GetSlot();
+		auto iSlot = pWeapon->GetSlot();
 		auto& tStorage = m_mStorage[iSlot];
-		const auto bRapidFire = pWeapon->IsRapidFire();
-		const float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
+		auto bRapidFire = pWeapon->IsRapidFire();
+		float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
 
 		if (tStorage.m_flDamage > 0)
 		{
@@ -488,7 +488,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				H::Draw.StringOutlined(fFont, x, y, { 100, 255, 255, 255 }, { 0, 0, 0, 255 }, align, "Crit Boosted");
 			else if (pWeapon->m_flCritTime() > flTickBase)
 			{
-				const float flTime = pWeapon->m_flCritTime() - flTickBase;
+				float flTime = pWeapon->m_flCritTime() - flTickBase;
 				H::Draw.StringOutlined(fFont, x, y, { 100, 255, 255, 255 }, { 0, 0, 0, 255 }, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
 			}
 			else if (!m_bCritBanned)
@@ -497,7 +497,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				{
 					if (bRapidFire && flTickBase < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
 					{
-						const float flTime = pWeapon->m_flLastRapidFireCritCheckTime() + 1.f - flTickBase;
+						float flTime = pWeapon->m_flLastRapidFireCritCheckTime() + 1.f - flTickBase;
 						H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Wait {:.1f}s", flTime).c_str());
 					}
 					else
