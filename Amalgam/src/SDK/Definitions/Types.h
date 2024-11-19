@@ -338,7 +338,7 @@ public:
 		return flLength;
 	}
 
-	Vec3 GetNorm()
+	Vec3 Normalized()
 	{
 		float flLengthNormal = 1.f / (FLT_EPSILON + Length());
 		return Vec3(x * flLengthNormal, y * flLengthNormal, z * flLengthNormal);

@@ -270,7 +270,7 @@ void CMovementSimulation::Store()
 				//if (bLocal)
 				{
 					if (tRecord.m_iMode != 0)
-						tRecord.m_vDirection = Vec3(vVelocity.x, vVelocity.y, 0).GetNorm() * flMaxSpeed;
+						tRecord.m_vDirection = Vec3(vVelocity.x, vVelocity.y, 0).Normalized() * flMaxSpeed;
 				}
 				//else
 				{
@@ -724,7 +724,7 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 		Vec3 vMove = Vec3(playerStorage.m_MoveData.m_flForwardMove, -playerStorage.m_MoveData.m_flSideMove, playerStorage.m_MoveData.m_flUpMove);
 
 		Vec3 v1 = playerStorage.m_MoveData.m_vecAbsOrigin;
-		Vec3 v2 = v1 + (vMove.IsZero() ? Vec3(0, 0, 1) : Math::RotatePoint(vMove.GetNorm() * 12, {}, { 0, playerStorage.m_MoveData.m_vecViewAngles.y, 0 }));
+		Vec3 v2 = v1 + (vMove.IsZero() ? Vec3(0, 0, 1) : Math::RotatePoint(vMove.Normalized() * 12, {}, { 0, playerStorage.m_MoveData.m_vecViewAngles.y, 0 }));
 
 		G::LineStorage.push_back({ { v1, v2 }, I::GlobalVars->curtime + 5.f, Color_t(SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), 255) });
 	}

@@ -527,11 +527,11 @@ void CVisuals::DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool 
 				Vec3& vStart = Line[i - 1];
 				Vec3& vEnd = Line[i];
 
-				Vec3 vSeparator = vEnd - vStart;
-				vSeparator.z = 0;
-				vSeparator.Normalize();
-				vSeparator = Math::RotatePoint(vSeparator * Vars::Visuals::Simulation::SeparatorLength.Value, {}, { 0, 90, 0 });
-				RenderLine(vEnd, vEnd + vSeparator, Color, bZBuffer);
+				Vec3 vDir = vEnd - vStart;
+				vDir.z = 0;
+				vDir.Normalize();
+				vDir = Math::RotatePoint(vDir * Vars::Visuals::Simulation::SeparatorLength.Value, {}, { 0, 90, 0 });
+				RenderLine(vEnd, vEnd + vDir, Color, bZBuffer);
 			}
 			break;
 		}
@@ -539,6 +539,27 @@ void CVisuals::DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool 
 		{
 			if (!(i % 2))
 				RenderLine(Line[i - 1], Line[i], Color, bZBuffer);
+			break;
+		}
+		case Vars::Visuals::Simulation::StyleEnum::Arrows:
+		{
+			if (!(i % 3))
+			{
+				Vec3& vStart = Line[i - 1];
+				Vec3& vEnd = Line[i];
+
+				if (!(vStart - vEnd).IsZero())
+				{
+					Vec3 vAngles; Math::VectorAngles(vEnd - vStart, vAngles);
+					Vec3 vForward, vRight, vUp; Math::AngleVectors(vAngles, &vForward, &vRight, &vUp);
+					RenderLine(vEnd, vEnd - vForward * 5 + vRight * 5, Color, bZBuffer);
+					RenderLine(vEnd, vEnd - vForward * 5 - vRight * 5, Color, bZBuffer);
+					// this also looked interesting but i'm not sure i'd actually add it
+					//RenderLine(vEnd, vEnd + vForward * 5, Color, bZBuffer);
+					//RenderLine(vEnd, vEnd + vRight * 5, Color, bZBuffer);
+					//RenderLine(vEnd, vEnd + vUp * 5, Color, bZBuffer);
+				}
+			}
 			break;
 		}
 		}
