@@ -368,7 +368,7 @@ void CDraw::Texture(int x, int y, int w, int h, int id, const EAlign& align)
 }
 CHudTexture* CDraw::GetIcon(const char* szIcon, int eIconFormat) // Thanks myzarfin
 {
-	return S::CDraw_GetIcon.As<CHudTexture*(__fastcall*)(void*, const char*, int)>()(nullptr, szIcon, eIconFormat);
+	return S::CDraw_GetIcon.Call<CHudTexture*>(nullptr, szIcon, eIconFormat);
 }
 int CDraw::CreateTextureFromArray(const unsigned char* rgba, int w, int h)
 {

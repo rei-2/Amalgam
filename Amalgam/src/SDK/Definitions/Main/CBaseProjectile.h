@@ -59,6 +59,14 @@ public:
 	NETVAR(m_bCritical, bool, "CTFProjectile_Rocket", "m_bCritical");
 };
 
+class CTFProjectile_EnergyBall : public CTFBaseRocket
+{
+public:
+	NETVAR(m_bChargedShot, bool, "CTFProjectile_EnergyBall", "m_bChargedShot");
+	NETVAR(m_vColor1, Vec3, "CTFProjectile_EnergyBall", "m_bChargedShot");
+	NETVAR(m_vColor2, Vec3, "CTFProjectile_EnergyBall", "m_bChargedShot");
+};
+
 class CTFProjectile_Flare : public CTFBaseRocket
 {
 public:

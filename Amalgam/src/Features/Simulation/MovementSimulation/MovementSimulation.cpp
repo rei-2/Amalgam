@@ -216,10 +216,10 @@ void CMovementSimulation::Store()
 				continue;
 
 			bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer();
-			Vec3 vVelocity = bLocal ? F::EnginePrediction.vVelocity : pPlayer->m_vecVelocity();
-			Vec3 vOrigin = bLocal ? F::EnginePrediction.vOrigin : pPlayer->m_vecOrigin();
-			Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.vDirection, {}, { 0, F::EnginePrediction.vAngles.y, 0 }) : Vec3(pPlayer->m_vecVelocity().x, pPlayer->m_vecVelocity().y, 0.f);
-			Vec3 vAngles = bLocal ? F::EnginePrediction.vAngles : pPlayer->GetEyeAngles();
+			Vec3 vVelocity = bLocal ? F::EnginePrediction.m_vVelocity : pPlayer->m_vecVelocity();
+			Vec3 vOrigin = bLocal ? F::EnginePrediction.m_vOrigin : pPlayer->m_vecOrigin();
+			Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : Vec3(pPlayer->m_vecVelocity().x, pPlayer->m_vecVelocity().y, 0.f);
+			Vec3 vAngles = bLocal ? F::EnginePrediction.m_vAngles : pPlayer->GetEyeAngles();
 
 			MoveData tRecord = {
 				vDirection,

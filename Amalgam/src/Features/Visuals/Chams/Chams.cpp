@@ -88,7 +88,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFProjectile_ThrowableBrick:
 	case ETFClassID::CTFProjectile_ThrowableRepel:
 	{
-		auto pOwner = pEntity->As<CBaseGrenade>()->m_hThrower().Get();
+		auto pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Projectiles.Value, Vars::Chams::Enemy::Projectiles.Value);
@@ -118,7 +118,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFProjectile_EnergyRing: // not drawn, shoulddraw check, small anyways
 	//case ETFClassID::CTFProjectile_Syringe: // not drawn
 	{
-		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
+		auto pWeapon = pEntity->As<CTFBaseProjectile>()->m_hLauncher().Get();
 		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
@@ -389,7 +389,7 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 			if (!SDK::IsOnScreen(pEntity, vOrigin))
 				return;
 
-			ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 		};
 
 	auto pRecords = F::Backtrack.GetRecords(pEntity);
@@ -439,7 +439,7 @@ void CChams::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderIn
 
 
 
-	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
+	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
 }
 void CChams::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
@@ -447,7 +447,7 @@ void CChams::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo
 	{
 		static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 		if (ModelRender_DrawModelExecute)
-			ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 	}
 	else
 	{
@@ -489,7 +489,7 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 
 		if (bInvert)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
-		*iReturn = CBaseAnimating_InternalDrawModel->Original<int(__fastcall*)(void*, int)>()(ecx, flags);
+		*iReturn = CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
 		if (bInvert)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 	}
@@ -531,7 +531,7 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 
 		if (bInvert)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
-		ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+		ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 		if (bInvert)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 	}

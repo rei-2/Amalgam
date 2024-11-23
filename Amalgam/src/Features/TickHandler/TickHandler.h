@@ -12,8 +12,9 @@ class CTickshiftHandler
 
 	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
 
-	bool bSpeedhack = false;
-	bool bGoalReached = true;
+	bool m_bSpeedhack = false;
+	bool m_bGoalReached = true;
+	Vec3 m_vShootPos = {};
 
 public:
 	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
@@ -28,7 +29,10 @@ public:
 	int GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks = Vars::CL_Move::Doubletap::TickLimit.Value);
 	int GetMinimumTicksNeeded(CTFWeaponBase* pWeapon);
 
-	int iDeficit = 0;
+	void SaveShootPos(CTFPlayer* pLocal);
+	Vec3 GetShootPos();
+
+	int m_iDeficit = 0;
 };
 
 ADD_FEATURE(CTickshiftHandler, Ticks)

@@ -80,7 +80,7 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFProjectile_ThrowableBrick:
 	case ETFClassID::CTFProjectile_ThrowableRepel:
 	{
-		auto pOwner = pEntity->As<CBaseGrenade>()->m_hThrower().Get();
+		auto pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerGlow(pOwner, pLocal, pGlow, pColor, Vars::Glow::Friendly::Projectiles.Value, Vars::Glow::Enemy::Projectiles.Value);
@@ -110,7 +110,7 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFProjectile_EnergyRing: // not drawn, shoulddraw check, small anyways
 	//case ETFClassID::CTFProjectile_Syringe: // not drawn
 	{
-		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
+		auto pWeapon = pEntity->As<CTFBaseProjectile>()->m_hLauncher().Get();
 		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
@@ -404,7 +404,7 @@ void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInf
 			if (!SDK::IsOnScreen(pEntity, vOrigin))
 				return;
 
-			ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 		};
 
 	const auto& pRecords = F::Backtrack.GetRecords(pEntity);
@@ -451,7 +451,7 @@ void CGlow::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInf
 
 
 
-	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
+	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
 }
 void CGlow::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
@@ -459,7 +459,7 @@ void CGlow::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_
 	{
 		static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 		if (ModelRender_DrawModelExecute)
-			ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 	}
 	else
 	{
@@ -494,13 +494,13 @@ void CGlow::RenderViewmodel(void* ecx, int flags)
 	auto glow = Glow_t(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value);
 
 	SetupBegin(glow, pRenderContext, m_pMatGlowColor, m_pMatBlurY);
-	CBaseAnimating_InternalDrawModel->Original<int(__fastcall*)(void*, int)>()(ecx, flags);
+	CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
 
 	SetupMid(pRenderContext, w, h);
 	auto& color = Vars::Colors::Local.Value;
 	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
 	I::RenderView->SetBlend(float(color.a) / 255.f);
-	CBaseAnimating_InternalDrawModel->Original<int(__fastcall*)(void*, int)>()(ecx, flags);
+	CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
 
 	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
 
@@ -530,13 +530,13 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 	auto glow = Glow_t(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value);
 
 	SetupBegin(glow, pRenderContext, m_pMatGlowColor, m_pMatBlurY);
-	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 
 	SetupMid(pRenderContext, w, h);
 	auto& color = Vars::Colors::Local.Value;
 	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
 	I::RenderView->SetBlend(float(color.a) / 255.f);
-	ModelRender_DrawModelExecute->Original<void(__fastcall*)(IVModelRender*, const DrawModelState_t&, const ModelRenderInfo_t&, matrix3x4*)>()(I::ModelRender, pState, pInfo, pBoneToWorld);
+	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 
 	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
 
@@ -547,12 +547,14 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 
 void CGlow::Initialize()
 {
+		SDK::Output("Glow::Initialize", "m_pMatGlowColor", {}, false, false, false, true);
 	if (!m_pMatGlowColor)
 	{
 		m_pMatGlowColor = I::MaterialSystem->FindMaterial("dev/glow_color", TEXTURE_GROUP_OTHER);
 		m_pMatGlowColor->IncrementReferenceCount();
 	}
-
+	
+		SDK::Output("Glow::Initialize", "m_pMatBlurX", {}, false, false, false, true);
 	if (!m_pMatBlurX)
 	{
 		KeyValues* m_pMatBlurXKV = new KeyValues("BlurFilterX");
@@ -560,6 +562,7 @@ void CGlow::Initialize()
 		m_pMatBlurX = I::MaterialSystem->CreateMaterial("m_pMatBlurX", m_pMatBlurXKV);
 	}
 
+		SDK::Output("Glow::Initialize", "m_pMatBlurY", {}, false, false, false, true);
 	if (!m_pMatBlurY)
 	{
 		KeyValues* m_pMatBlurYKV = new KeyValues("BlurFilterY");
@@ -567,6 +570,7 @@ void CGlow::Initialize()
 		m_pMatBlurY = I::MaterialSystem->CreateMaterial("m_pMatBlurY", m_pMatBlurYKV);
 	}
 
+		SDK::Output("Glow::Initialize", "m_pMatHaloAddToScreen", {}, false, false, false, true);
 	if (!m_pMatHaloAddToScreen)
 	{
 		KeyValues* m_pMatHaloAddToScreenKV = new KeyValues("UnlitGeneric");
@@ -575,12 +579,14 @@ void CGlow::Initialize()
 		m_pMatHaloAddToScreen = I::MaterialSystem->CreateMaterial("m_pMatHaloAddToScreen", m_pMatHaloAddToScreenKV);
 	}
 
+		SDK::Output("Glow::Initialize", "m_pRtFullFrame", {}, false, false, false, true);
 	if (!m_pRtFullFrame)
 	{
 		m_pRtFullFrame = I::MaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
 		m_pRtFullFrame->IncrementReferenceCount();
 	}
 
+		SDK::Output("Glow::Initialize", "m_pRenderBuffer1", {}, false, false, false, true);
 	if (!m_pRenderBuffer1)
 	{
 		m_pRenderBuffer1 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
@@ -596,6 +602,7 @@ void CGlow::Initialize()
 		m_pRenderBuffer1->IncrementReferenceCount();
 	}
 
+		SDK::Output("Glow::Initialize", "m_pRenderBuffer2", {}, false, false, false, true);
 	if (!m_pRenderBuffer2)
 	{
 		m_pRenderBuffer2 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(

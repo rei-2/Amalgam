@@ -21,7 +21,7 @@ private:
 	mutable bool in_q;
 };
 
-MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVFunc(I::EngineClient, 106), void, __fastcall,
+MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVFunc(I::EngineClient, 106), void,
 	void* rcx, const char* szCmdString)
 {
 	std::string sCmdString = szCmdString;

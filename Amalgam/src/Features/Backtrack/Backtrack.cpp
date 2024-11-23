@@ -286,7 +286,7 @@ void CBacktrack::ReportShot(int iIndex)
 
 void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 {
-	m_nInSequenceNr = pNetChan->m_nInSequenceNr, m_nInReliableState = pNetChan->m_nInReliableState;
+	m_nOldInSequenceNr = pNetChan->m_nInSequenceNr, m_nOldInReliableState = pNetChan->m_nInReliableState;
 
 	auto Set = [&]()
 		{
@@ -311,7 +311,7 @@ void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 				nInSequenceNr = cSequence.m_nSequenceNr;
 				flLatency = (I::GlobalVars->realtime - cSequence.m_flTime) * flTimescale - TICK_INTERVAL;
 
-				if (flLatency > flFake || m_nOldInSequenceNr >= cSequence.m_nSequenceNr || flLatency > m_flMaxUnlag - flStaticReal)
+				if (flLatency > flFake || m_nLastInSequenceNr >= cSequence.m_nSequenceNr || flLatency > m_flMaxUnlag - flStaticReal)
 					break;
 			}
 
@@ -321,7 +321,7 @@ void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 		};
 
 	auto flLatency = Set();
-	m_nOldInSequenceNr = pNetChan->m_nInSequenceNr;
+	m_nLastInSequenceNr = pNetChan->m_nInSequenceNr;
 
 	if (Vars::Backtrack::Enabled.Value && Vars::Backtrack::Latency.Value || m_flFakeLatency)
 	{
@@ -333,5 +333,5 @@ void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 
 void CBacktrack::RestorePing(CNetChannel* pNetChan)
 {
-	pNetChan->m_nInSequenceNr = m_nInSequenceNr, pNetChan->m_nInReliableState = m_nInReliableState;
+	pNetChan->m_nInSequenceNr = m_nOldInSequenceNr, pNetChan->m_nInReliableState = m_nOldInReliableState;
 }

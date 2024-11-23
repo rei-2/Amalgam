@@ -52,7 +52,7 @@
     <ClCompile Include="src\Features\Aimbot\AutoDetonate\AutoDetonate.cpp" />
     <ClCompile Include="src\Features\Aimbot\AutoRocketJump\AutoRocketJump.cpp" />
     <ClCompile Include="src\Features\Aimbot\AutoHeal\AutoHeal.cpp" />
-    <ClCompile Include="src\Features\AutoQueue\AutoQueue.cpp" />
+    <ClCompile Include="src\Features\Misc\AutoQueue\AutoQueue.cpp" />
     <ClCompile Include="src\Features\Backtrack\Backtrack.cpp" />
     <ClCompile Include="src\Features\CheaterDetection\CheaterDetection.cpp" />
     <ClCompile Include="src\Features\CritHack\CritHack.cpp" />
@@ -175,6 +175,9 @@
     <ClCompile Include="src\Hooks\CBaseAnimating_DoAnimationEvents.cpp" />
     <ClCompile Include="src\Hooks\CThirdPersonManager_Update.cpp" />
     <ClCompile Include="include\ImGui\imgui_freetype.cpp" />
+    <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />
+    <ClCompile Include="src\Hooks\bf_read_ReadString.cpp" />
+    <ClCompile Include="src\Hooks\CClientState_GetTime.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -372,7 +375,7 @@
     <ClInclude Include="src\Features\Aimbot\AutoDetonate\AutoDetonate.h" />
     <ClInclude Include="src\Features\Aimbot\AutoRocketJump\AutoRocketJump.h" />
     <ClInclude Include="src\Features\Aimbot\AutoHeal\AutoHeal.h" />
-    <ClInclude Include="src\Features\AutoQueue\AutoQueue.h" />
+    <ClInclude Include="src\Features\Misc\AutoQueue\AutoQueue.h" />
     <ClInclude Include="src\Features\Backtrack\Backtrack.h" />
     <ClInclude Include="src\Features\CheaterDetection\CheaterDetection.h" />
     <ClInclude Include="src\Features\CritHack\CritHack.h" />
@@ -550,6 +553,7 @@
     <ClInclude Include="include\ImGui\imstb_truetype.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CEconEntity.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CEconWearable.h" />
+    <ClInclude Include="src\Features\Misc\AutoVote\AutoVote.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

@@ -8,7 +8,7 @@ MAKE_SIGNATURE(vgui_Panel_SetBgColor, "client.dll", "89 91 ? ? ? ? C3 CC CC CC C
 MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_GetTeam_Call, "client.dll", "8B 9F ? ? ? ? 40 32 F6", 0x0);
 MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_SetBgColor_Call, "client.dll", "48 8B 8F ? ? ? ? 4C 8B 6C 24 ? 48 85 C9 0F 84 ? ? ? ? 40 38 B7", 0x0);
 
-MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int, __fastcall,
+MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 	void* rcx)
 {
 	static const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_GetTeam_Call();
@@ -25,14 +25,14 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int, __fastcall,
 
 static int CTFTeamStatusPlayerPanel_Update_PlayerIndex;
 
-MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(), bool, __fastcall,
+MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(), bool,
 	void* rcx)
 {
 	CTFTeamStatusPlayerPanel_Update_PlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
 	return CALL_ORIGINAL(rcx);
 }
 
-MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void, __fastcall,
+MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void,
 	void* rcx, Color_t color)
 {
 	static const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_SetBgColor_Call();

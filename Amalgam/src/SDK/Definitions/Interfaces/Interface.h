@@ -16,6 +16,6 @@ namespace SDK
 {
 	inline float AttribHookValue(float value, const char* name, void* econent, void* buffer = 0, bool isGlobalConstString = true)
 	{
-		return S::CAttributeManager_AttribHookFloat.As<float(__fastcall*)(float, const char*, void*, void*, bool)>()(value, name, econent, buffer, isGlobalConstString);
+		return S::CAttributeManager_AttribHookFloat.Call<float>(value, name, econent, buffer, isGlobalConstString);
 	}
 }

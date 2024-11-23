@@ -1,6 +1,6 @@
 #include "../SDK/SDK.h"
 
-MAKE_HOOK(IPanel_PaintTraverse, U::Memory.GetVFunc(I::Panel, 41), void, __fastcall,
+MAKE_HOOK(IPanel_PaintTraverse, U::Memory.GetVFunc(I::Panel, 41), void,
 	void* rcx, VPANEL vguiPanel, bool forceRepaint, bool allowForce)
 {
 	if (!Vars::Visuals::UI::StreamerMode.Value)
@@ -12,6 +12,7 @@ MAKE_HOOK(IPanel_PaintTraverse, U::Memory.GetVFunc(I::Panel, 41), void, __fastca
 	case FNV1A::Hash32Const("avatar"):
 	case FNV1A::Hash32Const("RankPanel"):
 	case FNV1A::Hash32Const("ModelContainer"):
+	case FNV1A::Hash32Const("ServerLabelNew"):
 		return;
 	}
 

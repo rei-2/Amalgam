@@ -5,7 +5,7 @@
 #include "../Features/CameraWindow/CameraWindow.h"
 #include "../Features/Visuals/Visuals.h"
 
-MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVFunc(I::ClientModeShared, 39), bool, __fastcall,
+MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVFunc(I::ClientModeShared, 39), bool,
 	void* rcx, const CViewSetup* pSetup)
 {
 	F::Chams.mEntities.clear();

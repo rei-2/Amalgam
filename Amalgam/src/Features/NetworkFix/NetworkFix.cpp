@@ -29,7 +29,7 @@ void CNetworkFix::FixInputDelay(bool bFinalTick)
 	CReadPacketState Backup = {};
 	Backup.Store();
 
-	CL_ReadPackets->Original<void(__cdecl*)(bool)>()(bFinalTick);
+	CL_ReadPackets->Call<void>(bFinalTick);
 	m_State.Store();
 
 	Backup.Restore();

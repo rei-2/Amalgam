@@ -342,12 +342,13 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
 	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
 
-	static bool bFirstTimePredicted = true;
-	if (!I::ClientState->chokedcommands)
-		bFirstTimePredicted = true;
-	if (bAttacking && bFirstTimePredicted)
+	//static bool bFirstTimePredicted = true;
+	//if (!I::ClientState->chokedcommands)
+	//	bFirstTimePredicted = true;
+	//if (bAttacking && bFirstTimePredicted)
+	if (bAttacking)
 	{
-		bFirstTimePredicted = false;
+	//	bFirstTimePredicted = false;
 
 		const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
 		const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
@@ -527,10 +528,8 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		if (Vars::Debug::Info.Value)
 		{
 			H::Draw.StringOutlined(fFont, x, y += nTall * 2, {}, { 0, 0, 0, 255 }, align, std::format("AllDamage: {}, CritDamage: {}", m_iAllDamage, m_iCritDamage).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Bucket: {}", pWeapon->m_flCritTokenBucket()).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Bucket: {}, Shots: {}, Crits: {}", pWeapon->m_flCritTokenBucket(), pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Shots: {}, Crits: {}", pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("CritBanned: {}, DamageTilUnban: {}", m_bCritBanned, m_iDamageTilUnban).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance + 0.1f).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Force: {}, Skip: {}", tStorage.m_vCritCommands.size(), tStorage.m_vSkipCommands.size()).c_str());
 		}

@@ -19,17 +19,17 @@ struct ProjectileInfo
 
 	float m_flVelocity = 0.f;
 	float m_flGravity = 0.f;
-
 	bool m_bNoSpin = false;
-
 	float m_flLifetime = 60.f;
 
 	std::deque<Vec3> m_vPath = {};
+
+	bool m_bQuick = false;
 };
 
 class CProjectileSimulation
 {
-	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge);
+	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge);
 
 	const objectparams_t g_PhysDefaultObjectParams =
 	{
@@ -47,7 +47,7 @@ class CProjectileSimulation
 	};
 
 public:
-	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, int iFlags = ProjSim_Trace | ProjSim_InitCheck, float flAutoCharge = -1.f);
+	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags = ProjSim_Trace | ProjSim_InitCheck, float flAutoCharge = -1.f);
 	bool Initialize(ProjectileInfo& info, bool bSimulate = true);
 	void RunTick(ProjectileInfo& info, bool bPath = true);
 	Vec3 GetOrigin();

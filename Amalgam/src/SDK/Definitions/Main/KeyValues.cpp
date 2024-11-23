@@ -25,12 +25,12 @@ int UTF8ToUnicode(const char* ansi, wchar_t* unicode, int unicodeBufferSizeInByt
 
 bool KeyValues::LoadFromBuffer(char const* resource_name, const char* buffer, void* file_system, const char* path_id)
 {
-	return S::KeyValues_LoadFromBuffer.As<int(__fastcall*)(KeyValues*, char const*, const char*, void*, const char*)>()(this, resource_name, buffer, file_system, path_id);
+	return S::KeyValues_LoadFromBuffer.Call<bool>(this, resource_name, buffer, file_system, path_id);
 }
 
 void KeyValues::Initialize(char* name)
 {
-	S::KeyValues_Initialize.As<KeyValues* (__fastcall*)(KeyValues*, char*)>()(this, name);
+	S::KeyValues_Initialize.Call<KeyValues*>(this, name);
 }
 
 KeyValues::KeyValues(const char* name)
@@ -42,7 +42,7 @@ KeyValues::KeyValues(const char* name)
 
 KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 {
-	return S::KeyValues_FindKey.As<KeyValues*(__fastcall*)(KeyValues*, const char*, bool)>()(this, keyName, bCreate);
+	return S::KeyValues_FindKey.Call<KeyValues*>(this, keyName, bCreate);
 }
 
 

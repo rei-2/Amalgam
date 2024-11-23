@@ -52,8 +52,9 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi))
 			return;
 
-		std::string sOutput = std::format("{}{} voted {}", (bSameTeam ? "" : "[Enemy] "), (pi.name), (bVotedYes ? "Yes" : "No"));
-		std::string sChat = std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (yellow), (pi.name), (bVotedYes ? green : red), (bVotedYes ? "Yes" : "No"));
+		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+		std::string sOutput = std::format("{}{} voted {}", (bSameTeam ? "" : "[Enemy] "), (sName), (bVotedYes ? "Yes" : "No"));
+		std::string sChat = std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (yellow), (sName), (bVotedYes ? green : red), (bVotedYes ? "Yes" : "No"));
 		OutputInfo(Vars::Logging::VoteCast::LogTo.Value, "Vote Cast", sOutput, sChat);
 
 		return;
@@ -74,8 +75,9 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi) || pi.fakeplayer)
 			return; // dont spam chat by giving class changes for bots
 
-		std::string sOutput = std::format("{}{} changed class to {}", (bSameTeam ? "" : "[Enemy] "), (pi.name), (SDK::GetClassByIndex(pEvent->GetInt("class"))));
-		std::string sChat = std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (yellow), (pi.name), (yellow), (SDK::GetClassByIndex(pEvent->GetInt("class"))));
+		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+		std::string sOutput = std::format("{}{} changed class to {}", (bSameTeam ? "" : "[Enemy] "), (sName), (SDK::GetClassByIndex(pEvent->GetInt("class"))));
+		std::string sChat = std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (yellow), (sName), (yellow), (SDK::GetClassByIndex(pEvent->GetInt("class"))));
 		OutputInfo(Vars::Logging::ClassChange::LogTo.Value, "Class Change", sOutput, sChat);
 
 		return;
@@ -101,8 +103,9 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			!I::EngineClient->GetPlayerInfo(iIndex, &pi))
 			return;
 
-		std::string sOutput = std::format("You hit {} for {} damage{}({} / {})", (pi.name), (nDamage), (bCrit ? " (crit) " : " "), (nHealth), (maxHealth));
-		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{}{}({} / {})", (yellow), (pi.name), (red), (nDamage), (bCrit ? " (crit) " : " "), (yellow), (nHealth), (maxHealth));
+		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+		std::string sOutput = std::format("You hit {} for {} damage{}({} / {})", (sName), (nDamage), (bCrit ? " (crit) " : " "), (nHealth), (maxHealth));
+		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{}{}({} / {})", (yellow), (sName), (red), (nDamage), (bCrit ? " (crit) " : " "), (yellow), (nHealth), (maxHealth));
 		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage", sOutput, sChat);
 
 		return;
@@ -146,8 +149,9 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			if (n == pLocal->entindex() || !I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer)
 				continue;
 
-			TagsOnJoin(pi.name, pi.friendsID);
-			AliasOnJoin(pi.name, pi.friendsID);
+			auto sName = F::PlayerUtils.GetPlayerName(n, pi.name);
+			TagsOnJoin(sName, pi.friendsID);
+			AliasOnJoin(sName, pi.friendsID);
 		}
 	}
 	}
@@ -163,21 +167,23 @@ void CRecords::UserMessage(bf_read& msgData)
 	if (!pLocal)
 		return;
 
-	const int team = msgData.ReadByte();
-	const int voteID = msgData.ReadLong();
-	const int caller = msgData.ReadByte();
-	char reason[64], voteTarget[64];
-	msgData.ReadString(reason, 64);
-	msgData.ReadString(voteTarget, 64);
-	const int target = static_cast<unsigned char>(msgData.ReadByte()) >> 1;
-	const bool bSameTeam = team == pLocal->m_iTeamNum();
+	const int iTeam = msgData.ReadByte();
+	/*const int iVoteID =*/ msgData.ReadLong();
+	const int iCaller = msgData.ReadByte();
+	char sReason[256]; msgData.ReadString(sReason, sizeof(sReason));
+	char sTarget[256]; msgData.ReadString(sTarget, sizeof(sTarget));
+	const int iTarget = msgData.ReadByte() >> 1;
+	msgData.Seek(0);
+	const bool bSameTeam = iTeam == pLocal->m_iTeamNum();
 
 	PlayerInfo_t piTarget{}, piCaller{};
-	if (!caller || !target || !I::EngineClient->GetPlayerInfo(target, &piTarget) || !I::EngineClient->GetPlayerInfo(caller, &piCaller))
+	if (!iCaller || !iTarget || !I::EngineClient->GetPlayerInfo(iCaller, &piCaller) || !I::EngineClient->GetPlayerInfo(iTarget, &piTarget))
 		return;
 
-	std::string sOutput = std::format("{}{} called a vote on {}", (bSameTeam ? "" : "[Enemy] "), (piCaller.name), (piTarget.name));
-	std::string sChat = std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (yellow), (piCaller.name), (yellow), (piTarget.name));
+	auto sTargetName = F::PlayerUtils.GetPlayerName(iTarget, piTarget.name);
+	auto sCallerName = F::PlayerUtils.GetPlayerName(iCaller, piCaller.name);
+	std::string sOutput = std::format("{}{} called a vote on {}", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName));
+	std::string sChat = std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (yellow), (sCallerName), (yellow), (sTargetName));
 	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start", sOutput, sChat);
 }
 

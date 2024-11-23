@@ -52,7 +52,7 @@ static void Paint()
 	I::MatSystemSurface->FinishDrawing();
 }
 
-MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void, __fastcall,
+MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
 {
 	CALL_ORIGINAL(rcx, iMode);

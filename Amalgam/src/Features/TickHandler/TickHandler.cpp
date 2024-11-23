@@ -6,13 +6,13 @@
 
 void CTickshiftHandler::Reset()
 {
-	bSpeedhack = G::DoubleTap = G::Recharge = G::Warp = false;
+	m_bSpeedhack = G::DoubleTap = G::Recharge = G::Warp = false;
 	G::ShiftedTicks = G::ShiftedGoal = 0;
 }
 
 void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 {
-	if (!bGoalReached)
+	if (!m_bGoalReached)
 		return;
 
 	bool bPassive = G::Recharge = false;
@@ -25,16 +25,16 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 		flPassiveTime += 1.f / Vars::CL_Move::Doubletap::PassiveRecharge.Value;
 	}
 
-	if (iDeficit && G::ShiftedTicks < G::MaxShift)
+	if (m_iDeficit && G::ShiftedTicks < G::MaxShift)
 	{
 		bPassive = true;
-		iDeficit--;
+		m_iDeficit--;
 	}
-	else if (iDeficit)
-		iDeficit = 0;
+	else if (m_iDeficit)
+		m_iDeficit = 0;
 
 	if (!Vars::CL_Move::Doubletap::RechargeTicks.Value && !bPassive
-		|| G::DoubleTap || G::Warp || G::ShiftedTicks == G::MaxShift || bSpeedhack)
+		|| G::DoubleTap || G::Warp || G::ShiftedTicks == G::MaxShift || m_bSpeedhack)
 		return;
 
 	G::Recharge = true;
@@ -43,12 +43,12 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 
 void CTickshiftHandler::Warp()
 {
-	if (!bGoalReached)
+	if (!m_bGoalReached)
 		return;
 
 	G::Warp = false;
 	if (!Vars::CL_Move::Doubletap::Warp.Value
-		|| !G::ShiftedTicks || G::DoubleTap || G::Recharge || bSpeedhack)
+		|| !G::ShiftedTicks || G::DoubleTap || G::Recharge || m_bSpeedhack)
 		return;
 
 	G::Warp = true;
@@ -57,12 +57,12 @@ void CTickshiftHandler::Warp()
 
 void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!bGoalReached)
+	if (!m_bGoalReached)
 		return;
 
 	G::DoubleTap = false;
 	if (!Vars::CL_Move::Doubletap::Doubletap.Value
-		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack)
+		|| G::WaitForShift || G::Warp || G::Recharge || m_bSpeedhack)
 		return;
 
 	int iTicks = std::min(G::ShiftedTicks + 1, 22);
@@ -82,11 +82,21 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CTickshiftHandler::Speedhack()
 {
-	bSpeedhack = Vars::CL_Move::SpeedEnabled.Value;
-	if (!bSpeedhack)
+	m_bSpeedhack = Vars::CL_Move::SpeedEnabled.Value;
+	if (!m_bSpeedhack)
 		return;
 
 	G::DoubleTap = G::Warp = G::Recharge = false;
+}
+
+void CTickshiftHandler::SaveShootPos(CTFPlayer* pLocal)
+{
+	if (!G::DoubleTap && !G::Warp)
+		m_vShootPos = pLocal->GetShootPos();
+}
+Vec3 CTickshiftHandler::GetShootPos()
+{
+	return m_vShootPos;
 }
 
 void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -183,10 +193,10 @@ void CTickshiftHandler::CLMoveFunc(float accumulated_extra_samples, bool bFinalT
 	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
 		G::WaitForShift = 1;
 
-	bGoalReached = bFinalTick && G::ShiftedTicks == G::ShiftedGoal;
+	m_bGoalReached = bFinalTick && G::ShiftedTicks == G::ShiftedGoal;
 
 	if (CL_Move)
-		CL_Move->Original<void(__fastcall*)(float, bool)>()(accumulated_extra_samples, bFinalTick);
+		CL_Move->Call<void>(accumulated_extra_samples, bFinalTick);
 }
 
 void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTick)
@@ -225,7 +235,7 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 		return;
 	}
 
-	if (bSpeedhack)
+	if (m_bSpeedhack)
 	{
 		for (int i = 0; i < Vars::CL_Move::SpeedFactor.Value; i++)
 			CLMoveFunc(accumulated_extra_samples, i == Vars::CL_Move::SpeedFactor.Value);
@@ -239,7 +249,7 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 			CLMoveFunc(accumulated_extra_samples, G::ShiftedTicks - 1 == G::ShiftedGoal);
 		G::AntiWarp = false;
 		if (G::Warp)
-			iDeficit = 0;
+			m_iDeficit = 0;
 
 		G::DoubleTap = G::Warp = false;
 	}
@@ -292,7 +302,7 @@ int CTickshiftHandler::GetTicks(CTFWeaponBase* pWeapon)
 		return G::ShiftedTicks - G::ShiftedGoal;
 
 	if (!Vars::CL_Move::Doubletap::Doubletap.Value
-		|| G::WaitForShift || G::Warp || G::Recharge || bSpeedhack || F::AutoRocketJump.IsRunning())
+		|| G::WaitForShift || G::Warp || G::Recharge || m_bSpeedhack || F::AutoRocketJump.IsRunning())
 		return 0;
 
 	int iTicks = std::min(G::ShiftedTicks + 1, 22);

@@ -141,12 +141,12 @@ public:
 
 	inline float FrameAdvance(float flInterval)
 	{
-		return S::CBaseAnimating_FrameAdvance.As<float(__fastcall*)(void*, float)>()(this, flInterval);
+		return S::CBaseAnimating_FrameAdvance.Call<float>(this, flInterval);
 	}
 
 	inline void GetBonePosition(int iBone, Vector& origin, QAngle& angles)
 	{
-		S::CBaseAnimating_GetBonePosition.As<void(__fastcall*)(void*, int, Vector&, QAngle&)>()(this, iBone, origin, angles);
+		S::CBaseAnimating_GetBonePosition.Call<void>(this, iBone, std::ref(origin), std::ref(angles));
 	}
 
 	inline bool GetAttachment(int number, Vec3& origin)

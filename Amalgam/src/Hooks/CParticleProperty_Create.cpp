@@ -6,7 +6,7 @@ MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects_CreateName_Call1, "client.dll", "E8 
 MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects_CreateName_Call2, "client.dll", "E8 ? ? ? ? 41 8B 14 24 48 8B D8", 0x5);
 MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect_CreateName_Call, "client.dll", "E8 ? ? ? ? 48 89 86 ? ? ? ? 48 89 BE", 0x5);
 
-MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*, __fastcall,
+MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*,
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, const char* pszAttachmentName)
 {
     static const auto dwUpdateEffects1 = S::CWeaponMedigun_UpdateEffects_CreateName_Call1();
@@ -85,7 +85,7 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
 	return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, pszAttachmentName);
 }
 
-MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), void*, __fastcall,
+MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), void*,
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, int iAttachmentPoint, Vector vecOriginOffset)
 {
     if (FNV1A::Hash32(Vars::Visuals::Particles::ProjectileTrail.Value.c_str()) != FNV1A::Hash32Const("Off"))
@@ -160,7 +160,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
                 case ETFClassID::CTFProjectile_ThrowableBrick:
                 case ETFClassID::CTFProjectile_ThrowableRepel:
                 {
-                    pOwner = pEntity->As<CBaseGrenade>()->m_hThrower().Get();
+                    pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
                     break;
                 }
                 case ETFClassID::CTFBaseRocket:

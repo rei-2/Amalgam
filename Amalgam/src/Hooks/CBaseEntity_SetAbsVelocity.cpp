@@ -54,7 +54,7 @@ public:
 
 MAKE_SIGNATURE(CBasePlayer_PostDataUpdate_SetAbsVelocity_Call, "client.dll", "E8 ? ? ? ? 0F 28 74 24 ? 8B D6", 0x5);
 
-MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void, __fastcall,
+MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 	void* rcx, const Vec3& vecAbsVelocity)
 {
 	static const auto dwDesired = S::CBasePlayer_PostDataUpdate_SetAbsVelocity_Call();

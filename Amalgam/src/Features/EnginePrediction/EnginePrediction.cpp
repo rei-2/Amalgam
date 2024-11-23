@@ -62,16 +62,17 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::Prediction->m_bFirstTimePredicted = bOldIsFirstPrediction;
 	I::Prediction->m_bInPrediction = bOldInPrediction;
 
-	vOrigin = pLocal->m_vecOrigin();
-	vVelocity = pLocal->m_vecVelocity();
-	vDirection = { m_MoveData.m_flForwardMove, -m_MoveData.m_flSideMove, m_MoveData.m_flUpMove };
-	vAngles = m_MoveData.m_vecViewAngles;
+	m_vOrigin = pLocal->m_vecOrigin();
+	m_vVelocity = pLocal->m_vecVelocity();
+	m_vDirection = { m_MoveData.m_flForwardMove, -m_MoveData.m_flSideMove, m_MoveData.m_flUpMove };
+	m_vAngles = m_MoveData.m_vecViewAngles;
 }
 
 
 
 void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
+	m_bInPrediction = true;
 	if (!pLocal || !pLocal->IsAlive())
 		return;
 
@@ -90,23 +91,24 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 		pLocal->m_fFlags() &= ~FL_ONGROUND;
 
 	// hopefully more accurate eyepos while dting
-	m_bDoubletap = F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
-
-	if (m_bDoubletap)
+	if (m_bDoubletap = F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
 	{
 		Vec3 vOrigin = pLocal->m_vecOrigin();
 
 		Simulate(pLocal, pCmd);
 		
-		m_vOrigin = pLocal->m_vecOrigin();
+		m_vOriginalOrigin = pLocal->m_vecOrigin();
 		pLocal->m_vecOrigin() = vOrigin;
 	}
 	else
 		Simulate(pLocal, pCmd);
+
+	F::Ticks.SaveShootPos(pLocal);
 }
 
 void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
+	m_bInPrediction = false;
 	if (!pLocal || !pLocal->IsAlive())
 		return;
 
@@ -115,7 +117,7 @@ void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->frametime = m_flOldFrameTime;
 
 	if (m_bDoubletap)
-		pLocal->m_vecOrigin() = m_vOrigin;
+		pLocal->m_vecOrigin() = m_vOriginalOrigin;
 }
 
 /*
@@ -144,7 +146,7 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::Prediction->m_bFirstTimePredicted = false;
 	I::Prediction->m_bInPrediction = true;
 
-	S::CPredictableId_ResetInstanceCounters.As<void(__cdecl*)()>()();
+	S::CPredictableId_ResetInstanceCounters.Call<void>();
 	pLocal->SetCurrentCmd(pCmd);
 	*G::RandomSeed() = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
 	//I::MoveHelper->SetHost(pLocal);
@@ -162,13 +164,13 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 
 	//pLocal->UpdateButtonState(pCmd->buttons);
-	S::CBaseEntity_UpdateButtonState.As<void(__fastcall*)(void*, int)>()(pLocal, pCmd->buttons);
+	S::CBaseEntity_UpdateButtonState.Call<void>(pLocal, pCmd->buttons);
 
 	I::Prediction->SetLocalViewAngles(pCmd->viewangles);
 
 
 	//if (pLocal->PhysicsRunThink())
-	if (S::CBaseEntity_PhysicsRunThink.As<bool(__fastcall*)(void*, int)>()(pLocal, 0))
+	if (S::CBaseEntity_PhysicsRunThink.Call<bool>(pLocal, 0))
 		pLocal->PreThink();
 
 	{
@@ -176,7 +178,7 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 		if (iThinkTick > 0 && iThinkTick <= I::GlobalVars->tickcount)
 		{
 			//pLocal->SetNextThink(-1);
-			S::CBaseEntity_SetNextThink.As<void(__fastcall*)(void*, float, const char*)>()(pLocal, -1, nullptr);
+			S::CBaseEntity_SetNextThink.Call<void>(pLocal, -1, nullptr);
 			pLocal->Think();
 		}
 	}

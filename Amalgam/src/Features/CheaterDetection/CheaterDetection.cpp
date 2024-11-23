@@ -113,7 +113,7 @@ void CCheaterDetection::Run()
 		}
 
 		mData[pPlayer].friendsID = pi.friendsID;
-		mData[pPlayer].sName = pi.name;
+		mData[pPlayer].sName = F::PlayerUtils.GetPlayerName(pPlayer->entindex(), pi.name);
 		mData[pPlayer].vAngles.push_back({ pPlayer->GetEyeAngles(), mData[pPlayer].bDamage });
 		mData[pPlayer].bDamage = false;
 		if (mData[pPlayer].vAngles.size() > 3)

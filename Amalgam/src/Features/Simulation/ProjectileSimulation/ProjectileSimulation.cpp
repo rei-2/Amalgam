@@ -1,6 +1,8 @@
 #include "ProjectileSimulation.h"
 
-bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge)
+#include "../../EnginePrediction/EnginePrediction.h"
+
+bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge)
 {
 	if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsTaunting() || !pWeapon)
 		return false;
@@ -13,6 +15,58 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 	Vec3 vPos, vAngle;
 
+	if (!bQuick && G::CurrentUserCmd)
+	{
+		switch (pWeapon->GetWeaponID())
+		{
+		case TF_WEAPON_ROCKETLAUNCHER:
+		case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
+		case TF_WEAPON_PARTICLE_CANNON:
+		case TF_WEAPON_RAYGUN:
+		case TF_WEAPON_DRG_POMSON:
+		case TF_WEAPON_GRENADELAUNCHER:
+		case TF_WEAPON_PIPEBOMBLAUNCHER:
+		case TF_WEAPON_CANNON:
+		case TF_WEAPON_FLAREGUN:
+		case TF_WEAPON_FLAREGUN_REVENGE:
+		case TF_WEAPON_COMPOUND_BOW:
+		case TF_WEAPON_CROSSBOW:
+		case TF_WEAPON_SHOTGUN_BUILDING_RESCUE:
+		case TF_WEAPON_SYRINGEGUN_MEDIC:
+		case TF_WEAPON_GRAPPLINGHOOK:
+		{
+			float flOldCurrentTime = I::GlobalVars->curtime;
+			I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
+
+			SDK::RandomSeed(SDK::SeedFileLineHash(MD5_PseudoRandom(G::CurrentUserCmd->command_number) & 0x7FFFFFFF, "SelectWeightedSequence", 0));
+			for (int i = 0; i < 6; ++i)
+				SDK::RandomFloat();
+
+			Vec3 vAngAdd = pWeapon->GetSpreadAngles() - I::EngineClient->GetViewAngles();
+			switch (pWeapon->GetWeaponID())
+			{
+			case TF_WEAPON_COMPOUND_BOW:
+				if (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f && I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 5.0f)
+				{
+					vAngAdd.x += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
+					vAngAdd.y += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
+				}
+				break;
+			case TF_WEAPON_SYRINGEGUN_MEDIC:
+				vAngAdd.x += SDK::RandomFloat(-1.5f, 1.5f);
+				vAngAdd.y += SDK::RandomFloat(-1.5f, 1.5f);
+			}
+			if (!F::EnginePrediction.m_bInPrediction) // don't do angle stuff for aimbot, nospread will pick that up
+			{
+				vAngles += vAngAdd;
+				SDK::Output("Angles", std::format("{}, {}, {}", vAngles.x, vAngles.y, vAngles.z).c_str());
+			}
+
+			I::GlobalVars->curtime = flOldCurrentTime;
+		}
+		}
+	}
+
 	if (Vars::Visuals::Trajectory::Overwrite.Value)
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffX.Value, Vars::Visuals::Trajectory::OffY.Value, Vars::Visuals::Trajectory::OffZ.Value }, vPos, vAngle, !bTrace ? true : Vars::Visuals::Trajectory::Pipes.Value, bQuick);
@@ -22,8 +76,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 	switch (pWeapon->GetWeaponID())
 	{
-	case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
 	case TF_WEAPON_ROCKETLAUNCHER:
+	case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, int(SDK::AttribHookValue(0, "centerfire_projectile", pWeapon)) == 1 ? 0.f : 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		float flSpeed = pPlayer->IsPrecisionRune() ? 3000.f : SDK::AttribHookValue(1100.f, "mult_projectile_speed", pWeapon);
@@ -154,8 +208,17 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, -8.f, -3.f }, vPos, vAngle, false, bQuick);
 		static auto tf_grapplinghook_projectile_speed = U::ConVars.FindVar("tf_grapplinghook_projectile_speed");
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
-		const float flSpeed = tf_grapplinghook_projectile_speed ? tf_grapplinghook_projectile_speed->GetFloat() : 1500.f;
-		const float flLifetime = (tf_grapplinghook_max_distance ? tf_grapplinghook_max_distance->GetFloat() : 2000.f) / flSpeed;
+		float flSpeed = tf_grapplinghook_projectile_speed ? tf_grapplinghook_projectile_speed->GetFloat() : 1500.f;
+		if (pPlayer->IsAgilityRune())
+		{
+			switch (pPlayer->m_iClass())
+			{
+			case TF_CLASS_SOLDIER:
+			case TF_CLASS_HEAVY: flSpeed = 2600.f; break;
+			default: flSpeed = 3000.f;
+			}
+		}
+		float flLifetime = (tf_grapplinghook_max_distance ? tf_grapplinghook_max_distance->GetFloat() : 2000.f) / flSpeed;
 		out = { TF_PROJECTILE_GRAPPLINGHOOK, vPos, vAngle, { 1.2f, 1.2f, 1.2f }, flSpeed, 0.f, false, flLifetime };
 		return true;
 	}
@@ -178,22 +241,19 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	return false;
 }
 
-bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
+bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
 {
 	bool bTrace = iFlags & ProjSim_Trace;
 	bool InitCheck = iFlags & ProjSim_InitCheck;
 	bool bQuick = iFlags & ProjSim_Quick;
 
-	bool bReturn;
+	const float flOldCurrentTime = I::GlobalVars->curtime;
 	if (bQuick)
-	{
-		const float flOldCurrentTime = I::GlobalVars->curtime;
 		I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
-		bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, true, flAutoCharge);
+	bool bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, bQuick, flAutoCharge);
+	out.m_bQuick = bQuick;
+	if (bQuick)
 		I::GlobalVars->curtime = flOldCurrentTime;
-	}
-	else
-		bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, false, flAutoCharge);
 
 	if (!bReturn || !InitCheck)
 		return bReturn;
@@ -214,12 +274,11 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 
 	if (!obj)
 	{
-		//it doesn't matter what the size is for non drag affected projectiles
-		//pipes use the size below so it works out just fine
-		auto col{ I::PhysicsCollision->BBoxToCollide({ -2.f, -2.f, -2.f }, { 2.f, 2.f, 2.f }) };
+		// it doesn't matter what the size is for non drag affected projectiles
+		// pipes use the size below so it works out just fine
+		CPhysCollide* col = I::PhysicsCollision->BBoxToCollide({ -2.f, -2.f, -2.f }, { 2.f, 2.f, 2.f });
 
-		auto params{ g_PhysDefaultObjectParams };
-
+		objectparams_t params = g_PhysDefaultObjectParams;
 		params.damping = 0.f;
 		params.rotdamping = 0.f;
 		params.inertia = 0.f;
@@ -240,8 +299,8 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 		Vec3 vDragBasis = {};
 		Vec3 vAngDragBasis = {};
 
-		//these values were dumped from the server by firing the projectiles with 0 0 0 angles
-		//they are calculated in CPhysicsObject::RecomputeDragBases
+		// these values were dumped from the server by firing the projectiles with 0 0 0 angles
+		// they are calculated in CPhysicsObject::RecomputeDragBases
 		switch (info.m_iType)
 		{
 		case TF_PROJECTILE_NONE:
@@ -299,10 +358,8 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 
 	//set position and velocity
 	{
-		Vec3 vForward, vUp; Math::AngleVectors(info.m_vAng, &vForward, nullptr, &vUp);
-
-		Vec3 vVelocity = { vForward * info.m_flVelocity };
-		Vec3 vAngularVelocity;
+		Vec3 vForward, vRight, vUp; Math::AngleVectors(info.m_vAng, &vForward, &vRight, &vUp);
+		Vec3 vVelocity = vForward * info.m_flVelocity, vAngularVelocity;
 
 		switch (info.m_iType)
 		{
@@ -314,6 +371,12 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 		case TF_PROJECTILE_PIPEBOMB_REMOTE:
 		case TF_PROJECTILE_PIPEBOMB_PRACTICE:
 		case TF_PROJECTILE_CANNONBALL:
+			if (!info.m_bQuick && G::CurrentUserCmd)
+			{
+				vVelocity += vUp * 200.f + vUp * SDK::RandomFloat(-10.f, 10.f) + vRight * SDK::RandomFloat(-10.f, 10.f);
+				vAngularVelocity = { 600.f, float(SDK::RandomInt(-1200, 1200)), 0.f };
+				break;
+			}
 			vVelocity += vUp * 200.f;
 			vAngularVelocity = { 600.f, -1200.f, 0.f };
 			break;

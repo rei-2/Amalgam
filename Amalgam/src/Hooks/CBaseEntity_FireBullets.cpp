@@ -4,7 +4,7 @@
 
 MAKE_SIGNATURE(CBaseEntity_FireBullets, "client.dll", "48 89 74 24 ? 55 57 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? F3 41 0F 10 58", 0x0);
 
-MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void, __fastcall,
+MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 	void* rcx, CBaseCombatWeapon* pWeapon, const FireBulletsInfo_t& info, bool bDoEffects, int nDamageType, int nCustomDamageType)
 {
 	auto pLocal = H::Entities.GetLocal();

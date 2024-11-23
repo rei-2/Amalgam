@@ -5,13 +5,13 @@ MAKE_SIGNATURE(CTFInventoryManager_GetItemInLoadoutForClass, "client.dll", "48 8
 MAKE_SIGNATURE(CTFPlayerInventory_VerifyChangedLoadoutsAreValid, "client.dll", "41 56 48 83 EC ? 48 8B 05 ? ? ? ? 48 8D 54 24", 0x0);
 MAKE_SIGNATURE(CEquipSlotItemSelectionPanel_UpdateModelPanelsForSelection_GetItemInLoadoutForClass_Call, "client.dll", "48 85 C0 74 ? 48 8D 48 ? 48 8B 40 ? FF 50 ? 44 0B A0", 0x0);
 
-MAKE_HOOK(GenerateEquipRegionConflictMask, S::GenerateEquipRegionConflictMask(), uint32_t, __fastcall,
+MAKE_HOOK(GenerateEquipRegionConflictMask, S::GenerateEquipRegionConflictMask(), uint32_t,
 	int iClass, int iUpToSlot, int iIgnoreSlot)
 {
 	return Vars::Misc::Exploits::EquipRegionUnlock.Value ? 0 : CALL_ORIGINAL(iClass, iUpToSlot, iIgnoreSlot);
 }
 
-MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_GetItemInLoadoutForClass(), void*, __fastcall,
+MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_GetItemInLoadoutForClass(), void*,
 	void* rcx, int iClass, int iSlot, CSteamID* pID)
 {
 	static const auto dwDesired = S::CEquipSlotItemSelectionPanel_UpdateModelPanelsForSelection_GetItemInLoadoutForClass_Call();
@@ -20,7 +20,7 @@ MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_G
 	return dwRetAddr == dwDesired && Vars::Misc::Exploits::EquipRegionUnlock.Value ? nullptr : CALL_ORIGINAL(rcx, iClass, iSlot, pID);
 }
 
-MAKE_HOOK(CTFPlayerInventory_VerifyChangedLoadoutsAreValid, S::CTFPlayerInventory_VerifyChangedLoadoutsAreValid(), void, __fastcall,
+MAKE_HOOK(CTFPlayerInventory_VerifyChangedLoadoutsAreValid, S::CTFPlayerInventory_VerifyChangedLoadoutsAreValid(), void,
 	void* rcx)
 {
 	if (!Vars::Misc::Exploits::EquipRegionUnlock.Value)

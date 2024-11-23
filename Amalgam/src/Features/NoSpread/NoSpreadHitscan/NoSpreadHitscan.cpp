@@ -71,8 +71,11 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 	if (!Vars::Aimbot::General::NoSpread.Value || !I::EngineClient->IsInGame())
 		return Reset();
 
+	if (G::Choking)
+		return;
+
 	static Timer playerperfTimer{};
-	if (playerperfTimer.Run(50) && !m_bWaitingForPlayerPerf)
+	if (!m_bWaitingForPlayerPerf ? playerperfTimer.Run(50) : playerperfTimer.Run(2000))
 	{
 		I::ClientState->SendStringCmd("playerperf");
 		m_bWaitingForPlayerPerf = true;
@@ -85,9 +88,7 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 	if (!Vars::Aimbot::General::NoSpread.Value)
 		return false;
 
-	char rawMsg[256] = {};
-
-	msgData.ReadString(rawMsg, sizeof(rawMsg), true);
+	char rawMsg[256]; msgData.ReadString(rawMsg, sizeof(rawMsg), true);
 	msgData.Seek(0);
 
 	std::string msg(rawMsg);
@@ -113,7 +114,7 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 		m_vTimeDeltas.push_back(m_flServerTime - dRecieveTime + dResponseTime);
 		while (!m_vTimeDeltas.empty() && m_vTimeDeltas.size() > Vars::Aimbot::General::NoSpreadAverage.Value)
 			m_vTimeDeltas.pop_front();
-		m_dTimeDelta = std::reduce(m_vTimeDeltas.begin(), m_vTimeDeltas.end()) / m_vTimeDeltas.size() + TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value);
+		m_dTimeDelta = std::reduce(m_vTimeDeltas.begin(), m_vTimeDeltas.end()) / m_vTimeDeltas.size() + TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value + 1);
 
 		float flMantissaStep = CalcMantissaStep(m_flServerTime);
 		m_bSynced = flMantissaStep >= 1.f;
@@ -222,4 +223,6 @@ void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
 
 	H::Draw.StringOutlined(fFont, x, y, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Uptime {}", GetFormat(m_flServerTime)).c_str());
 	H::Draw.StringOutlined(fFont, x, y += nTall, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", m_flMantissaStep).c_str());
+	if (Vars::Debug::Info.Value)
+		H::Draw.StringOutlined(fFont, x, y += nTall, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Delta {:.6f}", m_dTimeDelta).c_str());
 }

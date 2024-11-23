@@ -4,10 +4,10 @@
 
 MAKE_SIGNATURE(CNetChannel_SendDatagram, "engine.dll", "40 55 57 41 56 48 8D AC 24", 0x0);
 
-MAKE_HOOK(CNetChannel_SendDatagram, S::CNetChannel_SendDatagram(), int, __fastcall,
+MAKE_HOOK(CNetChannel_SendDatagram, S::CNetChannel_SendDatagram(), int,
 	CNetChannel* pNetChan, bf_write* datagram)
 {
-	if (!pNetChan || datagram)
+	if (datagram)
 		return CALL_ORIGINAL(pNetChan, datagram);
 
 	F::Backtrack.AdjustPing(pNetChan);

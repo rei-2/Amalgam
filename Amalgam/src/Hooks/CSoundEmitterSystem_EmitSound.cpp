@@ -119,7 +119,7 @@ bool ShouldBlockSound(const char* pSound)
 	return false;
 }
 
-MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), void, __fastcall,
+MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), void,
 	void* rcx, IRecipientFilter& filter, int entindex, const EmitSound_t& ep)
 {
 	if (ShouldBlockSound(ep.m_pSoundName))
@@ -129,7 +129,7 @@ MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), voi
 }
 
 /*
-MAKE_HOOK(S_StartDynamicSound, S::S_StartDynamicSound(), int, __fastcall,
+MAKE_HOOK(S_StartDynamicSound, S::S_StartDynamicSound(), int,
 	StartSoundParams_t& params)
 {
 	H::Entities.ManualNetwork(params);
@@ -140,7 +140,7 @@ MAKE_HOOK(S_StartDynamicSound, S::S_StartDynamicSound(), int, __fastcall,
 }
 */
 
-MAKE_HOOK(S_StartSound, S::S_StartSound(), int, __fastcall,
+MAKE_HOOK(S_StartSound, S::S_StartSound(), int,
 	StartSoundParams_t& params)
 {
 	if (!params.staticsound)

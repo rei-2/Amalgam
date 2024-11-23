@@ -27,7 +27,7 @@ struct CriticalStorage_t
 	int m_nCritSeedRequests;
 };
 
-MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool, __fastcall,
+MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 	SVC_PacketEntities* entmsg)
 {
 	if (entmsg->m_bIsDelta) // we won't need to restore

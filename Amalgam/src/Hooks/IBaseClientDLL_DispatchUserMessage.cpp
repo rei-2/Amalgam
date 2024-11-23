@@ -3,14 +3,15 @@
 #include "../Features/Misc/Misc.h"
 #include "../Features/Records/Records.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
+#include "../Features/Misc/AutoVote/AutoVote.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL, 36), bool, __fastcall,
+MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL, 36), bool,
 	void* rcx, UserMessageType type, bf_read& msgData)
 {
-	const auto bufData = reinterpret_cast<const char*>(msgData.m_pData);
+	auto bufData = reinterpret_cast<const char*>(msgData.m_pData);
 	msgData.SetAssertOnOverflow(false);
 	msgData.Seek(0);
 
@@ -18,6 +19,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 	{
 	case VoteStart:
 		F::Records.UserMessage(msgData);
+		F::AutoVote.UserMessage(msgData);
 
 		break;
 	case VoiceSubtitle:
@@ -40,7 +42,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 			static std::string previous_name;
 
 			auto pNetChan = I::EngineClient->GetNetChannelInfo();
-			const std::string data(bufData);
+			std::string data(bufData);
 
 			if (data.find("TeamChangeP") != std::string::npos && H::Entities.GetLocal())
 			{

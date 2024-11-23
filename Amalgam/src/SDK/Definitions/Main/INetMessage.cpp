@@ -66,7 +66,6 @@ bool NET_SetConVar::ReadFromBuffer(bf_read& buffer)
         buffer.ReadString(var.Name, sizeof(var.Name));
         buffer.ReadString(var.Value, sizeof(var.Value));
         m_ConVars.AddToTail(var);
-
     }
     return !buffer.IsOverflowed();
 }

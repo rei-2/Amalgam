@@ -138,7 +138,7 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Hitscan)
 			CVarEnum(Hitboxes, 0b00111, NONE, Head = 1 << 0, Pelvis = 1 << 1, Body = 1 << 2, Arms = 1 << 3, Legs = 1 << 4)
-			CVarEnum(Modifiers, 0b0000000, NONE, Tapfire = 1 << 0, WaitForHeadshot = 1 << 1, WaitForCharge = 1 << 2, ScopedOnly = 1 << 3, AutoScope = 1 << 4, BodyaimIfLethal = 1 << 5, ExtinguishTeam = 1 << 6)
+			CVarEnum(Modifiers, 0b01000000, NONE, Tapfire = 1 << 0, WaitForHeadshot = 1 << 1, WaitForCharge = 1 << 2, ScopedOnly = 1 << 3, AutoScope = 1 << 4, BodyaimIfLethal = 1 << 5, AutoRev = 1 << 6, ExtinguishTeam = 1 << 7)
 			CVar(PointScale, 0.f)
 			CVar(TapFireDist, 1000.f)
 		SUBNAMESPACE_END(HITSCAN)
@@ -510,7 +510,7 @@ namespace Vars
 		SUBNAMESPACE_END(Bullet)
 
 		SUBNAMESPACE_BEGIN(Simulation)
-			Enum(Style, Off, Line, Separators, Spaced, Arrows);
+			Enum(Style, Off, Line, Separators, Spaced, Arrows, Boxes);
 			CVar(PlayerPath, 0, VISUAL)
 			CVar(ProjectilePath, 0, VISUAL)
 			CVar(TrajectoryPath, 0, VISUAL)
@@ -651,6 +651,8 @@ namespace Vars
 			CVar(TauntControl, false)
 			CVar(KartControl, false)
 			CVar(BackpackExpander, true)
+			CVar(AutoF2Ignored, false)
+			CVar(AutoF1Priority, false)
 		SUBNAMESPACE_END(Automation)
 
 		SUBNAMESPACE_BEGIN(Sound)

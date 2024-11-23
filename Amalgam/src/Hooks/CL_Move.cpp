@@ -3,13 +3,12 @@
 #include "../Features/TickHandler/TickHandler.h"
 #include "../Features/Binds/Binds.h"
 #include "../Features/Players/PlayerCore.h"
-#include "../Features/AutoQueue/AutoQueue.h"
-#include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
+#include "../Features/Misc/AutoQueue/AutoQueue.h"
 #include "../Features/Backtrack/Backtrack.h"
 
 MAKE_SIGNATURE(CL_Move, "engine.dll", "40 55 53 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E8 ? ? ? ? 48 2B E0 83 3D", 0x0);
 
-MAKE_HOOK(CL_Move, S::CL_Move(), void, __fastcall,
+MAKE_HOOK(CL_Move, S::CL_Move(), void,
 	float accumulated_extra_samples, bool bFinalTick)
 {
 	if (G::Unload)
@@ -26,8 +25,6 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void, __fastcall,
 
 	F::Ticks.Run(accumulated_extra_samples, bFinalTick, pLocal);
 	I::EngineClient->FireEvents();
-
-	F::NoSpreadHitscan.AskForPlayerPerf();
 
 	for (auto& Line : G::PathStorage)
 	{

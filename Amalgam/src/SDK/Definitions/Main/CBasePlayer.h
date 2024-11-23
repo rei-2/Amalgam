@@ -126,6 +126,6 @@ public:
 
 	inline int GetAmmoCount(int iAmmoType)
 	{
-		return S::CBasePlayer_GetAmmoCount.As<int(__fastcall*)(void*, int)>()(this, iAmmoType);
+		return S::CBasePlayer_GetAmmoCount.Call<int>(this, iAmmoType);
 	}
 };

@@ -2,7 +2,7 @@
 
 #include "../Features/Visuals/Visuals.h"
 
-MAKE_HOOK(CClientModeShared_OverrideView, U::Memory.GetVFunc(I::ClientModeShared, 16), void, __fastcall,
+MAKE_HOOK(CClientModeShared_OverrideView, U::Memory.GetVFunc(I::ClientModeShared, 16), void,
 	void* rcx, CViewSetup* pView)
 {
 	CALL_ORIGINAL(rcx, pView);

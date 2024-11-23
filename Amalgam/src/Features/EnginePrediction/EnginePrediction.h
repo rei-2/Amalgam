@@ -20,7 +20,7 @@ private:
 	float m_flOldFrameTime = 0.f;
 
 	bool m_bDoubletap = false;
-	Vec3 m_vOrigin = {};
+	Vec3 m_vOriginalOrigin = {};
 
 	std::unordered_map<CBaseEntity*, RestoreInfo_t> m_mRestore = {};
 
@@ -31,11 +31,13 @@ public:
 	void ScalePlayers(CBaseEntity* pLocal);
 	void RestorePlayers();
 
+	bool m_bInPrediction = false;
+
 	// localplayer use in net_update_end
-	Vec3 vOrigin = {};
-	Vec3 vVelocity = {};
-	Vec3 vDirection = {};
-	Vec3 vAngles = {};
+	Vec3 m_vOrigin = {};
+	Vec3 m_vVelocity = {};
+	Vec3 m_vDirection = {};
+	Vec3 m_vAngles = {};
 };
 
 ADD_FEATURE(CEnginePrediction, EnginePrediction)

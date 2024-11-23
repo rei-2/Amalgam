@@ -462,7 +462,7 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 		case ETFClassID::CTFProjectile_ThrowableBrick:
 		case ETFClassID::CTFProjectile_ThrowableRepel:
 		{
-			pOwner = pEntity->As<CBaseGrenade>()->m_hThrower().Get();
+			pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
 			break;
 		}
 		case ETFClassID::CTFBaseRocket:
@@ -488,7 +488,7 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 		case ETFClassID::CTFProjectile_EnergyRing:
 		//case ETFClassID::CTFProjectile_Syringe:
 		{
-			auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
+			auto pWeapon = pEntity->As<CTFBaseProjectile>()->m_hLauncher().Get();
 			pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
 			break;
 		}
@@ -553,20 +553,20 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			case ETFClassID::CTFProjectile_SpellTransposeTeleport: szName = "Teleport"; break;
 			//case ETFClassID::CTFProjectile_Throwable:
 			//case ETFClassID::CTFProjectile_ThrowableBrick:
-			//case ETFClassID::CTFProjectile_ThrowableRepel:
-			//case ETFClassID::CTFBaseRocket:
-			//case ETFClassID::CTFFlameRocket:
+			//case ETFClassID::CTFProjectile_ThrowableRepel: szName = "Throwable"; break;
 			case ETFClassID::CTFProjectile_Arrow: szName = "Arrow"; break;
 			case ETFClassID::CTFProjectile_GrapplingHook: szName = "Grapple"; break;
 			case ETFClassID::CTFProjectile_HealingBolt: szName = "Heal"; break;
+			//case ETFClassID::CTFBaseRocket:
+			//case ETFClassID::CTFFlameRocket:
 			case ETFClassID::CTFProjectile_Rocket:
+			case ETFClassID::CTFProjectile_EnergyBall:
 			case ETFClassID::CTFProjectile_SentryRocket: szName = "Rocket"; break;
 			case ETFClassID::CTFProjectile_BallOfFire: szName = "Fire"; break;
 			case ETFClassID::CTFProjectile_MechanicalArmOrb: szName = "Short circuit"; break;
 			case ETFClassID::CTFProjectile_SpellFireball: szName = "Fireball"; break;
 			case ETFClassID::CTFProjectile_SpellLightningOrb: szName = "Lightning"; break;
 			case ETFClassID::CTFProjectile_SpellKartOrb: szName = "Fist"; break;
-			//case ETFClassID::CTFProjectile_EnergyBall:
 			case ETFClassID::CTFProjectile_Flare: szName = "Flare"; break;
 			//case ETFClassID::CTFBaseProjectile:
 			case ETFClassID::CTFProjectile_EnergyRing: szName = "Energy"; break;
@@ -577,7 +577,58 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 
 		if (Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Flags)
 		{
-			// do stuff like crit here
+			switch (pEntity->GetClassID())
+			{
+			case ETFClassID::CTFWeaponBaseGrenadeProj:
+			case ETFClassID::CTFWeaponBaseMerasmusGrenade:
+			case ETFClassID::CTFGrenadePipebombProjectile:
+			case ETFClassID::CTFStunBall:
+			case ETFClassID::CTFBall_Ornament:
+			case ETFClassID::CTFProjectile_Jar:
+			case ETFClassID::CTFProjectile_Cleaver:
+			case ETFClassID::CTFProjectile_JarGas:
+			case ETFClassID::CTFProjectile_JarMilk:
+			case ETFClassID::CTFProjectile_SpellBats:
+			case ETFClassID::CTFProjectile_SpellKartBats:
+			case ETFClassID::CTFProjectile_SpellMeteorShower:
+			case ETFClassID::CTFProjectile_SpellMirv:
+			case ETFClassID::CTFProjectile_SpellPumpkin:
+			case ETFClassID::CTFProjectile_SpellSpawnBoss:
+			case ETFClassID::CTFProjectile_SpellSpawnHorde:
+			case ETFClassID::CTFProjectile_SpellSpawnZombie:
+			case ETFClassID::CTFProjectile_SpellTransposeTeleport:
+			case ETFClassID::CTFProjectile_Throwable:
+			case ETFClassID::CTFProjectile_ThrowableBreadMonster:
+			case ETFClassID::CTFProjectile_ThrowableBrick:
+			case ETFClassID::CTFProjectile_ThrowableRepel:
+				if (pEntity->As<CTFWeaponBaseGrenadeProj>()->m_bCritical())
+					tCache.m_vText.push_back({ TextRight, "CRIT", { 255, 100, 100, 255 }, { 0, 0, 0, 255 } });
+				break;
+			case ETFClassID::CTFProjectile_Arrow:
+			case ETFClassID::CTFProjectile_GrapplingHook:
+			case ETFClassID::CTFProjectile_HealingBolt:
+				if (pEntity->As<CTFProjectile_Arrow>()->m_bCritical())
+					tCache.m_vText.push_back({ TextRight, "CRIT", { 255, 100, 100, 255 }, { 0, 0, 0, 255 } });
+				break;
+			case ETFClassID::CTFProjectile_Rocket:
+			case ETFClassID::CTFProjectile_BallOfFire:
+			case ETFClassID::CTFProjectile_MechanicalArmOrb:
+			case ETFClassID::CTFProjectile_SentryRocket:
+			case ETFClassID::CTFProjectile_SpellFireball:
+			case ETFClassID::CTFProjectile_SpellLightningOrb:
+			case ETFClassID::CTFProjectile_SpellKartOrb:
+				if (pEntity->As<CTFProjectile_Rocket>()->m_bCritical())
+					tCache.m_vText.push_back({ TextRight, "CRIT", { 255, 100, 100, 255 }, { 0, 0, 0, 255 } });
+				break;
+			case ETFClassID::CTFProjectile_EnergyBall:
+				if (pEntity->As<CTFProjectile_EnergyBall>()->m_bChargedShot())
+					tCache.m_vText.push_back({ TextRight, "CHARGE", { 255, 100, 100, 255 }, { 0, 0, 0, 255 } });
+				break;
+			case ETFClassID::CTFProjectile_Flare:
+				if (pEntity->As<CTFProjectile_Flare>()->m_bCritical())
+					tCache.m_vText.push_back({ TextRight, "CRIT", { 255, 100, 100, 255 }, { 0, 0, 0, 255 } });
+				break;
+			}
 		}
 	}
 }

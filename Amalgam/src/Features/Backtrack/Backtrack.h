@@ -34,24 +34,20 @@ struct TickRecord
 
 class CBacktrack
 {
-	// logic
 	bool WithinRewind(const TickRecord& record);
 
-	// utils
 	void SendLerp();
 	void UpdateDatagram();
 	void MakeRecords();
 	void CleanRecords();
 
-	// data
 	std::unordered_map<int, bool> m_mDidShoot;
 
-	// data - fake latency
 	std::deque<CIncomingSequence> m_dSequences;
 	int m_iLastInSequence = 0;
-	int m_nInSequenceNr = 0;
-	int m_nInReliableState = 0;
 	int m_nOldInSequenceNr = 0;
+	int m_nOldInReliableState = 0;
+	int m_nLastInSequenceNr = 0;
 	int m_nOldTickBase = 0;
 
 public:

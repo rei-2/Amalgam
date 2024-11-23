@@ -8,7 +8,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 {
 	std::vector<Target_t> vTargets;
 
-	const Vec3 vLocalPos = pLocal->GetShootPos();
+	const Vec3 vLocalPos = F::Ticks.GetShootPos();
 	const Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
 	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
@@ -433,7 +433,7 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
 	{
 		pCmd->viewangles = vAngle;
-		I::EngineClient->SetViewAngles(pCmd->viewangles);
+		I::EngineClient->SetViewAngles(vAngle);
 	}
 	else if (G::Attacking == 1 || bDoubleTap)
 	{

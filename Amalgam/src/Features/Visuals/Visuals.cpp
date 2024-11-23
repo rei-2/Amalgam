@@ -1,5 +1,6 @@
 #include "Visuals.h"
 
+#include "../Aimbot/Aimbot.h"
 #include "../Visuals/PlayerConditions/PlayerConditions.h"
 #include "../Backtrack/Backtrack.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
@@ -43,8 +44,8 @@ void CVisuals::DrawTicks(CTFPlayer* pLocal)
 	const DragBox_t dtPos = Vars::Menu::TicksDisplay.Value;
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
-	int iTicks = G::ShiftedTicks + G::ChokeAmount;
-	float flRatio = float(std::clamp(iTicks, 0, G::MaxShift)) / G::MaxShift;
+	int iTicks = std::clamp(G::ShiftedTicks + G::ChokeAmount, 0, G::MaxShift);
+	float flRatio = float(iTicks) / G::MaxShift;
 	int iSizeX = H::Draw.Scale(100, Scale_Round), iSizeY = H::Draw.Scale(12, Scale_Round);
 	int iPosX = dtPos.x - iSizeX / 2, iPosY = dtPos.y + fFont.m_nTall + H::Draw.Scale(4) + 1;
 
@@ -562,6 +563,13 @@ void CVisuals::DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool 
 			}
 			break;
 		}
+		case Vars::Visuals::Simulation::StyleEnum::Boxes:
+		{
+			RenderLine(Line[i - 1], Line[i], Color, bZBuffer);
+			if (!(i % Vars::Visuals::Simulation::SeparatorSpacing.Value))
+				RenderBox(Line[i], { -1, -1, -1 }, { 1, 1, 1 }, {}, Color, { 0, 0, 0, 0 }, bZBuffer);
+			break;
+		}
 		}
 	}
 }
@@ -626,40 +634,25 @@ void CVisuals::DrawServerHitboxes(CTFPlayer* pLocal)
 
 	if (I::Input->CAM_IsThirdPerson() && Vars::Debug::ServerHitbox.Value && pLocal->IsAlive())
 	{
-		using GetServerAnimating_t = void* (*)(int);
-		static auto GetServerAnimating = S::GetServerAnimating.As<GetServerAnimating_t>();
-
-		using DrawServerHitboxes_t = void(__fastcall*)(void*, float, bool); // CBaseAnimating, Duration, MonoColour
-		static auto DrawServerHitboxes = S::DrawServerHitboxes.As<DrawServerHitboxes_t>();
-
-		void* server_animating = GetServerAnimating(pLocal->entindex());
-		if (server_animating)
-			DrawServerHitboxes(server_animating, TICK_INTERVAL, true);
+		auto pServerAnimating = S::GetServerAnimating.Call<void*>(pLocal->entindex());
+		if (pServerAnimating)
+			S::DrawServerHitboxes.Call<void>(pServerAnimating, TICK_INTERVAL, true);
 	}
 }
 
 void CVisuals::RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t cLine, bool bZBuffer)
 {
 	if (cLine.a)
-	{
-		static auto fnRenderLine = S::RenderLine.As<void(__cdecl*)(const Vector&, const Vector&, Color_t, bool)>();
-		fnRenderLine(vStart, vEnd, cLine, bZBuffer);
-	}
+		S::RenderLine.Call<void>(std::ref(vStart), std::ref(vEnd), cLine, bZBuffer);
 }
 
 void CVisuals::RenderBox(const Vec3& vPos, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vOrientation, Color_t cEdge, Color_t cFace, bool bZBuffer)
 {
 	if (cFace.a)
-	{
-		static auto fnRenderBox = S::RenderBox.As<void(__cdecl*)(const Vec3&, const Vec3&, const Vec3&, const Vec3&, Color_t, bool, bool)>();
-		fnRenderBox(vPos, vOrientation, vMins, vMaxs, cFace, bZBuffer, false);
-	}
+		S::RenderBox.Call<void>(std::ref(vPos), std::ref(vOrientation), std::ref(vMins), std::ref(vMaxs), cFace, bZBuffer, false);
 
 	if (cEdge.a)
-	{
-		static auto fnRenderWireframeBox = S::RenderWireframeBox.As<void(__cdecl*)(const Vec3&, const Vec3&, const Vec3&, const Vec3&, Color_t, bool)>();
-		fnRenderWireframeBox(vPos, vOrientation, vMins, vMaxs, cEdge, bZBuffer);
-	}
+		S::RenderWireframeBox.Call<void>(std::ref(vPos), std::ref(vOrientation), std::ref(vMins), std::ref(vMaxs), cEdge, bZBuffer);
 }
 
 
@@ -960,6 +953,9 @@ void CVisuals::RestoreWorldModulation()
 
 void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
+	if (Vars::Visuals::Simulation::ShotPath.Value && G::Attacking == 1 && !F::Aimbot.bRan)
+		F::Visuals.ProjectileTrace(pLocal, pWeapon, false);
+
 	{
 		static float flStaticRatio = 0.f;
 		float flOldRatio = flStaticRatio;
@@ -971,10 +967,7 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	}
 
 	if (pLocal && Vars::Visuals::Particles::SpellFootsteps.Value && (G::DoubleTap || G::Warp))
-	{
-		static auto fnFireEvent = S::CTFPlayer_FireEvent.As<void(__fastcall*)(void*, const Vector, const QAngle, int, const char*)>();
-		fnFireEvent(pLocal, pLocal->GetAbsOrigin(), {}, 7001, nullptr);
-	}
+		S::CTFPlayer_FireEvent.Call<void>(pLocal, pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);
 	
 	static uint32_t iOldMedigunBeam = 0, iOldMedigunCharge = 0;
 	uint32_t iNewMedigunBeam = FNV1A::Hash32(Vars::Visuals::Particles::MedigunBeam.Value.c_str()), iNewMedigunCharge = FNV1A::Hash32(Vars::Visuals::Particles::MedigunCharge.Value.c_str());
@@ -982,14 +975,9 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	{
 		if (pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
 		{
-			static auto fnUpdateEffects = S::CWeaponMedigun_UpdateEffects.As<void(__fastcall*)(void*)>();
-			fnUpdateEffects(pWeapon);
-
-			static auto fnStopChargeEffect = S::CWeaponMedigun_StopChargeEffect.As<void(__fastcall*)(void*)>();
-			fnStopChargeEffect(pWeapon);
-
-			static auto fnManageChargeEffect = S::CWeaponMedigun_StopChargeEffect.As<void(__fastcall*)(void*, bool)>();
-			fnManageChargeEffect(pWeapon, false);
+			S::CWeaponMedigun_UpdateEffects.Call<void>();
+			S::CWeaponMedigun_StopChargeEffect.Call<void>(pWeapon);
+			S::CWeaponMedigun_StopChargeEffect.Call<void>(pWeapon, false);
 		}
 
 		iOldMedigunBeam = iNewMedigunBeam;

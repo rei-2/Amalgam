@@ -424,38 +424,38 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked() || pPlayer->m_bFeignDeathReady())
+		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked())
 			continue;
 
 		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
-		if (!pWeapon || pWeapon->GetWeaponID() != TF_WEAPON_KNIFE && pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch && pWeapon->m_iItemDefinitionIndex() != Pyro_m_TheBackburner && pWeapon->m_iItemDefinitionIndex() != Pyro_m_FestiveBackburner)
-			continue;
-
-		PlayerInfo_t pi{};
-		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && F::PlayerUtils.IsIgnored(pi.friendsID))
+		if (!pWeapon
+			|| pWeapon->GetWeaponID() != TF_WEAPON_KNIFE
+			&& pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch
+			&& pWeapon->m_iItemDefinitionIndex() != Pyro_m_TheBackburner
+			&& pWeapon->m_iItemDefinitionIndex() != Pyro_m_FestiveBackburner
+			|| F::PlayerUtils.IsIgnored(pPlayer->entindex()))
 			continue;
 
 		Vec3 vTargetPos = pPlayer->GetCenter() + pPlayer->m_vecVelocity() * F::Backtrack.GetReal();
-		if (pLocal->GetCenter().DistTo(vTargetPos) > pLocal->TeamFortress_CalculateMaxSpeed() || !SDK::VisPos(pLocal, pPlayer, pLocal->GetCenter(), vTargetPos))
+		if (pLocal->GetCenter().DistTo(vTargetPos) > std::max(std::max(SDK::MaxSpeed(pPlayer), SDK::MaxSpeed(pLocal)), pPlayer->m_vecVelocity().Length()))
 			continue;
 
 		vTargets.push_back({ vTargetPos, pEntity });
 	}
+	if (vTargets.empty())
+		return 0;
 
 	std::sort(vTargets.begin(), vTargets.end(), [&](const auto& a, const auto& b) -> bool
 		{
 			return pLocal->GetCenter().DistTo(a.first) < pLocal->GetCenter().DistTo(b.first);
 		});
 
-	auto vTargetPos = vTargets.begin();
-	if (vTargetPos == vTargets.end())
-		return 0;
-
+	auto& pTargetPos = vTargets.front();
 	switch (Vars::Misc::Automation::AntiBackstab.Value)
 	{
 	case Vars::Misc::Automation::AntiBackstabEnum::Yaw:
 	{
-		Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), vTargetPos->first);
+		Vec3 vAngleTo = Math::CalcAngle(pLocal->m_vecOrigin(), pTargetPos.first);
 		vAngleTo.x = pCmd->viewangles.x;
 		SDK::FixMovement(pCmd, vAngleTo);
 		pCmd->viewangles = vAngleTo;
@@ -465,13 +465,13 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	case Vars::Misc::Automation::AntiBackstabEnum::Pitch:
 	case Vars::Misc::Automation::AntiBackstabEnum::Fake:
 	{
-		bool bCheater = F::PlayerUtils.HasTag(vTargetPos->second->entindex(), CHEATER_TAG);
+		bool bCheater = F::PlayerUtils.HasTag(pTargetPos.second->entindex(), CHEATER_TAG);
 		// if the closest spy is a cheater, assume auto stab is being used, otherwise don't do anything if target is in front
 		if (!bCheater)
 		{
 			auto TargetIsBehind = [&]()
 				{
-					Vec3 vToTarget = pLocal->m_vecOrigin() - vTargetPos->first;
+					Vec3 vToTarget = pLocal->m_vecOrigin() - pTargetPos.first;
 					vToTarget.z = 0.f;
 					const float flDist = vToTarget.Length();
 					if (!flDist)

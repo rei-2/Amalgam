@@ -8,7 +8,7 @@ static int ColorToInt(const Color_t& col)
     return col.r << 16 | col.g << 8 | col.b;
 }
 
-MAKE_HOOK(CAttributeManager_AttribHookInt, S::CAttributeManager_AttribHookInt(), int, __fastcall,
+MAKE_HOOK(CAttributeManager_AttribHookInt, S::CAttributeManager_AttribHookInt(), int,
 	int value, const char* name, void* econent, void* buffer, bool isGlobalConstString)
 {
 	static const auto dwDesired = S::CTFPlayer_FireEvent_AttribHookValue_Call();

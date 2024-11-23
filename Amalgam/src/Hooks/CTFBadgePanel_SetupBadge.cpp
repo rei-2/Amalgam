@@ -14,7 +14,7 @@ struct LevelInfo_t
 	const char* m_pszLobbyBackgroundImage;
 };
 
-MAKE_HOOK(CTFBadgePanel_SetupBadge, S::CTFBadgePanel_SetupBadge(), void, __fastcall,
+MAKE_HOOK(CTFBadgePanel_SetupBadge, S::CTFBadgePanel_SetupBadge(), void,
 	void* rdx, const IProgressionDesc* pProgress, /*const*/ LevelInfo_t& levelInfo, const CSteamID& steamID)
 {
 	//SDK::Output("SetupBadge", std::format("{}: {}", steamID.GetAccountID(), levelInfo.m_nLevelNum).c_str());

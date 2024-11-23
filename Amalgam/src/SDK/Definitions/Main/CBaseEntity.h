@@ -160,22 +160,22 @@ public:
 
 	inline void SetAbsOrigin(const Vec3& absOrigin)
 	{
-		S::CBaseEntity_SetAbsOrigin.As<void(__fastcall*)(void*, const Vec3&)>()(this, absOrigin);
+		S::CBaseEntity_SetAbsOrigin.Call<void>(this, std::ref(absOrigin));
 	}
 
 	inline void SetAbsAngles(const Vec3& absAngles)
 	{
-		S::CBaseEntity_SetAbsAngles.As<void(__fastcall*)(void*, const Vec3&)>()(this, absAngles);
+		S::CBaseEntity_SetAbsAngles.Call<void>(this, std::ref(absAngles));
 	}
 
 	inline void SetAbsVelocity(const Vec3& vecAbsVelocity)
 	{
-		S::CBaseEntity_SetAbsVelocity.As<void(__fastcall*)(void*, const Vec3&)>()(this, vecAbsVelocity);
+		S::CBaseEntity_SetAbsVelocity.Call<void>(this, std::ref(vecAbsVelocity));
 	}
 
 	inline void EstimateAbsVelocity(Vec3& vel)
 	{
-		S::CBaseEntity_EstimateAbsVelocity.As<void(__fastcall*)(void*, Vec3&)>()(this, vel);
+		S::CBaseEntity_EstimateAbsVelocity.Call<void>(this, std::ref(vel));
 	}
 
 	inline Vec3 GetAbsVelocity()
@@ -187,11 +187,11 @@ public:
 
 	inline void CreateShadow()
 	{
-		S::CBaseEntity_CreateShadow.As<void(__fastcall*)(void*)>()(this);
+		S::CBaseEntity_CreateShadow.Call<void>(this);
 	}
 
 	inline void InvalidateBoneCache()
 	{
-		S::CBaseEntity_InvalidateBoneCache.As<void(__fastcall*)(void*)>()(this);
+		S::CBaseEntity_InvalidateBoneCache.Call<void>(this);
 	}
 };

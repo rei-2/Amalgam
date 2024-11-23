@@ -38,7 +38,7 @@ public:
 	Vector					m_LightingOrigin;
 };
 
-MAKE_HOOK(CStaticPropMgr_ComputePropOpacity, S::CStaticPropMgr_ComputePropOpacity(), void, __fastcall,
+MAKE_HOOK(CStaticPropMgr_ComputePropOpacity, S::CStaticPropMgr_ComputePropOpacity(), void,
 	void* rcx, CStaticProp* pProp)
 {
 	if (Vars::Visuals::World::NoPropFade.Value && pProp)

@@ -276,7 +276,7 @@ public:
 
 	inline bool IsFriend()
 	{
-		return S::CTFPlayer_IsPlayerOnSteamFriendsList.As<bool(__fastcall*)(void*, void*)>()(this, this);
+		return S::CTFPlayer_IsPlayerOnSteamFriendsList.Call<bool>(this, this);
 	}
 
 	inline bool InCond(const ETFCond cond)
@@ -437,12 +437,12 @@ public:
 
 	inline float TeamFortress_CalculateMaxSpeed(bool bIgnoreSpecialAbility = false)
 	{
-		return S::TeamFortress_CalculateMaxSpeed.As<float(__fastcall*)(CTFPlayer*, bool)>()(this, bIgnoreSpecialAbility);
+		return S::TeamFortress_CalculateMaxSpeed.Call<float>(this, bIgnoreSpecialAbility);
 	}
 
 	inline void UpdateClientSideAnimation()
 	{
-		S::CTFPlayer_UpdateClientSideAnimation.As<void(__fastcall*)(void*)>()(this);
+		S::CTFPlayer_UpdateClientSideAnimation.Call<void>(this);
 	}
 
 	inline float GetCritMult()
@@ -452,7 +452,7 @@ public:
 
 	inline void UpdateWearables()
 	{
-		S::CTFPlayer_UpdateWearables.As<void(__fastcall*)(void*)>()(this);
+		S::CTFPlayer_UpdateWearables.Call<void>(this);
 	}
 
 	inline void ThirdPersonSwitch(/*bool bThirdperson*/)

@@ -2,7 +2,7 @@
 
 MAKE_SIGNATURE(CTFWeaponBase_GetShootSound, "client.dll", "40 55 56 41 56 48 83 EC ? 80 B9", 0x0);
 
-MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const char*, __fastcall,
+MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const char*,
 	void* rcx, int iIndex)
 {
 	if (Vars::Misc::Sound::GiantWeaponSounds.Value)

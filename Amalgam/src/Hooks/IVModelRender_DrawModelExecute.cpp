@@ -8,7 +8,7 @@ MAKE_SIGNATURE(CBaseAnimating_DrawModel, "client.dll", "4C 8B DC 49 89 5B ? 89 5
 MAKE_SIGNATURE(CEconEntity_DrawOverriddenViewmodel_DrawModel_Call, "client.dll", "41 8B D5 FF 50 ? 8B 97", 0x6);
 MAKE_SIGNATURE(CBaseAnimating_InternalDrawModel, "client.dll", "48 8B C4 55 56 48 8D 6C 24 ? 48 81 EC ? ? ? ? 44 8B 81", 0x0);
 
-MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVFunc(I::ModelRender, 19), void, __fastcall,
+MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVFunc(I::ModelRender, 19), void,
 	void* rcx, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
 	/*
@@ -46,7 +46,7 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVFunc(I::ModelRender, 19)
 
 static bool bDrawingViewmodel = false;
 
-MAKE_HOOK(CBaseAnimating_DrawModel, S::CBaseAnimating_DrawModel(), int, __fastcall,
+MAKE_HOOK(CBaseAnimating_DrawModel, S::CBaseAnimating_DrawModel(), int,
 	void* rcx, int flags)
 {
 	static const auto dwDrawModel = S::CEconEntity_DrawOverriddenViewmodel_DrawModel_Call();
@@ -61,7 +61,7 @@ MAKE_HOOK(CBaseAnimating_DrawModel, S::CBaseAnimating_DrawModel(), int, __fastca
 	return iReturn;
 }
 
-MAKE_HOOK(CBaseAnimating_InternalDrawModel, S::CBaseAnimating_InternalDrawModel(), int, __fastcall,
+MAKE_HOOK(CBaseAnimating_InternalDrawModel, S::CBaseAnimating_InternalDrawModel(), int,
 	void* rcx, int flags)
 {
 	if (!bDrawingViewmodel || !(flags & STUDIO_RENDER))

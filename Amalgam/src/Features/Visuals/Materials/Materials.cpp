@@ -8,7 +8,7 @@
 
 IMaterial* CMaterials::Create(char const* szName, KeyValues* pKV)
 {
-	SDK::Output("LoadMaterials", "CreateMaterial", {}, false, false, false, true);
+		SDK::Output("LoadMaterials", "CreateMaterial", {}, false, false, false, true);
 	IMaterial* pMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
 	m_mMatList[pMaterial] = true;
 	return pMaterial;
@@ -162,16 +162,16 @@ void CMaterials::LoadMaterials()
 	// create materials
 	for (auto& [_, mat] : m_mMaterials)
 	{
-		SDK::Output("LoadMaterials", mat.m_sName.c_str(), {}, false, false, false, true);
+			SDK::Output("LoadMaterials", mat.m_sName.c_str(), {}, false, false, false, true);
 		KeyValues* kv = new KeyValues(mat.m_sName.c_str());
 		kv->LoadFromBuffer(mat.m_sName.c_str(), mat.m_sVMT.c_str());
 		kv->SetString("$model", "1"); // prevent wacko chams
 		mat.m_pMaterial = Create(std::format("m_pMat%s", mat.m_sName).c_str(), kv);
 	}
 
-	SDK::Output("LoadMaterials", "Glow.Initialize();", {}, false, false, false, true);
+		SDK::Output("LoadMaterials", "Glow.Initialize();", {}, false, false, false, true);
 	F::Glow.Initialize();
-	SDK::Output("LoadMaterials", "CameraWindow.Initialize();", {}, false, false, false, true);
+		SDK::Output("LoadMaterials", "CameraWindow.Initialize();", {}, false, false, false, true);
 	F::CameraWindow.Initialize();
 
 	m_bLoaded = true;

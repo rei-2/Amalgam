@@ -2,7 +2,7 @@
 
 #include "../Features/Visuals/Materials/Materials.h"
 
-MAKE_HOOK(CViewRender_LevelShutdown, U::Memory.GetVFunc(I::ViewRender, 2), void, __fastcall,
+MAKE_HOOK(CViewRender_LevelShutdown, U::Memory.GetVFunc(I::ViewRender, 2), void,
 	void* rcx)
 {
 	F::Materials.UnloadMaterials();

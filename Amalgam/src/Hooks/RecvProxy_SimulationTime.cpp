@@ -9,7 +9,7 @@ static int GetNetworkBase(int nTick, int nEntity)
 	return nBaseTick;
 }
 
-MAKE_HOOK(RecvProxy_SimulationTime, S::RecvProxy_SimulationTime(), void, __fastcall,
+MAKE_HOOK(RecvProxy_SimulationTime, S::RecvProxy_SimulationTime(), void,
 	const CRecvProxyData* pData, void* pStruct, void* pOut)
 {
 	auto pEntity = reinterpret_cast<CBaseEntity*>(pStruct);

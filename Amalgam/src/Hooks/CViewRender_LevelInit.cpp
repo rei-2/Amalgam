@@ -7,7 +7,7 @@
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "../Features/TickHandler/TickHandler.h"
 
-MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void, __fastcall,
+MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
 	void* rcx)
 {
 	F::Materials.ReloadMaterials();

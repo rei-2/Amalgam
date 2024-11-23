@@ -2,7 +2,7 @@
 
 #include "../Features/Visuals/Visuals.h"
 
-MAKE_HOOK(CClientModeShared_ShouldDrawViewModel, U::Memory.GetVFunc(I::ClientModeShared, 24), bool, __fastcall,
+MAKE_HOOK(CClientModeShared_ShouldDrawViewModel, U::Memory.GetVFunc(I::ClientModeShared, 24), bool,
 	void* rcx)
 {
 	auto pLocal = H::Entities.GetLocal();

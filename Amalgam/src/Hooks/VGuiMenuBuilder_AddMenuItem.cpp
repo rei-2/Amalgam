@@ -12,7 +12,7 @@ static int PlayerIndex;
 static uint32_t FriendsID;
 static std::string PlayerName;
 
-MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool, __fastcall,
+MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
     void* rcx, int playerIndex)
 {
     static const auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_IsPlayerBlocked_Call();
@@ -24,7 +24,7 @@ MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
     return CALL_ORIGINAL(rcx, playerIndex);
 }
 
-MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*, __fastcall,
+MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
     void* rcx, const char* pszButtonText, const char* pszCommand, const char* pszCategoryName)
 {
     static const auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuItem_Call();
@@ -54,7 +54,7 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*, 
     return CALL_ORIGINAL(rcx, pszButtonText, pszCommand, pszCategoryName);
 }
 
-MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCommand(), void, __fastcall,
+MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCommand(), void,
     void* rcx, const char* command)
 {
     if (!Vars::Visuals::UI::ScoreboardUtility.Value)

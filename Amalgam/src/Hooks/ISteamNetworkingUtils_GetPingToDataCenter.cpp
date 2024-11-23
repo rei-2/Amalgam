@@ -52,7 +52,7 @@ unsigned int GetDatacenter(uint32_t uHash)
 	return 0;
 }
 
-MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::SteamNetworkingUtils, 8), int, __fastcall,
+MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::SteamNetworkingUtils, 8), int,
 	void* rcx, SteamNetworkingPOPID popID, SteamNetworkingPOPID* pViaRelayPoP)
 {
 	int iReturn = CALL_ORIGINAL(rcx, popID, pViaRelayPoP);
@@ -67,13 +67,13 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 	return iReturn;
 }
 
-MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueForMatch(), void, __fastcall,
+MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueForMatch(), void,
 	void* rcx, int eMatchGroup)
 {
 	//if (Vars::Misc::Queueing::ForceRegions.Value)
 	{
 		*reinterpret_cast<bool*>(uintptr_t(I::TFGCClientSystem) + 1116) = true;
-		S::CTFGCClientSystem_PingThink.As<void(__fastcall*)(void*)>()(I::TFGCClientSystem);
+		S::CTFGCClientSystem_PingThink.Call<void>(I::TFGCClientSystem);
 	}
 
 	CALL_ORIGINAL(rcx, eMatchGroup);

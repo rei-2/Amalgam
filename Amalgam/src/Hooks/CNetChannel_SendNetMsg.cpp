@@ -6,7 +6,7 @@
 
 MAKE_SIGNATURE(CNetChan_SendNetMsg, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 48 8B F1 45 0F B6 F1", 0x0);
 
-MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool, __fastcall,
+MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 	CNetChannel* pNetChan, INetMessage& msg, bool bForceReliable, bool bVoice)
 {
 	switch (msg.GetType())
@@ -117,7 +117,7 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool, __fastcall,
 			{
 				SDK::Output("clc_Move", std::format("{:d} sent <{:d} | {:d}>, max was {:d}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
 				G::ShiftedTicks = G::ShiftedGoal -= iCmdCount - iAllowedNewCommands;
-				F::Ticks.iDeficit = iCmdCount - iAllowedNewCommands;
+				F::Ticks.m_iDeficit = iCmdCount - iAllowedNewCommands;
 			}
 		}
 

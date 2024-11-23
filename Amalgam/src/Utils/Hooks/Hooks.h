@@ -18,24 +18,31 @@ public:
 		MH_CreateHook(pSrc, pDst, &m_pOriginal);
 	}
 
-	template <typename fn> inline fn Original()
+	template <typename T>
+	inline T As() const
 	{
-		return reinterpret_cast<fn>(m_pOriginal);
+		return reinterpret_cast<T>(m_pOriginal);
+	}
+
+	template <typename T, typename... Args>
+	inline T Call(Args... args) const
+	{
+		return reinterpret_cast<T(__fastcall*)(Args...)>(m_pOriginal)(args...);
 	}
 };
 
-#define MAKE_HOOK(name, address, type, callconvo, ...) namespace Hooks \
+#define MAKE_HOOK(name, address, type, ...) namespace Hooks \
 {\
 	namespace name\
 	{\
 		void Init(); \
 		inline CHook Hook(#name, Init); \
-		using FN = type(callconvo *)(__VA_ARGS__); \
-		type callconvo Func(__VA_ARGS__); \
+		using FN = type(__fastcall*)(__VA_ARGS__); \
+		type __fastcall Func(__VA_ARGS__); \
 	}\
 } \
 void Hooks::name::Init() { Hook.Create(reinterpret_cast<void*>(address), Func); } \
-type callconvo Hooks::name::Func(__VA_ARGS__)
+type __fastcall Hooks::name::Func(__VA_ARGS__)
 
 class CHooks
 {
@@ -49,4 +56,4 @@ public:
 
 ADD_FEATURE_CUSTOM(CHooks, Hooks, U);
 
-#define CALL_ORIGINAL Hook.Original<FN>()
+#define CALL_ORIGINAL Hook.As<FN>()

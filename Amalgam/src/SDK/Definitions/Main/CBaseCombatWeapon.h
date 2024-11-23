@@ -28,6 +28,6 @@ public:
 
 	inline bool HasAmmo()
 	{
-		return S::CBaseCombatWeapon_HasAmmo.As<bool(__fastcall*)(void*)>()(this);
+		return S::CBaseCombatWeapon_HasAmmo.Call<bool>(this);
 	}
 };

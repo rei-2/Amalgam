@@ -5,6 +5,7 @@
 #include "../Features/EnginePrediction/EnginePrediction.h"
 #include "../Features/Misc/Misc.h"
 #include "../Features/NoSpread/NoSpread.h"
+#include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "../Features/PacketManip/PacketManip.h"
 #include "../Features/Resolver/Resolver.h"
 #include "../Features/TickHandler/TickHandler.h"
@@ -13,7 +14,7 @@
 
 MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
 
-MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 21), bool, __fastcall,
+MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 21), bool,
 	CClientModeShared* rcx, float flInputSampleTime, CUserCmd* pCmd)
 {
 	G::Buttons = pCmd ? pCmd->buttons : G::Buttons;
@@ -68,7 +69,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				{
 					// do this, otherwise it will be a tick behind
 					float flFrametime = TICK_INTERVAL * 100;
-					float flMeterMult = S::IHasGenericMeter_GetMeterMultiplier.As<float(__fastcall*)(void*)>()(reinterpret_cast<void*>(uintptr_t(pWeapon) + 3928));
+					float flMeterMult = S::IHasGenericMeter_GetMeterMultiplier.Call<float>(pWeapon->m_pMeter());
 					float flRate = SDK::AttribHookValue(1.f, "item_meter_charge_rate", pWeapon) - 1;
 					float flMult = SDK::AttribHookValue(1.f, "mult_item_meter_charge_rate", pWeapon);
 					float flTankPressure = pLocal->m_flTankPressure() + flFrametime * flMeterMult / (flRate * flMult);
@@ -172,6 +173,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 
 	G::Choking = !*pSendPacket;
 	G::LastUserCmd = pCmd;
+	F::NoSpreadHitscan.AskForPlayerPerf();
 
 	//const bool bShouldSkip = G::PSilentAngles || G::SilentAngles || G::AntiAim || G::AvoidingBackstab;
 	//return bShouldSkip ? false : CALL_ORIGINAL(rcx, edx, input_sample_frametime, pCmd);

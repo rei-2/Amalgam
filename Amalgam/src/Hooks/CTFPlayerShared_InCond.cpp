@@ -7,7 +7,7 @@ MAKE_SIGNATURE(CHudScope_ShouldDraw_InCond_Call, "client.dll", "84 C0 74 ? 48 8B
 MAKE_SIGNATURE(CTFPlayer_CreateMove_InCond_Call, "client.dll", "84 C0 74 ? 4C 8B C3", 0x0);
 MAKE_SIGNATURE(CTFInput_ApplyMouse_InCond_Call, "client.dll", "84 C0 74 ? F3 0F 10 9B", 0x0);
 
-MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool, __fastcall,
+MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool,
 	void* rcx, ETFCond nCond)
 {
 	static const auto dwPlayer = S::CTFPlayer_ShouldDraw_InCond_Call();

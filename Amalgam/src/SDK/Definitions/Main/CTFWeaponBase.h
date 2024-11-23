@@ -195,6 +195,7 @@ public:
 	NETVAR_OFF(m_flCritTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", -4);
 	NETVAR_OFF(m_iCurrentSeed, int, "CTFWeaponBase", "m_flLastCritCheckTime", 8);
 	NETVAR_OFF(m_flLastRapidFireCritCheckTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", 12);
+	NETVAR_OFF(m_pMeter, void*, "CTFWeaponBase", "m_flEffectBarRegenTime", -40);
 
 	VIRTUAL(GetSlot, int, int(__fastcall*)(void*), this, 330);
 	VIRTUAL(GetWeaponID, int, int(__fastcall*)(void*), this, 381);
@@ -344,7 +345,7 @@ public:
 
 	inline void GetSpreadAngles(Vec3& out)
 	{
-		S::CTFWeaponBase_GetSpreadAngles.As<void(__fastcall*)(void*, Vec3&)>()(this, out);
+		S::CTFWeaponBase_GetSpreadAngles.Call<void>(this, std::ref(out));
 	}
 
 	inline Vec3 GetSpreadAngles()
@@ -356,7 +357,7 @@ public:
 
 	inline void UpdateAllViewmodelAddons()
 	{
-		return S::CTFWeaponBase_UpdateAllViewmodelAddons.As<void(__fastcall*)(void*)>()(this);
+		return S::CTFWeaponBase_UpdateAllViewmodelAddons.Call<void>(this);
 	}
 
 	inline float ApplyFireDelay(float flDelay)
@@ -366,22 +367,22 @@ public:
 
 	inline bool CalcIsAttackCriticalHelperMelee()
 	{
-		return S::CTFWeaponBaseMelee_CalcIsAttackCriticalHelper.As<bool(__fastcall*)(void*)>()(this);
+		return S::CTFWeaponBaseMelee_CalcIsAttackCriticalHelper.Call<bool>(this);
 	}
 
 	inline bool CalcIsAttackCriticalHelper()
 	{
-		return S::CTFWeaponBase_CalcIsAttackCriticalHelper.As<bool(__fastcall*)(void*)>()(this);
+		return S::CTFWeaponBase_CalcIsAttackCriticalHelper.Call<bool>(this);
 	}
 
 	inline CBaseAnimating* GetAppropriateWorldOrViewModel()
 	{
-		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.As<CBaseAnimating * (__fastcall*)(void*)>()(this);
+		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.Call<CBaseAnimating*>(this);
 	}
 
 	inline float GetWeaponSpread()
 	{
-		return S::CTFWeaponBaseGun_GetWeaponSpread.As<float(__fastcall*)(void*)>()(this);
+		return S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(this);
 	}
 
 	CHudTexture* GetWeaponIcon();

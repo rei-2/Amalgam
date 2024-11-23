@@ -323,8 +323,12 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					PlayerInfo_t pi{};
 					if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && !pi.fakeplayer)
 					{
-						H::Draw.Avatar(x, y, iSize, iSize, pi.friendsID);
-						break;
+						int iType = 0; F::PlayerUtils.GetPlayerName(pPlayer->entindex(), nullptr, &iType);
+						if (iType != 1)
+						{
+							H::Draw.Avatar(x, y, iSize, iSize, pi.friendsID);
+							break;
+						}
 					}
 					[[fallthrough]];
 				}

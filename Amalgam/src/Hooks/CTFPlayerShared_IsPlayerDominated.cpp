@@ -4,7 +4,7 @@ MAKE_SIGNATURE(CTFPlayerShared_IsPlayerDominated, "client.dll", "48 89 5C 24 ? 4
 MAKE_SIGNATURE(CTFClientScoreBoardDialog_UpdatePlayerList_IsPlayerDominated_Call, "client.dll", "84 C0 74 ? 45 84 FF 74", 0x0);
 MAKE_SIGNATURE(CTFClientScoreBoardDialog_UpdatePlayerList_Jump, "client.dll", "8B E8 E8 ? ? ? ? 3B C7", 0x0);
 
-MAKE_HOOK(CTFPlayerShared_IsPlayerDominated, S::CTFPlayerShared_IsPlayerDominated(), bool, __fastcall,
+MAKE_HOOK(CTFPlayerShared_IsPlayerDominated, S::CTFPlayerShared_IsPlayerDominated(), bool,
 	void* rcx, int index)
 {
 	static const auto dwDesired = S::CTFClientScoreBoardDialog_UpdatePlayerList_IsPlayerDominated_Call();

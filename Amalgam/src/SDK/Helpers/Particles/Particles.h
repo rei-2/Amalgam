@@ -63,14 +63,12 @@ class CParticles
 public:
 	inline void DispatchEffect(const char* pName, const CEffectData& data)
 	{
-		static auto fnDispatchEffect = S::CTE_DispatchEffect.As<int(__cdecl*)(const char*, const CEffectData&)>();
-		fnDispatchEffect(pName, data);
+		S::CTE_DispatchEffect.Call<int>(pName, std::ref(data));
 	}
 
 	inline int GetParticleSystemIndex(const char* pParticleSystemName)
 	{
-		static auto fnGetParticleSystemIndex = S::Get_ParticleSystemIndex.As<int(__cdecl*)(const char*)>();
-		return fnGetParticleSystemIndex(pParticleSystemName);
+		return S::Get_ParticleSystemIndex.Call<int>(pParticleSystemName);
 	}
 
 	inline void DispatchParticleEffect(int iEffectIndex, const Vec3& vecOrigin, const Vec3& vecStart, const Vec3& vecAngles, CBaseEntity* pEntity = nullptr)
@@ -103,8 +101,7 @@ public:
 
 	inline void ParticleTracer(const char* pszTracerEffectName, const Vector& vecStart, const Vector& vecEnd, int iEntIndex, int iAttachment, bool bWhiz)
 	{
-		static auto fnParticleTracer = S::UTIL_ParticleTracer.As<void(__cdecl*)(const char*, const Vec3&, const Vec3&, int, int, bool)>();
-		fnParticleTracer(pszTracerEffectName, vecStart, vecEnd, iEntIndex, iAttachment, bWhiz);
+		S::UTIL_ParticleTracer.Call<void>(pszTracerEffectName, std::ref(vecStart), std::ref(vecEnd), iEntIndex, iAttachment, bWhiz);
 	}
 };
 

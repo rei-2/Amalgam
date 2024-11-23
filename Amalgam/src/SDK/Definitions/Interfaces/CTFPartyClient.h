@@ -10,17 +10,17 @@ class CTFPartyClient
 public:
 	void LoadSavedCasualCriteria()
 	{
-		return S::CTFPartyClient_LoadSavedCasualCriteria.As<void(__fastcall*)(void*)>()(this);
+		return S::CTFPartyClient_LoadSavedCasualCriteria.Call<void>(this);
 	}
 
 	bool BInQueueForMatchGroup(int eMatchGroup)
 	{
-		return S::CTFPartyClient_BInQueueForMatchGroup.As<bool(__fastcall*)(void*, int)>()(this, eMatchGroup);
+		return S::CTFPartyClient_BInQueueForMatchGroup.Call<bool>(this, eMatchGroup);
 	}
 
 	void RequestQueueForMatch(int eMatchGroup)
 	{
-		return S::CTFPartyClient_RequestQueueForMatch.As<void(__fastcall*)(void*, int)>()(this, eMatchGroup);
+		return S::CTFPartyClient_RequestQueueForMatch.Call<void>(this, eMatchGroup);
 	}
 };
 

@@ -12,7 +12,7 @@ MAKE_SIGNATURE(CTFClientScoreBoardDialog_UpdatePlayerList_SetItemFgColor_Call, "
 
 static int CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex;
 
-MAKE_HOOK(CTFClientScoreBoardDialog_UpdatePlayerAvatar, S::CTFClientScoreBoardDialog_UpdatePlayerAvatar(), void, __fastcall,
+MAKE_HOOK(CTFClientScoreBoardDialog_UpdatePlayerAvatar, S::CTFClientScoreBoardDialog_UpdatePlayerAvatar(), void,
 	void* rcx, int playerIndex, KeyValues* kv)
 {
 	CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex = playerIndex;
@@ -22,7 +22,7 @@ MAKE_HOOK(CTFClientScoreBoardDialog_UpdatePlayerAvatar, S::CTFClientScoreBoardDi
 		CALL_ORIGINAL(rcx, playerIndex, kv);
 }
 
-MAKE_HOOK(CTFMatchSummary_UpdatePlayerAvatar, S::CTFMatchSummary_UpdatePlayerAvatar(), void, __fastcall,
+MAKE_HOOK(CTFMatchSummary_UpdatePlayerAvatar, S::CTFMatchSummary_UpdatePlayerAvatar(), void,
 	void* rcx, int playerIndex, KeyValues* kv)
 {
 	int iType = 0; F::PlayerUtils.GetPlayerName(playerIndex, nullptr, &iType);
@@ -30,7 +30,7 @@ MAKE_HOOK(CTFMatchSummary_UpdatePlayerAvatar, S::CTFMatchSummary_UpdatePlayerAva
 		CALL_ORIGINAL(rcx, playerIndex, kv);
 }
 
-MAKE_HOOK(CTFHudMannVsMachineScoreboard_UpdatePlayerAvatar, S::CTFHudMannVsMachineScoreboard_UpdatePlayerAvatar(), void, __fastcall,
+MAKE_HOOK(CTFHudMannVsMachineScoreboard_UpdatePlayerAvatar, S::CTFHudMannVsMachineScoreboard_UpdatePlayerAvatar(), void,
 	void* rcx, int playerIndex, KeyValues* kv)
 {
 	int iType = 0; F::PlayerUtils.GetPlayerName(playerIndex, nullptr, &iType);
@@ -38,7 +38,7 @@ MAKE_HOOK(CTFHudMannVsMachineScoreboard_UpdatePlayerAvatar, S::CTFHudMannVsMachi
 		CALL_ORIGINAL(rcx, playerIndex, kv);
 }
 
-MAKE_HOOK(CTFHudMatchStatus_UpdatePlayerAvatar, S::CTFHudMatchStatus_UpdatePlayerAvatar(), void, __fastcall,
+MAKE_HOOK(CTFHudMatchStatus_UpdatePlayerAvatar, S::CTFHudMatchStatus_UpdatePlayerAvatar(), void,
 	void* rcx, int playerIndex, KeyValues* kv)
 {
 	int iType = 0; F::PlayerUtils.GetPlayerName(playerIndex, nullptr, &iType);
@@ -46,7 +46,7 @@ MAKE_HOOK(CTFHudMatchStatus_UpdatePlayerAvatar, S::CTFHudMatchStatus_UpdatePlaye
 		CALL_ORIGINAL(rcx, playerIndex, kv);
 }
 
-MAKE_HOOK(SectionedListPanel_SetItemFgColor, S::SectionedListPanel_SetItemFgColor(), void, __fastcall,
+MAKE_HOOK(SectionedListPanel_SetItemFgColor, S::SectionedListPanel_SetItemFgColor(), void,
 	void* rcx, int itemID, Color_t color)
 {
 	static const auto dwDesired = S::CTFClientScoreBoardDialog_UpdatePlayerList_SetItemFgColor_Call();

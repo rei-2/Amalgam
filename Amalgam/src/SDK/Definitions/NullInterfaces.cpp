@@ -9,7 +9,7 @@ MAKE_SIGNATURE(Get_SteamNetworkingUtils, "client.dll", "40 53 48 83 EC ? 48 8B D
 
 void CNullInterfaces::Initialize()
 {
-	I::TFPartyClient = S::Get_TFPartyClient.As<CTFPartyClient*(__cdecl*)()>()();
+	I::TFPartyClient = S::Get_TFPartyClient.Call<CTFPartyClient*>();
 	Validate(I::TFPartyClient);
 
 	const HSteamPipe hsNewPipe = I::SteamClient->CreateSteamPipe();
@@ -33,6 +33,6 @@ void CNullInterfaces::Initialize()
 	I::SteamUser = I::SteamClient->GetISteamUser(hsNewUser, hsNewPipe, STEAMUSER_INTERFACE_VERSION);
 	Validate(I::SteamUser);
 
-	S::Get_SteamNetworkingUtils.As<ISteamNetworkingUtils*(__fastcall*)(ISteamNetworkingUtils**)>()(&I::SteamNetworkingUtils);
+	S::Get_SteamNetworkingUtils.Call<ISteamNetworkingUtils*>(&I::SteamNetworkingUtils);
 	Validate(I::SteamNetworkingUtils);
 }
