@@ -91,9 +91,9 @@ struct EmitSound_t
 	mutable short		m_hSoundScriptHandle;
 };
 
-const static std::vector<const char*> vNoisemaker = { "items\\halloween", "items\\football_manager", "items\\japan_fundraiser", "items\\samurai", "items\\summer", "misc\\happy_birthday_tf", "misc\\jingle_bells" };
+const static std::vector<const char*> vNoisemaker = { "items\\halloween", "items\\football_manager", "items\\japan_fundraiser", "items\\samurai\\tf_samurai_noisemaker", "items\\summer", "misc\\happy_birthday_tf", "misc\\jingle_bells" };
 
-bool ShouldBlockSound(const char* pSound)
+static bool ShouldBlockSound(const char* pSound)
 {
 	if (!Vars::Misc::Sound::Block.Value || !pSound)
 		return false;

@@ -469,7 +469,7 @@ void CMenu::MenuVisuals()
 				} EndSection();
 				if (Vars::Debug::Info.Value)
 				{
-					if (Section("debug## melee"))
+					if (Section("debug"))
 					{
 						FColorPicker("indicator good", Vars::Colors::IndicatorGood, 0, FColorPicker_Left);
 						FColorPicker("indicator text good", Vars::Colors::IndicatorTextGood, 0, FColorPicker_Middle | FColorPicker_SameLine);

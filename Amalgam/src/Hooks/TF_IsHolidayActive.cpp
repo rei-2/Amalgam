@@ -18,7 +18,7 @@ enum EHoliday
 };
 
 MAKE_SIGNATURE(TF_IsHolidayActive, "client.dll", "48 83 EC ? 48 8B 05 ? ? ? ? 44 8B C9", 0x0);
-MAKE_SIGNATURE(CTFPlayer_FireEvent_IsHolidayActive_Call, "client.dll", "E8 ? ? ? ? 84 C0 74 ? 45 33 C9 C6 44 24 ? ? 4C 8B C6", 0x5);
+MAKE_SIGNATURE(CTFPlayer_FireEvent_IsHolidayActive_Call, "client.dll", "84 C0 74 ? 45 33 C9 C6 44 24 ? ? 4C 8B C6", 0x0);
 
 MAKE_HOOK(TF_IsHolidayActive, S::TF_IsHolidayActive(), bool,
 	int eHoliday)

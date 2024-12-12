@@ -172,7 +172,7 @@
     <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Utils\CrashLog\CrashLog.cpp" />
     <ClCompile Include="src\BytePatches\BytePatches.cpp" />
-    <ClCompile Include="src\Hooks\CBaseAnimating_DoAnimationEvents.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayer_UpdateStepSound.cpp" />
     <ClCompile Include="src\Hooks\CThirdPersonManager_Update.cpp" />
     <ClCompile Include="include\ImGui\imgui_freetype.cpp" />
     <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />

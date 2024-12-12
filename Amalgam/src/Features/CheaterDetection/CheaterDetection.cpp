@@ -24,8 +24,6 @@ bool CCheaterDetection::ShouldScan()
 
 bool CCheaterDetection::InvalidPitch(CTFPlayer* pEntity)
 {
-	if (Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::InvalidPitch && fabsf(pEntity->m_angEyeAnglesX()) == 90.f)
-		SDK::Output("EyeAngle", std::format("{}", pEntity->m_angEyeAnglesX()).c_str());
 	return Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::InvalidPitch && fabsf(pEntity->m_angEyeAnglesX()) == 90.f;
 }
 
@@ -90,7 +88,7 @@ void CCheaterDetection::Infract(CTFPlayer* pEntity, std::string sReason)
 	if (bMark)
 	{
 		mData[pEntity].m_iDetections = 0;
-		//F::PlayerUtils.AddTag(mData[pEntity].m_uFriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), true, mData[pEntity].m_sName);
+		F::PlayerUtils.AddTag(mData[pEntity].m_uFriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), true, mData[pEntity].m_sName);
 	}
 }
 
@@ -107,7 +105,7 @@ void CCheaterDetection::Run()
 
 		PlayerInfo_t pi{};
 		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant()
-			|| !I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) /*|| pi.fakeplayer*/ || F::PlayerUtils.HasTag(pi.friendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG)))
+			|| !I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) || pi.fakeplayer || F::PlayerUtils.HasTag(pi.friendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG)))
 		{
 			mData[pPlayer].m_PacketChoking = {};
 			mData[pPlayer].m_AimFlicking = {};

@@ -17,7 +17,7 @@ MAKE_SIGNATURE(RenderBox, "engine.dll", "48 83 EC ? 8B 84 24 ? ? ? ? 4D 8B D8", 
 MAKE_SIGNATURE(RenderWireframeBox, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 41 54 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 49 8B F9", 0x0);
 MAKE_SIGNATURE(DrawServerHitboxes, "server.dll", "44 88 44 24 ? 53 48 81 EC", 0x0);
 MAKE_SIGNATURE(GetServerAnimating, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
-MAKE_SIGNATURE(CTFPlayer_FireEvent, "client.dll", "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 55 41 54 41 57", 0x0);
+MAKE_SIGNATURE(CTFPlayer_FireEvent, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 4C 89 64 24 ? 55 41 56 41 57 48 8D 6C 24", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects, "client.dll", "40 57 48 81 EC ? ? ? ? 8B 91 ? ? ? ? 48 8B F9 85 D2 0F 84 ? ? ? ? 48 89 B4 24", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_StopChargeEffect, "client.dll", "40 53 48 83 EC ? 44 0F B6 C2", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 81 EC ? ? ? ? 48 8B F1 E8 ? ? ? ? 48 8B D8", 0x0);
@@ -999,8 +999,8 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		float flNewRatio = flStaticRatio = Vars::Visuals::UI::AspectRatio.Value;
 
 		static auto r_aspectratio = U::ConVars.FindVar("r_aspectratio");
-		if (r_aspectratio && (flNewRatio || flOldRatio))
-			r_aspectratio->SetValue(Vars::Visuals::UI::AspectRatio.Value);
+		if (flNewRatio != flOldRatio && r_aspectratio)
+			r_aspectratio->SetValue(flNewRatio);
 	}
 
 	if (pLocal && Vars::Visuals::Particles::SpellFootsteps.Value && (F::Ticks.m_bDoubletap || F::Ticks.m_bWarp))
@@ -1020,4 +1020,11 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		iOldMedigunBeam = iNewMedigunBeam;
 		iOldMedigunCharge = iNewMedigunCharge;
 	}
+}
+
+MAKE_HOOK(CTFPlayer_FireEvent, S::CTFPlayer_FireEvent(), void,
+	void* rcx, const Vector& origin, const QAngle& angles, int event, const char* options)
+{
+	SDK::Output("Event", std::format("{}", event).c_str());
+	CALL_ORIGINAL(rcx, origin, angles, event, options);
 }

@@ -47,22 +47,19 @@ void CMaterials::StoreVars(Material_t& tMaterial)
 	if (!tMaterial.m_pMaterial)
 		return;
 
-		SDK::Output("LoadMaterials", "StoreVars 2", {}, false, false, false, true);
 	bool bFound; auto $phongtint = tMaterial.m_pMaterial->FindVar("$phongtint", &bFound, false);
 	if (bFound)
 		tMaterial.m_phongtint = $phongtint;
 
-		SDK::Output("LoadMaterials", "StoreVars 3", {}, false, false, false, true);
 	auto $envmaptint = tMaterial.m_pMaterial->FindVar("$envmaptint", &bFound, false);
 	if (bFound)
 		tMaterial.m_envmaptint = $envmaptint;
 
-		SDK::Output("LoadMaterials", "StoreVars 4", {}, false, false, false, true);
 	auto $invertcull = tMaterial.m_pMaterial->FindVar("$invertcull", &bFound, false);
 	if (bFound && $invertcull && $invertcull->GetIntValueInternal())
 		tMaterial.m_bInvertCull = true;
 
-		SDK::Output("LoadMaterials", "StoreVars 5", {}, false, false, false, true);
+		SDK::Output("LoadMaterials", "StoreVars 2", {}, false, false, false, true);
 }
 
 static inline void ModifyKeyValues(KeyValues* pKV)
@@ -178,14 +175,14 @@ void CMaterials::LoadMaterials()
 	for (auto& [_, tMaterial] : m_mMaterials)
 	{
 			SDK::Output("LoadMaterials", tMaterial.m_sName.c_str(), {}, false, false, false, true);
-		auto sName = std::format("m_p{}", tMaterial.m_sName);
-		KeyValues* kv = new KeyValues(sName.c_str());
-		kv->LoadFromBuffer(sName.c_str(), tMaterial.m_sVMT.c_str());
+		KeyValues* kv = new KeyValues(tMaterial.m_sName.c_str());
+		kv->LoadFromBuffer(tMaterial.m_sName.c_str(), tMaterial.m_sVMT.c_str());
 		ModifyKeyValues(kv);
 			
-		tMaterial.m_pMaterial = Create(sName.c_str(), kv);
-		StoreVars(tMaterial);
+		tMaterial.m_pMaterial = Create(tMaterial.m_sName.c_str(), kv);
 	}
+	for (auto& [_, tMaterial] : m_mMaterials)
+		StoreVars(tMaterial);
 
 		SDK::Output("LoadMaterials", "Glow.Initialize();", {}, false, false, false, true);
 	F::Glow.Initialize();
