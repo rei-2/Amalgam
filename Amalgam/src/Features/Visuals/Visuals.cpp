@@ -1021,10 +1021,3 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		iOldMedigunCharge = iNewMedigunCharge;
 	}
 }
-
-MAKE_HOOK(CTFPlayer_FireEvent, S::CTFPlayer_FireEvent(), void,
-	void* rcx, const Vector& origin, const QAngle& angles, int event, const char* options)
-{
-	SDK::Output("Event", std::format("{}", event).c_str());
-	CALL_ORIGINAL(rcx, origin, angles, event, options);
-}
