@@ -16,8 +16,8 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 
 	if (Vars::Visuals::UI::RevealScoreboard.Value && dwRetAddr == dwDesired)
 	{
-		if (auto pResource = H::Entities.GetPR())
-			return pResource->GetTeam(I::EngineClient->GetLocalPlayer());
+		if (auto pLocal = H::Entities.GetLocal())
+			return pLocal->m_iTeamNum();
 	}
 
 	return CALL_ORIGINAL(rcx);

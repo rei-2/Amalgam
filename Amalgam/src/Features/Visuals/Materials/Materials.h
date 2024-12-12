@@ -10,26 +10,32 @@ struct Material_t
 	std::string m_sName;
 	std::string m_sVMT;
 	bool m_bLocked = false;
+
+	IMaterialVar* m_phongtint = nullptr;
+	IMaterialVar* m_envmaptint = nullptr;
+	bool m_bInvertCull = false;
 };
 
 class CMaterials
 {
-	IMaterial* Create(char const* szName, KeyValues* pKV);
-	void Remove(IMaterial* pMaterial);
-
 public:
 	void LoadMaterials();
 	void UnloadMaterials();
 	void ReloadMaterials();
 
-	IMaterial* GetMaterial(uint32_t uHash);
+	IMaterial* Create(char const* szName, KeyValues* pKV);
+	void StoreStruct(std::string sName, std::string sVMT, bool bLocked = false);
+	void StoreVars(Material_t& tMaterial);
+	void Remove(IMaterial* pMaterial);
+
+	Material_t* GetMaterial(uint32_t uHash);
 	std::string GetVMT(uint32_t uHash);
 
 	void AddMaterial(const char* sName);
 	void EditMaterial(const char* sName, const char* sVMT);
 	void RemoveMaterial(const char* sName);
 
-	void SetColor(IMaterial* material, Color_t color);
+	void SetColor(Material_t* pMaterial, Color_t tColor);
 
 	std::unordered_map<uint32_t, Material_t> m_mMaterials;
 	std::unordered_map<IMaterial*, bool> m_mMatList;

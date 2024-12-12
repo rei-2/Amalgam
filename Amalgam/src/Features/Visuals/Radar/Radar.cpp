@@ -221,15 +221,19 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 				if (pOwner)
 				{
 					const int nIndex = pOwner->entindex();
-					if (nIndex != I::EngineClient->GetLocalPlayer() && pOwner != H::Entities.GetObservedTarget())
+					if (pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON ? pLocal->m_hObserverTarget().Get() == pOwner : nIndex == I::EngineClient->GetLocalPlayer())
 					{
-						if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
-							&& !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Prioritized && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+						if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Local))
+							continue;
+					}
+					else
+					{
+						if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Prioritized && F::PlayerUtils.IsPrioritized(nIndex))
+							&& !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
+							&& !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Party && H::Entities.InParty(nIndex))
 							&& pOwner->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Team) : !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Enemy))
 							continue;
 					}
-					else if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Local))
-						continue;
 				}
 			}
 
@@ -264,16 +268,8 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int iMaxHealth = pBuilding->m_iMaxHealth(), iHealth = pBuilding->m_iHealth();
 
 					float flRatio = std::clamp(float(iHealth) / iMaxHealth, 0.f, 1.f);
-					Color_t cColor = Vars::Colors::HealthBar.Value.StartColor.Lerp(Vars::Colors::HealthBar.Value.EndColor, flRatio);
+					Color_t cColor = Vars::Colors::IndicatorBad.Value.Lerp(Vars::Colors::IndicatorGood.Value, flRatio);
 					H::Draw.FillRectPercent(x - iBounds / 2, y - iBounds / 2, 2, iBounds, flRatio, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
-
-					if (iHealth > iMaxHealth)
-					{
-						const float flMaxOverheal = floorf(iMaxHealth / 10.f) * 5;
-						flRatio = std::clamp((iHealth - iMaxHealth) / flMaxOverheal, 0.f, 1.f);
-						cColor = Vars::Colors::Overheal.Value;
-						H::Draw.FillRectPercent(x - iBounds / 2, y - iBounds / 2, 2, iBounds, flRatio, cColor, { 0, 0, 0, 0 }, ALIGN_BOTTOM, true);
-					}
 				}
 			}
 		}
@@ -291,15 +287,19 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 				continue;
 
 			const int nIndex = pPlayer->entindex();
-			if (nIndex != I::EngineClient->GetLocalPlayer() && pPlayer != H::Entities.GetObservedTarget())
+			if (pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON ? pLocal->m_hObserverTarget().Get() == pPlayer : nIndex == I::EngineClient->GetLocalPlayer())
 			{
-				if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
-					&& !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Prioritized && F::PlayerUtils.GetPriority(nIndex) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+				if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Local))
+					continue;
+			}
+			else
+			{
+				if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Prioritized && F::PlayerUtils.IsPrioritized(nIndex))
+					&& !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
+					&& !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Party && H::Entities.InParty(nIndex))
 					&& pPlayer->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Team) : !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Enemy))
 					continue;
 			}
-			else if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Local))
-				continue;
 			if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Cloaked) && pPlayer->m_flInvisibility() >= 1.f)
 				continue;
 
@@ -349,14 +349,14 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int iMaxHealth = pPlayer->GetMaxHealth(), iHealth = pPlayer->m_iHealth();
 
 					float flRatio = std::clamp(float(iHealth) / iMaxHealth, 0.f, 1.f);
-					Color_t cColor = Vars::Colors::HealthBar.Value.StartColor.Lerp(Vars::Colors::HealthBar.Value.EndColor, flRatio);
+					Color_t cColor = Vars::Colors::IndicatorBad.Value.Lerp(Vars::Colors::IndicatorGood.Value, flRatio);
 					H::Draw.FillRectPercent(x - iBounds / 2, y - iBounds / 2, 2, iBounds, flRatio, cColor, { 0, 0, 0, 255 }, ALIGN_BOTTOM, true);
 
 					if (iHealth > iMaxHealth)
 					{
 						const float flMaxOverheal = floorf(iMaxHealth / 10.f) * 5;
 						flRatio = std::clamp((iHealth - iMaxHealth) / flMaxOverheal, 0.f, 1.f);
-						cColor = Vars::Colors::Overheal.Value;
+						cColor = Vars::Colors::IndicatorMisc.Value;
 						H::Draw.FillRectPercent(x - iBounds / 2, y - iBounds / 2, 2, iBounds, flRatio, cColor, { 0, 0, 0, 0 }, ALIGN_BOTTOM, true);
 					}
 				}

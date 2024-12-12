@@ -1,6 +1,5 @@
 #pragma once
 #include "../../../SDK/SDK.h"
-#include <unordered_map>
 
 class CSpectatorList
 {
@@ -12,6 +11,7 @@ private:
 		int m_iRespawnIn;
 		bool m_bRespawnTimeIncreased;
 		bool m_bIsFriend;
+		bool m_bInParty;
 		int m_iIndex;
 	};
 
@@ -19,7 +19,7 @@ private:
 	std::unordered_map<int, float> m_mRespawnCache;
 
 public:
-	bool GetSpectators(CTFPlayer* pLocal);
+	bool GetSpectators(CTFPlayer* pTarget);
 	void Draw(CTFPlayer* pLocal);
 };
 

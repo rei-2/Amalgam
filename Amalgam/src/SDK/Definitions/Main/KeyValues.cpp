@@ -6,6 +6,8 @@
 
 MAKE_SIGNATURE(KeyValues_LoadFromBuffer, "engine.dll", "4C 89 4C 24 ? 48 89 4C 24 ? 55 56", 0x0);
 MAKE_SIGNATURE(KeyValues_Initialize, "engine.dll", "40 53 48 83 EC ? 48 8B D9 C7 01", 0x0);
+MAKE_SIGNATURE(KeyValues_GetSymbolForStringClassic, "engine.dll", "48 89 5C 24 ? 57 48 83 EC ? 0F B6 DA 48 8B F9", 0x0);
+MAKE_SIGNATURE(KeyValues_GetStringForSymbolClassic, "engine.dll", "40 53 48 83 EC ? 8B D9 FF 15", 0x0);
 MAKE_SIGNATURE(KeyValues_FindKey, "client.dll", "48 8B C4 53 57 41 56", 0x0);
 
 int UnicodeToUTF8(const wchar_t* unicode, char* ansi, int ansiBufferSize)
@@ -43,6 +45,17 @@ KeyValues::KeyValues(const char* name)
 KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 {
 	return S::KeyValues_FindKey.Call<KeyValues*>(this, keyName, bCreate);
+}
+
+
+const char* KeyValues::GetName() const
+{
+	return S::KeyValues_GetStringForSymbolClassic.Call<const char*>(m_iKeyName);
+}
+
+void KeyValues::SetName(const char* setName)
+{
+	m_iKeyName = S::KeyValues_GetSymbolForStringClassic.Call<int>(setName, true);
 }
 
 

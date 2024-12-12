@@ -24,6 +24,8 @@ void CPlayerlistCore::SavePlayers()
 	{
 		boost::property_tree::ptree writeTree;
 
+		writeTree.put("NewTags", true);
+
 		boost::property_tree::ptree tagTree;
 		for (auto& [friendsID, vTags] : F::PlayerUtils.m_mPlayerTags)
 		{
@@ -33,7 +35,7 @@ void CPlayerlistCore::SavePlayers()
 			boost::property_tree::ptree tagList;
 			for (auto& iID : vTags)
 			{
-				boost::property_tree::ptree child; child.put("", iID);
+				boost::property_tree::ptree child; child.put("", F::PlayerUtils.IndexToTag(iID));
 				tagList.push_back(std::make_pair("", child));
 			}
 
@@ -75,6 +77,8 @@ void CPlayerlistCore::LoadPlayers()
 			read_json(F::Configs.sConfigPath + "\\Core\\Players.json", readTree);
 			F::PlayerUtils.m_mPlayerTags.clear();
 
+			bool bNewTags = bool(readTree.get_child_optional("NewTags")); // newer system to support adding default tags better
+
 			auto tagTree = readTree.get_child_optional("Tags");
 			if (!tagTree)
 				tagTree = readTree; // support format w/o tag tree
@@ -91,6 +95,10 @@ void CPlayerlistCore::LoadPlayers()
 					try
 					{	// new id based indexing
 						iID = std::stoi(sTag);
+						if (bNewTags)
+							iID = F::PlayerUtils.TagToIndex(iID);
+						else if (iID > 3)
+							iID += TAG_COUNT - 3;
 					}
 					catch (...)
 					{	// old string based indexing
@@ -136,8 +144,8 @@ void CPlayerlistCore::LoadPlayers()
 
 				switch (iPriority)
 				{
-				case 1: F::PlayerUtils.AddTag(friendsID, IGNORED_TAG, false); break;
-				case 4: F::PlayerUtils.AddTag(friendsID, CHEATER_TAG, false); break;
+				case 1: F::PlayerUtils.AddTag(friendsID, F::PlayerUtils.TagToIndex(IGNORED_TAG), false); break;
+				case 4: F::PlayerUtils.AddTag(friendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), false); break;
 				}
 			}
 		}
@@ -159,20 +167,25 @@ void CPlayerlistCore::SaveTags()
 	{
 		boost::property_tree::ptree writeTree;
 
-		// Put map entries into ptree
-		int iID = -1;
-		for (auto& tTag : F::PlayerUtils.m_vTags)
+		writeTree.put("NewTags", true);
+
+		boost::property_tree::ptree tagTree;
 		{
-			iID++;
+			int iID = -1;
+			for (auto& tTag : F::PlayerUtils.m_vTags)
+			{
+				iID++;
 
-			boost::property_tree::ptree tagTree;
-			tagTree.put("Name", tTag.Name);
-			tagTree.put_child("Color", F::Configs.ColorToTree(tTag.Color));
-			tagTree.put("Priority", tTag.Priority);
-			tagTree.put("Label", tTag.Label);
+				boost::property_tree::ptree tagEntry;
+				tagEntry.put("Name", tTag.Name);
+				tagEntry.put_child("Color", F::Configs.ColorToTree(tTag.Color));
+				tagEntry.put("Priority", tTag.Priority);
+				tagEntry.put("Label", tTag.Label);
 
-			writeTree.put_child(std::to_string(iID), tagTree);
+				tagTree.put_child(std::to_string(F::PlayerUtils.IndexToTag(iID)), tagEntry);
+			}
 		}
+		writeTree.put_child("Tags", tagTree);
 
 		// Save the file
 		write_json(F::Configs.sConfigPath + "\\Core\\Tags.json", writeTree);
@@ -200,10 +213,17 @@ void CPlayerlistCore::LoadTags()
 				{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
 				{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
 				{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
-				{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true }
+				{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
+				{ "Party", { 100, 50, 255, 255 }, 0, true, false, true }
 			};
 
-			for (auto& it : readTree)
+			bool bNewTags = bool(readTree.get_child_optional("NewTags")); // newer system to support adding default tags better
+
+			auto tagTree = readTree.get_child_optional("Tags");
+			if (!tagTree)
+				tagTree = readTree; // support format w/o tag tree
+
+			for (auto& it : *tagTree)
 			{
 				PriorityLabel_t tTag = {};
 				if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
@@ -215,6 +235,10 @@ void CPlayerlistCore::LoadTags()
 				try
 				{	// new id based indexing
 					iID = std::stoi(it.first);
+					if (bNewTags)
+						iID = F::PlayerUtils.TagToIndex(iID);
+					else if (iID > 3)
+						iID += TAG_COUNT - 3;
 				}
 				catch (...)
 				{	// old string based indexing

@@ -5,8 +5,10 @@ enum ProjSim_
 {
 	ProjSim_None = 0,
 	ProjSim_Trace = 1 << 0,
-	ProjSim_InitCheck = 1 << 2,
-	ProjSim_Quick = 1 << 1
+	ProjSim_InitCheck = 1 << 1,
+	ProjSim_Quick = 1 << 2,
+	ProjSim_NoRandomAngles = 1 << 3,
+	ProjSim_PredictCmdNum = 1 << 4
 };
 
 struct ProjectileInfo
@@ -29,7 +31,7 @@ struct ProjectileInfo
 
 class CProjectileSimulation
 {
-	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge);
+	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge);
 
 	const objectparams_t g_PhysDefaultObjectParams =
 	{

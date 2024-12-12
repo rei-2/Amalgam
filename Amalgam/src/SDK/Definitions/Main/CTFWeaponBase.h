@@ -195,19 +195,23 @@ public:
 	NETVAR_OFF(m_flCritTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", -4);
 	NETVAR_OFF(m_iCurrentSeed, int, "CTFWeaponBase", "m_flLastCritCheckTime", 8);
 	NETVAR_OFF(m_flLastRapidFireCritCheckTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", 12);
-	NETVAR_OFF(m_pMeter, void*, "CTFWeaponBase", "m_flEffectBarRegenTime", -40);
+	inline void* m_pMeter()
+	{
+		static int nOffset = U::NetVars.GetNetVar("CTFWeaponBase", "m_flEffectBarRegenTime") + -40;
+		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
+	};
 
-	VIRTUAL(GetSlot, int, int(__fastcall*)(void*), this, 330);
-	VIRTUAL(GetWeaponID, int, int(__fastcall*)(void*), this, 381);
-	VIRTUAL(GetDamageType, int, int(__fastcall*)(void*), this, 382);
-	VIRTUAL(IsEnergyWeapon, bool, bool(__fastcall*)(void*), this, 432);
-	VIRTUAL(AreRandomCritsEnabled, bool, bool(__fastcall*)(void*), this, 402);
+	VIRTUAL(GetSlot, int, int(*)(void*), this, 330);
+	VIRTUAL(GetWeaponID, int, int(*)(void*), this, 381);
+	VIRTUAL(GetDamageType, int, int(*)(void*), this, 382);
+	VIRTUAL(IsEnergyWeapon, bool, bool(*)(void*), this, 432);
+	VIRTUAL(AreRandomCritsEnabled, bool, bool(*)(void*), this, 402);
 
 	OFFSET(m_iWeaponMode, int, 996);
 
 	inline float GetSwingRange(CBaseEntity* pLocal)
 	{
-		return reinterpret_cast<int(__fastcall*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 455))(pLocal);
+		return reinterpret_cast<int(*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 455))(pLocal);
 	}
 
 	inline float GetSwingRange()
@@ -223,7 +227,7 @@ public:
 
 		int& iFOV = pOwner->m_iFOV(), nFovBackup = iFOV;
 		iFOV = 70;
-		bool bReturn = reinterpret_cast<bool(__fastcall*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 425))(this, bIsHeadshot, nullptr);
+		bool bReturn = reinterpret_cast<bool(*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 425))(this, bIsHeadshot, nullptr);
 		iFOV = nFovBackup;
 		return bReturn;
 	}
@@ -339,8 +343,7 @@ public:
 
 	inline void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
 	{
-		using fn = void(__fastcall*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float);
-		reinterpret_cast<fn>(U::Memory.GetVFunc(this, 399))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
+		reinterpret_cast<void(*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float)>(U::Memory.GetVFunc(this, 399))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
 	}
 
 	inline void GetSpreadAngles(Vec3& out)
@@ -362,7 +365,7 @@ public:
 
 	inline float ApplyFireDelay(float flDelay)
 	{
-		return reinterpret_cast<float(__fastcall*)(void*, float)>(U::Memory.GetVFunc(this, 407))(this, flDelay);
+		return reinterpret_cast<float(*)(void*, float)>(U::Memory.GetVFunc(this, 407))(this, flDelay);
 	}
 
 	inline bool CalcIsAttackCriticalHelperMelee()
@@ -469,4 +472,11 @@ class CTFSniperRifleClassic : public CTFSniperRifle
 {
 public:
 	NETVAR(m_bCharging, bool, "CTFSniperRifleClassic", "m_bCharging");
+};
+
+class CTFParticleCannon : public CTFWeaponBase
+{
+public:
+	NETVAR(m_flChargeBeginTime, float, "CTFParticleCannon", "m_flChargeBeginTime");
+	NETVAR(m_iChargeEffect, int, "CTFParticleCannon", "m_iChargeEffect");
 };

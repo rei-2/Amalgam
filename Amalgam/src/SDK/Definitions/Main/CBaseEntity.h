@@ -92,7 +92,7 @@ public:
 	NETVAR_OFF(m_flOldSimulationTime, float, "CBaseEntity", "m_flSimulationTime", 4);
 	NETVAR_OFF(m_Particles, CParticleProperty*, "CBaseEntity", "m_flElasticity", -56);
 
-	VIRTUAL(UpdateVisibility, void, void(__fastcall*)(CBaseEntity*), this, 91);
+	VIRTUAL(UpdateVisibility, void, void(*)(CBaseEntity*), this, 91);
 
 	inline Vec3 GetCenter()
 	{

@@ -31,7 +31,7 @@ public:
 	NETVAR(m_bWasMapPlaced, bool, "CBaseObject", "m_bWasMapPlaced");
 	NETVAR(m_bPlasmaDisable, bool, "CBaseObject", "m_bPlasmaDisable");
 
-	VIRTUAL(GetNumBuildPoints, int, int(__fastcall*)(void*), IHasBuildPoints(), 0);
+	VIRTUAL(GetNumBuildPoints, int, int(*)(void*), IHasBuildPoints(), 0);
 
 	inline void* IHasBuildPoints()
 	{
@@ -42,13 +42,13 @@ public:
 	inline bool GetBuildPoint(int iPoint, Vec3& vecOrigin, Vec3& vecAngles)
 	{
 		void* pPoints = IHasBuildPoints();
-		return reinterpret_cast<bool(__fastcall*)(void*, int, Vec3&, Vec3&)>(U::Memory.GetVFunc(pPoints, 1))(pPoints, iPoint, vecOrigin, vecAngles);
+		return reinterpret_cast<bool(*)(void*, int, Vec3&, Vec3&)>(U::Memory.GetVFunc(pPoints, 1))(pPoints, iPoint, vecOrigin, vecAngles);
 	}
 
 	inline int GetBuildPointAttachmentIndex(int iPoint)
 	{
 		void* pPoints = IHasBuildPoints();
-		return reinterpret_cast<int(__fastcall*)(void*, int)>(U::Memory.GetVFunc(pPoints, 2))(pPoints, iPoint);
+		return reinterpret_cast<int(*)(void*, int)>(U::Memory.GetVFunc(pPoints, 2))(pPoints, iPoint);
 	}
 
 	inline bool IsDisabled()

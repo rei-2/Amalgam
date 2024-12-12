@@ -45,6 +45,10 @@ public:
 	KeyValues(const char* name);
 	KeyValues* FindKey(const char* keyName, bool bCreate = false);
 
+	const char* GetName() const;
+	void SetName(const char* setName);
+	int GetNameSymbol() const { return m_iKeyName; }
+
 	int GetInt(const char* keyName, int defaultValue = 0);
 	uint64_t GetUint64(const char* keyName, uint64_t defaultValue = 0);
 	float GetFloat(const char* keyName, float defaultValue = 0.0f);

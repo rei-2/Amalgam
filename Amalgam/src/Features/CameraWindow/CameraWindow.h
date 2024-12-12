@@ -1,8 +1,6 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-using RenderViewFN = void(__fastcall*)(void* ecx, const CViewSetup& view, ClearFlags_t nClearFlags, RenderViewInfo_t whatToDraw);
-
 class CCameraWindow
 {
 public:

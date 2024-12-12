@@ -3,11 +3,12 @@
 #include "../NetworkFix/NetworkFix.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
+#include "../Backtrack/Backtrack.h"
 
 void CTickshiftHandler::Reset()
 {
-	m_bSpeedhack = G::DoubleTap = G::Recharge = G::Warp = false;
-	G::ShiftedTicks = G::ShiftedGoal = 0;
+	m_bSpeedhack = m_bDoubletap = m_bRecharge = m_bWarp = false;
+	m_iShiftedTicks = m_iShiftedGoal = 0;
 }
 
 void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
@@ -15,7 +16,7 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 	if (!m_bGoalReached)
 		return;
 
-	bool bPassive = G::Recharge = false;
+	bool bPassive = m_bRecharge = false;
 
 	static float flPassiveTime = 0.f;
 	flPassiveTime = std::max(flPassiveTime - TICK_INTERVAL, -TICK_INTERVAL);
@@ -25,7 +26,7 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 		flPassiveTime += 1.f / Vars::CL_Move::Doubletap::PassiveRecharge.Value;
 	}
 
-	if (m_iDeficit && G::ShiftedTicks < G::MaxShift)
+	if (m_iDeficit && m_iShiftedTicks < m_iMaxShift)
 	{
 		bPassive = true;
 		m_iDeficit--;
@@ -34,11 +35,11 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 		m_iDeficit = 0;
 
 	if (!Vars::CL_Move::Doubletap::RechargeTicks.Value && !bPassive
-		|| G::DoubleTap || G::Warp || G::ShiftedTicks == G::MaxShift || m_bSpeedhack)
+		|| m_bDoubletap || m_bWarp || m_iShiftedTicks == m_iMaxShift || m_bSpeedhack)
 		return;
 
-	G::Recharge = true;
-	G::ShiftedGoal = G::ShiftedTicks + 1;
+	m_bRecharge = true;
+	m_iShiftedGoal = m_iShiftedTicks + 1;
 }
 
 void CTickshiftHandler::Warp()
@@ -46,13 +47,13 @@ void CTickshiftHandler::Warp()
 	if (!m_bGoalReached)
 		return;
 
-	G::Warp = false;
+	m_bWarp = false;
 	if (!Vars::CL_Move::Doubletap::Warp.Value
-		|| !G::ShiftedTicks || G::DoubleTap || G::Recharge || m_bSpeedhack)
+		|| !m_iShiftedTicks || m_bDoubletap || m_bRecharge || m_bSpeedhack)
 		return;
 
-	G::Warp = true;
-	G::ShiftedGoal = std::max(G::ShiftedTicks - Vars::CL_Move::Doubletap::WarpRate.Value + 1, 0);
+	m_bWarp = true;
+	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::CL_Move::Doubletap::WarpRate.Value + 1, 0);
 }
 
 void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -60,24 +61,24 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!m_bGoalReached)
 		return;
 
-	G::DoubleTap = false;
+	m_bDoubletap = false;
 	if (!Vars::CL_Move::Doubletap::Doubletap.Value
-		|| G::WaitForShift || G::Warp || G::Recharge || m_bSpeedhack)
+		|| m_iWait || m_bWarp || m_bRecharge || m_bSpeedhack)
 		return;
 
-	int iTicks = std::min(G::ShiftedTicks + 1, 22);
+	int iTicks = std::min(m_iShiftedTicks + 1, 22);
 	auto pWeapon = H::Entities.GetWeapon();
 	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
 		return;
 
 	bool bAttacking = G::PrimaryWeaponType == EWeaponType::MELEE ? pCmd->buttons & IN_ATTACK : G::Attacking;
-	if (!G::CanPrimaryAttack && !G::Reloading || !bAttacking && !G::DoubleTap || F::AutoRocketJump.IsRunning())
+	if (!G::CanPrimaryAttack && !G::Reloading || !bAttacking && !m_bDoubletap || F::AutoRocketJump.IsRunning())
 		return;
 
-	G::DoubleTap = true;
-	G::ShiftedGoal = std::max(G::ShiftedTicks - Vars::CL_Move::Doubletap::TickLimit.Value + 1, 0);
+	m_bDoubletap = true;
+	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::CL_Move::Doubletap::TickLimit.Value + 1, 0);
 	if (Vars::CL_Move::Doubletap::AntiWarp.Value)
-		G::AntiWarp = pLocal->m_hGroundEntity();
+		m_bAntiWarp = pLocal->m_hGroundEntity();
 }
 
 void CTickshiftHandler::Speedhack()
@@ -86,12 +87,12 @@ void CTickshiftHandler::Speedhack()
 	if (!m_bSpeedhack)
 		return;
 
-	G::DoubleTap = G::Warp = G::Recharge = false;
+	m_bDoubletap = m_bWarp = m_bRecharge = false;
 }
 
 void CTickshiftHandler::SaveShootPos(CTFPlayer* pLocal)
 {
-	if (!G::DoubleTap && !G::Warp)
+	if (!m_bDoubletap && !m_bWarp)
 		m_vShootPos = pLocal->GetShootPos();
 }
 Vec3 CTickshiftHandler::GetShootPos()
@@ -103,7 +104,7 @@ void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static Vec3 vVelocity = {};
 	static int iMaxTicks = 0;
-	if (G::AntiWarp)
+	if (m_bAntiWarp)
 	{
 		int iTicks = GetTicks();
 		iMaxTicks = std::max(iTicks + 1, iMaxTicks);
@@ -132,7 +133,7 @@ void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 	/*
 	static bool bSet = false;
 
-	if (!G::AntiWarp)
+	if (!m_bAntiWarp)
 	{
 		bSet = false;
 		return;
@@ -182,24 +183,24 @@ void CTickshiftHandler::CLMoveFunc(float accumulated_extra_samples, bool bFinalT
 {
 	static auto CL_Move = U::Hooks.m_mHooks["CL_Move"];
 
-	G::ShiftedTicks--;
-	if (G::ShiftedTicks < 0)
+	m_iShiftedTicks--;
+	if (m_iShiftedTicks < 0)
 		return;
-	if (G::WaitForShift > 0)
-		G::WaitForShift--;
+	if (m_iWait > 0)
+		m_iWait--;
 
-	int iTicks = std::min(G::ShiftedTicks + 1, 22);
+	int iTicks = std::min(m_iShiftedTicks + 1, 22);
 	auto pWeapon = H::Entities.GetWeapon();
 	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
-		G::WaitForShift = 1;
+		m_iWait = 1;
 
-	m_bGoalReached = bFinalTick && G::ShiftedTicks == G::ShiftedGoal;
+	m_bGoalReached = bFinalTick && m_iShiftedTicks == m_iShiftedGoal;
 
 	if (CL_Move)
 		CL_Move->Call<void>(accumulated_extra_samples, bFinalTick);
 }
 
-void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTick)
+void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 {
 	if (auto pWeapon = H::Entities.GetWeapon())
 	{
@@ -208,57 +209,76 @@ void CTickshiftHandler::MoveMain(float accumulated_extra_samples, bool bFinalTic
 		case TF_WEAPON_PIPEBOMBLAUNCHER:
 		case TF_WEAPON_CANNON:
 			if (G::Reloading)
-				G::WaitForShift = Vars::CL_Move::Doubletap::TickLimit.Value;
+				m_iWait = Vars::CL_Move::Doubletap::TickLimit.Value;
 			break;
 		default:
 			if (!ValidWeapon(pWeapon))
-				G::WaitForShift = 2;
+				m_iWait = 2;
 			else if (G::Attacking || !G::CanPrimaryAttack && !G::Reloading)
-				G::WaitForShift = Vars::CL_Move::Doubletap::TickLimit.Value;
+				m_iWait = Vars::CL_Move::Doubletap::TickLimit.Value;
 		}
 	}
 	else
-		G::WaitForShift = 2;
+		m_iWait = 2;
 
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-	G::MaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	m_iMaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
 	if (F::AntiAim.YawOn())
-		G::MaxShift -= F::AntiAim.AntiAimTicks();
+		m_iMaxShift -= F::AntiAim.AntiAimTicks();
 
-	while (G::ShiftedTicks > G::MaxShift)
+	while (m_iShiftedTicks > m_iMaxShift)
 		CLMoveFunc(accumulated_extra_samples, false); // skim any excess ticks
 
-	G::ShiftedTicks++; // since we now have full control over CL_Move, increment.
-	if (G::ShiftedTicks <= 0)
+	m_iShiftedTicks++; // since we now have full control over CL_Move, increment.
+	if (m_iShiftedTicks <= 0)
 	{
-		G::ShiftedTicks = 0;
+		m_iShiftedTicks = 0;
 		return;
 	}
 
 	if (m_bSpeedhack)
 	{
-		for (int i = 0; i < Vars::CL_Move::SpeedFactor.Value; i++)
-			CLMoveFunc(accumulated_extra_samples, i == Vars::CL_Move::SpeedFactor.Value);
-		return;
+		m_iShiftedTicks = Vars::CL_Move::SpeedFactor.Value;
+		m_iShiftedGoal = 0;
 	}
 
-	G::ShiftedGoal = std::clamp(G::ShiftedGoal, 0, G::MaxShift);
-	if (G::ShiftedTicks > G::ShiftedGoal) // normal use/doubletap/teleport
+	m_iShiftedGoal = std::clamp(m_iShiftedGoal, 0, m_iMaxShift);
+	if (m_iShiftedTicks > m_iShiftedGoal) // normal use/doubletap/teleport
 	{
-		while (G::ShiftedTicks > G::ShiftedGoal)
-			CLMoveFunc(accumulated_extra_samples, G::ShiftedTicks - 1 == G::ShiftedGoal);
-		G::AntiWarp = false;
-		if (G::Warp)
+		m_iShiftStart = m_iShiftedTicks - 1 != m_iShiftedGoal ? m_iShiftedTicks : 0;
+		m_bShifting = m_iShiftStart;
+
+#ifndef TICKBASE_DEBUG
+		while (m_iShiftedTicks > m_iShiftedGoal)
+			//CLMoveFunc(accumulated_extra_samples, m_iShiftedTicks - 1 == m_iShiftedGoal);
+			CLMoveFunc(accumulated_extra_samples, bFinalTick);
+#else
+		if (Vars::Debug::Info.Value)
+			SDK::Output("Pre loop", "", { 0, 255, 255, 255 });
+		while (m_iShiftedTicks > m_iShiftedGoal)
+		{
+			if (Vars::Debug::Info.Value)
+				SDK::Output("Pre move", "", { 0, 127, 255, 255 });
+			CLMoveFunc(accumulated_extra_samples, m_iShiftedTicks - 1 == m_iShiftedGoal);
+			if (Vars::Debug::Info.Value)
+				SDK::Output("Post move", "\n", { 0, 127, 255, 255 });
+		}
+		if (Vars::Debug::Info.Value)
+			SDK::Output("Post loop", "\n", { 0, 0, 255, 255 });
+#endif
+
+		m_bShifting = m_bAntiWarp = false;
+		if (m_bWarp)
 			m_iDeficit = 0;
 
-		G::DoubleTap = G::Warp = false;
+		m_bDoubletap = m_bWarp = false;
 	}
 	// else recharge, run once if we have any choked ticks
 	else if (I::ClientState->chokedcommands)
 		CLMoveFunc(accumulated_extra_samples, bFinalTick);
 }
 
-void CTickshiftHandler::MovePre(CTFPlayer* pLocal)
+void CTickshiftHandler::CLMoveManage(CTFPlayer* pLocal)
 {
 	if (!pLocal)
 		return;
@@ -268,7 +288,15 @@ void CTickshiftHandler::MovePre(CTFPlayer* pLocal)
 	Speedhack();
 }
 
-void CTickshiftHandler::MovePost(CTFPlayer* pLocal, CUserCmd* pCmd)
+void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
+{
+	F::NetworkFix.FixInputDelay(bFinalTick);
+
+	CLMoveManage(pLocal);
+	CLMove(accumulated_extra_samples, bFinalTick);
+}
+
+void CTickshiftHandler::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	if (!pLocal)
 		return;
@@ -277,39 +305,37 @@ void CTickshiftHandler::MovePost(CTFPlayer* pLocal, CUserCmd* pCmd)
 	AntiWarp(pLocal, pCmd);
 }
 
-void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
-{
-	F::NetworkFix.FixInputDelay(bFinalTick);
-
-	MovePre(pLocal);
-	MoveMain(accumulated_extra_samples, bFinalTick);
-}
-
 void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
 {
-	if (!G::DoubleTap /*&& !G::Warp*/)
+	if (!m_bDoubletap && !m_bWarp && !m_bSpeedhack)
 		return;
 
-	*pSendPacket = G::ShiftedGoal == G::ShiftedTicks;
+	if ((m_bSpeedhack || m_bWarp) && G::Attacking == 1)
+	{
+		*pSendPacket = true;
+		return;
+	}
+
+	*pSendPacket = m_iShiftedGoal == m_iShiftedTicks;
 	if (I::ClientState->chokedcommands >= 21 // prevent overchoking
-		|| G::ShiftedTicks == G::ShiftedGoal + Vars::CL_Move::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
+		|| m_iShiftedTicks == m_iShiftedGoal + Vars::CL_Move::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
 		*pSendPacket = true;
 }
 
 int CTickshiftHandler::GetTicks(CTFWeaponBase* pWeapon)
 {
-	if (G::DoubleTap && G::ShiftedGoal < G::ShiftedTicks)
-		return G::ShiftedTicks - G::ShiftedGoal;
+	if (m_bDoubletap && m_iShiftedGoal < m_iShiftedTicks)
+		return m_iShiftedTicks - m_iShiftedGoal;
 
 	if (!Vars::CL_Move::Doubletap::Doubletap.Value
-		|| G::WaitForShift || G::Warp || G::Recharge || m_bSpeedhack || F::AutoRocketJump.IsRunning())
+		|| m_iWait || m_bWarp || m_bRecharge || m_bSpeedhack || F::AutoRocketJump.IsRunning())
 		return 0;
 
-	int iTicks = std::min(G::ShiftedTicks + 1, 22);
+	int iTicks = std::min(m_iShiftedTicks + 1, 22);
 	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
 		return 0;
 	
-	return std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, G::MaxShift);
+	return std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, m_iMaxShift);
 }
 
 int CTickshiftHandler::GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks)

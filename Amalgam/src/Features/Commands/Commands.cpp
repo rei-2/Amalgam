@@ -8,16 +8,17 @@
 
 bool CCommands::Run(const std::string& cmd, std::deque<std::string>& args)
 {
-	if (!CommandMap.contains(cmd))
+	auto uHash = FNV1A::Hash32(cmd.c_str());
+	if (!CommandMap.contains(uHash))
 		return false;
 
-	CommandMap[cmd](args);
+	CommandMap[uHash](args);
 	return true;
 }
 
-void CCommands::Register(const std::string& name, CommandCallback callback)
+void CCommands::Register(const std::string & name, CommandCallback callback)
 {
-	CommandMap[name] = std::move(callback);
+	CommandMap[FNV1A::Hash32(name.c_str())] = std::move(callback);
 }
 
 void CCommands::Initialize()

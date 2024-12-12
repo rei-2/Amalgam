@@ -16,6 +16,7 @@
 #include "Main/CEntitySphereQuery.h"
 #include "Main/CHalloweenPickup.h"
 #include "Main/CMultiPlayerAnimState.h"
+#include "Main/CSniperDot.h"
 #include "Main/CTFPlayer.h"
 #include "Main/CTFPlayerResource.h"
 #include "Main/CTFWeaponBase.h"

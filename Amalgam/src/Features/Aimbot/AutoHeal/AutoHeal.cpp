@@ -8,7 +8,7 @@ bool CAutoHeal::ActivateOnVoice(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUse
 		return false;
 
 	auto pTarget = pWeapon->m_hHealingTarget().Get();
-	if (!pTarget || Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pTarget->entindex()))
+	if (!pTarget || Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pTarget->entindex()) && !H::Entities.InParty(pTarget->entindex()))
 		return false;
 
 	bool bReturn = m_mMedicCallers.contains(pTarget->entindex());

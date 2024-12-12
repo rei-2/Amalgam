@@ -28,117 +28,136 @@ void CMaterials::Remove(IMaterial* pMaterial)
 	pMaterial = nullptr;
 }
 
+
+
+void CMaterials::StoreStruct(std::string sName, std::string sVMT, bool bLocked)
+{
+		SDK::Output("LoadMaterials", "StoreStruct", {}, false, false, false, true);
+	Material_t tMaterial = {};
+	tMaterial.m_sName = sName;
+	tMaterial.m_sVMT = sVMT;
+	tMaterial.m_bLocked = bLocked;
+
+	m_mMaterials[FNV1A::Hash32(sName.c_str())] = tMaterial;
+}
+
+void CMaterials::StoreVars(Material_t& tMaterial)
+{
+		SDK::Output("LoadMaterials", "StoreVars", {}, false, false, false, true);
+	if (!tMaterial.m_pMaterial)
+		return;
+
+		SDK::Output("LoadMaterials", "StoreVars 2", {}, false, false, false, true);
+	bool bFound; auto $phongtint = tMaterial.m_pMaterial->FindVar("$phongtint", &bFound, false);
+	if (bFound)
+		tMaterial.m_phongtint = $phongtint;
+
+		SDK::Output("LoadMaterials", "StoreVars 3", {}, false, false, false, true);
+	auto $envmaptint = tMaterial.m_pMaterial->FindVar("$envmaptint", &bFound, false);
+	if (bFound)
+		tMaterial.m_envmaptint = $envmaptint;
+
+		SDK::Output("LoadMaterials", "StoreVars 4", {}, false, false, false, true);
+	auto $invertcull = tMaterial.m_pMaterial->FindVar("$invertcull", &bFound, false);
+	if (bFound && $invertcull && $invertcull->GetIntValueInternal())
+		tMaterial.m_bInvertCull = true;
+
+		SDK::Output("LoadMaterials", "StoreVars 5", {}, false, false, false, true);
+}
+
+static inline void ModifyKeyValues(KeyValues* pKV)
+{
+	pKV->SetString("$model", "1"); // prevent wacko chams
+
+	if (!pKV->FindKey("$cloakfactor"))
+	{
+		pKV->SetString("$cloakpassenabled", "1");
+		auto sName = pKV->GetName();
+		if (sName && FNV1A::Hash32(sName) == FNV1A::Hash32Const("VertexLitGeneric"))
+		{
+			if (auto pProxies = pKV->FindKey("Proxies", true))
+				pProxies->FindKey("invis", true);
+		}
+	}
+}
+
+
+
 void CMaterials::LoadMaterials()
 {
 	// default materials
-	{
-		// hacky
-		Material_t mat = {};
-		mat.m_sName = "None";
-
-		mat.m_sVMT = "\"UnlitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$color2 \"[0 0 0]\"";
-		mat.m_sVMT += "\n\t$additive \"1\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("None")] = mat;
-	}
-	{
-		Material_t mat = {};
-		mat.m_sName = "Flat";
-
-		mat.m_sVMT = "\"UnlitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$basetexture \"white\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("Flat")] = mat;
-	}
-	{
-		Material_t mat = {};
-		mat.m_sName = "Shaded";
-
-		mat.m_sVMT = "\"VertexLitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$basetexture \"white\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("Shaded")] = mat;
-	}
-	{
-		Material_t mat = {};
-		mat.m_sName = "Wireframe";
-
-		mat.m_sVMT = "\"UnlitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$basetexture \"white\"";
-		mat.m_sVMT += "\n\t$wireframe \"1\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("Wireframe")] = mat;
-	}
-	{
-		Material_t mat = {};
-		mat.m_sName = "Fresnel";
-
-		mat.m_sVMT = "\"VertexLitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$basetexture \"white\"";
-		mat.m_sVMT += "\n\t$bumpmap \"models/player/shared/shared_normal\"";
-		mat.m_sVMT += "\n\t$color2 \"[0 0 0]\"";
-		mat.m_sVMT += "\n\t$additive \"1\"";
-		mat.m_sVMT += "\n\t$phong \"1\"";
-		mat.m_sVMT += "\n\t$phongfresnelranges \"[0 0.5 1]\"";
-		mat.m_sVMT += "\n\t$envmap \"skybox/sky_dustbowl_01\"";
-		mat.m_sVMT += "\n\t$envmapfresnel \"1\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("Fresnel")] = mat;
-	}
-	{
-		Material_t mat = {};
-		mat.m_sName = "Shine";
-
-		mat.m_sVMT = "\"VertexLitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$additive \"1\"";
-		mat.m_sVMT += "\n\t$envmap \"cubemaps/cubemap_sheen002.hdr\"";
-		mat.m_sVMT += "\n\t$envmaptint \"[1 1 1]\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("Shine")] = mat;
-	}
-	{
-		Material_t mat = {};
-		mat.m_sName = "Tint";
-
-		mat.m_sVMT = "\"VertexLitGeneric\"";
-		mat.m_sVMT += "\n{";
-		mat.m_sVMT += "\n\t$basetexture \"models/player/shared/ice_player\"";
-		mat.m_sVMT += "\n\t$bumpmap \"models/player/shared/shared_normal\"";
-		mat.m_sVMT += "\n\t$additive \"1\"";
-		mat.m_sVMT += "\n\t$phong \"1\"";
-		mat.m_sVMT += "\n\t$phongfresnelranges \"[0 0.001 0.001]\"";
-		mat.m_sVMT += "\n\t$envmap \"skybox/sky_dustbowl_01\"";
-		mat.m_sVMT += "\n\t$envmapfresnel \"1\"";
-		mat.m_sVMT += "\n\t$selfillum \"1\"";
-		mat.m_sVMT += "\n\t$selfillumtint \"[0 0 0]\"";
-		mat.m_sVMT += "\n}";
-
-		mat.m_bLocked = true;
-		m_mMaterials[FNV1A::Hash32Const("Tint")] = mat;
-	}
+	StoreStruct( // hacky
+		"None",
+			"\"UnlitGeneric\""
+			"\n{"
+			"\n\t$color2 \"[0 0 0]\""
+			"\n\t$additive \"1\""
+			"\n}",
+		true);
+	StoreStruct(
+		"Flat",
+			"\"UnlitGeneric\""
+			"\n{"
+			"\n\t$basetexture \"white\""
+			"\n}",
+		true);
+	StoreStruct(
+		"Shaded",
+			"\"VertexLitGeneric\""
+			"\n{"
+			"\n\t$basetexture \"white\""
+			"\n}",
+		true);
+	StoreStruct(
+		"Wireframe",
+			"\"UnlitGeneric\""
+			"\n{"
+			"\n\t$basetexture \"white\""
+			"\n\t$wireframe \"1\""
+			"\n}",
+		true);
+	StoreStruct(
+		"Fresnel",
+			"\"VertexLitGeneric\""
+			"\n{"
+			"\n\t$basetexture \"white\""
+			"\n\t$bumpmap \"models/player/shared/shared_normal\""
+			"\n\t$color2 \"[0 0 0]\""
+			"\n\t$additive \"1\""
+			"\n\t$phong \"1\""
+			"\n\t$phongfresnelranges \"[0 0.5 1]\""
+			"\n\t$envmap \"skybox/sky_dustbowl_01\""
+			"\n\t$envmapfresnel \"1\""
+			"\n}",
+		true);
+	StoreStruct(
+		"Shine",
+			"\"VertexLitGeneric\""
+			"\n{"
+			"\n\t$additive \"1\""
+			"\n\t$envmap \"cubemaps/cubemap_sheen002.hdr\""
+			"\n\t$envmaptint \"[1 1 1]\""
+			"\n}",
+		true);
+	StoreStruct(
+		"Tint",
+			"\"VertexLitGeneric\""
+			"\n{"
+			"\n\t$basetexture \"models/player/shared/ice_player\""
+			"\n\t$bumpmap \"models/player/shared/shared_normal\""
+			"\n\t$additive \"1\""
+			"\n\t$phong \"1\""
+			"\n\t$phongfresnelranges \"[0 0.001 0.001]\""
+			"\n\t$envmap \"skybox/sky_dustbowl_01\""
+			"\n\t$envmapfresnel \"1\""
+			"\n\t$selfillum \"1\""
+			"\n\t$selfillumtint \"[0 0 0]\""
+			"\n}",
+		true);
 	// user materials
 	for (auto& entry : std::filesystem::directory_iterator(MaterialFolder))
 	{
-		// Ignore all non-Material files
+		// Ignore all non-material files
 		if (!entry.is_regular_file() || entry.path().extension() != std::string(".vmt"))
 			continue;
 
@@ -153,20 +172,19 @@ void CMaterials::LoadMaterials()
 		if (FNV1A::Hash32(sName.c_str()) == FNV1A::Hash32Const("Original"))
 			continue;
 
-		Material_t mat = {};
-		mat.m_sName = sName;
-		mat.m_sVMT = sVMT;
-
-		m_mMaterials[FNV1A::Hash32(sName.c_str())] = mat;
+		StoreStruct(sName, sVMT);
 	}
 	// create materials
-	for (auto& [_, mat] : m_mMaterials)
+	for (auto& [_, tMaterial] : m_mMaterials)
 	{
-			SDK::Output("LoadMaterials", mat.m_sName.c_str(), {}, false, false, false, true);
-		KeyValues* kv = new KeyValues(mat.m_sName.c_str());
-		kv->LoadFromBuffer(mat.m_sName.c_str(), mat.m_sVMT.c_str());
-		kv->SetString("$model", "1"); // prevent wacko chams
-		mat.m_pMaterial = Create(std::format("m_pMat%s", mat.m_sName).c_str(), kv);
+			SDK::Output("LoadMaterials", tMaterial.m_sName.c_str(), {}, false, false, false, true);
+		auto sName = std::format("m_p{}", tMaterial.m_sName);
+		KeyValues* kv = new KeyValues(sName.c_str());
+		kv->LoadFromBuffer(sName.c_str(), tMaterial.m_sVMT.c_str());
+		ModifyKeyValues(kv);
+			
+		tMaterial.m_pMaterial = Create(sName.c_str(), kv);
+		StoreVars(tMaterial);
 	}
 
 		SDK::Output("LoadMaterials", "Glow.Initialize();", {}, false, false, false, true);
@@ -197,30 +215,32 @@ void CMaterials::ReloadMaterials()
 	LoadMaterials();
 }
 
-void CMaterials::SetColor(IMaterial* material, Color_t color)
+void CMaterials::SetColor(Material_t* pMaterial, Color_t tColor)
 {
-	if (material)
-	{
-		bool bFound; auto $phongtint = material->FindVar("$phongtint", &bFound, false);
-		if (bFound && $phongtint)
-			$phongtint->SetVecValue(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
+	if (!pMaterial)
+		return;
 
-		auto $envmaptint = material->FindVar("$envmaptint", &bFound, false);
-		if (bFound && $envmaptint)
-			$envmaptint->SetVecValue(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-	}
-	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
-	I::RenderView->SetBlend(float(color.a) / 255.f);
+	float r = float(tColor.r) / 255.f;
+	float g = float(tColor.g) / 255.f;
+	float b = float(tColor.b) / 255.f;
+	float a = float(tColor.a) / 255.f;
+
+	if (pMaterial->m_phongtint)
+		pMaterial->m_phongtint->SetVecValue(r, g, b);
+	if (pMaterial->m_envmaptint)
+		pMaterial->m_envmaptint->SetVecValue(r, g, b);
+	I::RenderView->SetColorModulation(r, g, b);
+	I::RenderView->SetBlend(a);
 }
 
 
 
-IMaterial* CMaterials::GetMaterial(uint32_t uHash)
+Material_t* CMaterials::GetMaterial(uint32_t uHash)
 {
 	if (uHash == FNV1A::Hash32Const("Original"))
 		return nullptr;
 
-	return m_mMaterials.contains(uHash) ? m_mMaterials[uHash].m_pMaterial : nullptr;
+	return m_mMaterials.contains(uHash) ? &m_mMaterials[uHash] : nullptr;
 }
 
 std::string CMaterials::GetVMT(uint32_t uHash)
@@ -238,18 +258,24 @@ void CMaterials::AddMaterial(const char* sName)
 	if (uHash == FNV1A::Hash32Const("Original") || std::filesystem::exists(std::format("{}\\{}.vmt", MaterialFolder, sName)) || m_mMaterials.contains(uHash))
 		return;
 
-	Material_t mat = {};
-	mat.m_sVMT = "\"VertexLitGeneric\"\n{\n\t\n}";
+	StoreStruct(
+		sName,
+			"\"VertexLitGeneric\""
+			"\n{"
+			"\n\t"
+			"\n}"
+		);
+	auto& tMaterial = m_mMaterials[uHash];
 
 	KeyValues* kv = new KeyValues(sName);
-	kv->LoadFromBuffer(sName, mat.m_sVMT.c_str());
-	kv->SetString("$model", "1");
-	mat.m_pMaterial = Create(std::format("m_pMat%s", sName).c_str(), kv);
+	kv->LoadFromBuffer(sName, tMaterial.m_sVMT.c_str());
+	ModifyKeyValues(kv);
 
-	m_mMaterials[uHash] = mat;
+	tMaterial.m_pMaterial = Create(sName, kv);
+	StoreVars(tMaterial);
 
 	std::ofstream outStream(std::format("{}\\{}.vmt", MaterialFolder, sName));
-	outStream << mat.m_sVMT;
+	outStream << tMaterial.m_sVMT;
 	outStream.close();
 }
 
@@ -263,14 +289,17 @@ void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 	const auto cham = m_mMaterials.find(FNV1A::Hash32(sName));
 	if (cham != m_mMaterials.end() && !cham->second.m_bLocked)
 	{
-		Remove(cham->second.m_pMaterial);
+		auto& tMaterial = cham->second;
 
-		cham->second.m_sVMT = sVMT;
+		Remove(tMaterial.m_pMaterial);
+		tMaterial.m_sVMT = sVMT;
 
 		KeyValues* kv = new KeyValues(sName);
 		kv->LoadFromBuffer(sName, sVMT);
-		kv->SetString("$model", "1");
-		cham->second.m_pMaterial = Create(std::format("m_pMat%s", sName).c_str(), kv);
+		ModifyKeyValues(kv);
+
+		tMaterial.m_pMaterial = Create(sName, kv);
+		StoreVars(tMaterial);
 
 		std::ofstream outStream(std::format("{}\\{}.vmt", MaterialFolder, sName));
 		outStream << sVMT;

@@ -1,15 +1,16 @@
 #include "FakeLag.h"
 
+#include "../../TickHandler/TickHandler.h"
 #include "../../Aimbot/AutoRocketJump/AutoRocketJump.h"
 
 bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!(Vars::CL_Move::Fakelag::Fakelag.Value || bPreservingBlast || bUnducking)
-		|| I::ClientState->chokedcommands >= std::min(24 - G::ShiftedTicks, 21)
-		|| G::ShiftedGoal != G::ShiftedTicks || G::Recharge)
+	if (!(Vars::CL_Move::Fakelag::Fakelag.Value || m_bPreservingBlast || m_bUnducking)
+		|| I::ClientState->chokedcommands >= std::min(24 - F::Ticks.m_iShiftedTicks, 21)
+		|| F::Ticks.m_iShiftedGoal != F::Ticks.m_iShiftedTicks || F::Ticks.m_bRecharge)
 		return false;
 
-	if (bPreservingBlast)
+	if (m_bPreservingBlast)
 	{
 		G::PSilentAngles = true; // prevent unchoking while grounded
 		return true;
@@ -20,7 +21,7 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK)) // try to prevent issues
 		return false;
 
-	if (bUnducking)
+	if (m_bUnducking)
 		return true;
 	
 	const bool bMoving = !(Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileMoving) || pLocal->m_vecVelocity().Length2D() > 10.f;
@@ -31,10 +32,10 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 	{
 	case Vars::CL_Move::Fakelag::FakelagEnum::Plain:
 	case Vars::CL_Move::Fakelag::FakelagEnum::Random:
-		return G::ChokeAmount < G::ChokeGoal;
+		return I::ClientState->chokedcommands < m_iGoal;
 	case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive:
 	{
-		const Vec3 vDelta = vLastPosition - pLocal->m_vecOrigin();
+		const Vec3 vDelta = m_vLastPosition - pLocal->m_vecOrigin();
 		return vDelta.Length2DSqr() < 4096.f;
 	}
 	}
@@ -44,24 +45,29 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 void CFakeLag::PreserveBlastJump(CTFPlayer* pLocal)
 {
-	bPreservingBlast = false;
+	bool bLastPreservingBlast = m_bPreservingBlast;
+	m_bPreservingBlast = false;
 
-	if (!Vars::CL_Move::Fakelag::RetainBlastJump.Value || !Vars::Misc::Movement::Bunnyhop.Value || !(G::Buttons & IN_JUMP)
-		|| !pLocal->IsAlive() || pLocal->IsDucking() || !pLocal->m_hGroundEntity() || pLocal->m_iClass() != TF_CLASS_SOLDIER || !pLocal->InCond(TF_COND_BLASTJUMPING))
+	if (!Vars::CL_Move::Fakelag::RetainBlastJump.Value || bLastPreservingBlast || Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value
+		|| !pLocal->IsAlive() || pLocal->IsAGhost() || Vars::CL_Move::Fakelag::RetainSoldierOnly.Value && pLocal->m_iClass() != TF_CLASS_SOLDIER)
+		return;
+	if (!pLocal->InCond(TF_COND_BLASTJUMPING) || !pLocal->m_hGroundEntity())
 		return;
 
-	bPreservingBlast = true;
+	m_bPreservingBlast = true;
 }
 
 void CFakeLag::Unduck(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	bUnducking = false;
+	m_bUnducking = false;
 
-	if (!(Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileUnducking) || !pLocal->IsAlive()
-		|| !(pLocal->m_hGroundEntity() && pLocal->IsDucking() && !(pCmd->buttons & IN_DUCK)))
+	if (!(Vars::CL_Move::Fakelag::Options.Value & Vars::CL_Move::Fakelag::OptionsEnum::WhileUnducking)
+		|| !pLocal->IsAlive() || pLocal->IsAGhost())
+		return;
+	if (!(pLocal->m_hGroundEntity() && pLocal->IsDucking() && !(pCmd->buttons & IN_DUCK)))
 		return;
 
-	bUnducking = true;
+	m_bUnducking = true;
 }
 
 void CFakeLag::Prediction(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -75,24 +81,20 @@ void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	if (!pLocal)
 		return;
 
-	Prediction(pLocal, pCmd);
-
-	// Set the selected choke amount (if not random)
 	switch (Vars::CL_Move::Fakelag::Fakelag.Value)
 	{
-	case Vars::CL_Move::Fakelag::FakelagEnum::Plain: G::ChokeGoal = Vars::CL_Move::Fakelag::PlainTicks.Value; break;
-	case Vars::CL_Move::Fakelag::FakelagEnum::Random: if (!G::ChokeGoal) G::ChokeGoal = SDK::StdRandomInt(Vars::CL_Move::Fakelag::RandomTicks.Value.Min, Vars::CL_Move::Fakelag::RandomTicks.Value.Max); break;
-	case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive: G::ChokeGoal = 22; break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Off: m_iGoal = 0; break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Plain: m_iGoal = Vars::CL_Move::Fakelag::PlainTicks.Value; break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Random: if (!m_iGoal) m_iGoal = SDK::StdRandomInt(Vars::CL_Move::Fakelag::RandomTicks.Value.Min, Vars::CL_Move::Fakelag::RandomTicks.Value.Max); break;
+	case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive: m_iGoal = 22; break;
 	}
 
-	// Are we even allowed to choke?
+	Prediction(pLocal, pCmd);
 	if (!IsAllowed(pLocal, pWeapon, pCmd))
 	{
-		vLastPosition = pLocal->m_vecOrigin();
-		G::ChokeAmount = G::ChokeGoal = 0;
+		m_vLastPosition = pLocal->m_vecOrigin();
 		return;
 	}
 
 	*pSendPacket = false;
-	G::ChokeAmount++;
 }

@@ -14,18 +14,6 @@ void CEntities::Store()
 
 	m_pLocal = pLocal->As<CTFPlayer>();
 	m_pLocalWeapon = m_pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
-
-	switch (m_pLocal->m_iObserverMode())
-	{
-	case OBS_MODE_FIRSTPERSON:
-	case OBS_MODE_THIRDPERSON:
-	{
-		if (auto pObservedTarget = m_pLocal->m_hObserverTarget().Get())
-			m_pObservedTarget = pObservedTarget->As<CTFPlayer>();
-		break;
-	}
-	default: break;
-	}
 	
 	for (int n = I::EngineClient->GetMaxClients() + 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
 	{
@@ -107,7 +95,7 @@ void CEntities::Store()
 			if (nClassID == ETFClassID::CTFGrenadePipebombProjectile)
 			{
 				auto pPipebomb = pEntity->As<CTFGrenadePipebombProjectile>();
-				if (pPipebomb->m_hThrower().Get() == pLocal && pPipebomb->HasStickyEffects())
+				if (pPipebomb->m_hThrower().Get() == pLocal && pPipebomb->m_iType() == TF_GL_MODE_REMOTE_DETONATE /*pPipebomb->HasStickyEffects()*/)
 					m_mGroups[EGroupType::MISC_LOCAL_STICKIES].push_back(pEntity);
 			}
 
@@ -146,7 +134,17 @@ void CEntities::Store()
 			break;
 		}
 	}
-	
+
+	std::unordered_map<uint32_t, bool> mParty = {};
+	if (auto pParty = I::TFGCClientSystem->GetParty())
+	{
+		int iPartyCount = pParty->GetNumMembers();
+		for (int i = 0; i < iPartyCount; i++)
+		{
+			auto sID = CSteamID(); pParty->GetMember(&sID, i);
+			mParty[sID.GetAccountID()] = true;
+		}
+	}
 	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 	{
 		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CTFPlayer>();
@@ -178,7 +176,10 @@ void CEntities::Store()
 
 		PlayerInfo_t pi{};
 		if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
+		{
 			m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
+			m_mIParty[n] = m_mUParty[pi.friendsID] = mParty.contains(pi.friendsID) && n != I::EngineClient->GetLocalPlayer();
+		}
 	}
 
 	int iLag;
@@ -240,11 +241,12 @@ void CEntities::Clear(bool bShutdown)
 {
 	m_pLocal = nullptr;
 	m_pLocalWeapon = nullptr;
-	m_pObservedTarget = nullptr;
 	m_pPlayerResource = nullptr;
 	m_mGroups.clear();
 	m_mIFriends.clear();
 	m_mUFriends.clear();
+	m_mIParty.clear();
+	m_mUParty.clear();
 	m_mIPriorities.clear();
 	m_mUPriorities.clear();
 	m_bSettingUpBones = false;
@@ -361,7 +363,6 @@ bool CEntities::IsSpellbook(CBaseEntity* pEntity)
 CTFPlayer* CEntities::GetLocal() { return m_pLocal; }
 CTFWeaponBase* CEntities::GetWeapon() { return m_pLocalWeapon; }
 CTFPlayerResource* CEntities::GetPR() { return m_pPlayerResource; }
-CTFPlayer* CEntities::GetObservedTarget() { return m_pObservedTarget; }
 
 const std::vector<CBaseEntity*>& CEntities::GetGroup(const EGroupType& Group) { return m_mGroups[Group]; }
 
@@ -378,6 +379,8 @@ void CEntities::SetLagCompensation(int iIndex, bool bLagComp) { m_mLagCompensati
 
 bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
 bool CEntities::IsFriend(uint32_t friendsID) { return m_mUFriends[friendsID]; }
+bool CEntities::InParty(int iIndex) { return m_mIParty[iIndex]; }
+bool CEntities::InParty(uint32_t friendsID) { return m_mUParty[friendsID]; }
 int CEntities::GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
 int CEntities::GetPriority(uint32_t friendsID) { return m_mUPriorities[friendsID]; }
 

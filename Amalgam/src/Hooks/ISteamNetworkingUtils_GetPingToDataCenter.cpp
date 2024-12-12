@@ -1,7 +1,5 @@
 #include "../SDK/SDK.h"
 
-MAKE_SIGNATURE(CTFGCClientSystem_PingThink, "client.dll", "40 55 41 55 41 56 41 57 48 8D AC 24", 0x0);
-
 static void POPID_ToString(SteamNetworkingPOPID popID, char* out)
 {
 	out[0] = static_cast<char>(popID >> 16);
@@ -72,8 +70,8 @@ MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueFor
 {
 	//if (Vars::Misc::Queueing::ForceRegions.Value)
 	{
-		*reinterpret_cast<bool*>(uintptr_t(I::TFGCClientSystem) + 1116) = true;
-		S::CTFGCClientSystem_PingThink.Call<void>(I::TFGCClientSystem);
+		I::TFGCClientSystem->SetPendingPingRefresh(true);
+		I::TFGCClientSystem->PingThink();
 	}
 
 	CALL_ORIGINAL(rcx, eMatchGroup);

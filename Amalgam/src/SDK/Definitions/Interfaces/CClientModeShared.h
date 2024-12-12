@@ -3,6 +3,8 @@
 #include "../Misc/CGameEventListener.h"
 #include "../../../Utils/Memory/Memory.h"
 
+MAKE_SIGNATURE(ClientModeTFNormal_BIsFriendOrPartyMember, "client.dll", "48 89 5C 24 ? 57 48 81 EC ? ? ? ? 48 85 D2 0F 84", 0x0);
+
 class CBaseEntity;
 class CBasePlayer;
 class CViewSetup;
@@ -12,14 +14,12 @@ class CBaseHudChat
 public:
 	void ChatPrintf(int pIndex, const char* fmt, ...)
 	{
-		typedef void(_cdecl* FN)(void*, int, int, const char*, ...);
-		reinterpret_cast<FN>(U::Memory.GetVFunc(this, 19))(this, pIndex, 0, fmt);
+		reinterpret_cast<void(*)(void*, int, int, const char*, ...)>(U::Memory.GetVFunc(this, 19))(this, pIndex, 0, fmt);
 	}
 
 	void StartMessageMode(int iMessageModeType)
 	{
-		typedef void(__fastcall* FN)(void*, int);
-		reinterpret_cast<FN>(U::Memory.GetVFunc(this, 20))(this, iMessageModeType);
+		reinterpret_cast<void(*)(void*, int)>(U::Memory.GetVFunc(this, 20))(this, iMessageModeType);
 	}
 };
 
@@ -82,6 +82,11 @@ public:
 
 	char szPad[24];
 	CBaseHudChat* m_pChatElement;
+
+	inline bool BIsFriendOrPartyMember(CBaseEntity* pEntity)
+	{
+		return S::ClientModeTFNormal_BIsFriendOrPartyMember.Call<bool>(this, pEntity);
+	}
 };
 
 MAKE_INTERFACE_SIGNATURE(CClientModeShared, ClientModeShared, "client.dll", "48 8B 0D ? ? ? ? 48 8B 10 48 8B 19 48 8B C8 FF 92", 0x0, 1);

@@ -5,7 +5,12 @@
 
 class CAutoDetonate
 {
-	bool CheckDetonation(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, EGroupType entityGroup, float flRadiusScale, CUserCmd* pCmd);
+	bool CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, float flRadiusScale, CUserCmd* pCmd);
+
+	void PredictPlayers(CBaseEntity* pLocal, float flLatency);
+	void RestorePlayers();
+
+	std::unordered_map<CBaseEntity*, Vec3> m_mRestore = {};
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);

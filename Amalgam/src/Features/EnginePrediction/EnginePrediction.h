@@ -22,7 +22,7 @@ private:
 	bool m_bDoubletap = false;
 	Vec3 m_vOriginalOrigin = {};
 
-	std::unordered_map<CBaseEntity*, RestoreInfo_t> m_mRestore = {};
+	std::unordered_map<CTFPlayer*, RestoreInfo_t> m_mRestore = {};
 
 public:
 	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);

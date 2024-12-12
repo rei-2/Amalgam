@@ -46,7 +46,7 @@ namespace Math
 
 	inline void ClampAngles(Vec3& v)
 	{
-		v.x = std::max(-89.f, std::min(89.f, NormalizeAngle(v.x)));
+		v.x = std::clamp(NormalizeAngle(v.x), -89.f, 89.f);
 		v.y = NormalizeAngle(v.y);
 		v.z = 0.f;
 	}
@@ -430,6 +430,89 @@ namespace Math
 		mOut[2][1] = mIn1[2][0] * mIn2[0][1] + mIn1[2][1] * mIn2[1][1] + mIn1[2][2] * mIn2[2][1];
 		mOut[2][2] = mIn1[2][0] * mIn2[0][2] + mIn1[2][1] * mIn2[1][2] + mIn1[2][2] * mIn2[2][2];
 		mOut[2][3] = mIn1[2][0] * mIn2[0][3] + mIn1[2][1] * mIn2[1][3] + mIn1[2][2] * mIn2[2][3] + mIn1[2][3];
+	}
+
+	inline std::vector<float> SolveQuadratic(float a, float b, float c)
+	{
+		float flRoot = powf(b, 2.f) - 4 * a * c;
+		if (flRoot < 0)
+			return {};
+
+		a *= 2;
+		b = -b;
+		return { (b + sqrt(flRoot)) / a, (b - sqrt(flRoot)) / a };
+	}
+
+	inline float SolveCubic(float b, float c, float d)
+	{
+		float p = c - powf(b, 2) / 3;
+		float q = 2 * powf(b, 3) / 27 - b * c / 3 + d;
+
+		if (p == 0.f)
+			return pow(q, 1.f / 3);
+		if (q == 0.f)
+			return 0.f;
+
+		float t = sqrt(fabs(p) / 3);
+		float g = q / (2.f / 3) / (p * t);
+		if (p > 0.f)
+			return -2 * t * sinh(asinh(g) / 3) - b / 3;
+
+		if (4 * powf(p, 3) + 27 * powf(q, 2) < 0.f)
+			return 2 * t * cos(acos(g) / 3) - b / 3;
+		if (q > 0.f)
+			return -2 * t * cosh(acosh(-g) / 3) - b / 3;
+		return 2 * t * cosh(acosh(g) / 3) - b / 3;
+	}
+	
+	inline std::vector<float> SolveQuartic(float a, float b, float c, float d, float e)
+	{
+		std::vector<float> vRoots = {};
+
+		b /= a, c /= a, d /= a, e /= a;
+		float p = c - powf(b, 2) / (8.f / 3);
+		float q = powf(b, 3) / 8 - b * c / 2 + d;
+		float m = SolveCubic(
+			p,
+			powf(p, 2) / 4 + powf(b, 4) / (256.f / 3) - e + b * d / 4 - powf(b, 2) * c / 16,
+			-powf(q, 2) / 8
+		);
+		if (m < 0.f)
+			return vRoots;
+
+		float sqrt_2m = sqrt(2 * m);
+		if (q == 0.f)
+		{
+			if (-m - p > 0.f)
+			{
+				float flDelta = sqrt(2 * (-m - p));
+				vRoots.push_back(-b / 4 + (sqrt_2m - flDelta) / 2);
+				vRoots.push_back(-b / 4 - (sqrt_2m - flDelta) / 2);
+				vRoots.push_back(-b / 4 + (sqrt_2m + flDelta) / 2);
+				vRoots.push_back(-b / 4 - (sqrt_2m + flDelta) / 2);
+			}
+			if (-m - p == 0.f)
+			{
+				vRoots.push_back(-b / 4 - sqrt_2m / 2);
+				vRoots.push_back(-b / 4 + sqrt_2m / 2);
+			}
+		}
+		else
+		{
+			if (-m - p + q / sqrt_2m >= 0.f)
+			{
+				float flDelta = sqrt(2 * (-m - p + q / sqrt_2m));
+				vRoots.push_back((-sqrt_2m + flDelta) / 2 - b / 4);
+				vRoots.push_back((-sqrt_2m - flDelta) / 2 - b / 4);
+			}
+			if (-m - p - q / sqrt_2m >= 0.f)
+			{
+				float flDelta = sqrt(2 * (-m - p - q / sqrt_2m));
+				vRoots.push_back((sqrt_2m + flDelta) / 2 - b / 4);
+				vRoots.push_back((sqrt_2m - flDelta) / 2 - b / 4);
+			}
+		}
+		return vRoots;
 	}
 }
 

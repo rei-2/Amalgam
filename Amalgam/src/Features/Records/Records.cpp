@@ -149,9 +149,8 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			if (n == pLocal->entindex() || !I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer)
 				continue;
 
-			auto sName = F::PlayerUtils.GetPlayerName(n, pi.name);
-			TagsOnJoin(sName, pi.friendsID);
-			AliasOnJoin(sName, pi.friendsID);
+			TagsOnJoin(pi.name, pi.friendsID);
+			AliasOnJoin(pi.name, pi.friendsID);
 		}
 	}
 	}
@@ -225,7 +224,7 @@ void CRecords::TagsOnJoin(std::string sName, uint32_t friendsID)
 	case 2:
 	{
 		auto& pColorTag1 = *vColorsTags.begin(), &pColorTag2 = *(vColorsTags.begin() + 1);
-		sOutputText = std::format("{} and ", pColorTag1.second, pColorTag2.second);
+		sOutputText = std::format("{} and {}", pColorTag1.second, pColorTag2.second);
 		sChatText = std::format("{}{}\x1 and {}{}", pColorTag1.first, pColorTag1.second, pColorTag2.first, pColorTag2.second);
 		break;
 	}

@@ -3,21 +3,24 @@
 #include <mutex>
 
 #define DEFAULT_TAG 0
-#define IGNORED_TAG 1
-#define CHEATER_TAG 2
-#define FRIEND_TAG 3
+#define IGNORED_TAG (DEFAULT_TAG-1)
+#define CHEATER_TAG (IGNORED_TAG-1)
+#define FRIEND_TAG (CHEATER_TAG-1)
+#define PARTY_TAG (FRIEND_TAG-1)
+#define TAG_COUNT (-PARTY_TAG)
 
 struct ListPlayer
 {
-	const char* Name{};
-	uint32_t FriendsID{};
-	int UserID{};
-	int Team{};
-	int Class{};
-	bool Alive{};
-	bool Local{};
-	bool Friend{};
-	bool Fake{};
+	const char* m_sName;
+	uint32_t m_uFriendsID;
+	int m_iUserID;
+	int m_iTeam;
+	int m_iClass;
+	bool m_bAlive;
+	bool m_bLocal;
+	bool m_bFriend;
+	bool m_bParty;
+	bool m_bFake;
 };
 
 struct PriorityLabel_t
@@ -36,6 +39,22 @@ class CPlayerlistUtils
 public:
 	PriorityLabel_t* GetTag(int iID);
 	int GetTag(std::string sTag);
+	inline int TagToIndex(int iTag)
+	{
+		if (iTag <= 0)
+			iTag = -iTag;
+		else
+			iTag += TAG_COUNT;
+		return iTag;
+	}
+	inline int IndexToTag(int iID)
+	{
+		if (iID <= TAG_COUNT)
+			iID = -iID;
+		else
+			iID -= TAG_COUNT;
+		return iID;
+	}
 
 	void AddTag(uint32_t friendsID, int iID, bool bSave = true, std::string sName = "");
 	void AddTag(int iIndex, int iID, bool bSave = true, std::string sName = "");
@@ -52,6 +71,8 @@ public:
 	PriorityLabel_t* GetSignificantTag(int iIndex, int iMode = 1); // iMode: 0 - Priorities & Labels, 1 - Priorities, 2 - Labels
 	bool IsIgnored(uint32_t friendsID);
 	bool IsIgnored(int iIndex);
+	bool IsPrioritized(uint32_t friendsID);
+	bool IsPrioritized(int iIndex);
 
 	const char* GetPlayerName(int iIndex, const char* sDefault, int* pType = nullptr);
 
@@ -66,7 +87,8 @@ public:
 		{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
 		{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
 		{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
-		{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true }
+		{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
+		{ "Party", { 100, 100, 255, 255 }, 0, true, false, true }
 	};
 
 	std::vector<ListPlayer> m_vPlayerCache = {};

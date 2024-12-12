@@ -12,6 +12,7 @@
 struct Frame
 {
 	std::string m_sModule = "";
+	uintptr_t m_pBase = 0;
 	uintptr_t m_pAddress = 0;
 	std::string m_sFile = "";
 	unsigned int m_uLine = 0;
@@ -45,16 +46,18 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 
 		if (auto hBase = HINSTANCE(SymGetModuleBase64(hProcess, frame.AddrPC.Offset)))
 		{
+			tFrame.m_pBase = uintptr_t(hBase);
+
 			char buf[MAX_PATH];
 			if (GetModuleFileNameA(hBase, buf, MAX_PATH))
 			{
-				tFrame.m_sModule = std::format("{}, {:#x}", buf, uintptr_t(hBase));
+				tFrame.m_sModule = std::format("{}", buf);
 				auto find = tFrame.m_sModule.rfind("\\");
 				if (find != std::string::npos)
 					tFrame.m_sModule.replace(0, find + 1, "");
 			}
 			else
-				tFrame.m_sModule = std::format("{:#x}", uintptr_t(hBase));
+				tFrame.m_sModule = std::format("{:#x}", tFrame.m_pBase);
 		}
 
 		{
@@ -93,16 +96,16 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 
 static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 {
-	static LPVOID pLastAddress = nullptr;
+	static std::unordered_map<LPVOID, bool> mAddresses = {};
 	static bool bException = false;
 
 	// unsure of a way to filter nonfatal exceptions
 	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION
-		|| ExceptionInfo->ExceptionRecord->ExceptionAddress && ExceptionInfo->ExceptionRecord->ExceptionAddress == pLastAddress
+		|| !ExceptionInfo->ExceptionRecord->ExceptionAddress || mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)
 		|| !Vars::Debug::CrashLogging.Value
 		|| bException && GetAsyncKeyState(VK_SHIFT) & 0x8000 && GetAsyncKeyState(VK_RETURN) & 0x8000)
 		return EXCEPTION_EXECUTE_HANDLER;
-	pLastAddress = ExceptionInfo->ExceptionRecord->ExceptionAddress;
+	mAddresses[ExceptionInfo->ExceptionRecord->ExceptionAddress] = true;
 
 	std::stringstream ssErrorStream;
 	ssErrorStream << std::format("Error: {:#X}\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
@@ -122,9 +125,10 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	{
 		for (auto& tFrame : vTrace)
 		{
-			ssErrorStream << std::format("{:#x}", tFrame.m_pAddress);
-			if (!tFrame.m_sModule.empty())
-				ssErrorStream << std::format(" ({})", tFrame.m_sModule);
+			if (tFrame.m_pBase)
+				ssErrorStream << std::format("{}+{:#x}", tFrame.m_sModule, tFrame.m_pAddress - tFrame.m_pBase);
+			else
+				ssErrorStream << std::format("{:#x}", tFrame.m_pAddress);
 			if (!tFrame.m_sFile.empty())
 				ssErrorStream << std::format(" ({} L{})", tFrame.m_sFile, tFrame.m_uLine);
 			if (!tFrame.m_sName.empty())

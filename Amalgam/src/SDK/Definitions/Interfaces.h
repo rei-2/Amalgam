@@ -8,6 +8,7 @@
 #include "Interfaces/CTFGameRules.h"
 #include "Interfaces/CTFGCClientSystem.h"
 #include "Interfaces/CTFPartyClient.h"
+#include "Interfaces/IBaseClientDLL.h"
 #include "Interfaces/IClientEntityList.h"
 #include "Interfaces/ICVar.h"
 #include "Interfaces/IEngineTrace.h"

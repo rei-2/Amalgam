@@ -3,16 +3,26 @@
 
 struct PlayerInfo
 {
-	uint32_t friendsID = 0;
-	std::string sName = "";
+	uint32_t m_uFriendsID = 0;
+	std::string m_sName = "";
 
-	int iDetections = 0;
+	int m_iDetections = 0;
 
-	std::deque<int> vChokes = {};					// store last 3 choke counts
-	bool bChoke = false;							// infract the user for choking?
-	std::deque<std::pair<Vec3, bool>> vAngles = {};	// store last 3 angles & if damage was dealt
-	bool bDamage = false;
-	int iDuckSpeed = 0;								// how many times in a row a user has been detected for duck speed
+	struct PacketChoking_t
+	{
+		std::deque<int> m_vChokes = {}; // store last 3 choke counts
+		bool m_bInfract = false; // infract the user for choking?
+	} m_PacketChoking;
+
+	struct AimFlicking_t
+	{
+		std::deque<std::pair<Vec3, bool>> m_vAngles = {}; // store last 3 angles & if damage was dealt
+	} m_AimFlicking;
+					
+	struct DuckSpeed_t
+	{
+		int m_iStartTick = 0;
+	} m_DuckSpeed;
 };
 
 class CCheaterDetection

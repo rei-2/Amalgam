@@ -91,7 +91,7 @@
     <ClCompile Include="src\Hooks\CClientState_ProcessFixAngle.cpp" />
     <ClCompile Include="src\Hooks\KeyValues_SetInt.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayerShared_IsPlayerDominated.cpp" />
-    <ClCompile Include="src\Hooks\CPrediction_RunCommand.cpp" />
+    <ClCompile Include="src\Hooks\CPrediction_RunSimulation.cpp" />
     <ClCompile Include="src\Hooks\IVModelRender_DrawModelExecute.cpp" />
     <ClCompile Include="src\Hooks\CViewRender_RenderView.cpp" />
     <ClCompile Include="src\Hooks\Direct3DDevice9.cpp" />
@@ -178,6 +178,10 @@
     <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />
     <ClCompile Include="src\Hooks\bf_read_ReadString.cpp" />
     <ClCompile Include="src\Hooks\CClientState_GetTime.cpp" />
+    <ClCompile Include="src\Hooks\CTFHudDeathNotice_AddAdditionalMsg.cpp" />
+    <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
+    <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
+    <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -554,6 +558,9 @@
     <ClInclude Include="src\SDK\Definitions\Main\CEconEntity.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CEconWearable.h" />
     <ClInclude Include="src\Features\Misc\AutoVote\AutoVote.h" />
+    <ClInclude Include="src\Features\Spectate\Spectate.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\IBaseClientDLL.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\CSniperDot.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

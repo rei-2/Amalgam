@@ -33,16 +33,18 @@ struct Info_t
 	float m_flLatency = 0.f;
 	int m_iLatency = 0;
 
+	Vec3 m_vHull = {};
 	Vec3 m_vOffset = {};
+	Vec3 m_vAngFix = {};
 	float m_flVelocity = 0.f;
 	float m_flGravity = 0.f;
 	float m_flRadius = 0.f;
 	float m_flRadiusTime = 0.f;
-	float m_flBoundingRadius = 0.f;
-	float m_flUpFix = 0.f;
+	float m_flBoundingTime = 0.f;
 	float m_flOffsetTime = 0.f;
 	int m_iSplashCount = 0;
-	bool m_bRocket = false;
+	int m_iSplashMode = 0;
+	float m_flPrimeTime = 0;
 	int m_iPrimeTime = 0;
 };
 

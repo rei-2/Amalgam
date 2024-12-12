@@ -151,7 +151,7 @@ public:
 
 	inline bool GetAttachment(int number, Vec3& origin)
 	{
-		return reinterpret_cast<bool(__fastcall*)(void*, int, Vec3&)>(U::Memory.GetVFunc(this, 71))(this, number, origin);
+		return reinterpret_cast<bool(*)(void*, int, Vec3&)>(U::Memory.GetVFunc(this, 71))(this, number, origin);
 	}
 };
 

@@ -65,18 +65,7 @@ namespace G
 	inline bool SilentAngles = false;
 	inline bool PSilentAngles = false;
 
-	inline int ShiftedTicks = 0;
-	inline int ShiftedGoal = 0;
-	inline int WaitForShift = 0;
-	inline bool DoubleTap = false;
-	inline bool AntiWarp = false;
-	inline bool Warp = false;
-	inline bool Recharge = false;
-	inline int MaxShift = 24;
-
 	inline bool AntiAim = false;
-	inline int ChokeAmount = 0;
-	inline int ChokeGoal = 0;
 	inline int AnticipatedChoke = 0;
 	inline bool Choking = false;
 

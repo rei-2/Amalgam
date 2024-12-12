@@ -1,5 +1,7 @@
 #include "CritHack.h"
 
+#include "../TickHandler/TickHandler.h"
+
 #define WEAPON_RANDOM_RANGE				10000
 #define TF_DAMAGE_CRIT_MULTIPLIER		3.0f
 #define TF_DAMAGE_CRIT_CHANCE			0.02f
@@ -86,6 +88,9 @@ u32 CCritHack::DecryptOrEncryptSeed(int iSlot, int iIndex, u32 uSeed)
 void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	int iSlot = pWeapon->GetSlot();
+	if (!m_mStorage.contains(iSlot))
+		return;
+
 	auto& tStorage = m_mStorage[iSlot];
 
 	static float flOldBucket = 0.f; static int iOldID = 0, iOldCritChecks = 0, iOldCritSeedRequests = 0;
@@ -217,9 +222,9 @@ void CCritHack::CanFireCritical(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		m_iDamageTilUnban = flNormalizedDamage / flCritChance + m_iCritDamage - flNormalizedDamage - m_iAllDamage;
 }
 
-bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon)
+bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly)
 {
-	if (!pWeapon->AreRandomCritsEnabled() || SDK::AttribHookValue(1.f, "mult_crit_chance", pWeapon) <= 0.f)
+	if (!bWeaponOnly && !pWeapon->AreRandomCritsEnabled() || SDK::AttribHookValue(1.f, "mult_crit_chance", pWeapon) <= 0.f)
 		return false;
 
 	switch (pWeapon->GetWeaponID())
@@ -231,7 +236,6 @@ bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon)
 	case TF_WEAPON_PDA_SPY_BUILD:
 	case TF_WEAPON_BUILDER:
 	case TF_WEAPON_INVIS:
-	case TF_WEAPON_GRAPPLINGHOOK:
 	case TF_WEAPON_JAR_MILK:
 	case TF_WEAPON_LUNCHBOX:
 	case TF_WEAPON_BUFF_ITEM:
@@ -287,8 +291,8 @@ void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 
 	for (auto& [iSlot, _] : m_mStorage)
 	{
-		if (!mWeapons[iSlot])
-			m_mStorage[iSlot] = {};
+		if (m_mStorage.contains(iSlot) && !mWeapons[iSlot])
+			m_mStorage.erase(iSlot);
 	}
 }
 
@@ -318,14 +322,16 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	Fill(pCmd, 25);
 	GetTotalCrits(pLocal, pWeapon);
 	CanFireCritical(pLocal, pWeapon);
-	if (pLocal->IsCritBoosted() || !m_mStorage.contains(iSlot))
+	if (pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !m_mStorage.contains(iSlot))
 		return;
 
+	auto& tStorage = m_mStorage[iSlot];
+
+	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, false);
 	if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && pCmd->buttons & IN_ATTACK)
 		pCmd->buttons &= ~IN_ATTACK2;
-	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, false);
 	
-	bool bAttacking = G::Attacking /*== 1*/ || G::DoubleTap;
+	bool bAttacking = G::Attacking /*== 1*/ || F::Ticks.m_bDoubletap || F::Ticks.m_bSpeedhack;
 	if (G::PrimaryWeaponType == EWeaponType::MELEE)
 	{
 		bAttacking = G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK;
@@ -335,7 +341,6 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	else if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && !(G::LastUserCmd->buttons & IN_ATTACK))
 		bAttacking = false;
 
-	auto& tStorage = m_mStorage[iSlot];
 	bool bRapidFire = pWeapon->IsRapidFire();
 	bool bStreamWait = bRapidFire && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
 
@@ -367,6 +372,32 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		tStorage.m_vCritCommands.pop_front();
 	else if (pCmd->command_number == closestSkip)
 		tStorage.m_vSkipCommands.pop_front();
+}
+
+int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+{
+	if (!pLocal || !pWeapon || !pLocal->IsAlive() || !I::EngineClient->IsInGame())
+		return pCmd->command_number;
+
+	int iSlot = pWeapon->GetSlot();
+	if (pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !m_mStorage.contains(iSlot))
+		return pCmd->command_number;
+
+	auto& tStorage = m_mStorage[iSlot];
+	bool bRapidFire = pWeapon->IsRapidFire();
+	bool bStreamWait = bRapidFire && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
+
+	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
+	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
+
+	const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
+	const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
+	if (bCanCrit && bPressed && closestCrit)
+		return closestCrit;
+	else if (Vars::CritHack::AvoidRandom.Value && closestSkip)
+		return closestSkip;
+
+	return pCmd->command_number;
 }
 
 bool CCritHack::CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
@@ -450,9 +481,7 @@ void CCritHack::Store()
 
 void CCritHack::Draw(CTFPlayer* pLocal)
 {
-	static auto tf_weapon_criticals = U::ConVars.FindVar("tf_weapon_criticals");
-	const bool bWeaponCriticals = tf_weapon_criticals ? tf_weapon_criticals->GetBool() : true;
-	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::CritHack) || !I::EngineClient->IsInGame() || !bWeaponCriticals)
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::CritHack) || !I::EngineClient->IsInGame())
 		return;
 
 	auto pWeapon = H::Entities.GetWeapon();
@@ -476,9 +505,14 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		align = ALIGN_TOPRIGHT;
 	}
 
-	if (WeaponCanCrit(pWeapon))
+	auto iSlot = pWeapon->GetSlot();
+	if (!m_mStorage.contains(iSlot))
 	{
-		auto iSlot = pWeapon->GetSlot();
+		if (WeaponCanCrit(pWeapon, true))
+			H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, "Random crits disabled");
+	}
+	else
+	{
 		auto& tStorage = m_mStorage[iSlot];
 		auto bRapidFire = pWeapon->IsRapidFire();
 		float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
@@ -486,11 +520,11 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		if (tStorage.m_flDamage > 0)
 		{
 			if (pLocal->IsCritBoosted())
-				H::Draw.StringOutlined(fFont, x, y, { 100, 255, 255, 255 }, { 0, 0, 0, 255 }, align, "Crit Boosted");
+				H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextMisc.Value, Vars::Menu::Theme::Background.Value, align, "Crit Boosted");
 			else if (pWeapon->m_flCritTime() > flTickBase)
 			{
 				float flTime = pWeapon->m_flCritTime() - flTickBase;
-				H::Draw.StringOutlined(fFont, x, y, { 100, 255, 255, 255 }, { 0, 0, 0, 255 }, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
+				H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextMisc.Value, Vars::Menu::Theme::Background.Value, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
 			}
 			else if (!m_bCritBanned)
 			{
@@ -502,16 +536,16 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 						H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Wait {:.1f}s", flTime).c_str());
 					}
 					else
-						H::Draw.StringOutlined(fFont, x, y, { 150, 255, 150, 255 }, { 0, 0, 0, 255 }, align, "Crit Ready");
+						H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value, align, "Crit Ready");
 				}
 				else
 				{
 					int iShots = tStorage.m_iNextCrit;
-					H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, std::format("Crit in {}{} shot{}", iShots, iShots == 1000 ? "+" : "", iShots == 1 ? "" : "s").c_str());
+					H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Crit in {}{} shot{}", iShots, iShots == 1000 ? "+" : "", iShots == 1 ? "" : "s").c_str());
 				}
 			}
 			else
-				H::Draw.StringOutlined(fFont, x, y, { 255, 150, 150, 255 }, { 0, 0, 0, 255 }, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
+				H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
 
 			int iCrits = tStorage.m_iAvailableCrits;
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("{}{} / {} potential crits", iCrits, iCrits == 1000 ? "+" : "", tStorage.m_iPotentialCrits).c_str());
@@ -527,11 +561,11 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 
 		if (Vars::Debug::Info.Value)
 		{
-			H::Draw.StringOutlined(fFont, x, y += nTall * 2, {}, { 0, 0, 0, 255 }, align, std::format("AllDamage: {}, CritDamage: {}", m_iAllDamage, m_iCritDamage).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Bucket: {}, Shots: {}, Crits: {}", pWeapon->m_flCritTokenBucket(), pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance + 0.1f).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, {}, { 0, 0, 0, 255 }, align, std::format("Force: {}, Skip: {}", tStorage.m_vCritCommands.size(), tStorage.m_vSkipCommands.size()).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall * 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("AllDamage: {}, CritDamage: {}", m_iAllDamage, m_iCritDamage).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Bucket: {}, Shots: {}, Crits: {}", pWeapon->m_flCritTokenBucket(), pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance + 0.1f).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Force: {}, Skip: {}", tStorage.m_vCritCommands.size(), tStorage.m_vSkipCommands.size()).c_str());
 		}
 	}
 }

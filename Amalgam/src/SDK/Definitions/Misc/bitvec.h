@@ -11,6 +11,7 @@
 #endif
 
 #include <limits.h>
+#include <cstring>
 #include "BaseTypes.h"
 
 #define FORCEINLINE_TEMPLATE __forceinline

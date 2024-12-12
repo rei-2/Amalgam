@@ -96,7 +96,7 @@ public:
 public:
 	void SendStringCmd(const char* command)
 	{
-		reinterpret_cast<void(__fastcall*)(void*, const char*)>(S::CBaseClientState_SendStringCmd())(this, command);
+		reinterpret_cast<void(*)(void*, const char*)>(S::CBaseClientState_SendStringCmd())(this, command);
 	}
 };
 

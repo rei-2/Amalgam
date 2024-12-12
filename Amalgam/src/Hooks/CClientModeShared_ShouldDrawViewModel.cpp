@@ -6,7 +6,7 @@ MAKE_HOOK(CClientModeShared_ShouldDrawViewModel, U::Memory.GetVFunc(I::ClientMod
 	void* rcx)
 {
 	auto pLocal = H::Entities.GetLocal();
-	if (pLocal && pLocal->IsScoped() && Vars::Visuals::Removals::Scope.Value && Vars::Visuals::UI::ZoomFieldOfView.Value > 70 && !I::Input->CAM_IsThirdPerson())
+	if (pLocal && pLocal->IsScoped() && Vars::Visuals::Removals::Scope.Value && Vars::Visuals::UI::ZoomFieldOfView.Value > 20 && !I::Input->CAM_IsThirdPerson())
 		return true;
 
 	return CALL_ORIGINAL(rcx);

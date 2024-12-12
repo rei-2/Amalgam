@@ -109,14 +109,15 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 			}
 		}
 
+		if (!F::Ticks.m_bSpeedhack)
 		{
 			static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-			const int iAllowedNewCommands = fmax((sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24) - G::ShiftedTicks, 0);
+			const int iAllowedNewCommands = std::max((sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24) - F::Ticks.m_iShiftedTicks, 0);
 			const int iCmdCount = pMsg->m_nNewCommands + pMsg->m_nBackupCommands - 3;
 			if (iCmdCount > iAllowedNewCommands)
 			{
 				SDK::Output("clc_Move", std::format("{:d} sent <{:d} | {:d}>, max was {:d}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
-				G::ShiftedTicks = G::ShiftedGoal -= iCmdCount - iAllowedNewCommands;
+				F::Ticks.m_iShiftedTicks = F::Ticks.m_iShiftedGoal -= iCmdCount - iAllowedNewCommands;
 				F::Ticks.m_iDeficit = iCmdCount - iAllowedNewCommands;
 			}
 		}

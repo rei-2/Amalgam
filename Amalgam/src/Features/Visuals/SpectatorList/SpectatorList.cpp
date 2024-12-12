@@ -2,53 +2,52 @@
 
 #include "../../Players/PlayerUtils.h"
 
-bool CSpectatorList::GetSpectators(CTFPlayer* pLocal)
+bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 {
 	m_vSpectators.clear();
 
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
+	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 
-		if (!pPlayer->IsAlive() && pPlayer->m_hObserverTarget().Get() == pLocal)
+		if (pPlayer->IsAlive() || pPlayer->m_hObserverTarget().Get() != pTarget || pEntity->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingTimeDemo())
 		{
-			int iIndex = pPlayer->entindex();
-
-			std::string sMode;
-			switch (pPlayer->m_iObserverMode())
-			{
-				case OBS_MODE_FIRSTPERSON: sMode = "1st"; break;
-				case OBS_MODE_THIRDPERSON: sMode = "3rd"; break;
-				default: continue;
-			}
-
-			int respawnIn = 0; float respawnTime = 0;
-			if (auto pResource = H::Entities.GetPR())
-			{
-				respawnTime = pResource->GetNextRespawnTime(iIndex);
-				respawnIn = std::max(respawnTime - I::GlobalVars->curtime, 0.f);
-			}
-			bool respawnTimeIncreased = false; // theoretically the respawn times could be changed by the map but oh well
-			if (!m_mRespawnCache.contains(iIndex))
-				m_mRespawnCache[iIndex] = respawnTime;
-			if (m_mRespawnCache[iIndex] + 0.9f < respawnTime)
-			{
-				respawnTimeIncreased = true;
-				m_mRespawnCache[iIndex] = -1.f;
-			}
-
-			PlayerInfo_t pi{};
-			if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
-			{
-				std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-				m_vSpectators.push_back({ sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), pPlayer->entindex() });
-			}
+			auto it = m_mRespawnCache.find(pPlayer->entindex());
+			if (it != m_mRespawnCache.end())
+				m_mRespawnCache.erase(it);
+			continue;
 		}
-		else
+
+		int iIndex = pPlayer->entindex();
+
+		std::string sMode;
+		switch (pPlayer->m_iObserverMode())
 		{
-			auto iter = m_mRespawnCache.find(pPlayer->entindex());
-			if (iter != m_mRespawnCache.end())
-				m_mRespawnCache.erase(iter);
+		case OBS_MODE_FIRSTPERSON: sMode = "1st"; break;
+		case OBS_MODE_THIRDPERSON: sMode = "3rd"; break;
+		default: continue;
+		}
+
+		int respawnIn = 0; float respawnTime = 0;
+		if (auto pResource = H::Entities.GetPR())
+		{
+			respawnTime = pResource->GetNextRespawnTime(iIndex);
+			respawnIn = std::max(respawnTime - I::GlobalVars->curtime, 0.f);
+		}
+		bool respawnTimeIncreased = false; // theoretically the respawn times could be changed by the map but oh well
+		if (!m_mRespawnCache.contains(iIndex))
+			m_mRespawnCache[iIndex] = respawnTime;
+		if (m_mRespawnCache[iIndex] + 0.9f < respawnTime)
+		{
+			respawnTimeIncreased = true;
+			m_mRespawnCache[iIndex] = -1.f;
+		}
+
+		PlayerInfo_t pi{};
+		if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
+		{
+			std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+			m_vSpectators.push_back({ sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), H::Entities.InParty(pPlayer->entindex()), pPlayer->entindex() });
 		}
 	}
 
@@ -63,7 +62,19 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 		return;
 	}
 
-	if (!pLocal->IsAlive() || !GetSpectators(pLocal))
+
+	auto pTarget = pLocal;
+	switch (pLocal->m_iObserverMode())
+	{
+	case OBS_MODE_FIRSTPERSON:
+	case OBS_MODE_THIRDPERSON:
+		pTarget = pLocal->m_hObserverTarget().Get()->As<CTFPlayer>();
+	}
+	PlayerInfo_t pi{};
+	if (!pTarget || pTarget != pLocal && !I::EngineClient->GetPlayerInfo(pTarget->entindex(), &pi))
+		return;
+
+	if (!GetSpectators(pTarget))
 		return;
 
 	int x = Vars::Menu::SpectatorsDisplay.Value.x;
@@ -90,7 +101,8 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 	//if (!Vars::Menu::SpectatorAvatars.Value)
 	//	iconOffset = 0;
 
-	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, "Spectating You:");
+	std::string sName = pTarget != pLocal ? F::PlayerUtils.GetPlayerName(pTarget->entindex(), pi.name) : "You";
+	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, std::format("Spectating {}:", sName).c_str());
 	for (auto& Spectator : m_vSpectators)
 	{
 		y += nTall;
@@ -119,11 +131,13 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 
 		Color_t color = Vars::Menu::Theme::Active.Value;
 		if (Spectator.m_bIsFriend)
-			color = { 200, 255, 200, 255 };
+			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color;
+		else if (Spectator.m_bInParty)
+			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color;
 		else if (Spectator.m_bRespawnTimeIncreased)
-			color = { 255, 100, 100, 255 };
+			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].Color;
 		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
-			color = { 255, 200, 127, 255 };
+			color = color.Lerp({ 255, 150, 0, 255 }, 0.5f);
 		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, std::format("{} - {} (respawn {}s)", Spectator.m_sName, Spectator.m_sMode, Spectator.m_iRespawnIn).c_str());
 	}
 }

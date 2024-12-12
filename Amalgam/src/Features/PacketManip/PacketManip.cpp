@@ -1,10 +1,11 @@
 #include "PacketManip.h"
 
 #include "../Visuals/FakeAngle/FakeAngle.h"
+#include "../TickHandler/TickHandler.h"
 
 static inline bool AntiAimCheck(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	return F::AntiAim.YawOn() && F::AntiAim.ShouldRun(pLocal, pWeapon, pCmd) && !G::Recharge
+	return F::AntiAim.YawOn() && F::AntiAim.ShouldRun(pLocal, pWeapon, pCmd) && !F::Ticks.m_bRecharge
 		&& I::ClientState->chokedcommands < F::AntiAim.AntiAimTicks();
 }
 

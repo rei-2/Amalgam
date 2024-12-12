@@ -28,7 +28,7 @@ public:
 	void DrawFOV(CTFPlayer* pLocal);
 	void DrawTicks(CTFPlayer* pLocal);
 	void DrawPing(CTFPlayer* pLocal);
-	void ProjectileTrace(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const bool bQuick = true);
+	void ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const bool bQuick = true);
 	void SplashRadius(CTFPlayer* pLocal);
 	void DrawAntiAim(CTFPlayer* pLocal);
 	void DrawDebugInfo(CTFPlayer* pLocal);

@@ -10,8 +10,12 @@ BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
 {
 	char windowTitle[1024];
 	GetWindowTextA(hwnd, windowTitle, sizeof(windowTitle));
-	if (std::string(windowTitle).find("Team Fortress 2 - ") == 0) // support both dx9 & vulkan
+	std::string sTitle = windowTitle;
+	if (sTitle.find("Team Fortress 2 - Direct3D") == 0
+		|| sTitle.find("Team Fortress 2 - Vulkan") == 0) // support both dx9 & vulkan
+	{
 		*reinterpret_cast<HWND*>(lParam) = hwnd;
+	}
 
 	return TRUE;
 }
@@ -82,8 +86,8 @@ std::string SDK::ConvertWideToUTF8(const std::wstring& source)
 
 double SDK::PlatFloatTime()
 {
-	static auto fnPlatFloatTime = reinterpret_cast<double(*)()>(GetProcAddress(GetModuleHandleA("tier0.dll"), "Plat_FloatTime"));
-	return fnPlatFloatTime();
+	static auto Plat_FloatTime = U::Memory.GetModuleExport<double(*)()>("tier0.dll", "Plat_FloatTime");
+	return Plat_FloatTime();
 }
 
 int SDK::StdRandomInt(int min, int max)
@@ -126,20 +130,20 @@ int SDK::SharedRandomInt(unsigned iseed, const char* sharedname, int iMinVal, in
 
 void SDK::RandomSeed(int iSeed)
 {
-	static auto fnRandomSeed = reinterpret_cast<void(*)(uint32_t)>(GetProcAddress(GetModuleHandleA("vstdlib.dll"), "RandomSeed"));
-	fnRandomSeed(iSeed);
+	static auto RandomSeed = U::Memory.GetModuleExport<void(*)(uint32_t)>("vstdlib.dll", "RandomSeed");
+	RandomSeed(iSeed);
 }
 
 int SDK::RandomInt(int iMinVal, int iMaxVal)
 {
-	static auto fnRandomInt = reinterpret_cast<int(*)(int, int)>(GetProcAddress(GetModuleHandleA("vstdlib.dll"), "RandomInt"));
-	return fnRandomInt(iMinVal, iMaxVal);
+	static auto RandomInt = U::Memory.GetModuleExport<int(*)(int, int)>("vstdlib.dll", "RandomInt");
+	return RandomInt(iMinVal, iMaxVal);
 }
 
 float SDK::RandomFloat(float flMinVal, float flMaxVal)
 {
-	static auto fnRandomFloat = reinterpret_cast<float(*)(float, float)>(GetProcAddress(GetModuleHandleA("vstdlib.dll"), "RandomFloat"));
-	return fnRandomFloat(flMinVal, flMaxVal);
+	static auto RandomFloat = U::Memory.GetModuleExport<float(*)(float, float)>("vstdlib.dll", "RandomFloat");
+	return RandomFloat(flMinVal, flMaxVal);
 }
 
 int SDK::HandleToIDX(unsigned int pHandle)
@@ -360,23 +364,23 @@ EWeaponType SDK::GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryTy
 	case TF_WEAPON_LASER_POINTER:
 	case TF_WEAPON_ROCKETPACK:
 		return EWeaponType::UNKNOWN;
-	case TF_WEAPON_ROCKETLAUNCHER:
-	case TF_WEAPON_FLAME_BALL:
-	case TF_WEAPON_GRENADELAUNCHER:
-	case TF_WEAPON_FLAREGUN:
-	case TF_WEAPON_COMPOUND_BOW:
-	case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
-	case TF_WEAPON_CROSSBOW:
-	case TF_WEAPON_PARTICLE_CANNON:
-	case TF_WEAPON_DRG_POMSON:
-	case TF_WEAPON_FLAREGUN_REVENGE:
-	case TF_WEAPON_RAYGUN:
-	case TF_WEAPON_CANNON:
-	case TF_WEAPON_SYRINGEGUN_MEDIC:
-	case TF_WEAPON_SHOTGUN_BUILDING_RESCUE:
-	case TF_WEAPON_FLAMETHROWER:
 	case TF_WEAPON_CLEAVER:
+	case TF_WEAPON_ROCKETLAUNCHER:
+	case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
+	case TF_WEAPON_PARTICLE_CANNON:
+	case TF_WEAPON_RAYGUN:
+	case TF_WEAPON_FLAMETHROWER:
+	case TF_WEAPON_FLAME_BALL:
+	case TF_WEAPON_FLAREGUN:
+	case TF_WEAPON_FLAREGUN_REVENGE:
+	case TF_WEAPON_GRENADELAUNCHER:
+	case TF_WEAPON_CANNON:
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
+	case TF_WEAPON_SHOTGUN_BUILDING_RESCUE:
+	case TF_WEAPON_DRG_POMSON:
+	case TF_WEAPON_CROSSBOW:
+	case TF_WEAPON_SYRINGEGUN_MEDIC:
+	case TF_WEAPON_COMPOUND_BOW:
 	case TF_WEAPON_JAR:
 	case TF_WEAPON_JAR_MILK:
 	case TF_WEAPON_JAR_GAS:
@@ -460,6 +464,17 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	}
 	case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 		return !(pCmd->buttons & IN_ATTACK) && pWeapon->As<CTFSniperRifle>()->m_flChargedDamage() > 0.f;
+	case TF_WEAPON_PARTICLE_CANNON:
+	{
+		float flChargeBeginTime = pWeapon->As<CTFParticleCannon>()->m_flChargeBeginTime();
+		if (flChargeBeginTime > 0)
+		{
+			float flTotalChargeTime = flTickBase - flChargeBeginTime;
+			if (flTotalChargeTime >= TF_PARTICLE_MAX_CHARGE_TIME)
+				return 1;
+		}
+		break;
+	}
 	case TF_WEAPON_CLEAVER: // we can randomly use attack2 to fire
 	{
 		static int iThrowTick = 0;
@@ -499,13 +514,19 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		return trace.DidHit() && !(trace.surface.flags & 0x0004 /*SURF_SKY*/);
 	}
 	case TF_WEAPON_MINIGUN:
-	{
-		int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState();
-		if ((iState == AC_STATE_FIRING || iState == AC_STATE_SPINNING) && pWeapon->HasPrimaryAmmoForShot())
-			return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
-
+		switch (pWeapon->As<CTFMinigun>()->m_iWeaponState())
+		{
+		case AC_STATE_FIRING:
+		case AC_STATE_SPINNING:
+			if (pWeapon->HasPrimaryAmmoForShot())
+				return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
+		}
 		return false;
-	}
+	case TF_WEAPON_FLAMETHROWER:
+	case TF_WEAPON_FLAME_BALL:
+		if (G::CanSecondaryAttack && pCmd->buttons & IN_ATTACK2)
+			return 1;
+		break;
 	}
 
 	if (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka)
@@ -539,7 +560,7 @@ float SDK::MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch, bool bIgnoreSpecial
 	if (pPlayer->InCond(TF_COND_SPEED_BOOST) ||
 		pPlayer->InCond(TF_COND_HALLOWEEN_SPEED_BOOST))
 		flSpeed *= 1.35f;
-	if (bIncludeCrouch && pPlayer->IsDucking())
+	if (bIncludeCrouch && pPlayer->IsDucking() && pPlayer->IsOnGround())
 		flSpeed /= 3;
 
 	return flSpeed;

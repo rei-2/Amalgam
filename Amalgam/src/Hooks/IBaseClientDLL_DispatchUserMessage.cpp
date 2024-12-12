@@ -38,34 +38,16 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 
 		if (Vars::Misc::Automation::AntiAutobalance.Value && msgData.GetNumBitsLeft() > 35)
 		{
-			static int anti_balance_attempts = 0;
-			static std::string previous_name;
-
-			auto pNetChan = I::EngineClient->GetNetChannelInfo();
 			std::string data(bufData);
-
 			if (data.find("TeamChangeP") != std::string::npos && H::Entities.GetLocal())
-			{
-				const std::string serverName = pNetChan->GetAddress();
-				if (serverName != previous_name)
-				{
-					previous_name = serverName;
-					anti_balance_attempts = 0;
-				}
-				if (anti_balance_attempts < 2)
-					I::EngineClient->ClientCmd_Unrestricted("retry");
-				anti_balance_attempts++;
-			}
+				I::EngineClient->ClientCmd_Unrestricted("retry");
 		}
 		break;
 	case VGUIMenu:
-		if (Vars::Visuals::Removals::MOTD.Value)
+		if (Vars::Visuals::Removals::MOTD.Value && strcmp(reinterpret_cast<char*>(msgData.m_pData), "info") == 0)
 		{
-			if (strcmp(reinterpret_cast<char*>(msgData.m_pData), "info") == 0)
-			{
-				I::EngineClient->ClientCmd_Unrestricted("closedwelcomemenu");
-				return true;
-			}
+			I::EngineClient->ClientCmd_Unrestricted("closedwelcomemenu");
+			return true;
 		}
 
 		break;

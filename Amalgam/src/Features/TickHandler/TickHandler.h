@@ -1,6 +1,8 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
+//#define TICKBASE_DEBUG
+
 class CTickshiftHandler
 {
 	void Recharge(CTFPlayer* pLocal);
@@ -12,7 +14,6 @@ class CTickshiftHandler
 
 	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
 
-	bool m_bSpeedhack = false;
 	bool m_bGoalReached = true;
 	Vec3 m_vShootPos = {};
 
@@ -20,9 +21,10 @@ public:
 	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
 	void Reset();
 
-	void MovePre(CTFPlayer* pLocal);
-	void MoveMain(float accumulated_extra_samples, bool bFinalTick);
-	void MovePost(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void CLMove(float accumulated_extra_samples, bool bFinalTick);
+	void CLMoveManage(CTFPlayer* pLocal);
+
+	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	void ManagePacket(CUserCmd* pCmd, bool* pSendPacket);
 	int GetTicks(CTFWeaponBase* pWeapon = nullptr);
@@ -32,6 +34,19 @@ public:
 	void SaveShootPos(CTFPlayer* pLocal);
 	Vec3 GetShootPos();
 
+	bool m_bDoubletap = false;
+	bool m_bWarp = false;
+	bool m_bRecharge = false;
+	bool m_bAntiWarp = false;
+	bool m_bSpeedhack = false;
+
+	int m_iShiftedTicks = 0;
+	int m_iShiftedGoal = 0;
+	int m_iShiftStart = 0;
+	bool m_bShifting = false;
+
+	int m_iWait = 0;
+	int m_iMaxShift = 24;
 	int m_iDeficit = 0;
 };
 

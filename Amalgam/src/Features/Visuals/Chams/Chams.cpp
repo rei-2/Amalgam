@@ -8,8 +8,10 @@
 static inline bool GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
 {
 	if (Vars::Chams::Player::Local.Value && pEntity == pLocal
+		|| Vars::Chams::Player::Priority.Value && F::PlayerUtils.IsPrioritized(pEntity->entindex())
 		|| Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
-		|| Vars::Chams::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+		|| Vars::Chams::Player::Party.Value && H::Entities.InParty(pEntity->entindex())
+		|| Vars::Chams::Player::Target.Value && pEntity->entindex() == G::Target.first)
 	{
 		*pChams = Chams_t(Vars::Chams::Player::Visible.Value, Vars::Chams::Player::Occluded.Value);
 		return true;
@@ -228,27 +230,19 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 	StencilVisible(pRenderContext, !bExtra);
 	for (auto it = visibleMaterials.begin(); it != visibleMaterials.end(); it++)
 	{
-		auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
-		F::Materials.SetColor(material, it->second);
-		I::ModelRender->ForcedMaterialOverride(material);
+		F::Materials.SetColor(pMaterial, it->second);
+		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
-		bool bInvert = false;
-		if (material)
-		{
-			bool bFound; auto $invertcull = material->FindVar("$invertcull", &bFound, false);
-			if (bFound && $invertcull && $invertcull->GetIntValueInternal())
-				bInvert = true;
-		}
-
-		if (bInvert)
+		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(MATERIAL_CULLMODE_CW);
 
 		bRendering = true;
 		pEntity->DrawModel(STUDIO_RENDER);
 		bRendering = false;
 
-		if (bInvert)
+		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
 	}
 	if (!bExtra)
@@ -256,27 +250,19 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 		StencilOccluded(pRenderContext);
 		for (auto it = occludedMaterials.begin(); it != occludedMaterials.end(); it++)
 		{
-			auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+			auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
-			F::Materials.SetColor(material, it->second);
-			I::ModelRender->ForcedMaterialOverride(material);
+			F::Materials.SetColor(pMaterial, it->second);
+			I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
-			bool bInvert = false;
-			if (material)
-			{
-				bool bFound; auto $invertcull = material->FindVar("$invertcull", &bFound, false);
-				if (bFound && $invertcull && $invertcull->GetIntValueInternal())
-					bInvert = true;
-			}
-
-			if (bInvert)
+			if (pMaterial && pMaterial->m_bInvertCull)
 				pRenderContext->CullMode(MATERIAL_CULLMODE_CW);
 
 			bRendering = true;
 			pEntity->DrawModel(STUDIO_RENDER);
 			bRendering = false;
 
-			if (bInvert)
+			if (pMaterial && pMaterial->m_bInvertCull)
 				pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
 		}
 	}
@@ -355,14 +341,13 @@ void CChams::RenderMain()
 			bExtra = true;
 
 			auto pPlayer = tInfo.m_pEntity->As<CTFPlayer>();
+
 			const float flOldInvisibility = pPlayer->m_flInvisibility();
-			if (flOldInvisibility > 0.999f)
-				pPlayer->m_flInvisibility() = 0.f;
+			pPlayer->m_flInvisibility() = 0.f;
 
 			DrawModel(tInfo.m_pEntity, tInfo.m_tChams, pRenderContext, true);
 
-			if (flOldInvisibility > 0.999f)
-				pPlayer->m_flInvisibility() = flOldInvisibility;
+			pPlayer->m_flInvisibility() = flOldInvisibility;
 
 			bExtra = false;
 		}
@@ -474,23 +459,17 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 
 	for (auto it = vMaterials.begin(); it != vMaterials.end(); it++)
 	{
-		auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
-		bool bInvert = false;
-		if (material)
-		{
-			bool bFound; auto $invertcull = material->FindVar("$invertcull", &bFound, false);
-			if (bFound && $invertcull && $invertcull->GetIntValueInternal())
-				bInvert = true;
-		}
-		
-		F::Materials.SetColor(material, it->second);
-		I::ModelRender->ForcedMaterialOverride(material ? material : nullptr);
+		F::Materials.SetColor(pMaterial, it->second);
+		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
-		if (bInvert)
+		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
+
 		*iReturn = CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
-		if (bInvert)
+
+		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 	}
 
@@ -516,23 +495,17 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 
 	for (auto it = vMaterials.begin(); it != vMaterials.end(); it++)
 	{
-		auto material = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
 
-		bool bInvert = false;
-		if (material)
-		{
-			bool bFound; auto $invertcull = material->FindVar("$invertcull", &bFound, false);
-			if (bFound && $invertcull && $invertcull->GetIntValueInternal())
-				bInvert = true;
-		}
+		F::Materials.SetColor(pMaterial, it->second);
+		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
-		F::Materials.SetColor(material, it->second);
-		I::ModelRender->ForcedMaterialOverride(material ? material : nullptr);
-
-		if (bInvert)
+		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
+
 		ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
-		if (bInvert)
+
+		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 	}
 

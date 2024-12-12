@@ -44,13 +44,13 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		case TF_WEAPON_COMPOUND_BOW:
 			if (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f && I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 5.0f)
 			{
-				pCmd->viewangles.x += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
-				pCmd->viewangles.y += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
+				vAngAdd.x += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
+				vAngAdd.y += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
 			}
 			break;
 		case TF_WEAPON_SYRINGEGUN_MEDIC:
-			pCmd->viewangles.x += SDK::RandomFloat(-1.5f, 1.5f);
-			pCmd->viewangles.y += SDK::RandomFloat(-1.5f, 1.5f);
+			vAngAdd.x += SDK::RandomFloat(-1.5f, 1.5f);
+			vAngAdd.y += SDK::RandomFloat(-1.5f, 1.5f);
 		}
 
 		if (!vAngAdd.IsZero())

@@ -1,12 +1,14 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
+//#define SEEDPRED_DEBUG
+
 class CNoSpreadHitscan
 {
 private:
 	int GetSeed(CUserCmd* pCmd);
-	float CalcMantissaStep(float val);
-	std::string GetFormat(int m_ServerTime);
+	float CalcMantissaStep(float flV);
+	std::string GetFormat(int iServerTime);
 
 	bool m_bWaitingForPlayerPerf = false;
 	int m_bSynced = 0;

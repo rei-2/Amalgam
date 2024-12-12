@@ -1,5 +1,6 @@
 #include "AntiAim.h"
 
+#include "../../TickHandler/TickHandler.h"
 #include "../../Players/PlayerUtils.h"
 #include "../../Misc/Misc.h"
 #include "../../Aimbot/AutoRocketJump/AutoRocketJump.h"
@@ -31,7 +32,7 @@ bool CAntiAim::YawOn()
 bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsInBumperKart()
-		|| G::Attacking == 1 || F::AutoRocketJump.IsRunning()
+		|| G::Attacking == 1 || F::AutoRocketJump.IsRunning() || F::Ticks.m_bDoubletap // this m_bDoubletap check can probably be removed if we fix tickbase correctly
 		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
 		return false;
 
@@ -195,7 +196,7 @@ float CAntiAim::GetPitch(float flCurPitch)
 
 void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 {
-	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || G::DoubleTap || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
+	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || !pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
 		return;
 
 	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 10.f)

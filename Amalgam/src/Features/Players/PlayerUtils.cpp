@@ -121,23 +121,29 @@ int CPlayerlistUtils::GetPriority(uint32_t friendsID, bool bCache)
 	if (bCache)
 		return H::Entities.GetPriority(friendsID);
 
-	const int iDefault = m_vTags[DEFAULT_TAG].Priority;
+	const int iDefault = m_vTags[TagToIndex(DEFAULT_TAG)].Priority;
 	if (!friendsID)
 		return iDefault;
 
-	if (HasTag(friendsID, IGNORED_TAG))
-		return m_vTags[IGNORED_TAG].Priority;
+	if (HasTag(friendsID, TagToIndex(IGNORED_TAG)))
+		return m_vTags[TagToIndex(IGNORED_TAG)].Priority;
 
 	std::vector<int> vPriorities;
 	for (auto& iID : m_mPlayerTags[friendsID])
 	{
-		auto pTag = F::PlayerUtils.GetTag(iID);
+		auto pTag = GetTag(iID);
 		if (pTag && !pTag->Label)
 			vPriorities.push_back(pTag->Priority);
 	}
 	if (H::Entities.IsFriend(friendsID))
 	{
-		auto& tTag = m_vTags[FRIEND_TAG];
+		auto& tTag = m_vTags[TagToIndex(FRIEND_TAG)];
+		if (!tTag.Label)
+			vPriorities.push_back(tTag.Priority);
+	}
+	if (H::Entities.InParty(friendsID))
+	{
+		auto& tTag = m_vTags[TagToIndex(PARTY_TAG)];
 		if (!tTag.Label)
 			vPriorities.push_back(tTag.Priority);
 	}
@@ -156,7 +162,7 @@ int CPlayerlistUtils::GetPriority(int iIndex, bool bCache)
 
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
 		return GetPriority(friendsID);
-	return m_vTags[DEFAULT_TAG].Priority;
+	return m_vTags[TagToIndex(DEFAULT_TAG)].Priority;
 }
 
 PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, int iMode)
@@ -167,18 +173,24 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, int iMo
 	std::vector<PriorityLabel_t*> vTags;
 	if (!iMode || iMode == 1)
 	{
-		if (HasTag(friendsID, IGNORED_TAG))
-			return &m_vTags[IGNORED_TAG];
+		if (HasTag(friendsID, TagToIndex(IGNORED_TAG)))
+			return &m_vTags[TagToIndex(IGNORED_TAG)];
 
 		for (auto& iID : m_mPlayerTags[friendsID])
 		{
-			PriorityLabel_t* _pTag = F::PlayerUtils.GetTag(iID);
+			PriorityLabel_t* _pTag = GetTag(iID);
 			if (_pTag && !_pTag->Label)
 				vTags.push_back(_pTag);
 		}
 		if (H::Entities.IsFriend(friendsID))
 		{
-			auto _pTag = &m_vTags[FRIEND_TAG];
+			auto _pTag = &m_vTags[TagToIndex(FRIEND_TAG)];
+			if (!_pTag->Label)
+				vTags.push_back(_pTag);
+		}
+		if (H::Entities.InParty(friendsID))
+		{
+			auto _pTag = &m_vTags[TagToIndex(PARTY_TAG)];
 			if (!_pTag->Label)
 				vTags.push_back(_pTag);
 		}
@@ -187,13 +199,19 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, int iMo
 	{
 		for (auto& iID : m_mPlayerTags[friendsID])
 		{
-			PriorityLabel_t* _pTag = F::PlayerUtils.GetTag(iID);
+			PriorityLabel_t* _pTag = GetTag(iID);
 			if (_pTag && _pTag->Label)
 				vTags.push_back(_pTag);
 		}
 		if (H::Entities.IsFriend(friendsID))
 		{
-			auto _pTag = &m_vTags[FRIEND_TAG];
+			auto _pTag = &m_vTags[TagToIndex(FRIEND_TAG)];
+			if (_pTag->Label)
+				vTags.push_back(_pTag);
+		}
+		if (H::Entities.InParty(friendsID))
+		{
+			auto _pTag = &m_vTags[TagToIndex(PARTY_TAG)];
 			if (_pTag->Label)
 				vTags.push_back(_pTag);
 		}
@@ -224,13 +242,29 @@ bool CPlayerlistUtils::IsIgnored(uint32_t friendsID)
 		return false;
 
 	const int iPriority = GetPriority(friendsID);
-	const int iIgnored = m_vTags[IGNORED_TAG].Priority;
+	const int iIgnored = m_vTags[TagToIndex(IGNORED_TAG)].Priority;
 	return iPriority <= iIgnored;
 }
 bool CPlayerlistUtils::IsIgnored(int iIndex)
 {
 	if (const uint32_t friendsID = GetFriendsID(iIndex))
 		return IsIgnored(friendsID);
+	return false;
+}
+
+bool CPlayerlistUtils::IsPrioritized(uint32_t friendsID)
+{
+	if (!friendsID)
+		return false;
+
+	const int iPriority = GetPriority(friendsID);
+	const int iDefault = m_vTags[TagToIndex(DEFAULT_TAG)].Priority;
+	return iPriority > iDefault;
+}
+bool CPlayerlistUtils::IsPrioritized(int iIndex)
+{
+	if (const uint32_t friendsID = GetFriendsID(iIndex))
+		return IsPrioritized(friendsID);
 	return false;
 }
 
@@ -252,6 +286,14 @@ const char* CPlayerlistUtils::GetPlayerName(int iIndex, const char* sDefault, in
 			{
 				if (pType) *pType = 1;
 				return "Friend";
+			}
+		}
+		else if (H::Entities.InParty(iIndex))
+		{
+			if (Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Party)
+			{
+				if (pType) *pType = 1;
+				return "Party";
 			}
 		}
 		else if (Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::All)
@@ -299,12 +341,13 @@ void CPlayerlistUtils::UpdatePlayers()
 			if (!pResource->GetValid(n) || !pResource->GetConnected(n))
 				continue;
 
-			bool bFake = true, bFriend = false;
+			bool bFake = true, bFriend = false, bParty = false;
 			PlayerInfo_t pi{};
 			if (I::EngineClient->GetPlayerInfo(n, &pi))
 			{
 				bFake = pi.fakeplayer;
 				bFriend = H::Entities.IsFriend(n);
+				bParty = H::Entities.InParty(n);
 			}
 
 			m_vPlayerCache.push_back({
@@ -316,6 +359,7 @@ void CPlayerlistUtils::UpdatePlayers()
 				pResource->IsAlive(n),
 				n == I::EngineClient->GetLocalPlayer(),
 				bFriend,
+				bParty,
 				bFake
 			});
 		}

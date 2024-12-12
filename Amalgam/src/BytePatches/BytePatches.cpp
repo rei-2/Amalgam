@@ -57,7 +57,8 @@ void BytePatch::Unload()
 void CBytePatches::Initialize()
 {
 	m_vPatches = {
-		BytePatch("engine.dll", "0F 82 ? ? ? ? 4A 63 84 2F", 0x0, "90 90 90 90 90 90") // skybox fix
+		BytePatch("engine.dll", "0F 82 ? ? ? ? 4A 63 84 2F", 0x0, "90 90 90 90 90 90"), // skybox fix
+		BytePatch("server.dll", "75 ? 44 38 A7 ? ? ? ? 75 ? 41 3B DD", 0x0, "EB") // listen server speedhack
 	};
 
 	for (auto& patch : m_vPatches)

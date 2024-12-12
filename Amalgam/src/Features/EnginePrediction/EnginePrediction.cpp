@@ -12,22 +12,23 @@ void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
-		if (pEntity == pLocal || pEntity->IsDormant() || pEntity->As<CTFPlayer>()->IsAlive())
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		if (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 			continue;
 
-		m_mRestore[pEntity] = { pEntity->m_vecMins(), pEntity->m_vecMaxs() };
+		m_mRestore[pPlayer] = { pPlayer->m_vecMins(), pPlayer->m_vecMaxs() };
 
-		pEntity->m_vecMins() += 0.125f;
-		pEntity->m_vecMaxs() -= 0.125f;
+		pPlayer->m_vecMins() += 0.125f;
+		pPlayer->m_vecMaxs() -= 0.125f;
 	}
 }
 
 void CEnginePrediction::RestorePlayers()
 {
-	for (auto& [pEntity, tRestore] : m_mRestore)
+	for (auto& [pPlayer, tRestore] : m_mRestore)
 	{
-		pEntity->m_vecMins() = tRestore.m_vecMins;
-		pEntity->m_vecMaxs() = tRestore.m_vecMaxs;
+		pPlayer->m_vecMins() = tRestore.m_vecMins;
+		pPlayer->m_vecMaxs() = tRestore.m_vecMaxs;
 	}
 }
 

@@ -35,30 +35,25 @@ Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool
 		}
 		else if (H::Entities.IsFriend(pPlayer->entindex()))
 		{
-			out = F::PlayerUtils.m_vTags[FRIEND_TAG].Color;
+			out = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color;
 			if (pType) *pType = 3;
+		}
+		else if (H::Entities.InParty(pPlayer->entindex()))
+		{
+			out = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color;
+			if (pType) *pType = 4;
 		}
 		else if (auto pTag = F::PlayerUtils.GetSignificantTag(pPlayer->entindex()))
 		{
 			out = pTag->Color;
-			if (pType) *pType = 4;
-		}
-		else if (pPlayer->IsCloaked())
-		{
-			out = Vars::Colors::Cloak.Value;
 			if (pType) *pType = 5;
-		}
-		else if (pPlayer->IsInvulnerable())
-		{
-			out = Vars::Colors::Invulnerable.Value;
-			if (pType) *pType = 6;
 		}
 	}
 
-	if (pEntity->entindex() == G::Target.first && abs(G::Target.second - I::GlobalVars->tickcount) < 32)
+	if (pEntity->entindex() == G::Target.first)
 	{
 		out = Vars::Colors::Target.Value;
-		if (pType) *pType = 7;
+		if (pType) *pType = 8;
 	}
 
 	return out;
@@ -71,7 +66,9 @@ Color_t CColor::GetScoreboardColor(int iIndex)
 	if (iIndex == I::EngineClient->GetLocalPlayer())
 		out = Vars::Colors::Local.Value;
 	else if (H::Entities.IsFriend(iIndex))
-		out = F::PlayerUtils.m_vTags[FRIEND_TAG].Color;
+		out = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color;
+	else if (H::Entities.InParty(iIndex))
+		out = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color;
 	else if (auto pTag = F::PlayerUtils.GetSignificantTag(iIndex))
 		out = pTag->Color;
 

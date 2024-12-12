@@ -30,33 +30,27 @@ bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool
 
 int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
 {
-	static auto sv_usercmd_custom_random_seed = U::ConVars.FindVar("sv_usercmd_custom_random_seed");
-	if (sv_usercmd_custom_random_seed ? sv_usercmd_custom_random_seed->GetBool() : true)
-	{
-		double dFloatTime = SDK::PlatFloatTime() + m_dTimeDelta;
-		float flTime = float(dFloatTime * 1000.0);
-		return std::bit_cast<int32_t>(flTime) & 255;
-	}
-	else
-		return pCmd->random_seed; // i don't think this is right
+	double dFloatTime = SDK::PlatFloatTime() + m_dTimeDelta;
+	float flTime = float(dFloatTime * 1000.0);
+	return std::bit_cast<int32_t>(flTime) & 255;
 }
 
-float CNoSpreadHitscan::CalcMantissaStep(float val)
+float CNoSpreadHitscan::CalcMantissaStep(float flV)
 {
 	// Calculate the delta to the next representable value
-	float nextValue = std::nextafter(val, std::numeric_limits<float>::infinity());
-	float mantissaStep = (nextValue - val) * 1000;
+	float nextValue = std::nextafter(flV, std::numeric_limits<float>::infinity());
+	float mantissaStep = (nextValue - flV) * 1000;
 
 	// Get the closest mantissa (next power of 2)
 	return powf(2, ceilf(logf(mantissaStep) / logf(2)));
 }
 
-std::string CNoSpreadHitscan::GetFormat(int m_ServerTime)
+std::string CNoSpreadHitscan::GetFormat(int iServerTime)
 {
-	int iDays = m_ServerTime / 86400;
-	int iHours = m_ServerTime / 3600 % 24;
-	int iMinutes = m_ServerTime / 60 % 60;
-	int iSeconds = m_ServerTime % 60;
+	int iDays = iServerTime / 86400;
+	int iHours = iServerTime / 3600 % 24;
+	int iMinutes = iServerTime / 60 % 60;
+	int iSeconds = iServerTime % 60;
 
 	if (iDays)
 		return std::format("{}d {}h", iDays, iHours);
@@ -75,7 +69,7 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 		return;
 
 	static Timer playerperfTimer{};
-	if (!m_bWaitingForPlayerPerf ? playerperfTimer.Run(50) : playerperfTimer.Run(2000))
+	if (!m_bWaitingForPlayerPerf ? playerperfTimer.Run(Vars::Aimbot::General::NoSpreadInterval.Value * 1000) : playerperfTimer.Run(Vars::Aimbot::General::NoSpreadBackupInterval.Value * 1000))
 	{
 		I::ClientState->SendStringCmd("playerperf");
 		m_bWaitingForPlayerPerf = true;
@@ -106,18 +100,24 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 		if (flNewServerTime < m_flServerTime)
 			return true;
 
+		auto pNetChan = I::EngineClient->GetNetChannelInfo();
+		bool bLoopback = pNetChan && pNetChan->IsLoopback();
+
 		m_flServerTime = flNewServerTime;
 
-		double dRecieveTime = SDK::PlatFloatTime();
-		double dResponseTime = dRecieveTime - m_dRequestTime;
-
-		m_vTimeDeltas.push_back(m_flServerTime - dRecieveTime + dResponseTime);
-		while (!m_vTimeDeltas.empty() && m_vTimeDeltas.size() > Vars::Aimbot::General::NoSpreadAverage.Value)
-			m_vTimeDeltas.pop_front();
-		m_dTimeDelta = std::reduce(m_vTimeDeltas.begin(), m_vTimeDeltas.end()) / m_vTimeDeltas.size() + TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value + 1);
+		if (bLoopback)
+			m_dTimeDelta = 0.f;
+		else
+		{
+			m_vTimeDeltas.push_back(m_flServerTime - m_dRequestTime + TICKS_TO_TIME(1));
+			while (!m_vTimeDeltas.empty() && m_vTimeDeltas.size() > Vars::Aimbot::General::NoSpreadAverage.Value)
+				m_vTimeDeltas.pop_front();
+			m_dTimeDelta = std::reduce(m_vTimeDeltas.begin(), m_vTimeDeltas.end()) / m_vTimeDeltas.size();
+		}
+		m_dTimeDelta += TICKS_TO_TIME(Vars::Aimbot::General::NoSpreadOffset.Value);
 
 		float flMantissaStep = CalcMantissaStep(m_flServerTime);
-		m_bSynced = flMantissaStep >= 1.f;
+		m_bSynced = flMantissaStep >= 1.f || bLoopback;
 
 		if (flMantissaStep > m_flMantissaStep && (m_bSynced || !m_flMantissaStep))
 		{
@@ -134,8 +134,15 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 
 void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
+	if (!ShouldRun(pLocal, pWeapon, true))
+		return;
+
 	m_iSeed = GetSeed(pCmd);
-	if (!m_bSynced || !ShouldRun(pLocal, pWeapon, true))
+#ifdef SEEDPRED_DEBUG
+	SDK::Output("CNoSpreadHitscan::Run", std::format("{}: {}", SDK::PlatFloatTime() + m_dTimeDelta, m_iSeed).c_str(), { 255, 0, 0, 255 });
+#endif
+
+	if (!m_bSynced)
 		return;
 
 	// credits to cathook for average spread stuff
@@ -156,7 +163,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 			if (!iTicks || iTicks < TIME_TO_TICKS(flFireRate) * 2)
 			{
 				float flTimeSinceLastShot = TICKS_TO_TIME(pLocal->m_nTickBase()) - pWeapon->m_flLastFireTime();
-				if ((iBulletsPerShot == 1 && flTimeSinceLastShot > 1.25f) || (iBulletsPerShot > 1 && flTimeSinceLastShot > 0.25f))
+				if (flTimeSinceLastShot > (iBulletsPerShot > 1 ? 0.25f : 1.25f))
 					return;
 			}
 		}

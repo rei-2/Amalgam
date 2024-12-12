@@ -1,9 +1,9 @@
 #include "Misc.h"
 
 #include "../Backtrack/Backtrack.h"
-#include "../PacketManip/AntiAim/AntiAim.h"
 #include "../TickHandler/TickHandler.h"
 #include "../Players/PlayerUtils.h"
+#include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 
 void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
@@ -25,6 +25,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 	AutoStrafe(pLocal, pCmd);
 	AutoPeek(pLocal, pCmd);
 	MovementLock(pLocal, pCmd);
+	BreakJump(pLocal, pCmd);
 }
 
 void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
@@ -47,7 +48,7 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 	const bool bLastJump = bStaticJump, bLastGrounded = bStaticGrounded;
 	const bool bCurJump = bStaticJump = pCmd->buttons & IN_JUMP, bCurGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
 
-	if (bCurJump && bLastJump)
+	if (bCurJump && bLastJump && (pLocal->m_hGroundEntity().Get() ? !pLocal->IsDucking() : true))
 	{
 		if (!(bCurGrounded && !bLastGrounded))
 			pCmd->buttons &= ~IN_JUMP;
@@ -64,20 +65,19 @@ void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!Vars::Misc::Movement::AutoJumpbug.Value || !(pCmd->buttons & IN_DUCK) || pLocal->m_hGroundEntity() || pLocal->m_vecVelocity().z > -650.f)
 		return;
 
+	float flUnduckHeight = 20 * pLocal->m_flModelScale();
+	float flTraceDistance = flUnduckHeight + 2;
+
 	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {};
 
-	Vec3 origin = pLocal->m_vecOrigin();
-	SDK::TraceHull(origin, origin - Vec3(0, 0, 22), pLocal->m_vecMins(), pLocal->m_vecMaxs(), MASK_PLAYERSOLID, &filter, &trace);
-	if (!trace.DidHit()) // don't try if we aren't in range to unduck
+	Vec3 vOrigin = pLocal->m_vecOrigin();
+	SDK::TraceHull(vOrigin, vOrigin - Vec3(0, 0, flTraceDistance), pLocal->m_vecMins(), pLocal->m_vecMaxs(), MASK_PLAYERSOLID, &filter, &trace);
+	if (!trace.DidHit() || trace.fraction * flTraceDistance < flUnduckHeight) // don't try if we aren't in range to unduck or are too low
 		return;
 
-	const float flDist = origin.DistTo(trace.endpos);
-	if (20.f < flDist /*&& flDist < 22.f*/) // this seems to be the range where this works
-	{
-		pCmd->buttons &= ~IN_DUCK;
-		pCmd->buttons |= IN_JUMP;
-	}
+	pCmd->buttons &= ~IN_DUCK;
+	pCmd->buttons |= IN_JUMP;
 }
 
 void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -197,6 +197,35 @@ void CMisc::MovementLock(CTFPlayer* pLocal, CUserCmd* pCmd)
 	pCmd->sidemove = -vMove.y, pCmd->upmove = vDir.z;
 }
 
+void CMisc::BreakJump(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::BreakJump.Value || F::AutoRocketJump.IsRunning())
+		return;
+
+	static bool bStaticJump = false;
+	const bool bLastJump = bStaticJump;
+	const bool bCurrJump = bStaticJump = pCmd->buttons & IN_JUMP;
+
+	static int iTickSinceGrounded = -1;
+	if (pLocal->m_hGroundEntity().Get())
+		iTickSinceGrounded = -1;
+	iTickSinceGrounded++;
+
+	switch (iTickSinceGrounded)
+	{
+	case 0:
+		if (bLastJump || !bCurrJump || pLocal->IsDucking())
+			return;
+		break;
+	case 1:
+		break;
+	default:
+		return;
+	}
+
+	pCmd->buttons |= IN_DUCK;
+}
+
 void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static Timer afkTimer{};
@@ -210,7 +239,7 @@ void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 		afkTimer.Update();
 	// Trigger 10 seconds before kick
 	else if (Vars::Misc::Automation::AntiAFK.Value && iIdleMethod && afkTimer.Check(flMaxIdleTime * 60 * 1000 - 10000))
-		pCmd->buttons |= pCmd->command_number % 2 ? IN_FORWARD : IN_BACK;
+		pCmd->buttons |= I::GlobalVars->tickcount % 2 ? IN_FORWARD : IN_BACK;
 }
 
 void CMisc::InstantRespawnMVM(CTFPlayer* pLocal)
@@ -316,7 +345,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 		const bool bLeft = pCmd->buttons & IN_MOVELEFT;
 		const bool bRight = pCmd->buttons & IN_MOVERIGHT;
 
-		const bool flipVar = pCmd->command_number % 2;
+		const bool flipVar = I::GlobalVars->tickcount % 2;
 		if (bForward && (!bLeft && !bRight || !flipVar))
 		{
 			pCmd->forwardmove = 450.f;
@@ -329,7 +358,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 		}
 		else if (pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT))
 		{
-			if (flipVar || G::ShiftedTicks == G::MaxShift)
+			if (flipVar || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift)
 			{	// you could just do this if you didn't care about viewangles
 				const Vec3 vecMove(pCmd->forwardmove, pCmd->sidemove, 0.f);
 				const float flLength = vecMove.Length();
@@ -375,7 +404,8 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 	case 1:
 	{
-		if ((pLocal->IsDucking() ? !Vars::Misc::Movement::CrouchSpeed.Value : !Vars::Misc::Movement::FastAccel.Value) || G::Attacking == 1 || G::DoubleTap || G::Recharge || G::AntiAim || pCmd->command_number % 2)
+		if ((pLocal->IsDucking() ? !Vars::Misc::Movement::CrouchSpeed.Value : !Vars::Misc::Movement::FastAccel.Value)
+			|| G::Attacking == 1 || F::Ticks.m_bDoubletap || F::Ticks.m_bSpeedhack || F::Ticks.m_bRecharge || G::AntiAim || I::GlobalVars->tickcount % 2)
 			return;
 
 		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
@@ -436,11 +466,15 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 			|| F::PlayerUtils.IsIgnored(pPlayer->entindex()))
 			continue;
 
-		Vec3 vTargetPos = pPlayer->GetCenter() + pPlayer->m_vecVelocity() * F::Backtrack.GetReal();
-		if (pLocal->GetCenter().DistTo(vTargetPos) > std::max(std::max(SDK::MaxSpeed(pPlayer), SDK::MaxSpeed(pLocal)), pPlayer->m_vecVelocity().Length()))
+		Vec3 vLocalPos = pLocal->GetCenter();
+		Vec3 vTargetPos1 = pPlayer->GetCenter();
+		Vec3 vTargetPos2 = vTargetPos1 + pPlayer->m_vecVelocity() * F::Backtrack.GetReal();
+		float flDistance = std::max(std::max(SDK::MaxSpeed(pPlayer), SDK::MaxSpeed(pLocal)), pPlayer->m_vecVelocity().Length());
+		if ((vLocalPos.DistTo(vTargetPos1) > flDistance || !SDK::VisPosWorld(pLocal, pPlayer, vLocalPos, vTargetPos1))
+			&& (vLocalPos.DistTo(vTargetPos2) > flDistance || !SDK::VisPosWorld(pLocal, pPlayer, vLocalPos, vTargetPos2)))
 			continue;
 
-		vTargets.push_back({ vTargetPos, pEntity });
+		vTargets.push_back({ vTargetPos2, pEntity });
 	}
 	if (vTargets.empty())
 		return 0;
@@ -465,7 +499,7 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	case Vars::Misc::Automation::AntiBackstabEnum::Pitch:
 	case Vars::Misc::Automation::AntiBackstabEnum::Fake:
 	{
-		bool bCheater = F::PlayerUtils.HasTag(pTargetPos.second->entindex(), CHEATER_TAG);
+		bool bCheater = F::PlayerUtils.HasTag(pTargetPos.second->entindex(), F::PlayerUtils.TagToIndex(CHEATER_TAG));
 		// if the closest spy is a cheater, assume auto stab is being used, otherwise don't do anything if target is in front
 		if (!bCheater)
 		{
@@ -581,17 +615,3 @@ bool CMisc::SteamRPC()
 
 	return true;
 }
-
-#ifdef DEBUG
-void CMisc::DumpClassIDS() {
-	std::ofstream fDump("CLASSIDDUMP.txt");
-	fDump << "enum struct ETFClassID\n{\n";
-	CClientClass* ClientClass = I::BaseClientDLL->GetAllClasses();
-	while (ClientClass) {
-		fDump << "	" << ClientClass->GetName() << " = " << ClientClass->m_ClassID << ",\n";
-		ClientClass = ClientClass->m_pNext;
-	}
-	fDump << "}";
-	fDump.close();
-}
-#endif

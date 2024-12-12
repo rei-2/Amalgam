@@ -1,4 +1,5 @@
 #include "CameraWindow.h"
+#include "../Visuals/Materials/Materials.h"
 
 // Draws camera to the screen
 void CCameraWindow::Draw()
@@ -66,9 +67,9 @@ void CCameraWindow::Initialize()
 {
 	if (!m_pCameraMaterial)
 	{
-		KeyValues* m_pCameraMaterialKV = new KeyValues("UnlitGeneric");
-		m_pCameraMaterialKV->SetString("$basetexture", "m_pCameraTexture");
-		m_pCameraMaterial = I::MaterialSystem->CreateMaterial("m_pCameraMaterial", m_pCameraMaterialKV);
+		KeyValues* kv = new KeyValues("UnlitGeneric");
+		kv->SetString("$basetexture", "m_pCameraTexture");
+		m_pCameraMaterial = F::Materials.Create("CameraMaterial", kv);
 	}
 
 	if (!m_pCameraTexture)

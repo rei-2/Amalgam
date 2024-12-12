@@ -23,7 +23,6 @@ class CEntities
 	CTFPlayer* m_pLocal = nullptr;
 	CTFWeaponBase* m_pLocalWeapon = nullptr;
 	CTFPlayerResource* m_pPlayerResource = nullptr;
-	CTFPlayer* m_pObservedTarget = nullptr;
 
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
 
@@ -35,7 +34,9 @@ class CEntities
 	std::unordered_map<int, DormantData> m_mDormancy;
 
 	std::unordered_map<int, bool> m_mIFriends;
-	std::unordered_map<uint32_t, int> m_mUFriends;
+	std::unordered_map<uint32_t, bool> m_mUFriends;
+	std::unordered_map<int, bool> m_mIParty;
+	std::unordered_map<uint32_t, bool> m_mUParty;
 	std::unordered_map<int, int> m_mIPriorities;
 	std::unordered_map<uint32_t, int> m_mUPriorities;
 
@@ -54,7 +55,6 @@ public:
 	CTFPlayer* GetLocal();
 	CTFWeaponBase* GetWeapon();
 	CTFPlayerResource* GetPR();
-	CTFPlayer* GetObservedTarget();
 
 	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group);
 
@@ -71,6 +71,8 @@ public:
 
 	bool IsFriend(int iIndex);
 	bool IsFriend(uint32_t friendsID);
+	bool InParty(int iIndex);
+	bool InParty(uint32_t friendsID);
 	int GetPriority(int iIndex);
 	int GetPriority(uint32_t friendsID);
 

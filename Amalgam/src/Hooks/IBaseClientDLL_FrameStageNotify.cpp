@@ -10,6 +10,7 @@
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/Chams/Chams.h"
 #include "../Features/Visuals/Glow/Glow.h"
+#include "../Features/Spectate/Spectate.h"
 
 MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 35), void,
 	void* rcx, ClientFrameStage_t curStage)
@@ -87,6 +88,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 		F::Glow.Store(pLocal);
 
 		F::CheaterDetection.Run();
+		F::Spectate.NetUpdateEnd(pLocal);
 
 		break;
 	}

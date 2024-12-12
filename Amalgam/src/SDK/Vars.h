@@ -80,6 +80,7 @@ inline ConfigVar<T>::ConfigVar(T value, std::string name, int iFlags)
 #define VISUAL (1 << 0)
 #define NOSAVE (1 << 1)
 #define NOBIND (1 << 2)
+#define DEBUGVAR NOSAVE
 
 namespace Vars
 {
@@ -119,7 +120,7 @@ namespace Vars
 			CVarEnum(AimType, 0, NONE, Off, Plain, Smooth, Silent)
 			CVarEnum(TargetSelection, 0, NONE, FOV, Distance)
 			CVarEnum(Target, 0b0000001, NONE, Players = 1 << 0, Sentry = 1 << 1, Dispenser = 1 << 2, Teleporter = 1 << 3, Stickies = 1 << 4, NPCs = 1 << 5, Bombs = 1 << 6)
-			CVarEnum(Ignore, 0b00000000, NONE, Invulnerable = 1 << 0, Cloaked = 1 << 1, DeadRinger = 1 << 2, Vaccinator = 1 << 3, Unsimulated = 1 << 4, Disguised = 1 << 5, Taunting = 1 << 6)
+			CVarEnum(Ignore, 0b000000000, NONE, Friends = 1 << 0, Party = 1 << 1, Invulnerable = 1 << 2, Cloaked = 1 << 3, Unsimulated = 1 << 4, DeadRinger = 1 << 5, Vaccinator = 1 << 6, Disguised = 1 << 7, Taunting = 1 << 8)
 			CVar(AimFOV, 30.f)
 			CVar(Smoothing, 25.f)
 			CVar(MaxTargets, 2)
@@ -129,11 +130,13 @@ namespace Vars
 			CVar(FOVCircle, true)
 			CVar(NoSpread, false)
 
-			CVar(HitscanPeek, 1, NOSAVE) // debug
-			CVar(PeekDTOnly, true, NOSAVE) // debug
-			CVar(NoSpreadOffset, 0.f, NOSAVE) // debug
-			CVar(NoSpreadAverage, 5, NOSAVE) // debug
-			CVarEnum(AimHoldsFire, 2, NOSAVE, False, MinigunOnly, Always) // debug
+			CVar(HitscanPeek, 1, DEBUGVAR)
+			CVar(PeekDTOnly, true, DEBUGVAR)
+			CVar(NoSpreadOffset, 0.f, DEBUGVAR)
+			CVar(NoSpreadAverage, 5, DEBUGVAR)
+			CVar(NoSpreadInterval, 0.1f, DEBUGVAR)
+			CVar(NoSpreadBackupInterval, 2.f, DEBUGVAR)
+			CVarEnum(AimHoldsFire, 2, DEBUGVAR, False, MinigunOnly, Always)
 		SUBNAMESPACE_END(Global)
 
 		SUBNAMESPACE_BEGIN(Hitscan)
@@ -155,34 +158,39 @@ namespace Vars
 			CVar(SplashRadius, 90.f)
 			CVar(AutoRelease, 0.f)
 
-			CVar(GroundSamples, 33, NOSAVE) // debug
-			CVar(GroundStraightFuzzyValue, 100.f, NOSAVE) // debug
-			CVar(GroundLowMinimumSamples, 8, NOSAVE) // debug
-			CVar(GroundHighMinimumSamples, 16, NOSAVE) // debug
-			CVar(GroundLowMinimumDistance, 0.f, NOSAVE) // debug
-			CVar(GroundHighMinimumDistance, 2500.f, NOSAVE) // debug
+			CVar(GroundSamples, 33, DEBUGVAR)
+			CVar(GroundStraightFuzzyValue, 100.f, DEBUGVAR)
+			CVar(GroundLowMinimumSamples, 8, DEBUGVAR)
+			CVar(GroundHighMinimumSamples, 16, DEBUGVAR)
+			CVar(GroundLowMinimumDistance, 0.f, DEBUGVAR)
+			CVar(GroundHighMinimumDistance, 2500.f, DEBUGVAR)
 
-			CVar(AirSamples, 33, NOSAVE) // debug
-			CVar(AirStraightFuzzyValue, 10.f, NOSAVE) // debug
-			CVar(AirLowMinimumSamples, 3, NOSAVE) // debug
-			CVar(AirHighMinimumSamples, 3, NOSAVE) // debug
-			CVar(AirLowMinimumDistance, 100000.f, NOSAVE) // debug
-			CVar(AirHighMinimumDistance, 100000.f, NOSAVE) // debug
+			CVar(AirSamples, 16, DEBUGVAR)
+			CVar(AirStraightFuzzyValue, 10.f, DEBUGVAR)
+			CVar(AirLowMinimumSamples, 3, DEBUGVAR)
+			CVar(AirHighMinimumSamples, 3, DEBUGVAR)
+			CVar(AirLowMinimumDistance, 100000.f, DEBUGVAR)
+			CVar(AirHighMinimumDistance, 100000.f, DEBUGVAR)
 
-			CVar(VelocityAverageCount, 5, NOSAVE) // debug
-			CVar(VerticalShift, 5.f, NOSAVE) // debug
-			CVar(LatencyOffset, 0.f, NOSAVE) // debug
-			CVar(HullIncrease, 0.f, NOSAVE) // debug
-			CVar(DragOverride, 0.f, NOSAVE) // debug
-			CVar(TimeOverride, 0.f, NOSAVE) // debug
-			CVar(HuntsmanLerp, 100.f, NOSAVE) // debug
-			CVar(SplashGrates, true, NOSAVE) // debug
-			CVar(SplashRocket, false, NOSAVE) // debug
-			CVar(SplashPoints, 100, NOSAVE) // debug
-			CVar(SplashCountDirect, 100, NOSAVE) // debug
-			CVar(SplashCountArc, 5, NOSAVE) // debug
-			CVar(DeltaCount, 5, NOSAVE) // debug
-			CVarEnum(DeltaMode, 0, NOSAVE, Average, Max) // debug
+			CVar(VelocityAverageCount, 5, DEBUGVAR)
+			CVar(VerticalShift, 5.f, DEBUGVAR)
+			CVar(LatencyOffset, 0.f, DEBUGVAR)
+			CVar(HullIncrease, 0.f, DEBUGVAR)
+			CVar(DragOverride, 0.f, DEBUGVAR)
+			CVar(TimeOverride, 0.f, DEBUGVAR)
+			CVar(HuntsmanLerp, 50.f, DEBUGVAR)
+			CVar(HuntsmanLerpLow, 100.f, DEBUGVAR)
+			CVar(HuntsmanAdd, 0.f, DEBUGVAR)
+			CVar(HuntsmanAddLow, 0.f, DEBUGVAR)
+			CVar(HuntsmanClamp, 5.f, DEBUGVAR)
+			CVar(SplashGrates, true, DEBUGVAR)
+			CVarEnum(RocketSplashMode, 0, DEBUGVAR, Regular, SpecialLight, SpecialHeavy)
+			CVar(SplashPoints, 100, DEBUGVAR)
+			CVar(SplashCountDirect, 100, DEBUGVAR)
+			CVar(SplashCountArc, 5, DEBUGVAR)
+			CVar(DeltaCount, 5, DEBUGVAR)
+			CVarEnum(DeltaMode, 0, DEBUGVAR, Average, Max)
+			CVar(StrafeDelta, false, DEBUGVAR)
 		SUBNAMESPACE_END(Projectile)
 
 		SUBNAMESPACE_BEGIN(Melee)
@@ -191,9 +199,9 @@ namespace Vars
 			CVar(SwingPrediction, false)
 			CVar(WhipTeam, false)
 
-			CVar(SwingTicks, 13, NOSAVE) // debug
-			CVar(BackstabAccountPing, true, NOSAVE) // debug
-			CVar(BackstabDoubleTest, true, NOSAVE) // debug
+			CVar(SwingTicks, 13, DEBUGVAR)
+			CVar(BackstabAccountPing, true, DEBUGVAR)
+			CVar(BackstabDoubleTest, true, DEBUGVAR)
 		SUBNAMESPACE_END(Melee)
 
 		SUBNAMESPACE_BEGIN(Healing)
@@ -216,7 +224,7 @@ namespace Vars
 		CVar(Interp, 0)
 		CVar(Window, 185)
 
-		CVar(Offset, 0, NOSAVE) // debug
+		CVar(Offset, 0, DEBUGVAR)
 	NAMESPACE_END(Backtrack)
 
 	NAMESPACE_BEGIN(CL_Move)
@@ -237,6 +245,8 @@ namespace Vars
 			CVarEnum(Options, 0b000, NONE, WhileMoving = 1 << 0, WhileUnducking = 1 << 1, WhileAirborne = 1 << 2)
 			CVar(UnchokeOnAttack, true)
 			CVar(RetainBlastJump, false)
+
+			CVar(RetainSoldierOnly, true, DEBUGVAR)
 		SUBNAMESPACE_END(FakeLag)
 
 		CVar(AutoPeek, false)
@@ -278,14 +288,14 @@ namespace Vars
 		CVar(DetectionsRequired, 10)
 		CVar(MinimumChoking, 20)
 		CVar(MinimumFlick, 20.f) // min flick size to suspect
-		CVar(MaximumNoise, 5.f) // max different between angles before and after flick
+		CVar(MaximumNoise, 1.f) // max different between angles before and after flick
 	NAMESPACE_END(CheaterDetection)
 
 	NAMESPACE_BEGIN(ESP)
 		CVarEnum(Draw, 0b0, VISUAL, Players = 1 << 0, Buildings = 1 << 1, Projectiles = 1 << 2, Objective = 1 << 3, NPCs = 1 << 4, Health = 1 << 5, Ammo = 1 << 6, Money = 1 << 7, Powerups = 1 << 8, Bombs = 1 << 9, Spellbook = 1 << 10, Gargoyle = 1 << 11)
-		CVarEnum(Player, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Friends = 1 << 3, Prioritized = 1 << 4, Name = 1 << 5, Box = 1 << 6, Distance = 1 << 7, Bones = 1 << 8, HealthBar = 1 << 9, HealthText = 1 << 10, UberBar = 1 << 11, UberText = 1 << 12, ClassIcon = 1 << 13, ClassText = 1 << 14, WeaponIcon = 1 << 15, WeaponText = 1 << 16, Priority = 1 << 17, Labels = 1 << 18, Buffs = 1 << 19, Debuffs = 1 << 20, Misc = 1 << 21, LagCompensation = 1 << 22, Ping = 1 << 23, KDR = 1 << 24)
-		CVarEnum(Building, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Friends = 1 << 3, Prioritized = 1 << 4, Name = 1 << 5, Box = 1 << 6, Distance = 1 << 7, HealthBar = 1 << 8, HealthText = 1 << 9, Owner = 1 << 10, Level = 1 << 11, Flags = 1 << 12)
-		CVarEnum(Projectile, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Friends = 1 << 3, Prioritized = 1 << 4, Name = 1 << 5, Box = 1 << 6, Distance = 1 << 7, Flags = 1 << 8)
+		CVarEnum(Player, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Name = 1 << 6, Box = 1 << 7, Distance = 1 << 8, Bones = 1 << 9, HealthBar = 1 << 10, HealthText = 1 << 11, UberBar = 1 << 12, UberText = 1 << 13, ClassIcon = 1 << 14, ClassText = 1 << 15, WeaponIcon = 1 << 16, WeaponText = 1 << 17, Priority = 1 << 18, Labels = 1 << 19, Buffs = 1 << 20, Debuffs = 1 << 21, Misc = 1 << 22, LagCompensation = 1 << 23, Ping = 1 << 24, KDR = 1 << 25)
+		CVarEnum(Building, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Name = 1 << 6, Box = 1 << 7, Distance = 1 << 8, HealthBar = 1 << 9, HealthText = 1 << 10, Owner = 1 << 11, Level = 1 << 12, Flags = 1 << 13)
+		CVarEnum(Projectile, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Name = 1 << 6, Box = 1 << 7, Distance = 1 << 8, Flags = 1 << 9)
 		CVarEnum(Objective, 0b0, VISUAL, Enemy = 1 << 0, Team = 1 << 1, Name = 1 << 2, Box = 1 << 3, Distance = 1 << 4, Flags = 1 << 5, IntelReturnTime = 1 << 6)
 
 		CVar(ActiveAlpha, 255, VISUAL)
@@ -317,8 +327,10 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Player)
 			CVar(Local, false, VISUAL)
-			CVar(Friend, false, VISUAL)
 			CVar(Priority, false, VISUAL)
+			CVar(Friend, false, VISUAL)
+			CVar(Party, false, VISUAL)
+			CVar(Target, false, VISUAL)
 		
 			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
 			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
@@ -383,8 +395,10 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Player)
 			CVar(Local, false, VISUAL)
-			CVar(Friend, false, VISUAL)
 			CVar(Priority, false, VISUAL)
+			CVar(Friend, false, VISUAL)
+			CVar(Party, false, VISUAL)
+			CVar(Target, false, VISUAL)
 				
 			CVar(Stencil, 0, VISUAL)
 			CVar(Blur, 0, VISUAL)
@@ -443,8 +457,8 @@ namespace Vars
 		SUBNAMESPACE_END(Removals)
 
 		SUBNAMESPACE_BEGIN(UI)
-			CVarEnum(StreamerMode, 0, VISUAL, Off, Local, Friends, All)
-			CVarEnum(ChatTags, 0, VISUAL, Local = 1 << 0, Friends = 1 << 1, Assigned = 1 << 2)
+			CVarEnum(StreamerMode, 0, VISUAL, Off, Local, Friends, Party, All)
+			CVarEnum(ChatTags, 0b000, VISUAL, Local = 1 << 0, Friends = 1 << 1, Party = 1 << 2, Assigned = 1 << 3)
 			CVar(FieldOfView, 0, VISUAL)
 			CVar(ZoomFieldOfView, 0, VISUAL)
 			CVar(AspectRatio, 0.f, VISUAL)
@@ -462,7 +476,10 @@ namespace Vars
 			CVar(OffsetX, 0, VISUAL)
 			CVar(OffsetY, 0, VISUAL)
 			CVar(OffsetZ, 0, VISUAL)
+			CVar(Pitch, 0, VISUAL)
+			CVar(Yaw, 0, VISUAL)
 			CVar(Roll, 0, VISUAL)
+			CVar(FieldOfView, 0.f, VISUAL)
 			CVar(SwayScale, 0.f, VISUAL)
 			CVar(SwayInterp, 0.f, VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
@@ -498,7 +515,7 @@ namespace Vars
 			CVar(NoGib, false, VISUAL)
 			CVar(Enabled, false, VISUAL)
 			CVar(EnemyOnly, false, VISUAL)
-			CVarEnum(Effects, 0b0, VISUAL, Burning = 1 << 0, Electrocuted = 1 << 1, Ash = 1 << 2, Dissolve = 1 << 3)
+			CVarEnum(Effects, 0b0000, VISUAL, Burning = 1 << 0, Electrocuted = 1 << 1, Ash = 1 << 2, Dissolve = 1 << 3)
 			CVarEnum(Type, 0, VISUAL, None, Gold, Ice)
 			CVar(Force, 1.f, VISUAL)
 			CVar(ForceHorizontal, 1.f, VISUAL)
@@ -515,40 +532,40 @@ namespace Vars
 			CVar(ProjectilePath, 0, VISUAL)
 			CVar(TrajectoryPath, 0, VISUAL)
 			CVar(ShotPath, 0, VISUAL)
-			CVarEnum(SplashRadius, 0, VISUAL, Simulation = 1 << 0, Priority = 1 << 1, Enemy = 1 << 2, Team = 1 << 3, Local = 1 << 4, Friends = 1 << 5, Rockets = 1 << 6, Stickies = 1 << 7, Pipes = 1 << 8, ScorchShot = 1 << 9, Trace = 1 << 10)
+			CVarEnum(SplashRadius, 0b0, VISUAL, Simulation = 1 << 0, Priority = 1 << 1, Enemy = 1 << 2, Team = 1 << 3, Local = 1 << 4, Friends = 1 << 5, Party = 1 << 6, Rockets = 1 << 7, Stickies = 1 << 8, Pipes = 1 << 9, ScorchShot = 1 << 10, Trace = 1 << 11)
 			CVar(Timed, false, VISUAL)
 			CVar(Box, true, VISUAL)
 			CVar(SwingLines, false, VISUAL)
 			CVar(ProjectileCamera, false, VISUAL)
 			CVar(ProjectileWindow, WindowBox_t(), NOBIND)
-			CVar(SeparatorSpacing, 4, NOSAVE) // debug
-			CVar(SeparatorLength, 12, NOSAVE) // debug
+			CVar(SeparatorSpacing, 4, DEBUGVAR)
+			CVar(SeparatorLength, 12, DEBUGVAR)
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Trajectory)
-			CVar(Overwrite, false, NOSAVE) // debug
-			CVar(OffX, 16.f, NOSAVE) // debug
-			CVar(OffY, 8.f, NOSAVE) // debug
-			CVar(OffZ, -6.f, NOSAVE) // debug
-			CVar(Pipes, true, NOSAVE) // debug
-			CVar(Hull, 5.f, NOSAVE) // debug
-			CVar(Speed, 1200.f, NOSAVE) // debug
-			CVar(Gravity, 1.f, NOSAVE) // debug
-			CVar(NoSpin, false, NOSAVE) // debug
-			CVar(LifeTime, 2.2f, NOSAVE) // debug
-			CVar(UpVelocity, 200.f, NOSAVE) // debug
-			CVar(AngVelocityX, 600.f, NOSAVE) // debug
-			CVar(AngVelocityY, -1200.f, NOSAVE) // debug
-			CVar(AngVelocityZ, 0.f, NOSAVE) // debug
-			CVar(Drag, 1.f, NOSAVE) // debug
-			CVar(DragBasisX, 0.003902f, NOSAVE) // debug
-			CVar(DragBasisY, 0.009962f, NOSAVE) // debug
-			CVar(DragBasisZ, 0.009962f, NOSAVE) // debug
-			CVar(AngDragBasisX, 0.003618f, NOSAVE) // debug
-			CVar(AngDragBasisY, 0.001514f, NOSAVE) // debug
-			CVar(AngDragBasisZ, 0.001514f, NOSAVE) // debug
-			CVar(MaxVelocity, 2000.f, NOSAVE) // debug
-			CVar(MaxAngularVelocity, 3600.f, NOSAVE) // debug
+			CVar(Overwrite, false, DEBUGVAR)
+			CVar(OffX, 16.f, DEBUGVAR)
+			CVar(OffY, 8.f, DEBUGVAR)
+			CVar(OffZ, -6.f, DEBUGVAR)
+			CVar(Pipes, true, DEBUGVAR)
+			CVar(Hull, 5.f, DEBUGVAR)
+			CVar(Speed, 1200.f, DEBUGVAR)
+			CVar(Gravity, 1.f, DEBUGVAR)
+			CVar(NoSpin, false, DEBUGVAR)
+			CVar(LifeTime, 2.2f, DEBUGVAR)
+			CVar(UpVelocity, 200.f, DEBUGVAR)
+			CVar(AngVelocityX, 600.f, DEBUGVAR)
+			CVar(AngVelocityY, -1200.f, DEBUGVAR)
+			CVar(AngVelocityZ, 0.f, DEBUGVAR)
+			CVar(Drag, 1.f, DEBUGVAR)
+			CVar(DragBasisX, 0.003902f, DEBUGVAR)
+			CVar(DragBasisY, 0.009962f, DEBUGVAR)
+			CVar(DragBasisZ, 0.009962f, DEBUGVAR)
+			CVar(AngDragBasisX, 0.003618f, DEBUGVAR)
+			CVar(AngDragBasisY, 0.001514f, DEBUGVAR)
+			CVar(AngDragBasisZ, 0.001514f, DEBUGVAR)
+			CVar(MaxVelocity, 2000.f, DEBUGVAR)
+			CVar(MaxAngularVelocity, 3600.f, DEBUGVAR)
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Hitbox)
@@ -576,6 +593,13 @@ namespace Vars
 			CVar(NearPropFade, false, VISUAL)
 			CVar(NoPropFade, false, VISUAL)
 		SUBNAMESPACE_END(World)
+
+		SUBNAMESPACE_BEGIN(Misc)
+			CVar(LocalDominationOverride, std::string(""), VISUAL)
+			CVar(LocalRevengeOverride, std::string(""), VISUAL)
+			CVar(DominationOverride, std::string(""), VISUAL)
+			CVar(RevengeOverride, std::string(""), VISUAL)
+		SUBNAMESPACE_END(Misc)
 	NAMESPACE_END(Visuals)
 
 	NAMESPACE_BEGIN(Radar)
@@ -592,7 +616,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Players)
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
-			CVarEnum(Draw, 0b101010, VISUAL, Local = 1 << 0, Enemy = 1 << 1, Team = 1 << 2, Friends = 1 << 3, Prioritized = 1 << 4, Cloaked = 1 << 5)
+			CVarEnum(Draw, 0b1001010, VISUAL, Local = 1 << 0, Enemy = 1 << 1, Team = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Cloaked = 1 << 6)
 			CVarEnum(IconType, 1, VISUAL, Icons, Portraits, Avatars)
 			CVar(IconSize, 24, VISUAL)
 			CVar(Health, false, VISUAL)
@@ -602,7 +626,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Buildings)
 			CVar(Enabled, false, VISUAL)
 			CVar(Background, true, VISUAL)
-			CVarEnum(Draw, 0b01011, VISUAL, Local = 1 << 0, Enemy = 1 << 1, Team = 1 << 2, Friends = 1 << 3, Prioritized = 1 << 4)
+			CVarEnum(Draw, 0b001011, VISUAL, Local = 1 << 0, Enemy = 1 << 1, Team = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5)
 			CVar(Health, false, VISUAL)
 			CVar(IconSize, 18, VISUAL)
 		SUBNAMESPACE_END(Buildings)
@@ -629,10 +653,11 @@ namespace Vars
 			CVar(NoPush, false)
 			CVar(CrouchSpeed, false)
 			CVar(MovementLock, false)
+			CVar(BreakJump, false)
 
-			CVar(TimingOffset, 0, NOSAVE) // debug
-			CVar(ChokeCount, 1, NOSAVE) // debug
-			CVar(ApplyAbove, 0, NOSAVE) // debug
+			CVar(TimingOffset, 0, DEBUGVAR)
+			CVar(ChokeCount, 1, DEBUGVAR)
+			CVar(ApplyAbove, 0, DEBUGVAR)
 		SUBNAMESPACE_END(Movement)
 
 		SUBNAMESPACE_BEGIN(Exploits)
@@ -716,6 +741,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(MannVsMachine)
 			CVar(InstantRespawn, false)
 			CVar(InstantRevive, false)
+			CVar(AllowInspect, false)
 		SUBNAMESPACE_END(Sound)
 
 		SUBNAMESPACE_BEGIN(Steam)
@@ -736,17 +762,21 @@ namespace Vars
 		CVar(Team, Color_t(75, 175, 225, 255), VISUAL)
 		CVar(Local, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(Target, Color_t(255, 0, 0, 255), VISUAL)
-		CVar(Invulnerable, Color_t(200, 200, 255, 255), VISUAL)
-		CVar(Cloak, Color_t(150, 175, 210, 255), VISUAL)
-		CVar(Overheal, Color_t(75, 175, 255, 255), VISUAL)
-		CVar(HealthBar, Gradient_t({ 255, 0, 0, 255 }, { 0, 200, 125, 255 }), VISUAL)
-		CVar(UberBar, Color_t( 127, 255, 255, 255 ), VISUAL)
 		CVar(Health, Color_t(0, 225, 75, 255), VISUAL)
 		CVar(Ammo, Color_t(127, 127, 127, 255), VISUAL)
 		CVar(Money, Color_t(0, 150, 75, 255), VISUAL)
 		CVar(Powerup, Color_t(255, 175, 0, 255), VISUAL)
 		CVar(NPC, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(Halloween, Color_t(100, 0, 255, 255), VISUAL)
+
+		CVar(IndicatorGood, Color_t(0, 255, 100, 255), DEBUGVAR)
+		CVar(IndicatorMid, Color_t(255, 200, 0, 255), DEBUGVAR)
+		CVar(IndicatorBad, Color_t(255, 0, 0, 255), DEBUGVAR)
+		CVar(IndicatorMisc, Color_t(75, 175, 255, 255), DEBUGVAR)
+		CVar(IndicatorTextGood, Color_t(150, 255, 150, 255), DEBUGVAR)
+		CVar(IndicatorTextMid, Color_t(255, 200, 0, 255), DEBUGVAR)
+		CVar(IndicatorTextBad, Color_t(255, 150, 150, 255), DEBUGVAR)
+		CVar(IndicatorTextMisc, Color_t(100, 255, 255, 255), DEBUGVAR)
 
 		CVar(WorldModulation, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(SkyModulation, Color_t(255, 255, 255, 255), VISUAL)

@@ -1,6 +1,5 @@
 #pragma once
 #include "../Feature/Feature.h"
-#include "../../SDK/Definitions/Interfaces/IVEngineClient.h"
 #include "../../SDK/Definitions/Misc/dt_recv.h"
 #include <cstdint>
 

@@ -22,6 +22,14 @@ public:
 	{
 		return *reinterpret_cast<std::int32_t*>(address + 0x3) + address + 0x7;
 	}
+
+	template <typename T>
+	inline T GetModuleExport(const char* szModule, const char* szExport)
+	{
+		if (auto hModule = GetModuleHandle(szModule))
+			return reinterpret_cast<T>(GetProcAddress(hModule, szExport));
+		return reinterpret_cast<T>(nullptr);
+	}
 };
 
 ADD_FEATURE_CUSTOM(CMemory, Memory, U)

@@ -1,11 +1,6 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-#ifdef DEBUG
-#include <iostream>
-#include <fstream>
-#endif
-
 class CMisc
 {
 	void AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd);
@@ -13,6 +8,7 @@ class CMisc
 	void AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoPeek(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void MovementLock(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void BreakJump(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void InstantRespawnMVM(CTFPlayer* pLocal);
 
@@ -39,10 +35,6 @@ public:
 
 	int iWishCmdrate = -1;
 	int iWishUpdaterate = -1;
-
-#ifdef DEBUG
-	void DumpClassIDS();
-#endif
 };
 
 ADD_FEATURE(CMisc, Misc)

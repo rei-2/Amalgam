@@ -7,7 +7,7 @@ using CommandCallback = std::function<void(std::deque<std::string>)>;
 class CCommands
 {
 private:
-    std::unordered_map<std::string, CommandCallback> CommandMap;
+    std::unordered_map<uint32_t, CommandCallback> CommandMap;
 
 public:
     void Initialize();

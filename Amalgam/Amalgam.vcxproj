@@ -871,6 +871,7 @@
     <ClCompile Include="src\Features\Resolver\Resolver.cpp" />
     <ClCompile Include="src\Features\Simulation\MovementSimulation\MovementSimulation.cpp" />
     <ClCompile Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.cpp" />
+    <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
     <ClCompile Include="src\Features\TickHandler\TickHandler.cpp" />
     <ClCompile Include="src\Features\Visuals\Chams\Chams.cpp" />
     <ClCompile Include="src\Features\Visuals\ESP\ESP.cpp" />
@@ -884,7 +885,9 @@
     <ClCompile Include="src\Features\Visuals\SpectatorList\SpectatorList.cpp" />
     <ClCompile Include="src\Features\Visuals\Visuals.cpp" />
     <ClCompile Include="src\Hooks\CBaseAnimating_DoAnimationEvents.cpp" />
+    <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />
     <ClCompile Include="src\Hooks\CClientState_GetTime.cpp" />
+    <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
     <ClCompile Include="src\Hooks\CL_ProcessPacketEntities.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_BaseInterpolatePart1.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_WorldSpaceCenter.cpp" />
@@ -900,6 +903,7 @@
     <ClCompile Include="src\Hooks\CParticleProperty_Create.cpp" />
     <ClCompile Include="src\Hooks\CPlayerResource_GetPlayerName.cpp" />
     <ClCompile Include="src\Hooks\CTFGCClientSystem_UpdateAssignedLobby.cpp" />
+    <ClCompile Include="src\Hooks\CTFHudDeathNotice_AddAdditionalMsg.cpp" />
     <ClCompile Include="src\Hooks\CThirdPersonManager_Update.cpp" />
     <ClCompile Include="src\Hooks\CViewRender_PerformScreenOverlay.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_DispatchUserMessage.cpp" />
@@ -929,7 +933,7 @@
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
     <ClCompile Include="src\Hooks\COPRenderSprites_Render.cpp" />
-    <ClCompile Include="src\Hooks\CPrediction_RunCommand.cpp" />
+    <ClCompile Include="src\Hooks\CPrediction_RunSimulation.cpp" />
     <ClCompile Include="src\Hooks\CRendering3dView_EnableWorldFog.cpp" />
     <ClCompile Include="src\Hooks\CSkyboxView_Enable3dSkyboxFog.cpp" />
     <ClCompile Include="src\Hooks\CSoundEmitterSystem_EmitSound.cpp" />
@@ -1149,6 +1153,7 @@
     <ClInclude Include="src\Features\Resolver\Resolver.h" />
     <ClInclude Include="src\Features\Simulation\MovementSimulation\MovementSimulation.h" />
     <ClInclude Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.h" />
+    <ClInclude Include="src\Features\Spectate\Spectate.h" />
     <ClInclude Include="src\Features\TickHandler\TickHandler.h" />
     <ClInclude Include="src\Features\Visuals\Chams\Chams.h" />
     <ClInclude Include="src\Features\Visuals\ESP\ESP.h" />
@@ -1162,6 +1167,7 @@
     <ClInclude Include="src\Hooks\Direct3DDevice9.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGameRules.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGCClientSystem.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\IBaseClientDLL.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IGameMovement.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IInput.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IPanel.h" />
@@ -1181,6 +1187,7 @@
     <ClInclude Include="src\SDK\Definitions\Main\CModel.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IEngineTrace.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CParticleProperty.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\CSniperDot.h" />
     <ClInclude Include="src\SDK\Definitions\Main\IAchievementMgr.h" />
     <ClInclude Include="src\SDK\Definitions\Main\MD5.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\bitvec.h" />
@@ -1382,12 +1389,12 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="..\packages\boost.1.84.0\build\boost.targets" Condition="Exists('..\packages\boost.1.84.0\build\boost.targets')" />
+    <Import Project="..\packages\boost.1.86.0\build\boost.targets" Condition="Exists('..\packages\boost.1.86.0\build\boost.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\boost.1.84.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.84.0\build\boost.targets'))" />
+    <Error Condition="!Exists('..\packages\boost.1.86.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.86.0\build\boost.targets'))" />
   </Target>
 </Project>

@@ -2,7 +2,7 @@
 
 MAKE_SIGNATURE(CBasePlayer_CalcViewModelView, "client.dll", "48 89 74 24 ? 55 41 56 41 57 48 8D AC 24", 0x0);
 
-MAKE_HOOK(C_BasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), void,
+MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), void,
 	void* rcx, CBaseEntity* pOwner, const Vec3& vEyePosition, Vec3& vEyeAngles)
 {
 	Vec3 vOffset = { float(Vars::Visuals::Viewmodel::OffsetX.Value), float(Vars::Visuals::Viewmodel::OffsetY.Value), float(Vars::Visuals::Viewmodel::OffsetZ.Value) };
@@ -50,10 +50,24 @@ MAKE_HOOK(C_BasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), vo
 	if (bOffset)
 	{
 		Vec3 vForward, vRight, vUp; Math::AngleVectors(vEyeAngles, &vForward, &vRight, &vUp);
-		vNewEyePosition += (vRight * vOffset.x * (bFlip ? -1 : 1)) + (vForward * vOffset.y) + (vUp * vOffset.z);
+		vNewEyePosition += vForward * vOffset.y;
+		vNewEyePosition += vRight * vOffset.x * (bFlip ? -1 : 1);
+		vNewEyePosition += vUp * vOffset.z;
 	}
+	if (Vars::Visuals::Viewmodel::Pitch.Value)
+		vEyeAngles.x += Vars::Visuals::Viewmodel::Pitch.Value;
+	if (Vars::Visuals::Viewmodel::Yaw.Value)
+		vEyeAngles.y += Vars::Visuals::Viewmodel::Yaw.Value * (bFlip ? -1 : 1);
 	if (Vars::Visuals::Viewmodel::Roll.Value)
 		vEyeAngles.z += Vars::Visuals::Viewmodel::Roll.Value * (bFlip ? -1 : 1);
 
 	CALL_ORIGINAL(rcx, pOwner, vNewEyePosition, vEyeAngles);
+}
+
+MAKE_HOOK(ClientModeTFNormal_GetViewModelFOV, U::Memory.GetVFunc(I::ClientModeShared, 32), float,
+	/*void* rcx*/)
+{
+	if (float flFOV = Vars::Visuals::Viewmodel::FieldOfView.Value)
+		return flFOV;
+	return CALL_ORIGINAL(/*rcx*/);
 }

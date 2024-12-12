@@ -31,13 +31,16 @@ void CEventListener::Unload()
 
 void CEventListener::FireGameEvent(IGameEvent* pEvent)
 {
-	if (!pEvent || I::EngineClient->IsPlayingTimeDemo())
+	if (!pEvent)
 		return;
 
 	auto pLocal = H::Entities.GetLocal();
 	auto uHash = FNV1A::Hash32(pEvent->GetName());
 
 	F::Records.Event(pEvent, uHash, pLocal);
+	if (I::EngineClient->IsPlayingTimeDemo())
+		return;
+
 	F::CritHack.Event(pEvent, uHash, pLocal);
 	F::Misc.Event(pEvent, uHash);
 	F::Visuals.Event(pEvent, uHash);

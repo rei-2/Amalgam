@@ -1,5 +1,6 @@
 #include "NetVars.h"
 
+#include "../../SDK/Definitions/Interfaces/IBaseClientDLL.h"
 #include "../Hash/FNV1A.h"
 
 int CNetVars::GetOffset(RecvTable* pTable, const char* szNetVar)

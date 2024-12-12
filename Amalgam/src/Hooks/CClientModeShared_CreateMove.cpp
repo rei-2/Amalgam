@@ -11,6 +11,7 @@
 #include "../Features/TickHandler/TickHandler.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Visuals/FakeAngle/FakeAngle.h"
+#include "../Features/Spectate/Spectate.h"
 
 MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
 
@@ -30,7 +31,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	G::CurrentUserCmd = pCmd;
 
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
-
+	
 	// correct tick_count for fakeinterp / nointerp
 	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.m_flFakeInterp) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
 	if (G::Buttons & IN_DUCK) // lol
@@ -46,7 +47,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 			int iNewItemDefinitionIndex = iStaticItemDefinitionIndex = pWeapon->m_iItemDefinitionIndex();
 
 			if (iNewItemDefinitionIndex != iOldItemDefinitionIndex || !pWeapon->m_iClip1() || !pLocal->IsAlive() || pLocal->IsTaunting() || pLocal->IsBonked() || pLocal->IsAGhost() || pLocal->IsInBumperKart())
-				G::WaitForShift = 1;
+				F::Ticks.m_iWait = 1;
 		}
 
 		G::CanPrimaryAttack = G::CanSecondaryAttack = G::Reloading = false;
@@ -97,6 +98,20 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 			case TF_WEAPON_MEDIGUN:
 			case TF_WEAPON_BUILDER:
 				break;
+			case TF_WEAPON_PARTICLE_CANNON:
+			{
+				float flChargeBeginTime = pWeapon->As<CTFParticleCannon>()->m_flChargeBeginTime();
+				if (flChargeBeginTime > 0)
+				{
+					float flTotalChargeTime = TICKS_TO_TIME(pLocal->m_nTickBase()) - flChargeBeginTime;
+					if (flTotalChargeTime < TF_PARTICLE_MAX_CHARGE_TIME)
+					{
+						G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+						break;
+					}
+				}
+				[[fallthrough]];
+			}
 			default:
 				if (pWeapon->GetSlot() != SLOT_MELEE)
 				{
@@ -121,6 +136,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	}
 
 	// Run Features
+	F::Spectate.CreateMove(pLocal, pCmd);
 	F::Misc.RunPre(pLocal, pCmd);
 	F::Backtrack.Run(pCmd);
 
@@ -129,7 +145,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	F::EnginePrediction.End(pLocal, pCmd);
 
 	F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
-	F::Ticks.MovePost(pLocal, pCmd);
+	F::Ticks.CreateMove(pLocal, pCmd);
 	F::CritHack.Run(pLocal, pWeapon, pCmd);
 	F::NoSpread.Run(pLocal, pWeapon, pCmd);
 	F::Misc.RunPost(pLocal, pCmd, *pSendPacket);
@@ -138,7 +154,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 
 	{
 		static bool bWasSet = false;
-		const bool bOverchoking = I::ClientState->chokedcommands >= 21 || G::ShiftedTicks + I::ClientState->chokedcommands == G::MaxShift + (F::AntiAim.YawOn() ? 3 : 0); // failsafe
+		const bool bOverchoking = I::ClientState->chokedcommands >= 21 || F::Ticks.m_iShiftedTicks + I::ClientState->chokedcommands == F::Ticks.m_iMaxShift + (F::AntiAim.YawOn() ? 3 : 0); // failsafe
 		if (G::PSilentAngles && !bOverchoking)
 			*pSendPacket = false, bWasSet = true;
 		else if (bWasSet || bOverchoking)

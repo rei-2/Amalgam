@@ -8,8 +8,10 @@
 static inline bool GetPlayerGlow(CBaseEntity* pEntity, CTFPlayer* pLocal, Glow_t* pGlow, Color_t* pColor, bool bFriendly, bool bEnemy)
 {
 	if (Vars::Glow::Player::Local.Value && pEntity == pLocal
+		|| Vars::Glow::Player::Priority.Value && F::PlayerUtils.IsPrioritized(pEntity->entindex())
 		|| Vars::Glow::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
-		|| Vars::Glow::Player::Priority.Value && F::PlayerUtils.GetPriority(pEntity->entindex()) > F::PlayerUtils.m_vTags[DEFAULT_TAG].Priority)
+		|| Vars::Glow::Player::Party.Value && H::Entities.InParty(pEntity->entindex())
+		|| Vars::Glow::Player::Target.Value && pEntity->entindex() == G::Target.first)
 	{
 		*pGlow = Glow_t(Vars::Glow::Player::Stencil.Value, Vars::Glow::Player::Blur.Value);
 		*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
@@ -291,16 +293,24 @@ void CGlow::SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* 
 
 void CGlow::DrawModel(CBaseEntity* pEntity, bool bModel)
 {
-	const float flOldInvisibility = pEntity->IsPlayer() ? pEntity->As<CTFPlayer>()->m_flInvisibility() : -1.f;
-	if (flOldInvisibility > 0.999f)
-		pEntity->As<CTFPlayer>()->m_flInvisibility() = 0.f;
-
 	bRendering = true;
-	pEntity->DrawModel(STUDIO_RENDER | STUDIO_NOSHADOWS);
-	bRendering = false;
 
-	if (flOldInvisibility > 0.999f)
-		pEntity->As<CTFPlayer>()->m_flInvisibility() = flOldInvisibility;
+	/*
+	if (pEntity->IsPlayer())
+	{
+		auto pPlayer = pEntity->As<CTFPlayer>();
+
+		float flOldInvisibility = pPlayer->m_flInvisibility();
+		pPlayer->m_flInvisibility() = 0.f;
+
+		pEntity->DrawModel(STUDIO_RENDER | STUDIO_NOSHADOWS);
+		
+		pPlayer->m_flInvisibility() = flOldInvisibility;
+	}
+	else*/
+		pEntity->DrawModel(STUDIO_RENDER | STUDIO_NOSHADOWS);
+
+	bRendering = false;
 }
 
 
@@ -552,31 +562,32 @@ void CGlow::Initialize()
 	{
 		m_pMatGlowColor = I::MaterialSystem->FindMaterial("dev/glow_color", TEXTURE_GROUP_OTHER);
 		m_pMatGlowColor->IncrementReferenceCount();
+		F::Materials.m_mMatList[m_pMatGlowColor] = true;
 	}
 	
 		SDK::Output("Glow::Initialize", "m_pMatBlurX", {}, false, false, false, true);
 	if (!m_pMatBlurX)
 	{
-		KeyValues* m_pMatBlurXKV = new KeyValues("BlurFilterX");
-		m_pMatBlurXKV->SetString("$basetexture", "glow_buffer_1");
-		m_pMatBlurX = I::MaterialSystem->CreateMaterial("m_pMatBlurX", m_pMatBlurXKV);
+		KeyValues* kv = new KeyValues("BlurFilterX");
+		kv->SetString("$basetexture", "glow_buffer_1");
+		m_pMatBlurX = F::Materials.Create("MatBlurX", kv);
 	}
 
 		SDK::Output("Glow::Initialize", "m_pMatBlurY", {}, false, false, false, true);
 	if (!m_pMatBlurY)
 	{
-		KeyValues* m_pMatBlurYKV = new KeyValues("BlurFilterY");
-		m_pMatBlurYKV->SetString("$basetexture", "glow_buffer_2");
-		m_pMatBlurY = I::MaterialSystem->CreateMaterial("m_pMatBlurY", m_pMatBlurYKV);
+		KeyValues* kv = new KeyValues("BlurFilterY");
+		kv->SetString("$basetexture", "glow_buffer_2");
+		m_pMatBlurY = F::Materials.Create("MatBlurY", kv);
 	}
 
 		SDK::Output("Glow::Initialize", "m_pMatHaloAddToScreen", {}, false, false, false, true);
 	if (!m_pMatHaloAddToScreen)
 	{
-		KeyValues* m_pMatHaloAddToScreenKV = new KeyValues("UnlitGeneric");
-		m_pMatHaloAddToScreenKV->SetString("$basetexture", "glow_buffer_1");
-		m_pMatHaloAddToScreenKV->SetString("$additive", "1");
-		m_pMatHaloAddToScreen = I::MaterialSystem->CreateMaterial("m_pMatHaloAddToScreen", m_pMatHaloAddToScreenKV);
+		KeyValues* kv = new KeyValues("UnlitGeneric");
+		kv->SetString("$basetexture", "glow_buffer_1");
+		kv->SetString("$additive", "1");
+		m_pMatHaloAddToScreen = F::Materials.Create("MatHaloAddToScreen", kv);
 	}
 
 		SDK::Output("Glow::Initialize", "m_pRtFullFrame", {}, false, false, false, true);

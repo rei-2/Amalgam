@@ -37,16 +37,16 @@ public:
 class ConCommandBase
 {
 public:
-	virtual ~ConCommandBase(void);
-	virtual	bool IsCommand(void) const;
-	virtual bool IsFlagSet(int flag) const;
-	virtual void AddFlags(int flags);
-	virtual const char* GetName(void) const;
-	virtual const char* GetHelpText(void) const;
-	virtual bool IsRegistered(void) const;
-	virtual void* GetDLLIdentifier() const;
-	virtual void CreateBase(const char* pName, const char* pHelpString = 0, int flags = 0);
-	virtual void Init();
+	virtual ~ConCommandBase(void) = 0;
+	virtual	bool IsCommand(void) const = 0;
+	virtual bool IsFlagSet(int flag) const = 0;
+	virtual void AddFlags(int flags) = 0;
+	virtual const char* GetName(void) const = 0;
+	virtual const char* GetHelpText(void) const = 0;
+	virtual bool IsRegistered(void) const = 0;
+	virtual void* GetDLLIdentifier() const = 0;
+	virtual void CreateBase(const char* pName, const char* pHelpString = 0, int flags = 0) = 0;
+	virtual void Init() = 0;
 
 public:
 	ConCommandBase* m_pNext;
@@ -69,21 +69,54 @@ enum
 class CCommand
 {
 public:
+	int ArgC() const;
+	const char** ArgV() const;
+	const char* ArgS() const;
+	const char* GetCommandString() const;
+	const char* operator[](int nIndex) const;
+	const char* Arg(int nIndex) const;
+
 	int m_nArgc;
 	int m_nArgv0Size;
 	char m_pArgSBuffer[COMMAND_MAX_LENGTH];
 	char m_pArgvBuffer[COMMAND_MAX_LENGTH];
 	const char* m_ppArgv[COMMAND_MAX_ARGC];
 };
+inline int CCommand::ArgC() const
+{
+	return m_nArgc;
+}
+inline const char** CCommand::ArgV() const
+{
+	return m_nArgc ? (const char**)m_ppArgv : NULL;
+}
+inline const char* CCommand::ArgS() const
+{
+	return m_nArgv0Size ? &m_pArgSBuffer[m_nArgv0Size] : "";
+}
+inline const char* CCommand::GetCommandString() const
+{
+	return m_nArgc ? m_pArgSBuffer : "";
+}
+inline const char* CCommand::operator[](int nIndex) const
+{
+	return Arg(nIndex);
+}
+inline const char* CCommand::Arg(int nIndex) const
+{
+	if (nIndex < 0 || nIndex >= m_nArgc)
+		return "";
+	return m_ppArgv[nIndex];
+}
 
 class ConCommand : public ConCommandBase
 {
 public:
-	virtual ~ConCommand(void);
-	virtual	bool IsCommand(void) const;
-	virtual int AutoCompleteSuggest(const char* partial, CUtlVector< /*CUtlString*/ void* >& commands);
-	virtual bool CanAutoComplete(void);
-	virtual void Dispatch(const CCommand& command);
+	virtual ~ConCommand(void) = 0;
+	virtual	bool IsCommand(void) const = 0;
+	virtual int AutoCompleteSuggest(const char* partial, CUtlVector< /*CUtlString*/ void* >& commands) = 0;
+	virtual bool CanAutoComplete(void) = 0;
+	virtual void Dispatch(const CCommand& command) = 0;
 
 private:
 	union

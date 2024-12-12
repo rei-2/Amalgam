@@ -16,6 +16,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 		bool bDisciplinary = Vars::Aimbot::Melee::WhipTeam.Value && pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheDisciplinaryAction;
 		for (auto pEntity : H::Entities.GetGroup(bDisciplinary ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_ENEMIES))
 		{
+			bool bTeammate = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
@@ -24,7 +25,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 				continue;
 
 			float flDistTo = vLocalPos.DistTo(vPos);
-			vTargets.push_back({ pEntity, ETargetType::Player, vPos, vAngleTo, flFOVTo, flDistTo, F::AimbotGlobal.GetPriority(pEntity->entindex()) });
+			vTargets.push_back({ pEntity, ETargetType::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()) });
 		}
 	}
 
@@ -138,10 +139,7 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			if (i < iMax)
 			{
 				if (pLocal->IsCharging() && iMax - i <= GetSwingTime(pWeapon)) // demo charge fix for swing pred
-				{
-					localStorage.m_MoveData.m_flMaxSpeed = pLocal->TeamFortress_CalculateMaxSpeed(true);
-					localStorage.m_MoveData.m_flClientMaxSpeed = localStorage.m_MoveData.m_flMaxSpeed;
-				}
+					localStorage.m_MoveData.m_flMaxSpeed = localStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal, false, true);
 				F::MoveSim.RunTick(localStorage);
 			}
 			if (i < iSwingTicks - iDoubletapTicks)
@@ -429,7 +427,7 @@ Vec3 CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 // assume angle calculated outside with other overload
 void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 {
-	bool bDoubleTap = G::DoubleTap || F::Ticks.GetTicks(H::Entities.GetWeapon());
+	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
 	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
 	{
 		pCmd->viewangles = vAngle;
@@ -491,7 +489,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			if (bShouldSwing)
 				pCmd->buttons |= IN_ATTACK;
 			if (iDoubletapTicks)
-				G::DoubleTap = true;
+				F::Ticks.m_bDoubletap = true;
 		}
 
 		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
@@ -608,7 +606,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	{
 		static int iLastRun = 0;
 
-		if ((Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent ? iLastRun != I::GlobalVars->tickcount - 1 || G::PSilentAngles && G::ShiftedTicks == G::MaxShift : true) && Vars::Aimbot::General::AutoShoot.Value)
+		if ((Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent ? iLastRun != I::GlobalVars->tickcount - 1 || G::PSilentAngles && F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift : true) && Vars::Aimbot::General::AutoShoot.Value)
 			pCmd->buttons |= IN_ATTACK;
 
 		if (pCmd->buttons & IN_ATTACK)

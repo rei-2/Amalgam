@@ -24,7 +24,7 @@ public:
 
 	NETVAR_OFF(m_bInReload, bool, "CBaseCombatWeapon", "m_flNextPrimaryAttack", 12);
 
-	VIRTUAL(GetName, const char*, const char* (__fastcall*)(void*), this, 332);
+	VIRTUAL(GetName, const char*, const char*(*)(void*), this, 332);
 
 	inline bool HasAmmo()
 	{

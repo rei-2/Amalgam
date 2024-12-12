@@ -50,9 +50,9 @@ void CPlayerArrows::Run(CTFPlayer* pLocal)
 		if (pPlayer->IsDormant() && !H::Entities.GetDormancy(pPlayer->entindex()) || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked())
 			continue;
 
-		int iType; Color_t tColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value, &iType);
-		if (iType == 1 && pPlayer->InCond(TF_COND_DISGUISED))
-			tColor = Vars::Colors::Cloak.Value;
+		Color_t tColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
+		if (pPlayer->InCond(TF_COND_DISGUISED))
+			tColor = Vars::Colors::Target.Value;
 
 		DrawArrowTo(vLocalPos, pPlayer->GetCenter(), tColor);
 	}

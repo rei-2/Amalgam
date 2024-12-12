@@ -59,6 +59,7 @@ struct PlayerStorage
 	PlayerData m_PlayerData = {};
 
 	float m_flAverageYaw = 0.f;
+	float m_flAverageDelta = 0.f;
 
 	float m_flSimTime = 0.f;
 	float m_flPredictedDelta = 0.f;
@@ -90,9 +91,8 @@ private:
 	void Reset(PlayerStorage& playerStorage);
 
 	bool SetupMoveData(PlayerStorage& playerStorage);
-	bool GetYawDifference(PlayerStorage& playerStorage, size_t i, float* flYaw, float flStraightFuzzyValue = 0.f);
-	float GetAverageYaw(PlayerStorage& playerStorage, const int iSamples);
-	bool StrafePrediction(PlayerStorage& playerStorage, const int iSamples);
+	void GetAverageYaw(PlayerStorage& playerStorage, int iSamples);
+	bool StrafePrediction(PlayerStorage& playerStorage, int iSamples);
 
 	bool m_bOldInPrediction = false;
 	bool m_bOldFirstTimePredicted = false;

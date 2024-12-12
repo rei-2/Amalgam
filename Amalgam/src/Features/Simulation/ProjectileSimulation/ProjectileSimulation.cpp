@@ -1,11 +1,15 @@
 #include "ProjectileSimulation.h"
 
 #include "../../EnginePrediction/EnginePrediction.h"
+#include "../../CritHack/CritHack.h"
 
-bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, bool bTrace, bool bQuick, float flAutoCharge)
+bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
 {
 	if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsTaunting() || !pWeapon)
 		return false;
+
+	bool bTrace = iFlags & ProjSim_Trace;
+	bool bQuick = iFlags & ProjSim_Quick;
 
 	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
 	static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
@@ -38,7 +42,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			float flOldCurrentTime = I::GlobalVars->curtime;
 			I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
 
-			SDK::RandomSeed(SDK::SeedFileLineHash(MD5_PseudoRandom(G::CurrentUserCmd->command_number) & 0x7FFFFFFF, "SelectWeightedSequence", 0));
+			int iCmdNum = iFlags & ProjSim_PredictCmdNum ? F::CritHack.PredictCmdNum(pPlayer, pWeapon, G::CurrentUserCmd) : G::CurrentUserCmd->command_number;
+			SDK::RandomSeed(SDK::SeedFileLineHash(MD5_PseudoRandom(iCmdNum) & 0x7FFFFFFF, "SelectWeightedSequence", 0));
 			for (int i = 0; i < 6; ++i)
 				SDK::RandomFloat();
 
@@ -46,6 +51,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			switch (pWeapon->GetWeaponID())
 			{
 			case TF_WEAPON_COMPOUND_BOW:
+				// done after the projectile is created and not before, position may be a bit off
 				if (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f && I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 5.0f)
 				{
 					vAngAdd.x += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
@@ -56,11 +62,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 				vAngAdd.x += SDK::RandomFloat(-1.5f, 1.5f);
 				vAngAdd.y += SDK::RandomFloat(-1.5f, 1.5f);
 			}
-			if (!F::EnginePrediction.m_bInPrediction) // don't do angle stuff for aimbot, nospread will pick that up
-			{
+			if (!(iFlags & ProjSim_NoRandomAngles)) // don't do angle stuff for aimbot, nospread will pick that up
 				vAngles += vAngAdd;
-				SDK::Output("Angles", std::format("{}, {}, {}", vAngles.x, vAngles.y, vAngles.z).c_str());
-			}
 
 			I::GlobalVars->curtime = flOldCurrentTime;
 		}
@@ -88,11 +91,13 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case TF_WEAPON_RAYGUN:
 	case TF_WEAPON_DRG_POMSON:
 	{
+		bool bCowMangler = pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON;
+
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 8.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		if (pWeapon->GetWeaponID() == TF_WEAPON_DRG_POMSON)
 			vPos.z -= 13.f;
-		float flSpeed = pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON ? 1100.f : 1200.f;
-		out = { TF_PROJECTILE_ENERGY_RING, vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, 0.f, true };
+		float flSpeed = bCowMangler ? 1100.f : 1200.f;
+		out = { TF_PROJECTILE_ENERGY_RING, vPos, vAngle, bCowMangler ? Vec3() : Vec3(1.f, 1.f, 1.f), flSpeed, 0.f, true };
 		return true;
 	}
 	case TF_WEAPON_GRENADELAUNCHER: // vphysics projectiles affected by server start gravity
@@ -243,17 +248,14 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
 {
-	bool bTrace = iFlags & ProjSim_Trace;
 	bool InitCheck = iFlags & ProjSim_InitCheck;
 	bool bQuick = iFlags & ProjSim_Quick;
 
 	const float flOldCurrentTime = I::GlobalVars->curtime;
-	if (bQuick)
-		I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
-	bool bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, bTrace, bQuick, flAutoCharge);
+	I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
+	bool bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, iFlags, flAutoCharge);
 	out.m_bQuick = bQuick;
-	if (bQuick)
-		I::GlobalVars->curtime = flOldCurrentTime;
+	I::GlobalVars->curtime = flOldCurrentTime;
 
 	if (!bReturn || !InitCheck)
 		return bReturn;
@@ -262,7 +264,7 @@ bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, 
 	const Vec3 vEnd = out.m_vPos;
 
 	CGameTrace trace = {};
-	CTraceFilterProjectile filter = {}; filter.pSkip = pPlayer;
+	CTraceFilterWorldAndPropsOnly filter = {};
 	SDK::TraceHull(vStart, vEnd, out.m_vHull * -1.f, out.m_vHull, MASK_SOLID, &filter, &trace);
 	return !trace.DidHit();
 }

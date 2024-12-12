@@ -1548,6 +1548,13 @@ namespace ImGui
 		case VK_RWIN: return "windows";
 		case VK_PAUSE: return "pause";
 		case VK_APPS: return "apps";
+		case VK_VOLUME_MUTE: return "mute";
+		case VK_VOLUME_DOWN: return "volume down";
+		case VK_VOLUME_UP: return "volume up";
+		case VK_MEDIA_STOP: return "stop";
+		case VK_MEDIA_PLAY_PAUSE: return "play/pause";
+		case VK_MEDIA_PREV_TRACK: return "previous track";
+		case VK_MEDIA_NEXT_TRACK: return "next track";
 		}
 
 		std::string str = "unknown";
@@ -1591,7 +1598,7 @@ namespace ImGui
 				int iKeyPressed = 0;
 				for (short iKey = 0; iKey < 255; iKey++)
 				{
-					if (U::KeyHandler.Pressed(iKey))
+					if (U::KeyHandler.Pressed(iKey) && iKey != VK_LBUTTON)
 					{
 						iKeyPressed = iKey;
 						break;
@@ -2010,12 +2017,12 @@ namespace ImGui
 			bool bNewPopup = bHovered && IsMouseReleased(ImGuiMouseButton_Right) && !IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);\
 			if (bNewPopup)\
 			{\
-				OpenPopup(var.m_sName.c_str());\
+				OpenPopup(std::format("{}::{}", var.m_sName.c_str(), sLabel).c_str());\
 				staticVal = val;\
 			}\
 			PushStyleColor(ImGuiCol_PopupBg, F::Render.Foreground.Value);\
 			SetNextWindowSize({ H::Draw.Scale(300), 0 });\
-			bool bPopup = BeginPopup(var.m_sName.c_str());\
+			bool bPopup = BeginPopup(std::format("{}::{}", var.m_sName.c_str(), sLabel).c_str());\
 			PopStyleColor();\
 			if (bPopup)\
 			{\
