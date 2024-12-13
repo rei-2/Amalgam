@@ -9,6 +9,7 @@
 //#define SPLASH_DEBUG1 // normal splash visualization
 //#define SPLASH_DEBUG2 // obstructed splash visualization
 //#define SPLASH_DEBUG3 // points visualization
+//#define SPLASH_DEBUG4 // trace visualization
 
 std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
@@ -748,6 +749,10 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 	CTraceFilterProjectile filter = {}; filter.pSkip = pLocal;
 	CTraceFilterWorldAndPropsOnly filterWorld = {};
 
+#ifdef SPLASH_DEBUG4
+	G::BoxStorage.push_back({ vPoint, projInfo.m_vHull * -1, projInfo.m_vHull, {}, I::GlobalVars->curtime + 5.f, { 255, 0, 0, 255 }, { 0, 0, 0, 0 } });
+#endif
+
 	if (!projInfo.m_flGravity)
 	{
 		SDK::TraceHull(projInfo.m_vPos, vPoint, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filterWorld, &trace);
@@ -775,9 +780,29 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 		if (!bSplash)
 			SDK::TraceHull(vOld, vNew, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filter, &trace);
 		else
-			SDK::TraceHull(vOld, vNew, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filterWorld, &trace);
+		{
+			static Vec3 vStaticPos = {};
+			if (n == 1)
+				vStaticPos = vOld;
+
+			if (n % Vars::Aimbot::Projectile::SplashTraceInterval.Value && n != iSimTime)
+				continue;
+
+			SDK::TraceHull(vStaticPos, vNew, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filterWorld, &trace);
+#ifdef SPLASH_DEBUG4
+			G::LineStorage.push_back({ { vStaticPos, vNew }, I::GlobalVars->curtime + 5.f, { 255, 0, 0, 255 } });
+#endif
+			vStaticPos = vNew;
+		}
 		if (trace.DidHit())
 		{
+			if (bSplash)
+			{
+				int iPopCount = Vars::Aimbot::Projectile::SplashTraceInterval.Value - trace.fraction * Vars::Aimbot::Projectile::SplashTraceInterval.Value;
+				for (int i = 0; i < iPopCount; i++)
+					projInfo.m_vPath.pop_back();
+			}
+
 			bool bTarget = trace.m_pEnt == target.m_pEntity || bSplash;
 			bool bTime = bSplash ? trace.endpos.DistTo(vPoint) < projInfo.m_flVelocity * TICK_INTERVAL : iSimTime - n < 5;
 
@@ -1180,10 +1205,10 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			return false;
 	}
 
-#if defined(SPLASH_DEBUG1) || defined(SPLASH_DEBUG2)
+#if defined(SPLASH_DEBUG1) || defined(SPLASH_DEBUG2) || defined(SPLASH_DEBUG4)
 	G::LineStorage.clear();
 #endif
-#ifdef SPLASH_DEBUG3
+#if defined(SPLASH_DEBUG3) || defined(SPLASH_DEBUG4)
 	G::BoxStorage.clear();
 #endif
 	for (auto& target : targets)

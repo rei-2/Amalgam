@@ -188,6 +188,7 @@ namespace Vars
 			CVar(SplashPoints, 100, DEBUGVAR)
 			CVar(SplashCountDirect, 100, DEBUGVAR)
 			CVar(SplashCountArc, 5, DEBUGVAR)
+			CVar(SplashTraceInterval, 10, DEBUGVAR)
 			CVar(DeltaCount, 5, DEBUGVAR)
 			CVarEnum(DeltaMode, 0, DEBUGVAR, Average, Max)
 			CVar(StrafeDelta, false, DEBUGVAR)
