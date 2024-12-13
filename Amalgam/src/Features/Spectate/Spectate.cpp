@@ -2,14 +2,18 @@
 
 void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 {
-	auto pResource = H::Entities.GetPR();
-	if (!pLocal || !pResource)
+	if (!pLocal)
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iTarget))->As<CTFPlayer>();
-	if (!pEntity || pEntity == pLocal)
+	if (!pEntity)
+	{
+		SDK::Output("Spectate", "Null entity", { 175, 150, 255, 255 }, true, false, false, true);
 		m_iTarget = -1;
-	if (m_iTarget == -1)
+	}
+	else if (pEntity == pLocal)
+		m_iTarget = -1;
+	else if (m_iTarget == -1)
 	{
 		if (pLocal->IsAlive())
 			pLocal->m_iObserverMode() = OBS_MODE_NONE;
