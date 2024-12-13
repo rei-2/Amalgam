@@ -40,6 +40,55 @@ void CAutoDetonate::RestorePlayers()
 	}
 }
 
+static inline bool CheckEntities(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, CBaseEntity* pProjectile, float flRadius, Vec3 vOrigin)
+{
+	CBaseEntity* pEntity;
+	for (CEntitySphereQuery sphere(vOrigin, flRadius);
+		(pEntity = sphere.GetCurrentEntity()) != nullptr;
+		sphere.NextEntity())
+	{
+		if (pEntity == pLocal || pEntity->IsPlayer() && (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->As<CTFPlayer>()->IsAGhost()) || pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
+			continue;
+
+		// CEntitySphereQuery actually does a box test so we need to make sure the distance is less than the radius first
+		Vec3 vPos = {}; reinterpret_cast<CCollisionProperty*>(pEntity->GetCollideable())->CalcNearestPoint(vOrigin, &vPos);
+		if (vOrigin.DistTo(vPos) > flRadius)
+			continue;
+
+		bool isPlayer = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players
+			&& pEntity->IsPlayer() && !F::AimbotGlobal.ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon);
+		bool isSentry = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry
+			&& pEntity->IsSentrygun();
+		bool isDispenser = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser
+			&& pEntity->IsDispenser();
+		bool isTeleporter = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter
+			&& pEntity->IsTeleporter();
+		bool isSticky = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Stickies
+			&& pEntity->GetClassID() == ETFClassID::CTFGrenadePipebombProjectile && pEntity->As<CTFGrenadePipebombProjectile>()->HasStickyEffects() && (pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheQuickiebombLauncher || pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance);
+		bool isNPC = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs
+			&& pEntity->IsNPC();
+		bool isBomb = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Bombs
+			&& pEntity->IsBomb();
+		if (isPlayer || isSentry || isDispenser || isTeleporter || isNPC || isBomb || isSticky)
+		{
+			if (!SDK::VisPosProjectile(pProjectile, pEntity, vOrigin, isPlayer ? pEntity->GetAbsOrigin() + pEntity->As<CTFPlayer>()->GetViewOffset() : pEntity->GetCenter(), MASK_SHOT))
+				continue;
+
+			if (pCmd && pWeapon && pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance)
+			{
+				Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), vOrigin);
+				SDK::FixMovement(pCmd, vAngleTo);
+				pCmd->viewangles = vAngleTo;
+				G::PSilentAngles = true;
+			}
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, float flRadiusScale, CUserCmd* pCmd)
 {
 	auto& vProjectiles = H::Entities.GetGroup(entityGroup);
@@ -86,52 +135,13 @@ bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, f
 		else
 			flRadius *= 110.f;
 		flRadius = SDK::AttribHookValue(flRadius, "mult_explosion_radius", pWeapon);
-
 		Vec3 vOrigin = PredictOrigin(pProjectile->m_vecOrigin(), pProjectile->GetAbsVelocity(), flLatency);
-		CBaseEntity* pEntity;
-		for (CEntitySphereQuery sphere(vOrigin, flRadius);
-			(pEntity = sphere.GetCurrentEntity()) != nullptr;
-			sphere.NextEntity())
-		{
-			if (!pEntity || pEntity == pLocal || pEntity->IsPlayer() && (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->As<CTFPlayer>()->IsAGhost()) || pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
-				continue;
 
-			// CEntitySphereQuery actually does a box test so we need to make sure the distance is less than the radius first
-			Vec3 vPos = {}; reinterpret_cast<CCollisionProperty*>(pEntity->GetCollideable())->CalcNearestPoint(vOrigin, &vPos);
-			if (vOrigin.DistTo(vPos) > flRadius)
-				continue;
-
-			bool isPlayer = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players
-				&& pEntity->IsPlayer() && !F::AimbotGlobal.ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon);
-			bool isSentry = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry
-				&& pEntity->IsSentrygun();
-			bool isDispenser = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser
-				&& pEntity->IsDispenser();
-			bool isTeleporter = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter
-				&& pEntity->IsTeleporter();
-			bool isSticky = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Stickies
-				&& pEntity->GetClassID() == ETFClassID::CTFGrenadePipebombProjectile && pEntity->As<CTFGrenadePipebombProjectile>()->HasStickyEffects() && (pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheQuickiebombLauncher || pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance);
-			bool isNPC = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs
-				&& pEntity->IsNPC();
-			bool isBomb = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Bombs
-				&& pEntity->IsBomb();
-			if (isPlayer || isSentry || isDispenser || isTeleporter || isNPC || isBomb || isSticky)
-			{
-				if (!SDK::VisPosProjectile(pProjectile, pEntity, vOrigin, isPlayer ? pEntity->GetAbsOrigin() + pEntity->As<CTFPlayer>()->GetViewOffset() : pEntity->GetCenter(), MASK_SHOT))
-					continue;
-
-				if (pWeapon && pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance)
-				{
-					Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), vOrigin);
-					SDK::FixMovement(pCmd, vAngleTo);
-					pCmd->viewangles = vAngleTo;
-					G::PSilentAngles = true;
-				}
-
-				RestorePlayers();
-				return true;
-			}
-		}
+		bool bCheck = CheckEntities(pLocal, pWeapon, nullptr, pProjectile, flRadius, vOrigin);
+		RestorePlayers();
+		bCheck = bCheck && CheckEntities(pLocal, pWeapon, pCmd, pProjectile, flRadius, pProjectile->m_vecOrigin());
+		if (bCheck)
+			return true;
 	}
 
 	RestorePlayers();
