@@ -427,13 +427,6 @@ public:
 		return true;
 	}
 
-	inline CTFWeaponBase* GetWeaponFromSlot(int nSlot)
-	{
-		static int nOffset = U::NetVars.GetNetVar("CBaseCombatCharacter", "m_hMyWeapons");
-		auto& hWeapon = *reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset + nSlot * 4);
-		return hWeapon.Get()->As<CTFWeaponBase>();
-	}
-
 	inline float TeamFortress_CalculateMaxSpeed(bool bIgnoreSpecialAbility = false)
 	{
 		return S::TeamFortress_CalculateMaxSpeed.Call<float>(this, bIgnoreSpecialAbility);

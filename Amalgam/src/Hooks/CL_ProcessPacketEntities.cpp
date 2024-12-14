@@ -36,33 +36,31 @@ MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 	CTFPlayer* pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer())->As<CTFPlayer>();
 	if (!pLocal)
 	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (1)", { 255, 100, 100, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (1)", { 255, 100, 100, 255 });
 		return CALL_ORIGINAL(entmsg);
 	}
-
-	auto hWeapons = pLocal->GetMyWeapons();
-	if (!hWeapons)
+	if (!pLocal->m_hMyWeapons())
 	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (2)", { 255, 100, 100, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (2)", { 255, 100, 100, 255 });
 		return CALL_ORIGINAL(entmsg);
 	}
 
 	std::unordered_map<int, CriticalStorage_t> mCriticalStorage = {};
-	for (size_t i = 0; hWeapons[i]; i++)
-	{
-		auto pWeapon = pLocal->GetWeaponFromSlot(int(i));
-		if (!pWeapon)
-			break;
 
-		const int iSlot = pWeapon->GetSlot();
-		mCriticalStorage[iSlot].m_flCritTokenBucket = pWeapon->m_flCritTokenBucket();
-		mCriticalStorage[iSlot].m_nCritChecks = pWeapon->m_nCritChecks();
-		mCriticalStorage[iSlot].m_nCritSeedRequests = pWeapon->m_nCritSeedRequests();
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		auto pWeapon = pLocal->GetWeaponFromSlot(i);
+		if (!pWeapon)
+			continue;
+
+		mCriticalStorage[i].m_flCritTokenBucket = pWeapon->m_flCritTokenBucket();
+		mCriticalStorage[i].m_nCritChecks = pWeapon->m_nCritChecks();
+		mCriticalStorage[i].m_nCritSeedRequests = pWeapon->m_nCritSeedRequests();
 
 		if (Vars::Debug::Logging.Value) I::CVar->ConsolePrintf("\n");
-		SDK::Output("ProcessPacketEntities", std::format("{} ({:#x}): mCriticalStorage[iSlot].m_flCritTokenBucket = {}", iSlot, uintptr_t(pWeapon), pWeapon->m_flCritTokenBucket()).c_str(), { 100, 150, 255, 255 }, Vars::Debug::Logging.Value);
-		SDK::Output("ProcessPacketEntities", std::format("{} ({:#x}): mCriticalStorage[iSlot].m_nCritChecks = {}", iSlot, uintptr_t(pWeapon), pWeapon->m_nCritChecks()).c_str(), { 100, 150, 255, 255 }, Vars::Debug::Logging.Value);
-		SDK::Output("ProcessPacketEntities", std::format("{} ({:#x}): mCriticalStorage[iSlot].m_nCritSeedRequests = {}", iSlot, uintptr_t(pWeapon), pWeapon->m_nCritSeedRequests()).c_str(), { 100, 150, 255, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", std::format("{} ({:#x}): mCriticalStorage[i].m_flCritTokenBucket = {}", i, uintptr_t(pWeapon), pWeapon->m_flCritTokenBucket()).c_str(), { 100, 150, 255, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", std::format("{} ({:#x}): mCriticalStorage[i].m_nCritChecks = {}", i, uintptr_t(pWeapon), pWeapon->m_nCritChecks()).c_str(), { 100, 150, 255, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", std::format("{} ({:#x}): mCriticalStorage[i].m_nCritSeedRequests = {}", i, uintptr_t(pWeapon), pWeapon->m_nCritSeedRequests()).c_str(), { 100, 150, 255, 255 }, Vars::Debug::Logging.Value);
 	}
 
 	bool bReturn = CALL_ORIGINAL(entmsg);
@@ -70,14 +68,12 @@ MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 	pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer())->As<CTFPlayer>();
 	if (!pLocal)
 	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (3)", { 255, 100, 100, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (3)", { 255, 100, 100, 255 });
 		return bReturn;
 	}
-
-	hWeapons = pLocal->GetMyWeapons();
-	if (!hWeapons)
+	if (!pLocal->m_hMyWeapons())
 	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (4)", { 255, 100, 100, 255 }, Vars::Debug::Logging.Value);
+		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (4)", { 255, 100, 100, 255 });
 		return bReturn;
 	}
 

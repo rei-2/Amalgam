@@ -96,7 +96,6 @@ bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, f
 		return false;
 
 	float flLatency = std::max(F::Backtrack.GetReal() - 0.05f, 0.f);
-	PredictPlayers(pLocal, flLatency);
 
 	for (auto pProjectile : vProjectiles)
 	{
@@ -137,14 +136,13 @@ bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, f
 		flRadius = SDK::AttribHookValue(flRadius, "mult_explosion_radius", pWeapon);
 		Vec3 vOrigin = PredictOrigin(pProjectile->m_vecOrigin(), pProjectile->GetAbsVelocity(), flLatency);
 
+		PredictPlayers(pLocal, flLatency);
 		bool bCheck = CheckEntities(pLocal, pWeapon, nullptr, pProjectile, flRadius, vOrigin);
 		RestorePlayers();
-		bCheck = bCheck && CheckEntities(pLocal, pWeapon, pCmd, pProjectile, flRadius, pProjectile->m_vecOrigin());
-		if (bCheck)
+		if (bCheck && CheckEntities(pLocal, pWeapon, pCmd, pProjectile, flRadius, pProjectile->m_vecOrigin()))
 			return true;
 	}
 
-	RestorePlayers();
 	return false;
 }
 

@@ -260,18 +260,15 @@ bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly)
 
 void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 {
-	std::unordered_map<int, bool> mWeapons = {};
-	auto hWeapons = pLocal->GetMyWeapons();
-	if (!hWeapons)
+	if (!pLocal->m_hMyWeapons())
 		return;
 
-	for (size_t i = 0; hWeapons[i]; i++)
-	{
-		auto pWeapon = pLocal->GetWeaponFromSlot(int(i));
-		if (!pWeapon)
-			break;
+	std::unordered_map<int, bool> mWeapons = {};
 
-		if (!WeaponCanCrit(pWeapon))
+	for (int i = 0; i < MAX_WEAPONS; i++)
+	{
+		auto pWeapon = pLocal->GetWeaponFromSlot(i);
+		if (!pWeapon || !WeaponCanCrit(pWeapon))
 			continue;
 
 		int iSlot = pWeapon->GetSlot();
@@ -291,7 +288,7 @@ void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 
 	for (auto& [iSlot, _] : m_mStorage)
 	{
-		if (m_mStorage.contains(iSlot) && !mWeapons[iSlot])
+		if (m_mStorage.contains(iSlot) && !mWeapons.contains(iSlot))
 			m_mStorage.erase(iSlot);
 	}
 }
