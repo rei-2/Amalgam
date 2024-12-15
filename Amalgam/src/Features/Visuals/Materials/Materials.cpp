@@ -8,7 +8,6 @@
 
 IMaterial* CMaterials::Create(char const* szName, KeyValues* pKV)
 {
-		SDK::Output("LoadMaterials", "CreateMaterial", {}, false, false, false, true);
 	IMaterial* pMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
 	m_mMatList[pMaterial] = true;
 	return pMaterial;
@@ -32,7 +31,6 @@ void CMaterials::Remove(IMaterial* pMaterial)
 
 void CMaterials::StoreStruct(std::string sName, std::string sVMT, bool bLocked)
 {
-		SDK::Output("LoadMaterials", "StoreStruct", {}, false, false, false, true);
 	Material_t tMaterial = {};
 	tMaterial.m_sName = sName;
 	tMaterial.m_sVMT = sVMT;
@@ -43,7 +41,6 @@ void CMaterials::StoreStruct(std::string sName, std::string sVMT, bool bLocked)
 
 void CMaterials::StoreVars(Material_t& tMaterial)
 {
-		SDK::Output("LoadMaterials", "StoreVars", {}, false, false, false, true);
 	if (!tMaterial.m_pMaterial)
 		return;
 
@@ -58,8 +55,6 @@ void CMaterials::StoreVars(Material_t& tMaterial)
 	auto $invertcull = tMaterial.m_pMaterial->FindVar("$invertcull", &bFound, false);
 	if (bFound && $invertcull && $invertcull->GetIntValueInternal())
 		tMaterial.m_bInvertCull = true;
-
-		SDK::Output("LoadMaterials", "StoreVars 2", {}, false, false, false, true);
 }
 
 static inline void ModifyKeyValues(KeyValues* pKV)
@@ -174,19 +169,15 @@ void CMaterials::LoadMaterials()
 	// create materials
 	for (auto& [_, tMaterial] : m_mMaterials)
 	{
-			SDK::Output("LoadMaterials", tMaterial.m_sName.c_str(), {}, false, false, false, true);
 		KeyValues* kv = new KeyValues(tMaterial.m_sName.c_str());
 		kv->LoadFromBuffer(tMaterial.m_sName.c_str(), tMaterial.m_sVMT.c_str());
 		ModifyKeyValues(kv);
 			
 		tMaterial.m_pMaterial = Create(tMaterial.m_sName.c_str(), kv);
-	}
-	for (auto& [_, tMaterial] : m_mMaterials)
 		StoreVars(tMaterial);
+	}
 
-		SDK::Output("LoadMaterials", "Glow.Initialize();", {}, false, false, false, true);
 	F::Glow.Initialize();
-		SDK::Output("LoadMaterials", "CameraWindow.Initialize();", {}, false, false, false, true);
 	F::CameraWindow.Initialize();
 
 	m_bLoaded = true;
@@ -214,20 +205,20 @@ void CMaterials::ReloadMaterials()
 
 void CMaterials::SetColor(Material_t* pMaterial, Color_t tColor)
 {
-	if (!pMaterial)
-		return;
-
 	float r = float(tColor.r) / 255.f;
 	float g = float(tColor.g) / 255.f;
 	float b = float(tColor.b) / 255.f;
 	float a = float(tColor.a) / 255.f;
 
+	I::RenderView->SetColorModulation(r, g, b);
+	I::RenderView->SetBlend(a);
+
+	if (!pMaterial)
+		return;
 	if (pMaterial->m_phongtint)
 		pMaterial->m_phongtint->SetVecValue(r, g, b);
 	if (pMaterial->m_envmaptint)
 		pMaterial->m_envmaptint->SetVecValue(r, g, b);
-	I::RenderView->SetColorModulation(r, g, b);
-	I::RenderView->SetBlend(a);
 }
 
 

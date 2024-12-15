@@ -139,7 +139,8 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 		if (iClassNum == TF_CLASS_MEDIC)
 		{
-			if (auto pMediGun = pPlayer->GetWeaponFromSlot(SLOT_SECONDARY))
+			auto pMediGun = pPlayer->GetWeaponFromSlot(SLOT_SECONDARY);
+			if (pMediGun && pMediGun->GetClassID() == ETFClassID::CWeaponMedigun)
 			{
 				tCache.m_flUber = std::clamp(pMediGun->As<CWeaponMedigun>()->m_flChargeLevel(), 0.f, 1.f);
 				tCache.m_bUberBar = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::UberBar;

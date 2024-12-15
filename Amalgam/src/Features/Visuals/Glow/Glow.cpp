@@ -557,7 +557,6 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 
 void CGlow::Initialize()
 {
-		SDK::Output("Glow::Initialize", "m_pMatGlowColor", {}, false, false, false, true);
 	if (!m_pMatGlowColor)
 	{
 		m_pMatGlowColor = I::MaterialSystem->FindMaterial("dev/glow_color", TEXTURE_GROUP_OTHER);
@@ -565,7 +564,6 @@ void CGlow::Initialize()
 		F::Materials.m_mMatList[m_pMatGlowColor] = true;
 	}
 	
-		SDK::Output("Glow::Initialize", "m_pMatBlurX", {}, false, false, false, true);
 	if (!m_pMatBlurX)
 	{
 		KeyValues* kv = new KeyValues("BlurFilterX");
@@ -573,7 +571,6 @@ void CGlow::Initialize()
 		m_pMatBlurX = F::Materials.Create("MatBlurX", kv);
 	}
 
-		SDK::Output("Glow::Initialize", "m_pMatBlurY", {}, false, false, false, true);
 	if (!m_pMatBlurY)
 	{
 		KeyValues* kv = new KeyValues("BlurFilterY");
@@ -581,7 +578,6 @@ void CGlow::Initialize()
 		m_pMatBlurY = F::Materials.Create("MatBlurY", kv);
 	}
 
-		SDK::Output("Glow::Initialize", "m_pMatHaloAddToScreen", {}, false, false, false, true);
 	if (!m_pMatHaloAddToScreen)
 	{
 		KeyValues* kv = new KeyValues("UnlitGeneric");
@@ -590,14 +586,12 @@ void CGlow::Initialize()
 		m_pMatHaloAddToScreen = F::Materials.Create("MatHaloAddToScreen", kv);
 	}
 
-		SDK::Output("Glow::Initialize", "m_pRtFullFrame", {}, false, false, false, true);
 	if (!m_pRtFullFrame)
 	{
 		m_pRtFullFrame = I::MaterialSystem->FindTexture("_rt_FullFrameFB", TEXTURE_GROUP_RENDER_TARGET);
 		m_pRtFullFrame->IncrementReferenceCount();
 	}
 
-		SDK::Output("Glow::Initialize", "m_pRenderBuffer1", {}, false, false, false, true);
 	if (!m_pRenderBuffer1)
 	{
 		m_pRenderBuffer1 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
@@ -613,7 +607,6 @@ void CGlow::Initialize()
 		m_pRenderBuffer1->IncrementReferenceCount();
 	}
 
-		SDK::Output("Glow::Initialize", "m_pRenderBuffer2", {}, false, false, false, true);
 	if (!m_pRenderBuffer2)
 	{
 		m_pRenderBuffer2 = I::MaterialSystem->CreateNamedRenderTargetTextureEx(

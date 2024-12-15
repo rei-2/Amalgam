@@ -23,24 +23,15 @@ void CCore::Load()
 	if (bUnload)
 		return;
 
-		SDK::Output("Core", "SDK::GetTeamFortressWindow();", {}, false, false, false, true);
 	SDK::GetTeamFortressWindow();
-		SDK::Output("Core", "U::Signatures.Initialize();", {}, false, false, false, true);
 	U::Signatures.Initialize();
-		SDK::Output("Core", "U::Interfaces.Initialize();", {}, false, false, false, true);
 	U::Interfaces.Initialize();
-		SDK::Output("Core", "U::ConVars.Initialize();", {}, false, false, false, true);
 	U::ConVars.Initialize();
-		SDK::Output("Core", "F::Materials.LoadMaterials();", {}, false, false, false, true);
-	F::Materials.LoadMaterials();
-		SDK::Output("Core", "F::Commands.Initialize();", {}, false, false, false, true);
-	F::Commands.Initialize();
-		SDK::Output("Core", "U::Hooks.Initialize();", {}, false, false, false, true);
 	U::Hooks.Initialize();
-		SDK::Output("Core", "U::BytePatches.Initialize();", {}, false, false, false, true);
 	U::BytePatches.Initialize();
-		SDK::Output("Core", "H::Events.Initialize();", {}, false, false, false, true);
 	H::Events.Initialize();
+	F::Materials.LoadMaterials();
+	F::Commands.Initialize();
 
 	F::Configs.LoadConfig(F::Configs.sCurrentConfig, false);
 	F::Menu.ConfigLoaded = true;
@@ -69,11 +60,8 @@ void CCore::Unload()
 	}
 
 	G::Unload = true;
-		SDK::Output("Core", "U::Hooks.Unload();", {}, false, false, false, true);
 	U::Hooks.Unload();
-		SDK::Output("Core", "U::BytePatches.Unload();", {}, false, false, false, true);
 	U::BytePatches.Unload();
-		SDK::Output("Core", "H::Events.Unload();", {}, false, false, false, true);
 	H::Events.Unload();
 
 	if (F::Menu.IsOpen)
@@ -93,9 +81,7 @@ void CCore::Unload()
 		cl_wpn_sway_scale->SetValue(0.f);
 
 	Sleep(250);
-		SDK::Output("Core", "U::ConVars.Unload();", {}, false, false, false, true);
 	U::ConVars.Unload();
-		SDK::Output("Core", "F::Materials.UnloadMaterials();", {}, false, false, false, true);
 	F::Materials.UnloadMaterials();
 
 	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255, 255 }, true, false, false, true);
