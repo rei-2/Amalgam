@@ -799,7 +799,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 			if (bSplash)
 			{
 				int iPopCount = Vars::Aimbot::Projectile::SplashTraceInterval.Value - trace.fraction * Vars::Aimbot::Projectile::SplashTraceInterval.Value;
-				for (int i = 0; i < iPopCount; i++)
+				for (int i = 0; i < iPopCount && !projInfo.m_vPath.empty(); i++)
 					projInfo.m_vPath.pop_back();
 			}
 
