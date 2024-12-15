@@ -324,7 +324,6 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 	auto& tStorage = m_mStorage[iSlot];
 
-	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, false);
 	if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && pCmd->buttons & IN_ATTACK)
 		pCmd->buttons &= ~IN_ATTACK2;
 	

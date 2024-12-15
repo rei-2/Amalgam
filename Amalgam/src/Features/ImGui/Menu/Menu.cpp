@@ -80,14 +80,14 @@ void CMenu::DrawMenu()
 	Bind_t tBind;
 	if (F::Binds.GetBind(CurrentBind, &tBind))
 	{
-		const auto textSize = FCalcTextSize(std::format("Editing for condition {}", tBind.Name).c_str());
+		const auto textSize = FCalcTextSize(std::format("Editing bind {}", tBind.Name).c_str());
 		SetNextWindowSize({ std::clamp(textSize.x + H::Draw.Scale(56), H::Draw.Scale(40), vMainWindowSize.x), H::Draw.Scale(40) });
 		SetNextWindowPos({ vMainWindowPos.x, vMainWindowPos.y + vMainWindowSize.y + H::Draw.Scale(8) });
 		if (Begin("Bind", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar))
 		{
-			const auto preSize = FCalcTextSize("Editing for condition ");
+			const auto preSize = FCalcTextSize("Editing bind ");
 			SetCursorPos({ H::Draw.Scale(16), H::Draw.Scale(13) });
-			FText("Editing for condition ");
+			FText("Editing bind ");
 			SetCursorPos({ H::Draw.Scale(16) + preSize.x, H::Draw.Scale(13) });
 			PushStyleColor(ImGuiCol_Text, F::Render.Accent.Value);
 			FText(tBind.Name.c_str());

@@ -54,7 +54,7 @@ void CAimbot::RunAimbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 		G::CanPrimaryAttack = bOriginal;
 }
 
-void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	if (F::AimbotProjectile.m_bLastTickCancel)
 	{
@@ -80,4 +80,11 @@ void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 	RunAimbot(pLocal, pWeapon, pCmd);
 	RunAimbot(pLocal, pWeapon, pCmd, true);
+}
+
+void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+{
+	RunMain(pLocal, pWeapon, pCmd);
+
+	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
 }

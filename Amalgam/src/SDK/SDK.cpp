@@ -411,7 +411,7 @@ const char* SDK::GetClassByIndex(const int nClass)
 
 int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase)
 {
-	if (pCmd->weaponselect)
+	if (!pLocal || !pWeapon || pCmd->weaponselect)
 		return false;
 
 	int iTickBase = bTickBase ? I::GlobalVars->tickcount : pLocal->m_nTickBase();
