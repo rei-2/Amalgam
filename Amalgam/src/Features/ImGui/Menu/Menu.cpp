@@ -1016,6 +1016,7 @@ void CMenu::MenuMisc()
 					FToggle("Crouch speed", Vars::Misc::Movement::CrouchSpeed, FToggle_Right);
 					FToggle("Movement lock", Vars::Misc::Movement::MovementLock, FToggle_Left);
 					FToggle("Break jump", Vars::Misc::Movement::BreakJump, FToggle_Right);
+					FToggle("Shield turn rate", Vars::Misc::Movement::ShieldTurnRate);
 				} EndSection();
 				if (Vars::Debug::Info.Value)
 				{

@@ -19,10 +19,10 @@ MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool,
 
 	auto GetOuter = [&rcx]() -> CBaseEntity*
 		{
-			static const auto dwShared = U::NetVars.GetNetVar("CTFPlayer", "m_Shared");
-			static const auto dwBombHeadStage = U::NetVars.GetNetVar("CTFPlayer", "m_nHalloweenBombHeadStage");
-			static const auto dwOff = (dwBombHeadStage - dwShared) + 0x4;
-			return *reinterpret_cast<CBaseEntity**>(uintptr_t(rcx) + dwOff);
+			static const auto iShared = U::NetVars.GetNetVar("CTFPlayer", "m_Shared");
+			static const auto iBombHeadStage = U::NetVars.GetNetVar("CTFPlayer", "m_nHalloweenBombHeadStage");
+			static const auto iOffset = iBombHeadStage - iShared + 0x4;
+			return *reinterpret_cast<CBaseEntity**>(uintptr_t(rcx) + iOffset);
 		};
 
 	switch (nCond)

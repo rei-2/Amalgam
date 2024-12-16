@@ -182,6 +182,7 @@
     <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
     <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />
+    <ClCompile Include="src\Hooks\CTFInput_ApplyMouse.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

@@ -29,7 +29,7 @@ public:
 	NETVAR(m_bCustomModelVisibleToSelf, bool, "CTFPlayer", "m_bCustomModelVisibleToSelf");
 	NETVAR(m_bUseClassAnimations, bool, "CTFPlayer", "m_bUseClassAnimations");
 	NETVAR(m_iClassModelParity, int, "CTFPlayer", "m_iClassModelParity");
-	NETVAR(m_Shared, void*, "CTFPlayer", "m_Shared");
+	//NETVAR(m_Shared, void*, "CTFPlayer", "m_Shared");
 	NETVAR(m_nPlayerCond, int, "CTFPlayer", "m_nPlayerCond");
 	NETVAR(m_bJumping, bool, "CTFPlayer", "m_bJumping");
 	NETVAR(m_nNumHealers, int, "CTFPlayer", "m_nNumHealers");
@@ -180,6 +180,11 @@ public:
 	NETVAR(m_iCampaignMedals, int, "CTFPlayer", "m_iCampaignMedals");
 	NETVAR(m_iPlayerSkinOverride, int, "CTFPlayer", "m_iPlayerSkinOverride");
 	NETVAR(m_bViewingCYOAPDA, bool, "CTFPlayer", "m_bViewingCYOAPDA");
+	inline void* m_Shared()
+	{
+		static int nOffset = U::NetVars.GetNetVar("CTFPlayer", "m_Shared");
+		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
+	};
 
 	NETVAR_OFF(m_flGravity, float, "CTFPlayer", "m_nWaterLevel", -24);
 	NETVAR_OFF(m_MoveType, byte, "CTFPlayer", "m_nWaterLevel", -4);

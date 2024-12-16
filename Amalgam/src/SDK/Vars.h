@@ -655,6 +655,7 @@ namespace Vars
 			CVar(CrouchSpeed, false)
 			CVar(MovementLock, false)
 			CVar(BreakJump, false)
+			CVar(ShieldTurnRate, false)
 
 			CVar(TimingOffset, 0, DEBUGVAR)
 			CVar(ChokeCount, 1, DEBUGVAR)
