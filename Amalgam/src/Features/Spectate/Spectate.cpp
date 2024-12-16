@@ -13,7 +13,7 @@ void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 	}
 	else if (pEntity == pLocal)
 		m_iTarget = -1;
-	else if (m_iTarget == -1)
+	if (m_iTarget == -1)
 	{
 		if (pLocal->IsAlive())
 			pLocal->m_iObserverMode() = OBS_MODE_NONE;

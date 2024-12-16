@@ -62,7 +62,6 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 		return;
 	}
 
-
 	auto pTarget = pLocal;
 	switch (pLocal->m_iObserverMode())
 	{

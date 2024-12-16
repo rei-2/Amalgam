@@ -355,7 +355,17 @@ std::vector<std::wstring> CPlayerConditions::Get(CTFPlayer* pEntity)
 
 void CPlayerConditions::Draw(CTFPlayer* pLocal)
 {
-	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Conditions) || !pLocal->IsAlive())
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Conditions))
+		return;
+
+	auto pTarget = pLocal;
+	switch (pLocal->m_iObserverMode())
+	{
+	case OBS_MODE_FIRSTPERSON:
+	case OBS_MODE_THIRDPERSON:
+		pTarget = pLocal->m_hObserverTarget().Get()->As<CTFPlayer>();
+	}
+	if (!pTarget || !pTarget->IsPlayer() || !pTarget->IsAlive())
 		return;
 
 	int x = Vars::Menu::ConditionsDisplay.Value.x;
@@ -375,7 +385,7 @@ void CPlayerConditions::Draw(CTFPlayer* pLocal)
 		align = ALIGN_TOPRIGHT;
 	}
 
-	std::vector<std::wstring> vConditions = Get(pLocal);
+	std::vector<std::wstring> vConditions = Get(pTarget);
 
 	int iOffset = 0;
 	for (const std::wstring& sCondition : vConditions)
