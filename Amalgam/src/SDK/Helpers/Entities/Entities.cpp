@@ -111,11 +111,12 @@ void CEntities::Store()
 		case ETFClassID::CCaptureFlag:
 			m_mGroups[EGroupType::WORLD_OBJECTIVE].push_back(pEntity);
 			break;
-		case ETFClassID::CHeadlessHatman:
-		case ETFClassID::CTFTankBoss:
-		case ETFClassID::CMerasmus:
-		case ETFClassID::CZombie:
 		case ETFClassID::CEyeballBoss:
+		case ETFClassID::CHeadlessHatman:
+		case ETFClassID::CMerasmus:
+		case ETFClassID::CTFBaseBoss:
+		case ETFClassID::CTFTankBoss:
+		case ETFClassID::CZombie:
 			m_mGroups[EGroupType::WORLD_NPC].push_back(pEntity);
 			break;
 		case ETFClassID::CTFPumpkinBomb:

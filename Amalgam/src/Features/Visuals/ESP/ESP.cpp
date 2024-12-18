@@ -775,11 +775,12 @@ void CESP::StoreWorld()
 			const char* szName = "NPC";
 			switch (pEntity->GetClassID())
 			{
-			case ETFClassID::CHeadlessHatman: szName = "Horseless Headless Horsemann"; break;
-			case ETFClassID::CTFTankBoss: szName = "Tank"; break;
-			case ETFClassID::CMerasmus: szName = "Merasmus"; break;
-			case ETFClassID::CZombie: szName = "Skeleton"; break;
 			case ETFClassID::CEyeballBoss: szName = "Monoculus";
+			case ETFClassID::CHeadlessHatman: szName = "Horseless Headless Horsemann"; break;
+			case ETFClassID::CMerasmus: szName = "Merasmus"; break;
+			case ETFClassID::CTFBaseBoss: szName = "Boss";
+			case ETFClassID::CTFTankBoss: szName = "Tank"; break;
+			case ETFClassID::CZombie: szName = "Skeleton"; break;
 			}
 
 			tCache.m_vText.push_back({ TextTop, szName, Vars::Colors::NPC.Value, Vars::Menu::Theme::Background.Value });

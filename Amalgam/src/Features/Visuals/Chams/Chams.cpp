@@ -131,11 +131,12 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::Objective.Value;
 	// npc chams
-	case ETFClassID::CHeadlessHatman:
-	case ETFClassID::CTFTankBoss:
-	case ETFClassID::CMerasmus:
-	case ETFClassID::CZombie:
 	case ETFClassID::CEyeballBoss:
+	case ETFClassID::CHeadlessHatman:
+	case ETFClassID::CMerasmus:
+	case ETFClassID::CTFBaseBoss:
+	case ETFClassID::CTFTankBoss:
+	case ETFClassID::CZombie:
 		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::NPCs.Value;
 	// pickup chams

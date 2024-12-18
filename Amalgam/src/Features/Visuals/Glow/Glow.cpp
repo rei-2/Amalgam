@@ -124,11 +124,12 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 		*pColor = H::Color.GetEntityDrawColor(pLocal, pEntity, Vars::Colors::Relative.Value);
 		return Vars::Glow::World::Objective.Value;
 	// npc glow
-	case ETFClassID::CHeadlessHatman:
-	case ETFClassID::CTFTankBoss:
-	case ETFClassID::CMerasmus:
-	case ETFClassID::CZombie:
 	case ETFClassID::CEyeballBoss:
+	case ETFClassID::CHeadlessHatman:
+	case ETFClassID::CMerasmus:
+	case ETFClassID::CTFBaseBoss:
+	case ETFClassID::CTFTankBoss:
+	case ETFClassID::CZombie:
 		if (pEntity->m_iTeamNum() == TF_TEAM_BLUE || pEntity->m_iTeamNum() == TF_TEAM_RED)
 		{
 			if (auto pOwner = pEntity->m_hOwnerEntity().Get())

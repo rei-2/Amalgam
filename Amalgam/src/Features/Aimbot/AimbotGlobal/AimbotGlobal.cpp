@@ -173,16 +173,17 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 
 		return false;
 	}
-	case ETFClassID::CHeadlessHatman:
-	case ETFClassID::CTFTankBoss:
-	case ETFClassID::CMerasmus:
 	case ETFClassID::CEyeballBoss:
+	case ETFClassID::CHeadlessHatman:
+	case ETFClassID::CMerasmus:
+	case ETFClassID::CTFBaseBoss:
 	{
 		if (pEntity->m_iTeamNum() != 5)
 			return true;
 
 		return false;
 	}
+	case ETFClassID::CTFTankBoss:
 	case ETFClassID::CZombie:
 	{
 		if (pLocal->m_iTeamNum() == pEntity->m_iTeamNum())
