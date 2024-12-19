@@ -41,17 +41,19 @@ void CMaterials::StoreStruct(std::string sName, std::string sVMT, bool bLocked)
 
 void CMaterials::StoreVars(Material_t& tMaterial)
 {
-	if (!tMaterial.m_pMaterial)
+	if (tMaterial.m_bStored || !tMaterial.m_pMaterial)
 		return;
+
+	tMaterial.m_bStored = true;
 
 	bool bFound; auto $phongtint = tMaterial.m_pMaterial->FindVar("$phongtint", &bFound, false);
 	if (bFound)
 		tMaterial.m_phongtint = $phongtint;
-
+	
 	auto $envmaptint = tMaterial.m_pMaterial->FindVar("$envmaptint", &bFound, false);
 	if (bFound)
 		tMaterial.m_envmaptint = $envmaptint;
-
+	
 	auto $invertcull = tMaterial.m_pMaterial->FindVar("$invertcull", &bFound, false);
 	if (bFound && $invertcull && $invertcull->GetIntValueInternal())
 		tMaterial.m_bInvertCull = true;
@@ -161,7 +163,8 @@ void CMaterials::LoadMaterials()
 		sName.erase(sName.end() - 4, sName.end());
 		const std::string sVMT((std::istreambuf_iterator(inStream)), std::istreambuf_iterator<char>());
 
-		if (FNV1A::Hash32(sName.c_str()) == FNV1A::Hash32Const("Original"))
+		auto uHash = FNV1A::Hash32(sName.c_str());
+		if (uHash == FNV1A::Hash32Const("Original") || m_mMaterials.contains(uHash))
 			continue;
 
 		StoreStruct(sName, sVMT);
@@ -170,11 +173,11 @@ void CMaterials::LoadMaterials()
 	for (auto& [_, tMaterial] : m_mMaterials)
 	{
 		KeyValues* kv = new KeyValues(tMaterial.m_sName.c_str());
-		kv->LoadFromBuffer(tMaterial.m_sName.c_str(), tMaterial.m_sVMT.c_str());
+		bool bLoad = kv->LoadFromBuffer(tMaterial.m_sName.c_str(), tMaterial.m_sVMT.c_str());
 		ModifyKeyValues(kv);
 			
 		tMaterial.m_pMaterial = Create(tMaterial.m_sName.c_str(), kv);
-		StoreVars(tMaterial);
+		//StoreVars(tMaterial);
 	}
 
 	F::Glow.Initialize();
@@ -213,12 +216,14 @@ void CMaterials::SetColor(Material_t* pMaterial, Color_t tColor)
 	I::RenderView->SetColorModulation(r, g, b);
 	I::RenderView->SetBlend(a);
 
-	if (!pMaterial)
-		return;
-	if (pMaterial->m_phongtint)
-		pMaterial->m_phongtint->SetVecValue(r, g, b);
-	if (pMaterial->m_envmaptint)
-		pMaterial->m_envmaptint->SetVecValue(r, g, b);
+	if (pMaterial)
+	{
+		StoreVars(*pMaterial);
+		if (pMaterial->m_phongtint)
+			pMaterial->m_phongtint->SetVecValue(r, g, b);
+		if (pMaterial->m_envmaptint)
+			pMaterial->m_envmaptint->SetVecValue(r, g, b);
+	}
 }
 
 

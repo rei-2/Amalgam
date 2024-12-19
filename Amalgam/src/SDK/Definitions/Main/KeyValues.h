@@ -41,7 +41,7 @@ private:
 
 public:
 	bool LoadFromBuffer(char const* resource_name, const char* buffer, void* file_system = 0, const char* path_id = 0);
-	void Initialize(char* name);
+	void Initialize(const char* name);
 	KeyValues(const char* name);
 	KeyValues* FindKey(const char* keyName, bool bCreate = false);
 

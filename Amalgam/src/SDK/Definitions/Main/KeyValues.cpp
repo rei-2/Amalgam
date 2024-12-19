@@ -30,16 +30,14 @@ bool KeyValues::LoadFromBuffer(char const* resource_name, const char* buffer, vo
 	return S::KeyValues_LoadFromBuffer.Call<bool>(this, resource_name, buffer, file_system, path_id);
 }
 
-void KeyValues::Initialize(char* name)
+void KeyValues::Initialize(const char* name)
 {
 	S::KeyValues_Initialize.Call<KeyValues*>(this, name);
 }
 
 KeyValues::KeyValues(const char* name)
 {
-	char _name[128];
-	sprintf_s(_name, sizeof(_name), name);
-	this->Initialize((char *)_name);
+	this->Initialize(name);
 }
 
 KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
