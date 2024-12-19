@@ -1,11 +1,16 @@
 #include "FakeAngle.h"
 
 #include "../../PacketManip/AntiAim/AntiAim.h"
+#include "../../TickHandler/TickHandler.h"
 
 void CFakeAngle::Run(CTFPlayer* pLocal)
 {
-	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost())
+	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost()
+		|| !F::AntiAim.AntiAimOn() && (!Vars::CL_Move::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift))
+	{
+		bBonesSetup = false;
 		return;
+	}
 
 	auto pAnimState = pLocal->GetAnimState();
 	if (!pAnimState)

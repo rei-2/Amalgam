@@ -524,6 +524,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		return false;
 	case TF_WEAPON_FLAMETHROWER:
 	case TF_WEAPON_FLAME_BALL:
+	case TF_WEAPON_MECHANICAL_ARM:
 		if (G::CanSecondaryAttack && pCmd->buttons & IN_ATTACK2)
 			return 1;
 		break;
