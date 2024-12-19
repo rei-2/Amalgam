@@ -9,7 +9,6 @@ class CTickshiftHandler
 	void Warp();
 	void Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void Speedhack();
-	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 	bool ValidWeapon(CTFWeaponBase* pWeapon);
 
 	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
@@ -31,6 +30,7 @@ public:
 	int GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks = Vars::CL_Move::Doubletap::TickLimit.Value);
 	int GetMinimumTicksNeeded(CTFWeaponBase* pWeapon);
 
+	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void SaveShootPos(CTFPlayer* pLocal);
 	Vec3 GetShootPos();
 

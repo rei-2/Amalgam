@@ -50,11 +50,36 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::Prediction->m_bInPrediction = true;
 	I::Prediction->SetLocalViewAngles(pCmd->viewangles);
 
-	I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_MoveData);
-	ScalePlayers(pLocal);
-	I::GameMovement->ProcessMovement(pLocal, &m_MoveData);
-	RestorePlayers();
-	I::Prediction->FinishMove(pLocal, pCmd, &m_MoveData);
+	if (m_bDoubletap = m_bInPrediction && F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
+	{
+		m_vOriginalOrigin = pLocal->m_vecOrigin();
+		m_vOriginalVelocity = pLocal->m_vecVelocity();
+
+		Vec3 vOriginalMove = { pCmd->forwardmove, pCmd->sidemove };
+		int iOriginalButtons = pCmd->buttons;
+
+		bool bOriginalWarp = F::Ticks.m_bAntiWarp;
+		F::Ticks.m_bAntiWarp = true;
+		F::Ticks.AntiWarp(pLocal, pCmd);
+		F::Ticks.m_bAntiWarp = bOriginalWarp;
+
+		I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_MoveData);
+		ScalePlayers(pLocal);
+		I::GameMovement->ProcessMovement(pLocal, &m_MoveData);
+		RestorePlayers();
+		I::Prediction->FinishMove(pLocal, pCmd, &m_MoveData);
+
+		pCmd->forwardmove = vOriginalMove.x, pCmd->sidemove = vOriginalMove.y;
+		pCmd->buttons = iOriginalButtons;
+	}
+	else
+	{
+		I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_MoveData);
+		ScalePlayers(pLocal);
+		I::GameMovement->ProcessMovement(pLocal, &m_MoveData);
+		RestorePlayers();
+		I::Prediction->FinishMove(pLocal, pCmd, &m_MoveData);
+	}
 
 	pLocal->SetCurrentCmd(nullptr);
 	*G::RandomSeed() = -1;
@@ -91,18 +116,7 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	else
 		pLocal->m_fFlags() &= ~FL_ONGROUND;
 
-	// hopefully more accurate eyepos while dting
-	if (m_bDoubletap = F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
-	{
-		Vec3 vOrigin = pLocal->m_vecOrigin();
-
-		Simulate(pLocal, pCmd);
-		
-		m_vOriginalOrigin = pLocal->m_vecOrigin();
-		pLocal->m_vecOrigin() = vOrigin;
-	}
-	else
-		Simulate(pLocal, pCmd);
+	Simulate(pLocal, pCmd);
 
 	F::Ticks.SaveShootPos(pLocal);
 }
@@ -117,8 +131,13 @@ void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->curtime = m_flOldCurrentTime;
 	I::GlobalVars->frametime = m_flOldFrameTime;
 
-	if (m_bDoubletap)
+	if (m_bDoubletap && !G::Attacking)
+	{
 		pLocal->m_vecOrigin() = m_vOriginalOrigin;
+		pLocal->m_vecVelocity() = m_vOriginalVelocity;
+
+		Simulate(pLocal, pCmd);
+	}
 }
 
 /*

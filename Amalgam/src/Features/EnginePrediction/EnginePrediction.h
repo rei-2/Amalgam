@@ -21,6 +21,7 @@ private:
 
 	bool m_bDoubletap = false;
 	Vec3 m_vOriginalOrigin = {};
+	Vec3 m_vOriginalVelocity = {};
 
 	std::unordered_map<CTFPlayer*, RestoreInfo_t> m_mRestore = {};
 
