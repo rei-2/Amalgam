@@ -1059,7 +1059,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 	}
 	F::MoveSim.Restore(storage);
 
-	const float flTime = TICKS_TO_TIME(pProjectilePath->size());
+	const float flTime = TICKS_TO_TIME(pPlayerPath->size());
 	target.m_vPos = vTarget;
 
 	if (iLowestPriority != std::numeric_limits<int>::max() &&
@@ -1071,6 +1071,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			if (!Vars::Colors::BoundHitboxEdge.Value.a && !Vars::Colors::BoundHitboxFace.Value.a)
 				return true;
 
+			tInfo.m_vHull = tInfo.m_vHull.Max(1);
 			pBoxes->push_back({ vPredicted, target.m_pEntity->m_vecMins(), target.m_pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + (Vars::Visuals::Simulation::Timed.Value ? flTime : 5.f), Vars::Colors::BoundHitboxEdge.Value, Vars::Colors::BoundHitboxFace.Value, true });
 			pBoxes->push_back({ vTarget, tInfo.m_vHull * -1, tInfo.m_vHull, Vec3(), I::GlobalVars->curtime + (Vars::Visuals::Simulation::Timed.Value ? flTime : 5.f), Vars::Colors::BoundHitboxEdge.Value, Vars::Colors::BoundHitboxFace.Value, true });
 

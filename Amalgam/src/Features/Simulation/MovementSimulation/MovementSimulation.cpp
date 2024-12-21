@@ -532,7 +532,7 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& playerStorage)
 	return true;
 }
 
-static bool GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* flYaw, float flStraightFuzzyValue)
+static bool GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* flYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0)
 {
 	if (vRecords.size() <= i + 2)
 		return false;
@@ -554,16 +554,30 @@ static bool GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* fl
 	if (fabsf(*flYaw) * pRecord1.m_vVelocity.Length2D() * iTicks <= flStraightFuzzyValue) // dumb way to get straight bool
 		return false;
 
-	return !i || iLastSign == iCurSign;
+	static int iChanges, iStart;
+	if (!i)
+	{
+		iChanges = 0, iStart = TIME_TO_TICKS(flTime1);
+		return true;
+	}
+	if (iLastSign != iCurSign && ++iChanges > iMaxChanges)
+		return false;
+	if (iChanges && iStart - TIME_TO_TICKS(flTime2) > iMaxChangeTime)
+		return false;
+	return true;
 }
 
-static bool GetYawInfo(CTFPlayer* pPlayer, std::deque<MoveData>& vRecords, int iSamples, float flStraightFuzzyValue, float* pAverageYaw, float* pAverageDelta, int* pTicks)
+static bool GetYawInfo(CTFPlayer* pPlayer, std::deque<MoveData>& vRecords, int iSamples, bool bGround, float* pAverageYaw, float* pAverageDelta, int* pTicks)
 {
+	float flStraightFuzzyValue = bGround ? Vars::Aimbot::Projectile::GroundStraightFuzzyValue.Value : Vars::Aimbot::Projectile::AirStraightFuzzyValue.Value;
+	int iMaxChanges = bGround ? Vars::Aimbot::Projectile::GroundMaxChanges.Value : Vars::Aimbot::Projectile::AirMaxChanges.Value;
+	int iMaxChangeTime = bGround ? Vars::Aimbot::Projectile::GroundMaxChangeTime.Value : Vars::Aimbot::Projectile::AirMaxChangeTime.Value;
+
 	float flAverageYaw = 0.f, flAverageDelta = 0.f; int iDeltaChanges = 0;
 	*pTicks = 0; for (; *pTicks < iSamples; (*pTicks)++)
 	{
 		float flYaw;
-		if (!GetYawDifference(vRecords, *pTicks, &flYaw, flStraightFuzzyValue))
+		if (!GetYawDifference(vRecords, *pTicks, &flYaw, flStraightFuzzyValue, iMaxChanges, iMaxChangeTime))
 			break;
 
 		float flMult = 1.f;
@@ -607,10 +621,9 @@ static bool GetYawInfo(CTFPlayer* pPlayer, std::deque<MoveData>& vRecords, int i
 void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSamples)
 {
 	bool bGround = playerStorage.m_pPlayer->IsOnGround();
-	float flStraightFuzzyValue = bGround ? Vars::Aimbot::Projectile::GroundStraightFuzzyValue.Value : Vars::Aimbot::Projectile::AirStraightFuzzyValue.Value;
 
 	float flAverageYaw, flAverageDelta; int iTicks;
-	if (!GetYawInfo(playerStorage.m_pPlayer, mRecords[playerStorage.m_pPlayer->entindex()], iSamples, flStraightFuzzyValue, &flAverageYaw, &flAverageDelta, &iTicks))
+	if (!GetYawInfo(playerStorage.m_pPlayer, mRecords[playerStorage.m_pPlayer->entindex()], iSamples, bGround, &flAverageYaw, &flAverageDelta, &iTicks))
 		return;
 
 	float flLowMinimumDistance = bGround ? Vars::Aimbot::Projectile::GroundLowMinimumDistance.Value : Vars::Aimbot::Projectile::AirLowMinimumDistance.Value;

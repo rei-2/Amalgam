@@ -147,6 +147,11 @@ public:
 		return Vec2(std::max<float>(x, v.x), std::max<float>(y, v.y));
 	}
 
+	Vec2 Clamp(const Vec2& v1, const Vec2& v2) const
+	{
+		return Max(v1).Min(v2);
+	}
+
 	Vec2 Min(float v) const
 	{
 		return Vec2(std::min<float>(x, v), std::min<float>(y, v));
@@ -155,6 +160,11 @@ public:
 	Vec2 Max(float v) const
 	{
 		return Vec2(std::max<float>(x, v), std::max<float>(y, v));
+	}
+
+	Vec2 Clamp(float v1, float v2) const
+	{
+		return Max(v1).Min(v2);
 	}
 
 	float Length(void) const
@@ -346,6 +356,11 @@ public:
 		return Vec3(std::max<float>(x, v.x), std::max<float>(y, v.y), std::max<float>(z, v.z));
 	}
 
+	Vec3 Clamp(const Vec3& v1, const Vec3& v2) const
+	{
+		return Max(v1).Min(v2);
+	}
+
 	Vec3 Min(float v) const
 	{
 		return Vec3(std::min<float>(x, v), std::min<float>(y, v), std::min<float>(z, v));
@@ -354,6 +369,11 @@ public:
 	Vec3 Max(float v) const
 	{
 		return Vec3(std::max<float>(x, v), std::max<float>(y, v), std::max<float>(z, v));
+	}
+
+	Vec3 Clamp(float v1, float v2) const
+	{
+		return Max(v1).Min(v2);
 	}
 
 	float Length(void) const

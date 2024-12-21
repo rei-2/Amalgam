@@ -42,6 +42,8 @@ void CAutoDetonate::RestorePlayers()
 
 static inline bool CheckEntities(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, CBaseEntity* pProjectile, float flRadius, Vec3 vOrigin)
 {
+	flRadius -= 1;
+
 	CBaseEntity* pEntity;
 	for (CEntitySphereQuery sphere(vOrigin, flRadius);
 		(pEntity = sphere.GetCurrentEntity()) != nullptr;

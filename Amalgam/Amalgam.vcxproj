@@ -884,6 +884,7 @@
     <ClCompile Include="src\Features\Visuals\Radar\Radar.cpp" />
     <ClCompile Include="src\Features\Visuals\SpectatorList\SpectatorList.cpp" />
     <ClCompile Include="src\Features\Visuals\Visuals.cpp" />
+    <ClCompile Include="src\Hooks\CSniperDot_GetRenderingPositions.cpp" />
     <ClCompile Include="src\Hooks\CTFInput_ApplyMouse.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_UpdateStepSound.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />

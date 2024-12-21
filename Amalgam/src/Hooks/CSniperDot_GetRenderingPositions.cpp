@@ -1,7 +1,7 @@
 #include "../SDK/SDK.h"
 
 MAKE_SIGNATURE(CSniperDot_GetRenderingPositions, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 55 57 41 57 48 8D 6C 24", 0x0);
-MAKE_SIGNATURE(CTFPlayer_EyePosition, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 44 8B 81 ? ? ? ? 48 8B FA", 0x0);
+MAKE_SIGNATURE(CBasePlayer_EyePosition, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 44 8B 81 ? ? ? ? 48 8B FA", 0x0);
 MAKE_SIGNATURE(CSniperDot_GetRenderingPositions_EyePosition_Call, "client.dll", "8B 08 89 0F 8B 48 ? 89 4F ? 49 8B CF", 0x0);
 MAKE_SIGNATURE(CTFPlayer_EyeAngles, "client.dll", "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 84 C0 74 ? 83 3D", 0x0);
 MAKE_SIGNATURE(CSniperDot_GetRenderingPositions_EyeAngles_Call, "client.dll", "48 8D 54 24 ? 48 8D 4C 24 ? F2 0F 10 00 F2 0F 11 44 24 ? 8B 40 ? 89 44 24 ? E8 ? ? ? ? 49 8B 07", 0x0);
@@ -23,7 +23,7 @@ MAKE_HOOK(CSniperDot_GetRenderingPositions, S::CSniperDot_GetRenderingPositions(
 	return CALL_ORIGINAL(rcx, pPlayer, vecAttachment, vecEndPos, flSize);
 }
 
-MAKE_HOOK(CTFPlayer_EyePosition, S::CTFPlayer_EyePosition(), Vec3*,
+MAKE_HOOK(CBasePlayer_EyePosition, S::CBasePlayer_EyePosition(), Vec3*,
 	void* rcx, void* rdx)
 {
 	static const auto dwDesired = S::CSniperDot_GetRenderingPositions_EyePosition_Call();
