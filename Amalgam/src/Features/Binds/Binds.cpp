@@ -64,14 +64,18 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 					const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && !I::MatSystemSurface->IsCursorVisible()
 											|| F::Menu.IsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.InKeybind; // allow in menu
 					bKey = bShouldUse && bKey;
-					if (tBind.Not)
-						bKey = !bKey;
 
 					switch (tBind.Info)
 					{
-					case 0: tBind.Active = bKey; break;
+					case 0:
+						if (tBind.Not)
+							bKey = !bKey;
+						tBind.Active = bKey;
+						break;
 					case 1:
-					case 2: if (bKey) tBind.Active = !tBind.Active;
+					case 2:
+						if (bKey)
+							tBind.Active = !tBind.Active;
 					}
 					break;
 				}

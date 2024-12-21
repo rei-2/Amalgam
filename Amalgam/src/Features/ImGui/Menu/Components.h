@@ -1598,7 +1598,7 @@ namespace ImGui
 				int iKeyPressed = 0;
 				for (short iKey = 0; iKey < 255; iKey++)
 				{
-					if (U::KeyHandler.Pressed(iKey) && iKey != VK_LBUTTON)
+					if (U::KeyHandler.Pressed(iKey))
 					{
 						iKeyPressed = iKey;
 						break;
