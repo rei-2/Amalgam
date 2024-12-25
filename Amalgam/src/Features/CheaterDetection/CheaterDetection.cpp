@@ -81,8 +81,12 @@ bool CCheaterDetection::IsDuckSpeed(CTFPlayer* pEntity)
 
 void CCheaterDetection::Infract(CTFPlayer* pEntity, std::string sReason)
 {
-	mData[pEntity].m_iDetections++;
-	const bool bMark = mData[pEntity].m_iDetections >= Vars::CheaterDetection::DetectionsRequired.Value;
+	bool bMark = false;
+	if (Vars::CheaterDetection::DetectionsRequired.Value)
+	{
+		mData[pEntity].m_iDetections++;
+		bMark = mData[pEntity].m_iDetections >= Vars::CheaterDetection::DetectionsRequired.Value;
+	}
 
 	F::Records.CheatDetection(mData[pEntity].m_sName, bMark ? "marked" : "infracted", sReason);
 	if (bMark)

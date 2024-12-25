@@ -499,25 +499,26 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			if (target.m_bBacktrack)
 				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 			// bug: fast old records seem to be progressively more unreliable ?
+		}
 
-			if (Vars::Visuals::Bullet::Enabled.Value)
-			{
-				G::LineStorage.clear();
+		bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f && Vars::Aimbot::General::AutoShoot.Value && !Vars::Debug::Info.Value;
+		bool bLine = Vars::Visuals::Bullet::Enabled.Value;
+		bool bBoxes = Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot;
+		if (G::Attacking == 1 && (bLine || bBoxes) || bPath)
+		{
+			G::LineStorage.clear();
+			G::BoxStorage.clear();
+			G::PathStorage.clear();
+
+			if (bLine)
 				G::LineStorage.push_back({ { vEyePos, target.m_vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
-			}
-			if (Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
+			if (bBoxes)
 			{
-				G::BoxStorage.clear();
 				auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
 				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 			}
-		}
-		if (Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f)
-		{
-			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
-			if (!bAlwaysDraw)
+			if (bPath)
 			{
-				G::PathStorage.clear();
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
 					G::PathStorage.push_back({ mPaths[pLocal], I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });

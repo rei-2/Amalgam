@@ -661,9 +661,6 @@ bool CTraceFilterSetup::ShouldHitEntity(IHandleEntity* pServerEntity, int nConte
 		return false;
 
 	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
-	auto pLocal = H::Entities.GetLocal();
-
-	const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
 
 	switch (pEntity->GetClassID())
 	{
@@ -675,7 +672,13 @@ bool CTraceFilterSetup::ShouldHitEntity(IHandleEntity* pServerEntity, int nConte
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
 	case ETFClassID::CObjectTeleporter: return true;
-	case ETFClassID::CTFPlayer: return iTargetTeam != iLocalTeam;
+	case ETFClassID::CTFPlayer:
+	{
+		auto pLocal = H::Entities.GetLocal();
+
+		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
+		return iTargetTeam != iLocalTeam;
+	}
 	}
 
 	return true;

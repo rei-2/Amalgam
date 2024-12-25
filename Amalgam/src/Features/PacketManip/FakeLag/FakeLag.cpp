@@ -45,13 +45,15 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 void CFakeLag::PreserveBlastJump(CTFPlayer* pLocal)
 {
-	bool bLastPreservingBlast = m_bPreservingBlast;
 	m_bPreservingBlast = false;
 
-	if (!Vars::CL_Move::Fakelag::RetainBlastJump.Value || bLastPreservingBlast || Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value
+	if (!Vars::CL_Move::Fakelag::RetainBlastJump.Value || Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value
 		|| !pLocal->IsAlive() || pLocal->IsAGhost() || Vars::CL_Move::Fakelag::RetainSoldierOnly.Value && pLocal->m_iClass() != TF_CLASS_SOLDIER)
 		return;
-	if (!pLocal->InCond(TF_COND_BLASTJUMPING) || !pLocal->m_hGroundEntity())
+	static bool bStaticGround = true;
+	const bool bLastGround = bStaticGround;
+	const bool bCurrGround = bStaticGround = pLocal->m_hGroundEntity();
+	if (!pLocal->InCond(TF_COND_BLASTJUMPING) || bLastGround || !bCurrGround)
 		return;
 
 	m_bPreservingBlast = true;

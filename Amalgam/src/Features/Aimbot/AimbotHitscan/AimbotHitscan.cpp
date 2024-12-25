@@ -730,16 +730,18 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			if (target.m_bBacktrack)
 				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 
-			if (G::CanPrimaryAttack)
+			bool bLine = Vars::Visuals::Bullet::Enabled.Value;
+			bool bBoxes = Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot;
+			if (G::CanPrimaryAttack && (bLine || bBoxes))
 			{
-				if (Vars::Visuals::Bullet::Enabled.Value)
-				{
-					G::LineStorage.clear();
+				G::LineStorage.clear();
+				G::BoxStorage.clear();
+				G::PathStorage.clear();
+
+				if (bLine)
 					G::LineStorage.push_back({ { pLocal->GetShootPos(), target.m_vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
-				}
-				if (Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot)
+				if (bBoxes)
 				{
-					G::BoxStorage.clear();
 					auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>(), {}, target.m_nAimedHitbox);
 					G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 				}

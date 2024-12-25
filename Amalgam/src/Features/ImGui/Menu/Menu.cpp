@@ -375,7 +375,9 @@ void CMenu::MenuAimbot()
 				{
 					PushTransparent(!FGet(Vars::CheaterDetection::Methods));
 						FDropdown("Detection methods", Vars::CheaterDetection::Methods, { "Invalid pitch", "Packet choking", "Aim flicking", "Duck Speed" }, {}, FDropdown_Multi);
-						FSlider("Detections required", Vars::CheaterDetection::DetectionsRequired, 10, 50, 1);
+						PushTransparent(!FGet(Vars::CheaterDetection::DetectionsRequired));
+							FSlider("Detections required", Vars::CheaterDetection::DetectionsRequired, 0, 50, 1);
+						PopTransparent();
 
 						PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::PacketChoking));
 							FSlider("Minimum choking", Vars::CheaterDetection::MinimumChoking, 4, 22, 1);
@@ -1435,7 +1437,7 @@ void CMenu::MenuSettings()
 						I::EngineClient->ClientCmd_Unrestricted("retry");
 					if (FButton("Console", FButton_Left))
 						I::EngineClient->ClientCmd_Unrestricted("toggleconsole");
-					if (FButton("Fix Chams", FButton_Right | FButton_SameLine))
+					if (FButton("Fix materials", FButton_Right | FButton_SameLine) && F::Materials.m_bLoaded)
 						F::Materials.ReloadMaterials();
 
 					if (!I::EngineClient->IsConnected())
