@@ -311,6 +311,8 @@ bool CConfigs::SaveConfig(const std::string& configName, bool bNotify)
 {
 	try
 	{
+		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+
 		boost::property_tree::ptree writeTree;
 
 		boost::property_tree::ptree bindTree;
@@ -335,7 +337,7 @@ bool CConfigs::SaveConfig(const std::string& configName, bool bNotify)
 		boost::property_tree::ptree varTree;
 		for (auto& var : g_Vars)
 		{
-			if (var->m_iFlags & NOSAVE)
+			if (!bLoadNosave && var->m_iFlags & NOSAVE)
 				continue;
 
 			SaveMain(bool, varTree)
@@ -381,6 +383,8 @@ bool CConfigs::LoadConfig(const std::string& configName, bool bNotify)
 	// Read ptree from json
 	try
 	{
+		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+
 		boost::property_tree::ptree readTree;
 		read_json(sConfigPath + "\\" + configName + sConfigExtension, readTree);
 		
@@ -444,7 +448,7 @@ bool CConfigs::LoadConfig(const std::string& configName, bool bNotify)
 			auto& varTree = *conVars;
 			for (auto& var : g_Vars)
 			{
-				if (var->m_iFlags & NOSAVE)
+				if (!bLoadNosave && var->m_iFlags & NOSAVE)
 					continue;
 
 				LoadMain(bool, varTree)
@@ -485,11 +489,13 @@ bool CConfigs::SaveVisual(const std::string& configName, bool bNotify)
 {
 	try
 	{
+		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+
 		boost::property_tree::ptree writeTree;
 
 		for (auto& var : g_Vars)
 		{
-			if (!(var->m_iFlags & VISUAL) || var->m_iFlags & NOSAVE)
+			if (!(var->m_iFlags & VISUAL) || !bLoadNosave && var->m_iFlags & NOSAVE)
 				continue;
 
 			SaveMisc(bool, writeTree)
@@ -529,12 +535,14 @@ bool CConfigs::LoadVisual(const std::string& configName, bool bNotify)
 
 	try
 	{
+		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+
 		boost::property_tree::ptree readTree;
 		read_json(sConfigPath + "\\Visuals\\" + configName + sConfigExtension, readTree);
 
 		for (auto& var : g_Vars)
 		{
-			if (!(var->m_iFlags & VISUAL) || var->m_iFlags & NOSAVE)
+			if (!(var->m_iFlags & VISUAL) || !bLoadNosave && var->m_iFlags & NOSAVE)
 				continue;
 
 			LoadMisc(bool, readTree)
@@ -571,11 +579,13 @@ void CConfigs::RemoveConfig(const std::string& configName)
 		std::filesystem::remove(sConfigPath + "\\" + configName + sConfigExtension);
 	else
 	{
+		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+
 		F::Binds.vBinds.clear();
 
 		for (auto& var : g_Vars)
 		{
-			if (var->m_iFlags & NOSAVE)
+			if (!bLoadNosave && var->m_iFlags & NOSAVE)
 				continue;
 
 			ResetT(bool)

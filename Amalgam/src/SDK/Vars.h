@@ -169,8 +169,8 @@ namespace Vars
 
 			CVar(AirSamples, 16, DEBUGVAR)
 			CVar(AirStraightFuzzyValue, 10.f, DEBUGVAR)
-			CVar(AirLowMinimumSamples, 3, DEBUGVAR)
-			CVar(AirHighMinimumSamples, 3, DEBUGVAR)
+			CVar(AirLowMinimumSamples, 5, DEBUGVAR)
+			CVar(AirHighMinimumSamples, 5, DEBUGVAR)
 			CVar(AirLowMinimumDistance, 100000.f, DEBUGVAR)
 			CVar(AirHighMinimumDistance, 100000.f, DEBUGVAR)
 			CVar(AirMaxChanges, 1, DEBUGVAR)
