@@ -991,7 +991,6 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 	for (auto& [vPoint, _] : vSpherePoints)
 		G::BoxStorage.push_back({ target.m_pEntity->m_vecOrigin() + tInfo.m_vTargetEye + vPoint * tInfo.m_flRadius / (tInfo.m_flRadius + flSize), { -1, -1, -1 }, { 1, 1, 1 }, {}, I::GlobalVars->curtime + 60.f, { 0, 0, 0, 0 }, Vars::Colors::Local.Value });
 #endif
-	SDK::Output("CanHit", "");
 	
 	Vec3 vAngleTo, vPredicted, vTarget;
 	int iLowestPriority = std::numeric_limits<int>::max(); float flLowestDist = std::numeric_limits<float>::max();
@@ -1189,12 +1188,13 @@ Vec3 CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle)
 {
 	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
+	auto pWeapon = H::Entities.GetWeapon();
 	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
 	{
 		//pCmd->viewangles = vAngle; // retarded, overshooting with this uncommented
 		I::EngineClient->SetViewAngles(vAngle);
 	}
-	else if (G::Attacking == 1 || bDoubleTap)
+	else if (G::Attacking == 1 || bDoubleTap || pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
 	{
 		SDK::FixMovement(pCmd, vAngle);
 		pCmd->viewangles = vAngle;
@@ -1228,7 +1228,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	if (Vars::Aimbot::General::AimHoldsFire.Value == Vars::Aimbot::General::AimHoldsFireEnum::Always && !G::CanPrimaryAttack && G::LastUserCmd->buttons & IN_ATTACK && Vars::Aimbot::General::AimType.Value && !pWeapon->IsInReload())
 		pCmd->buttons |= IN_ATTACK;
 	// the F::Ticks.m_bDoubletap condition is not a great fix here and actually properly predicting when shots will be fired should likely be done over this, but it's fine for now
-	if (!Vars::Aimbot::General::AimType.Value || !G::CanPrimaryAttack && !G::Reloading && !F::Ticks.m_bDoubletap && !F::Ticks.m_bSpeedhack && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent && nWeaponID != TF_WEAPON_PIPEBOMBLAUNCHER && nWeaponID != TF_WEAPON_CANNON)
+	if (!Vars::Aimbot::General::AimType.Value || !G::CanPrimaryAttack && !G::Reloading && !F::Ticks.m_bDoubletap && !F::Ticks.m_bSpeedhack && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent && nWeaponID != TF_WEAPON_PIPEBOMBLAUNCHER && nWeaponID != TF_WEAPON_CANNON && nWeaponID != TF_WEAPON_FLAMETHROWER)
 		return false;
 
 	auto targets = SortTargets(pLocal, pWeapon);
@@ -1338,7 +1338,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		Aim(pCmd, target.m_vAngleTo);
 		if (G::PSilentAngles)
 		{
-			switch (pWeapon->GetWeaponID())
+			switch (nWeaponID)
 			{
 			case TF_WEAPON_FLAMETHROWER: // angles show up anyways
 			case TF_WEAPON_CLEAVER: // can't psilent with these weapons, they use SetContextThink
