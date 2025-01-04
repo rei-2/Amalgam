@@ -291,7 +291,7 @@ namespace ImGui
 		return vTextSize;
 	}
 
-	inline void FText(const char* sText, int iFlags = 0, ImFont* pFont = nullptr)
+	inline void FText(const char* sText, int iFlags = FText_None, ImFont* pFont = nullptr)
 	{
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -377,7 +377,7 @@ namespace ImGui
 			PopStyleVar();
 	}
 
-	inline bool IconButton(const char* sIcon, ImVec4 tColor = { 1, 1, 1, -1 })
+	inline bool IconButton(const char* sIcon, ImVec4 tColor = { 1, 1, 1, -1 }, bool* pHovered = nullptr)
 	{
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -390,6 +390,8 @@ namespace ImGui
 		TextUnformatted(sIcon);
 		if (!Disabled && IsItemHovered())
 			SetMouseCursor(ImGuiMouseCursor_Hand);
+		if (pHovered)
+			*pHovered = IsItemHovered();
 		const bool bReturn = IsItemClicked();
 		PopFont();
 		if (tColor.w >= 0.f)
@@ -521,7 +523,7 @@ namespace ImGui
 		return pVar ? *pVar != iOriginalTab : false;
 	}
 
-	inline bool FSelectable(const char* sLabel, ImVec4 tColor = { 0.2f, 0.6f, 0.85f, 1.f }, bool bSelected = false, int iFlags = 0, const ImVec2& vSize = {})
+	inline bool FSelectable(const char* sLabel, ImVec4 tColor = { 0.2f, 0.6f, 0.85f, 1.f }, bool bSelected = false, int iFlags = ImGuiSelectableFlags_None, const ImVec2& vSize = {})
 	{
 		PushStyleColor(ImGuiCol_HeaderHovered, tColor);
 		tColor.x /= 1.1f; tColor.y /= 1.1f; tColor.z /= 1.1f;
@@ -531,7 +533,7 @@ namespace ImGui
 		return bReturn;
 	}
 
-	inline bool FButton(const char* sLabel, int iFlags = 0, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0)
+	inline bool FButton(const char* sLabel, int iFlags = FButton_None, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -575,6 +577,8 @@ namespace ImGui
 		const bool bReturn = Button(sLabel, vSize);
 		if (!Disabled && IsItemHovered())
 			SetMouseCursor(ImGuiMouseCursor_Hand);
+		if (pHovered)
+			*pHovered = IsItemHovered();
 		PopStyleVar();
 		PopStyleColor();
 
@@ -586,7 +590,7 @@ namespace ImGui
 		return Disabled ? false : bReturn;
 	}
 
-	inline bool FToggle(const char* sLabel, bool* pVar, int iFlags = 0, bool* pHovered = nullptr)
+	inline bool FToggle(const char* sLabel, bool* pVar, int iFlags = FToggle_None, bool* pHovered = nullptr)
 	{
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -631,7 +635,7 @@ namespace ImGui
 		return bReturn;
 	}
 
-	inline bool FSlider(const char* sLabel, float* pVar1, float* pVar2, float flMin, float flMax, float flStep = 1.f, const char* fmt = "%.0f", int iFlags = 0, bool* pHovered = nullptr)
+	inline bool FSlider(const char* sLabel, float* pVar1, float* pVar2, float flMin, float flMax, float flStep = 1.f, const char* fmt = "%.0f", int iFlags = FSlider_None, bool* pHovered = nullptr)
 	{
 		auto uHash = FNV1A::Hash32Const(sLabel);
 
@@ -828,7 +832,7 @@ namespace ImGui
 		return *pVar1 != flOriginal1 || pVar2 && *pVar2 != flOriginal2;
 	}
 
-	inline bool FSlider(const char* sLabel, int* pVar1, int* pVar2, int iMin, int iMax, int iStep = 1, const char* fmt = "%d", int iFlags = 0, bool* pHovered = nullptr)
+	inline bool FSlider(const char* sLabel, int* pVar1, int* pVar2, int iMin, int iMax, int iStep = 1, const char* fmt = "%d", int iFlags = FSlider_None, bool* pHovered = nullptr)
 	{
 		// replace incorrect formats as it will be converted to float
 		std::string sReplace = fmt;
@@ -856,17 +860,17 @@ namespace ImGui
 		return bReturn;
 	}
 
-	inline bool FSlider(const char* sLabel, float* pVar, float flMin, float flMax, float flStep = 1.f, const char* fmt = "%.0f", int iFlags = 0, bool* pHovered = nullptr)
+	inline bool FSlider(const char* sLabel, float* pVar, float flMin, float flMax, float flStep = 1.f, const char* fmt = "%.0f", int iFlags = FSlider_None, bool* pHovered = nullptr)
 	{
 		return FSlider(sLabel, pVar, nullptr, flMin, flMax, flStep, fmt, iFlags, pHovered);
 	}
 
-	inline bool FSlider(const char* sLabel, int* pVar, int iMin, int iMax, int iStep = 1, const char* fmt = "%d", int iFlags = 0, bool* pHovered = nullptr)
+	inline bool FSlider(const char* sLabel, int* pVar, int iMin, int iMax, int iStep = 1, const char* fmt = "%d", int iFlags = FSlider_None, bool* pHovered = nullptr)
 	{
 		return FSlider(sLabel, pVar, nullptr, iMin, iMax, iStep, fmt, iFlags, pHovered);
 	}
 
-	inline bool FDropdown(const char* sLabel, int* pVar, std::vector<const char*> vEntries, std::vector<int> vValues = {}, int iFlags = 0, int iSizeOffset = 0, bool* pHovered = nullptr, int* pModified = nullptr)
+	inline bool FDropdown(const char* sLabel, int* pVar, std::vector<const char*> vEntries, std::vector<int> vValues = {}, int iFlags = FDropdown_None, int iSizeOffset = 0, bool* pHovered = nullptr, int* pModified = nullptr)
 	{
 		bool bReturn = false;
 
@@ -1041,7 +1045,7 @@ namespace ImGui
 		return bReturn;
 	}
 
-	inline bool FSDropdown(const char* sLabel, std::string* pVar, std::vector<const char*> vEntries = {}, int iFlags = 0, int iSizeOffset = 0, bool* pHovered = nullptr)
+	inline bool FSDropdown(const char* sLabel, std::string* pVar, std::vector<const char*> vEntries = {}, int iFlags = FDropdown_None, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		auto uHash = FNV1A::Hash32Const(sLabel);
 		bool bReturn = false;
@@ -1260,7 +1264,7 @@ namespace ImGui
 
 	/*
 	// in it's current state it sees no use, so i'm commenting it out for now
-	inline bool FVDropdown(const char* sLabel, std::vector<std::string>* pVar, std::vector<std::string> vEntries, int iFlags = 0, int iSizeOffset = 0, bool* pHovered = nullptr)
+	inline bool FVDropdown(const char* sLabel, std::vector<std::string>* pVar, std::vector<std::string> vEntries, int iFlags = FDropdown_None, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		bool bReturn = false;
 
@@ -1395,7 +1399,7 @@ namespace ImGui
 	}
 	*/
 
-	inline bool ColorPicker(const char* sLabel, Color_t* tColor, bool bTooltip = true, int iFlags = 0)
+	inline bool ColorPicker(const char* sLabel, Color_t* tColor, bool bTooltip = true, int iFlags = FColorPicker_None)
 	{
 		ImVec2 vOriginalPos = GetCursorPos();
 		ImVec2 vSize = iFlags & FColorPicker_Dropdown ? ImVec2(H::Draw.Scale(10), H::Draw.Scale(40)) : ImVec2(H::Draw.Scale(12), H::Draw.Scale(12));
@@ -1424,7 +1428,7 @@ namespace ImGui
 	}
 
 	// if items overlap, use before to have working input, e.g. a middle toggle and a color picker
-	inline bool FColorPicker(const char* sLabel, Color_t* tColor, int iOffset = 0, int iFlags = 0, bool* pHovered = nullptr)
+	inline bool FColorPicker(const char* sLabel, Color_t* tColor, int iOffset = 0, int iFlags = FColorPicker_None, bool* pHovered = nullptr)
 	{
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -1571,7 +1575,7 @@ namespace ImGui
 
 		return str;
 	}
-	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = 0, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0)
+	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = FKeybind_None, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		static bool bCanceled = false;
 
@@ -1640,7 +1644,7 @@ namespace ImGui
 	}
 
 	// dropdown for materials
-	inline bool FMDropdown(const char* sLabel, std::vector<std::pair<std::string, Color_t>>* pVar, int iFlags = 0, int iSizeOffset = 0, bool* pHovered = nullptr)
+	inline bool FMDropdown(const char* sLabel, std::vector<std::pair<std::string, Color_t>>* pVar, int iFlags = FDropdown_None, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		// material stuff
 		std::vector<Material_t> vMaterials;
@@ -1899,7 +1903,7 @@ namespace ImGui
 	}
 
 	template <class T>
-	inline void DrawBindInfo(ConfigVar<T>& var, T& val, std::string sBind, bool bNewPopup)
+	inline void DrawBindInfo(ConfigVar<T>& var, T& val, std::string sBind, bool bNewPopup, bool& bLastHovered)
 	{
 		TextUnformatted(std::format("Bind '{}'", sBind).c_str());
 
@@ -1942,9 +1946,10 @@ namespace ImGui
 			if (var.Map.contains(iBind))
 				val = var.Map[iBind];
 		}
-		if (iModified != -2)
+		bool bClickedNew = iBind == DEFAULT_BIND && bLastHovered && IsMouseDown(ImGuiMouseButton_Left);
+		if (iModified != -2 || bClickedNew)
 		{
-			if (iModified == -1)
+			if (iModified == -1 || bClickedNew)
 			{
 				iBind = int(F::Binds.vBinds.size());
 				tBind = { sBind };
@@ -1960,33 +1965,41 @@ namespace ImGui
 				iBind = -1;
 			}
 		}
+		bool bHovered = false; bLastHovered = false;
 
-		PushDisabled(iBind == DEFAULT_BIND);
+		PushTransparent(iBind == DEFAULT_BIND);
 
 		{
 			ImVec2 vOriginalPos = GetCursorPos();
 
 			SetCursorPos({ GetWindowWidth() - H::Draw.Scale(34), H::Draw.Scale(40) });
-			if (IconButton(tBind.Visible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF))
+			if (IconButton(tBind.Visible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF, { 1, 1, 1, -1 }, &bHovered))
 				tBind.Visible = !tBind.Visible;
+			bLastHovered = bLastHovered || bHovered;
 
 			SetCursorPos({ GetWindowWidth() - H::Draw.Scale(59), H::Draw.Scale(40) });
-			if (IconButton(!tBind.Not ? ICON_MD_CODE : ICON_MD_CODE_OFF))
+			if (IconButton(!tBind.Not ? ICON_MD_CODE : ICON_MD_CODE_OFF, { 1, 1, 1, -1 }, &bHovered))
 				tBind.Not = !tBind.Not;
+			bLastHovered = bLastHovered || bHovered;
 
 			SetCursorPos(vOriginalPos);
 		}
 
-		FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type" }, {}, FDropdown_Left);
+		FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type" }, {}, FDropdown_Left, 0, &bHovered);
+		bLastHovered = bLastHovered || bHovered;
 		switch (tBind.Type)
 		{
-		case 0: tBind.Info = std::min(tBind.Info, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right); break;
-		case 1: tBind.Info = std::min(tBind.Info, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right); break;
-		case 2: tBind.Info = std::min(tBind.Info, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right); break;
+		case 0: tBind.Info = std::min(tBind.Info, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case 1: tBind.Info = std::min(tBind.Info, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case 2: tBind.Info = std::min(tBind.Info, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, &bHovered); break;
 		}
+		bLastHovered = bLastHovered || bHovered;
 
 		if (tBind.Type == 0)
-			FKeybind("Key", tBind.Key);
+		{
+			FKeybind("Key", tBind.Key, FKeybind_None, { 0, 30 }, 0, &bHovered);
+			bLastHovered = bLastHovered || bHovered;
+		}
 
 		if (!Disabled && iBind != DEFAULT_BIND && iBind < F::Binds.vBinds.size())
 		{
@@ -2011,6 +2024,8 @@ namespace ImGui
 		bool bHovered = false;\
 		const bool bReturn = function(sLabel, arguments, &bHovered);\
 		FSet(var, val);\
+		if (pHovered)\
+			*pHovered = bHovered;\
 		if (!(var.m_iFlags & NOBIND) && !Disabled && CurrentBind == DEFAULT_BIND)\
 		{	/*probably a better way to do this*/\
 			static auto staticVal = val;\
@@ -2044,16 +2059,16 @@ namespace ImGui
 					iFlags |= FColorPicker_Left; /*add left flag for color pickers*/\
 				}\
 				PushTransparent(false);\
-				DrawBindInfo(var, staticVal, sLower, bNewPopup);\
+				static bool bLastHovered = false;\
+				DrawBindInfo(var, staticVal, sLower, bNewPopup, bLastHovered);\
 				val = staticVal;\
-				function(std::format("{}## Bind", sLabel).c_str(), arguments);\
+				function(std::format("{}## Bind", sLabel).c_str(), arguments, &bHovered);\
+				bLastHovered = bLastHovered || bHovered;\
 				staticVal = val;\
-				PopDisabled();\
-				PopTransparent();\
+				PopTransparent(2);\
 				EndPopup();\
 			}\
 		}\
-		if (pHovered) *pHovered = bHovered;\
 		return bReturn;\
 	}
 
