@@ -46,7 +46,7 @@ private:
 	std::vector<InterfaceInit_t*> m_vecInterfaces = {};
 
 public:
-	void Initialize();
+	bool Initialize();
 
 	inline void AddInterface(InterfaceInit_t* pInterface)
 	{

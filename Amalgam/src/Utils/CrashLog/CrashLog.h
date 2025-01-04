@@ -4,4 +4,5 @@
 namespace CrashLog
 {
 	void Setup();
+	void Unload();
 }

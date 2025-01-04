@@ -10,7 +10,7 @@ MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVFunc(I::Clie
 {
 	F::Chams.mEntities.clear();
 
-	if (I::EngineVGui->IsGameUIVisible() || Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
+	if (I::EngineVGui->IsGameUIVisible() || Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot() || G::Unload)
 		return CALL_ORIGINAL(rcx, pSetup);
 
 	auto pLocal = H::Entities.GetLocal();

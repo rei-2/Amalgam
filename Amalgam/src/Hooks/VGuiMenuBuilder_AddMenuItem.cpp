@@ -31,7 +31,7 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
     static const auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuItem_Call();
     const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
-    if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired && PlayerIndex != -1)
+    if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired && PlayerIndex != -1 && !G::Unload)
     {
         auto ret = CALL_ORIGINAL(rcx, pszButtonText, pszCommand, pszCategoryName);
 
@@ -59,7 +59,7 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
 MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCommand(), void,
     void* rcx, const char* command)
 {
-    if (!Vars::Visuals::UI::ScoreboardUtility.Value)
+    if (G::Unload || !Vars::Visuals::UI::ScoreboardUtility.Value)
         return CALL_ORIGINAL(rcx, command);
 
     auto uHash = FNV1A::Hash32(command);

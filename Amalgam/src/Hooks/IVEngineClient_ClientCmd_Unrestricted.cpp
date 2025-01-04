@@ -24,19 +24,22 @@ private:
 MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVFunc(I::EngineClient, 106), void,
 	void* rcx, const char* szCmdString)
 {
-	std::string sCmdString = szCmdString;
-	std::transform(sCmdString.begin(), sCmdString.end(), sCmdString.begin(), ::tolower);
-
-	std::deque<std::string> vArgs;
-	boost::split(vArgs, sCmdString, split_q());
-
-	if (!vArgs.empty())
+	if (!G::Unload)
 	{
-		std::string sCommand = vArgs.front();
-		vArgs.pop_front();
+		std::string sCmdString = szCmdString;
+		std::transform(sCmdString.begin(), sCmdString.end(), sCmdString.begin(), ::tolower);
 
-		if (F::Commands.Run(sCommand, vArgs))
-			return;
+		std::deque<std::string> vArgs;
+		boost::split(vArgs, sCmdString, split_q());
+
+		if (!vArgs.empty())
+		{
+			std::string sCommand = vArgs.front();
+			vArgs.pop_front();
+
+			if (F::Commands.Run(sCommand, vArgs))
+				return;
+		}
 	}
 
 	CALL_ORIGINAL(rcx, szCmdString);

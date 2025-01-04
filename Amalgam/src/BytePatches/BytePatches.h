@@ -17,14 +17,14 @@ class BytePatch
 public:
 	BytePatch(const char* sModule, const char* sSignature, int iOffset, const char* sPatch);
 
-	void Initialize();
+	bool Initialize();
 	void Unload();
 };
 
 class CBytePatches
 {
 public:
-	void Initialize();
+	bool Initialize();
 	void Unload();
 
 	std::vector<BytePatch> m_vPatches = {};

@@ -71,8 +71,9 @@ InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLLName, const char* 
 	U::Interfaces.AddInterface(this);
 }
 
-void CInterfaces::Initialize()
+bool CInterfaces::Initialize()
 {
+	bool bFail{false};
 	for (auto& Interface : m_vecInterfaces)
 	{
 		if (!Interface->m_pPtr || !Interface->m_pszDLLName || !Interface->m_pszVersion)
@@ -89,6 +90,7 @@ void CInterfaces::Initialize()
 			if (!dwDest)
 			{
 				AssertCustom(dwDest, std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+				bFail = true;
 				continue;
 			}
 
@@ -102,8 +104,9 @@ void CInterfaces::Initialize()
 			}
 		}
 
+		bFail = (bFail || !*Interface->m_pPtr);
 		AssertCustom(*Interface->m_pPtr, std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
 	}
 
-	H::Interfaces.Initialize(); // Initialize any null interfaces
+	return !(bFail = (!H::Interfaces.Initialize() || bFail)); // Initialize any null interfaces
 }

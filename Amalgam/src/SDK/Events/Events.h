@@ -5,7 +5,7 @@
 class CEventListener : public CGameEventListener
 {
 public:
-	void Initialize();
+	bool Initialize();
 	void Unload();
 
 	virtual void FireGameEvent(IGameEvent* pEvent) override;

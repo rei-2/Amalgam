@@ -9,7 +9,7 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 {
 	auto pLocal = H::Entities.GetLocal();
 	auto pPlayer = reinterpret_cast<CBaseEntity*>(rcx);
-	if (!pLocal || pPlayer != pLocal)
+	if (!pLocal || pPlayer != pLocal || G::Unload)
 		return CALL_ORIGINAL(rcx, pWeapon, info, bDoEffects, nDamageType, nCustomDamageType);
 
 	const Vec3 vStart = info.m_vecSrc;

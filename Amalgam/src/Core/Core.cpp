@@ -19,31 +19,45 @@ void CCore::Load()
 	}
 	Sleep(500);
 
+	
+	// What is this here for??
 	// Check the DirectX version
-	if (bUnload)
-		return;
+	/*if (bUnload)
+		return;*/
 
-	SDK::GetTeamFortressWindow();
-	U::Signatures.Initialize();
-	U::Interfaces.Initialize();
-	U::ConVars.Initialize();
-	U::Hooks.Initialize();
-	U::BytePatches.Initialize();
-	H::Events.Initialize();
-	F::Materials.LoadMaterials();
-	F::Commands.Initialize();
+	if(!(bUnload = bEarly = !SDK::GetTeamFortressWindow()))
+	{
+		if (!(bUnload = bEarly = !U::Signatures.Initialize()))
+		{
+			if (!(bUnload = bEarly = !U::Interfaces.Initialize()))
+			{
+				U::ConVars.Initialize();
+				if (!(bUnload = !U::Hooks.Initialize()))
+				{
+					if (!(bUnload = !U::BytePatches.Initialize()))
+					{
+						if (!(bUnload = !H::Events.Initialize()))
+						{
+							F::Materials.LoadMaterials();
+							F::Commands.Initialize();
 
-	F::Configs.LoadConfig(F::Configs.sCurrentConfig, false);
-	F::Menu.ConfigLoaded = true;
+							F::Configs.LoadConfig(F::Configs.sCurrentConfig, false);
+							F::Menu.ConfigLoaded = true;
 
-	SDK::Output("Amalgam", "Loaded", { 175, 150, 255, 255 }, true, false, false, true);
+							SDK::Output("Amalgam", "Loaded", { 175, 150, 255, 255 }, true, false, false, true);
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 void CCore::Loop()
 {
 	while (true)
 	{
-		bool bShouldUnload = U::KeyHandler.Down(VK_F11) && SDK::IsGameWindowInFocus() || bUnload;
+		bool bShouldUnload = bUnload || U::KeyHandler.Down(VK_F11) && SDK::IsGameWindowInFocus();
 		if (bShouldUnload)
 			break;
 
@@ -53,9 +67,10 @@ void CCore::Loop()
 
 void CCore::Unload()
 {
-	if (bEarly)
+	if (bEarly) 
 	{
-		SDK::Output("Amalgam", "Cancelled", { 175, 150, 255, 255 }, true, false, false, true);
+		// Cant use console here since I::CVar is not initialized yet
+		SDK::Output("Amalgam", "Cancelled", { 175, 150, 255, 255 }, false, false, false, true);
 		return;
 	}
 

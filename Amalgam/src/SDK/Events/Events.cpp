@@ -9,19 +9,24 @@
 #include "../../Features/Resolver/Resolver.h"
 #include "../../Features/Visuals/Visuals.h"
 
-void CEventListener::Initialize()
+bool CEventListener::Initialize()
 {
 	std::vector<const char*> vEvents = { 
 		"client_beginconnect", "client_connected", "client_disconnect", "game_newmap", "teamplay_round_start", "player_connect_client", "player_spawn", "player_changeclass", "player_hurt", "vote_cast", "item_pickup", "revive_player_notify"
 	};
 
+	bool bFail{false};
 	for (auto szEvent : vEvents)
 	{
 		I::GameEventManager->AddListener(this, szEvent, false);
 
 		if (!I::GameEventManager->FindListener(this, szEvent))
+		{
 			SDK::Output("Amalgam", std::format("Failed to add listener: {}", szEvent).c_str(), { 255, 150, 175, 255 });
+			bFail = true;
+		}
 	}
+	return !bFail;
 }
 
 void CEventListener::Unload()
@@ -31,7 +36,7 @@ void CEventListener::Unload()
 
 void CEventListener::FireGameEvent(IGameEvent* pEvent)
 {
-	if (!pEvent)
+	if (!pEvent || G::Unload)
 		return;
 
 	auto pLocal = H::Entities.GetLocal();

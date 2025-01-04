@@ -60,7 +60,7 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 	static const auto dwDesired = S::CBasePlayer_PostDataUpdate_SetAbsVelocity_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
-	if (dwRetAddr != dwDesired)
+	if (dwRetAddr != dwDesired || G::Unload)
 		return CALL_ORIGINAL(rcx, vecAbsVelocity);
 	
 	const auto pPlayer = reinterpret_cast<CTFPlayer*>(rcx);

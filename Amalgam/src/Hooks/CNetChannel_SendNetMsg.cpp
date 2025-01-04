@@ -9,121 +9,129 @@ MAKE_SIGNATURE(CNetChan_SendNetMsg, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 4
 MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 	CNetChannel* pNetChan, INetMessage& msg, bool bForceReliable, bool bVoice)
 {
-	switch (msg.GetType())
+	if (!G::Unload)
 	{
-	case net_SetConVar:
-	{
-		auto pMsg = reinterpret_cast<NET_SetConVar*>(&msg);
-		for (int i = 0; i < pMsg->m_ConVars.Count(); i++)
+		switch (msg.GetType())
 		{
-			NET_SetConVar::CVar_t* localCvar = &pMsg->m_ConVars[i];
-
-			// intercept and change any vars we want to control
-			switch (FNV1A::Hash32(localCvar->Name))
+		case net_SetConVar:
+		{
+			auto pMsg = reinterpret_cast<NET_SetConVar*>(&msg);
+			for (int i = 0; i < pMsg->m_ConVars.Count(); i++)
 			{
-			case FNV1A::Hash32Const("cl_interp"): strncpy_s(localCvar->Value, std::to_string(F::Backtrack.m_flWishInterp).c_str(), MAX_OSPATH); break;
-			case FNV1A::Hash32Const("cl_interp_ratio"): strncpy_s(localCvar->Value, "1.0", MAX_OSPATH); break;
-			case FNV1A::Hash32Const("cl_interpolate"): strncpy_s(localCvar->Value, "1", MAX_OSPATH); break;
-			case FNV1A::Hash32Const("cl_cmdrate"): strncpy_s(localCvar->Value, std::to_string(F::Misc.iWishCmdrate).c_str(), MAX_OSPATH); break;
-			case FNV1A::Hash32Const("cl_updaterate"): strncpy_s(localCvar->Value, std::to_string(F::Misc.iWishUpdaterate).c_str(), MAX_OSPATH); break;
-			}
+				NET_SetConVar::CVar_t* localCvar = &pMsg->m_ConVars[i];
 
-			if (Vars::Debug::Logging.Value)
-			{
+				// intercept and change any vars we want to control
 				switch (FNV1A::Hash32(localCvar->Name))
 				{
-				case FNV1A::Hash32Const("cl_interp"):
-				case FNV1A::Hash32Const("cl_interp_ratio"):
-				case FNV1A::Hash32Const("cl_interpolate"):
-				case FNV1A::Hash32Const("cl_cmdrate"):
-				case FNV1A::Hash32Const("cl_updaterate"):
-					SDK::Output("SendNetMsg", std::format("{}: {}", localCvar->Name, localCvar->Value).c_str(), { 100, 0, 255, 255 });
+				case FNV1A::Hash32Const("cl_interp"): strncpy_s(localCvar->Value, std::to_string(F::Backtrack.m_flWishInterp).c_str(), MAX_OSPATH); break;
+				case FNV1A::Hash32Const("cl_interp_ratio"): strncpy_s(localCvar->Value, "1.0", MAX_OSPATH); break;
+				case FNV1A::Hash32Const("cl_interpolate"): strncpy_s(localCvar->Value, "1", MAX_OSPATH); break;
+				case FNV1A::Hash32Const("cl_cmdrate"): strncpy_s(localCvar->Value, std::to_string(F::Misc.iWishCmdrate).c_str(), MAX_OSPATH); break;
+				case FNV1A::Hash32Const("cl_updaterate"): strncpy_s(localCvar->Value, std::to_string(F::Misc.iWishUpdaterate).c_str(), MAX_OSPATH); break;
 				}
-			}
-		}
-		break;
-	}
-	case clc_VoiceData:
-		// stop lag with voice chat
-		bVoice = true;
-		break;
-	case clc_FileCRCCheck:
-		// whitelist
-		if (Vars::Misc::Exploits::BypassPure.Value)
-			return false;
-		break;
-	case clc_RespondCvarValue:
-		// causes b1g crash
-		if (Vars::Visuals::Removals::ConvarQueries.Value)
-		{
-			if (const auto pMsg = reinterpret_cast<uintptr_t*>(&msg))
-			{
-				if (const auto cvarName = reinterpret_cast<const char*>(pMsg[6]))
+
+				if (Vars::Debug::Logging.Value)
 				{
-					if (const auto pConVar = U::ConVars.FindVar(cvarName))
+					switch (FNV1A::Hash32(localCvar->Name))
 					{
-						if (auto defaultValue = pConVar->m_pParent->m_pszDefaultValue)
-						{
-							pMsg[7] = uintptr_t(defaultValue);
-							SDK::Output("Removals::ConvarQueries", msg.ToString());
-							break;
-						}
+					case FNV1A::Hash32Const("cl_interp"):
+					case FNV1A::Hash32Const("cl_interp_ratio"):
+					case FNV1A::Hash32Const("cl_interpolate"):
+					case FNV1A::Hash32Const("cl_cmdrate"):
+					case FNV1A::Hash32Const("cl_updaterate"):
+						SDK::Output("SendNetMsg", std::format("{}: {}", localCvar->Name, localCvar->Value).c_str(), { 100, 0, 255, 255 });
 					}
-					return true; //	if we failed to manipulate the data, don't send it.
 				}
 			}
+			break;
 		}
-		break;
-	case clc_Move:
-	{
-		const auto pMsg = reinterpret_cast<CLC_Move*>(&msg);
-
+		case clc_VoiceData:
+			// stop lag with voice chat
+			bVoice = true;
+			break;
+		case clc_FileCRCCheck:
+			// whitelist
+			if (Vars::Misc::Exploits::BypassPure.Value)
+				return false;
+			break;
+		case clc_RespondCvarValue:
+			// causes b1g crash
+			if (Vars::Visuals::Removals::ConvarQueries.Value)
+			{
+				if (const auto pMsg = reinterpret_cast<uintptr_t*>(&msg))
+				{
+					if (const auto cvarName = reinterpret_cast<const char*>(pMsg[6]))
+					{
+						// Some servers check dxlevel and for some reason its default value is 0
+						if (FNV1A::Hash32(cvarName) != FNV1A::Hash32Const("mat_dxlevel"))
+						{
+							if (const auto pConVar = U::ConVars.FindVar(cvarName))
+							{
+								if (auto defaultValue = pConVar->m_pParent->m_pszDefaultValue)
+								{
+									pMsg[7] = uintptr_t(defaultValue);
+									SDK::Output("Removals::ConvarQueries", msg.ToString(), Color_t(), Vars::Debug::Logging.Value);
+									break;
+								}
+							}
+						}
+						// Even if we didn't find the cvar we should be fine
+						// https://github.com/OthmanAba/TeamFortress2/blob/1b81dded673d49adebf4d0958e52236ecc28a956/tf2_src/engine/baseclientstate.cpp#L1825
+					}
+				}
+			}
+			break;
+		case clc_Move:
 		{
-			const int nLastOutGoingCommand = I::ClientState->lastoutgoingcommand;
-			const int nChokedCommands = I::ClientState->chokedcommands;
-			const int nNextCommandNr = nLastOutGoingCommand + nChokedCommands + 1;
+			const auto pMsg = reinterpret_cast<CLC_Move*>(&msg);
 
-			byte data[4000] = {};
-			pMsg->m_DataOut.StartWriting(data, sizeof(data));
-			pMsg->m_nNewCommands = std::clamp(1 + nChokedCommands, 0, MAX_NEW_COMMANDS);
-			const int nExtraCommands = nChokedCommands + 1 - pMsg->m_nNewCommands;
-			const int nCmdBackup = std::max(2, nExtraCommands);
-			pMsg->m_nBackupCommands = std::clamp(nCmdBackup, 0, MAX_BACKUP_COMMANDS);
-
-			const int nNumCmds = pMsg->m_nNewCommands + pMsg->m_nBackupCommands;
-			int nFrom = -1;
-			bool bOk = true;
-			for (int nTo = nNextCommandNr - nNumCmds + 1; nTo <= nNextCommandNr; nTo++)
 			{
-				const bool bIsNewCmd = nTo >= nNextCommandNr - pMsg->m_nNewCommands + 1;
-				bOk = bOk && I::BaseClientDLL->WriteUsercmdDeltaToBuffer(&pMsg->m_DataOut, nFrom, nTo, bIsNewCmd);
-				nFrom = nTo;
+				const int nLastOutGoingCommand = I::ClientState->lastoutgoingcommand;
+				const int nChokedCommands = I::ClientState->chokedcommands;
+				const int nNextCommandNr = nLastOutGoingCommand + nChokedCommands + 1;
+
+				byte data[4000] = {};
+				pMsg->m_DataOut.StartWriting(data, sizeof(data));
+				pMsg->m_nNewCommands = std::clamp(1 + nChokedCommands, 0, MAX_NEW_COMMANDS);
+				const int nExtraCommands = nChokedCommands + 1 - pMsg->m_nNewCommands;
+				const int nCmdBackup = std::max(2, nExtraCommands);
+				pMsg->m_nBackupCommands = std::clamp(nCmdBackup, 0, MAX_BACKUP_COMMANDS);
+
+				const int nNumCmds = pMsg->m_nNewCommands + pMsg->m_nBackupCommands;
+				int nFrom = -1;
+				bool bOk = true;
+				for (int nTo = nNextCommandNr - nNumCmds + 1; nTo <= nNextCommandNr; nTo++)
+				{
+					const bool bIsNewCmd = nTo >= nNextCommandNr - pMsg->m_nNewCommands + 1;
+					bOk = bOk && I::BaseClientDLL->WriteUsercmdDeltaToBuffer(&pMsg->m_DataOut, nFrom, nTo, bIsNewCmd);
+					nFrom = nTo;
+				}
+
+				if (bOk)
+				{
+					if (nExtraCommands > 0)
+						pNetChan->m_nChokedPackets -= nExtraCommands;
+
+					CALL_ORIGINAL(pNetChan, reinterpret_cast<INetMessage&>(*pMsg), bForceReliable, bVoice);
+				}
 			}
 
-			if (bOk)
+			if (!F::Ticks.m_bSpeedhack)
 			{
-				if (nExtraCommands > 0)
-					pNetChan->m_nChokedPackets -= nExtraCommands;
-
-				CALL_ORIGINAL(pNetChan, reinterpret_cast<INetMessage&>(*pMsg), bForceReliable, bVoice);
+				static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
+				const int iAllowedNewCommands = std::max((sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24) - F::Ticks.m_iShiftedTicks, 0);
+				const int iCmdCount = pMsg->m_nNewCommands + pMsg->m_nBackupCommands - 3;
+				if (iCmdCount > iAllowedNewCommands)
+				{
+					SDK::Output("clc_Move", std::format("{:d} sent <{:d} | {:d}>, max was {:d}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
+					F::Ticks.m_iShiftedTicks = F::Ticks.m_iShiftedGoal -= iCmdCount - iAllowedNewCommands;
+					F::Ticks.m_iDeficit = iCmdCount - iAllowedNewCommands;
+				}
 			}
+
+			return true;
 		}
-
-		if (!F::Ticks.m_bSpeedhack)
-		{
-			static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-			const int iAllowedNewCommands = std::max((sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24) - F::Ticks.m_iShiftedTicks, 0);
-			const int iCmdCount = pMsg->m_nNewCommands + pMsg->m_nBackupCommands - 3;
-			if (iCmdCount > iAllowedNewCommands)
-			{
-				SDK::Output("clc_Move", std::format("{:d} sent <{:d} | {:d}>, max was {:d}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
-				F::Ticks.m_iShiftedTicks = F::Ticks.m_iShiftedGoal -= iCmdCount - iAllowedNewCommands;
-				F::Ticks.m_iDeficit = iCmdCount - iAllowedNewCommands;
-			}
 		}
-
-		return true;
-	}
 	}
 
 	return CALL_ORIGINAL(pNetChan, msg, bForceReliable, bVoice);

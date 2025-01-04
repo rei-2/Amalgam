@@ -67,7 +67,5 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 MAKE_HOOK(ClientModeTFNormal_GetViewModelFOV, U::Memory.GetVFunc(I::ClientModeShared, 32), float,
 	/*void* rcx*/)
 {
-	if (float flFOV = Vars::Visuals::Viewmodel::FieldOfView.Value)
-		return flFOV;
-	return CALL_ORIGINAL(/*rcx*/);
+	return Vars::Visuals::Viewmodel::FieldOfView.Value ? Vars::Visuals::Viewmodel::FieldOfView.Value : CALL_ORIGINAL(/*rcx*/);
 }

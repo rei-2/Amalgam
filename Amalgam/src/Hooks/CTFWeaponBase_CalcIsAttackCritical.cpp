@@ -8,7 +8,7 @@ MAKE_HOOK(CTFWeaponBase_CalcIsAttackCritical, S::CTFWeaponBase_CalcIsAttackCriti
 {
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
-	if (!pLocal || !pWeapon || pWeapon != rcx)
+	if (!pLocal || !pWeapon || pWeapon != rcx || G::Unload)
 		CALL_ORIGINAL(rcx);
 
 	if (!F::CritHack.CalcIsAttackCriticalHandler(pLocal, pWeapon))

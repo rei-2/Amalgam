@@ -30,7 +30,7 @@ struct CriticalStorage_t
 MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 	SVC_PacketEntities* entmsg)
 {
-	if (entmsg->m_bIsDelta) // we won't need to restore
+	if (entmsg->m_bIsDelta || G::Unload) // we won't need to restore
 		return CALL_ORIGINAL(entmsg);
 
 	CTFPlayer* pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer())->As<CTFPlayer>();

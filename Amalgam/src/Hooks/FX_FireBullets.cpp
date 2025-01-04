@@ -12,14 +12,16 @@ MAKE_HOOK(FX_FireBullets, S::FX_FireBullets(), void,
 {
 	static const auto dwDesired = S::CTFWeaponBaseGun_FireBullet_FireBullets_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
-
-	if (iPlayer != I::EngineClient->GetLocalPlayer())
+	if (!G::Unload)
 	{
-		F::Backtrack.ReportShot(iPlayer);
-		F::Resolver.FXFireBullet(iPlayer, vecAngles);
+		if (iPlayer != I::EngineClient->GetLocalPlayer())
+		{
+			F::Backtrack.ReportShot(iPlayer);
+			F::Resolver.FXFireBullet(iPlayer, vecAngles);
+		}
+		else if (Vars::Aimbot::General::NoSpread.Value && dwRetAddr == dwDesired)
+			iSeed = F::NoSpreadHitscan.m_iSeed;
 	}
-	else if (Vars::Aimbot::General::NoSpread.Value && dwRetAddr == dwDesired)
-		iSeed = F::NoSpreadHitscan.m_iSeed;
 
 	return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
 }

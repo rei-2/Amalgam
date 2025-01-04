@@ -21,7 +21,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	G::Buttons = pCmd ? pCmd->buttons : G::Buttons;
 
 	const bool bReturn = CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
-	if (!pCmd || !pCmd->command_number)
+	if (!pCmd || !pCmd->command_number || G::Unload)
 		return bReturn;
 
 	bool* pSendPacket = reinterpret_cast<bool*>(uintptr_t(_AddressOfReturnAddress()) + 0x128);

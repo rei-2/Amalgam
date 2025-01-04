@@ -9,15 +9,24 @@ CHook::CHook(std::string sName, void* pInitFunc)
 	U::Hooks.m_mHooks[sName] = this;
 }
 
-void CHooks::Initialize()
+bool CHooks::Initialize()
 {
 	MH_Initialize();
 
 	WndProc::Initialize();
-	for (auto& [_, pHook] : m_mHooks)
-		reinterpret_cast<void(__cdecl*)()>(pHook->m_pInitFunc)();
 
-	AssertCustom(MH_EnableHook(MH_ALL_HOOKS) == MH_OK, "MH failed to enable all hooks!");
+	bool bFail{false};
+	for (auto& [_, pHook] : m_mHooks)
+	{
+		if (!reinterpret_cast<bool(__cdecl*)()>(pHook->m_pInitFunc)())
+			bFail = true;
+	}
+
+	const bool bEnableAll{MH_EnableHook(MH_ALL_HOOKS) == MH_OK};
+	AssertCustom(bEnableAll, "MH failed to enable all hooks!");
+
+	bFail = (bFail || !bEnableAll);
+	return !bFail;
 }
 
 void CHooks::Unload()

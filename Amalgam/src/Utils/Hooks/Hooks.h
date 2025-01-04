@@ -35,13 +35,13 @@ public:
 {\
 	namespace name\
 	{\
-		void Init(); \
+		bool Init(); \
 		inline CHook Hook(#name, Init); \
 		using FN = type(__fastcall*)(__VA_ARGS__); \
 		type __fastcall Func(__VA_ARGS__); \
 	}\
 } \
-void Hooks::name::Init() { Hook.Create(reinterpret_cast<void*>(address), Func); } \
+bool Hooks::name::Init() { if (address) {Hook.Create(reinterpret_cast<void*>(address), Func); return true;} else { SDK::Output("Amalgam", std::format("Failed to initialize hook: {}", #name).c_str(), { 255, 150, 175, 255 }); return false;}} \
 type __fastcall Hooks::name::Func(__VA_ARGS__)
 
 class CHooks
@@ -50,7 +50,7 @@ public:
 	std::unordered_map<std::string, CHook*> m_mHooks = {};
 
 public:
-	void Initialize();
+	bool Initialize();
 	void Unload();
 };
 

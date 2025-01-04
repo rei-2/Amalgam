@@ -7,7 +7,7 @@ MAKE_SIGNATURE(CNetChannel_SendDatagram, "engine.dll", "40 55 57 41 56 48 8D AC 
 MAKE_HOOK(CNetChannel_SendDatagram, S::CNetChannel_SendDatagram(), int,
 	CNetChannel* pNetChan, bf_write* datagram)
 {
-	if (datagram)
+	if (datagram || G::Unload)
 		return CALL_ORIGINAL(pNetChan, datagram);
 
 	F::Backtrack.AdjustPing(pNetChan);

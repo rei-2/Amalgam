@@ -15,6 +15,9 @@
 MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 35), void,
 	void* rcx, ClientFrameStage_t curStage)
 {
+	if (G::Unload)
+		return CALL_ORIGINAL(rcx, curStage);
+
 	switch (curStage)
 	{
 	case FRAME_RENDER_START:
@@ -94,8 +97,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 	}
 	case FRAME_RENDER_START:
 	{
-		if (!G::Unload)
-			F::Visuals.Modulate();
+		F::Visuals.Modulate();
 	}
 	}
 }
