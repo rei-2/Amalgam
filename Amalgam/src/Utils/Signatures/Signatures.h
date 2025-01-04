@@ -15,7 +15,7 @@ private:
 public:
 	CSignature(const char* sDLLName, const char* sSignature, int nOffset, const char* sName);
 
-	void Initialize();
+	bool Initialize();
 
 	inline uintptr_t operator()()
 	{
@@ -41,9 +41,10 @@ class CSignatures
 {
 private:
 	std::vector<CSignature*> m_vecSignatures = {};
+	bool m_bFailed = false;
 
 public:
-	void Initialize();
+	bool Initialize();
 
 	inline void AddSignature(CSignature* pSignature)
 	{

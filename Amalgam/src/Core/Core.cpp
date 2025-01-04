@@ -9,27 +9,38 @@
 #include "../Features/Visuals/Visuals.h"
 #include "../SDK/Events/Events.h"
 
+static inline bool CheckDXLevel()
+{
+	auto mat_dxlevel = I::CVar->FindVar("mat_dxlevel");
+	if (mat_dxlevel->GetInt() < 90)
+	{
+		MessageBox(nullptr, "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.", "Error", MB_ICONERROR);
+		return false;
+	}
+
+	return true;
+}
+
 void CCore::Load()
 {
 	while (!U::Memory.FindSignature("client.dll", "48 8B 0D ? ? ? ? 48 8B 10 48 8B 19 48 8B C8 FF 92"))
 	{
 		Sleep(500);
-		if (bUnload = bEarly = U::KeyHandler.Down(VK_F11, true))
+		if (m_bUnload = m_bFailed = U::KeyHandler.Down(VK_F11, true))
 			return;
 	}
 	Sleep(500);
 
-	// Check the DirectX version
-	if (bUnload)
-		return;
-
 	SDK::GetTeamFortressWindow();
-	U::Signatures.Initialize();
-	U::Interfaces.Initialize();
+	if (m_bUnload = m_bFailed =
+			!U::Signatures.Initialize()
+		 || !U::Interfaces.Initialize() || !CheckDXLevel()
+		 || !U::Hooks.Initialize()
+		 || !U::BytePatches.Initialize()
+		 || !H::Events.Initialize()
+		)
+		return;
 	U::ConVars.Initialize();
-	U::Hooks.Initialize();
-	U::BytePatches.Initialize();
-	H::Events.Initialize();
 	F::Materials.LoadMaterials();
 	F::Commands.Initialize();
 
@@ -43,7 +54,7 @@ void CCore::Loop()
 {
 	while (true)
 	{
-		bool bShouldUnload = U::KeyHandler.Down(VK_F11) && SDK::IsGameWindowInFocus() || bUnload;
+		bool bShouldUnload = U::KeyHandler.Down(VK_F11) && SDK::IsGameWindowInFocus() || m_bUnload;
 		if (bShouldUnload)
 			break;
 
@@ -53,9 +64,9 @@ void CCore::Loop()
 
 void CCore::Unload()
 {
-	if (bEarly)
+	if (m_bFailed)
 	{
-		SDK::Output("Amalgam", "Cancelled", { 175, 150, 255, 255 }, true, false, false, true);
+		SDK::Output("Amalgam", "Failed", { 175, 150, 255, 255 }, false, false, false, true);
 		return;
 	}
 

@@ -155,7 +155,12 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void CrashLog::Setup()
+static PVOID pHandle;
+void CrashLog::Initialize()
 {
-	AddVectoredExceptionHandler(1, ExceptionFilter);
+	pHandle = AddVectoredExceptionHandler(1, ExceptionFilter);
+}
+void CrashLog::Unload()
+{
+	RemoveVectoredExceptionHandler(pHandle);
 }

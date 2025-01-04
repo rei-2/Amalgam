@@ -80,6 +80,6 @@ void CCommands::Initialize()
 		{
 			if (F::Menu.IsOpen)
 				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.IsOpen = false);
-			U::Core.bUnload = true;
+			U::Core.m_bUnload = true;
 		});
 }

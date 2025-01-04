@@ -9,7 +9,7 @@
 #include "../../Features/Resolver/Resolver.h"
 #include "../../Features/Visuals/Visuals.h"
 
-void CEventListener::Initialize()
+bool CEventListener::Initialize()
 {
 	std::vector<const char*> vEvents = { 
 		"client_beginconnect", "client_connected", "client_disconnect", "game_newmap", "teamplay_round_start", "player_connect_client", "player_spawn", "player_changeclass", "player_hurt", "vote_cast", "item_pickup", "revive_player_notify"
@@ -20,8 +20,13 @@ void CEventListener::Initialize()
 		I::GameEventManager->AddListener(this, szEvent, false);
 
 		if (!I::GameEventManager->FindListener(this, szEvent))
+		{
 			SDK::Output("Amalgam", std::format("Failed to add listener: {}", szEvent).c_str(), { 255, 150, 175, 255 });
+			m_bFailed = true;
+		}
 	}
+
+	return !m_bFailed;
 }
 
 void CEventListener::Unload()

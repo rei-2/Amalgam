@@ -38,8 +38,11 @@ MAKE_INTERFACE_SIGNATURE_SEARCH(IDirect3DDevice9, DirectXDevice, "shaderapi", "4
 
 class CNullInterfaces
 {
+private:
+	bool m_bFailed = false;
+
 public:
-	void Initialize();
+	bool Initialize();
 };
 
 ADD_FEATURE_CUSTOM(CNullInterfaces, Interfaces, H);

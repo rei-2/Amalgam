@@ -9,7 +9,7 @@ CHook::CHook(std::string sName, void* pInitFunc)
 	U::Hooks.m_mHooks[sName] = this;
 }
 
-void CHooks::Initialize()
+bool CHooks::Initialize()
 {
 	MH_Initialize();
 
@@ -17,11 +17,13 @@ void CHooks::Initialize()
 	for (auto& [_, pHook] : m_mHooks)
 		reinterpret_cast<void(__cdecl*)()>(pHook->m_pInitFunc)();
 
-	AssertCustom(MH_EnableHook(MH_ALL_HOOKS) == MH_OK, "MH failed to enable all hooks!");
+	m_bFailed = MH_EnableHook(MH_ALL_HOOKS) != MH_OK;
+	AssertCustom(!m_bFailed, "MinHook failed to enable all hooks!");
+	return !m_bFailed;
 }
 
 void CHooks::Unload()
 {
-	AssertCustom(MH_Uninitialize() == MH_OK, "MH failed to unload all hooks!");
+	AssertCustom(MH_Uninitialize() == MH_OK, "MinHook failed to unload all hooks!");
 	WndProc::Unload();
 }

@@ -8,8 +8,8 @@ public:
 	void Loop();
 	void Unload();
 
-	bool bUnload = false;
-	bool bEarly = false;
+	bool m_bUnload = false;
+	bool m_bFailed = false;
 };
 
 ADD_FEATURE_CUSTOM(CCore, Core, U);

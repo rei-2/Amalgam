@@ -56,22 +56,26 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 		// causes b1g crash
 		if (Vars::Visuals::Removals::ConvarQueries.Value)
 		{
-			if (const auto pMsg = reinterpret_cast<uintptr_t*>(&msg))
+			auto pMsg = reinterpret_cast<uintptr_t*>(&msg);
+			if (!pMsg) break;
+
+			auto cvarName = reinterpret_cast<const char*>(pMsg[6]);
+			if (!cvarName) break;
+			switch (FNV1A::Hash32(cvarName))
 			{
-				if (const auto cvarName = reinterpret_cast<const char*>(pMsg[6]))
-				{
-					if (const auto pConVar = U::ConVars.FindVar(cvarName))
-					{
-						if (auto defaultValue = pConVar->m_pParent->m_pszDefaultValue)
-						{
-							pMsg[7] = uintptr_t(defaultValue);
-							SDK::Output("Removals::ConvarQueries", msg.ToString());
-							break;
-						}
-					}
-					return true; //	if we failed to manipulate the data, don't send it.
-				}
+			case FNV1A::Hash32Const("mat_dxlevel"):
+				cvarName = nullptr;
 			}
+			if (!cvarName) break;
+
+			auto pConVar = U::ConVars.FindVar(cvarName);
+			if (!pConVar) break;
+
+			auto defaultValue = pConVar->m_pParent->m_pszDefaultValue;
+			if (!defaultValue) break;
+
+			pMsg[7] = uintptr_t(defaultValue);
+			SDK::Output("Removals::ConvarQueries", msg.ToString());
 		}
 		break;
 	case clc_Move:
