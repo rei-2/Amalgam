@@ -61,7 +61,6 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!m_bGoalReached)
 		return;
 
-	m_bDoubletap = false;
 	if (!Vars::CL_Move::Doubletap::Doubletap.Value
 		|| m_iWait || m_bWarp || m_bRecharge || m_bSpeedhack)
 		return;
