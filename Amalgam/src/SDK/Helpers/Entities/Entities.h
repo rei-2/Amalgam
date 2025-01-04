@@ -32,6 +32,7 @@ class CEntities
 	std::unordered_map<int, Vec3> m_mEyeAngles, m_mPingAngles;
 	std::unordered_map<int, bool> m_mLagCompensation;
 	std::unordered_map<int, DormantData> m_mDormancy;
+	std::unordered_map<int, Vec3> m_mAvgVelocities;
 
 	std::unordered_map<int, bool> m_mIFriends;
 	std::unordered_map<uint32_t, bool> m_mUFriends;
@@ -68,6 +69,8 @@ public:
 	bool GetLagCompensation(int iIndex);
 	void SetLagCompensation(int iIndex, bool bLagComp);
 	bool GetDormancy(int iIndex);
+	Vec3* GetAvgVelocity(int iIndex);
+	void SetAvgVelocity(int iIndex, Vec3 vAvgVelocity);
 
 	bool IsFriend(int iIndex);
 	bool IsFriend(uint32_t friendsID);

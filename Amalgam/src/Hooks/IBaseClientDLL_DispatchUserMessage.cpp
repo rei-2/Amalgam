@@ -36,20 +36,24 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 		if (F::NoSpreadHitscan.ParsePlayerPerf(msgData))
 			return true;
 
-		if (Vars::Misc::Automation::AntiAutobalance.Value && msgData.GetNumBitsLeft() > 35)
+		if (Vars::Misc::Automation::AntiAutobalance.Value && bufData && msgData.GetNumBitsLeft() > 35)
 		{
-			std::string data(bufData);
-			if (data.find("TeamChangeP") != std::string::npos && H::Entities.GetLocal())
-				I::EngineClient->ClientCmd_Unrestricted("retry");
+			std::string sMsg = bufData;
+			if (!sMsg.empty())
+			{
+				sMsg.erase(0, 1);
+				if (FNV1A::Hash32(sMsg.c_str()) == FNV1A::Hash32Const("#TF_Autobalance_TeamChangePending"))
+					I::EngineClient->ClientCmd_Unrestricted("retry");
+			}
 		}
 		break;
 	case VGUIMenu:
-		if (Vars::Visuals::Removals::MOTD.Value && strcmp(reinterpret_cast<char*>(msgData.m_pData), "info") == 0)
+		if (Vars::Visuals::Removals::MOTD.Value && bufData
+			&& FNV1A::Hash32(bufData) == FNV1A::Hash32Const("info"))
 		{
 			I::EngineClient->ClientCmd_Unrestricted("closedwelcomemenu");
 			return true;
 		}
-
 		break;
 	case ForcePlayerViewAngles:
 		return Vars::Visuals::Removals::AngleForcing.Value ? true : CALL_ORIGINAL(rcx, type, msgData);

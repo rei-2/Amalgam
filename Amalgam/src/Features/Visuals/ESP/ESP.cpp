@@ -1119,8 +1119,7 @@ bool CESP::GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, flo
 const char* CESP::GetPlayerClass(int iClassNum)
 {
 	static const char* szClasses[] = {
-		"Unknown", "Scout", "Sniper", "Soldier", "Demoman",
-		"Medic", "Heavy", "Pyro", "Spy", "Engineer"
+		"Unknown", "Scout", "Sniper", "Soldier", "Demoman", "Medic", "Heavy", "Pyro", "Spy", "Engineer"
 	};
 
 	return iClassNum < 10 && iClassNum > 0 ? szClasses[iClassNum] : szClasses[0];

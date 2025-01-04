@@ -377,6 +377,8 @@ Vec3 CEntities::GetEyeAngles(int iIndex) { return m_mEyeAngles.contains(iIndex) 
 Vec3 CEntities::GetPingAngles(int iIndex) { return m_mPingAngles.contains(iIndex) ? m_mPingAngles[iIndex] : Vec3(); }
 bool CEntities::GetLagCompensation(int iIndex) { return m_mLagCompensation[iIndex]; }
 void CEntities::SetLagCompensation(int iIndex, bool bLagComp) { m_mLagCompensation[iIndex] = bLagComp; }
+Vec3* CEntities::GetAvgVelocity(int iIndex) { return iIndex != I::EngineClient->GetLocalPlayer() ? &m_mAvgVelocities[iIndex] : nullptr; }
+void CEntities::SetAvgVelocity(int iIndex, Vec3 vAvgVelocity) { m_mAvgVelocities[iIndex] = vAvgVelocity; }
 
 bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
 bool CEntities::IsFriend(uint32_t friendsID) { return m_mUFriends[friendsID]; }

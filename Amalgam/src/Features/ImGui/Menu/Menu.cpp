@@ -229,6 +229,8 @@ void CMenu::MenuAimbot()
 						FSlider("high min distance##ground", Vars::Aimbot::Projectile::GroundHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 						FSlider("max changes##ground", Vars::Aimbot::Projectile::GroundMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
 						FSlider("max change time##ground", Vars::Aimbot::Projectile::GroundMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FSlider("new weight##ground", Vars::Aimbot::Projectile::GroundNewWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("old weight##ground", Vars::Aimbot::Projectile::GroundOldWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Right | FSlider_Min | FSlider_Precision);
 
 						FText("air");
 						FSlider("samples##air", Vars::Aimbot::Projectile::AirSamples, 3, 66, 1, "%i", FSlider_Left);
@@ -239,6 +241,8 @@ void CMenu::MenuAimbot()
 						FSlider("high min distance##air", Vars::Aimbot::Projectile::AirHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 						FSlider("max changes##air", Vars::Aimbot::Projectile::AirMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
 						FSlider("max change time##air", Vars::Aimbot::Projectile::AirMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FSlider("new weight##air", Vars::Aimbot::Projectile::AirNewWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("old weight##air", Vars::Aimbot::Projectile::AirOldWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Right | FSlider_Min | FSlider_Precision);
 
 						FText("");
 						FSlider("velocity average count", Vars::Aimbot::Projectile::VelocityAverageCount, 1, 10, 1, "%i", FSlider_Left);
