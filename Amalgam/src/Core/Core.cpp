@@ -11,10 +11,10 @@
 
 static inline bool CheckDXLevel()
 {
-	auto mat_dxlevel = I::CVar->FindVar("mat_dxlevel");
+	auto mat_dxlevel = U::ConVars.FindVar("mat_dxlevel");
 	if (mat_dxlevel->GetInt() < 90)
 	{
-		MessageBox(nullptr, "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.", "Error", MB_ICONERROR);
+		SDK::Output("Error", "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.", { 175, 150, 255, 255 }, true, false, false, true, MB_OK | MB_ICONERROR);
 		return false;
 	}
 
@@ -32,13 +32,9 @@ void CCore::Load()
 	Sleep(500);
 
 	SDK::GetTeamFortressWindow();
-	if (m_bUnload = m_bFailed =
-			!U::Signatures.Initialize()
-		 || !U::Interfaces.Initialize() || !CheckDXLevel()
-		 || !U::Hooks.Initialize()
-		 || !U::BytePatches.Initialize()
-		 || !H::Events.Initialize()
-		)
+	if (m_bUnload = m_bFailed = !U::Signatures.Initialize() || !U::Interfaces.Initialize() || !CheckDXLevel())
+		return;
+	if (m_bUnload = m_bFailed2 = !U::Hooks.Initialize() || !U::BytePatches.Initialize() || !H::Events.Initialize())
 		return;
 	U::ConVars.Initialize();
 	F::Materials.LoadMaterials();
@@ -66,7 +62,7 @@ void CCore::Unload()
 {
 	if (m_bFailed)
 	{
-		SDK::Output("Amalgam", "Failed", { 175, 150, 255, 255 }, false, false, false, true);
+		SDK::Output("Amalgam", "Failed", {}, false, false, false, true, MB_OK);
 		return;
 	}
 
@@ -95,5 +91,10 @@ void CCore::Unload()
 	U::ConVars.Unload();
 	F::Materials.UnloadMaterials();
 
+	if (m_bFailed2)
+	{
+		SDK::Output("Amalgam", "Failed", {}, false, false, false, true, true);
+		return;
+	}
 	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255, 255 }, true, false, false, true);
 }

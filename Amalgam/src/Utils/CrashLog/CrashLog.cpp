@@ -144,7 +144,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 		ssErrorStream << "\nShift + Enter to skip repetitive exceptions. ";
 	bException = true;
 
-	MessageBox(nullptr, ssErrorStream.str().c_str(), "Unhandled exception", MB_OK | MB_ICONERROR);
+	SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, false, false, false, true, MB_OK | MB_ICONERROR);
 
 	ssErrorStream << "\n\n\n\n";
 	std::ofstream file;

@@ -23,7 +23,7 @@ BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
 
 
 
-void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool bConsole, bool bChat, bool bToast, bool bDebug)
+void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool bConsole, bool bChat, bool bToast, bool bDebug, int bMessageBox)
 {
 	if (cLog)
 	{
@@ -37,7 +37,9 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool b
 		if (bToast)
 			F::Notifications.Add(std::format("[{}] {}", cFunction, cLog));
 		if (bDebug)
-			OutputDebugStringA(std::format("[{}] {}\n", cFunction, cLog).c_str());
+			OutputDebugString(std::format("[{}] {}\n", cFunction, cLog).c_str());
+		if (bMessageBox != -1)
+			MessageBox(nullptr, cLog, cFunction, bMessageBox);
 	}
 	else
 	{
@@ -48,7 +50,9 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool b
 		if (bToast)
 			F::Notifications.Add(std::format("{}", cFunction));
 		if (bDebug)
-			OutputDebugStringA(std::format("{}\n", cFunction).c_str());
+			OutputDebugString(std::format("{}\n", cFunction).c_str());
+		if (bMessageBox != -1)
+			MessageBox(nullptr, "", cFunction, bMessageBox);
 	}
 }
 

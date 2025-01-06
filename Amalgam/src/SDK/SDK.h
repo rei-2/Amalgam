@@ -65,7 +65,7 @@ template <typename T> int sign(T val)
 
 namespace SDK
 {
-	void Output(const char* cFunction, const char* cLog = nullptr, Color_t cColor = { 255, 255, 255, 255 }, bool bConsole = true, bool bChat = false, bool bToast = false, bool bDebug = false);
+	void Output(const char* cFunction, const char* cLog = nullptr, Color_t cColor = { 255, 255, 255, 255 }, bool bConsole = true, bool bChat = false, bool bToast = false, bool bDebug = false, int bMessageBox = -1);
 
 	HWND GetTeamFortressWindow();
 	bool IsGameWindowInFocus();
