@@ -782,7 +782,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 
 	CGameTrace trace = {};
 	CTraceFilterProjectile filter = {}; filter.pSkip = pLocal;
-	CTraceFilterProjectileNoPlayer filterWorld = {};
+	CTraceFilterProjectileNoPlayer filterSplash = {};
 
 #ifdef SPLASH_DEBUG4
 	G::BoxStorage.push_back({ vPoint, projInfo.m_vHull * -1, projInfo.m_vHull, {}, I::GlobalVars->curtime + 5.f, { 255, 0, 0, 255 }, { 0, 0, 0, 0 } });
@@ -790,6 +790,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 
 	if (!projInfo.m_flGravity)
 	{
+		CTraceFilterWorldAndPropsOnly filterWorld = {};
 		SDK::TraceHull(projInfo.m_vPos, vPoint, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filterWorld, &trace);
 		if (trace.fraction < 0.999f)
 			return false;
@@ -823,7 +824,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 			if (n % Vars::Aimbot::Projectile::SplashTraceInterval.Value && n != iSimTime && !bPrimeTime)
 				continue;
 
-			SDK::TraceHull(vStaticPos, vNew, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filterWorld, &trace);
+			SDK::TraceHull(vStaticPos, vNew, projInfo.m_vHull * -1, projInfo.m_vHull, MASK_SOLID, &filterSplash, &trace);
 #ifdef SPLASH_DEBUG4
 			G::LineStorage.push_back({ { vStaticPos, vNew }, I::GlobalVars->curtime + 5.f, { 255, 0, 0, 255 } });
 #endif
