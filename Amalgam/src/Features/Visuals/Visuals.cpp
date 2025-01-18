@@ -842,11 +842,11 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 		case EWeaponType::HITSCAN:
 		case EWeaponType::MELEE:
 		{
-			matrix3x4* aBones = H::Entities.GetBones(pEntity->entindex());
-			if (!aBones)
+			auto pBones = H::Entities.GetBones(pEntity->entindex());
+			if (!pBones)
 				return;
 
-			auto vBoxes = F::Visuals.GetHitboxes(aBones, pEntity);
+			auto vBoxes = F::Visuals.GetHitboxes(pBones, pEntity);
 			G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 
 			return;

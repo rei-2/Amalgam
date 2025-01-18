@@ -872,8 +872,8 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 							auto pSet = pHDR->pHitboxSet(target.m_pEntity->As<CTFPlayer>()->m_nHitboxSet());
 							if (!pSet) break;
 
-							auto aBones = H::Entities.GetBones(target.m_pEntity->entindex());
-							if (!aBones)
+							auto pBones = H::Entities.GetBones(target.m_pEntity->entindex());
+							if (!pBones)
 								break;
 
 							Vec3 vForward = vOld - vNew; vForward.Normalize();
@@ -889,7 +889,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 								if (!pBox)
 									continue;
 
-								Vec3 vCenter; Math::VectorTransform((pBox->bbmin + pBox->bbmax) / 2, aBones[pBox->bone], vCenter);
+								Vec3 vCenter; Math::VectorTransform((pBox->bbmin + pBox->bbmax) / 2, pBones[pBox->bone], vCenter);
 
 								const float flDist = vPos.DistTo(vCenter);
 								if (closestId != -1 && flDist < closestDist || closestId == -1)
@@ -1118,11 +1118,11 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			{
 				const Vec3 vOriginOffset = target.m_pEntity->m_vecOrigin() - vPredicted;
 
-				auto aBones = H::Entities.GetBones(target.m_pEntity->entindex());
-				if (!aBones)
+				auto pBones = H::Entities.GetBones(target.m_pEntity->entindex());
+				if (!pBones)
 					return true;
 
-				auto vBoxes = F::Visuals.GetHitboxes(aBones, target.m_pEntity->As<CTFPlayer>(), { HITBOX_HEAD });
+				auto vBoxes = F::Visuals.GetHitboxes(pBones, target.m_pEntity->As<CTFPlayer>(), { HITBOX_HEAD });
 				for (auto& bBox : vBoxes)
 				{
 					bBox.m_vecPos -= vOriginOffset;
@@ -1134,11 +1134,11 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			{
 				const Vec3 vOriginOffset = target.m_pEntity->m_vecOrigin() - vPredicted;
 
-				auto aBones = H::Entities.GetBones(target.m_pEntity->entindex());
-				if (!aBones)
+				auto pBones = H::Entities.GetBones(target.m_pEntity->entindex());
+				if (!pBones)
 					return true;
 
-				auto vBoxes = F::Visuals.GetHitboxes(aBones, target.m_pEntity->As<CTFPlayer>(), { HITBOX_HEAD });
+				auto vBoxes = F::Visuals.GetHitboxes(pBones, target.m_pEntity->As<CTFPlayer>(), { HITBOX_HEAD });
 				for (auto& bBox : vBoxes)
 				{
 					bBox.m_vecPos -= vOriginOffset;
