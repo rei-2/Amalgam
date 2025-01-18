@@ -177,7 +177,6 @@
     <ClCompile Include="include\ImGui\imgui_freetype.cpp" />
     <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />
     <ClCompile Include="src\Hooks\bf_read_ReadString.cpp" />
-    <ClCompile Include="src\Hooks\CClientState_GetTime.cpp" />
     <ClCompile Include="src\Hooks\CTFHudDeathNotice_AddAdditionalMsg.cpp" />
     <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
     <ClCompile Include="src\Features\Spectate\Spectate.cpp" />

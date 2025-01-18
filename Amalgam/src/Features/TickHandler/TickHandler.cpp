@@ -26,13 +26,11 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 		flPassiveTime += 1.f / Vars::CL_Move::Doubletap::PassiveRecharge.Value;
 	}
 
-	if (m_iDeficit && m_iShiftedTicks < m_iMaxShift)
+	if (m_iDeficit)
 	{
 		bPassive = true;
-		m_iDeficit--;
+		m_iDeficit--, m_iShiftedTicks--;
 	}
-	else if (m_iDeficit)
-		m_iDeficit = 0;
 
 	if (!Vars::CL_Move::Doubletap::RechargeTicks.Value && !bPassive
 		|| m_bDoubletap || m_bWarp || m_iShiftedTicks == m_iMaxShift || m_bSpeedhack)
@@ -244,8 +242,8 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 	m_iShiftedGoal = std::clamp(m_iShiftedGoal, 0, m_iMaxShift);
 	if (m_iShiftedTicks > m_iShiftedGoal) // normal use/doubletap/teleport
 	{
-		m_iShiftStart = m_iShiftedTicks - 1 != m_iShiftedGoal ? m_iShiftedTicks : 0;
-		m_bShifting = m_iShiftStart;
+		m_bShifting = m_bShifted = m_iShiftedTicks - 1 != m_iShiftedGoal;
+		m_iShiftStart = m_iShiftedTicks;
 
 #ifndef TICKBASE_DEBUG
 		while (m_iShiftedTicks > m_iShiftedGoal)
@@ -272,9 +270,11 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 
 		m_bDoubletap = m_bWarp = false;
 	}
-	// else recharge, run once if we have any choked ticks
-	else if (I::ClientState->chokedcommands)
-		CLMoveFunc(accumulated_extra_samples, bFinalTick);
+	else // else recharge, run once if we have any choked ticks
+	{
+		if (I::ClientState->chokedcommands)
+			CLMoveFunc(accumulated_extra_samples, bFinalTick);
+	}
 }
 
 void CTickshiftHandler::CLMoveManage(CTFPlayer* pLocal)

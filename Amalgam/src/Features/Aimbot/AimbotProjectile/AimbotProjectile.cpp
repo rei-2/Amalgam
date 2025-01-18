@@ -872,7 +872,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 							auto pSet = pHDR->pHitboxSet(target.m_pEntity->As<CTFPlayer>()->m_nHitboxSet());
 							if (!pSet) break;
 
-							matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity->entindex());
+							auto aBones = H::Entities.GetBones(target.m_pEntity->entindex());
 							if (!aBones)
 								break;
 
@@ -1118,7 +1118,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			{
 				const Vec3 vOriginOffset = target.m_pEntity->m_vecOrigin() - vPredicted;
 
-				matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity->entindex());
+				auto aBones = H::Entities.GetBones(target.m_pEntity->entindex());
 				if (!aBones)
 					return true;
 
@@ -1134,7 +1134,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 			{
 				const Vec3 vOriginOffset = target.m_pEntity->m_vecOrigin() - vPredicted;
 
-				matrix3x4* aBones = H::Entities.GetBones(target.m_pEntity->entindex());
+				auto aBones = H::Entities.GetBones(target.m_pEntity->entindex());
 				if (!aBones)
 					return true;
 

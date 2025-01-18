@@ -148,8 +148,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 {
 	if (bQuick)
 		F::CameraWindow.m_bShouldDraw = false;
-	if ((bQuick ? !Vars::Visuals::Simulation::TrajectoryPath.Value && !Vars::Visuals::Simulation::ProjectileCamera.Value : !Vars::Visuals::Simulation::ShotPath.Value)
-		|| !pPlayer || !pWeapon || pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
+	if (bQuick ? !Vars::Visuals::Simulation::TrajectoryPath.Value && !Vars::Visuals::Simulation::ProjectileCamera.Value : !Vars::Visuals::Simulation::ShotPath.Value)
 		return;
 
 	Vec3 vAngles = bQuick ? I::EngineClient->GetViewAngles() : G::CurrentUserCmd->viewangles;
@@ -162,6 +161,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 
 		pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
 		if (!pWeapon)
+		if (!pWeapon || pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
 			return;
 
 		if (I::Input->CAM_IsThirdPerson())
@@ -169,6 +169,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 
 		pPlayer->m_vecViewOffset() = pPlayer->GetViewOffset();
 	}
+	else if (!pPlayer || !pWeapon || pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
+		return;
 
 	ProjectileInfo projInfo = {};
 	if (!F::ProjSim.GetInfo(pPlayer, pWeapon, vAngles, projInfo, iFlags, (bQuick && Vars::Aimbot::Projectile::AutoRelease.Value) ? Vars::Aimbot::Projectile::AutoRelease.Value / 100 : -1.f)

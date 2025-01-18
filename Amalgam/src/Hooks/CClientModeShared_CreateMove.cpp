@@ -31,7 +31,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	G::CurrentUserCmd = pCmd;
 
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
-	
+
 	// correct tick_count for fakeinterp / nointerp
 	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.m_flFakeInterp) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
 	if (G::Buttons & IN_DUCK) // lol

@@ -447,7 +447,7 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 
 int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 {
-	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsInBumperKart())
+	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || !pLocal || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsInBumperKart())
 		return 0;
 
 	std::vector<std::pair<Vec3, CBaseEntity*>> vTargets = {};

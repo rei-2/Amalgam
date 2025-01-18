@@ -44,6 +44,7 @@ public:
 	int m_iShiftedGoal = 0;
 	int m_iShiftStart = 0;
 	bool m_bShifting = false;
+	bool m_bShifted = false;
 
 	int m_iWait = 0;
 	int m_iMaxShift = 24;

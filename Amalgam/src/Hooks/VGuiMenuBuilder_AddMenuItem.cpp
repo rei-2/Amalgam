@@ -45,7 +45,7 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
             const bool bCheater = F::PlayerUtils.HasTag(FriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG));
 
             CALL_ORIGINAL(rcx, "History", "history", "profile");
-            CALL_ORIGINAL(rcx, I::EngineClient->GetPlayerForUserID(F::Spectate.m_iTarget) == PlayerIndex ? "Unspectate" : "Spectate", "spectate", "profile");
+            CALL_ORIGINAL(rcx, I::EngineClient->GetPlayerForUserID(F::Spectate.m_iIntendedTarget) == PlayerIndex ? "Unspectate" : "Spectate", "spectate", "profile");
             CALL_ORIGINAL(rcx, std::format("{} {}", bIgnored ? "Unignore" : "Ignore", PlayerName).c_str(), "ignoreplayer", "tags");
             CALL_ORIGINAL(rcx, std::format("{} {}", bCheater ? "Unmark" : "Mark", PlayerName).c_str(), "markplayer", "tags");
         }

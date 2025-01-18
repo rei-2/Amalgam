@@ -57,23 +57,26 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 				G::VelocityMap[n].clear();
 		}
 
-		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+		if (Vars::Visuals::Removals::Interpolation.Value)
 		{
-			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive())
-				continue; // local player managed in CPrediction_RunCommand
-
-			if (auto iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))
+			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 			{
-				float flOldFrameTime = I::GlobalVars->frametime;
-				I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
-				for (int i = 0; i < iDeltaTicks; i++)
+				auto pPlayer = pEntity->As<CTFPlayer>();
+				if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive())
+					continue; // local player managed in CPrediction_RunCommand
+
+				if (auto iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))
 				{
-					G::UpdatingAnims = true;
-					pPlayer->UpdateClientSideAnimation();
-					G::UpdatingAnims = false;
+					float flOldFrameTime = I::GlobalVars->frametime;
+					I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
+					for (int i = 0; i < iDeltaTicks; i++)
+					{
+						G::UpdatingAnims = true;
+						pPlayer->UpdateClientSideAnimation();
+						G::UpdatingAnims = false;
+					}
+					I::GlobalVars->frametime = flOldFrameTime;
 				}
-				I::GlobalVars->frametime = flOldFrameTime;
 			}
 		}
 

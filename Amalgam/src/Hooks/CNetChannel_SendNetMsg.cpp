@@ -121,7 +121,6 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 			if (iCmdCount > iAllowedNewCommands)
 			{
 				SDK::Output("clc_Move", std::format("{:d} sent <{:d} | {:d}>, max was {:d}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
-				F::Ticks.m_iShiftedTicks = F::Ticks.m_iShiftedGoal -= iCmdCount - iAllowedNewCommands;
 				F::Ticks.m_iDeficit = iCmdCount - iAllowedNewCommands;
 			}
 		}

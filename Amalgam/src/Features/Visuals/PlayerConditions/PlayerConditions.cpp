@@ -5,9 +5,8 @@ std::vector<std::wstring> CPlayerConditions::Get(CTFPlayer* pEntity)
 	std::vector<std::wstring> vConditions = {};
 
 	{
-		if (pEntity->InCond(TF_COND_CRITBOOSTED))
-			vConditions.emplace_back(L"KRITS");
-		else if (pEntity->InCond(TF_COND_CRITBOOSTED_PUMPKIN) ||
+		if (pEntity->InCond(TF_COND_CRITBOOSTED) ||
+			pEntity->InCond(TF_COND_CRITBOOSTED_PUMPKIN) ||
 			pEntity->InCond(TF_COND_CRITBOOSTED_USER_BUFF) ||
 			pEntity->InCond(TF_COND_CRITBOOSTED_DEMO_CHARGE) ||
 			pEntity->InCond(TF_COND_CRITBOOSTED_FIRST_BLOOD) ||

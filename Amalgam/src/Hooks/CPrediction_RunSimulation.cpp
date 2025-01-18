@@ -13,7 +13,7 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 	const int nCurrDifference = nStaticDifference = I::ClientState->lastoutgoingcommand - current_command;
 
 #ifndef TICKBASE_DEBUG
-	if (F::Ticks.m_iShiftStart && !nLastDifference && nCurrDifference)
+	if (F::Ticks.m_bShifted && !nLastDifference && nCurrDifference)
 		localPlayer->m_nTickBase() -= F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal - 1;
 
 #else
@@ -25,7 +25,7 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 	const int nLastTickBase = nStaticTickBase;
 	const int nCurrTickBase = nStaticTickBase = localPlayer->m_nTickBase();
 
-	if (F::Ticks.m_iShiftStart && !nLastDifference && nCurrDifference)
+	if (F::Ticks.m_bShifted && !nLastDifference && nCurrDifference)
 	{
 		localPlayer->m_nTickBase() -= F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal - 1;
 		nStaticTickBase = localPlayer->m_nTickBase();

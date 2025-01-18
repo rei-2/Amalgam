@@ -1789,7 +1789,7 @@ void CMenu::MenuSettings()
 								SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
 								IconImage(ICON_MD_GROUPS);
 							}
-							else if (F::Spectate.m_iTarget == player.m_iUserID)
+							else if (F::Spectate.m_iIntendedTarget == player.m_iUserID)
 							{
 								lOffset = H::Draw.Scale(29);
 								SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
@@ -1888,7 +1888,7 @@ void CMenu::MenuSettings()
 								if (FSelectable("History"))
 									I::SteamFriends->ActivateGameOverlayToWebPage(std::format("https://steamhistory.net/id/{}", CSteamID(player.m_uFriendsID, k_EUniversePublic, k_EAccountTypeIndividual).ConvertToUint64()).c_str());
 
-								if (FSelectable(F::Spectate.m_iTarget == player.m_iUserID ? "Unspectate" : "Spectate"))
+								if (FSelectable(F::Spectate.m_iIntendedTarget == player.m_iUserID ? "Unspectate" : "Spectate"))
 									F::Spectate.SetTarget(player.m_iUserID);
 
 								if (!player.m_bLocal && FSelectable("Votekick"))
