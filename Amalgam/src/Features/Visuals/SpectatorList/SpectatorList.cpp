@@ -10,7 +10,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 
-		if (pPlayer->IsAlive() || pPlayer->m_hObserverTarget().Get() != pTarget || pEntity->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingTimeDemo())
+		if (pPlayer->IsAlive() || pPlayer->m_hObserverTarget().Get() != pTarget || pEntity->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo())
 		{
 			auto it = m_mRespawnCache.find(pPlayer->entindex());
 			if (it != m_mRespawnCache.end())

@@ -61,7 +61,7 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 					case 1: bKey = U::KeyHandler.Pressed(tBind.Key, true, &tBind.Storage); break;
 					case 2: bKey = U::KeyHandler.Double(tBind.Key, true, &tBind.Storage); break;
 					}
-					const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && !I::MatSystemSurface->IsCursorVisible()
+					const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && (!I::MatSystemSurface->IsCursorVisible() || I::EngineClient->IsPlayingDemo())
 											|| F::Menu.IsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.InKeybind; // allow in menu
 					bKey = bShouldUse && bKey;
 

@@ -183,6 +183,7 @@
     <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />
     <ClCompile Include="src\Hooks\CTFInput_ApplyMouse.cpp" />
     <ClCompile Include="src\Hooks\CSniperDot_GetRenderingPositions.cpp" />
+    <ClCompile Include="src\Hooks\CBasePlayer_ItemPostFrame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

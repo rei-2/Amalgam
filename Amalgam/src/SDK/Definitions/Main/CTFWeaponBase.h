@@ -9,6 +9,7 @@ MAKE_SIGNATURE(CTFWeaponBaseMelee_CalcIsAttackCriticalHelper, "client.dll", "40 
 MAKE_SIGNATURE(CTFWeaponBase_CalcIsAttackCriticalHelper, "client.dll", "48 89 5C 24 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 74 24", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_GetAppropriateWorldOrViewModel, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 C7 44 24 ? ? ? ? ? 4C 8D 0D ? ? ? ? 33 D2 4C 8D 05 ? ? ? ? E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B CB", 0x0);
 MAKE_SIGNATURE(CTFWeaponBaseGun_GetWeaponSpread, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 4C 63 91", 0x0);
+MAKE_SIGNATURE(CTFWeaponBase_IncrementAmmo, "client.dll", "48 89 5C 24 ? 56 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8", 0x0);
 
 //credits: KGB (all weapon info stuff below)
 typedef unsigned short WEAPON_FILE_INFO_HANDLE;
@@ -386,6 +387,11 @@ public:
 	inline float GetWeaponSpread()
 	{
 		return S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(this);
+	}
+
+	inline void IncrementAmmo()
+	{
+		return S::CTFWeaponBase_IncrementAmmo.Call<void>(this);
 	}
 
 	CHudTexture* GetWeaponIcon();

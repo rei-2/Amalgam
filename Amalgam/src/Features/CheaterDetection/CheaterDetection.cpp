@@ -5,7 +5,7 @@
 
 bool CCheaterDetection::ShouldScan()
 {
-	if (!Vars::CheaterDetection::Methods.Value || I::EngineClient->IsPlayingTimeDemo())
+	if (!Vars::CheaterDetection::Methods.Value || I::EngineClient->IsPlayingDemo())
 		return false;
 
 	static float flOldTime = I::GlobalVars->curtime;
@@ -98,7 +98,7 @@ void CCheaterDetection::Infract(CTFPlayer* pEntity, std::string sReason)
 
 void CCheaterDetection::Run()
 {
-	if (!ShouldScan() || !I::EngineClient->IsConnected() || I::EngineClient->IsPlayingTimeDemo())
+	if (!ShouldScan() || !I::EngineClient->IsConnected() || I::EngineClient->IsPlayingDemo())
 		return;
 
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))

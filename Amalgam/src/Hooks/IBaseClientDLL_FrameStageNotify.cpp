@@ -62,7 +62,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 			{
 				auto pPlayer = pEntity->As<CTFPlayer>();
-				if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive())
+				if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() || pPlayer->IsDormant() || !pPlayer->IsAlive())
 					continue; // local player managed in CPrediction_RunCommand
 
 				if (auto iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))

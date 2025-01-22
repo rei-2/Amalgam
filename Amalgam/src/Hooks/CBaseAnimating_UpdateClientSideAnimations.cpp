@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseAnimating_UpdateClientSideAnimation, S::CBaseAnimating_UpdateClie
 	void* rcx)
 {
 	auto pLocal = H::Entities.GetLocal();
-	if (Vars::Visuals::Removals::Interpolation.Value && !G::UpdatingAnims || rcx == pLocal && !pLocal->IsInBumperKart())
+	if (Vars::Visuals::Removals::Interpolation.Value && !G::UpdatingAnims || rcx == pLocal && !pLocal->IsInBumperKart() && !I::EngineClient->IsPlayingDemo())
 		return;
 
 	CALL_ORIGINAL(rcx);

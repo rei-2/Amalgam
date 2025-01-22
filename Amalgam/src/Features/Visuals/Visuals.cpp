@@ -446,12 +446,13 @@ void CVisuals::DrawAntiAim(CTFPlayer* pLocal)
 	}
 }
 
+#define PAIR(x) { x, #x }
 void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 {
 	if (Vars::Debug::Info.Value)
 	{
 		auto pWeapon = H::Entities.GetWeapon();
-		auto pCmd = G::LastUserCmd;
+		auto pCmd = !I::EngineClient->IsPlayingDemo() ? G::LastUserCmd : I::Input->GetUserCmd(I::ClientState->lastoutgoingcommand);
 
 		int x = 10, y = 10;
 		const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
@@ -462,7 +463,52 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		{
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("View: ({:.3f}, {:.3f}, {:.3f})", pCmd->viewangles.x, pCmd->viewangles.y, pCmd->viewangles.z).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Move: ({}, {}, {})", pCmd->forwardmove, pCmd->sidemove, pCmd->upmove).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Buttons: {}", pCmd->buttons).c_str());
+			
+			std::vector<std::pair<int, const char*>> vFlags = { 
+				PAIR(IN_ATTACK),
+				PAIR(IN_ATTACK2),
+				PAIR(IN_ATTACK3),
+				PAIR(IN_FORWARD),
+				PAIR(IN_BACK),
+				PAIR(IN_MOVELEFT),
+				PAIR(IN_MOVERIGHT),
+				PAIR(IN_JUMP),
+				PAIR(IN_DUCK),
+				PAIR(IN_RELOAD),
+				PAIR(IN_LEFT),
+				PAIR(IN_RIGHT),
+				PAIR(IN_SCORE),
+				/*
+				PAIR(IN_USE),
+				PAIR(IN_CANCEL),
+				PAIR(IN_RUN),
+				PAIR(IN_ALT1),
+				PAIR(IN_ALT2),
+				PAIR(IN_SPEED),
+				PAIR(IN_WALK),
+				PAIR(IN_ZOOM),
+				PAIR(IN_WEAPON1),
+				PAIR(IN_WEAPON2),
+				PAIR(IN_BULLRUSH),
+				PAIR(IN_GRENADE1),
+				PAIR(IN_GRENADE2),
+				*/
+			};
+			std::string sButtons = "NONE";
+			int i = 0;
+			for (auto& pFlag : vFlags)
+			{
+				if (pCmd->buttons & pFlag.first)
+				{
+					if (i)
+						sButtons += " | ";
+					else
+						sButtons = "";
+					sButtons += pFlag.second;
+					i++;
+				}
+			}
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Buttons: {} ({})", pCmd->buttons, sButtons).c_str());
 		}
 		{
 			Vec3 vOrigin = pLocal->m_vecOrigin();
@@ -474,12 +520,12 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		}
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", F::Ticks.m_iShiftedTicks, F::Ticks.m_iShiftedGoal).c_str());
-		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Round state: {}", SDK::GetRoundState()).c_str());
+		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Round state: {}, {}", SDK::GetRoundState(), I::EngineClient->IsPlayingDemo()).c_str());
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Tickcount: {}", pLocal->m_nTickBase()).c_str());
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Entities: {} ({}, {})", I::ClientEntityList->GetMaxEntities(), I::ClientEntityList->GetHighestEntityIndex(), I::ClientEntityList->NumberOfEntities(false)).c_str());
 	
-		if (!pWeapon || !pCmd)
-			return;
+		if (pWeapon)
+		{
 
 		float flTime = TICKS_TO_TIME(pLocal->m_nTickBase());
 		float flPrimaryAttack = pWeapon->m_flNextPrimaryAttack();
@@ -493,6 +539,8 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Reload: {} ({} || {} != 0)", G::Reloading, pWeapon->m_bInReload(), pWeapon->m_iReloadMode()).c_str());
 	}
 }
+}
+#undef PAIR
 
 
 

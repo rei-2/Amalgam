@@ -43,7 +43,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	auto uHash = FNV1A::Hash32(pEvent->GetName());
 
 	F::Records.Event(pEvent, uHash, pLocal);
-	if (I::EngineClient->IsPlayingTimeDemo())
+	if (I::EngineClient->IsPlayingDemo())
 		return;
 
 	F::CritHack.Event(pEvent, uHash, pLocal);

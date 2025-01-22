@@ -147,7 +147,7 @@ void CMovementSimulation::Store()
 			else if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
 				continue;
 
-			bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer();
+			bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo();
 			Vec3 vVelocity = bLocal ? F::EnginePrediction.m_vVelocity : pPlayer->m_vecVelocity();
 			Vec3 vOrigin = bLocal ? F::EnginePrediction.m_vOrigin : pPlayer->m_vecOrigin();
 			Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : Vec3(pPlayer->m_vecVelocity().x, pPlayer->m_vecVelocity().y, 0.f);
