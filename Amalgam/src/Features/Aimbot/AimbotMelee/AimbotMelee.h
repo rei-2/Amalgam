@@ -14,7 +14,7 @@ class CAimbotMelee
 						 std::unordered_map<CBaseEntity*, std::deque<TickRecord>>& pRecordMap,
 						 std::unordered_map<CBaseEntity*, std::deque<Vec3>>& mPaths);
 	bool CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEyeAngles);
-	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord> newRecords);
+	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord>& vSimRecords);
 	
 	Vec3 Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod = Vars::Aimbot::General::AimType.Value);
 	void Aim(CUserCmd* pCmd, Vec3& vAngle);

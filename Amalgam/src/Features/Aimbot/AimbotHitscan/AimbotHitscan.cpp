@@ -306,13 +306,13 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 		};
 
 	int iReturn = false;
-	for (auto& pTick : vRecords)
+	for (auto& tRecord : vRecords)
 	{
 		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pWeapon) : true) && Vars::Aimbot::General::HitscanPeek.Value;
 
 		if (target.m_TargetType == ETargetType::Player || target.m_TargetType == ETargetType::Sentry)
 		{
-			auto aBones = pTick.m_BoneMatrix.m_aBones;
+			auto aBones = tRecord.m_BoneMatrix.m_aBones;
 			if (!aBones)
 				continue;
 
@@ -423,9 +423,9 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 							}
 							if (bWillHit)
 							{
-								flPreferredRecord = pTick.m_flSimTime;
+								flPreferredRecord = tRecord.m_flSimTime;
 
-								target.m_Tick = pTick;
+								target.m_tRecord = tRecord;
 								target.m_vPos = vTransformed;
 								target.m_nAimedHitbox = pair.second;
 								if (target.m_TargetType == ETargetType::Player)
@@ -483,7 +483,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 					target.m_vAngleTo = vAngles;
 					if (RayToOBB(vEyePos, vForward, vMins, vMaxs, transform)) // for the time being, no vischecks against other hitboxes
 					{
-						target.m_Tick = pTick;
+						target.m_tRecord = tRecord;
 						target.m_vPos = vTransformed;
 						return true;
 					}
@@ -743,7 +743,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 				F::Resolver.Aimbot(target.m_pEntity->As<CTFPlayer>(), target.m_nAimedHitbox == HITBOX_HEAD);
 
 			if (target.m_bBacktrack)
-				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
+				pCmd->tick_count = TIME_TO_TICKS(target.m_tRecord.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 
 			bool bLine = Vars::Visuals::Bullet::Enabled.Value;
 			bool bBoxes = Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot;
@@ -757,7 +757,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 					G::LineStorage.push_back({ { pLocal->GetShootPos(), target.m_vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
 				if (bBoxes)
 				{
-					auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>(), {}, target.m_nAimedHitbox);
+					auto vBoxes = F::Visuals.GetHitboxes(target.m_tRecord.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>(), {}, target.m_nAimedHitbox);
 					G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 				}
 			}

@@ -258,28 +258,20 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 	return true;
 }
 
-int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord> newRecords)
+int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord>& vSimRecords)
 {
 	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(target.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
 
 	float flHull = SDK::AttribHookValue(18, "melee_bounds_multiplier", pWeapon);
-	float flRange = pWeapon->GetSwingRange(pLocal);
+	float flRange = SDK::AttribHookValue(pWeapon->GetSwingRange(pLocal), "melee_range_multiplier", pWeapon);
 	if (pLocal->m_flModelScale() > 1.0f)
 	{
 		flRange *= pLocal->m_flModelScale();
-		flRange *= pLocal->m_flModelScale();
-		flRange *= pLocal->m_flModelScale();
+		flHull *= pLocal->m_flModelScale();
 	}
-	flRange = SDK::AttribHookValue(flRange, "melee_range_multiplier", pWeapon);
-	if (flHull <= 0.f || flRange <= 0.f)
-		return false;
-
-	static Vec3 vSwingMins = { -flHull, -flHull, -flHull };
-	static Vec3 vSwingMaxs = { flHull, flHull, flHull };
-
-	CGameTrace trace = {};
-	CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
+	Vec3 vSwingMins = { -flHull, -flHull, -flHull };
+	Vec3 vSwingMaxs = { flHull, flHull, flHull };
 
 	std::deque<TickRecord> vRecords;
 	{
@@ -319,50 +311,44 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 			}
 		}
 	}
-	if (!newRecords.empty())
+	if (!vSimRecords.empty())
 	{
-		for (TickRecord& pTick : newRecords)
+		for (TickRecord& tRecord : vSimRecords)
 		{
 			vRecords.pop_back();
-			vRecords.push_front({ pTick.m_flSimTime, {}, pTick.m_vOrigin });
+			vRecords.push_front({ tRecord.m_flSimTime, {}, tRecord.m_vOrigin, target.m_pEntity->m_vecMins(), target.m_pEntity->m_vecMaxs() });
 		}
-		for (TickRecord& pTick : vRecords)
-			pTick.m_flSimTime -= TICKS_TO_TIME(newRecords.size());
+		for (TickRecord& tRecord : vRecords)
+			tRecord.m_flSimTime -= TICKS_TO_TIME(vSimRecords.size());
 	}
-	std::deque<TickRecord> validRecords = target.m_TargetType == ETargetType::Player ? F::Backtrack.GetValidRecords(&vRecords, pLocal, true) : vRecords;
-	if (!Vars::Backtrack::Enabled.Value && !validRecords.empty())
-		validRecords = { validRecords.front() };
+	vRecords = target.m_TargetType == ETargetType::Player ? F::Backtrack.GetValidRecords(&vRecords, pLocal, true) : vRecords;
+	if (!Vars::Backtrack::Enabled.Value && !vRecords.empty())
+		vRecords = { vRecords.front() };
 
-	// this might be retarded
-	const float flTargetPos = (target.m_pEntity->m_vecMaxs().z - target.m_pEntity->m_vecMins().z) * 65.f / 82.f;
-	const float flLocalPos = (pLocal->m_vecMaxs().z - pLocal->m_vecMins().z) * 65.f / 82.f;
-	const Vec3 vDiff = { 0, 0, std::min(flTargetPos, flLocalPos) };
-
-	auto originTolerance = [target](float flTolerance)
-		{
-			target.m_pEntity->m_vecMins() += flTolerance;
-			target.m_pEntity->m_vecMaxs() -= flTolerance;
-		};
-
-	// account for origin tolerance
-	originTolerance(0.125f);
-
-	for (auto& pTick : validRecords)
+	CGameTrace trace = {};
+	CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
+	for (auto& tRecord : vRecords)
 	{
-		const Vec3 vRestore = target.m_pEntity->GetAbsOrigin();
-		target.m_pEntity->SetAbsOrigin(pTick.m_vOrigin);
+		Vec3 vRestoreOrigin = target.m_pEntity->GetAbsOrigin();
+		Vec3 vRestoreMins = target.m_pEntity->m_vecMins();
+		Vec3 vRestoreMaxs = target.m_pEntity->m_vecMaxs();
 
-		target.m_vPos = pTick.m_vOrigin + vDiff;
+		target.m_pEntity->SetAbsOrigin(tRecord.m_vOrigin);
+		target.m_pEntity->m_vecMins() = tRecord.m_vMins + 0.125f; // account for origin tolerance
+		target.m_pEntity->m_vecMaxs() = tRecord.m_vMaxs - 0.125f;
+
+		Vec3 vDiff = { 0, 0, std::clamp(vEyePos.z - tRecord.m_vOrigin.z, target.m_pEntity->m_vecMins().z, target.m_pEntity->m_vecMaxs().z) };
+		target.m_vPos = tRecord.m_vOrigin + vDiff;
 		target.m_vAngleTo = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, target.m_vPos));
 
 		Vec3 vForward; Math::AngleVectors(target.m_vAngleTo, &vForward);
 		Vec3 vTraceEnd = vEyePos + (vForward * flRange);
 
-		SDK::Trace(vEyePos, vTraceEnd, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
+		SDK::TraceHull(vEyePos, vTraceEnd, {}, {}, MASK_SOLID, &filter, &trace);
 		bool bReturn = trace.m_pEnt && trace.m_pEnt == target.m_pEntity;
 		if (!bReturn)
 		{
-			SDK::TraceHull(vEyePos, vTraceEnd, vSwingMins, vSwingMaxs, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
+			SDK::TraceHull(vEyePos, vTraceEnd, vSwingMins, vSwingMaxs, MASK_SOLID, &filter, &trace);
 			bReturn = trace.m_pEnt && trace.m_pEnt == target.m_pEntity;
 		}
 
@@ -374,14 +360,15 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 				bReturn = false;
 		}
 
-		target.m_pEntity->SetAbsOrigin(vRestore);
+		target.m_pEntity->SetAbsOrigin(vRestoreOrigin);
+		target.m_pEntity->m_vecMins() = vRestoreMins;
+		target.m_pEntity->m_vecMaxs() = vRestoreMaxs;
 
 		if (bReturn)
 		{
-			target.m_Tick = pTick;
+			target.m_tRecord = tRecord;
 			target.m_bBacktrack = target.m_TargetType == ETargetType::Player /*&& Vars::Backtrack::Enabled.Value*/;
 
-			originTolerance(-0.125f);
 			return true;
 		}
 		else if (Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth)
@@ -393,14 +380,10 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 
 			SDK::Trace(vEyePos, vTraceEnd, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
 			if (trace.m_pEnt && trace.m_pEnt == target.m_pEntity)
-			{
-				originTolerance(-0.125f);
 				return 2;
-			}
 		}
 	}
 
-	originTolerance(-0.125f);
 	return false;
 }
 
@@ -508,7 +491,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 		if (G::Attacking == 1)
 		{
 			if (target.m_bBacktrack)
-				pCmd->tick_count = TIME_TO_TICKS(target.m_Tick.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
+				pCmd->tick_count = TIME_TO_TICKS(target.m_tRecord.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 			// bug: fast old records seem to be progressively more unreliable ?
 		}
 
@@ -525,7 +508,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 				G::LineStorage.push_back({ { vEyePos, target.m_vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
 			if (bBoxes)
 			{
-				auto vBoxes = F::Visuals.GetHitboxes(target.m_Tick.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
+				auto vBoxes = F::Visuals.GetHitboxes(target.m_tRecord.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
 				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 			}
 			if (bPath)

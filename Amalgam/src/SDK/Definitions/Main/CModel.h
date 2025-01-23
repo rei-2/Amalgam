@@ -58,7 +58,7 @@ struct Ray_t
 	void Init(Vector const& start, Vector const& end)
 	{
 		m_Delta = end - start;
-		m_IsSwept = (m_Delta.LengthSqr() != 0);
+		m_IsSwept = m_Delta.LengthSqr() != 0;
 		m_Extents.Set();
 		m_IsRay = true;
 		m_StartOffset.Set();
@@ -68,10 +68,10 @@ struct Ray_t
 	void Init(Vector const& start, Vector const& end, Vector const& mins, Vector const& maxs)
 	{
 		m_Delta = end - start;
-		m_IsSwept = (m_Delta.LengthSqr() != 0);
+		m_IsSwept = m_Delta.LengthSqr() != 0;
 		m_Extents = maxs - mins;
 		m_Extents *= 0.5f;
-		m_IsRay = (m_Extents.LengthSqr() < 1e-6);
+		m_IsRay = m_Extents.LengthSqr() == 0;
 		m_StartOffset = mins + maxs;
 		m_StartOffset *= 0.5f;
 		m_Start = start + m_StartOffset;

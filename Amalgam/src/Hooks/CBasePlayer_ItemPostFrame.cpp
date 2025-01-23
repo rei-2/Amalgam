@@ -36,10 +36,7 @@ MAKE_HOOK(CBasePlayer_ItemPostFrame, S::CBasePlayer_ItemPostFrame(), void,
 		return CALL_ORIGINAL(rcx);
 	}
 
-	//SDK::Output("CBasePlayer_ItemPostFrame", std::format("{}; {}, {}, {}; {:#x}", TIME_TO_TICKS(pLocal->m_flNextAttack() - I::GlobalVars->curtime) == 31, I::GlobalVars->curtime - pWeapon->m_flTimeWeaponIdle(), I::GlobalVars->curtime - pLocal->m_flNextAttack(), I::GlobalVars->curtime - pWeapon->m_flNextPrimaryAttack(), uintptr_t(_ReturnAddress())).c_str());
 	CALL_ORIGINAL(rcx);
 	pWeapon->IncrementAmmo();
 	pWeapon->m_bReloadedThroughAnimEvent() = true;
-
-	//SDK::Output("CBasePlayer_ItemPostFrame", "");
 }

@@ -28,14 +28,14 @@ struct TickRecord
 	float m_flSimTime = 0.f;
 	BoneMatrix m_BoneMatrix = {};
 	Vec3 m_vOrigin = {};
+	Vec3 m_vMins = {};
+	Vec3 m_vMaxs = {};
 	bool m_bOnShot = false;
 	bool m_bInvalid = false;
 };
 
 class CBacktrack
 {
-	bool WithinRewind(const TickRecord& record);
-
 	void SendLerp();
 	void UpdateDatagram();
 	void MakeRecords();
