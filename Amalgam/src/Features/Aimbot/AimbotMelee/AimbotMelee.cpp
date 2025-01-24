@@ -290,24 +290,16 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 		if (!pRecords || vRecords.empty())
 		{
 			if (auto pBones = H::Entities.GetBones(target.m_pEntity->entindex()))
-			{
-				vRecords.push_front({
-					target.m_pEntity->m_flSimulationTime(),
-					*reinterpret_cast<BoneMatrix*>(pBones),
-					target.m_pEntity->m_vecOrigin()
-				});
-			}
+				vRecords.push_front({ target.m_pEntity->m_flSimulationTime(), *reinterpret_cast<BoneMatrix*>(pBones), target.m_pEntity->m_vecOrigin(),
+					target.m_pEntity->m_vecMins(), target.m_pEntity->m_vecMaxs() });
 			else
 			{
 				matrix3x4 aBones[MAXSTUDIOBONES];
 				if (!target.m_pEntity->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, target.m_pEntity->m_flSimulationTime()))
 					return false;
 
-				vRecords.push_front({
-					target.m_pEntity->m_flSimulationTime(),
-					*reinterpret_cast<BoneMatrix*>(&aBones),
-					target.m_pEntity->m_vecOrigin()
-				});
+				vRecords.push_front({ target.m_pEntity->m_flSimulationTime(), *reinterpret_cast<BoneMatrix*>(&aBones), target.m_pEntity->m_vecOrigin(),
+					target.m_pEntity->m_vecMins(), target.m_pEntity->m_vecMaxs() });
 			}
 		}
 	}
