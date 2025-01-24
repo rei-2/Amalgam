@@ -497,7 +497,13 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			G::PathStorage.clear();
 
 			if (bLine)
-				G::LineStorage.push_back({ { vEyePos, target.m_vPos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
+			{
+				Vec3 vEyePos = pLocal->GetShootPos();
+				float flDist = vEyePos.DistTo(target.m_vPos);
+				Vec3 vForward; Math::AngleVectors(target.m_vAngleTo, &vForward);
+
+				G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
+			}
 			if (bBoxes)
 			{
 				auto vBoxes = F::Visuals.GetHitboxes(target.m_tRecord.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
