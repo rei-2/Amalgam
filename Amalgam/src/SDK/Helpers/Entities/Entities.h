@@ -33,6 +33,7 @@ class CEntities
 	std::unordered_map<int, bool> m_mLagCompensation;
 	std::unordered_map<int, DormantData> m_mDormancy;
 	std::unordered_map<int, Vec3> m_mAvgVelocities;
+	std::unordered_map<int, uint32_t> m_mModels;
 
 	std::unordered_map<int, bool> m_mIFriends;
 	std::unordered_map<uint32_t, bool> m_mUFriends;
@@ -48,10 +49,10 @@ public:
 	void Clear(bool bShutdown = false);
 	void ManualNetwork(const StartSoundParams_t& params);
 
-	bool IsHealth(CBaseEntity* pEntity);
-	bool IsAmmo(CBaseEntity* pEntity);
-	bool IsPowerup(CBaseEntity* pEntity);
-	bool IsSpellbook(CBaseEntity* pEntity);
+	bool IsHealth(uint32_t uHash);
+	bool IsAmmo(uint32_t uHash);
+	bool IsPowerup(uint32_t uHash);
+	bool IsSpellbook(uint32_t uHash);
 
 	CTFPlayer* GetLocal();
 	CTFWeaponBase* GetWeapon();
@@ -71,6 +72,7 @@ public:
 	bool GetDormancy(int iIndex);
 	Vec3* GetAvgVelocity(int iIndex);
 	void SetAvgVelocity(int iIndex, Vec3 vAvgVelocity);
+	uint32_t GetModel(int iIndex);
 
 	bool IsFriend(int iIndex);
 	bool IsFriend(uint32_t friendsID);

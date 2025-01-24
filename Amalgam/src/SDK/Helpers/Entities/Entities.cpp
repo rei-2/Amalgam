@@ -30,18 +30,20 @@ void CEntities::Store()
 		case ETFClassID::CObjectSentrygun:
 		case ETFClassID::CObjectDispenser:
 		case ETFClassID::CObjectTeleporter:
+			m_mModels[n] = FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel()));
 			m_mGroups[EGroupType::BUILDINGS_ALL].push_back(pEntity);
 			m_mGroups[pEntity->m_iTeamNum() != m_pLocal->m_iTeamNum() ? EGroupType::BUILDINGS_ENEMIES : EGroupType::BUILDINGS_TEAMMATES].push_back(pEntity);
 			break;
 		case ETFClassID::CBaseAnimating:
 		{
-			if (IsHealth(pEntity))
+			m_mModels[n] = FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel()));
+			if (IsHealth(GetModel(n)))
 				m_mGroups[EGroupType::PICKUPS_HEALTH].push_back(pEntity);
-			else if (IsAmmo(pEntity))
+			else if (IsAmmo(GetModel(n)))
 				m_mGroups[EGroupType::PICKUPS_AMMO].push_back(pEntity);
-			else if (IsPowerup(pEntity))
+			else if (IsPowerup(GetModel(n)))
 				m_mGroups[EGroupType::PICKUPS_POWERUP].push_back(pEntity);
-			else if (IsSpellbook(pEntity))
+			else if (IsSpellbook(GetModel(n)))
 				m_mGroups[EGroupType::PICKUPS_SPELLBOOK].push_back(pEntity);
 			break;
 		}
@@ -172,6 +174,7 @@ void CEntities::Store()
 				m_mDormancy[n] = { pEntity->m_vecOrigin(), I::EngineClient->Time() };
 		}
 
+		m_mModels[n] = FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel()));
 		m_mGroups[EGroupType::PLAYERS_ALL].push_back(pEntity);
 		m_mGroups[pEntity->m_iTeamNum() != m_pLocal->m_iTeamNum() ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_TEAMMATES].push_back(pEntity);
 
@@ -276,9 +279,9 @@ void CEntities::ManualNetwork(const StartSoundParams_t& params)
 		m_mDormancy[params.soundsource] = { params.origin, I::EngineClient->Time() };
 }
 
-bool CEntities::IsHealth(CBaseEntity* pEntity)
+bool CEntities::IsHealth(uint32_t uHash)
 {
-	switch (FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel())))
+	switch (uHash)
 	{
 	case FNV1A::Hash32Const("models/items/banana/plate_banana.mdl"):
 	case FNV1A::Hash32Const("models/items/medkit_small.mdl"):
@@ -304,9 +307,9 @@ bool CEntities::IsHealth(CBaseEntity* pEntity)
 	return false;
 }
 
-bool CEntities::IsAmmo(CBaseEntity* pEntity)
+bool CEntities::IsAmmo(uint32_t uHash)
 {
-	switch (FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel())))
+	switch (uHash)
 	{
 	case FNV1A::Hash32Const("models/items/ammopack_small.mdl"):
 	case FNV1A::Hash32Const("models/items/ammopack_medium.mdl"):
@@ -319,9 +322,9 @@ bool CEntities::IsAmmo(CBaseEntity* pEntity)
 	return false;
 }
 
-bool CEntities::IsPowerup(CBaseEntity* pEntity)
+bool CEntities::IsPowerup(uint32_t uHash)
 {
-	switch (FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel())))
+	switch (uHash)
 	{
 	case FNV1A::Hash32Const("models/pickups/pickup_powerup_agility.mdl"):
 	case FNV1A::Hash32Const("models/pickups/pickup_powerup_crit.mdl"):
@@ -345,9 +348,9 @@ bool CEntities::IsPowerup(CBaseEntity* pEntity)
 	return false;
 }
 
-bool CEntities::IsSpellbook(CBaseEntity* pEntity)
+bool CEntities::IsSpellbook(uint32_t uHash)
 {
-	switch (FNV1A::Hash32(I::ModelInfoClient->GetModelName(pEntity->GetModel())))
+	switch (uHash)
 	{
 	case FNV1A::Hash32Const("models/props_halloween/hwn_spellbook_flying.mdl"):
 	case FNV1A::Hash32Const("models/props_halloween/hwn_spellbook_upright.mdl"):
@@ -379,6 +382,7 @@ bool CEntities::GetLagCompensation(int iIndex) { return m_mLagCompensation[iInde
 void CEntities::SetLagCompensation(int iIndex, bool bLagComp) { m_mLagCompensation[iIndex] = bLagComp; }
 Vec3* CEntities::GetAvgVelocity(int iIndex) { return iIndex != I::EngineClient->GetLocalPlayer() ? &m_mAvgVelocities[iIndex] : nullptr; }
 void CEntities::SetAvgVelocity(int iIndex, Vec3 vAvgVelocity) { m_mAvgVelocities[iIndex] = vAvgVelocity; }
+uint32_t CEntities::GetModel(int iIndex) { return m_mModels[iIndex]; }
 
 bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
 bool CEntities::IsFriend(uint32_t friendsID) { return m_mUFriends[friendsID]; }

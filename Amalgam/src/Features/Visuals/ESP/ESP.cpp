@@ -775,10 +775,10 @@ void CESP::StoreWorld()
 			const char* szName = "NPC";
 			switch (pEntity->GetClassID())
 			{
-			case ETFClassID::CEyeballBoss: szName = "Monoculus";
+			case ETFClassID::CEyeballBoss: szName = "Monoculus"; break;
 			case ETFClassID::CHeadlessHatman: szName = "Horseless Headless Horsemann"; break;
 			case ETFClassID::CMerasmus: szName = "Merasmus"; break;
-			case ETFClassID::CTFBaseBoss: szName = "Boss";
+			case ETFClassID::CTFBaseBoss: szName = "Boss"; break;
 			case ETFClassID::CTFTankBoss: szName = "Tank"; break;
 			case ETFClassID::CZombie: szName = "Skeleton"; break;
 			}
@@ -914,11 +914,22 @@ void CESP::DrawPlayers()
 		if (tCache.m_bBones)
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
-			DrawBones(pPlayer, { 8, 7, 6, 4 }, tCache.m_tColor);
-			DrawBones(pPlayer, { 11, 10, 9, 4 }, tCache.m_tColor);
-			DrawBones(pPlayer, { 0, 4, 1 }, tCache.m_tColor);
-			DrawBones(pPlayer, { 14, 13, 1 }, tCache.m_tColor);
-			DrawBones(pPlayer, { 17, 16, 1 }, tCache.m_tColor);
+			switch (H::Entities.GetModel(pPlayer->entindex()))
+			{
+			case FNV1A::Hash32Const("models/vsh/player/saxton_hale.mdl"):
+				DrawBones(pPlayer, { HITBOX_SAXTON_HEAD, HITBOX_SAXTON_CHEST, HITBOX_SAXTON_PELVIS }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_SAXTON_CHEST, HITBOX_SAXTON_LEFT_UPPER_ARM, HITBOX_SAXTON_LEFT_FOREARM, HITBOX_SAXTON_LEFT_HAND }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_SAXTON_CHEST, HITBOX_SAXTON_RIGHT_UPPER_ARM, HITBOX_SAXTON_RIGHT_FOREARM, HITBOX_SAXTON_RIGHT_HAND }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_SAXTON_PELVIS, HITBOX_SAXTON_LEFT_THIGH, HITBOX_SAXTON_LEFT_CALF, HITBOX_SAXTON_LEFT_FOOT }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_SAXTON_PELVIS, HITBOX_SAXTON_RIGHT_THIGH, HITBOX_SAXTON_RIGHT_CALF, HITBOX_SAXTON_RIGHT_FOOT }, tCache.m_tColor);
+				break;
+			default:
+				DrawBones(pPlayer, { HITBOX_HEAD, HITBOX_CHEST, HITBOX_PELVIS }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_CHEST, HITBOX_LEFT_UPPER_ARM, HITBOX_LEFT_FOREARM, HITBOX_LEFT_HAND }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_CHEST, HITBOX_RIGHT_UPPER_ARM, HITBOX_RIGHT_FOREARM, HITBOX_RIGHT_HAND }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_PELVIS, HITBOX_LEFT_THIGH, HITBOX_LEFT_CALF, HITBOX_LEFT_FOOT }, tCache.m_tColor);
+				DrawBones(pPlayer, { HITBOX_PELVIS, HITBOX_RIGHT_THIGH, HITBOX_RIGHT_CALF, HITBOX_RIGHT_FOOT }, tCache.m_tColor);
+			}
 		}
 
 		if (tCache.m_bHealthBar)

@@ -147,17 +147,17 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		return Vars::Chams::World::Pickups.Value;
 	case ETFClassID::CBaseAnimating:
 	{
-		if (H::Entities.IsAmmo(pEntity) || H::Entities.IsHealth(pEntity))
+		if (H::Entities.IsAmmo(H::Entities.GetModel(pEntity->entindex())) || H::Entities.IsHealth(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 			return Vars::Chams::World::Pickups.Value;
 		}
-		else if (H::Entities.IsPowerup(pEntity))
+		else if (H::Entities.IsPowerup(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 			return Vars::Chams::World::Powerups.Value;
 		}
-		else if (H::Entities.IsSpellbook(pEntity))
+		else if (H::Entities.IsSpellbook(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 			return Vars::Chams::World::Halloween.Value;

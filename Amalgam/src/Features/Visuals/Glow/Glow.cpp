@@ -157,25 +157,25 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 		return Vars::Glow::World::Halloween.Value;
 	case ETFClassID::CBaseAnimating:
 	{
-		if (H::Entities.IsAmmo(pEntity))
+		if (H::Entities.IsAmmo(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pGlow = Glow_t(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Ammo.Value;
 			return Vars::Glow::World::Pickups.Value;
 		}
-		else if (H::Entities.IsHealth(pEntity))
+		else if (H::Entities.IsHealth(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pGlow = Glow_t(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Health.Value;
 			return Vars::Glow::World::Pickups.Value;
 		}
-		else if (H::Entities.IsPowerup(pEntity))
+		else if (H::Entities.IsPowerup(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pGlow = Glow_t(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Powerup.Value;
 			return Vars::Glow::World::Powerups.Value;
 		}
-		else if (H::Entities.IsSpellbook(pEntity))
+		else if (H::Entities.IsSpellbook(H::Entities.GetModel(pEntity->entindex())))
 		{
 			*pGlow = Glow_t(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 			*pColor = Vars::Colors::Halloween.Value;

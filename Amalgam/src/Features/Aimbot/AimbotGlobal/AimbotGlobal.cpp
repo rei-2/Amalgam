@@ -29,7 +29,7 @@ bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLo
 	float flMinFOV = 180.f;
 	for (int nHitbox = 0; nHitbox < pTarget->GetNumOfHitboxes(); nHitbox++)
 	{
-		if (!IsHitboxValid(nHitbox, iHitboxes))
+		if (!IsHitboxValid(H::Entities.GetModel(pTarget->entindex()), nHitbox, iHitboxes))
 			continue;
 
 		Vec3 vCurPos = pTarget->GetHitboxCenter(nHitbox);
@@ -47,29 +47,61 @@ bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLo
 	return flMinFOV < Vars::Aimbot::General::AimFOV.Value;
 }
 
-bool CAimbotGlobal::IsHitboxValid(int nHitbox, int iHitboxes)
+bool CAimbotGlobal::IsHitboxValid(uint32_t uHash, int nHitbox, int iHitboxes)
 {
-	switch (nHitbox)
+	switch (uHash)
 	{
-	case -1: return true;
-	case HITBOX_HEAD: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Head;
-	case HITBOX_PELVIS: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Pelvis;
-	case HITBOX_BODY:
-	case HITBOX_THORAX:
-	case HITBOX_CHEST:
-	case HITBOX_UPPER_CHEST: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Body;
-	case HITBOX_RIGHT_HAND:
-	case HITBOX_LEFT_HAND:
-	case HITBOX_RIGHT_UPPER_ARM:
-	case HITBOX_RIGHT_FOREARM:
-	case HITBOX_LEFT_UPPER_ARM:
-	case HITBOX_LEFT_FOREARM: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Arms;
-	case HITBOX_RIGHT_THIGH:
-	case HITBOX_LEFT_THIGH:
-	case HITBOX_RIGHT_CALF:
-	case HITBOX_LEFT_CALF:
-	case HITBOX_RIGHT_FOOT:
-	case HITBOX_LEFT_FOOT: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Legs;
+	case FNV1A::Hash32Const("models/vsh/player/saxton_hale.mdl"):
+	{
+		switch (nHitbox)
+		{
+		case -1: return true;
+		case HITBOX_SAXTON_HEAD: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Head;
+		case HITBOX_SAXTON_BODY:
+		case HITBOX_SAXTON_THORAX:
+		case HITBOX_SAXTON_CHEST:
+		case HITBOX_SAXTON_UPPER_CHEST:
+		case HITBOX_SAXTON_NECK: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Body;
+		case HITBOX_SAXTON_PELVIS: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Pelvis;
+		case HITBOX_SAXTON_LEFT_UPPER_ARM:
+		case HITBOX_SAXTON_LEFT_FOREARM:
+		case HITBOX_SAXTON_LEFT_HAND:
+		case HITBOX_SAXTON_RIGHT_UPPER_ARM:
+		case HITBOX_SAXTON_RIGHT_FOREARM:
+		case HITBOX_SAXTON_RIGHT_HAND: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Arms;
+		case HITBOX_SAXTON_LEFT_THIGH:
+		case HITBOX_SAXTON_LEFT_CALF:
+		case HITBOX_SAXTON_LEFT_FOOT:
+		case HITBOX_SAXTON_RIGHT_THIGH:
+		case HITBOX_SAXTON_RIGHT_CALF:
+		case HITBOX_SAXTON_RIGHT_FOOT: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Legs;
+		}
+	}
+	default:
+	{
+		switch (nHitbox)
+		{
+		case -1: return true;
+		case HITBOX_HEAD: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Head;
+		case HITBOX_BODY:
+		case HITBOX_THORAX:
+		case HITBOX_CHEST:
+		case HITBOX_UPPER_CHEST: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Body;
+		case HITBOX_PELVIS: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Pelvis;
+		case HITBOX_LEFT_UPPER_ARM:
+		case HITBOX_LEFT_FOREARM:
+		case HITBOX_LEFT_HAND:
+		case HITBOX_RIGHT_UPPER_ARM:
+		case HITBOX_RIGHT_FOREARM:
+		case HITBOX_RIGHT_HAND: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Arms;
+		case HITBOX_LEFT_THIGH:
+		case HITBOX_LEFT_CALF:
+		case HITBOX_LEFT_FOOT:
+		case HITBOX_RIGHT_THIGH:
+		case HITBOX_RIGHT_CALF:
+		case HITBOX_RIGHT_FOOT: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Legs;
+		}
+	}
 	}
 
 	return false;
