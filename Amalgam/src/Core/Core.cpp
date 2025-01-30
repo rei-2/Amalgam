@@ -14,8 +14,10 @@ static inline bool CheckDXLevel()
 	auto mat_dxlevel = U::ConVars.FindVar("mat_dxlevel");
 	if (mat_dxlevel->GetInt() < 90)
 	{
-		//U::Core.AppendFailText("You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.");
-		U::Core.AppendFailText("You are running with graphics options that Amalgam does not support.\nIt is recommended for -dxlevel to be at least 90.");
+		//const char* sMessage = "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.";
+		const char* sMessage = "You are running with graphics options that Amalgam does not support.\nIt is recommended for -dxlevel to be at least 90.";
+		U::Core.AppendFailText(sMessage);
+		SDK::Output("Amalgam", sMessage, { 175, 150, 255, 255 }, true, false, false, true);
 		//return false;
 	}
 
