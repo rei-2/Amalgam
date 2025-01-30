@@ -129,7 +129,7 @@ void CMenu::MenuAimbot()
 				TableNextColumn();
 				if (Section("General"))
 				{
-					FDropdown("Aim type", Vars::Aimbot::General::AimType, { "Off", "Plain", "Smooth", "Silent" }, {}, FDropdown_Left);
+					FDropdown("Aim type", Vars::Aimbot::General::AimType, { "Off", "Plain", "Smooth", "Silent", "Locking" }, {}, FDropdown_Left);
 					FDropdown("Target selection", Vars::Aimbot::General::TargetSelection, { "FOV", "Distance" }, {}, FDropdown_Right);
 					FDropdown("Target", Vars::Aimbot::General::Target, { "Players", "Sentries", "Dispensers", "Teleporters", "Stickies", "NPCs", "Bombs" }, {}, FDropdown_Multi | FDropdown_Left);
 					FDropdown("Ignore", Vars::Aimbot::General::Ignore, { "Friends", "Party", "Invulnerable", "Cloaked", "Unsimulated players", "Dead Ringer", "Vaccinator", "Disguised", "Taunting" }, {}, FDropdown_Multi | FDropdown_Right);
@@ -205,7 +205,7 @@ void CMenu::MenuAimbot()
 					FDropdown("Splash", Vars::Aimbot::Projectile::SplashPrediction, { "Off", "Include", "Prefer", "Only" }, {}, FDropdown_Right);
 					FDropdown("Auto detonate", Vars::Aimbot::Projectile::AutoDetonate, { "Stickies", "Flares" }, {}, FDropdown_Multi | FDropdown_Left);
 					FDropdown("Auto airblast", Vars::Aimbot::Projectile::AutoAirblast, { "Off", "Legit", "Rage" }, {}, FDropdown_Right);
-					FDropdown("Modifiers## Projectile", Vars::Aimbot::Projectile::Modifiers, { "Charge shot", "Cancel charge", "Bodyaim if lethal", "Use prime time" }, {}, FDropdown_Multi);
+					FDropdown("Modifiers## Projectile", Vars::Aimbot::Projectile::Modifiers, { "Charge shot", "Cancel charge", "Bodyaim if lethal", "Use prime time", "Aim blast at feet" }, {}, FDropdown_Multi);
 					FSlider("Max simulation time", Vars::Aimbot::Projectile::PredictionTime, 0.1f, 10.f, 0.25f, "%gs", FSlider_Min | FSlider_Precision);
 					PushTransparent(!FGet(Vars::Aimbot::Projectile::StrafePrediction));
 						FSlider("Hit chance", Vars::Aimbot::Projectile::Hitchance, 0.f, 100.f, 5.f, "%g%%", FSlider_Clamp | FSlider_Precision);
@@ -283,7 +283,9 @@ void CMenu::MenuAimbot()
 				{
 					if (Section("debug## melee"))
 					{
-						FSlider("swing ticks", Vars::Aimbot::Melee::SwingTicks, 10, 14);
+						FSlider("swing ticks", Vars::Aimbot::Melee::SwingTicks, 10, 14, 1, "%i", FSlider_Left);
+						FToggle("swing predict lag", Vars::Aimbot::Melee::SwingPredictLag, FToggle_Right);
+						SetCursorPosY(GetCursorPosY() + 8);
 						FToggle("backstab account ping", Vars::Aimbot::Melee::BackstabAccountPing, FToggle_Left);
 						FToggle("backstab double test", Vars::Aimbot::Melee::BackstabDoubleTest, FToggle_Right);
 					}
@@ -308,6 +310,7 @@ void CMenu::MenuAimbot()
 					FSlider("Tick limit", Vars::CL_Move::Doubletap::TickLimit, 2, 22, 1, "%i", FSlider_Clamp);
 					FSlider("Warp rate", Vars::CL_Move::Doubletap::WarpRate, 2, 22, 1, "%i", FSlider_Clamp);
 					FSlider("Passive recharge", Vars::CL_Move::Doubletap::PassiveRecharge, 0, 67, 1, "%i", FSlider_Clamp);
+					FSlider("Recharge limit", Vars::CL_Move::Doubletap::RechargeLimit, 1, 24, 1, "%i", FSlider_Clamp);
 				} EndSection();
 				if (Section("Fakelag"))
 				{
@@ -1716,9 +1719,9 @@ void CMenu::MenuSettings()
 							if (bEdit)
 								CurrentBind = CurrentBind != _iBind ? _iBind : DEFAULT_BIND;
 							if (bVisibility)
-								F::Binds.vBinds[_iBind].Visible = !_tBind.Visible;
+								_tBind.Visible = !_tBind.Visible;
 							if (bNot)
-								F::Binds.vBinds[_iBind].Not = !_tBind.Not;
+								_tBind.Not = !_tBind.Not;
 
 							y = getBinds(_iBind, x + 1, y);
 						}
@@ -2420,7 +2423,7 @@ void CMenu::DrawBinds()
 {
 	using namespace ImGui;
 
-	if (IsOpen ? !FGet(Vars::Menu::ShowBinds) : !Vars::Menu::ShowBinds.Value || I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo())
+	if (IsOpen ? false : !Vars::Menu::ShowBinds.Value || I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo())
 		return;
 
 	static DragBox_t old = { -2147483648, -2147483648 };
@@ -2428,7 +2431,7 @@ void CMenu::DrawBinds()
 	if (info != old)
 		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
 
-	std::vector<std::tuple<bool, const char*, std::string, std::string>> vBinds;
+	std::vector<std::tuple<bool, const char*, std::string, std::string, int, Bind_t&>> vBinds;
 	std::function<void(int)> getBinds = [&](int iParent)
 		{
 			for (auto it = F::Binds.vBinds.begin(); it != F::Binds.vBinds.end(); it++)
@@ -2438,54 +2441,54 @@ void CMenu::DrawBinds()
 				if (iParent != tBind.Parent)
 					continue;
 
-				if (tBind.Visible)
+				if (tBind.Visible || IsOpen)
 				{
-					std::string info; std::string state;
+					std::string sInfo; std::string sState;
 					switch (tBind.Type)
 					{
 					// key
 					case 0:
 						switch (tBind.Info)
 						{
-						case 0: { info = "hold"; break; }
-						case 1: { info = "toggle"; break; }
-						case 2: { info = "double"; break; }
+						case 0: { sInfo = "hold"; break; }
+						case 1: { sInfo = "toggle"; break; }
+						case 2: { sInfo = "double"; break; }
 						}
-						state = VK2STR(tBind.Key);
+						sState = VK2STR(tBind.Key);
 						break;
 					// class
 					case 1:
-						info = "class";
+						sInfo = "class";
 						switch (tBind.Info)
 						{
-						case 0: { state = "scout"; break; }
-						case 1: { state = "soldier"; break; }
-						case 2: { state = "pyro"; break; }
-						case 3: { state = "demoman"; break; }
-						case 4: { state = "heavy"; break; }
-						case 5: { state = "engineer"; break; }
-						case 6: { state = "medic"; break; }
-						case 7: { state = "sniper"; break; }
-						case 8: { state = "spy"; break; }
+						case 0: { sState = "scout"; break; }
+						case 1: { sState = "soldier"; break; }
+						case 2: { sState = "pyro"; break; }
+						case 3: { sState = "demoman"; break; }
+						case 4: { sState = "heavy"; break; }
+						case 5: { sState = "engineer"; break; }
+						case 6: { sState = "medic"; break; }
+						case 7: { sState = "sniper"; break; }
+						case 8: { sState = "spy"; break; }
 						}
 						break;
 					// weapon type
 					case 2:
-						info = "weapon";
+						sInfo = "weapon";
 						switch (tBind.Info)
 						{
-						case 0: { state = "hitscan"; break; }
-						case 1: { state = "projectile"; break; }
-						case 2: { state = "melee"; break; }
+						case 0: { sState = "hitscan"; break; }
+						case 1: { sState = "projectile"; break; }
+						case 2: { sState = "melee"; break; }
 						}
 					}
 					if (tBind.Not)
-						info = std::format("not {}", info);
+						sInfo = std::format("not {}", sInfo);
 
-					vBinds.push_back({ tBind.Active, tBind.Name.c_str(), info, state });
+					vBinds.push_back({ tBind.Active, tBind.Name.c_str(), sInfo, sState, iBind, tBind });
 				}
 
-				if (tBind.Active)
+				if (tBind.Active || IsOpen)
 					getBinds(iBind);
 			}
 		};
@@ -2502,7 +2505,7 @@ void CMenu::DrawBinds()
 	else
 	{
 		PushFont(F::Render.FontSmall);
-		for (auto& [_, sName, sInfo, sState] : vBinds)
+		for (auto& [_, sName, sInfo, sState, iBind, tBind] : vBinds)
 		{
 			flNameWidth = std::max(flNameWidth, FCalcTextSize(sName).x);
 			flInfoWidth = std::max(flInfoWidth, FCalcTextSize(sInfo.c_str()).x);
@@ -2512,7 +2515,7 @@ void CMenu::DrawBinds()
 		flNameWidth += H::Draw.Scale(9), flInfoWidth += H::Draw.Scale(9), flStateWidth += H::Draw.Scale(9);
 	}
 
-	float flWidth = flNameWidth + flInfoWidth + flStateWidth + H::Draw.Scale(14);
+	float flWidth = flNameWidth + flInfoWidth + flStateWidth + (IsOpen ? H::Draw.Scale(88) : H::Draw.Scale(14));
 	float flHeight = H::Draw.Scale(18 * vBinds.size() + 40);
 	SetNextWindowSize({ flWidth, flHeight });
 	PushStyleVar(ImGuiStyleVar_WindowMinSize, { H::Draw.Scale(40), H::Draw.Scale(40) });
@@ -2533,7 +2536,7 @@ void CMenu::DrawBinds()
 		GetWindowDrawList()->AddRectFilled({ vWindowPos.x + H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(26) }, { vWindowPos.x + flWidth - H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(27) }, F::Render.Accent, H::Draw.Scale(3));
 
 		PushFont(F::Render.FontSmall);
-		int i = 0; for (auto& [bActive, sName, sInfo, sState] : vBinds)
+		int i = 0; for (auto& [bActive, sName, sInfo, sState, iBind, tBind] : vBinds)
 		{
 			float flPosX = 0;
 
@@ -2549,6 +2552,46 @@ void CMenu::DrawBinds()
 			SetCursorPos({ flPosX += flInfoWidth, H::Draw.Scale(34 + 18 * i) });
 			FText(sState.c_str());
 			PopStyleColor();
+
+			if (IsOpen)
+			{	// buttons
+				SetCursorPos({ flWidth - H::Draw.Scale(25), H::Draw.Scale(33 + 18 * i) });
+				bool bDelete = IconButton(ICON_MD_DELETE);
+
+				SetCursorPos({ flWidth - H::Draw.Scale(50), H::Draw.Scale(33 + 18 * i) });
+				bool bNot = IconButton(!tBind.Not ? ICON_MD_CODE : ICON_MD_CODE_OFF);
+
+				SetCursorPos({ flWidth - H::Draw.Scale(75), H::Draw.Scale(33 + 18 * i) });
+				bool bVisibility = IconButton(tBind.Visible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF);
+
+				PushFont(F::Render.FontRegular);
+				PushStyleVar(ImGuiStyleVar_WindowPadding, { H::Draw.Scale(8), H::Draw.Scale(8) });
+
+				if (bDelete)
+					OpenPopup(std::format("Confirmation## DeleteCond{}", iBind).c_str());
+				if (BeginPopupModal(std::format("Confirmation## DeleteCond{}", iBind).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+				{
+					FText(std::format("Do you really want to delete '{}'{}?", tBind.Name, F::Binds.HasChildren(iBind) ? " and all of its children" : "").c_str());
+
+					SetCursorPosY(GetCursorPosY() - 8); // stupid and i don't know why this is needed here
+					if (FButton("Yes", FButton_Left))
+					{
+						F::Binds.RemoveBind(iBind);
+						CloseCurrentPopup();
+					}
+					if (FButton("No", FButton_Right | FButton_SameLine))
+						CloseCurrentPopup();
+
+					EndPopup();
+				}
+				if (bNot)
+					tBind.Not = !tBind.Not;
+				if (bVisibility)
+					tBind.Visible = !tBind.Visible;
+
+				PopStyleVar();
+				PopFont();
+			}
 
 			i++;
 		}

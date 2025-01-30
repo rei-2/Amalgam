@@ -228,7 +228,7 @@ void CEntities::Store()
 
 		Vec3 vOldAngles = m_mEyeAngles[n], vNewAngles = pPlayer->As<CTFPlayer>()->GetEyeAngles();
 		m_mEyeAngles[n] = vNewAngles;
-		m_mPingAngles[n] = (vNewAngles - vOldAngles) / (flSimTime - flOldSimTime) * (F::Backtrack.GetReal() + TICKS_TO_TIME(G::AnticipatedChoke));
+		m_mPingAngles[n] = (vNewAngles - vOldAngles) / (flSimTime - flOldSimTime) * (F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke()));
 	}
 
 	for (auto pEntity : GetGroup(EGroupType::PLAYERS_ALL))

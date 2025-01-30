@@ -54,6 +54,7 @@ public:
 	float GetLerp();
 	float GetFake();
 	float GetReal(int iFlow = -1, bool bNoFake = true);
+	int GetAnticipatedChoke(int iMethod = Vars::Aimbot::General::AimType.Value);
 
 	std::deque<TickRecord>* GetRecords(CBaseEntity* pEntity);
 	std::deque<TickRecord> GetValidRecords(std::deque<TickRecord>* pRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false);

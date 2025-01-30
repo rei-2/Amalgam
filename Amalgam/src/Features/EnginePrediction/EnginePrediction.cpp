@@ -92,6 +92,8 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	m_vVelocity = pLocal->m_vecVelocity();
 	m_vDirection = { m_MoveData.m_flForwardMove, -m_MoveData.m_flSideMove, m_MoveData.m_flUpMove };
 	m_vAngles = m_MoveData.m_vecViewAngles;
+	m_iButtons = pCmd->buttons;
+	m_iFlags = pLocal->m_fFlags();
 }
 
 

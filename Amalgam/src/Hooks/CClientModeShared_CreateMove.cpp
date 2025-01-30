@@ -46,7 +46,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 			int iOldItemDefinitionIndex = iStaticItemDefinitionIndex;
 			int iNewItemDefinitionIndex = iStaticItemDefinitionIndex = pWeapon->m_iItemDefinitionIndex();
 
-			if (iNewItemDefinitionIndex != iOldItemDefinitionIndex || !pWeapon->m_iClip1() || !pLocal->IsAlive() || pLocal->IsTaunting() || pLocal->IsBonked() || pLocal->IsAGhost() || pLocal->IsInBumperKart())
+			if (iNewItemDefinitionIndex != iOldItemDefinitionIndex || !pWeapon->m_iClip1() || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->InCond(TF_COND_PHASE) || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 				F::Ticks.m_iWait = 1;
 		}
 
@@ -154,10 +154,10 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 
 	{
 		static bool bWasSet = false;
-		const bool bOverchoking = I::ClientState->chokedcommands >= 21 || F::Ticks.m_iShiftedTicks + I::ClientState->chokedcommands == F::Ticks.m_iMaxShift + (F::AntiAim.YawOn() ? 3 : 0); // failsafe
-		if (G::PSilentAngles && !bOverchoking)
+		const bool bCanChoke = F::Ticks.CanChoke(); // failsafe
+		if (G::PSilentAngles && bCanChoke)
 			*pSendPacket = false, bWasSet = true;
-		else if (bWasSet || bOverchoking)
+		else if (bWasSet || !bCanChoke)
 			*pSendPacket = true, bWasSet = false;
 	}
 	F::Ticks.ManagePacket(pCmd, pSendPacket);

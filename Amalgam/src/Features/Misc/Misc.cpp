@@ -17,7 +17,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 	AntiAFK(pLocal, pCmd);
 	InstantRespawnMVM(pLocal);
 
-	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->IsCharging() || pLocal->IsInBumperKart())
+	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->InCond(TF_COND_SHIELD_CHARGE) || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
 	AutoJump(pLocal, pCmd);
@@ -30,7 +30,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 {
-	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->IsCharging())
+	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->InCond(TF_COND_SHIELD_CHARGE))
 		return;
 
 	TauntKartControl(pLocal, pCmd);
@@ -338,7 +338,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 		G::SilentAngles = true;
 	}
-	else if (Vars::Misc::Automation::KartControl.Value && pLocal->IsInBumperKart())
+	else if (Vars::Misc::Automation::KartControl.Value && pLocal->InCond(TF_COND_HALLOWEEN_KART))
 	{
 		const bool bForward = pCmd->buttons & IN_FORWARD;
 		const bool bBack = pCmd->buttons & IN_BACK;
@@ -358,7 +358,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 		}
 		else if (pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT))
 		{
-			if (flipVar || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift)
+			if (flipVar || !F::Ticks.CanChoke())
 			{	// you could just do this if you didn't care about viewangles
 				const Vec3 vecMove(pCmd->forwardmove, pCmd->sidemove, 0.f);
 				const float flLength = vecMove.Length();
@@ -380,7 +380,7 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!pLocal->m_hGroundEntity() || pLocal->IsInBumperKart())
+	if (!pLocal->m_hGroundEntity() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
 	const float flSpeed = pLocal->m_vecVelocity().Length2D();
@@ -447,14 +447,14 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 
 int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 {
-	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || !pLocal || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsInBumperKart())
+	if (!Vars::Misc::Automation::AntiBackstab.Value || !bSendPacket || G::Attacking == 1 || !pLocal || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return 0;
 
 	std::vector<std::pair<Vec3, CBaseEntity*>> vTargets = {};
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsCloaked())
+		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
 			continue;
 
 		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();

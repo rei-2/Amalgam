@@ -56,7 +56,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				continue;
 
 			if (pWeapon->m_iItemDefinitionIndex() == Sniper_m_TheSydneySleeper && bTeammate
-				&& (!(Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::ExtinguishTeam) || !pEntity->As<CTFPlayer>()->IsOnFire()))
+				&& (!(Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::ExtinguishTeam) || !pEntity->As<CTFPlayer>()->InCond(TF_COND_BURNING)))
 				continue;
 
 			float flFOVTo; Vec3 vPos, vAngleTo;
@@ -158,50 +158,60 @@ std::vector<Target_t> CAimbotHitscan::SortTargets(CTFPlayer* pLocal, CTFWeaponBa
 int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pTarget)
 {
 	bool bHeadshot = false;
+	if (pTarget->IsPlayer())
 	{
-		const int nClassNum = pLocal->m_iClass();
-
-		if (nClassNum == TF_CLASS_SNIPER)
+		switch (pWeapon->GetWeaponID())
 		{
-			if (pWeapon->m_iItemDefinitionIndex() != Sniper_m_TheClassic ? pLocal->IsScoped() : pWeapon->As<CTFSniperRifle>()->m_flChargedDamage() == 150.f)
+		case TF_WEAPON_SNIPERRIFLE:
+		case TF_WEAPON_SNIPERRIFLE_DECAP:
+		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
+		{
+			auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
+
+			if (G::CanHeadshot
+				|| pLocal->InCond(TF_COND_AIMING) && (
+					pSniperRifle->GetRifleType() == RIFLE_JARATE && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0
+					|| Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot
+				))
+				bHeadshot = true;
+			break;
+		}
+		case TF_WEAPON_REVOLVER:
+		{
+			if (SDK::AttribHookValue(0, "set_weapon_mode", pWeapon) == 1
+				&& (pWeapon->AmbassadorCanHeadshot() || Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot))
 				bHeadshot = true;
 		}
-		if (nClassNum == TF_CLASS_SPY)
-		{
-			switch (pWeapon->m_iItemDefinitionIndex())
-			{
-			case Spy_m_TheAmbassador:
-			case Spy_m_FestiveAmbassador:
-				if (pWeapon->AmbassadorCanHeadshot())
-					bHeadshot = true;
-			}
 		}
 
-		if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::BodyaimIfLethal && bHeadshot && pTarget->IsPlayer())
+		if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::BodyaimIfLethal && bHeadshot)
 		{
+			auto pPlayer = pTarget->As<CTFPlayer>();
+
+			switch (pWeapon->GetWeaponID())
 			{
-				float flMult = SDK::AttribHookValue(1.f, "mult_dmg", pWeapon);
-				switch (pWeapon->m_iItemDefinitionIndex())
-				{
-				case Sniper_m_TheClassic: flMult = 0.9f; break;
-				case Sniper_m_TheHitmansHeatmaker: flMult = 0.8f; break;
-				case Sniper_m_TheMachina:
-				case Sniper_m_ShootingStar: if (pWeapon->As<CTFSniperRifle>()->m_flChargedDamage() == 150.f) flMult = 1.15f;
-				}
-				if (std::max(pWeapon->As<CTFSniperRifle>()->m_flChargedDamage(), 50.f) * flMult >= pTarget->As<CTFPlayer>()->m_iHealth())
+			case TF_WEAPON_SNIPERRIFLE:
+			case TF_WEAPON_SNIPERRIFLE_DECAP:
+			case TF_WEAPON_SNIPERRIFLE_CLASSIC:
+			{
+				auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
+
+				int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
+				if (pPlayer->m_iHealth() <= iDamage)
 					bHeadshot = false;
+				break;
 			}
-
-			switch (pWeapon->m_iItemDefinitionIndex())
+			case TF_WEAPON_REVOLVER:
 			{
-			case Spy_m_TheAmbassador:
-			case Spy_m_FestiveAmbassador:
-			{
-				const float flDistTo = pTarget->m_vecOrigin().DistTo(pLocal->m_vecOrigin());
-				const int nAmbassadorBodyshotDamage = Math::RemapValClamped(flDistTo, 90, 900, 51, 18);
+				if (SDK::AttribHookValue(0, "set_weapon_mode", pWeapon) == 1)
+				{
+					float flDistTo = pTarget->m_vecOrigin().DistTo(pLocal->m_vecOrigin());
 
-				if (pTarget->As<CTFPlayer>()->m_iHealth() < nAmbassadorBodyshotDamage + 2) // whatever
-					bHeadshot = false;
+					float flMult = SDK::AttribHookValue(1.f, "mult_dmg", pWeapon);
+					int iDamage = std::ceil(Math::RemapValClamped(flDistTo, 90.f, 900.f, 60.f, 21.f) * flMult);
+					if (pPlayer->m_iHealth() <= iDamage)
+						bHeadshot = false;
+				}
 			}
 			}
 		}
@@ -530,67 +540,57 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 {
 	if (!Vars::Aimbot::General::AutoShoot.Value) return false;
 
-	switch (pLocal->m_iClass())
+	if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot)
 	{
-	case TF_CLASS_SNIPER:
-	{
-		const bool bIsScoped = pLocal->IsScoped();
-
-		if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot)
+		switch (pWeapon->GetWeaponID())
 		{
-			if (pWeapon->m_iItemDefinitionIndex() != Sniper_m_TheClassic
-				&& pWeapon->m_iItemDefinitionIndex() != Sniper_m_TheSydneySleeper
-				&& !G::CanHeadshot && bIsScoped)
-			{
+		case TF_WEAPON_SNIPERRIFLE:
+		case TF_WEAPON_SNIPERRIFLE_DECAP:
+			if (!G::CanHeadshot && pLocal->InCond(TF_COND_AIMING) && pWeapon->As<CTFSniperRifle>()->GetRifleType() != RIFLE_JARATE)
 				return false;
-			}
+			break;
+		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
+			if (!G::CanHeadshot)
+				return false;
+			break;
+		case TF_WEAPON_REVOLVER:
+			if (!pWeapon->AmbassadorCanHeadshot())
+				return false;
 		}
+	}
 
-		if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForCharge && (bIsScoped || pWeapon->m_iItemDefinitionIndex() == Sniper_m_TheClassic))
+	if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForCharge)
+	{
+		switch (pWeapon->GetWeaponID())
+		{
+		case TF_WEAPON_SNIPERRIFLE:
+		case TF_WEAPON_SNIPERRIFLE_DECAP:
+		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 		{
 			auto pPlayer = target.m_pEntity->As<CTFPlayer>();
 			auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
-			const int nHealth = pPlayer->m_iHealth();
-			const bool bIsCritBoosted = pLocal->IsCritBoosted();
 
-			if (target.m_nAimedHitbox == HITBOX_HEAD && pWeapon->m_iItemDefinitionIndex() != Sniper_m_TheSydneySleeper && (pWeapon->m_iItemDefinitionIndex() != Sniper_m_TheClassic ?  true : pSniperRifle->m_flChargedDamage() == 150.f))
+			if (!pLocal->InCond(TF_COND_AIMING) || pSniperRifle->m_flChargedDamage() == 150.f)
+				return true;
+
+			if (target.m_nAimedHitbox == HITBOX_HEAD && (pWeapon->m_iItemDefinitionIndex() != Sniper_m_TheClassic ? true : pSniperRifle->m_flChargedDamage() == 150.f))
 			{
-				if (nHealth > 150)
-				{
-					int iDamage = Math::RemapValClamped(pSniperRifle->m_flChargedDamage(), 50.f, 150.f, 50.f, 450.f);
-					if (iDamage < nHealth && iDamage != 450)
-						return false;
-				}
-				else if (!bIsCritBoosted && !G::CanHeadshot)
-					return false;
+				if (pSniperRifle->GetRifleType() == RIFLE_JARATE)
+					return true;
+
+				int iHeadDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetHeadshotMult(pPlayer));
+				if (pPlayer->m_iHealth() <= iHeadDamage && (G::CanHeadshot || pLocal->IsCritBoosted()))
+					return true;
 			}
 			else
 			{
-				if (nHealth > (bIsCritBoosted ? 150 : 50))
-				{
-					float flMult = SDK::AttribHookValue(1.f, "mult_dmg", pWeapon);
-					switch (pWeapon->m_iItemDefinitionIndex())
-					{
-					case Sniper_m_TheClassic: flMult = 0.9f; break;
-					case Sniper_m_TheHitmansHeatmaker: flMult = 0.8f; break;
-					case Sniper_m_TheMachina:
-					case Sniper_m_ShootingStar: if (pSniperRifle->m_flChargedDamage() == 150.f) flMult = 1.15f;
-					}
-
-					float flCritMult = bIsCritBoosted ? 3.f : pPlayer->IsInJarate() ? 1.36f : 1.f;
-					int iDamage = pSniperRifle->m_flChargedDamage() * flCritMult * flMult;
-					if (iDamage < pPlayer->m_iHealth() && pSniperRifle->m_flChargedDamage() != 150.f)
-						return false;
-				}
+				int iBodyDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
+				if (pPlayer->m_iHealth() <= iBodyDamage)
+					return true;
 			}
-		}
-
-		break;
-	}
-	case TF_CLASS_SPY:
-		if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot && !pWeapon->AmbassadorCanHeadshot())
 			return false;
-		break;
+		}
+		}
 	}
 
 	return true;
@@ -608,6 +608,7 @@ Vec3 CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
+	case Vars::Aimbot::General::AimTypeEnum::Locking:
 		vReturn = vToAngle;
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
@@ -630,17 +631,29 @@ Vec3 CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 // assume angle calculated outside with other overload
 void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle)
 {
-	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
-	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Silent)
+	switch (Vars::Aimbot::General::AimType.Value)
 	{
+	case Vars::Aimbot::General::AimTypeEnum::Plain:
+	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 		pCmd->viewangles = vAngle;
 		I::EngineClient->SetViewAngles(vAngle);
+		break;
+	case Vars::Aimbot::General::AimTypeEnum::Silent:
+	{
+		bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
+		if (G::Attacking == 1 || bDoubleTap)
+		{
+			SDK::FixMovement(pCmd, vAngle);
+			pCmd->viewangles = vAngle;
+			G::SilentAngles = true;
+		}
+		break;
 	}
-	else if (G::Attacking == 1 || bDoubleTap)
+	case Vars::Aimbot::General::AimTypeEnum::Locking:
 	{
 		SDK::FixMovement(pCmd, vAngle);
 		pCmd->viewangles = vAngle;
-		G::SilentAngles = true;
+	}
 	}
 }
 
@@ -684,7 +697,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 	case TF_WEAPON_SNIPERRIFLE:
 	case TF_WEAPON_SNIPERRIFLE_DECAP:
 	{
-		const bool bScoped = pLocal->IsScoped();
+		const bool bScoped = pLocal->InCond(TF_COND_ZOOMED);
 
 		if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::AutoScope && !bScoped)
 		{
@@ -748,14 +761,12 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 				pCmd->buttons |= IN_ATTACK2;
 			}
 
-			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire && nWeaponID == TF_WEAPON_MINIGUN && !pLocal->IsPrecisionRune())
+			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire && pWeapon->GetWeaponSpread() != 0.f && !pLocal->InCond(TF_COND_RUNE_PRECISION)
+				&& pLocal->GetShootPos().DistTo(target.m_vPos) > Vars::Aimbot::Hitscan::TapFireDist.Value)
 			{
-				if (pLocal->GetShootPos().DistTo(target.m_vPos) > Vars::Aimbot::Hitscan::TapFireDist.Value && pWeapon->GetWeaponSpread() != 0.f)
-				{
-					const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
-					if (flTimeSinceLastShot <= (pWeapon->GetBulletsPerShot() > 1 ? 0.25f : 1.25f))
-						pCmd->buttons &= ~IN_ATTACK;
-				}
+				const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
+				if (flTimeSinceLastShot <= (pWeapon->GetBulletsPerShot() > 1 ? 0.25f : 1.25f))
+					pCmd->buttons &= ~IN_ATTACK;
 			}
 		}
 

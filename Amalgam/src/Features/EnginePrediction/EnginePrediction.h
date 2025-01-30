@@ -39,6 +39,8 @@ public:
 	Vec3 m_vVelocity = {};
 	Vec3 m_vDirection = {};
 	Vec3 m_vAngles = {};
+	int m_iButtons = 0;
+	int m_iFlags = 0;
 };
 
 ADD_FEATURE(CEnginePrediction, EnginePrediction)

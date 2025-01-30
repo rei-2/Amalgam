@@ -37,7 +37,7 @@ void KeyValues::Initialize(const char* name)
 
 KeyValues::KeyValues(const char* name)
 {
-	this->Initialize(name);
+	Initialize(name);
 }
 
 KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)

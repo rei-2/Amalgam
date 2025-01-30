@@ -34,6 +34,8 @@ public:
 	void SaveShootPos(CTFPlayer* pLocal);
 	Vec3 GetShootPos();
 
+	bool CanChoke();
+
 	bool m_bDoubletap = false;
 	bool m_bWarp = false;
 	bool m_bRecharge = false;

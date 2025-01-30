@@ -244,7 +244,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					pPlayer->InCond(TF_COND_MEGAHEAL) ||
 					pPlayer->InCond(TF_COND_HALLOWEEN_QUICK_HEAL) ||
 					pPlayer->InCond(TF_COND_HALLOWEEN_HELL_HEAL) ||
-					pPlayer->IsBuffedByKing())
+					pPlayer->InCond(TF_COND_KING_BUFFED))
 					tCache.m_vText.push_back({ TextRight, "HP+", Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value });
 				else if (pPlayer->InCond(TF_COND_HEALTH_OVERHEALED))
 					tCache.m_vText.push_back({ TextRight, "HP", Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value });

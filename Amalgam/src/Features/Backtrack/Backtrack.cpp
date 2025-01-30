@@ -42,6 +42,17 @@ float CBacktrack::GetReal(int iFlow, bool bNoFake)
 	return pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - (bNoFake ? m_flFakeLatency : 0.f);
 }
 
+// Returns the current anticipated choke
+int CBacktrack::GetAnticipatedChoke(int iMethod)
+{
+	int iAnticipatedChoke = 0;
+	if (F::Ticks.CanChoke() && G::PrimaryWeaponType != EWeaponType::HITSCAN && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
+		iAnticipatedChoke = 1;
+	if (F::FakeLag.m_iGoal && !Vars::CL_Move::Fakelag::UnchokeOnAttack.Value && F::Ticks.m_iShiftedTicks == F::Ticks.m_iShiftedGoal && !F::Ticks.m_bDoubletap && !F::Ticks.m_bSpeedhack)
+		iAnticipatedChoke = F::FakeLag.m_iGoal - I::ClientState->chokedcommands; // iffy, unsure if there is a good way to get it to work well without unchoking
+	return iAnticipatedChoke;
+}
+
 void CBacktrack::SendLerp()
 {
 	auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
@@ -110,8 +121,8 @@ std::deque<TickRecord> CBacktrack::GetValidRecords(std::deque<TickRecord>* pReco
 	if (!pNetChan)
 		return vRecords;
 
-	float flCorrect = std::clamp(pNetChan->GetLatency(FLOW_OUTGOING) + ROUND_TO_TICKS(m_flFakeInterp) + ROUND_TO_TICKS(m_flFakeLatency), 0.f, m_flMaxUnlag) - pNetChan->GetLatency(FLOW_OUTGOING);
-	int iServerTick = m_iTickCount + G::AnticipatedChoke + Vars::Backtrack::Offset.Value;
+	float flCorrect = std::clamp(pNetChan->GetLatency(FLOW_OUTGOING) + pNetChan->GetLatency(FLOW_INCOMING) + ROUND_TO_TICKS(m_flFakeInterp), 0.f, m_flMaxUnlag);
+	int iServerTick = m_iTickCount + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(pNetChan->GetLatency(FLOW_OUTGOING));
 
 	for (auto& tRecord : *pRecords)
 	{
@@ -263,13 +274,6 @@ void CBacktrack::FrameStageNotify()
 void CBacktrack::Run(CUserCmd* pCmd)
 {
 	SendLerp();
-
-	// might not even be necessary
-	G::AnticipatedChoke = 0;
-	if (F::Ticks.m_iShiftedTicks != F::Ticks.m_iMaxShift && G::PrimaryWeaponType != EWeaponType::HITSCAN && Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
-		G::AnticipatedChoke = 1;
-	if (F::FakeLag.m_iGoal && !Vars::CL_Move::Fakelag::UnchokeOnAttack.Value && F::Ticks.m_iShiftedTicks == F::Ticks.m_iShiftedGoal && !F::Ticks.m_bDoubletap && !F::Ticks.m_bSpeedhack)
-		G::AnticipatedChoke = F::FakeLag.m_iGoal - I::ClientState->chokedcommands; // iffy, unsure if there is a good way to get it to work well without unchoking
 }
 
 void CBacktrack::ResolverUpdate(CBaseEntity* pEntity)

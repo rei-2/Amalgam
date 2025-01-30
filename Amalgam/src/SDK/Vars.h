@@ -90,7 +90,7 @@ namespace Vars
 		CVar(MenuPrimaryKey, VK_INSERT, NOBIND)
 		CVar(MenuSecondaryKey, VK_F3, NOBIND)
 
-		CVar(ShowBinds, false)
+		CVar(ShowBinds, true)
 		CVar(BindsDisplay, DragBox_t(), NOBIND)
 		CVar(MenuShowsBinds, false, NOBIND)
 
@@ -117,7 +117,7 @@ namespace Vars
 
 	NAMESPACE_BEGIN(Aimbot)
 		SUBNAMESPACE_BEGIN(General)
-			CVarEnum(AimType, 0, NONE, Off, Plain, Smooth, Silent)
+			CVarEnum(AimType, 0, NONE, Off, Plain, Smooth, Silent, Locking)
 			CVarEnum(TargetSelection, 0, NONE, FOV, Distance)
 			CVarEnum(Target, 0b0000001, NONE, Players = 1 << 0, Sentry = 1 << 1, Dispenser = 1 << 2, Teleporter = 1 << 3, Stickies = 1 << 4, NPCs = 1 << 5, Bombs = 1 << 6)
 			CVarEnum(Ignore, 0b000000000, NONE, Friends = 1 << 0, Party = 1 << 1, Invulnerable = 1 << 2, Cloaked = 1 << 3, Unsimulated = 1 << 4, DeadRinger = 1 << 5, Vaccinator = 1 << 6, Disguised = 1 << 7, Taunting = 1 << 8)
@@ -151,7 +151,7 @@ namespace Vars
 			CVarEnum(SplashPrediction, 0, NONE, Off, Include, Prefer, Only)
 			CVarEnum(AutoDetonate, 0b00, NONE, Stickies = 1 << 0, Flares = 1 << 1)
 			CVarEnum(AutoAirblast, 0, NONE, Off, Legit, Rage)
-			CVarEnum(Modifiers, 0b1010, NONE, ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, BodyaimIfLethal = 1 << 2, UsePrimeTime = 1 << 3)
+			CVarEnum(Modifiers, 0b1010, NONE, ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, BodyaimIfLethal = 1 << 2, UsePrimeTime = 1 << 3, AimBlastAtFeet = 1 << 4)
 			CVar(PredictionTime, 2.f)
 			CVar(Hitchance, 0.f)
 			CVar(AutodetRadius, 90.f)
@@ -209,6 +209,7 @@ namespace Vars
 			CVar(WhipTeam, false)
 
 			CVar(SwingTicks, 13, DEBUGVAR)
+			CVar(SwingPredictLag, true, DEBUGVAR)
 			CVar(BackstabAccountPing, true, DEBUGVAR)
 			CVar(BackstabDoubleTest, true, DEBUGVAR)
 		SUBNAMESPACE_END(Melee)
@@ -245,6 +246,7 @@ namespace Vars
 			CVar(TickLimit, 22)
 			CVar(WarpRate, 22)
 			CVar(PassiveRecharge, 0)
+			CVar(RechargeLimit, 24)
 		SUBNAMESPACE_END(DoubleTap)
 
 		SUBNAMESPACE_BEGIN(Fakelag)

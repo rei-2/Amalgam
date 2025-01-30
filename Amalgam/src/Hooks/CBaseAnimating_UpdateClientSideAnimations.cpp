@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseAnimating_UpdateClientSideAnimation, S::CBaseAnimating_UpdateClie
 	void* rcx)
 {
 	auto pLocal = H::Entities.GetLocal();
-	if (Vars::Visuals::Removals::Interpolation.Value && !G::UpdatingAnims || rcx == pLocal && !pLocal->IsInBumperKart() && !I::EngineClient->IsPlayingDemo())
+	if (Vars::Visuals::Removals::Interpolation.Value && !G::UpdatingAnims || rcx == pLocal && !pLocal->InCond(TF_COND_HALLOWEEN_KART) && !I::EngineClient->IsPlayingDemo())
 		return;
 
 	CALL_ORIGINAL(rcx);

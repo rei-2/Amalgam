@@ -83,7 +83,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, int(SDK::AttribHookValue(0, "centerfire_projectile", pWeapon)) == 1 ? 0.f : 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		float flSpeed = pPlayer->IsPrecisionRune() ? 3000.f : SDK::AttribHookValue(1100.f, "mult_projectile_speed", pWeapon);
+		float flSpeed = pPlayer->InCond(TF_COND_RUNE_PRECISION) ? 3000.f : SDK::AttribHookValue(1100.f, "mult_projectile_speed", pWeapon);
 		out = { TF_PROJECTILE_ROCKET, vPos, vAngle, { 0.f, 0.f, 0.f }, flSpeed, 0.f, true };
 		return true;
 	}
@@ -107,7 +107,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		float flMortar = bCannon ? SDK::AttribHookValue(0.f, "grenade_launcher_mortar_mode", pWeapon) : 0.f;
 
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, true, bQuick);
-		float flSpeed = pPlayer->IsPrecisionRune() ? 3000.f : SDK::AttribHookValue(1200.f, "mult_projectile_speed", pWeapon);
+		float flSpeed = pPlayer->InCond(TF_COND_RUNE_PRECISION) ? 3000.f : SDK::AttribHookValue(1200.f, "mult_projectile_speed", pWeapon);
 		float flLifetime = flMortar
 			? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime : flMortar
 			: SDK::AttribHookValue(2.2f, "fuse_mult", pWeapon);
@@ -214,7 +214,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		static auto tf_grapplinghook_projectile_speed = U::ConVars.FindVar("tf_grapplinghook_projectile_speed");
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
 		float flSpeed = tf_grapplinghook_projectile_speed ? tf_grapplinghook_projectile_speed->GetFloat() : 1500.f;
-		if (pPlayer->IsAgilityRune())
+		if (pPlayer->InCond(TF_COND_RUNE_AGILITY))
 		{
 			switch (pPlayer->m_iClass())
 			{

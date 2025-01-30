@@ -1,5 +1,6 @@
 #include "Interfaces.h"
 #include "../Memory/Memory.h"
+#include "../../Core/Core.h"
 #include "../Assert/Assert.h"
 #include "../../SDK/Definitions/Interfaces.h"
 #include <TlHelp32.h>
@@ -88,7 +89,7 @@ bool CInterfaces::Initialize()
 			auto dwDest = U::Memory.FindSignature(Interface->m_pszDLLName, Interface->m_pszVersion);
 			if (!dwDest)
 			{
-				AssertCustom(dwDest, std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
 				m_bFailed = true;
 				continue;
 			}
@@ -105,7 +106,7 @@ bool CInterfaces::Initialize()
 
 		if (!*Interface->m_pPtr)
 		{
-			AssertCustom(*Interface->m_pPtr, std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+			U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
 			m_bFailed = true;
 		}
 	}

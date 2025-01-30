@@ -132,207 +132,228 @@ static inline float GetPlayerGravity(CTFPlayer* pEntity)
 
 void CMovementSimulation::Store()
 {
-	if (Vars::Aimbot::Projectile::StrafePrediction.Value)
+	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
-		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		auto& vRecords = mRecords[pPlayer->entindex()];
+
+		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_vecVelocity().IsZero())
 		{
-			auto pPlayer = pEntity->As<CTFPlayer>();
-			auto& vRecords = mRecords[pPlayer->entindex()];
+			vRecords.clear();
+			continue;
+		}
+		else if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
+			continue;
 
-			if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_vecVelocity().IsZero())
-			{
-				vRecords.clear();
-				continue;
-			}
-			else if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
-				continue;
+		bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo();
+		Vec3 vVelocity = bLocal ? F::EnginePrediction.m_vVelocity : pPlayer->m_vecVelocity();
+		Vec3 vOrigin = bLocal ? F::EnginePrediction.m_vOrigin : pPlayer->m_vecOrigin();
+		Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : Vec3(vVelocity.x, vVelocity.y, 0.f);
+		Vec3 vAngles = bLocal ? F::EnginePrediction.m_vAngles : pPlayer->GetEyeAngles();
 
-			bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo();
-			Vec3 vVelocity = bLocal ? F::EnginePrediction.m_vVelocity : pPlayer->m_vecVelocity();
-			Vec3 vOrigin = bLocal ? F::EnginePrediction.m_vOrigin : pPlayer->m_vecOrigin();
-			Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : Vec3(pPlayer->m_vecVelocity().x, pPlayer->m_vecVelocity().y, 0.f);
-			Vec3 vAngles = bLocal ? F::EnginePrediction.m_vAngles : pPlayer->GetEyeAngles();
-
-			MoveData tRecord = {
-				vDirection,
-				vAngles,
-				pPlayer->m_flSimulationTime(),
-				pPlayer->IsOnGround() ? 0 : pPlayer->m_nWaterLevel() < 2 ? 1 : 2,
-				vVelocity,
-				vOrigin
-			};
-			MoveData* pRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
+		MoveData tRecord = {
+			vDirection,
+			vAngles,
+			pPlayer->m_flSimulationTime(),
+			pPlayer->IsOnGround() ? 0 : pPlayer->m_nWaterLevel() < 2 ? 1 : 2,
+			vVelocity,
+			vOrigin
+		};
+		MoveData* pRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
 			
-			if (pRecord)
+		if (pRecord)
+		{
+			/*
+			if (tRecord.m_iMode != pRecord->m_iMode)
 			{
-				/*
-				if (tRecord.m_iMode != pRecord->m_iMode)
+				pRecord = nullptr;
+				vRecords.clear();
+			}
+			else // does this eat up fps? i can't tell currently
+			*/
+			{
+				CGameTrace trace = {};
+				CTraceFilterWorldAndPropsOnly filter = {};
+				SDK::TraceHull(pRecord->m_vOrigin, pRecord->m_vOrigin + pRecord->m_vVelocity * TICK_INTERVAL, pPlayer->m_vecMins() + 0.125f, pPlayer->m_vecMaxs() - 0.125f, MASK_PLAYERSOLID, &filter, &trace);
+				if (trace.DidHit() && trace.plane.normal.z < 0.707f)
 				{
 					pRecord = nullptr;
 					vRecords.clear();
 				}
-				else // does this eat up fps? i can't tell currently
-				*/
-				{
-					CGameTrace trace = {};
-					CTraceFilterWorldAndPropsOnly filter = {};
-					SDK::TraceHull(pRecord->m_vOrigin, pRecord->m_vOrigin + pRecord->m_vVelocity * TICK_INTERVAL, pPlayer->m_vecMins() + 0.125f, pPlayer->m_vecMaxs() - 0.125f, MASK_PLAYERSOLID, &filter, &trace);
-					if (trace.DidHit() && trace.plane.normal.z < 0.707f)
-					{
-						pRecord = nullptr;
-						vRecords.clear();
-					}
-				}
 			}
+		}
 
+		{
+			/*
+			bool bSet = false; // debug
+
+			static auto sv_accelerate = U::ConVars.FindVar("sv_accelerate");
+			static auto sv_friction = U::ConVars.FindVar("sv_friction");
+			static auto sv_stopspeed = U::ConVars.FindVar("sv_stopspeed");
+
+			float flAccel = sv_accelerate->GetFloat();
+			float flFriction = sv_friction->GetFloat();
+			float flStopSpeed = sv_stopspeed->GetFloat();
+
+			float flMaxSpeed = SDK::MaxSpeed(pPlayer);
+			float flEntFriction = 1.f;
+			*/
+
+			float flMaxSpeed = SDK::MaxSpeed(pPlayer);
+
+			//if (bLocal)
 			{
-				//bool bSet = false; // debug
+				if (tRecord.m_iMode != 0 || bLocal && Vars::Misc::Movement::Bunnyhop.Value && G::Buttons & IN_JUMP && !(F::EnginePrediction.m_iFlags & FL_DUCKING))
+					tRecord.m_vDirection = Vec3(vVelocity.x, vVelocity.y, 0).Normalized() * flMaxSpeed;
+			}
+			//else
+			{
+				// proof of concept that didn't really work out (most notably due to the origin tolerance)
+				// there is probably a way to implement ground movement in a way that's beneficial, but i didn't care enough to fiddle around with it
 
-				//static auto sv_accelerate = U::ConVars.FindVar("sv_accelerate");
-				//static auto sv_friction = U::ConVars.FindVar("sv_friction");
-				//static auto sv_stopspeed = U::ConVars.FindVar("sv_stopspeed");
-
-				//float flAccel = sv_accelerate->GetFloat();
-				//float flFriction = sv_friction->GetFloat();
-				//float flStopSpeed = sv_stopspeed->GetFloat();
-
-				float flMaxSpeed = SDK::MaxSpeed(pPlayer);
-				//float flEntFriction = 1.f;
-
-				//if (bLocal)
+				/*
+				switch (pRecord ? tRecord.m_iMode : 3)
 				{
-					if (tRecord.m_iMode != 0)
-						tRecord.m_vDirection = Vec3(vVelocity.x, vVelocity.y, 0).Normalized() * flMaxSpeed;
-				}
-				//else
+				case 0: // walkmove
 				{
-					// proof of concept that didn't really work out (most notably due to the origin tolerance)
-					// there is probably a way to implement ground movement in a way that's beneficial, but i didn't care enough to fiddle around with it
+					Vec3 vOldVelocity = pRecord->m_vVelocity, vNewVelocity = tRecord.m_vVelocity;
+					vOldVelocity.z = vNewVelocity.z = 0;
+					vOldVelocity /= std::max(vOldVelocity.Length2D() / flMaxSpeed, 1.f);
+					vNewVelocity /= std::max(vNewVelocity.Length2D() / flMaxSpeed, 1.f);
 
-					/*
-					switch (pRecord ? tRecord.m_iMode : 3)
+					// friction
+					float flSpeed = vOldVelocity.Length2D();
+					if (flSpeed >= 0.1f)
 					{
-					case 0: // walkmove
-					{
-						Vec3 vOldVelocity = pRecord->m_vVelocity, vNewVelocity = tRecord.m_vVelocity;
-						vOldVelocity.z = vNewVelocity.z = 0;
-						vOldVelocity /= std::max(vOldVelocity.Length2D() / flMaxSpeed, 1.f);
-						vNewVelocity /= std::max(vNewVelocity.Length2D() / flMaxSpeed, 1.f);
-
-						// friction
-						float flSpeed = vOldVelocity.Length2D();
-						if (flSpeed >= 0.1f)
+						float flControl = std::max(flStopSpeed, flSpeed);
+						float flDrop = flControl * flFriction * flEntFriction * TICK_INTERVAL;
+						float flNewSpeed = std::max(flSpeed - flDrop, 0.f);
+						if (flNewSpeed != flSpeed)
 						{
-							float flControl = std::max(flStopSpeed, flSpeed);
-							float flDrop = flControl * flFriction * flEntFriction * TICK_INTERVAL;
-							float flNewSpeed = std::max(flSpeed - flDrop, 0.f);
-							if (flNewSpeed != flSpeed)
-							{
-								flNewSpeed /= flSpeed;
-								vOldVelocity *= flNewSpeed;
-							}
+							flNewSpeed /= flSpeed;
+							vOldVelocity *= flNewSpeed;
 						}
+					}
 
-						Vec3 vWishDir = vNewVelocity - vOldVelocity;
-						float flAccelSpeed = vWishDir.Normalize();
-						float flMaxAccel = flAccel * flMaxSpeed * flEntFriction * TICK_INTERVAL;
-						if (flAccelSpeed < flMaxAccel * 0.999f && vNewVelocity.Length2D() > flMaxSpeed * 0.999f)
+					Vec3 vWishDir = vNewVelocity - vOldVelocity;
+					float flAccelSpeed = vWishDir.Normalize();
+					float flMaxAccel = flAccel * flMaxSpeed * flEntFriction * TICK_INTERVAL;
+					if (flAccelSpeed < flMaxAccel * 0.999f && vNewVelocity.Length2D() > flMaxSpeed * 0.999f)
+					{
+						//SDK::Output("Quadratic", std::format("{} < {} && {} > {}", flAccelSpeed, flMaxAccel * 0.999f, vNewVelocity.Length2D(), flMaxSpeed * 0.999f).c_str());
+						float flMult;
 						{
-							//SDK::Output("Quadratic", std::format("{} < {} && {} > {}", flAccelSpeed, flMaxAccel * 0.999f, vNewVelocity.Length2D(), flMaxSpeed * 0.999f).c_str());
-							float flMult;
+							// quadratic
+							float flA = powf(vNewVelocity.x, 2.f) + powf(vNewVelocity.y, 2.f);
+							float flB = -2 * vNewVelocity.x * vOldVelocity.x - 2 * vNewVelocity.y * vOldVelocity.y;
+							float flC = powf(vOldVelocity.x, 2.f) + powf(vOldVelocity.y, 2.f) - powf(flMaxAccel, 2.f);
+							flMult = (-flB + sqrt(fabsf(powf(flB, 2.f) - 4 * flA * flC))) / (2 * flA);
+						}
+						vNewVelocity *= flMult;
+
+						vWishDir = vNewVelocity - vOldVelocity;
+						flAccelSpeed = vWishDir.Normalize();
+
+						float flCurSpeed = vOldVelocity.Dot(vWishDir);
+						float flAccelSpeed2 = std::max(flMaxSpeed - flCurSpeed, 0.f);
+						if (flAccelSpeed2 < flMaxAccel)
+						{
+							//SDK::Output("Quartic", std::format("{} < {}", flAccelSpeed2, flMaxAccel).c_str());
+							vNewVelocity = tRecord.m_vVelocity;
+							vNewVelocity.z = 0;
+							vNewVelocity /= std::max(vNewVelocity.Length2D() / flMaxSpeed, 1.f);
 							{
-								// quadratic
-								float flA = powf(vNewVelocity.x, 2.f) + powf(vNewVelocity.y, 2.f);
-								float flB = -2 * vNewVelocity.x * vOldVelocity.x - 2 * vNewVelocity.y * vOldVelocity.y;
-								float flC = powf(vOldVelocity.x, 2.f) + powf(vOldVelocity.y, 2.f) - powf(flMaxAccel, 2.f);
-								flMult = (-flB + sqrt(fabsf(powf(flB, 2.f) - 4 * flA * flC))) / (2 * flA);
+								// quartic
+								float flA = pow((powf(vNewVelocity.x, 2.f) + powf(vNewVelocity.y, 2.f)) / flMaxSpeed, 2);
+								float flB = (2 * (powf(vNewVelocity.x, 2.f) + powf(vNewVelocity.y, 2.f)) * (-vOldVelocity.x * vNewVelocity.x - vOldVelocity.y * vNewVelocity.y)) / pow(flMaxSpeed, 2);
+								float flC = pow((-vOldVelocity.x * vNewVelocity.x - vOldVelocity.y * vNewVelocity.y) / flMaxSpeed, 2) - powf(vNewVelocity.x, 2.f) - powf(vNewVelocity.y, 2.f);
+								float flD = 2 * vNewVelocity.x * vOldVelocity.x + 2 * vNewVelocity.y * vOldVelocity.y;
+								float flE = -powf(vOldVelocity.x, 2.f) - powf(vOldVelocity.y, 2.f);
+								//SDK::Output("Values", std::format("\na={}\nb={}\nc={}\nd={}\ne={}", flA, flB, flC, flD, flE).c_str());
+								auto vRoots = Math::SolveQuartic(flA, flB, flC, flD, flE);
+								if (vRoots.size())
+									flMult = std::clamp(*std::max_element(vRoots.begin(), vRoots.end()), 1.f, flMult);
 							}
 							vNewVelocity *= flMult;
 
 							vWishDir = vNewVelocity - vOldVelocity;
 							flAccelSpeed = vWishDir.Normalize();
+						}
+					}
 
-							float flCurSpeed = vOldVelocity.Dot(vWishDir);
-							float flAccelSpeed2 = std::max(flMaxSpeed - flCurSpeed, 0.f);
-							if (flAccelSpeed2 < flMaxAccel)
-							{
-								//SDK::Output("Quartic", std::format("{} < {}", flAccelSpeed2, flMaxAccel).c_str());
-								vNewVelocity = tRecord.m_vVelocity;
-								vNewVelocity.z = 0;
-								vNewVelocity /= std::max(vNewVelocity.Length2D() / flMaxSpeed, 1.f);
-								{
-									// quartic
-									float flA = pow((powf(vNewVelocity.x, 2.f) + powf(vNewVelocity.y, 2.f)) / flMaxSpeed, 2);
-									float flB = (2 * (powf(vNewVelocity.x, 2.f) + powf(vNewVelocity.y, 2.f)) * (-vOldVelocity.x * vNewVelocity.x - vOldVelocity.y * vNewVelocity.y)) / pow(flMaxSpeed, 2);
-									float flC = pow((-vOldVelocity.x * vNewVelocity.x - vOldVelocity.y * vNewVelocity.y) / flMaxSpeed, 2) - powf(vNewVelocity.x, 2.f) - powf(vNewVelocity.y, 2.f);
-									float flD = 2 * vNewVelocity.x * vOldVelocity.x + 2 * vNewVelocity.y * vOldVelocity.y;
-									float flE = -powf(vOldVelocity.x, 2.f) - powf(vOldVelocity.y, 2.f);
-									//SDK::Output("Values", std::format("\na={}\nb={}\nc={}\nd={}\ne={}", flA, flB, flC, flD, flE).c_str());
-									auto vRoots = Math::SolveQuartic(flA, flB, flC, flD, flE);
-									if (vRoots.size())
-										flMult = std::clamp(*std::max_element(vRoots.begin(), vRoots.end()), 1.f, flMult);
-								}
-								vNewVelocity *= flMult;
+					SDK::Output("flAccelSpeed", std::format("{}", flAccelSpeed).c_str(), {}, Vars::Debug::Info.Value);
+					flAccelSpeed = flAccelSpeed < (flAccel * flMaxSpeed * flEntFriction * TICK_INTERVAL) * 0.35f ? 0.f : flMaxSpeed; // this might be a bad solution?
 
-								vWishDir = vNewVelocity - vOldVelocity;
-								flAccelSpeed = vWishDir.Normalize();
-							}
+					if (!tRecord.m_vDirection.IsZero())
+					{
+						bSet = true;
+
+						if (Vars::Debug::Info.Value)
+						{
+							G::LineStorage.clear();
+							G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.1f, { 255, 0, 0, 255 } });
+							G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + vWishDir * flAccelSpeed }, I::GlobalVars->curtime + 0.1f, { 0, 255, 0, 255 } });
 						}
 
-						SDK::Output("flAccelSpeed", std::format("{}", flAccelSpeed).c_str());
-						flAccelSpeed = flAccelSpeed < (flAccel * flMaxSpeed * flEntFriction * TICK_INTERVAL) * 0.35f ? 0.f : flMaxSpeed; // this might be a bad solution?
-
-						bSet = true;
-						tRecord.m_vDirection = vWishDir * flAccelSpeed;
-						//SDK::Output("Angle", std::format("{}", tRecord.m_vDirection.Ang).c_str());
-						//SDK::Output("WishDir", std::format("{}, {}, ({})", vWishDir.x, vWishDir.y, flAccelSpeed).c_str());
-						//SDK::Output("Velocity", std::format("{}, {}, {} ({}, {}; {})", vNewVelocity.x, vNewVelocity.y, vNewVelocity.z, vNewVelocity.Length2D(), vNewVelocity.Length2D(), flMaxSpeed * 0.999f).c_str());
-
-						break;
+						float flAng1 = Math::VelocityToAngles(tRecord.m_vDirection).y, flAng2 = Math::VelocityToAngles(vWishDir).y;
+						float flDiff = flAng1 - flAng2;
+						flDiff = fmodf(flDiff + 180.f, 360.f);
+						flDiff += flDiff < 0 ? 180.f : -180.f;
+							
+						SDK::Output("Diff", std::format("{}", flDiff).c_str(), {}, Vars::Debug::Info.Value);
+							
+						if (flAccelSpeed > 0 && !vWishDir.IsZero() && fabsf(flDiff) > 45.f)
+							tRecord.m_vDirection = vWishDir * flAccelSpeed;
+						else
+							tRecord.m_vDirection = tRecord.m_vDirection.Normalized() * flAccelSpeed;
 					}
-					/*
-					case 1: // airmove
-					{
-						Vec3 vOldVelocity = pRecord->m_vVelocity, vNewVelocity = tRecord.m_vVelocity;
-						vOldVelocity.z = vNewVelocity.z = 0; // for wishdir
+					//SDK::Output("Angle", std::format("{}", tRecord.m_vDirection.Ang).c_str());
+					//SDK::Output("WishDir", std::format("{}, {}, ({})", vWishDir.x, vWishDir.y, flAccelSpeed).c_str());
+					//SDK::Output("Velocity", std::format("{}, {}, {} ({}, {}; {})", vNewVelocity.x, vNewVelocity.y, vNewVelocity.z, vNewVelocity.Length2D(), vNewVelocity.Length2D(), flMaxSpeed * 0.999f).c_str());
 
-						Vec3 vWishDir = vNewVelocity - vOldVelocity;
-						float flAccelSpeed = vWishDir.Normalize();
-
-						SDK::Output("flAccelSpeed", std::format("{}, {}", flAccelSpeed, flMaxSpeed).c_str());
-
-						// just assume forward if we can't get a dir large enough
-						if (flAccelSpeed < 10.f) // this might be a bad solution?
-							break;
-
-						bSet = true;
-						tRecord.m_vDirection = vWishDir * flMaxSpeed;
-						//SDK::Output("WishDir", std::format("{}, {}, ({})", vWishDir.x, vWishDir.y, flAccelSpeed).c_str());
-
-						break;
-					}
-					case 2: // watermove
-					{
-						// maybe implement idk
-
-						break;
-					}
-					* /
-					//case 3: // none, just use velocity
-					}
-					*/
+					break;
 				}
+				/*
+				case 1: // airmove
+				{
+					Vec3 vOldVelocity = pRecord->m_vVelocity, vNewVelocity = tRecord.m_vVelocity;
+					vOldVelocity.z = vNewVelocity.z = 0; // for wishdir
 
-				//G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.5f, bSet ? Color_t(SDK::RandomInt(200, 255), SDK::RandomInt(200, 255), SDK::RandomInt(200, 255), 255) : Color_t(0, 0, 0, 255) });
+					Vec3 vWishDir = vNewVelocity - vOldVelocity;
+					float flAccelSpeed = vWishDir.Normalize();
+
+					SDK::Output("flAccelSpeed", std::format("{}, {}", flAccelSpeed, flMaxSpeed).c_str());
+
+					// just assume forward if we can't get a dir large enough
+					if (flAccelSpeed < 10.f) // this might be a bad solution?
+						break;
+
+					bSet = true;
+					tRecord.m_vDirection = vWishDir * flMaxSpeed;
+					//SDK::Output("WishDir", std::format("{}, {}, ({})", vWishDir.x, vWishDir.y, flAccelSpeed).c_str());
+
+					break;
+				}
+				case 2: // watermove
+				{
+					// maybe implement idk
+
+					break;
+				}
+				* /
+				//case 3: // none, just use velocity
+				}
+				*/
 			}
-			
-			vRecords.push_front(tRecord);
-			if (vRecords.size() > 66)
-				vRecords.pop_back();
+
+			//if (Vars::Debug::Info.Value)
+			//	G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.5f, bSet ? Color_t(SDK::StdRandomInt(200, 255), SDK::StdRandomInt(200, 255), SDK::StdRandomInt(200, 255), 255) : Color_t(0, 0, 0, 255) });
 		}
+			
+		vRecords.push_front(tRecord);
+		if (vRecords.size() > 66)
+			vRecords.pop_back();
 	}
-	else
-		mRecords.clear();
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
@@ -394,12 +415,14 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 
 		if (pPlayer != H::Entities.GetLocal())
 		{
-			pPlayer->m_hGroundEntity() = nullptr; // fix for velocity.z being set to 0 even if in air
-
 			pPlayer->m_vecBaseVelocity() = Vec3(); // residual basevelocity causes issues
 			if (pPlayer->IsOnGround())
 				pPlayer->m_vecVelocity().z = std::min(pPlayer->m_vecVelocity().z, 0.f); // step fix
+			else
+				pPlayer->m_hGroundEntity() = nullptr; // fix for velocity.z being set to 0 even if in air
 		}
+		else if (Vars::Misc::Movement::Bunnyhop.Value && G::Buttons & IN_JUMP)
+			playerStorageOut.m_bBunnyHop = true;
 
 		// fixes issues with origin tolerance
 		if (auto pGameRules = I::TFGameRules->Get())
@@ -437,6 +460,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 	{
 		const auto& vRecords = mRecords[playerStorageOut.m_pPlayer->entindex()];
 		const auto iSamples = vRecords.size();
+		float flMaxSpeed = SDK::MaxSpeed(pPlayer);
 
 		float flCurrentChance = 1.f, flAverageYaw = 0.f;
 		for (size_t i = 0; i < iSamples; i++)
@@ -445,13 +469,17 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 				break;
 
 			const auto& pRecord1 = vRecords[i], &pRecord2 = vRecords[i + 1];
-			const float flYaw1 = Math::VelocityToAngles(pRecord1.m_vVelocity).y, flYaw2 = Math::VelocityToAngles(pRecord2.m_vVelocity).y;
+			const float flYaw1 = Math::VelocityToAngles(pRecord1.m_vDirection).y, flYaw2 = Math::VelocityToAngles(pRecord2.m_vDirection).y;
 			const float flTime1 = pRecord1.m_flSimTime, flTime2 = pRecord2.m_flSimTime;
+			const int iTicks = std::max(TIME_TO_TICKS(flTime1 - flTime2), 1);
 
-			float flYaw = (flYaw1 - flYaw2) / TIME_TO_TICKS(flTime1 - flTime2);
+			float flYaw = flYaw1 - flYaw2;
 			flYaw = fmodf(flYaw + 180.f, 360.f);
 			flYaw += flYaw < 0 ? 180.f : -180.f;
+			flYaw /= iTicks;
 			flAverageYaw += flYaw;
+			if (flMaxSpeed)
+				flYaw *= std::clamp(pRecord1.m_vVelocity.Length2D() / flMaxSpeed, 0.f, 1.f);
 
 			if ((i + 1) % iStrafeSamples == 0 || i == iSamples - 1)
 			{
@@ -535,12 +563,15 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& playerStorage)
 	return true;
 }
 
-static bool GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* pYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0)
+static int GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* pYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0, float flMaxSpeed = 0.f)
 {
 	if (vRecords.size() <= i + 2)
 		return false;
 
 	const auto& pRecord1 = vRecords[i], &pRecord2 = vRecords[i + 1];
+	if (pRecord1.m_iMode != pRecord2.m_iMode)
+		return 2;
+
 	const float flYaw1 = Math::VelocityToAngles(pRecord1.m_vDirection).y, flYaw2 = Math::VelocityToAngles(pRecord2.m_vDirection).y;
 	const float flTime1 = pRecord1.m_flSimTime, flTime2 = pRecord2.m_flSimTime;
 	const int iTicks = std::max(TIME_TO_TICKS(flTime1 - flTime2), 1);
@@ -549,6 +580,8 @@ static bool GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* pY
 	*pYaw = fmodf(*pYaw + 180.f, 360.f);
 	*pYaw += *pYaw < 0 ? 180.f : -180.f;
 	*pYaw /= iTicks;
+	if (flMaxSpeed)
+		*pYaw *= std::clamp(pRecord1.m_vVelocity.Length2D() / flMaxSpeed, 0.f, 1.f);
 
 	static int iSign = 0;
 	const int iLastSign = iSign;
@@ -589,27 +622,30 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 	if (!flMaxWeight)
 		return;
 
+	float flMaxSpeed = SDK::MaxSpeed(pPlayer);
 	float flAverageYaw = 0.f, flAverageDelta = 0.f, flTotalWeight = 0.f;
-	int iTicks = 0, iDeltaChanges = 0;
+	int iTicks = 0, iSkips = 0, iDeltaChanges = 0;
 	for (; iTicks < iSamples; iTicks++)
 	{
-		float flYaw;
-		/*
-		if (!GetYawDifference(vRecords, iTicks, &flYaw, flStraightFuzzyValue, iMaxChanges, iMaxChangeTime))
+		float flYaw = 0.f;
+		int iResult = GetYawDifference(vRecords, iTicks, &flYaw, flStraightFuzzyValue, iMaxChanges, iMaxChangeTime, flMaxSpeed);
+		SDK::Output("GetYawDifference", std::format("{}: {}, {}", iTicks, flYaw, iResult).c_str(), { 50, 127, 75, 255 }, Vars::Debug::Logging.Value);
+		if (!iResult)
 			break;
-		*/
-
-		bool bYaw = GetYawDifference(vRecords, iTicks, &flYaw, flStraightFuzzyValue, iMaxChanges, iMaxChangeTime);
-		SDK::Output("GetYawDifference", std::format("{}: {}, {}", iTicks, flYaw, bYaw).c_str(), { 50, 127, 75, 255 }, Vars::Debug::Logging.Value);
-		if (!bYaw)
-			break;
+		else if (iResult == 2)
+		{
+			iSkips++;
+			continue;
+		}
 
 		float flMult = 1.f;
+		/*
 		if (!pPlayer->IsOnGround())
 		{
 			float flPrevVelZ = vRecords[iTicks].m_vVelocity.z - GetPlayerGravity(pPlayer) * TICK_INTERVAL;
 			flMult = 0.f < flPrevVelZ && flPrevVelZ <= 250.f ? 0.25f : 1.f; // flEntFriction will be 0.25f if flPrevVelZ is between 0.f and 250.f
 		}
+		*/
 
 		float flWeight = powf(Math::RemapValClamped(iTicks, 0, iSamples, flNewWeight, flOldWeight) / flMaxWeight, flMaxWeight);
 		flYaw *= flWeight / flMult, flTotalWeight += flWeight;
@@ -632,6 +668,7 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 			}
 		}
 	}
+	iTicks -= iSkips;
 
 	if (!flTotalWeight || iTicks <= 3) // valid strafes not high enough
 		return;
@@ -651,7 +688,7 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 	if (fabsf(flAverageYaw) < 0.1f)
 		return;
 
-	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} ({}) from {} ({})", flAverageYaw, flAverageDelta, iTicks, iMinimumStrafes).c_str(), { 100, 255, 150, 255 }, Vars::Debug::Logging.Value);
+	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} ({}) from {} ({}) {}", flAverageYaw, flAverageDelta, iTicks, iMinimumStrafes, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), {100, 255, 150, 255}, Vars::Debug::Logging.Value);
 	
 	playerStorage.m_flAverageYaw = flAverageYaw;
 	playerStorage.m_flAverageDelta = flAverageDelta;
@@ -722,6 +759,12 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 	float flOldSpeed = playerStorage.m_MoveData.m_flClientMaxSpeed, flOldSide = playerStorage.m_MoveData.m_flSideMove;
 	if (playerStorage.m_PlayerData.m_fFlags & FL_DUCKING && playerStorage.m_pPlayer->IsOnGround())
 		playerStorage.m_MoveData.m_flClientMaxSpeed /= 3;
+
+	if (playerStorage.m_bBunnyHop && !(playerStorage.m_PlayerData.m_fFlags & FL_DUCKING))
+	{
+		playerStorage.m_MoveData.m_nOldButtons = 0;
+		playerStorage.m_MoveData.m_nButtons |= IN_JUMP;
+	}
 
 	I::GameMovement->ProcessMovement(playerStorage.m_pPlayer, &playerStorage.m_MoveData);
 

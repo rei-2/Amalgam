@@ -14,11 +14,18 @@ static inline bool CheckDXLevel()
 	auto mat_dxlevel = U::ConVars.FindVar("mat_dxlevel");
 	if (mat_dxlevel->GetInt() < 90)
 	{
-		SDK::Output("Error", "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.", { 175, 150, 255, 255 }, true, false, false, true, MB_OK | MB_ICONERROR);
-		return false;
+		//U::Core.AppendFailText("You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.");
+		U::Core.AppendFailText("You are running with graphics options that Amalgam does not support.\nIt is recommended for -dxlevel to be at least 90.");
+		//return false;
 	}
 
 	return true;
+}
+
+void CCore::AppendFailText(const char* sMessage)
+{
+	ssFailStream << std::format("{}\n", sMessage);
+	OutputDebugStringA(std::format("{}\n", sMessage).c_str());
 }
 
 void CCore::Load()
@@ -62,7 +69,17 @@ void CCore::Unload()
 {
 	if (m_bFailed)
 	{
-		SDK::Output("Amalgam", "Failed", {}, false, false, false, true, MB_OK);
+		ssFailStream << "\nCtrl + C to copy. Logged to Amalgam\\fail_log.txt. \n";
+		ssFailStream << "Built @ " __DATE__ ", " __TIME__;
+
+		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, false, false, true, MB_OK | MB_ICONERROR);
+
+		ssFailStream << "\n\n\n\n";
+		std::ofstream file;
+		file.open(F::Configs.sConfigPath + "\\fail_log.txt", std::ios_base::app);
+		file << ssFailStream.str();
+		file.close();
+
 		return;
 	}
 

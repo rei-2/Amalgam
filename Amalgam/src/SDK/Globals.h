@@ -66,7 +66,6 @@ namespace G
 	inline bool PSilentAngles = false;
 
 	inline bool AntiAim = false;
-	inline int AnticipatedChoke = 0;
 	inline bool Choking = false;
 
 	inline bool UpdatingAnims = false;

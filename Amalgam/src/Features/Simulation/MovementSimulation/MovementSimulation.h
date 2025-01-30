@@ -60,6 +60,7 @@ struct PlayerStorage
 
 	float m_flAverageYaw = 0.f;
 	float m_flAverageDelta = 0.f;
+	bool m_bBunnyHop = false;
 
 	float m_flSimTime = 0.f;
 	float m_flPredictedDelta = 0.f;

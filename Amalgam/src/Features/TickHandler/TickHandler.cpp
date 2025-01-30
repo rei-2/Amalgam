@@ -97,6 +97,14 @@ Vec3 CTickshiftHandler::GetShootPos()
 	return m_vShootPos;
 }
 
+bool CTickshiftHandler::CanChoke()
+{
+	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
+	const int iMaxTicks = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+
+	return I::ClientState->chokedcommands < 21 && F::Ticks.m_iShiftedTicks + I::ClientState->chokedcommands < iMaxTicks;
+}
+
 void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static Vec3 vVelocity = {};
@@ -220,8 +228,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
 	m_iMaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
-	if (F::AntiAim.YawOn())
-		m_iMaxShift -= F::AntiAim.AntiAimTicks();
+	m_iMaxShift -= std::max(24 - std::clamp(Vars::CL_Move::Doubletap::RechargeLimit.Value, 1, 24), F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
 
 	while (m_iShiftedTicks > m_iMaxShift)
 		CLMoveFunc(accumulated_extra_samples, false); // skim any excess ticks

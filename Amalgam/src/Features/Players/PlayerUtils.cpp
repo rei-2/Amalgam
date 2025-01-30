@@ -3,7 +3,7 @@
 #include "../../SDK/Definitions/Types.h"
 #include "../Records/Records.h"
 
-static inline uint32_t GetFriendsID(int iIndex)
+uint32_t CPlayerlistUtils::GetFriendsID(int iIndex)
 {
 	PlayerInfo_t pi{};
 	if (I::EngineClient->GetPlayerInfo(iIndex, &pi) && !pi.fakeplayer)

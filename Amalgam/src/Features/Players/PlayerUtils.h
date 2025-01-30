@@ -37,6 +37,7 @@ struct PriorityLabel_t
 class CPlayerlistUtils
 {
 public:
+	uint32_t GetFriendsID(int iIndex);
 	PriorityLabel_t* GetTag(int iID);
 	int GetTag(std::string sTag);
 	inline int TagToIndex(int iTag)

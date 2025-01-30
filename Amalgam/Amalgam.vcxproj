@@ -886,6 +886,7 @@
     <ClCompile Include="src\Features\Visuals\Visuals.cpp" />
     <ClCompile Include="src\Hooks\CSniperDot_GetRenderingPositions.cpp" />
     <ClCompile Include="src\Hooks\CTFInput_ApplyMouse.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayer_DoAnimationEvent.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_UpdateStepSound.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />
     <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
@@ -958,6 +959,7 @@
     <ClCompile Include="src\Hooks\DoEnginePostProcessing.cpp" />
     <ClCompile Include="src\Hooks\DSP_Process.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
+    <ClCompile Include="src\Hooks\ISteamFriends_GetFriendPersonaName.cpp" />
     <ClCompile Include="src\Hooks\ISteamNetworkingUtils_GetPingToDataCenter.cpp" />
     <ClCompile Include="src\Hooks\IVEngineClient_ClientCmd_Unrestricted.cpp" />
     <ClCompile Include="src\Hooks\IEngineVGui_Paint.cpp" />

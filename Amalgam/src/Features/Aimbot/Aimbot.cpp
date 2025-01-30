@@ -14,12 +14,12 @@ bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	if (!pLocal || !pWeapon
 		|| !pLocal->IsAlive()
+		|| pLocal->IsAGhost()
 		|| pLocal->IsTaunting()
-		|| pLocal->IsBonked()
 		|| pLocal->m_bFeignDeathReady()
-		|| pLocal->IsCloaked()
-		|| pLocal->IsInBumperKart()
-		|| pLocal->IsAGhost())
+		|| pLocal->InCond(TF_COND_PHASE)
+		|| pLocal->InCond(TF_COND_STEALTHED)
+		|| pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return false;
 
 	switch (pWeapon->m_iItemDefinitionIndex())

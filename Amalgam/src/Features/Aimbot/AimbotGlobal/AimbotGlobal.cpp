@@ -138,14 +138,14 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 			|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Cloaked && pPlayer->IsInvisible() && pPlayer->GetInvisPercentage() >= Vars::Aimbot::General::IgnoreCloakPercentage.Value
 			|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::DeadRinger && pPlayer->m_bFeignDeathReady()
 			|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Taunting && pPlayer->IsTaunting()
-			|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Disguised && pPlayer->IsDisguised())
+			|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Disguised && pPlayer->InCond(TF_COND_DISGUISED))
 			return true;
 		if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Vaccinator)
 		{
 			switch (G::PrimaryWeaponType)
 			{
 			case EWeaponType::HITSCAN:
-				if (pPlayer->IsBulletResist() && pWeapon->m_iItemDefinitionIndex() != Spy_m_TheEnforcer)
+				if (pPlayer->InCond(TF_COND_MEDIGUN_UBER_BULLET_RESIST) && SDK::AttribHookValue(0, "mod_pierce_resists_absorbs", pWeapon) != 0)
 					return true;
 				break;
 			case EWeaponType::PROJECTILE:
@@ -153,15 +153,15 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 				{
 				case TF_WEAPON_FLAMETHROWER:
 				case TF_WEAPON_FLAREGUN:
-					if (pPlayer->IsFireResist())
+					if (pPlayer->InCond(TF_COND_MEDIGUN_UBER_FIRE_RESIST))
 						return true;
 					break;
 				case TF_WEAPON_COMPOUND_BOW:
-					if (pPlayer->IsBulletResist())
+					if (pPlayer->InCond(TF_COND_MEDIGUN_UBER_BULLET_RESIST))
 						return true;
 					break;
 				default:
-					if (pPlayer->IsBlastResist())
+					if (pPlayer->InCond(TF_COND_MEDIGUN_UBER_BLAST_RESIST))
 						return true;
 				}
 			}

@@ -1,6 +1,7 @@
 #include "Signatures.h"
 
 #include "../Memory/Memory.h"
+#include "../../Core/Core.h"
 #include <string>
 #include <format>
 
@@ -19,7 +20,7 @@ bool CSignature::Initialize()
 	m_dwVal = U::Memory.FindSignature(m_pszDLLName, m_pszSignature);
 	if (!m_dwVal)
 	{
-		OutputDebugStringA(std::format("CSignature::Initialize() failed to initialize:\n  {}\n  {}\n  {}\n", m_pszName, m_pszDLLName, m_pszSignature).c_str());
+		U::Core.AppendFailText(std::format("CSignature::Initialize() failed to initialize:\n  {}\n  {}\n  {}", m_pszName, m_pszDLLName, m_pszSignature).c_str());
 		return false;
 	}
 

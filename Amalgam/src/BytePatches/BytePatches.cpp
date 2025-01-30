@@ -1,5 +1,7 @@
 #include "BytePatches.h"
 
+#include "../Core/Core.h"
+
 BytePatch::BytePatch(const char* sModule, const char* sSignature, int iOffset, const char* sPatch)
 {
 	m_sModule = sModule;
@@ -28,7 +30,7 @@ bool BytePatch::Initialize()
 	m_pAddress = LPVOID(U::Memory.FindSignature(m_sModule, m_sSignature));
 	if (!m_pAddress)
 	{
-		OutputDebugStringA(std::format("BytePatch::Initialize() failed to initialize:\n  {}\n  {}\n", m_sModule, m_sSignature).c_str());
+		U::Core.AppendFailText(std::format("BytePatch::Initialize() failed to initialize:\n  {}\n  {}", m_sModule, m_sSignature).c_str());
 		return false;
 	}
 
