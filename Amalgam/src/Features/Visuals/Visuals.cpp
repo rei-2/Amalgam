@@ -24,7 +24,7 @@ MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 4
 
 void CVisuals::DrawFOV(CTFPlayer* pLocal)
 {
-	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->IsStunned() || pLocal->IsInBumperKart())
+	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->InCond(TF_COND_STUNNED) || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
 	if (Vars::Aimbot::General::AimFOV.Value >= 90.f)
