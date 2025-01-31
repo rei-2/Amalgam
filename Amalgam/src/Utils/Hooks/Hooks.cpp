@@ -24,9 +24,11 @@ bool CHooks::Initialize()
 	return !m_bFailed;
 }
 
-void CHooks::Unload()
+bool CHooks::Unload()
 {
-	if (MH_Uninitialize() != MH_OK)
+	m_bFailed = MH_Uninitialize() != MH_OK;
+	if (m_bFailed)
 		U::Core.AppendFailText("MinHook failed to unload all hooks!");
 	WndProc::Unload();
+	return !m_bFailed;
 }

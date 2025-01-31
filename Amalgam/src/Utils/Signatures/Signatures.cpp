@@ -30,12 +30,12 @@ bool CSignature::Initialize()
 
 bool CSignatures::Initialize()
 {
-	for (auto Signature : m_vecSignatures)
+	for (auto pSignature : m_vSignatures)
 	{
-		if (!Signature)
+		if (!pSignature)
 			continue;
 
-		if (!Signature->Initialize())
+		if (!pSignature->Initialize())
 			m_bFailed = true;
 	}
 

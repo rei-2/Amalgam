@@ -54,7 +54,7 @@ public:
 
 public:
 	bool Initialize();
-	void Unload();
+	bool Unload();
 };
 
 ADD_FEATURE_CUSTOM(CHooks, Hooks, U);
