@@ -36,7 +36,10 @@ void CCore::Load()
 	{
 		Sleep(500);
 		if (m_bUnload = m_bFailed = U::KeyHandler.Down(VK_F11, true))
+		{
+			U::Core.AppendFailText("Cancelled load");
 			return;
+		}
 	}
 	Sleep(500);
 
