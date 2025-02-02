@@ -1985,13 +1985,14 @@ namespace ImGui
 			SetCursorPos(vOriginalPos);
 		}
 
-		FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type" }, {}, FDropdown_Left, 0, &bHovered);
+		FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdown_Left, 0, &bHovered);
 		bLastHovered = bLastHovered || bHovered;
 		switch (tBind.Type)
 		{
-		case 0: tBind.Info = std::min(tBind.Info, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case 1: tBind.Info = std::min(tBind.Info, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case 2: tBind.Info = std::min(tBind.Info, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::Key: tBind.Info = std::clamp(tBind.Info, 0, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::Class: tBind.Info = std::clamp(tBind.Info, 0, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::WeaponType: tBind.Info = std::clamp(tBind.Info, 0, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::ItemSlot: tBind.Info = std::max(tBind.Info, 0); FDropdown("Item slot", &tBind.Info, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdown_Right, 0, &bHovered); break;
 		}
 		bLastHovered = bLastHovered || bHovered;
 

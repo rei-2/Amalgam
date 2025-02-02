@@ -3,12 +3,7 @@
 
 #include "../AimbotGlobal/AimbotGlobal.h"
 
-enum PointType_
-{
-	PointType_None = 0,
-	PointType_Regular = (1 << 0),
-	PointType_Obscured = (1 << 1)
-};
+Enum(PointType, None = 0, Regular = 1 << 0, Obscured = 1 << 1)
 
 struct Solution_t
 {

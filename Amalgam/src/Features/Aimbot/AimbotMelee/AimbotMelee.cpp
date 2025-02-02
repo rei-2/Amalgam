@@ -25,7 +25,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 				continue;
 
 			float flDistTo = vLocalPos.DistTo(vPos);
-			vTargets.push_back({ pEntity, ETargetType::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()) });
+			vTargets.push_back({ pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()) });
 		}
 	}
 
@@ -56,7 +56,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 				continue;
 
 			float flDistTo = vLocalPos.DistTo(vPos);
-			vTargets.push_back({ pEntity, pEntity->IsSentrygun() ? ETargetType::Sentry : pEntity->IsDispenser() ? ETargetType::Dispenser : ETargetType::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo });
+			vTargets.push_back({ pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
@@ -74,7 +74,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 				continue;
 
 			float flDistTo = vLocalPos.DistTo(vPos);
-			vTargets.push_back({ pEntity, ETargetType::NPC, vPos, vAngleTo, flFOVTo, flDistTo });
+			vTargets.push_back({ pEntity, TargetEnum::NPC, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
@@ -276,7 +276,7 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 	std::deque<TickRecord> vRecords;
 	{
 		auto pRecords = F::Backtrack.GetRecords(target.m_pEntity);
-		if (pRecords && target.m_TargetType == ETargetType::Player)
+		if (pRecords && target.m_iTargetType == TargetEnum::Player)
 		{
 			if (Vars::Backtrack::Enabled.Value)
 				vRecords = *pRecords;
@@ -313,7 +313,7 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 		for (TickRecord& tRecord : vRecords)
 			tRecord.m_flSimTime -= TICKS_TO_TIME(vSimRecords.size());
 	}
-	vRecords = target.m_TargetType == ETargetType::Player ? F::Backtrack.GetValidRecords(&vRecords, pLocal, true) : vRecords;
+	vRecords = target.m_iTargetType == TargetEnum::Player ? F::Backtrack.GetValidRecords(&vRecords, pLocal, true) : vRecords;
 	if (!Vars::Backtrack::Enabled.Value && !vRecords.empty())
 		vRecords = { vRecords.front() };
 
@@ -346,7 +346,7 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 
 		if (bReturn && Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
 		{
-			if (target.m_TargetType == ETargetType::Player)
+			if (target.m_iTargetType == TargetEnum::Player)
 				bReturn = CanBackstab(target.m_pEntity, pLocal, target.m_vAngleTo);
 			else
 				bReturn = false;
@@ -359,7 +359,7 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 		if (bReturn)
 		{
 			target.m_tRecord = tRecord;
-			target.m_bBacktrack = target.m_TargetType == ETargetType::Player /*&& Vars::Backtrack::Enabled.Value*/;
+			target.m_bBacktrack = target.m_iTargetType == TargetEnum::Player /*&& Vars::Backtrack::Enabled.Value*/;
 
 			return true;
 		}
@@ -609,7 +609,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 		if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 			continue;
 
-		validTargets.push_back({ pBuilding, ETargetType::Unknown, vPoint, vAngleTo, flFOVTo, flDistTo });
+		validTargets.push_back({ pBuilding, TargetEnum::Unknown, vPoint, vAngleTo, flFOVTo, flDistTo });
 	}
 
 	F::AimbotGlobal.SortTargets(&validTargets, Vars::Aimbot::General::TargetSelectionEnum::Distance);

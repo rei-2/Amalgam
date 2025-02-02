@@ -1538,12 +1538,13 @@ void CMenu::MenuSettings()
 							if (FButton(std::format("Parent: {}", sParent).c_str(), FButton_Right | FButton_SameLine | FButton_NoUpper, { 0, 40 }))
 								bParent = 2;
 						}
-						FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type" }, {}, FDropdown_Left);
+						FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdown_Left);
 						switch (tBind.Type)
 						{
-						case 0: tBind.Info = std::min(tBind.Info, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right); break;
-						case 1: tBind.Info = std::min(tBind.Info, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right); break;
-						case 2: tBind.Info = std::min(tBind.Info, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right); break;
+						case BindEnum::Key: tBind.Info = std::clamp(tBind.Info, 0, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right); break;
+						case BindEnum::Class: tBind.Info = std::clamp(tBind.Info, 0, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right); break;
+						case BindEnum::WeaponType: tBind.Info = std::clamp(tBind.Info, 0, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right); break;
+						case BindEnum::ItemSlot: tBind.Info = std::max(tBind.Info, 0); FDropdown("Item slot", &tBind.Info, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdown_Right); break;
 						}
 					} EndChild();
 
@@ -1613,44 +1614,46 @@ void CMenu::MenuSettings()
 
 							y++;
 
-							std::string sType; std::string sBehavior;
+							std::string sType; std::string sInfo;
 							switch (_tBind.Type)
 							{
-							// key
-							case 0:
+							case BindEnum::Key:
 								switch (_tBind.Info)
 								{
-								case 0: { sType = "hold"; break; }
-								case 1: { sType = "toggle"; break; }
-								case 2: { sType = "double"; break; }
+								case BindEnum::KeyEnum::Hold: { sType = "hold"; break; }
+								case BindEnum::KeyEnum::Toggle: { sType = "toggle"; break; }
+								case BindEnum::KeyEnum::DoubleClick: { sType = "double"; break; }
 								}
-								sBehavior = VK2STR(_tBind.Key);
+								sInfo = VK2STR(_tBind.Key);
 								break;
-							// class
-							case 1:
+							case BindEnum::Class:
 								sType = "class";
 								switch (_tBind.Info)
 								{
-								case 0: { sBehavior = "scout"; break; }
-								case 1: { sBehavior = "soldier"; break; }
-								case 2: { sBehavior = "pyro"; break; }
-								case 3: { sBehavior = "demoman"; break; }
-								case 4: { sBehavior = "heavy"; break; }
-								case 5: { sBehavior = "engineer"; break; }
-								case 6: { sBehavior = "medic"; break; }
-								case 7: { sBehavior = "sniper"; break; }
-								case 8: { sBehavior = "spy"; break; }
+								case BindEnum::ClassEnum::Scout: { sInfo = "scout"; break; }
+								case BindEnum::ClassEnum::Soldier: { sInfo = "soldier"; break; }
+								case BindEnum::ClassEnum::Pyro: { sInfo = "pyro"; break; }
+								case BindEnum::ClassEnum::Demoman: { sInfo = "demoman"; break; }
+								case BindEnum::ClassEnum::Heavy: { sInfo = "heavy"; break; }
+								case BindEnum::ClassEnum::Engineer: { sInfo = "engineer"; break; }
+								case BindEnum::ClassEnum::Medic: { sInfo = "medic"; break; }
+								case BindEnum::ClassEnum::Sniper: { sInfo = "sniper"; break; }
+								case BindEnum::ClassEnum::Spy: { sInfo = "spy"; break; }
 								}
 								break;
-							// weapon type
-							case 2:
+							case BindEnum::WeaponType:
 								sType = "weapon";
 								switch (_tBind.Info)
 								{
-								case 0: { sBehavior = "hitscan"; break; }
-								case 1: { sBehavior = "projectile"; break; }
-								case 2: { sBehavior = "melee"; break; }
+								case BindEnum::WeaponTypeEnum::Hitscan: { sInfo = "hitscan"; break; }
+								case BindEnum::WeaponTypeEnum::Projectile: { sInfo = "projectile"; break; }
+								case BindEnum::WeaponTypeEnum::Melee: { sInfo = "melee"; break; }
 								}
+								break;
+							case BindEnum::ItemSlot:
+								sType = "slot";
+								sInfo = std::format("{}", _tBind.Info + 1);
+								break;
 							}
 							if (_tBind.Not)
 								sType = std::format("not {}", sType);
@@ -1673,7 +1676,7 @@ void CMenu::MenuSettings()
 							FText(sType.c_str());
 
 							SetCursorPos({ vOriginalPos.x + (flWidth - H::Draw.Scale(105)) * (2.f / 3), vOriginalPos.y + H::Draw.Scale(7) });
-							FText(sBehavior.c_str());
+							FText(sInfo.c_str());
 
 							// buttons
 							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(22), vOriginalPos.y + H::Draw.Scale(5) });
@@ -2450,49 +2453,51 @@ void CMenu::DrawBinds()
 
 				if (tBind.Visible || IsOpen)
 				{
-					std::string sInfo; std::string sState;
+					std::string sType; std::string sInfo;
 					switch (tBind.Type)
 					{
-					// key
-					case 0:
+					case BindEnum::Key:
 						switch (tBind.Info)
 						{
-						case 0: { sInfo = "hold"; break; }
-						case 1: { sInfo = "toggle"; break; }
-						case 2: { sInfo = "double"; break; }
+						case BindEnum::KeyEnum::Hold: { sType = "hold"; break; }
+						case BindEnum::KeyEnum::Toggle: { sType = "toggle"; break; }
+						case BindEnum::KeyEnum::DoubleClick: { sType = "double"; break; }
 						}
-						sState = VK2STR(tBind.Key);
+						sInfo = VK2STR(tBind.Key);
 						break;
-					// class
-					case 1:
-						sInfo = "class";
+					case BindEnum::Class:
+						sType = "class";
 						switch (tBind.Info)
 						{
-						case 0: { sState = "scout"; break; }
-						case 1: { sState = "soldier"; break; }
-						case 2: { sState = "pyro"; break; }
-						case 3: { sState = "demoman"; break; }
-						case 4: { sState = "heavy"; break; }
-						case 5: { sState = "engineer"; break; }
-						case 6: { sState = "medic"; break; }
-						case 7: { sState = "sniper"; break; }
-						case 8: { sState = "spy"; break; }
+						case BindEnum::ClassEnum::Scout: { sInfo = "scout"; break; }
+						case BindEnum::ClassEnum::Soldier: { sInfo = "soldier"; break; }
+						case BindEnum::ClassEnum::Pyro: { sInfo = "pyro"; break; }
+						case BindEnum::ClassEnum::Demoman: { sInfo = "demoman"; break; }
+						case BindEnum::ClassEnum::Heavy: { sInfo = "heavy"; break; }
+						case BindEnum::ClassEnum::Engineer: { sInfo = "engineer"; break; }
+						case BindEnum::ClassEnum::Medic: { sInfo = "medic"; break; }
+						case BindEnum::ClassEnum::Sniper: { sInfo = "sniper"; break; }
+						case BindEnum::ClassEnum::Spy: { sInfo = "spy"; break; }
 						}
 						break;
-					// weapon type
-					case 2:
-						sInfo = "weapon";
+					case BindEnum::WeaponType:
+						sType = "weapon";
 						switch (tBind.Info)
 						{
-						case 0: { sState = "hitscan"; break; }
-						case 1: { sState = "projectile"; break; }
-						case 2: { sState = "melee"; break; }
+						case BindEnum::WeaponTypeEnum::Hitscan: { sInfo = "hitscan"; break; }
+						case BindEnum::WeaponTypeEnum::Projectile: { sInfo = "projectile"; break; }
+						case BindEnum::WeaponTypeEnum::Melee: { sInfo = "melee"; break; }
 						}
+						break;
+					case BindEnum::ItemSlot:
+						sType = "slot";
+						sInfo = std::format("{}", tBind.Info + 1);
+						break;
 					}
 					if (tBind.Not)
 						sInfo = std::format("not {}", sInfo);
 
-					vBinds.push_back({ tBind.Active, tBind.Name.c_str(), sInfo, sState, iBind, tBind });
+					vBinds.push_back({ tBind.Active, tBind.Name.c_str(), sType, sInfo, iBind, tBind });
 				}
 
 				if (tBind.Active || IsOpen)

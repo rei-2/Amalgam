@@ -2,22 +2,12 @@
 #include "../../../SDK/SDK.h"
 #include "../../Backtrack/Backtrack.h"
 
-enum struct ETargetType
-{
-	Unknown,
-	Player,
-	Sentry,
-	Dispenser,
-	Teleporter,
-	Sticky,
-	NPC,
-	Bomb
-};
+Enum(Target, Unknown, Player, Sentry, Dispenser, Teleporter, Sticky, NPC, Bomb)
 
 struct Target_t
 {
 	CBaseEntity* m_pEntity = nullptr;
-	ETargetType m_TargetType = ETargetType::Unknown;
+	int m_iTargetType = TargetEnum::Unknown;
 	Vec3 m_vPos = {};
 	Vec3 m_vAngleTo = {};
 	float m_flFOVTo = std::numeric_limits<float>::max();

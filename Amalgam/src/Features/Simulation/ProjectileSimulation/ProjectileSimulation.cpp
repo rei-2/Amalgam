@@ -8,8 +8,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsTaunting() || !pWeapon)
 		return false;
 
-	bool bTrace = iFlags & ProjSim_Trace;
-	bool bQuick = iFlags & ProjSim_Quick;
+	bool bTrace = iFlags & ProjSimEnum::Trace;
+	bool bQuick = iFlags & ProjSimEnum::Quick;
 
 	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
 	static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
@@ -42,7 +42,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			float flOldCurrentTime = I::GlobalVars->curtime;
 			I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
 
-			int iCmdNum = iFlags & ProjSim_PredictCmdNum ? F::CritHack.PredictCmdNum(pPlayer, pWeapon, G::CurrentUserCmd) : G::CurrentUserCmd->command_number;
+			int iCmdNum = iFlags & ProjSimEnum::PredictCmdNum ? F::CritHack.PredictCmdNum(pPlayer, pWeapon, G::CurrentUserCmd) : G::CurrentUserCmd->command_number;
 			SDK::RandomSeed(SDK::SeedFileLineHash(MD5_PseudoRandom(iCmdNum) & 0x7FFFFFFF, "SelectWeightedSequence", 0));
 			for (int i = 0; i < 6; ++i)
 				SDK::RandomFloat();
@@ -62,7 +62,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 				vAngAdd.x += SDK::RandomFloat(-1.5f, 1.5f);
 				vAngAdd.y += SDK::RandomFloat(-1.5f, 1.5f);
 			}
-			if (!(iFlags & ProjSim_NoRandomAngles)) // don't do angle stuff for aimbot, nospread will pick that up
+			if (!(iFlags & ProjSimEnum::NoRandomAngles)) // don't do angle stuff for aimbot, nospread will pick that up
 				vAngles += vAngAdd;
 
 			I::GlobalVars->curtime = flOldCurrentTime;
@@ -248,8 +248,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
 {
-	bool InitCheck = iFlags & ProjSim_InitCheck;
-	bool bQuick = iFlags & ProjSim_Quick;
+	bool InitCheck = iFlags & ProjSimEnum::InitCheck;
+	bool bQuick = iFlags & ProjSimEnum::Quick;
 
 	const float flOldCurrentTime = I::GlobalVars->curtime;
 	I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());

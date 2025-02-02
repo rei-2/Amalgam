@@ -51,15 +51,14 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 
 				switch (tBind.Type)
 				{
-				// key
-				case 0:
+				case BindEnum::Key:
 				{
 					bool bKey = false;
 					switch (tBind.Info)
 					{
-					case 0: bKey = U::KeyHandler.Down(tBind.Key, true, &tBind.Storage); break;
-					case 1: bKey = U::KeyHandler.Pressed(tBind.Key, true, &tBind.Storage); break;
-					case 2: bKey = U::KeyHandler.Double(tBind.Key, true, &tBind.Storage); break;
+					case BindEnum::KeyEnum::Hold: bKey = U::KeyHandler.Down(tBind.Key, true, &tBind.Storage); break;
+					case BindEnum::KeyEnum::Toggle: bKey = U::KeyHandler.Pressed(tBind.Key, true, &tBind.Storage); break;
+					case BindEnum::KeyEnum::DoubleClick: bKey = U::KeyHandler.Double(tBind.Key, true, &tBind.Storage); break;
 					}
 					const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && (!I::MatSystemSurface->IsCursorVisible() || I::EngineClient->IsPlayingDemo())
 											|| F::Menu.IsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.InKeybind; // allow in menu
@@ -67,44 +66,50 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 
 					switch (tBind.Info)
 					{
-					case 0:
+					case BindEnum::KeyEnum::Hold:
 						if (tBind.Not)
 							bKey = !bKey;
 						tBind.Active = bKey;
 						break;
-					case 1:
-					case 2:
+					case BindEnum::KeyEnum::Toggle:
+					case BindEnum::KeyEnum::DoubleClick:
 						if (bKey)
 							tBind.Active = !tBind.Active;
 					}
 					break;
 				}
-				// class
-				case 1:
+				case BindEnum::Class:
 				{
 					const int iClass = pLocal ? pLocal->m_iClass() : 0;
 					switch (tBind.Info)
 					{
-					case 0: { tBind.Active = iClass == 1; break; }
-					case 1: { tBind.Active = iClass == 3; break; }
-					case 2: { tBind.Active = iClass == 7; break; }
-					case 3: { tBind.Active = iClass == 4; break; }
-					case 4: { tBind.Active = iClass == 6; break; }
-					case 5: { tBind.Active = iClass == 9; break; }
-					case 6: { tBind.Active = iClass == 5; break; }
-					case 7: { tBind.Active = iClass == 2; break; }
-					case 8: { tBind.Active = iClass == 8; break; }
+					case BindEnum::ClassEnum::Scout: { tBind.Active = iClass == 1; break; }
+					case BindEnum::ClassEnum::Soldier: { tBind.Active = iClass == 3; break; }
+					case BindEnum::ClassEnum::Pyro: { tBind.Active = iClass == 7; break; }
+					case BindEnum::ClassEnum::Demoman: { tBind.Active = iClass == 4; break; }
+					case BindEnum::ClassEnum::Heavy: { tBind.Active = iClass == 6; break; }
+					case BindEnum::ClassEnum::Engineer: { tBind.Active = iClass == 9; break; }
+					case BindEnum::ClassEnum::Medic: { tBind.Active = iClass == 5; break; }
+					case BindEnum::ClassEnum::Sniper: { tBind.Active = iClass == 2; break; }
+					case BindEnum::ClassEnum::Spy: { tBind.Active = iClass == 8; break; }
 					}
 					if (tBind.Not)
 						tBind.Active = !tBind.Active;
 					break;
 				}
-				// weapon type
-				case 2:
+				case BindEnum::WeaponType:
 				{
 					tBind.Active = tBind.Info + 1 == int(SDK::GetWeaponType(pWeapon));
 					if (tBind.Not)
 						tBind.Active = !tBind.Active;
+					break;
+				}
+				case BindEnum::ItemSlot:
+				{
+					tBind.Active = tBind.Info == (pWeapon ? pWeapon->GetSlot() : -1);
+					if (tBind.Not)
+						tBind.Active = !tBind.Active;
+					break;
 				}
 				}
 

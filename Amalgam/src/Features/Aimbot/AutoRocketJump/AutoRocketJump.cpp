@@ -10,7 +10,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		return true;
 
 	ProjectileInfo projInfo = {};
-	if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, projInfo, ProjSim_NoRandomAngles) || !F::ProjSim.Initialize(projInfo, false))
+	if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, projInfo, ProjSimEnum::NoRandomAngles) || !F::ProjSim.Initialize(projInfo, false))
 		return false;
 	Vec3 vOrigin = pLocal->m_vecOrigin();
 	Vec3 vLocalPos = pLocal->GetShootPos();
@@ -64,7 +64,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		m_vAngles.x = flPitch = vAngleTo.x, m_vAngles.y = flYaw = vAngleTo.y;
 	}
 
-	if (!F::ProjSim.GetInfo(pLocal, pWeapon, { flPitch, flYaw, 0 }, projInfo, ProjSim_Trace | ProjSim_NoRandomAngles))
+	if (!F::ProjSim.GetInfo(pLocal, pWeapon, { flPitch, flYaw, 0 }, projInfo, ProjSimEnum::Trace | ProjSimEnum::NoRandomAngles))
 		return false;
 
 	{	// correct yaw
@@ -142,7 +142,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 			PlayerStorage localStorage;
 			ProjectileInfo projInfo = {};
 
-			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, m_vAngles, projInfo, ProjSim_Trace | ProjSim_InitCheck | ProjSim_NoRandomAngles) && F::ProjSim.Initialize(projInfo);
+			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, m_vAngles, projInfo, ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles) && F::ProjSim.Initialize(projInfo);
 			bool bMoveSimSetup = F::MoveSim.Initialize(pLocal, localStorage, false); // do move sim after to not mess with proj sim
 			if (bMoveSimSetup && bProjSimSetup)
 			{

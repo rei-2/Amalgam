@@ -1,13 +1,20 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
+Enum(Bind, Key, Class, WeaponType, ItemSlot)
+namespace BindEnum
+{
+	Enum(Key, Hold, Toggle, DoubleClick)
+	Enum(Class, Scout, Soldier, Pyro, Demoman, Heavy, Engineer, Medic, Sniper, Spy)
+	Enum(WeaponType, Hitscan, Projectile, Melee)
+	//Enum(ItemType, First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Ninth)
+}
+
 struct Bind_t
 {
 	std::string Name = "";
-	int Type = 0; // Key, Class, Weapon type
-	int Info = 0; // Key: Hold, Toggle, Double click
-	// Class: Scout, Soldier, Pyro, Demoman, Heavy, Engineer, Medic, Sniper, Spy
-	// Weapon type: Hitscan, Projectile, Melee
+	int Type = 0;
+	int Info = 0;
 	int Key = 0;
 	bool Not = false;
 	KeyStorage Storage = {};

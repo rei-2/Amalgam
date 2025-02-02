@@ -1,15 +1,14 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
-enum ProjSim_
-{
-	ProjSim_None = 0,
-	ProjSim_Trace = 1 << 0,
-	ProjSim_InitCheck = 1 << 1,
-	ProjSim_Quick = 1 << 2,
-	ProjSim_NoRandomAngles = 1 << 3,
-	ProjSim_PredictCmdNum = 1 << 4
-};
+Enum(ProjSim,
+	None = 0,
+	Trace = 1 << 0,
+	InitCheck = 1 << 1,
+	Quick = 1 << 2,
+	NoRandomAngles = 1 << 3,
+	PredictCmdNum = 1 << 4
+)
 
 struct ProjectileInfo
 {
@@ -49,7 +48,7 @@ class CProjectileSimulation
 	};
 
 public:
-	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags = ProjSim_Trace | ProjSim_InitCheck, float flAutoCharge = -1.f);
+	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
 	bool Initialize(ProjectileInfo& info, bool bSimulate = true);
 	void RunTick(ProjectileInfo& info, bool bPath = true);
 	Vec3 GetOrigin();

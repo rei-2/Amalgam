@@ -29,7 +29,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargetsMedigun(CTFPlayer* pLocal, CWeap
 			continue;
 
 		float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-		vTargets.push_back({ pPlayer, ETargetType::Player, vPos, vAngleTo, flFOVTo, flDistTo });
+		vTargets.push_back({ pPlayer, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo });
 	}
 
 	return vTargets;
@@ -64,7 +64,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				continue;
 
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.push_back({ pEntity, ETargetType::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()) });
+			vTargets.push_back({ pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()) });
 		}
 	}
 
@@ -82,7 +82,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				continue;
 
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.push_back({ pEntity, pEntity->IsSentrygun() ? ETargetType::Sentry : pEntity->IsDispenser() ? ETargetType::Dispenser : ETargetType::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo });
+			vTargets.push_back({ pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
@@ -100,7 +100,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				continue;
 
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.push_back({ pEntity, ETargetType::Sticky, vPos, vAngleTo, flFOVTo, flDistTo });
+			vTargets.push_back({ pEntity, TargetEnum::Sticky, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
@@ -118,7 +118,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				continue;
 
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.push_back({ pEntity, ETargetType::NPC, vPos, vAngleTo, flFOVTo, flDistTo });
+			vTargets.push_back({ pEntity, TargetEnum::NPC, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
@@ -136,7 +136,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				continue;
 
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.push_back({ pEntity, ETargetType::Bomb, vPos, vAngleTo, flFOVTo, flDistTo });
+			vTargets.push_back({ pEntity, TargetEnum::Bomb, vPos, vAngleTo, flFOVTo, flDistTo });
 		}
 	}
 
@@ -344,7 +344,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 	{
 		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pWeapon) : true) && Vars::Aimbot::General::HitscanPeek.Value;
 
-		if (target.m_TargetType == ETargetType::Player || target.m_TargetType == ETargetType::Sentry)
+		if (target.m_iTargetType == TargetEnum::Player || target.m_iTargetType == TargetEnum::Sentry)
 		{
 			auto aBones = tRecord.m_BoneMatrix.m_aBones;
 			if (!aBones)
@@ -352,7 +352,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 
 			std::vector<std::pair<const mstudiobbox_t*, int>> vHitboxes;
 			{
-				if (target.m_TargetType != ETargetType::Sentry)
+				if (target.m_iTargetType != TargetEnum::Sentry)
 				{
 					std::vector<std::pair<const mstudiobbox_t*, int>> primary, secondary, tertiary; // dumb
 					for (int nHitbox = 0; nHitbox < target.m_pEntity->As<CTFPlayer>()->GetNumOfHitboxes(); nHitbox++)
@@ -449,7 +449,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 						if (RayToOBB(vEyePos, vForward, vMins, vMaxs, aBones[pair.first->bone])) // for the time being, no vischecks against other hitboxes
 						{
 							bool bWillHit = true;
-							if (target.m_TargetType == ETargetType::Sentry) // point of hit for sentries needs to be within bbox
+							if (target.m_iTargetType == TargetEnum::Sentry) // point of hit for sentries needs to be within bbox
 							{
 								const matrix3x4& transform = target.m_pEntity->RenderableToWorldTransform();
 								const Vec3 vMin = target.m_pEntity->m_vecMins(), vMax = target.m_pEntity->m_vecMaxs();
@@ -462,8 +462,8 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 								target.m_tRecord = tRecord;
 								target.m_vPos = vTransformed;
 								target.m_nAimedHitbox = pair.second;
-								if (target.m_TargetType == ETargetType::Player)
-									target.m_bBacktrack = true; //target.m_TargetType == ETargetType::PLAYER /*&& Vars::Backtrack::Enabled.Value*/;
+								if (target.m_iTargetType == TargetEnum::Player)
+									target.m_bBacktrack = true; //target.m_iTargetType == TargetEnum::PLAYER /*&& Vars::Backtrack::Enabled.Value*/;
 								return true;
 							}
 						}
