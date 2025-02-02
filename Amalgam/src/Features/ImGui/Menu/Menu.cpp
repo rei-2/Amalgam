@@ -852,6 +852,13 @@ void CMenu::MenuVisuals()
 					FSlider("Thirdperson right", Vars::Visuals::ThirdPerson::Right, -500.f, 500.f, 5.f, "%g", FSlider_Precision);
 					FSlider("Thirdperson up", Vars::Visuals::ThirdPerson::Up, -500.f, 500.f, 5.f, "%g", FSlider_Precision);
 				} EndSection();
+				if (Vars::Debug::Info.Value)
+				{
+					if (Section("debug"))
+					{
+						FToggle("thirdperson scales", Vars::Visuals::ThirdPerson::Scale);
+					} EndSection();
+				}
 				if (Section("Out of FOV arrows"))
 				{
 					FToggle("Enabled", Vars::Visuals::FOVArrows::Enabled);

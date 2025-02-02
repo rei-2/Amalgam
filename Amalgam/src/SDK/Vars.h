@@ -589,6 +589,7 @@ namespace Vars
 			CVar(Right, 0.f, VISUAL)
 			CVar(Up, 0.f, VISUAL)
 			CVar(Crosshair, false, VISUAL)
+			CVar(Scale, true, DEBUGVAR)
 		SUBNAMESPACE_END(ThirdPerson)
 
 		SUBNAMESPACE_BEGIN(FOVArrows)

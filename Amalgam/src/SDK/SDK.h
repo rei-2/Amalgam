@@ -65,7 +65,7 @@ template <typename T> int sign(T val)
 
 namespace SDK
 {
-	void Output(const char* cFunction, const char* cLog = nullptr, Color_t cColor = { 255, 255, 255, 255 }, bool bConsole = true, bool bChat = false, bool bToast = false, bool bDebug = false, int bMessageBox = -1);
+	void Output(const char* cFunction, const char* cLog = nullptr, Color_t cColor = { 255, 255, 255, 255 }, bool bConsole = true, bool bChat = false, bool bToast = false, bool bDebug = false, int iMessageBox = -1);
 
 	HWND GetTeamFortressWindow();
 	bool IsGameWindowInFocus();
@@ -98,6 +98,7 @@ namespace SDK
 	bool VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
 
 	int GetRoundState();
+	int GetWinningTeam();
 	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType = nullptr);
 	const char* GetClassByIndex(const int nClass);
 

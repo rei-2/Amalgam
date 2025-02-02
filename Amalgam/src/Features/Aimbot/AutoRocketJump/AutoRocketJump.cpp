@@ -133,7 +133,6 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 	else if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
 		pCmd->buttons &= ~IN_ATTACK2; // fix for retarded issue
 
-
 	if (m_iFrame == -1 && (pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka ? G::Attacking == 1 : G::CanPrimaryAttack || G::Reloading)
 		&& SetAngles(pLocal, pWeapon, pCmd))
 	{

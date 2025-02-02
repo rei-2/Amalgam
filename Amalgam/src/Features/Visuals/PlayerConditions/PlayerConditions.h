@@ -4,7 +4,7 @@
 class CPlayerConditions
 {
 public:
-	std::vector<std::wstring> Get(CTFPlayer* pEntity);
+	std::vector<std::string> Get(CTFPlayer* pEntity);
 	void Draw(CTFPlayer* pLocal);
 };
 

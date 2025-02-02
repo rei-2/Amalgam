@@ -2,10 +2,15 @@
 
 #include "../Features/Players/PlayerUtils.h"
 
+MAKE_SIGNATURE(GetPlayerNameForSteamID_GetFriendPersonaName_Call, "client.dll", "41 B9 ? ? ? ? 44 8B C3 48 8B C8", 0x0);
+
 MAKE_HOOK(ISteamFriends_GetFriendPersonaName, U::Memory.GetVFunc(I::SteamFriends, 7), const char*,
 	void* rcx, CSteamID steamIDFriend)
 {
-	if (Vars::Visuals::UI::StreamerMode.Value)
+	static const auto dwDesired = S::GetPlayerNameForSteamID_GetFriendPersonaName_Call();
+	const auto dwRetAddr = uintptr_t(_ReturnAddress());
+
+	if (Vars::Visuals::UI::StreamerMode.Value && dwRetAddr == dwDesired)
 	{
 		if (I::SteamUser->GetSteamID() == steamIDFriend)
 		{

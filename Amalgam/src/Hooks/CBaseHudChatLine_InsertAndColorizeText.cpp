@@ -65,7 +65,14 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 		}
 		for (auto& [sFind, sReplace] : vReplace)
 		{
-			std::transform(sFind.begin(), sFind.end(), sFind.begin(), ::tolower);
+			{
+				std::string sReplace2 = sReplace;
+				std::transform(sFind.begin(), sFind.end(), sFind.begin(), ::tolower);
+				std::transform(sReplace2.begin(), sReplace2.end(), sReplace2.begin(), ::tolower);
+				if (FNV1A::Hash32(sFind.c_str()) == FNV1A::Hash32(sReplace2.c_str()))
+					continue;
+			}
+
 			while (true)
 			{
 				std::string sMessage2 = sMessage;

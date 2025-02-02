@@ -54,10 +54,21 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		bool bCanAttack = pLocal->CanAttack();
 		switch (SDK::GetRoundState())
 		{
+		case GR_STATE_TEAM_WIN:
+			if (pLocal->m_iTeamNum() != SDK::GetWinningTeam())
+				bCanAttack = false;
+			break;
 		case GR_STATE_BETWEEN_RNDS:
+			if (pLocal->m_fFlags() & FL_FROZEN)
+				bCanAttack = false;
+			break;
 		case GR_STATE_GAME_OVER:
-			bCanAttack = bCanAttack && !(pLocal->m_fFlags() & FL_FROZEN);
+			if (pLocal->m_fFlags() & FL_FROZEN || pLocal->m_iTeamNum() != SDK::GetWinningTeam())
+				bCanAttack = false;
+			break;
 		}
+		if (pLocal->InCond(TF_COND_STUNNED) && pLocal->m_iStunFlags() & (TF_STUN_CONTROLS | TF_STUN_LOSER_STATE))
+			bCanAttack = false;
 		if (bCanAttack)
 		{
 			G::CanPrimaryAttack = pWeapon->CanPrimaryAttack();

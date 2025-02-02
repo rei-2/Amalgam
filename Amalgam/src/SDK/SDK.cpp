@@ -23,7 +23,7 @@ BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
 
 
 
-void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool bConsole, bool bChat, bool bToast, bool bDebug, int bMessageBox)
+void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool bConsole, bool bChat, bool bToast, bool bDebug, int iMessageBox)
 {
 	if (cLog)
 	{
@@ -38,8 +38,8 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool b
 			F::Notifications.Add(std::format("[{}] {}", cFunction, cLog));
 		if (bDebug)
 			OutputDebugString(std::format("[{}] {}\n", cFunction, cLog).c_str());
-		if (bMessageBox != -1)
-			MessageBox(nullptr, cLog, cFunction, bMessageBox);
+		if (iMessageBox != -1)
+			MessageBox(nullptr, cLog, cFunction, iMessageBox);
 	}
 	else
 	{
@@ -51,8 +51,8 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool b
 			F::Notifications.Add(std::format("{}", cFunction));
 		if (bDebug)
 			OutputDebugString(std::format("{}\n", cFunction).c_str());
-		if (bMessageBox != -1)
-			MessageBox(nullptr, "", cFunction, bMessageBox);
+		if (iMessageBox != -1)
+			MessageBox(nullptr, "", cFunction, iMessageBox);
 	}
 }
 
@@ -321,6 +321,12 @@ int SDK::GetRoundState()
 {
 	if (auto pGameRules = I::TFGameRules->Get())
 		return pGameRules->m_iRoundState();
+	return 0;
+}
+int SDK::GetWinningTeam()
+{
+	if (auto pGameRules = I::TFGameRules->Get())
+		return pGameRules->m_iWinningTeam();
 	return 0;
 }
 
