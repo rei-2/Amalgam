@@ -14,10 +14,7 @@ MAKE_HOOK(FX_FireBullets, S::FX_FireBullets(), void,
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
 	if (iPlayer != I::EngineClient->GetLocalPlayer())
-	{
 		F::Backtrack.ReportShot(iPlayer);
-		F::Resolver.FXFireBullet(iPlayer, vecAngles);
-	}
 	else if (Vars::Aimbot::General::NoSpread.Value && dwRetAddr == dwDesired)
 		iSeed = F::NoSpreadHitscan.m_iSeed;
 

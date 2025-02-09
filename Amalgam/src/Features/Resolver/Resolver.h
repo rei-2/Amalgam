@@ -3,51 +3,45 @@
 
 struct ResolveData
 {
-	//config data
-	bool bEnabled = false;			//	should we resolve this player
+	float m_flYaw = 0.f; // to be added
+	float m_flPitch = 0.f; // to be set, if pitch oob
 
-	//bruteforce data
-	int iYawIndex = 0;
+	bool m_bYaw = false;
+	bool m_bPitch = false;
+	bool m_bMinwalk = true;
 
-	//logical data
-	std::pair<int, float> pLastSniperPitch = {0, 0.f};
-	float flPitchNoise = 0.f;		//	noise around sniper dot pitch
-	int iPitchNoiseSteps = 0;
-
-	//historical data
-	std::pair<std::pair<int, bool>, Vec3> pLastFireAngles = { { 0, false }, {} };
-	Vec2 vOriginalAngles = {0.f, 0.f};
+	bool m_bAutoSetYaw = true;
+	bool m_bAutoSetPitch = true;
+	bool m_bFirstOOBPitch = false;
+	bool m_bInversePitch = false;
 };
 
-class PResolver
+class CResolver
 {
-	void UpdateSniperDots();
-	std::optional<float> GetPitchForSniperDot(CTFPlayer* pEntity);
-
-	std::optional<float> PredictBaseYaw(CTFPlayer* pLocal, CTFPlayer* pEntity);
-
-	bool ShouldRun(CTFPlayer* pLocal);
-	bool ShouldRunEntity(CTFPlayer* pEntity);
-	bool KeepOnShot(CTFPlayer* pEntity);
-	bool IsOnShotPitchReliable(const float flPitch);
-	float GetRealPitch(const float flPitch);
-	void SetAngles(const Vec3 vAngles, CTFPlayer* pEntity);
-	int GetPitchMode(CTFPlayer* pEntity);
-	int GetYawMode(CTFPlayer* pEntity);
-	void OnDormancy(CTFPlayer* pEntity);
+	void StoreSniperDots(CTFPlayerResource* pResource);
+	std::optional<float> GetPitchForSniperDot(CTFPlayer* pEntity, CTFPlayerResource* pResource);
 	
-	std::unordered_map<IClientEntity*, Vec3> mSniperDots;
-	std::unordered_map<CTFPlayer*, ResolveData> mResolverData;
-	std::pair<int, std::pair<CTFPlayer*, bool>> pWaiting = {0, {nullptr, false}};
+	std::unordered_map<int, ResolveData> m_mResolverData;
+	std::unordered_map<int, Vec3> m_mSniperDots;
+
+	int m_iWaitingForTarget = -1;
+	float m_flWaitingForDamage = 0.f;
+	bool m_bWaitingForHeadshot = false;
+
+	float m_flLastYawCycle = 0.f;
+	float m_flLastPitchCycle = 0.f;
+	float m_flLastMinwalkCycle = 0.f;
 
 public:
-	void Aimbot(CTFPlayer* pEntity, const bool bHeadshot);
-	void FrameStageNotify(CTFPlayer* pLocal);
-	void CreateMove();
-	void FXFireBullet(int iIndex, const Vec3 vAngles);
+	void FrameStageNotify();
+	void CreateMove(CTFPlayer* pLocal);
+	void HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int iHitbox = HITBOX_MAX);
 	void OnPlayerHurt(IGameEvent* pEvent);
-
-	std::unordered_map<uint32_t, std::pair<int, int>> mResolverMode;
+	void SetYaw(int iUserID, float flValue, bool bAuto = false);
+	void SetPitch(int iUserID, float flValue, bool bInverse = false, bool bAuto = false);
+	void SetMinwalk(int iUserID, bool bValue);
+	bool GetAngles(CTFPlayer* pPlayer, float* pYaw = nullptr, float* pPitch = nullptr, bool* pMinwalk = nullptr, bool bFake = false);
+	void Reset();
 };
 
-ADD_FEATURE(PResolver, Resolver)
+ADD_FEATURE(CResolver, Resolver)

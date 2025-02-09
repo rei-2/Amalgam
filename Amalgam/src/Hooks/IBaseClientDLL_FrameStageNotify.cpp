@@ -15,18 +15,6 @@
 MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 35), void,
 	void* rcx, ClientFrameStage_t curStage)
 {
-	switch (curStage)
-	{
-	case FRAME_RENDER_START:
-	{
-		if (auto pLocal = H::Entities.GetLocal())
-			F::Resolver.FrameStageNotify(pLocal);
-		// CRASH: Exception thrown at 0x00007FFCD004E223 (client.dll) in tf_win64.exe: 0xC0000005: Access violation reading location 0x0000025800000000.
-		// CRASH: Exception thrown at 0x00007FFC5A09EED0 (client.dll) in tf_win64.exe: 0xC0000005: Access violation reading location 0x000001F636472562.
-		// crashes likely not fsn related
-	}
-	}
-
 	CALL_ORIGINAL(rcx, curStage);
 
 	switch (curStage)
@@ -40,6 +28,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 	{
 		H::Entities.Store();
 		F::PlayerUtils.UpdatePlayers();
+		F::Resolver.FrameStageNotify();
 
 		for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 		{
@@ -57,26 +46,40 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 				G::VelocityMap[n].clear();
 		}
 
-		if (Vars::Visuals::Removals::Interpolation.Value)
+		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 		{
-			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
-			{
-				auto pPlayer = pEntity->As<CTFPlayer>();
-				if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() || pPlayer->IsDormant() || !pPlayer->IsAlive())
-					continue; // local player managed in CPrediction_RunCommand
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() || pPlayer->IsDormant() || !pPlayer->IsAlive())
+				continue; // local player managed in CreateMove
 
-				if (auto iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))
+			bool bResolver = F::Resolver.GetAngles(pPlayer);
+			if (!(Vars::Visuals::Removals::Interpolation.Value || bResolver))
+				continue;
+
+			if (int iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))
+			{
+				float flOldFrameTime = I::GlobalVars->frametime;
+				I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
+				for (int i = 0; i < iDeltaTicks; i++)
 				{
-					float flOldFrameTime = I::GlobalVars->frametime;
-					I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
-					for (int i = 0; i < iDeltaTicks; i++)
+					G::UpdatingAnims = true;
+
+					if (bResolver)
 					{
-						G::UpdatingAnims = true;
+						float flYaw, flPitch;
+						F::Resolver.GetAngles(pPlayer, &flYaw, &flPitch, nullptr, i + 1 == iDeltaTicks);
+
+						float flOriginalYaw = pPlayer->m_angEyeAnglesY(), flOriginalPitch = pPlayer->m_angEyeAnglesX();
+						pPlayer->m_angEyeAnglesY() = flYaw, pPlayer->m_angEyeAnglesX() = flPitch;
 						pPlayer->UpdateClientSideAnimation();
-						G::UpdatingAnims = false;
+						pPlayer->m_angEyeAnglesY() = flOriginalYaw, pPlayer->m_angEyeAnglesX() = flOriginalPitch;
 					}
-					I::GlobalVars->frametime = flOldFrameTime;
+					else
+						pPlayer->UpdateClientSideAnimation();
+
+					G::UpdatingAnims = false;
 				}
+				I::GlobalVars->frametime = flOldFrameTime;
 			}
 		}
 

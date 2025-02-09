@@ -6,5 +6,5 @@ MAKE_HOOK(CClientState_GetClientInterpAmount, S::CClientState_GetClientInterpAmo
 	CClientState* rcx)
 {
 	G::Lerp = CALL_ORIGINAL(rcx);
-	return 0.f; //Vars::Visuals::Removals::Interpolation.Value ? 0.f : G::Lerp
+	return 0.f;
 }

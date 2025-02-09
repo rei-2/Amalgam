@@ -83,10 +83,10 @@ public:
 	CONDGET(IsInWater, m_fFlags(), FL_INWATER);
 	CONDGET(IsDucking, m_fFlags(), FL_DUCKING);
 
-	VIRTUAL(PreThink, void, void(*)(void*), this, 261);
-	VIRTUAL(Think, void, void(*)(void*), this, 121);
-	VIRTUAL(PostThink, void, void(*)(void*), this, 262);
-	VIRTUAL(GetRenderedWeaponModel, CBaseAnimating*, CBaseAnimating*(*)(void*), this, 251);
+	VIRTUAL(PreThink, void, void*, this, 261);
+	VIRTUAL(Think, void, void*, this, 121);
+	VIRTUAL(PostThink, void, void*, this, 262);
+	VIRTUAL(GetRenderedWeaponModel, CBaseAnimating*, void*, this, 251);
 	
 	inline void SelectItem(const char* ptr, int subtype)
 	{

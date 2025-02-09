@@ -99,9 +99,6 @@ public:
 	bool m_bSavePlayers = false;
 	bool m_bLoadTags = true;
 	bool m_bSaveTags = false;
-
-	const std::vector<const char*> m_vListPitch = { "None", "Up", "Down", "Zero", "Auto" };
-	const std::vector<const char*> m_vListYaw = { "None", "Forward", "Backward", "Left", "Right", "Invert", "Edge", "Auto" };
 };
 
 ADD_FEATURE(CPlayerlistUtils, PlayerUtils)

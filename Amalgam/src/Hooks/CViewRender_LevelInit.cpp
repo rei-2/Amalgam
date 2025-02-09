@@ -5,6 +5,7 @@
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/CheaterDetection/CheaterDetection.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
+#include "../Features/Resolver/Resolver.h"
 #include "../Features/TickHandler/TickHandler.h"
 
 MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
@@ -13,7 +14,8 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
 	F::Materials.ReloadMaterials();
 	F::Visuals.OverrideWorldTextures();
 
-	F::Backtrack.Restart();
+	F::Backtrack.Reset();
+	F::Resolver.Reset();
 	F::Ticks.Reset();
 	F::NoSpreadHitscan.Reset();
 	F::CheaterDetection.Reset();

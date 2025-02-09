@@ -362,9 +362,22 @@ void CMenu::MenuAimbot()
 				TableNextColumn();
 				if (Section("Resolver"))
 				{
-					FToggle("Enabled", Vars::AntiHack::Resolver::Resolver, FToggle_Left);
-					PushTransparent(!FGet(Vars::AntiHack::Resolver::Resolver));
-						FToggle("Ignore in-air", Vars::AntiHack::Resolver::IgnoreAirborne, FToggle_Right);
+					FToggle("Enabled", Vars::AntiHack::Resolver::Enabled, FToggle_Left);
+					PushTransparent(!FGet(Vars::AntiHack::Resolver::Enabled));
+						FToggle("Auto resolve", Vars::AntiHack::Resolver::AutoResolve, FToggle_Right);
+						PushTransparent(Transparent || !FGet(Vars::AntiHack::Resolver::AutoResolve));
+							FToggle("Auto resolve cheaters only", Vars::AntiHack::Resolver::AutoResolveCheatersOnly, FToggle_Left);
+							FToggle("Auto resolve headshot only", Vars::AntiHack::Resolver::AutoResolveHeadshotOnly, FToggle_Right);
+							PushTransparent(Transparent || !FGet(Vars::AntiHack::Resolver::AutoResolveYawAmount));
+								FSlider("Auto resolve yaw", Vars::AntiHack::Resolver::AutoResolveYawAmount, -180.f, 180.f, 45.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+							PopTransparent();
+							PushTransparent(Transparent || !FGet(Vars::AntiHack::Resolver::AutoResolvePitchAmount));
+								FSlider("Auto resolve pitch", Vars::AntiHack::Resolver::AutoResolvePitchAmount, -180.f, 180.f, 90.f, "%g", FSlider_Right | FSlider_Clamp);
+							PopTransparent();
+						PopTransparent();
+						FSlider("Cycle yaw", Vars::AntiHack::Resolver::CycleYaw, -180.f, 180.f, 45.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+						FSlider("Cycle pitch", Vars::AntiHack::Resolver::CyclePitch, -180.f, 180.f, 90.f, "%g", FSlider_Right | FSlider_Clamp);
+						FToggle("Cycle minwalk", Vars::AntiHack::Resolver::CycleMinwalk);
 					PopTransparent();
 				} EndSection();
 				if (Section("Auto Peek"))
@@ -382,15 +395,15 @@ void CMenu::MenuAimbot()
 				{
 					PushTransparent(!FGet(Vars::CheaterDetection::Methods));
 						FDropdown("Detection methods", Vars::CheaterDetection::Methods, { "Invalid pitch", "Packet choking", "Aim flicking", "Duck Speed" }, {}, FDropdown_Multi);
-						PushTransparent(!FGet(Vars::CheaterDetection::DetectionsRequired));
+						PushTransparent(Transparent || !FGet(Vars::CheaterDetection::DetectionsRequired));
 							FSlider("Detections required", Vars::CheaterDetection::DetectionsRequired, 0, 50, 1);
 						PopTransparent();
 
-						PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::PacketChoking));
+						PushTransparent(Transparent || !(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::PacketChoking));
 							FSlider("Minimum choking", Vars::CheaterDetection::MinimumChoking, 4, 22, 1);
 						PopTransparent();
 
-						PushTransparent(!(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::AimFlicking));
+						PushTransparent(Transparent || !(FGet(Vars::CheaterDetection::Methods) & Vars::CheaterDetection::MethodsEnum::AimFlicking));
 							FSlider("Minimum flick angle", Vars::CheaterDetection::MinimumFlick, 10.f, 30.f, 1.f, "%.0f", FSlider_Left);
 							FSlider("Maximum noise", Vars::CheaterDetection::MaximumNoise, 1.f, 10.f, 1.f, "%.0f", FSlider_Right);
 						PopTransparent();
@@ -1170,7 +1183,7 @@ void CMenu::MenuLogs()
 				TableNextColumn();
 				if (Section("Logging"))
 				{
-					FDropdown("Logs", Vars::Logging::Logs, { "Vote start", "Vote cast", "Class changes", "Damage", "Cheat detection", "Tags", "Aliases" }, {}, FDropdown_Multi);
+					FDropdown("Logs", Vars::Logging::Logs, { "Vote start", "Vote cast", "Class changes", "Damage", "Cheat detection", "Tags", "Aliases", "Resolver" }, {}, FDropdown_Multi);
 					FSlider("Notification time", Vars::Logging::Lifetime, 0.5f, 5.f, 0.5f, "%g");
 				} EndSection();
 				if (Section("Vote Start"))
@@ -1216,6 +1229,12 @@ void CMenu::MenuLogs()
 				{
 					PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::Aliases));
 						FDropdown("Log to", Vars::Logging::Aliases::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
+					PopTransparent();
+				} EndSection();
+				if (Section("Resolver"))
+				{
+					PushTransparent(!(FGet(Vars::Logging::Logs) & Vars::Logging::LogsEnum::Resolver));
+						FDropdown("Log to", Vars::Logging::Resolver::LogTo, { "Toasts", "Chat", "Party", "Console" }, { 1 << 0, 1 << 1, 1 << 2, 1 << 3 }, FDropdown_Multi);
 					PopTransparent();
 				} EndSection();
 
@@ -1276,44 +1295,66 @@ void CMenu::MenuSettings()
 							newName.clear();
 						}
 
+						std::vector<std::pair<std::filesystem::directory_entry, std::string>> vConfigs = {};
+						bool bDefaultFound = false;
 						for (auto& entry : std::filesystem::directory_iterator(F::Configs.sConfigPath))
 						{
 							if (!entry.is_regular_file() || entry.path().extension() != F::Configs.sConfigExtension)
 								continue;
 
-							std::string configName = entry.path().filename().string();
-							configName.erase(configName.end() - F::Configs.sConfigExtension.size(), configName.end());
+							std::string sConfigName = entry.path().filename().string();
+							sConfigName.erase(sConfigName.end() - F::Configs.sConfigExtension.size(), sConfigName.end());
+							if (FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32Const("default"))
+								bDefaultFound = true;
 
-							const auto current = GetCursorPos().y;
+							vConfigs.push_back({ entry, sConfigName });
+						}
+						if (!bDefaultFound)
+							F::Configs.SaveConfig("default");
+						std::sort(vConfigs.begin(), vConfigs.end(), [&](const auto& a, const auto& b) -> bool
+							{
+								// override for default config
+								if (FNV1A::Hash32(a.second.c_str()) == FNV1A::Hash32Const("default"))
+									return true;
+								if (FNV1A::Hash32(b.second.c_str()) == FNV1A::Hash32Const("default"))
+									return false;
 
-							SetCursorPos({ H::Draw.Scale(14), current + H::Draw.Scale(11) });
-							TextColored(configName == F::Configs.sCurrentConfig ? F::Render.Active.Value : F::Render.Inactive.Value, configName.c_str());
+								return a.second < b.second;
+							});
+
+						for (auto& [entry, sConfigName] : vConfigs)
+						{
+							bool bCurrentConfig = FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32(F::Configs.sCurrentConfig.c_str());
+							ImVec2 vOriginalPos = GetCursorPos();
+
+							SetCursorPos({ H::Draw.Scale(14), vOriginalPos.y + H::Draw.Scale(11) });
+							TextColored(bCurrentConfig ? F::Render.Active.Value : F::Render.Inactive.Value, sConfigName.c_str());
 
 							int iOffset = 0;
-							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, current + H::Draw.Scale(9) });
+							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_DELETE))
-								OpenPopup(std::format("Confirmation## DeleteConfig{}", configName).c_str());
+								OpenPopup(std::format("Confirmation## RemoveConfig{}", sConfigName).c_str());
 
-							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, current + H::Draw.Scale(9) });
+							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_SAVE))
 							{
-								if (configName != F::Configs.sCurrentConfig || F::Configs.sCurrentVisuals.length())
-									OpenPopup(std::format("Confirmation## SaveConfig{}", configName).c_str());
+								if (!bCurrentConfig || F::Configs.sCurrentVisuals.length())
+									OpenPopup(std::format("Confirmation## SaveConfig{}", sConfigName).c_str());
 								else
-									F::Configs.SaveConfig(configName);
+									F::Configs.SaveConfig(sConfigName);
 							}
 
-							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, current + H::Draw.Scale(9) });
+							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_DOWNLOAD))
-								F::Configs.LoadConfig(configName);
+								F::Configs.LoadConfig(sConfigName);
 
-							if (BeginPopupModal(std::format("Confirmation## SaveConfig{}", configName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+							if (BeginPopupModal(std::format("Confirmation## SaveConfig{}", sConfigName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
 							{
-								FText(std::format("Do you really want to override '{}'?", configName).c_str());
+								FText(std::format("Do you really want to override '{}'?", sConfigName).c_str());
 
 								if (FButton("Yes, override", FButton_Left))
 								{
-									F::Configs.SaveConfig(configName);
+									F::Configs.SaveConfig(sConfigName);
 									CloseCurrentPopup();
 								}
 								if (FButton("No", FButton_Right | FButton_SameLine))
@@ -1322,22 +1363,29 @@ void CMenu::MenuSettings()
 								EndPopup();
 							}
 
-							if (BeginPopupModal(std::format("Confirmation## DeleteConfig{}", configName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+							if (BeginPopupModal(std::format("Confirmation## RemoveConfig{}", sConfigName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
 							{
-								FText(std::format("Do you really want to delete '{}'?", configName).c_str());
+								FText(std::format("Do you really want to remove '{}'?", sConfigName).c_str());
 
-								if (FButton("Yes, delete", FButton_Left))
+								PushDisabled(FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32Const("default"));
+								if (FButton("Yes, delete", FButton_Fit))
 								{
-									F::Configs.RemoveConfig(configName);
+									F::Configs.RemoveConfig(sConfigName);
 									CloseCurrentPopup();
 								}
-								if (FButton("No", FButton_Right | FButton_SameLine))
+								PopDisabled();
+								if (FButton("Yes, reset", FButton_Fit | FButton_SameLine))
+								{
+									F::Configs.ResetConfig(sConfigName);
+									CloseCurrentPopup();
+								}
+								if (FButton("No", FButton_Fit | FButton_SameLine))
 									CloseCurrentPopup();
 
 								EndPopup();
 							}
 
-							SetCursorPos({ H::Draw.Scale(6), current }); DebugDummy({ 0, H::Draw.Scale(28) });
+							SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(28) });
 						}
 						break;
 					}
@@ -1358,42 +1406,43 @@ void CMenu::MenuSettings()
 							if (!entry.is_regular_file() || entry.path().extension() != F::Configs.sConfigExtension)
 								continue;
 
-							std::string configName = entry.path().filename().string();
-							configName.erase(configName.end() - F::Configs.sConfigExtension.size(), configName.end());
+							std::string sConfigName = entry.path().filename().string();
+							sConfigName.erase(sConfigName.end() - F::Configs.sConfigExtension.size(), sConfigName.end());
 
+							bool bCurrentConfig = FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32(F::Configs.sCurrentVisuals.c_str());
 							ImVec2 vOriginalPos = GetCursorPos();
 
 							SetCursorPos({ H::Draw.Scale(14), vOriginalPos.y + H::Draw.Scale(11) });
-							TextColored(configName == F::Configs.sCurrentVisuals ? F::Render.Active.Value : F::Render.Inactive.Value, configName.c_str());
+							TextColored(bCurrentConfig ? F::Render.Active.Value : F::Render.Inactive.Value, sConfigName.c_str());
 
 							int iOffset = 0;
 							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_DELETE))
-								OpenPopup(std::format("Confirmation## DeleteVisual{}", configName).c_str());
+								OpenPopup(std::format("Confirmation## DeleteVisual{}", sConfigName).c_str());
 
 							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_SAVE))
 							{
-								if (configName != F::Configs.sCurrentVisuals)
-									OpenPopup(std::format("Confirmation## SaveVisual{}", configName).c_str());
+								if (!bCurrentConfig)
+									OpenPopup(std::format("Confirmation## SaveVisual{}", sConfigName).c_str());
 								else
-									F::Configs.SaveVisual(configName);
+									F::Configs.SaveVisual(sConfigName);
 							}
 
 							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_DOWNLOAD))
-								F::Configs.LoadVisual(configName);
+								F::Configs.LoadVisual(sConfigName);
 
 							// Dialogs
 							{
 								// Save config dialog
-								if (BeginPopupModal(std::format("Confirmation## SaveVisual{}", configName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+								if (BeginPopupModal(std::format("Confirmation## SaveVisual{}", sConfigName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
 								{
-									FText(std::format("Do you really want to override '{}'?", configName).c_str());
+									FText(std::format("Do you really want to override '{}'?", sConfigName).c_str());
 
 									if (FButton("Yes, override", FButton_Left))
 									{
-										F::Configs.SaveVisual(configName);
+										F::Configs.SaveVisual(sConfigName);
 										CloseCurrentPopup();
 									}
 									if (FButton("No", FButton_Right | FButton_SameLine))
@@ -1403,13 +1452,13 @@ void CMenu::MenuSettings()
 								}
 
 								// Delete config dialog
-								if (BeginPopupModal(std::format("Confirmation## DeleteVisual{}", configName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+								if (BeginPopupModal(std::format("Confirmation## DeleteVisual{}", sConfigName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
 								{
-									FText(std::format("Do you really want to delete '{}'?", configName).c_str());
+									FText(std::format("Do you really want to delete '{}'?", sConfigName).c_str());
 
 									if (FButton("Yes, delete", FButton_Left))
 									{
-										F::Configs.RemoveVisual(configName);
+										F::Configs.RemoveVisual(sConfigName);
 										CloseCurrentPopup();
 									}
 									if (FButton("No", FButton_Right | FButton_SameLine))
@@ -1679,16 +1728,18 @@ void CMenu::MenuSettings()
 							FText(sInfo.c_str());
 
 							// buttons
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(22), vOriginalPos.y + H::Draw.Scale(5) });
+							int iOffset = -3;
+
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
 							bDelete = IconButton(ICON_MD_DELETE);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(47), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
 							bEdit = IconButton(ICON_MD_EDIT);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(72), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
 							bVisibility = IconButton(_tBind.Visible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(97), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
 							bNot = IconButton(!_tBind.Not ? ICON_MD_CODE : ICON_MD_CODE_OFF);
 
 							SetCursorPos(vOriginalPos);
@@ -1769,7 +1820,7 @@ void CMenu::MenuSettings()
 						};
 					auto drawPlayer = [getTeamColor](const ListPlayer& player, int x, int y)
 						{
-							bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false;
+							bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false, bMinwalk = false;
 
 							const Color_t teamColor = getTeamColor(player.m_iTeam, player.m_bAlive);
 							const ImColor imColor = ColorToVec(teamColor);
@@ -1813,29 +1864,36 @@ void CMenu::MenuSettings()
 							lOffset += FCalcTextSize(player.m_sName).x + H::Draw.Scale(8);
 
 							// buttons
+							int iOffset = 2;
+
 							if (!player.m_bFake)
 							{
-								bool bResolver = Vars::AntiHack::Resolver::Resolver.Value && !player.m_bLocal;
-
 								// right
-								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(22), vOriginalPos.y + H::Draw.Scale(5) });
+								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(5) });
 								bAlias = IconButton(ICON_MD_EDIT);
 
-								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(42), vOriginalPos.y + H::Draw.Scale(5) });
+								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(5) });
 								bAdd = IconButton(ICON_MD_ADD);
+							}
 
-								if (bResolver)
-								{
-									SetCursorPos({ vOriginalPos.x + flWidth - 62, vOriginalPos.y + 5 });
-									bYaw = IconButton(ICON_MD_ARROW_FORWARD);
+							bool bResolver = Vars::AntiHack::Resolver::Enabled.Value && !player.m_bLocal;
+							if (bResolver)
+							{
+								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+								bMinwalk = IconButton(ICON_MD_DIRECTIONS_WALK);
 
-									SetCursorPos({ vOriginalPos.x + flWidth - 82, vOriginalPos.y + 5 });
-									bPitch = IconButton(ICON_MD_ARROW_UPWARD);
-								}
+								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+								bYaw = IconButton(ICON_MD_ARROW_FORWARD);
 
+								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+								bPitch = IconButton(ICON_MD_ARROW_UPWARD);
+							}
+
+							if (!player.m_bFake)
+							{
 								// tag bar
 								SetCursorPos({ vOriginalPos.x + lOffset, vOriginalPos.y });
-								if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(bResolver ? 88 : 48), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
+								if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(bResolver ? 108 : 48), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
 								{
 									PushFont(F::Render.FontSmall);
 
@@ -1885,10 +1943,12 @@ void CMenu::MenuSettings()
 								OpenPopup(std::format("Add{}", player.m_uFriendsID).c_str());
 							else if (bAlias)
 								OpenPopup(std::format("Alias{}", player.m_uFriendsID).c_str());
-							else if (bPitch)
-								OpenPopup(std::format("Pitch{}", player.m_uFriendsID).c_str());
 							else if (bYaw)
 								OpenPopup(std::format("Yaw{}", player.m_uFriendsID).c_str());
+							else if (bPitch)
+								OpenPopup(std::format("Pitch{}", player.m_uFriendsID).c_str());
+							else if (bMinwalk)
+								OpenPopup(std::format("Minwalk{}", player.m_uFriendsID).c_str());
 
 							// popups
 							if (BeginPopup(std::format("Clicked{}", player.m_uFriendsID).c_str()))
@@ -1973,27 +2033,79 @@ void CMenu::MenuSettings()
 								PopStyleVar();
 								EndPopup();
 							}
-							else if (BeginPopup(std::format("Pitch{}", player.m_uFriendsID).c_str()))
+							else if (BeginPopup(std::format("Yaw{}", player.m_uFriendsID).c_str()))
 							{
 								PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
 
-								for (size_t i = 0; i < F::PlayerUtils.m_vListPitch.size(); i++)
+								static std::vector<std::pair<std::string, float>> vYaws = {
+									{ "Auto", 0.f },
+									{ "Forward", 0.f },
+									{ "Left", 90.f },
+									{ "Right", -90.f },
+									{ "Backwards", 180.f }
+								};
+								for (auto& [sYaw, flValue] : vYaws)
 								{
-									if (FSelectable(F::PlayerUtils.m_vListPitch[i]))
-										F::Resolver.mResolverMode[player.m_uFriendsID].second = int(i);
+									if (FSelectable(sYaw.c_str()))
+									{
+										switch (FNV1A::Hash32(sYaw.c_str()))
+										{
+										case FNV1A::Hash32Const("Auto"):
+											F::Resolver.SetYaw(player.m_iUserID, 0.f, true);
+											break;
+										default:
+											F::Resolver.SetYaw(player.m_iUserID, flValue);
+										}
+									}
 								}
 
 								PopStyleVar();
 								EndPopup();
 							}
-							else if (BeginPopup(std::format("Yaw{}", player.m_uFriendsID).c_str()))
+							else if (BeginPopup(std::format("Pitch{}", player.m_uFriendsID).c_str()))
 							{
 								PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
 
-								for (size_t i = 0; i < F::PlayerUtils.m_vListYaw.size(); i++)
+								static std::vector<std::pair<std::string, float>> vPitches = {
+									{ "Auto", 0.f },
+									{ "Up", -90.f },
+									{ "Down", 90.f },
+									{ "Zero", 0.f },
+									{ "Inverse", 0.f }
+								};
+								for (auto& [sPitch, flValue] : vPitches)
 								{
-									if (FSelectable(F::PlayerUtils.m_vListYaw[i]))
-										F::Resolver.mResolverMode[player.m_uFriendsID].second = int(i);
+									if (FSelectable(sPitch.c_str()))
+									{
+										switch (FNV1A::Hash32(sPitch.c_str()))
+										{
+										case FNV1A::Hash32Const("Auto"):
+											F::Resolver.SetPitch(player.m_iUserID, 0.f, false, true);
+											break;
+										case FNV1A::Hash32Const("Inverse"):
+											F::Resolver.SetPitch(player.m_iUserID, 0.f, true);
+											break;
+										default:
+											F::Resolver.SetPitch(player.m_iUserID, flValue);
+										}
+									}
+								}
+
+								PopStyleVar();
+								EndPopup();
+							}
+							else if (BeginPopup(std::format("Minwalk{}", player.m_uFriendsID).c_str()))
+							{
+								PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
+
+								static std::vector<std::pair<std::string, bool>> vPitches = {
+									{ "Minwalk on", true },
+									{ "Minwalk off", false }
+								};
+								for (auto& [sPitch, bValue] : vPitches)
+								{
+									if (FSelectable(sPitch.c_str()))
+										F::Resolver.SetMinwalk(player.m_iUserID, bValue);
 								}
 
 								PopStyleVar();
@@ -2313,7 +2425,7 @@ void CMenu::MenuSettings()
 						int iOffset = 0;
 						if (!pair.m_bLocked)
 						{
-							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
+							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_DELETE))
 								OpenPopup(std::format("Confirmation## DeleteMat{}", pair.m_sName).c_str());
 							if (BeginPopupModal(std::format("Confirmation## DeleteMat{}", pair.m_sName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
@@ -2332,7 +2444,7 @@ void CMenu::MenuSettings()
 							}
 						}
 
-						SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
+						SetCursorPos({ GetWindowWidth() - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(9) });
 						if (IconButton(ICON_MD_EDIT))
 						{
 							CurrentMaterial = pair.m_sName;

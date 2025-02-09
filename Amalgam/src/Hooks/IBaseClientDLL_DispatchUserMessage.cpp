@@ -7,6 +7,8 @@
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+//#include <boost/algorithm/string/split.hpp>
+//#include <boost/algorithm/string/classification.hpp>
 
 MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL, 36), bool,
 	void* rcx, UserMessageType type, bf_read& msgData)
@@ -33,20 +35,48 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 		break;
 	}
 	case TextMsg:
-		if (F::NoSpreadHitscan.ParsePlayerPerf(msgData))
-			return true;
-
-		if (Vars::Misc::Automation::AntiAutobalance.Value && bufData && msgData.GetNumBitsLeft() > 35)
+	{
+		char rawMsg[256]; msgData.ReadString(rawMsg, sizeof(rawMsg), true);
+		msgData.Seek(0);
+		std::string sMsg = rawMsg;
+		if (!sMsg.empty())
 		{
-			std::string sMsg = bufData;
-			if (!sMsg.empty())
+			sMsg.erase(sMsg.begin());
+
+			if (F::NoSpreadHitscan.ParsePlayerPerf(sMsg))
+				return true;
+
+			/*
+			if (sMsg.find("[BoxAngles] ") == 0)
 			{
-				sMsg.erase(0, 1);
-				if (FNV1A::Hash32(sMsg.c_str()) == FNV1A::Hash32Const("#TF_Autobalance_TeamChangePending"))
-					I::EngineClient->ClientCmd_Unrestricted("retry");
+				try
+				{
+					sMsg.replace(0, strlen("[BoxAngles] "), "");
+					std::vector<std::string> vValues = {};
+					boost::split(vValues, sMsg, boost::is_any_of(" "));
+					if (vValues.size() != 17)
+						return true;
+
+					Vec3 vOrigin = { std::stof(vValues[0]), std::stof(vValues[1]), std::stof(vValues[2]) };
+					Vec3 vMins = { std::stof(vValues[3]), std::stof(vValues[4]), std::stof(vValues[5]) };
+					Vec3 vMaxs = { std::stof(vValues[6]), std::stof(vValues[7]), std::stof(vValues[8]) };
+					Vec3 vAngles = { std::stof(vValues[9]), std::stof(vValues[10]), std::stof(vValues[11]) };
+					Color_t tColor = { byte(std::stoi(vValues[12])), byte(std::stoi(vValues[13])), byte(std::stoi(vValues[14])), byte(255 - std::stoi(vValues[15])) };
+					float flDuration = std::stof(vValues[16]);
+
+					G::BoxStorage.push_back({ vOrigin, vMins, vMaxs, vAngles, I::GlobalVars->curtime + flDuration, tColor, { 0, 0, 0, 0 } });
+				}
+				catch (...) {}
+
+				return true;
 			}
+			*/
+
+			if (Vars::Misc::Automation::AntiAutobalance.Value && FNV1A::Hash32(sMsg.c_str()) == FNV1A::Hash32Const("#TF_Autobalance_TeamChangePending"))
+				I::EngineClient->ClientCmd_Unrestricted("retry");
 		}
 		break;
+	}
 	case VGUIMenu:
 		if (Vars::Visuals::Removals::MOTD.Value && bufData
 			&& FNV1A::Hash32(bufData) == FNV1A::Hash32Const("info"))

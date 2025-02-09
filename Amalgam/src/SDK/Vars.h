@@ -288,9 +288,15 @@ namespace Vars
 		SUBNAMESPACE_END(AntiAim)
 
 		SUBNAMESPACE_BEGIN(Resolver)
-			CVar(Resolver, false)
-			CVar(AutoResolveCheaters, false)
-			CVar(IgnoreAirborne, false)
+			CVar(Enabled, false)
+			CVar(AutoResolve, false)
+			CVar(AutoResolveCheatersOnly, false)
+			CVar(AutoResolveHeadshotOnly, false)
+			CVar(AutoResolveYawAmount, 90.f)
+			CVar(AutoResolvePitchAmount, 90.f)
+			CVar(CycleYaw, 0.f)
+			CVar(CyclePitch, 0.f)
+			CVar(CycleMinwalk, false)
 		SUBNAMESPACE_END(Resolver)
 	NAMESPACE_END(AntiHack)
 
@@ -821,7 +827,7 @@ namespace Vars
 	NAMESPACE_END(Colors)
 
 	NAMESPACE_BEGIN(Logging)
-		CVarEnum(Logs, 0b0000011, NONE, VoteStart = 1 << 0, VoteCast = 1 << 1, ClassChanges = 1 << 2, Damage = 1 << 3, CheatDetection = 1 << 4, Tags = 1 << 5, Aliases = 1 << 6)
+		CVarEnum(Logs, 0b0000011, NONE, VoteStart = 1 << 0, VoteCast = 1 << 1, ClassChanges = 1 << 2, Damage = 1 << 3, CheatDetection = 1 << 4, Tags = 1 << 5, Aliases = 1 << 6, Resolver = 1 << 7)
 		Enum(LogTo, Toasts = 1 << 0, Chat = 1 << 1, Party = 1 << 2, Console = 1 << 3)
 		CVar(Lifetime, 5.f, VISUAL)
 
@@ -852,6 +858,10 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Aliases)
 			CVar(LogTo, 0b0001)
 		SUBNAMESPACE_END(Aliases)
+
+		SUBNAMESPACE_BEGIN(Resolver)
+			CVar(LogTo, 0b0001)
+		SUBNAMESPACE_END(Resolver)
 	NAMESPACE_END(Logging)
 
 	NAMESPACE_BEGIN(Debug)

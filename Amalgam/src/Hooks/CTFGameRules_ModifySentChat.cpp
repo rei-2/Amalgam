@@ -8,7 +8,7 @@ struct s_CTFGameRules
 	bool m_bPlayingMedieval;
 };
 
-MAKE_HOOK(CTFGameRules_ModifySentChat, S::CTFGameRules_ModifySentChat(), void, __fastcall,
+MAKE_HOOK(CTFGameRules_ModifySentChat, S::CTFGameRules_ModifySentChat(), void,
 	void* rcx, char* pBuf, int iBufSize)
 {
 	if (Vars::Misc::MedievalChat.Value > 0)

@@ -198,7 +198,7 @@ public:
 	NETVAR_OFF(m_bStunNeedsFadeOut, bool, "CTFPlayer", "m_hItem", -188);
 	NETVAR_OFF(m_bTauntForceMoveForward, bool, "CTFPlayer", "m_bAllowMoveDuringTaunt", 1);
 
-	VIRTUAL(GetMaxHealth, int, int(*)(void*), this, 107);
+	VIRTUAL(GetMaxHealth, int, void*, this, 107);
 
 	inline Vec3 GetEyeAngles()
 	{

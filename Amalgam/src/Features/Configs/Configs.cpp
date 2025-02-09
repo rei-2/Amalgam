@@ -307,7 +307,7 @@ CConfigs::CConfigs()
 }
 #define LoadMain(type, tree) if (IsType(type)) LoadCond(type, tree)
 
-bool CConfigs::SaveConfig(const std::string& configName, bool bNotify)
+bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 {
 	try
 	{
@@ -354,10 +354,10 @@ bool CConfigs::SaveConfig(const std::string& configName, bool bNotify)
 		}
 		writeTree.put_child("ConVars", varTree);
 
-		write_json(sConfigPath + "\\" + configName + sConfigExtension, writeTree);
-		sCurrentConfig = configName; sCurrentVisuals = "";
+		write_json(sConfigPath + "\\" + sConfigName + sConfigExtension, writeTree);
+		sCurrentConfig = sConfigName; sCurrentVisuals = "";
 		if (bNotify)
-			F::Notifications.Add("Config " + configName + " saved");
+			F::Notifications.Add("Config " + sConfigName + " saved");
 	}
 	catch (...)
 	{
@@ -368,13 +368,13 @@ bool CConfigs::SaveConfig(const std::string& configName, bool bNotify)
 	return true;
 }
 
-bool CConfigs::LoadConfig(const std::string& configName, bool bNotify)
+bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 {
 	// Check if the config exists
-	if (!std::filesystem::exists(sConfigPath + "\\" + configName + sConfigExtension))
+	if (!std::filesystem::exists(sConfigPath + "\\" + sConfigName + sConfigExtension))
 	{
 		// Save default config if one doesn't yet exist
-		if (configName == std::string("default"))
+		if (sConfigName == std::string("default"))
 			SaveConfig("default", false);
 
 		return false;
@@ -386,7 +386,7 @@ bool CConfigs::LoadConfig(const std::string& configName, bool bNotify)
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
 		boost::property_tree::ptree readTree;
-		read_json(sConfigPath + "\\" + configName + sConfigExtension, readTree);
+		read_json(sConfigPath + "\\" + sConfigName + sConfigExtension, readTree);
 		
 		bool bLegacy = false;
 		if (const auto condTree = readTree.get_child_optional("Binds"))
@@ -467,9 +467,9 @@ bool CConfigs::LoadConfig(const std::string& configName, bool bNotify)
 
 		H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
 
-		sCurrentConfig = configName; sCurrentVisuals = "";
+		sCurrentConfig = sConfigName; sCurrentVisuals = "";
 		if (bNotify)
-			F::Notifications.Add("Config " + configName + " loaded");
+			F::Notifications.Add("Config " + sConfigName + " loaded");
 	}
 	catch (...)
 	{
@@ -485,7 +485,7 @@ bool CConfigs::LoadConfig(const std::string& configName, bool bNotify)
 #define LoadRegular(type, tree) LoadJson(tree, var->m_sName.c_str(), var->As<type>()->Map[DEFAULT_BIND])
 #define LoadMisc(type, tree) if (IsType(type)) LoadRegular(type, tree);
 
-bool CConfigs::SaveVisual(const std::string& configName, bool bNotify)
+bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
 {
 	try
 	{
@@ -511,9 +511,9 @@ bool CConfigs::SaveVisual(const std::string& configName, bool bNotify)
 			else SaveMisc(WindowBox_t, writeTree)
 		}
 
-		write_json(sConfigPath + "\\Visuals\\" + configName + sConfigExtension, writeTree);
+		write_json(sConfigPath + "\\Visuals\\" + sConfigName + sConfigExtension, writeTree);
 		if (bNotify)
-			F::Notifications.Add("Visual config " + configName + " saved");
+			F::Notifications.Add("Visual config " + sConfigName + " saved");
 	}
 	catch (...)
 	{
@@ -523,12 +523,12 @@ bool CConfigs::SaveVisual(const std::string& configName, bool bNotify)
 	return true;
 }
 
-bool CConfigs::LoadVisual(const std::string& configName, bool bNotify)
+bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 {
 	// Check if the visual config exists
-	if (!std::filesystem::exists(sVisualsPath + "\\" + configName + sConfigExtension))
+	if (!std::filesystem::exists(sVisualsPath + "\\" + sConfigName + sConfigExtension))
 	{
-		//if (configName == std::string("default"))
+		//if (sConfigName == std::string("default"))
 		//	SaveVisual("default");
 		return false;
 	}
@@ -538,7 +538,7 @@ bool CConfigs::LoadVisual(const std::string& configName, bool bNotify)
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
 		boost::property_tree::ptree readTree;
-		read_json(sConfigPath + "\\Visuals\\" + configName + sConfigExtension, readTree);
+		read_json(sConfigPath + "\\Visuals\\" + sConfigName + sConfigExtension, readTree);
 
 		for (auto& var : g_Vars)
 		{
@@ -558,9 +558,9 @@ bool CConfigs::LoadVisual(const std::string& configName, bool bNotify)
 			else LoadMisc(WindowBox_t, readTree)
 		}
 
-		sCurrentVisuals = configName;
+		sCurrentVisuals = sConfigName;
 		if (bNotify)
-			F::Notifications.Add("Visual config " + configName + " loaded");
+			F::Notifications.Add("Visual config " + sConfigName + " loaded");
 	}
 	catch (...)
 	{
@@ -573,11 +573,46 @@ bool CConfigs::LoadVisual(const std::string& configName, bool bNotify)
 #define ResetType(type) var->As<type>()->Map = { { DEFAULT_BIND, var->As<type>()->Default } };
 #define ResetT(type) if (IsType(type)) ResetType(type)
 
-void CConfigs::RemoveConfig(const std::string& configName)
+void CConfigs::RemoveConfig(const std::string& sConfigName, bool bNotify)
 {
-	if (FNV1A::Hash32(configName.c_str()) != FNV1A::Hash32Const("default"))
-		std::filesystem::remove(sConfigPath + "\\" + configName + sConfigExtension);
-	else
+	try
+	{
+		if (FNV1A::Hash32(sConfigName.c_str()) != FNV1A::Hash32Const("default"))
+		{
+			std::filesystem::remove(sConfigPath + "\\" + sConfigName + sConfigExtension);
+
+			LoadConfig("default", false);
+
+			if (bNotify)
+				F::Notifications.Add("Config " + sConfigName + " deleted");
+		}
+		else
+			ResetConfig(sConfigName);
+	}
+	catch (...)
+	{
+		SDK::Output("RemoveConfig", "Failed", { 175, 150, 255, 255 });
+	}
+}
+
+void CConfigs::RemoveVisual(const std::string& sConfigName, bool bNotify)
+{
+	try
+	{
+		std::filesystem::remove(sVisualsPath + "\\" + sConfigName + sConfigExtension);
+
+		if (bNotify)
+			F::Notifications.Add("Visual config " + sConfigName + " deleted");
+	}
+	catch (...)
+	{
+		SDK::Output("RemoveVisual", "Failed", { 175, 150, 255, 255 });
+	}
+}
+
+void CConfigs::ResetConfig(const std::string& sConfigName, bool bNotify)
+{
+	try
 	{
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
@@ -601,11 +636,48 @@ void CConfigs::RemoveConfig(const std::string& configName)
 			else ResetT(WindowBox_t)
 		}
 
-		SaveConfig("default", false);
+		SaveConfig(sConfigName, false);
+
+		if (bNotify)
+			F::Notifications.Add("Config " + sConfigName + " reset");
+	}
+	catch (...)
+	{
+		SDK::Output("ResetConfig", "Failed", { 175, 150, 255, 255 });
 	}
 }
 
-void CConfigs::RemoveVisual(const std::string& configName)
+void CConfigs::ResetVisual(const std::string& sConfigName, bool bNotify)
 {
-	std::filesystem::remove(sVisualsPath + "\\" + configName + sConfigExtension);
+	try
+	{
+		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
+
+		for (auto& var : g_Vars)
+		{
+			if (!(var->m_iFlags & VISUAL) || !bLoadNosave && var->m_iFlags & NOSAVE)
+				continue;
+
+			ResetT(bool)
+			else ResetT(int)
+			else ResetT(float)
+			else ResetT(IntRange_t)
+			else ResetT(FloatRange_t)
+			else ResetT(std::string)
+			else ResetT(std::vector<std::string>)
+			else ResetT(Color_t)
+			else ResetT(Gradient_t)
+			else ResetT(DragBox_t)
+			else ResetT(WindowBox_t)
+		}
+
+		SaveVisual(sConfigName, false);
+
+		if (bNotify)
+			F::Notifications.Add("Visual config " + sConfigName + " reset");
+	}
+	catch (...)
+	{
+		SDK::Output("ResetVisual", "Failed", { 175, 150, 255, 255 });
+	}
 }

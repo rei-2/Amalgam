@@ -61,7 +61,7 @@ public:
 
 	void FrameStageNotify();
 	void Run(CUserCmd* pCmd);
-	void Restart();
+	void Reset();
 	void SetLerp(IGameEvent* pEvent);
 	void ResolverUpdate(CBaseEntity* pEntity);
 	void ReportShot(int iIndex);

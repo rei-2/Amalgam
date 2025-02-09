@@ -8,7 +8,6 @@ MAKE_SIGNATURE(CTFWeaponBase_UpdateAllViewmodelAddons, "client.dll", "48 89 5C 2
 MAKE_SIGNATURE(CTFWeaponBaseMelee_CalcIsAttackCriticalHelper, "client.dll", "40 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8B F9 83 78 ? ? 75", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_CalcIsAttackCriticalHelper, "client.dll", "48 89 5C 24 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 74 24", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_GetAppropriateWorldOrViewModel, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 C7 44 24 ? ? ? ? ? 4C 8D 0D ? ? ? ? 33 D2 4C 8D 05 ? ? ? ? E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B CB", 0x0);
-MAKE_SIGNATURE(CTFWeaponBaseGun_GetWeaponSpread, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 4C 63 91", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_IncrementAmmo, "client.dll", "48 89 5C 24 ? 56 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8", 0x0);
 
 //credits: KGB (all weapon info stuff below)
@@ -202,11 +201,12 @@ public:
 		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
 	};
 
-	VIRTUAL(GetSlot, int, int(*)(void*), this, 330);
-	VIRTUAL(GetWeaponID, int, int(*)(void*), this, 381);
-	VIRTUAL(GetDamageType, int, int(*)(void*), this, 382);
-	VIRTUAL(IsEnergyWeapon, bool, bool(*)(void*), this, 432);
-	VIRTUAL(AreRandomCritsEnabled, bool, bool(*)(void*), this, 402);
+	VIRTUAL(GetSlot, int, void*, this, 330);
+	VIRTUAL(GetWeaponID, int, void*, this, 381);
+	VIRTUAL(GetDamageType, int, void*, this, 382);
+	VIRTUAL(IsEnergyWeapon, bool, void*, this, 432);
+	VIRTUAL(AreRandomCritsEnabled, bool, void*, this, 402);
+	VIRTUAL(GetWeaponSpread, float, void*, this, 467);
 
 	OFFSET(m_iWeaponMode, int, 996);
 
@@ -335,12 +335,11 @@ public:
 		return GetDamageType() & DMG_USE_HITLOCATIONS && CanFireCriticalShot(true);
 	}
 
-	inline bool AmbassadorCanHeadshot()
+	inline bool AmbassadorCanHeadshot(float flCurTime = I::GlobalVars->curtime)
 	{
-		if (GetClassID() == ETFClassID::CTFRevolver && SDK::AttribHookValue(0, "set_weapon_mode", this) == 1
-			&& I::GlobalVars->curtime - m_flLastFireTime() <= 1.f)
-			return false;
-		return true;
+		if (GetClassID() == ETFClassID::CTFRevolver && SDK::AttribHookValue(0, "set_weapon_mode", this) == 1)
+			return flCurTime - m_flLastFireTime() > 1.f;
+		return false;
 	}
 
 	inline void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
@@ -383,11 +382,6 @@ public:
 	inline CBaseAnimating* GetAppropriateWorldOrViewModel()
 	{
 		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.Call<CBaseAnimating*>(this);
-	}
-
-	inline float GetWeaponSpread()
-	{
-		return S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(this);
 	}
 
 	inline void IncrementAmmo()

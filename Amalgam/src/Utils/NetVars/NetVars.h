@@ -31,7 +31,7 @@ ADD_FEATURE_CUSTOM(CNetVars, NetVars, U);
 
 #define VIRTUAL(name, type, fn, base, index) inline type name() \
 { \
-	return reinterpret_cast<fn>(U::Memory.GetVFunc(base, index))(base); \
+	return reinterpret_cast<type(*)(fn)>(U::Memory.GetVFunc(base, index))(base); \
 }
 
 #define CONDGET(name, conditions, cond) inline bool name() \

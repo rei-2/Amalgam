@@ -169,7 +169,10 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			}
 			else
 			{
+				G::LineStorage.clear();
+				G::BoxStorage.clear();
 				G::PathStorage.clear();
+
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
 					G::PathStorage.push_back({ localStorage.m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
@@ -505,28 +508,15 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			target.m_vAngleTo = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, target.m_vPos));
 		}
 
-		bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f && Vars::Aimbot::General::AutoShoot.Value && !Vars::Debug::Info.Value;
+		bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && Vars::Aimbot::General::AutoShoot.Value && !Vars::Debug::Info.Value;
 		bool bLine = Vars::Visuals::Bullet::Enabled.Value;
 		bool bBoxes = Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot;
-		if (G::Attacking == 1 && (bLine || bBoxes) || bPath)
+		if (pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f && bPath)
 		{
 			G::LineStorage.clear();
 			G::BoxStorage.clear();
 			G::PathStorage.clear();
 
-			if (bLine)
-			{
-				Vec3 vEyePos = pLocal->GetShootPos();
-				float flDist = vEyePos.DistTo(target.m_vPos);
-				Vec3 vForward; Math::AngleVectors(target.m_vAngleTo, &vForward);
-
-				G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
-			}
-			if (bBoxes)
-			{
-				auto vBoxes = F::Visuals.GetHitboxes(target.m_tRecord.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
-				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
-			}
 			if (bPath)
 			{
 				if (Vars::Colors::PlayerPath.Value.a)
@@ -539,6 +529,25 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 					G::PathStorage.push_back({ mPaths[pLocal], I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
 					G::PathStorage.push_back({ mPaths[target.m_pEntity], I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
 				}
+			}
+		}
+		if (G::Attacking == 1 && (bLine || bBoxes))
+		{
+			G::LineStorage.clear();
+			G::BoxStorage.clear();
+
+			if (bLine)
+			{
+				Vec3 vEyePos = pLocal->GetShootPos();
+				float flDist = vEyePos.DistTo(target.m_vPos);
+				Vec3 vForward; Math::AngleVectors(target.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
+
+				G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
+			}
+			if (bBoxes)
+			{
+				auto vBoxes = F::Visuals.GetHitboxes(target.m_tRecord.m_BoneMatrix.m_aBones, target.m_pEntity->As<CBaseAnimating>());
+				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
 			}
 		}
 

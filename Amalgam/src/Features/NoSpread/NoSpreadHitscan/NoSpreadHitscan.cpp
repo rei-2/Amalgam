@@ -4,6 +4,8 @@
 #include <regex>
 #include <numeric>
 
+MAKE_SIGNATURE(CTFWeaponBaseGun_GetWeaponSpread, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 4C 63 91", 0x0);
+
 void CNoSpreadHitscan::Reset()
 {
 	m_bWaitingForPlayerPerf = false;
@@ -22,7 +24,7 @@ bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool
 	if (G::PrimaryWeaponType != EWeaponType::HITSCAN)
 		return false;
 
-	if (pWeapon->GetWeaponSpread() <= 0.f)
+	if ((bCreateMove ? pWeapon->GetWeaponSpread() : S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(pWeapon)) <= 0.f)
 		return false;
 
 	return bCreateMove ? G::Attacking == 1 : true;
@@ -77,19 +79,13 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 	}
 }
 
-bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
+bool CNoSpreadHitscan::ParsePlayerPerf(std::string sMsg)
 {
 	if (!Vars::Aimbot::General::NoSpread.Value)
 		return false;
 
-	char rawMsg[256]; msgData.ReadString(rawMsg, sizeof(rawMsg), true);
-	msgData.Seek(0);
-
-	std::string msg(rawMsg);
-	msg.erase(msg.begin());
-
 	std::smatch matches = {};
-	std::regex_match(msg, matches, std::regex(R"((\d+.\d+)\s\d+\s\d+\s\d+.\d+\s\d+.\d+\svel\s\d+.\d+)"));
+	std::regex_match(sMsg, matches, std::regex(R"((\d+.\d+)\s\d+\s\d+\s\d+.\d+\s\d+.\d+\svel\s\d+.\d+)"));
 
 	if (matches.size() == 2)
 	{
@@ -129,7 +125,7 @@ bool CNoSpreadHitscan::ParsePlayerPerf(bf_read& msgData)
 		return true;
 	}
 
-	return std::regex_match(msg, std::regex(R"(\d+.\d+\s\d+\s\d+)"));
+	return std::regex_match(sMsg, std::regex(R"(\d+.\d+\s\d+\s\d+)"));
 }
 
 void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)

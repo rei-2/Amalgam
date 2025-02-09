@@ -3,7 +3,7 @@
 MAKE_SIGNATURE(CPhysicsObject_OutputDebugInfo, "vphysics.dll", "48 8B C4 55 53 56 57 41 54 41 55 41 56 41 57 48 8D 68", 0x0);
 
 // physics_debug_entity !picker
-MAKE_HOOK(CPhysicsObject_OutputDebugInfo, S::CPhysicsObject_OutputDebugInfo(), void, __fastcall,
+MAKE_HOOK(CPhysicsObject_OutputDebugInfo, S::CPhysicsObject_OutputDebugInfo(), void,
     void* rcx)
 {
     //CALL_ORIGINAL(rcx);

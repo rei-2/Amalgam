@@ -187,13 +187,13 @@ void CRecords::UserMessage(bf_read& msgData)
 }
 
 // Cheat detection
-void CRecords::CheatDetection(std::string name, std::string action, std::string reason)
+void CRecords::CheatDetection(std::string sName, std::string sAction, std::string sReason)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::CheatDetection))
 		return;
 
-	std::string sOutput = std::format("{} {} for {}", (name), (action), (reason));
-	std::string sChat = std::format("{}{}\x1 {} for {}{}", (yellow), (name), (action), (yellow), (reason));
+	std::string sOutput = std::format("{} {} for {}", (sName), (sAction), (sReason));
+	std::string sChat = std::format("{}{}\x1 {} for {}{}", (yellow), (sName), (sAction), (yellow), (sReason));
 	OutputInfo(Vars::Logging::CheatDetection::LogTo.Value, "Cheat Detection", sOutput, sChat);
 }
 
@@ -286,4 +286,34 @@ void CRecords::AliasChanged(std::string sName, std::string sAction, std::string 
 	std::string sOutput = std::format("{} {}'s alias {} \"{}\"", (sAction), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sAlias));
 	std::string sChat = std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (yellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (yellow), (sAlias));
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases", sOutput, sChat);
+}
+
+void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis, float flValue)
+{
+	ReportResolver(iIndex, sAction, sAxis, std::format("{}", flValue));
+}
+void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis, bool bValue)
+{
+	ReportResolver(iIndex, sAction, sAxis, std::format("{}", bValue));
+}
+void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue)
+{
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
+		return;
+
+	PlayerInfo_t pi{};
+	if (!I::EngineClient->GetPlayerInfo(iIndex, &pi))
+		return;
+
+	auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+	std::string sOutput = std::format("{} {} of {} to {}", (sAction), (sAxis), (sName), (sValue));
+	std::string sChat = std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (yellow), (sAxis), (yellow), (sName), (yellow), (sValue));
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver", sOutput, sChat);
+}
+void CRecords::ReportResolver(std::string sMessage)
+{
+	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
+		return;
+
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver", sMessage, sMessage);
 }

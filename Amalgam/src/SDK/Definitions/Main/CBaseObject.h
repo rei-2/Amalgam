@@ -31,7 +31,7 @@ public:
 	NETVAR(m_bWasMapPlaced, bool, "CBaseObject", "m_bWasMapPlaced");
 	NETVAR(m_bPlasmaDisable, bool, "CBaseObject", "m_bPlasmaDisable");
 
-	VIRTUAL(GetNumBuildPoints, int, int(*)(void*), IHasBuildPoints(), 0);
+	VIRTUAL(GetNumBuildPoints, int, void*, IHasBuildPoints(), 0);
 
 	inline void* IHasBuildPoints()
 	{

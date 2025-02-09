@@ -3,7 +3,7 @@
 #include "../PacketManip/FakeLag/FakeLag.h"
 #include "../TickHandler/TickHandler.h"
 
-void CBacktrack::Restart()
+void CBacktrack::Reset()
 {
 	m_mRecords.clear();
 	m_dSequences.clear();
@@ -262,7 +262,7 @@ void CBacktrack::FrameStageNotify()
 {
 	UpdateDatagram();
 	if (!I::EngineClient->IsInGame())
-		return Restart();
+		return;
 
 	static auto sv_maxunlag = U::ConVars.FindVar("sv_maxunlag");
 	m_flMaxUnlag = sv_maxunlag ? sv_maxunlag->GetFloat() : 1.f;
@@ -278,7 +278,10 @@ void CBacktrack::Run(CUserCmd* pCmd)
 
 void CBacktrack::ResolverUpdate(CBaseEntity* pEntity)
 {
-	m_mRecords[pEntity].clear();	//	TODO: eventually remake records and rotate them or smthn idk, maybe just rotate them
+	if (!pEntity)
+		return;
+
+	m_mRecords[pEntity].clear();
 }
 
 void CBacktrack::ReportShot(int iIndex)

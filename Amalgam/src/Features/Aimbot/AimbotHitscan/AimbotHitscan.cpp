@@ -554,7 +554,7 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 				return false;
 			break;
 		case TF_WEAPON_REVOLVER:
-			if (!pWeapon->AmbassadorCanHeadshot())
+			if (SDK::AttribHookValue(0, "set_weapon_mode", pWeapon) == 1 && !pWeapon->AmbassadorCanHeadshot())
 				return false;
 		}
 	}
@@ -775,7 +775,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		if (G::Attacking == 1)
 		{
 			if (target.m_pEntity->IsPlayer())
-				F::Resolver.Aimbot(target.m_pEntity->As<CTFPlayer>(), target.m_nAimedHitbox == HITBOX_HEAD);
+				F::Resolver.HitscanRan(pLocal, target.m_pEntity->As<CTFPlayer>(), pWeapon, target.m_nAimedHitbox);
 
 			if (target.m_bBacktrack)
 				pCmd->tick_count = TIME_TO_TICKS(target.m_tRecord.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
@@ -792,7 +792,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 				{
 					Vec3 vEyePos = pLocal->GetShootPos();
 					float flDist = vEyePos.DistTo(target.m_vPos);
-					Vec3 vForward; Math::AngleVectors(target.m_vAngleTo, &vForward);
+					Vec3 vForward; Math::AngleVectors(target.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
 
 					G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
 				}

@@ -4,7 +4,7 @@
 
 static std::unordered_map<void*, std::pair<int, float>> pAnimatingInfo;
 
-MAKE_HOOK(CBaseAnimating_FrameAdvance, S::CBaseAnimating_FrameAdvance(), float, __fastcall,
+MAKE_HOOK(CBaseAnimating_FrameAdvance, S::CBaseAnimating_FrameAdvance(), float,
 	void* rcx, float flInterval)
 {
 	if (!Vars::Visuals::Removals::Interpolation.Value || rcx == H::Entities.GetLocal())
