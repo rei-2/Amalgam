@@ -250,10 +250,13 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin)
 	return !(flRight < 0 || flLeft > H::Draw.m_nScreenW || flTop < 0 || flBottom > H::Draw.m_nScreenH);
 }
 
-bool SDK::IsOnScreen(CBaseEntity* pEntity)
+bool SDK::IsOnScreen(CBaseEntity* pEntity, bool bShouldGetOwner)
 {
-	if (auto pOwner = pEntity->m_hOwnerEntity().Get())
-		pEntity = pOwner;
+	if (bShouldGetOwner)
+	{
+		if (auto pOwner = pEntity->m_hOwnerEntity().Get())
+			pEntity = pOwner;
+	}
 
 	return IsOnScreen(pEntity, pEntity->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() ? F::EnginePrediction.m_vOrigin : pEntity->GetAbsOrigin());
 }

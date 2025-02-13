@@ -587,16 +587,17 @@ static int GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* pYa
 	const int iLastSign = iSign;
 	const int iCurSign = iSign = *pYaw > 0 ? 1 : -1;
 
-	if (fabsf(*pYaw) * pRecord1.m_vVelocity.Length2D() * iTicks <= flStraightFuzzyValue) // dumb way to get straight bool
-		return false;
-
 	static int iChanges, iStart;
+	bool bStraight = fabsf(*pYaw) * pRecord1.m_vVelocity.Length2D() * iTicks <= flStraightFuzzyValue; // dumb way to get straight bool
+	bool bChanged = iLastSign != iCurSign;
 	if (!i)
 	{
 		iChanges = 0, iStart = TIME_TO_TICKS(flTime1);
+		if (bStraight && ++iChanges > iMaxChanges)
+			return false;
 		return true;
 	}
-	if (iLastSign != iCurSign && ++iChanges > iMaxChanges)
+	if ((bChanged || bStraight) && ++iChanges > iMaxChanges)
 		return false;
 	if (iChanges && iStart - TIME_TO_TICKS(flTime2) > iMaxChangeTime)
 		return false;

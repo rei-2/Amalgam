@@ -377,7 +377,8 @@ void CMenu::MenuAimbot()
 						PopTransparent();
 						FSlider("Cycle yaw", Vars::AntiHack::Resolver::CycleYaw, -180.f, 180.f, 45.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
 						FSlider("Cycle pitch", Vars::AntiHack::Resolver::CyclePitch, -180.f, 180.f, 90.f, "%g", FSlider_Right | FSlider_Clamp);
-						FToggle("Cycle minwalk", Vars::AntiHack::Resolver::CycleMinwalk);
+						FToggle("Cycle minwalk", Vars::AntiHack::Resolver::CycleMinwalk, FToggle_Left);
+						FToggle("Cycle view", Vars::AntiHack::Resolver::CycleView, FToggle_Right);
 					PopTransparent();
 				} EndSection();
 				if (Section("Auto Peek"))
@@ -1820,7 +1821,7 @@ void CMenu::MenuSettings()
 						};
 					auto drawPlayer = [getTeamColor](const ListPlayer& player, int x, int y)
 						{
-							bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false, bMinwalk = false;
+							bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false, bMinwalk = false, bView = false;
 
 							const Color_t teamColor = getTeamColor(player.m_iTeam, player.m_bAlive);
 							const ImColor imColor = ColorToVec(teamColor);
@@ -1880,6 +1881,9 @@ void CMenu::MenuSettings()
 							if (bResolver)
 							{
 								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+								bView = IconButton(ICON_MD_NEAR_ME);
+
+								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
 								bMinwalk = IconButton(ICON_MD_DIRECTIONS_WALK);
 
 								SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
@@ -1893,7 +1897,7 @@ void CMenu::MenuSettings()
 							{
 								// tag bar
 								SetCursorPos({ vOriginalPos.x + lOffset, vOriginalPos.y });
-								if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(bResolver ? 108 : 48), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
+								if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(bResolver ? 128 : 48), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
 								{
 									PushFont(F::Render.FontSmall);
 
@@ -1949,6 +1953,8 @@ void CMenu::MenuSettings()
 								OpenPopup(std::format("Pitch{}", player.m_uFriendsID).c_str());
 							else if (bMinwalk)
 								OpenPopup(std::format("Minwalk{}", player.m_uFriendsID).c_str());
+							else if (bView)
+								OpenPopup(std::format("View{}", player.m_uFriendsID).c_str());
 
 							// popups
 							if (BeginPopup(std::format("Clicked{}", player.m_uFriendsID).c_str()))
@@ -2106,6 +2112,23 @@ void CMenu::MenuSettings()
 								{
 									if (FSelectable(sPitch.c_str()))
 										F::Resolver.SetMinwalk(player.m_iUserID, bValue);
+								}
+
+								PopStyleVar();
+								EndPopup();
+							}
+							else if (BeginPopup(std::format("View{}", player.m_uFriendsID).c_str()))
+							{
+								PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
+
+								static std::vector<std::pair<std::string, bool>> vPitches = {
+									{ "Offset from static view", true },
+									{ "Offset from view to local", false }
+								};
+								for (auto& [sPitch, bValue] : vPitches)
+								{
+									if (FSelectable(sPitch.c_str()))
+										F::Resolver.SetView(player.m_iUserID, bValue);
 								}
 
 								PopStyleVar();

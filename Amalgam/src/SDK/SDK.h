@@ -88,7 +88,7 @@ namespace SDK
 	bool W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways = false);
 	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& transform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr);
 	bool IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin);
-	bool IsOnScreen(CBaseEntity* pEntity);
+	bool IsOnScreen(CBaseEntity* pEntity, bool bShouldGetOwner = true);
 
 	void Trace(const Vec3& vecStart, const Vec3& vecEnd, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace);
 	void TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHullMin, const Vec3& vecHullMax, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace);

@@ -292,7 +292,7 @@ void CChams::Store(CTFPlayer* pLocal)
 			continue;
 
 		Chams_t tChams = {};
-		if (GetChams(pLocal, pEntity, &tChams) && SDK::IsOnScreen(pEntity))
+		if (GetChams(pLocal, pEntity, &tChams) && SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity)))
 			vEntities.push_back({ pEntity, tChams });
 
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())

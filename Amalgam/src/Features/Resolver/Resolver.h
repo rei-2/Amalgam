@@ -9,6 +9,7 @@ struct ResolveData
 	bool m_bYaw = false;
 	bool m_bPitch = false;
 	bool m_bMinwalk = true;
+	bool m_bView = false; // instead of offsetting from sent angle, offset from view to local
 
 	bool m_bAutoSetYaw = true;
 	bool m_bAutoSetPitch = true;
@@ -31,6 +32,7 @@ class CResolver
 	float m_flLastYawCycle = 0.f;
 	float m_flLastPitchCycle = 0.f;
 	float m_flLastMinwalkCycle = 0.f;
+	float m_flLastViewCycle = 0.f;
 
 public:
 	void FrameStageNotify();
@@ -40,6 +42,7 @@ public:
 	void SetYaw(int iUserID, float flValue, bool bAuto = false);
 	void SetPitch(int iUserID, float flValue, bool bInverse = false, bool bAuto = false);
 	void SetMinwalk(int iUserID, bool bValue);
+	void SetView(int iUserID, bool bValue);
 	bool GetAngles(CTFPlayer* pPlayer, float* pYaw = nullptr, float* pPitch = nullptr, bool* pMinwalk = nullptr, bool bFake = false);
 	void Reset();
 };

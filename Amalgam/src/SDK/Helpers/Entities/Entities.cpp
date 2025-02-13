@@ -364,6 +364,59 @@ bool CEntities::IsSpellbook(uint32_t uHash)
 	return false;
 }
 
+bool CEntities::IsProjectile(CBaseEntity* pEntity)
+{
+	if (!pEntity)
+		return false;
+
+	switch (pEntity->GetClassID())
+	{
+	case ETFClassID::CBaseProjectile:
+	case ETFClassID::CBaseGrenade:
+	case ETFClassID::CTFWeaponBaseGrenadeProj:
+	case ETFClassID::CTFWeaponBaseMerasmusGrenade:
+	case ETFClassID::CTFGrenadePipebombProjectile:
+	case ETFClassID::CTFStunBall:
+	case ETFClassID::CTFBall_Ornament:
+	case ETFClassID::CTFProjectile_Jar:
+	case ETFClassID::CTFProjectile_Cleaver:
+	case ETFClassID::CTFProjectile_JarGas:
+	case ETFClassID::CTFProjectile_JarMilk:
+	case ETFClassID::CTFProjectile_SpellBats:
+	case ETFClassID::CTFProjectile_SpellKartBats:
+	case ETFClassID::CTFProjectile_SpellMeteorShower:
+	case ETFClassID::CTFProjectile_SpellMirv:
+	case ETFClassID::CTFProjectile_SpellPumpkin:
+	case ETFClassID::CTFProjectile_SpellSpawnBoss:
+	case ETFClassID::CTFProjectile_SpellSpawnHorde:
+	case ETFClassID::CTFProjectile_SpellSpawnZombie:
+	case ETFClassID::CTFProjectile_SpellTransposeTeleport:
+	case ETFClassID::CTFProjectile_Throwable:
+	case ETFClassID::CTFProjectile_ThrowableBreadMonster:
+	case ETFClassID::CTFProjectile_ThrowableBrick:
+	case ETFClassID::CTFProjectile_ThrowableRepel:
+	case ETFClassID::CTFBaseRocket:
+	case ETFClassID::CTFFlameRocket:
+	case ETFClassID::CTFProjectile_Arrow:
+	case ETFClassID::CTFProjectile_GrapplingHook:
+	case ETFClassID::CTFProjectile_HealingBolt:
+	case ETFClassID::CTFProjectile_Rocket:
+	case ETFClassID::CTFProjectile_BallOfFire:
+	case ETFClassID::CTFProjectile_MechanicalArmOrb:
+	case ETFClassID::CTFProjectile_SentryRocket:
+	case ETFClassID::CTFProjectile_SpellFireball:
+	case ETFClassID::CTFProjectile_SpellLightningOrb:
+	case ETFClassID::CTFProjectile_SpellKartOrb:
+	case ETFClassID::CTFProjectile_EnergyBall:
+	case ETFClassID::CTFProjectile_Flare:
+	case ETFClassID::CTFBaseProjectile:
+	case ETFClassID::CTFProjectile_EnergyRing:
+	//case ETFClassID::CTFProjectile_Syringe:
+		return true;
+	}
+	return false;
+}
+
 CTFPlayer* CEntities::GetLocal() { return m_pLocal; }
 CTFWeaponBase* CEntities::GetWeapon() { return m_pLocalWeapon; }
 CTFPlayerResource* CEntities::GetPR() { return m_pPlayerResource; }

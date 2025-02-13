@@ -5,6 +5,7 @@
 
 MAKE_SIGNATURE(CBaseAnimating_FrameAdvance, "client.dll", "48 89 5C 24 ? 48 89 6C 24 ? 57 48 81 EC ? ? ? ? 44 0F 29 54 24", 0x0);
 MAKE_SIGNATURE(CBaseAnimating_GetBonePosition, "client.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 8B DA 49 8B F1", 0x0);
+MAKE_SIGNATURE(CBaseAnimating_SequenceDuration, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 80 B9 ? ? ? ? ? 48 8B D9 8B B9", 0x0);
 
 class CBaseAnimating : public CBaseEntity
 {
@@ -31,7 +32,8 @@ public:
 	NETVAR(m_fadeMaxDist, float, "CBaseAnimating", "m_fadeMaxDist");
 	NETVAR(m_flFadeScale, float, "CBaseAnimating", "m_flFadeScale");
 
-	NETVAR_OFF(GetModelPtr, CStudioHdr*, "CBaseAnimating", "m_nMuzzleFlashParity", 12);
+	NETVAR_OFF(GetModelPtr, CStudioHdr*, "CBaseAnimating", "m_nMuzzleFlashParity", 16);
+	NETVAR_OFF(m_bSequenceLoops, bool, "CBaseAnimating", "m_flFadeScale", 13);
 
 	inline int GetHitboxGroup(int nHitbox)
 	{
@@ -152,6 +154,11 @@ public:
 	inline bool GetAttachment(int number, Vec3& origin)
 	{
 		return reinterpret_cast<bool(*)(void*, int, Vec3&)>(U::Memory.GetVFunc(this, 71))(this, number, origin);
+	}
+
+	inline float SequenceDuration()
+	{
+		return S::CBaseAnimating_SequenceDuration.Call<float>(this);
 	}
 };
 

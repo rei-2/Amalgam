@@ -15,7 +15,7 @@
 MAKE_SIGNATURE(RenderLine, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 44 89 44 24", 0x0);
 MAKE_SIGNATURE(RenderBox, "engine.dll", "48 83 EC ? 8B 84 24 ? ? ? ? 4D 8B D8", 0x0);
 MAKE_SIGNATURE(RenderWireframeBox, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 41 54 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 49 8B F9", 0x0);
-MAKE_SIGNATURE(DrawServerHitboxes, "server.dll", "44 88 44 24 ? 53 48 81 EC", 0x0);
+MAKE_SIGNATURE(CBaseAnimating_DrawServerHitboxes, "server.dll", "44 88 44 24 ? 53 48 81 EC", 0x0);
 MAKE_SIGNATURE(GetServerAnimating, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
 MAKE_SIGNATURE(CTFPlayer_FireEvent, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 4C 89 64 24 ? 55 41 56 41 57 48 8D 6C 24", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects, "client.dll", "40 57 48 81 EC ? ? ? ? 8B 91 ? ? ? ? 48 8B F9 85 D2 0F 84 ? ? ? ? 48 89 B4 24", 0x0);
@@ -706,16 +706,25 @@ void CVisuals::RestoreBoxes()
 
 void CVisuals::DrawServerHitboxes(CTFPlayer* pLocal)
 {
-	static int iOldTick = I::GlobalVars->tickcount;
-	if (iOldTick == I::GlobalVars->tickcount)
+	if (!Vars::Debug::ServerHitbox.Value)
 		return;
-	iOldTick = I::GlobalVars->tickcount;
 
-	if (I::Input->CAM_IsThirdPerson() && Vars::Debug::ServerHitbox.Value && pLocal->IsAlive())
+	if (I::Input->CAM_IsThirdPerson() && pLocal->IsAlive())
 	{
 		auto pServerAnimating = S::GetServerAnimating.Call<void*>(pLocal->entindex());
 		if (pServerAnimating)
-			S::DrawServerHitboxes.Call<void>(pServerAnimating, TICK_INTERVAL, true);
+			S::CBaseAnimating_DrawServerHitboxes.Call<void>(pServerAnimating, 0.f, true);
+	}
+
+	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+	{
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive())
+			continue;
+
+		auto pServerAnimating = S::GetServerAnimating.Call<void*>(pPlayer->entindex());
+		if (pServerAnimating)
+			S::CBaseAnimating_DrawServerHitboxes.Call<void>(pServerAnimating, 0.f, true);
 	}
 }
 

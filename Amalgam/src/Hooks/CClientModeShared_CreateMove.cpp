@@ -184,7 +184,9 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		if (*pSendPacket && pAnimState)
 		{
 			float flOldFrametime = I::GlobalVars->frametime;
+			float flOldCurtime = I::GlobalVars->curtime;
 			I::GlobalVars->frametime = TICK_INTERVAL;
+			I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
 			for (auto& vAngle : vAngles)
 			{
 				if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
@@ -194,6 +196,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				pLocal->FrameAdvance(TICK_INTERVAL);
 			}
 			I::GlobalVars->frametime = flOldFrametime;
+			I::GlobalVars->curtime = flOldCurtime;
 			vAngles.clear();
 		}
 	}

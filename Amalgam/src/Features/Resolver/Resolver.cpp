@@ -234,6 +234,28 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 	}
 	else
 		m_flLastMinwalkCycle = 0.f;
+
+	if (Vars::AntiHack::Resolver::CycleView.Value)
+	{
+		if (SDK::PlatFloatTime() > m_flLastViewCycle + 0.5f)
+		{
+			if (auto pTarget = getPlayerClosestToFOV())
+			{
+				int iUserID = pResource->GetUserID(pTarget->entindex());
+				auto& tData = m_mResolverData[iUserID];
+
+				bool& bView = tData.m_bView;
+				bView = !bView;
+
+				F::Backtrack.ResolverUpdate(pTarget);
+				F::Records.ReportResolver(pTarget->entindex(), "Cycling", "view", std::string(bView ? "view to local" : "static"));
+			}
+
+			m_flLastViewCycle = SDK::PlatFloatTime();
+		}
+	}
+	else
+		m_flLastViewCycle = 0.f;
 }
 
 void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int iHitbox)
@@ -355,6 +377,16 @@ void CResolver::SetMinwalk(int iUserID, bool bValue)
 	F::Records.ReportResolver(I::EngineClient->GetPlayerForUserID(iUserID), "Set", "minwalk", bValue);
 }
 
+void CResolver::SetView(int iUserID, bool bValue)
+{
+	auto& tData = m_mResolverData[iUserID];
+
+	tData.m_bView = bValue;
+
+	F::Backtrack.ResolverUpdate(I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(iUserID))->As<CTFPlayer>());
+	F::Records.ReportResolver(I::EngineClient->GetPlayerForUserID(iUserID), "Set", "view", std::string(bValue ? "view to local" : "static"));
+}
+
 bool CResolver::GetAngles(CTFPlayer* pPlayer, float* pYaw, float* pPitch, bool* pMinwalk, bool bFake)
 {
 	if (!Vars::AntiHack::Resolver::Enabled.Value)
@@ -376,7 +408,12 @@ bool CResolver::GetAngles(CTFPlayer* pPlayer, float* pYaw, float* pPitch, bool* 
 	{
 		*pYaw = pPlayer->m_angEyeAnglesY();
 		if (bYaw && !bFake)
+		{
+			auto pLocal = H::Entities.GetLocal();
+			if (pLocal && tData.m_bView)
+				*pYaw = Math::CalcAngle(pPlayer->m_vecOrigin(), pLocal->m_vecOrigin()).y;
 			*pYaw += tData.m_flYaw;
+		}
 	}
 
 	if (pPitch)

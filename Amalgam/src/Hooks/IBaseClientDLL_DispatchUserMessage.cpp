@@ -70,6 +70,27 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 
 				return true;
 			}
+			if (sMsg.find("[Line] ") == 0)
+			{
+				try
+				{
+					sMsg.replace(0, strlen("[Line] "), "");
+					std::vector<std::string> vValues = {};
+					boost::split(vValues, sMsg, boost::is_any_of(" "));
+					if (vValues.size() != 11)
+						return true;
+
+					Vec3 vStart = { std::stof(vValues[0]), std::stof(vValues[1]), std::stof(vValues[2]) };
+					Vec3 vEnd = { std::stof(vValues[3]), std::stof(vValues[4]), std::stof(vValues[5]) };
+					Color_t tColor = { byte(std::stoi(vValues[6])), byte(std::stoi(vValues[7])), byte(std::stoi(vValues[8])), byte(255 - std::stoi(vValues[9])) };
+					float flDuration = std::stof(vValues[10]);
+
+					G::LineStorage.push_back({ { vStart, vEnd }, I::GlobalVars->curtime + flDuration, tColor });
+				}
+				catch (...) {}
+
+				return true;
+			}
 			*/
 
 			if (Vars::Misc::Automation::AntiAutobalance.Value && FNV1A::Hash32(sMsg.c_str()) == FNV1A::Hash32Const("#TF_Autobalance_TeamChangePending"))

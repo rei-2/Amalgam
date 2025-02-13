@@ -329,7 +329,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 			continue;
 
 		Glow_t tGlow = {}; Color_t tColor = {};
-		if (GetGlow(pLocal, pEntity, &tGlow, &tColor) && SDK::IsOnScreen(pEntity))
+		if (GetGlow(pLocal, pEntity, &tGlow, &tColor) && SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity)))
 			mvEntities[tGlow].push_back({ pEntity, tColor });
 
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
