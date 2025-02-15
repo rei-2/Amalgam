@@ -83,6 +83,7 @@ void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	if (!pLocal || !pLocal->IsAlive())
 	{
 		m_iGoal = 0;
+		*pSendPacket = true;
 		return;
 	}
 
