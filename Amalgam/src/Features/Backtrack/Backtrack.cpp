@@ -18,6 +18,10 @@ float CBacktrack::GetLerp()
 	if (!Vars::Backtrack::Enabled.Value)
 		return G::Lerp;
 
+	auto pLocal = H::Entities.GetLocal();
+	if (!pLocal || !pLocal->IsAlive())
+		return G::Lerp;
+
 	return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, m_flMaxUnlag);
 }
 

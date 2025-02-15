@@ -80,8 +80,12 @@ void CFakeLag::Prediction(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket)
 {
-	if (!pLocal)
+	if (!pLocal || !pLocal->IsAlive())
+	{
+		m_iGoal = 0;
+		*pSendPacket = true;
 		return;
+	}
 
 	switch (Vars::CL_Move::Fakelag::Fakelag.Value)
 	{
