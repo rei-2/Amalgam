@@ -545,7 +545,7 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 
 std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBaseAnimating* pEntity, std::vector<int> vHitboxes, int iTarget)
 {
-	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a)
+	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a && !Vars::Colors::BoneHitboxEdgeClipped.Value.a && !Vars::Colors::BoneHitboxFaceClipped.Value.a)
 		return {};
 
 	std::vector<DrawBox> vBoxes = {};
@@ -574,9 +574,20 @@ std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBa
 		Vec3 vOrigin; Math::GetMatrixOrigin(matrix, vOrigin);
 
 		bool bTargeted = i == iTarget;
-		Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
-		Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
-		vBoxes.push_back({ vOrigin, pBox->bbmin, pBox->bbmax, vAngle, I::GlobalVars->curtime + 5.f, tEdge, tFace, true });
+
+		{
+			Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
+			Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
+			if (tEdge.a || tFace.a)
+				vBoxes.push_back({ vOrigin, pBox->bbmin, pBox->bbmax, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace });
+		}
+
+		{
+			Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeClipped.Value : Vars::Colors::BoneHitboxEdgeClipped.Value;
+			Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFaceClipped.Value : Vars::Colors::BoneHitboxFaceClipped.Value;
+			if (tEdge.a || tFace.a)
+				vBoxes.push_back({ vOrigin, pBox->bbmin, pBox->bbmax, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace, true });
+		}
 	}
 
 	return vBoxes;
@@ -885,7 +896,9 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 	{
 	case FNV1A::Hash32Const("player_hurt"):
 	{
-		if (!(Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnHit))
+		bool bBones = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnHit;
+		bool bBounds = Vars::Visuals::Hitbox::BoundsEnabled.Value & Vars::Visuals::Hitbox::BoundsEnabledEnum::OnHit;
+		if (!bBones || !bBounds)
 			return;
 
 		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")) != I::EngineClient->GetLocalPlayer())
@@ -901,6 +914,9 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 		case EWeaponType::HITSCAN:
 		case EWeaponType::MELEE:
 		{
+			if (!bBones)
+				break;
+
 			auto pBones = H::Entities.GetBones(pEntity->entindex());
 			if (!pBones)
 				return;
@@ -912,11 +928,14 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 		}
 		case EWeaponType::PROJECTILE:
 		{
+			if (!bBounds)
+				break;
+
 			G::BoxStorage.push_back({ pEntity->m_vecOrigin(), pEntity->m_vecMins(), pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + 5.f, Vars::Colors::BoundHitboxEdge.Value, Vars::Colors::BoundHitboxFace.Value, true });
 		}
 		}
 
-		return;
+		break;
 	}
 	case FNV1A::Hash32Const("item_pickup"):
 	{

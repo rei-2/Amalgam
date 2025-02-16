@@ -7,7 +7,8 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 {
 	if (!(Vars::CL_Move::Fakelag::Fakelag.Value || m_bPreservingBlast || m_bUnducking)
 		|| I::ClientState->chokedcommands >= std::min(24 - F::Ticks.m_iShiftedTicks, 21)
-		|| F::Ticks.m_iShiftedGoal != F::Ticks.m_iShiftedTicks || F::Ticks.m_bRecharge)
+		|| F::Ticks.m_iShiftedGoal != F::Ticks.m_iShiftedTicks || F::Ticks.m_bRecharge
+		|| !pLocal->IsAlive() || pLocal->IsAGhost())
 		return false;
 
 	if (m_bPreservingBlast)

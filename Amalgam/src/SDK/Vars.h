@@ -160,7 +160,7 @@ namespace Vars
 
 			CVar(GroundSamples, 33, DEBUGVAR)
 			CVar(GroundStraightFuzzyValue, 100.f, DEBUGVAR)
-			CVar(GroundLowMinimumSamples, 8, DEBUGVAR)
+			CVar(GroundLowMinimumSamples, 16, DEBUGVAR)
 			CVar(GroundHighMinimumSamples, 33, DEBUGVAR)
 			CVar(GroundLowMinimumDistance, 0.f, DEBUGVAR)
 			CVar(GroundHighMinimumDistance, 2500.f, DEBUGVAR)
@@ -540,9 +540,10 @@ namespace Vars
 			CVar(ForceVertical, 1.f, VISUAL)
 		SUBNAMESPACE_END(RagdollEffects)
 
-		SUBNAMESPACE_BEGIN(Bullet)
+		SUBNAMESPACE_BEGIN(Line)
 			CVar(Enabled, false, VISUAL)
-		SUBNAMESPACE_END(Bullet)
+			CVar(DrawDuration, 5.f, VISUAL)
+		SUBNAMESPACE_END(Line)
 
 		SUBNAMESPACE_BEGIN(Simulation)
 			Enum(Style, Off, Line, Separators, Spaced, Arrows, Boxes);
@@ -556,6 +557,7 @@ namespace Vars
 			CVar(SwingLines, false, VISUAL)
 			CVar(ProjectileCamera, false, VISUAL)
 			CVar(ProjectileWindow, WindowBox_t(), NOBIND)
+			CVar(DrawDuration, 5.f, VISUAL)
 			CVar(SeparatorSpacing, 4, DEBUGVAR)
 			CVar(SeparatorLength, 12, DEBUGVAR)
 		SUBNAMESPACE_END(ProjectileTrajectory)
@@ -587,7 +589,9 @@ namespace Vars
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Hitbox)
-			CVarEnum(Enabled, 0b00, VISUAL, OnShot = 1 << 0, OnHit = 1 << 1)
+			CVarEnum(BonesEnabled, 0b00, VISUAL, OnShot = 1 << 0, OnHit = 1 << 1)
+			CVarEnum(BoundsEnabled, 0b000, VISUAL, OnShot = 1 << 0, OnHit = 1 << 1, AimPoint = 1 << 2)
+			CVar(DrawDuration, 5.f, VISUAL)
 		SUBNAMESPACE_END(Hitbox)
 
 		SUBNAMESPACE_BEGIN(ThirdPerson)
@@ -804,7 +808,8 @@ namespace Vars
 		CVar(ParticleModulation, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(FogModulation, Color_t(255, 255, 255, 255), VISUAL)
 
-		CVar(Bullet, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(Line, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(LineClipped, Color_t(255, 255, 255, 255), VISUAL)
 
 		CVar(PlayerPath, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(PlayerPathClipped, Color_t(255, 255, 255, 0), VISUAL)
@@ -817,12 +822,18 @@ namespace Vars
 		CVar(SplashRadius, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(SplashRadiusClipped, Color_t(255, 255, 255, 0), VISUAL)
 
-		CVar(BoneHitboxEdge, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(BoneHitboxEdge, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoneHitboxEdgeClipped, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(BoneHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(TargetHitboxEdge, Color_t(255, 150, 150, 255), VISUAL)
+		CVar(BoneHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(TargetHitboxEdge, Color_t(255, 150, 150, 0), VISUAL)
+		CVar(TargetHitboxEdgeClipped, Color_t(255, 150, 150, 255), VISUAL)
 		CVar(TargetHitboxFace, Color_t(255, 150, 150, 0), VISUAL)
-		CVar(BoundHitboxEdge, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(TargetHitboxFaceClipped, Color_t(255, 150, 150, 0), VISUAL)
+		CVar(BoundHitboxEdge, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoundHitboxEdgeClipped, Color_t(255, 255, 255, 255), VISUAL)
 		CVar(BoundHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoundHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
 
 		CVar(SpellFootstep, Color_t(255, 255, 255, 0), VISUAL)
 	NAMESPACE_END(Colors)

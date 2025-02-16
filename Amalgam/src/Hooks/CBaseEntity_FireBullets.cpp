@@ -58,7 +58,7 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 		if (bClear)
 			G::LineStorage.clear();
 
-		G::LineStorage.push_back({ {trace.startpos, trace.endpos}, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
+		G::LineStorage.push_back({ { trace.startpos, trace.endpos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Line.Value, true });
 	}
 	else if (uHash == FNV1A::Hash32Const("Beam"))
 	{

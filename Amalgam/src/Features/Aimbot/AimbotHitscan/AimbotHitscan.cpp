@@ -780,8 +780,8 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			if (target.m_bBacktrack)
 				pCmd->tick_count = TIME_TO_TICKS(target.m_tRecord.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.m_flFakeInterp);
 
-			bool bLine = Vars::Visuals::Bullet::Enabled.Value;
-			bool bBoxes = Vars::Visuals::Hitbox::Enabled.Value & Vars::Visuals::Hitbox::EnabledEnum::OnShot;
+			bool bLine = Vars::Visuals::Line::Enabled.Value;
+			bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
 			if (G::CanPrimaryAttack && (bLine || bBoxes))
 			{
 				G::LineStorage.clear();
@@ -794,7 +794,10 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 					float flDist = vEyePos.DistTo(target.m_vPos);
 					Vec3 vForward; Math::AngleVectors(target.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
 
-					G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + 5.f, Vars::Colors::Bullet.Value, true });
+					if (Vars::Colors::Line.Value.a)
+						G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::Line.Value });
+					if (Vars::Colors::LineClipped.Value.a)
+						G::LineStorage.push_back({ { vEyePos, vEyePos + vForward * flDist }, I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::LineClipped.Value, true });
 				}
 				if (bBoxes)
 				{

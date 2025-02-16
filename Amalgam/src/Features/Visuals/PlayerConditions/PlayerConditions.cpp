@@ -35,10 +35,12 @@ std::vector<std::string> CPlayerConditions::Get(CTFPlayer* pEntity)
 			pEntity->InCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED) ||
 			pEntity->InCond(TF_COND_INVULNERABLE_USER_BUFF) ||
 			pEntity->InCond(TF_COND_INVULNERABLE_CARD_EFFECT))
-			vConditions.emplace_back("INVULNERABLE");
-
-		if (pEntity->InCond(TF_COND_INVULNERABLE_WEARINGOFF))
-			vConditions.emplace_back("INVULNERABLE-");
+		{
+			if (pEntity->InCond(TF_COND_INVULNERABLE_WEARINGOFF))
+				vConditions.emplace_back("INVULNERABLE-"); // this cond may sometimes be residual
+			else
+				vConditions.emplace_back("INVULNERABLE");
+		}
 
 		if (pEntity->InCond(TF_COND_DEFENSEBUFF))
 			vConditions.emplace_back("DEFENSE BUFF");
@@ -49,15 +51,14 @@ std::vector<std::string> CPlayerConditions::Get(CTFPlayer* pEntity)
 		if (pEntity->InCond(TF_COND_DEFENSEBUFF_NO_CRIT_BLOCK))
 			vConditions.emplace_back("DEFENSE BUFF-");
 
-		if (pEntity->InCond(TF_COND_RADIUSHEAL) ||
+		if (pEntity->InCond(TF_COND_MEGAHEAL) ||
+			pEntity->InCond(TF_COND_HALLOWEEN_QUICK_HEAL))
+			vConditions.emplace_back("HEAL+");
+		else if (pEntity->InCond(TF_COND_RADIUSHEAL) ||
 			pEntity->InCond(TF_COND_HEALTH_BUFF) ||
 			pEntity->InCond(TF_COND_RADIUSHEAL_ON_DAMAGE) ||
 			pEntity->InCond(TF_COND_HALLOWEEN_HELL_HEAL))
 			vConditions.emplace_back("HEAL");
-
-		if (pEntity->InCond(TF_COND_MEGAHEAL) ||
-			pEntity->InCond(TF_COND_HALLOWEEN_QUICK_HEAL))
-			vConditions.emplace_back("HEAL+");
 
 		if (pEntity->InCond(TF_COND_REGENONDAMAGEBUFF))
 			vConditions.emplace_back("HEALTH ON DAMAGE");

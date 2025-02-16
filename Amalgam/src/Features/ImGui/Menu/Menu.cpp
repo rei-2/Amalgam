@@ -790,10 +790,12 @@ void CMenu::MenuVisuals()
 
 				/* Column 2 */
 				TableNextColumn();
-				if (Section("Bullet"))
+				if (Section("Line"))
 				{
-					FColorPicker("Bullet tracer color", Vars::Colors::Bullet);
-					FToggle("Bullet tracers", Vars::Visuals::Bullet::Enabled);
+					FColorPicker("Line tracer clipped", Vars::Colors::LineClipped);
+					FColorPicker("Line tracer", Vars::Colors::Line, 1);
+					FToggle("Line tracers", Vars::Visuals::Line::Enabled);
+					FSlider("Draw duration## Line", Vars::Visuals::Line::DrawDuration, 0.f, 10.f, 1.f, "%g", FSlider_Min | FSlider_Precision);
 				} EndSection();
 				if (Section("Simulation"))
 				{
@@ -811,6 +813,9 @@ void CMenu::MenuVisuals()
 					FToggle("Box", Vars::Visuals::Simulation::Box, FToggle_Right);
 					FToggle("Swing prediction lines", Vars::Visuals::Simulation::SwingLines, FToggle_Left);
 					FToggle("Projectile camera", Vars::Visuals::Simulation::ProjectileCamera, FToggle_Right);
+					PushTransparent(FGet(Vars::Visuals::Simulation::Timed));
+						FSlider("Draw duration## Simulation", Vars::Visuals::Simulation::DrawDuration, 0.f, 10.f, 1.f, "%g", FSlider_Min | FSlider_Precision);
+					PopTransparent();
 				} EndSection();
 				if (Vars::Debug::Info.Value)
 				{
@@ -848,15 +853,27 @@ void CMenu::MenuVisuals()
 				}
 				if (Section("Hitbox"))
 				{
-					FDropdown("Enabled", Vars::Visuals::Hitbox::Enabled, { "On shot", "On hit" }, {}, FDropdown_Multi, -80);
+					FDropdown("Bones enabled", Vars::Visuals::Hitbox::BonesEnabled, { "On shot", "On hit" }, {}, FDropdown_Multi, -110);
 					FColorPicker("Target edge color", Vars::Colors::TargetHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					FColorPicker("Target edge color clipped", Vars::Colors::TargetHitboxEdgeClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
 					FColorPicker("Target face color", Vars::Colors::TargetHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					FColorPicker("Target face color clipped", Vars::Colors::TargetHitboxFaceClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
 					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
 					FColorPicker("Bone edge color", Vars::Colors::BoneHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
-					FColorPicker("Bone face color", Vars::Colors::BoneHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					FColorPicker("Bone edge color clipped", Vars::Colors::BoneHitboxEdgeClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
 					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
+					FColorPicker("Bone face color", Vars::Colors::BoneHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					FColorPicker("Bone face color clipped", Vars::Colors::BoneHitboxFaceClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+
+					FDropdown("Bounds enabled", Vars::Visuals::Hitbox::BoundsEnabled, { "On shot", "On hit", "Aim point" }, {}, FDropdown_Multi, -50);
 					FColorPicker("Bound edge color", Vars::Colors::BoundHitboxEdge, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					FColorPicker("Bound edge color clipped", Vars::Colors::BoundHitboxEdgeClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
 					FColorPicker("Bound face color", Vars::Colors::BoundHitboxFace, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+					FColorPicker("Bound face color clipped", Vars::Colors::BoundHitboxFaceClipped, 0, FColorPicker_Dropdown | FColorPicker_Tooltip);
+
+					FSlider("Draw duration## Hitbox", Vars::Visuals::Hitbox::DrawDuration, 0.f, 10.f, 1.f, "%g", FSlider_Min | FSlider_Precision);
 				} EndSection();
 				if (Section("Thirdperson"))
 				{

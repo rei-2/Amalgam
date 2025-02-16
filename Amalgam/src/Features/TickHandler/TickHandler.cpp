@@ -213,7 +213,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 		{
 		case TF_WEAPON_PIPEBOMBLAUNCHER:
 		case TF_WEAPON_CANNON:
-			if (G::Reloading)
+			if (!G::CanSecondaryAttack)
 				m_iWait = Vars::CL_Move::Doubletap::TickLimit.Value;
 			break;
 		default:
