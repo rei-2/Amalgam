@@ -93,7 +93,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			Vec3 vPos = pEntity->GetCenter();
+			Vec3 vPos = pEntity->m_vecOrigin();
 			Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPos);
 			float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)

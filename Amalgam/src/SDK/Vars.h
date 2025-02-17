@@ -149,7 +149,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Projectile)
 			CVarEnum(StrafePrediction, 0b11, NONE, Air = 1 << 0, Ground = 1 << 1)
 			CVarEnum(SplashPrediction, 0, NONE, Off, Include, Prefer, Only)
-			CVarEnum(AutoDetonate, 0b00, NONE, Stickies = 1 << 0, Flares = 1 << 1)
+			CVarEnum(AutoDetonate, 0b00, NONE, Stickies = 1 << 0, Flares = 1 << 1, PreventSelfDamage = 1 << 2)
 			CVarEnum(AutoAirblast, 0, NONE, Off, Legit, Rage)
 			CVarEnum(Modifiers, 0b1010, NONE, ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, BodyaimIfLethal = 1 << 2, UsePrimeTime = 1 << 3, AimBlastAtFeet = 1 << 4)
 			CVar(PredictionTime, 2.f)
