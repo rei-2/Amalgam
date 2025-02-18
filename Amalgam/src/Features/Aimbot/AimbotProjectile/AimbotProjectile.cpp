@@ -611,14 +611,14 @@ static inline void SolveProjectileSpeed(CTFWeaponBase* pWeapon, const Vec3& vLoc
 		case Demoman_s_FestiveStickybombLauncher:
 		case Demoman_s_TheQuickiebombLauncher:
 		case Demoman_s_TheScottishResistance: flDrag = Math::RemapValClamped(flVelocity, 922.f, k_flMaxVelocity, 0.085f, 0.190f); break; // 0.085 low, 0.190 capped, 0.230 v2400
+		case Scout_t_TheSandman: flDrag = 0.180f; break;
+		case Scout_t_TheWrapAssassin: flDrag = 0.285f; break;
 		}
 	}
 
-	flDragTime = powf(flTime, 2) * flDrag / 1.5f; // rough estimate to prevent m_flTime being too low
+	float flOverride = Vars::Aimbot::Projectile::TimeOverride.Value;
+	flDragTime = powf(flTime, 2) * flDrag / (flOverride ? flOverride : 1.5f); // rough estimate to prevent m_flTime being too low
 	flVelocity = flVelocity - flVelocity * flTime * flDrag;
-
-	if (Vars::Aimbot::Projectile::TimeOverride.Value)
-		flDragTime = Vars::Aimbot::Projectile::TimeOverride.Value;
 }
 void CAimbotProjectile::CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, Info_t& tInfo, int iSimTime, Solution_t& out, bool bAccuracy)
 {

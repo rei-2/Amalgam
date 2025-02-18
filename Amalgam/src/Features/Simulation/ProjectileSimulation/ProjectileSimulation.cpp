@@ -333,12 +333,12 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 			break;
 		case TF_PROJECTILE_THROWABLE:
 			flDrag = 1.f;
-			vDragBasis = { 0.006645f, 0.006581f, 0.006710f };
+			vDragBasis = { 0.009000f /*0.006645f*/, 0.006581f, 0.006710f};
 			vAngDragBasis = { 0.002233f, 0.002246f, 0.002206f };
 			break;
 		case TF_PROJECTILE_FESTIVE_ARROW:
 			flDrag = 1.f;
-			vDragBasis = { 0.010867f, 0.0108727f, 0.010804f };
+			vDragBasis = { 0.013500f /*0.010867f*/, 0.0108727f, 0.010804f };
 			vAngDragBasis = { 0.002081f, 0.002162f, 0.002069f };
 			break;
 		case TF_PROJECTILE_JAR: // there are different drags for different models, though shouldn't matter too much here

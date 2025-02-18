@@ -296,8 +296,8 @@ namespace Vars
 			CVar(AutoResolvePitchAmount, 90.f)
 			CVar(CycleYaw, 0.f)
 			CVar(CyclePitch, 0.f)
-			CVar(CycleMinwalk, false)
 			CVar(CycleView, false)
+			CVar(CycleMinwalk, false)
 		SUBNAMESPACE_END(Resolver)
 	NAMESPACE_END(AntiHack)
 
