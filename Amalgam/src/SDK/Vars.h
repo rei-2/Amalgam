@@ -167,7 +167,7 @@ namespace Vars
 			CVar(GroundMaxChanges, 0, DEBUGVAR)
 			CVar(GroundMaxChangeTime, 0, DEBUGVAR)
 			CVar(GroundNewWeight, 100.f, DEBUGVAR)
-			CVar(GroundOldWeight, 0.f, DEBUGVAR)
+			CVar(GroundOldWeight, 100.f, DEBUGVAR)
 
 			CVar(AirSamples, 33, DEBUGVAR)
 			CVar(AirStraightFuzzyValue, 10.f, DEBUGVAR)
@@ -178,7 +178,7 @@ namespace Vars
 			CVar(AirMaxChanges, 1, DEBUGVAR)
 			CVar(AirMaxChangeTime, 10, DEBUGVAR)
 			CVar(AirNewWeight, 100.f, DEBUGVAR)
-			CVar(AirOldWeight, 0.f, DEBUGVAR)
+			CVar(AirOldWeight, 100.f, DEBUGVAR)
 
 			CVar(VelocityAverageCount, 5, DEBUGVAR)
 			CVar(VerticalShift, 5.f, DEBUGVAR)

@@ -43,6 +43,7 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	const bool bOldIsFirstPrediction = I::Prediction->m_bFirstTimePredicted;
 	const bool bOldInPrediction = I::Prediction->m_bInPrediction;
 
+	I::MoveHelper->SetHost(pLocal);
 	pLocal->SetCurrentCmd(pCmd);
 	*G::RandomSeed() = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
 
@@ -81,6 +82,7 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 		I::Prediction->FinishMove(pLocal, pCmd, &m_MoveData);
 	}
 
+	I::MoveHelper->SetHost(nullptr);
 	pLocal->SetCurrentCmd(nullptr);
 	*G::RandomSeed() = -1;
 
