@@ -30,15 +30,9 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 			static Vec3 vAng = {};
 			static int iTick = 0;
 
-			if (!G::AimPosition.IsZero())
+			if (!G::AimPosition.first.IsZero())
 			{
-				vAng = Math::CalcAngle(vEyePosition, G::AimPosition);
-				iTick = I::GlobalVars->tickcount;
-			}
-
-			if (abs(iTick - I::GlobalVars->tickcount) < 32)
-			{
-				Vec3 vDiff = I::EngineClient->GetViewAngles() - vAng;
+				Vec3 vDiff = I::EngineClient->GetViewAngles() - Math::CalcAngle(vEyePosition, G::AimPosition.first);
 				if (bFlip)
 					vDiff.y *= -1;
 				vEyeAngles = I::EngineClient->GetViewAngles() - vDiff;

@@ -60,7 +60,7 @@ namespace G
 	inline int Buttons = 0;
 
 	inline std::pair<int, int> Target = { 0, 0 };
-	inline Vec3 AimPosition = {};
+	inline std::pair<Vec3, int> AimPosition = {};
 
 	inline bool SilentAngles = false;
 	inline bool PSilentAngles = false;

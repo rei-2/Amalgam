@@ -3,7 +3,7 @@
 #include "../Types.h"
 #include "../../../Utils/Signatures/Signatures.h"
 
-MAKE_SIGNATURE(CCollisionPropert_SetCollisionBounds, "client.dll", "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 41 56 48 81 EC ? ? ? ? F2 0F 10 02", 0x0);
+MAKE_SIGNATURE(CCollisionProperty_SetCollisionBounds, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 81 EC ? ? ? ? F3 0F 10 0A", 0x0);
 MAKE_SIGNATURE(CCollisionProperty_CalcNearestPoint, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 49 8B D8 48 8B F9 4C 8D 44 24", 0x0);
 
 struct model_t;
@@ -38,7 +38,7 @@ class CCollisionProperty : public ICollideable
 public:
 	inline void SetCollisionBounds(const Vec3& mins, const Vec3& maxs)
 	{
-		S::CCollisionPropert_SetCollisionBounds.Call<void>(this, std::ref(mins), std::ref(maxs));
+		S::CCollisionProperty_SetCollisionBounds.Call<void>(this, std::ref(mins), std::ref(maxs));
 	}
 
 	inline void CalcNearestPoint(const Vec3& vecWorldPt, Vec3* pVecNearestWorldPt)

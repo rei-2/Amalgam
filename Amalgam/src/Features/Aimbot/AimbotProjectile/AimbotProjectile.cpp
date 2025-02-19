@@ -1320,8 +1320,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		}
 
 		G::Target = { target.m_pEntity->entindex(), I::GlobalVars->tickcount };
-		if (Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
-			G::AimPosition = target.m_vPos;
+		G::AimPosition = { target.m_vPos, I::GlobalVars->tickcount };
 
 		if (Vars::Aimbot::General::AutoShoot.Value)
 		{

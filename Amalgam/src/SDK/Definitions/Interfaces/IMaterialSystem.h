@@ -324,6 +324,15 @@ enum RenderTargetSizeMode_t
 	RT_SIZE_LITERAL_PICMIP = 9
 };
 
+enum RenderBackend_t
+{
+	RENDER_BACKEND_UNKNOWN,
+	RENDER_BACKEND_D3D9,
+	RENDER_BACKEND_TOGL,
+	RENDER_BACKEND_VULKAN,
+	RENDER_BACKEND_NULL,
+};
+
 typedef void (*MaterialBufferReleaseFunc_t)();
 typedef void (*MaterialBufferRestoreFunc_t)(int nChangeFlags);
 typedef void (*ModeChangeCallbackFunc_t)(void);
@@ -409,8 +418,6 @@ public:
 	virtual void ToggleDebugMaterial(char const* pMaterialName) = 0;
 	virtual bool UsingFastClipping(void) = 0;
 	virtual int StencilBufferBits(void) = 0;
-	virtual void SuspendTextureStreaming() = 0;
-	virtual void ResumeTextureStreaming() = 0;
 	virtual void UncacheAllMaterials() = 0;
 	virtual void UncacheUnusedMaterials(bool bRecomputeStateSnapshots = false) = 0;
 	virtual void CacheUsedMaterials() = 0;
@@ -478,9 +485,12 @@ public:
 	virtual ITexture* CreateNamedTextureFromBitsEx(const char* pName, const char* pTextureGroupName, int w, int h, int mips, ImageFormat fmt, int srcBufferSize, byte* srcBits, int nFlags) = 0;
 	virtual bool AddTextureCompositorTemplate(const char* pName, KeyValues* pTmplDesc, int nTexCompositeTemplateFlags = 0) = 0;
 	virtual bool VerifyTextureCompositorTemplates() = 0;
+	virtual RenderBackend_t GetRenderBackend() const = 0;
+	virtual void SuspendTextureStreaming() = 0;
+	virtual void ResumeTextureStreaming() = 0;
 };
 
-MAKE_INTERFACE_VERSION(IMaterialSystem, MaterialSystem, "materialsystem.dll", "VMaterialSystem081");
+MAKE_INTERFACE_VERSION(IMaterialSystem, MaterialSystem, "materialsystem.dll", "VMaterialSystem082");
 
 class IMatRenderContext : public IRefCounted
 {

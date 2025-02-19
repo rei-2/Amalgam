@@ -20,16 +20,10 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 		static Vec3 vPos = {};
 		static int iTick = 0;
 
-		if (!G::AimPosition.IsZero())
-		{
-			vPos = G::AimPosition;
-			iTick = I::GlobalVars->tickcount;
-		}
-
-		if (abs(iTick - I::GlobalVars->tickcount) < 32)
+		if (!G::AimPosition.first.IsZero())
 		{
 			Vec3 vScreen;
-			if (SDK::W2S(vPos, vScreen))
+			if (SDK::W2S(G::AimPosition.first, vScreen))
 			{
 				if (pX) *pX = vScreen.x;
 				if (pY) *pY = vScreen.y;

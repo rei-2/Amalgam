@@ -419,7 +419,7 @@ public:
 
 	inline void ThirdPersonSwitch(/*bool bThirdperson*/)
 	{
-		return reinterpret_cast<void(*)(void*/*, bool*/)>(U::Memory.GetVFunc(this, 255))(this/*, bThirdperson*/);
+		return reinterpret_cast<void(*)(void*/*, bool*/)>(U::Memory.GetVFunc(this, 256))(this/*, bThirdperson*/);
 	};
 };
 

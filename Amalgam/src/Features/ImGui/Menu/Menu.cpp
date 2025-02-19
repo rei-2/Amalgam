@@ -204,7 +204,7 @@ void CMenu::MenuAimbot()
 					FDropdown("Predict", Vars::Aimbot::Projectile::StrafePrediction, { "Air strafing", "Ground strafing" }, {}, FDropdown_Multi | FDropdown_Left);
 					FDropdown("Splash", Vars::Aimbot::Projectile::SplashPrediction, { "Off", "Include", "Prefer", "Only" }, {}, FDropdown_Right);
 					FDropdown("Auto detonate", Vars::Aimbot::Projectile::AutoDetonate, { "Stickies", "Flares", "##Divider", "Ignore self damage" }, {}, FDropdown_Multi | FDropdown_Left);
-					FDropdown("Auto airblast", Vars::Aimbot::Projectile::AutoAirblast, { "Off", "Legit", "Rage" }, {}, FDropdown_Right);
+					FDropdown("Auto airblast", Vars::Aimbot::Projectile::AutoAirblast, { "Enabled", "##Divider", "Redirect simple", "Redirect advanced", "##Divider", "Respect FOV"}, {}, FDropdown_Multi | FDropdown_Right); // todo: finish redirect advanced!!
 					FDropdown("Modifiers## Projectile", Vars::Aimbot::Projectile::Modifiers, { "Charge shot", "Cancel charge", "Bodyaim if lethal", "Use prime time", "Aim blast at feet" }, {}, FDropdown_Multi);
 					FSlider("Max simulation time", Vars::Aimbot::Projectile::PredictionTime, 0.1f, 10.f, 0.25f, "%gs", FSlider_Min | FSlider_Precision);
 					PushTransparent(!FGet(Vars::Aimbot::Projectile::StrafePrediction));
@@ -377,9 +377,9 @@ void CMenu::MenuAimbot()
 						PopTransparent();
 						FSlider("Cycle yaw", Vars::AntiHack::Resolver::CycleYaw, -180.f, 180.f, 45.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
 						FSlider("Cycle pitch", Vars::AntiHack::Resolver::CyclePitch, -180.f, 180.f, 90.f, "%g", FSlider_Right | FSlider_Clamp);
-						FToggle("Cycle view", Vars::AntiHack::Resolver::CycleView, FToggle_Right);
-						FToggle("Cycle minwalk", Vars::AntiHack::Resolver::CycleMinwalk, FToggle_Left);
-						PopTransparent();
+						FToggle("Cycle view", Vars::AntiHack::Resolver::CycleView, FToggle_Left);
+						FToggle("Cycle minwalk", Vars::AntiHack::Resolver::CycleMinwalk, FToggle_Right);
+					PopTransparent();
 				} EndSection();
 				if (Section("Auto Peek"))
 				{

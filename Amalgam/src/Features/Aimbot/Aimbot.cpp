@@ -64,9 +64,10 @@ void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	}
 
 	bRan = false;
-	G::AimPosition = Vec3();
 	if (abs(G::Target.second - I::GlobalVars->tickcount) > 32)
 		G::Target = { 0, 0 };
+	if (abs(G::AimPosition.second - I::GlobalVars->tickcount) > 32)
+		G::AimPosition = { {}, 0 };
 
 	if (pCmd->weaponselect)
 		return;
