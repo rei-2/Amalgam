@@ -2019,7 +2019,7 @@ namespace ImGui
 	}
 
 	#define WRAPPER(function, type, parameters, arguments)\
-	inline bool function(const char* sLabel, ConfigVar<type>& var, parameters, bool* pHovered = nullptr)\
+	inline bool function(const char* sLabel, ConfigVar<type>& var, parameters, bool* pHovered = nullptr, std::string sBindOverride = "")\
 	{\
 		auto val = FGet(var, true);\
 		bool bHovered = false;\
@@ -2027,7 +2027,7 @@ namespace ImGui
 		FSet(var, val);\
 		if (pHovered)\
 			*pHovered = bHovered;\
-		if (!(var.m_iFlags & NOBIND) && !Disabled && CurrentBind == DEFAULT_BIND)\
+		if (!(var.m_iFlags & (NOBIND | NOSAVE)) && !Disabled && CurrentBind == DEFAULT_BIND)\
 		{	/*probably a better way to do this*/\
 			static auto staticVal = val;\
 			bool bNewPopup = bHovered && IsMouseReleased(ImGuiMouseButton_Right) && !IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId);\
@@ -2042,7 +2042,7 @@ namespace ImGui
 			PopStyleColor();\
 			if (bPopup)\
 			{\
-				std::string sLower = StripDoubleHash(sLabel);\
+				std::string sLower = !sBindOverride.empty() ? sBindOverride : StripDoubleHash(sLabel);\
 				std::transform(sLower.begin(), sLower.end(), sLower.begin(), ::tolower);\
 				switch (FNV1A::Hash32Const(#function)) /*get rid of any visual flags*/\
 				{\

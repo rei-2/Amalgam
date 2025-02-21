@@ -705,7 +705,7 @@ namespace Vars
 		SUBNAMESPACE_END(Automation)
 
 		SUBNAMESPACE_BEGIN(Sound)
-			CVarEnum(Block, 0b000, NONE, Footsteps = 1 << 0, Noisemaker = 1 << 1, FryingPan = 1 << 2)
+			CVarEnum(Block, 0b0000, NONE, Footsteps = 1 << 0, Noisemaker = 1 << 1, FryingPan = 1 << 2, Water = 1 << 3)
 			CVar(GiantWeaponSounds, false)
 			CVar(HitsoundAlways, false)
 		SUBNAMESPACE_END(Sound)

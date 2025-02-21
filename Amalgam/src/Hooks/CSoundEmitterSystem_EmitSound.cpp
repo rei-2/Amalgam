@@ -116,6 +116,13 @@ static bool ShouldBlockSound(const char* pSound)
 	if (Vars::Misc::Sound::Block.Value & Vars::Misc::Sound::BlockEnum::FryingPan && sSound.find("pan_") != std::string::npos) // Pan
 		return true;
 
+	if (Vars::Misc::Sound::Block.Value & Vars::Misc::Sound::BlockEnum::Water && // Water
+		(sSound.find("ambient_mp3\\water\\water_splash") != std::string::npos || sSound.find("slosh") != std::string::npos || sSound.find("wade") != std::string::npos))
+		return true;
+
+	if (FNV1A::Hash32(pSound) == FNV1A::Hash32Const("Physics.WaterSplash")) // temporary fix for duplicate water sounds
+		return true;
+
 	return false;
 }
 

@@ -173,8 +173,6 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	}
 	F::Ticks.ManagePacket(pCmd, pSendPacket);
 	F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
-	if (*pSendPacket)
-		F::FakeAngle.Run(pLocal);
 
 	if (pLocal)
 	{
@@ -198,6 +196,8 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 			I::GlobalVars->frametime = flOldFrametime;
 			I::GlobalVars->curtime = flOldCurtime;
 			vAngles.clear();
+
+			F::FakeAngle.Run(pLocal);
 		}
 	}
 

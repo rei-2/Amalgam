@@ -344,68 +344,122 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 	{
 		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pWeapon) : true) && Vars::Aimbot::General::HitscanPeek.Value;
 
-		if (target.m_iTargetType == TargetEnum::Player || target.m_iTargetType == TargetEnum::Sentry)
+		if (target.m_iTargetType == TargetEnum::Player)
 		{
 			auto aBones = tRecord.m_BoneMatrix.m_aBones;
 			if (!aBones)
 				continue;
 
-			std::vector<std::pair<const mstudiobbox_t*, int>> vHitboxes;
+			std::vector<std::tuple<const mstudiobbox_t*, int, int>> vHitboxes;
+			for (int i = 0; i < pSet->numhitboxes; i++)
 			{
-				if (target.m_iTargetType != TargetEnum::Sentry)
+				if (!F::AimbotGlobal.IsHitboxValid(H::Entities.GetModel(target.m_pEntity->entindex()), i, Vars::Aimbot::Hitscan::Hitboxes.Value))
+					continue;
+
+				auto pBox = pSet->pHitbox(i);
+				if (!pBox) continue;
+
+				int iPriority = GetHitboxPriority(i, pLocal, pWeapon, target.m_pEntity);
+				vHitboxes.push_back({ pBox, i, iPriority });
+			}
+			std::sort(vHitboxes.begin(), vHitboxes.end(), [&](const auto& a, const auto& b) -> bool
 				{
-					std::vector<std::pair<const mstudiobbox_t*, int>> primary, secondary, tertiary; // dumb
-					for (int nHitbox = 0; nHitbox < target.m_pEntity->As<CTFPlayer>()->GetNumOfHitboxes(); nHitbox++)
-					{
-						if (!F::AimbotGlobal.IsHitboxValid(H::Entities.GetModel(target.m_pEntity->entindex()), nHitbox, Vars::Aimbot::Hitscan::Hitboxes.Value))
-							continue;
+					return std::get<2>(a) < std::get<2>(b);
+				});
 
-						auto pBox = pSet->pHitbox(nHitbox);
-						if (!pBox) continue;
+			for (auto& [pBox, iHitbox, _] : vHitboxes)
+			{
+				float flModelScale = powf(target.m_pEntity->As<CBaseAnimating>()->m_flModelScale(), 2);
 
-						switch (GetHitboxPriority(nHitbox, pLocal, pWeapon, target.m_pEntity))
-						{
-						case 0: primary.push_back({ pBox, nHitbox }); break;
-						case 1: secondary.push_back({ pBox, nHitbox }); break;
-						case 2: tertiary.push_back({ pBox, nHitbox }); break;
-						}
-					}
-					for (auto& pair : primary) vHitboxes.push_back(pair);
-					for (auto& pair : secondary) vHitboxes.push_back(pair);
-					for (auto& pair : tertiary) vHitboxes.push_back(pair);
+				Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);
+				Vec3 vMins = pBox->bbmin;
+				Vec3 vMaxs = pBox->bbmax;
+
+				Vec3 vOffset;
+				{
+					Vec3 vOrigin, vCenter;
+					Math::VectorTransform({}, aBones[pBox->bone], vOrigin);
+					Math::VectorTransform((vMins + vMaxs) / 2, aBones[pBox->bone], vCenter);
+					vOffset = vCenter - vOrigin;
 				}
-				else
+
+				std::vector<Vec3> vPoints = { Vec3() };
+				if (Vars::Aimbot::Hitscan::PointScale.Value > 0.f)
 				{
-					Vec3 vCenter = target.m_pEntity->GetCenter();
-					std::vector<std::pair<float, std::pair<const mstudiobbox_t*, int>>> vCenters = {};
-					for (int nHitbox = 0; nHitbox < target.m_pEntity->As<CObjectSentrygun>()->GetNumOfHitboxes(); nHitbox++)
+					bool bTriggerbot = Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth && Vars::Aimbot::General::Smoothing.Value == 100.f;
+
+					if (!bTriggerbot)
 					{
-						const mstudiobbox_t* pBox = pSet->pHitbox(nHitbox);
-						if (pBox)
-							vCenters.push_back({ target.m_pEntity->As<CBaseAnimating>()->GetHitboxCenter(nHitbox).DistTo(vCenter), {pBox, nHitbox}});
+						float flScale = Vars::Aimbot::Hitscan::PointScale.Value / 100;
+						Vec3 vMinsS = (vMins - vMaxs) / 2 * flScale;
+						Vec3 vMaxsS = (vMaxs - vMins) / 2 * flScale;
+
+						vPoints = {
+							Vec3(),
+							Vec3(vMinsS.x, vMinsS.y, vMaxsS.z),
+							Vec3(vMaxsS.x, vMinsS.y, vMaxsS.z),
+							Vec3(vMinsS.x, vMaxsS.y, vMaxsS.z),
+							Vec3(vMaxsS.x, vMaxsS.y, vMaxsS.z),
+							Vec3(vMinsS.x, vMinsS.y, vMinsS.z),
+							Vec3(vMaxsS.x, vMinsS.y, vMinsS.z),
+							Vec3(vMinsS.x, vMaxsS.y, vMinsS.z),
+							Vec3(vMaxsS.x, vMaxsS.y, vMinsS.z)
+						};
 					}
-					std::sort(vCenters.begin(), vCenters.end(), [&](const auto& a, const auto& b) -> bool
+				}
+
+				for (auto& vPoint : vPoints)
+				{
+					Vec3 vOrigin = {}; Math::VectorTransform(vPoint, aBones[pBox->bone], vOrigin); vOrigin += vOffset;
+
+					if (vEyePos.DistToSqr(vOrigin) > flMaxRange)
+						continue;
+
+					if (bRunPeekCheck)
+					{
+						bRunPeekCheck = false;
+						if (!SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vOrigin))
+							goto nextTick; // if we can't hit our primary hitbox, don't bother
+					}
+
+					if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vOrigin))
+					{
+						auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vOrigin));
+						Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+
+						target.m_vAngleTo = vAngles;
+						if (RayToOBB(vEyePos, vForward, vMins * flModelScale, vMaxs * flModelScale, aBones[pBox->bone])) // for the time being, no vischecks against other hitboxes
 						{
-							return a.first < b.first;
-						});
-					for (auto& pair : vCenters)
-						vHitboxes.push_back(pair.second);
+							flPreferredRecord = tRecord.m_flSimTime;
+
+							target.m_tRecord = tRecord;
+							target.m_vPos = vOrigin;
+							target.m_nAimedHitbox = iHitbox;
+							target.m_bBacktrack = true;
+							return true;
+						}
+						iReturn = 2;
+					}
 				}
 			}
+		}
+		else
+		{
+			Vec3 vMins = target.m_pEntity->m_vecMins();
+			Vec3 vMaxs = target.m_pEntity->m_vecMaxs();
 
-			for (auto& pair : vHitboxes)
+			std::vector<Vec3> vPoints = { Vec3() };
+			//if (Vars::Aimbot::Hitscan::PointScale.Value > 0.f)
 			{
-				Vec3 vMins = pair.first->bbmin;
-				Vec3 vMaxs = pair.first->bbmax;
+				bool bTriggerbot = Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth && Vars::Aimbot::General::Smoothing.Value == 100.f;
 
-				float flScale = Vars::Aimbot::Hitscan::PointScale.Value / 100;
-				Vec3 vMinsU = (vMins - vMaxs) / 2, vMinsS = vMinsU * flScale;
-				Vec3 vMaxsU = (vMaxs - vMins) / 2, vMaxsS = vMaxsU * flScale;
-
-				std::vector<Vec3> vecPoints = { Vec3() };
-				if (flScale > 0.f)
+				if (!bTriggerbot)
 				{
-					vecPoints = {
+					float flScale = 0.5f; //Vars::Aimbot::Hitscan::PointScale.Value / 100;
+					Vec3 vMinsS = vMins * flScale;
+					Vec3 vMaxsS = vMaxs * flScale;
+
+					vPoints = {
 						Vec3(),
 						Vec3(vMinsS.x, vMinsS.y, vMaxsS.z),
 						Vec3(vMaxsS.x, vMinsS.y, vMaxsS.z),
@@ -417,93 +471,15 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 						Vec3(vMaxsS.x, vMaxsS.y, vMinsS.z)
 					};
 				}
-
-				Vec3 vOffset;
-				{
-					Vec3 vOrigin, vCenter;
-					Math::VectorTransform({}, aBones[pair.first->bone], vOrigin);
-					Math::VectorTransform((vMins + vMaxs) / 2, aBones[pair.first->bone], vCenter);
-					vOffset = vCenter - vOrigin;
-				}
-
-				for (auto& point : vecPoints)
-				{
-					Vec3 vTransformed = {}; Math::VectorTransform(point, aBones[pair.first->bone], vTransformed); vTransformed += vOffset;
-
-					if (vEyePos.DistToSqr(vTransformed) > flMaxRange)
-						continue;
-
-					auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vTransformed));
-					Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-
-					if (bRunPeekCheck)
-					{
-						bRunPeekCheck = false;
-						if (!SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vTransformed))
-							goto nextTick; // if we can't hit our primary hitbox, don't bother
-					}
-
-					if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed))
-					{
-						target.m_vAngleTo = vAngles;
-						if (RayToOBB(vEyePos, vForward, vMins, vMaxs, aBones[pair.first->bone])) // for the time being, no vischecks against other hitboxes
-						{
-							bool bWillHit = true;
-							if (target.m_iTargetType == TargetEnum::Sentry) // point of hit for sentries needs to be within bbox
-							{
-								const matrix3x4& transform = target.m_pEntity->RenderableToWorldTransform();
-								const Vec3 vMin = target.m_pEntity->m_vecMins(), vMax = target.m_pEntity->m_vecMaxs();
-								bWillHit = RayToOBB(vEyePos, vForward, vMin, vMax, transform);
-							}
-							if (bWillHit)
-							{
-								flPreferredRecord = tRecord.m_flSimTime;
-
-								target.m_tRecord = tRecord;
-								target.m_vPos = vTransformed;
-								target.m_nAimedHitbox = pair.second;
-								if (target.m_iTargetType == TargetEnum::Player)
-									target.m_bBacktrack = true; //target.m_iTargetType == TargetEnum::PLAYER /*&& Vars::Backtrack::Enabled.Value*/;
-								return true;
-							}
-						}
-						iReturn = 2;
-					}
-				}
-			}
-		}
-		else
-		{
-			const float flScale = Vars::Aimbot::Hitscan::PointScale.Value / 100;
-			const Vec3 vMins = target.m_pEntity->m_vecMins(), vMinsS = vMins * flScale;
-			const Vec3 vMaxs = target.m_pEntity->m_vecMaxs(), vMaxsS = vMaxs * flScale;
-
-			std::vector<Vec3> vecPoints = { Vec3() };
-			if (flScale > 0.f)
-			{
-				vecPoints = {
-					Vec3(),
-					Vec3(vMinsS.x, vMinsS.y, vMaxsS.z),
-					Vec3(vMaxsS.x, vMinsS.y, vMaxsS.z),
-					Vec3(vMinsS.x, vMaxsS.y, vMaxsS.z),
-					Vec3(vMaxsS.x, vMaxsS.y, vMaxsS.z),
-					Vec3(vMinsS.x, vMinsS.y, vMinsS.z),
-					Vec3(vMaxsS.x, vMinsS.y, vMinsS.z),
-					Vec3(vMinsS.x, vMaxsS.y, vMinsS.z),
-					Vec3(vMaxsS.x, vMaxsS.y, vMinsS.z)
-				};
 			}
 
 			const matrix3x4& transform = target.m_pEntity->RenderableToWorldTransform();
-			for (auto& point : vecPoints)
+			for (auto& vPoint : vPoints)
 			{
-				Vec3 vTransformed = target.m_pEntity->GetCenter() + point;
+				Vec3 vTransformed = target.m_pEntity->GetCenter() + vPoint;
 
 				if (vEyePos.DistToSqr(vTransformed) > flMaxRange)
 					continue;
-
-				auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vTransformed));
-				Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
 
 				if (bRunPeekCheck)
 				{
@@ -514,8 +490,11 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 
 				if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed))
 				{
+					auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vTransformed));
+					Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+
 					target.m_vAngleTo = vAngles;
-					if (RayToOBB(vEyePos, vForward, vMins, vMaxs, transform)) // for the time being, no vischecks against other hitboxes
+					if (RayToOBB(vEyePos, vForward, vMins, vMaxs, transform))
 					{
 						target.m_tRecord = tRecord;
 						target.m_vPos = vTransformed;

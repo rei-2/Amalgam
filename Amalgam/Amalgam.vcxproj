@@ -891,7 +891,7 @@
     <ClCompile Include="src\Hooks\CTFPlayer_BuildTransformations.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_DoAnimationEvent.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_UpdateStepSound.cpp" />
-    <ClCompile Include="src\Hooks\CBasePlayer_InFirstPersonView.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayer_ShouldDraw.cpp" />
     <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
     <ClCompile Include="src\Hooks\CL_ProcessPacketEntities.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_BaseInterpolatePart1.cpp" />

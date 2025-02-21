@@ -194,12 +194,12 @@ float CAntiAim::GetPitch(float flCurPitch)
 		return flCurPitch;
 }
 
-void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
+void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || !pLocal->m_hGroundEntity() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
-	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 10.f)
+	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 2.f)
 	{
 		static bool bVar = true;
 		float flMove = (pLocal->IsDucking() ? 3 : 1) * ((bVar = !bVar) ? 1 : -1);
@@ -208,6 +208,8 @@ void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		Vec3 vMove = Math::RotatePoint(vDir, {}, { 0, -pCmd->viewangles.y, 0 });
 		pCmd->forwardmove = vMove.x * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1);
 		pCmd->sidemove = -vMove.y;
+
+		pLocal->m_vecVelocity() = { 1, 1 }; // a bit stupid but it's probably fine
 	}
 }
 
@@ -238,5 +240,5 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	pCmd->viewangles.x = vAngles.x;
 	pCmd->viewangles.y = vAngles.y;
 
-	MinWalk(pLocal, pCmd, bSendPacket);
+	MinWalk(pLocal, pCmd);
 }

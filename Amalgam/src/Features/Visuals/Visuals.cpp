@@ -31,7 +31,7 @@ void CVisuals::DrawFOV(CTFPlayer* pLocal)
 		return;
 
 	float flW = H::Draw.m_nScreenW, flH = H::Draw.m_nScreenH;
-	float flRadius = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value)) / tanf(DEG2RAD(pLocal->m_iFOV()) / 2) * flW * (4.f / 6.f) / (flW / flH);
+	float flRadius = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value)) / tanf(DEG2RAD(pLocal->m_iFOV()) / 2) * flW * (4.f / 6.f) / (16.f / 9.f);
 	H::Draw.LineCircle(H::Draw.m_nScreenW / 2, H::Draw.m_nScreenH / 2, flRadius, 68, Vars::Colors::FOVCircle.Value);
 }
 
@@ -545,7 +545,8 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 
 std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBaseAnimating* pEntity, std::vector<int> vHitboxes, int iTarget)
 {
-	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a && !Vars::Colors::BoneHitboxEdgeClipped.Value.a && !Vars::Colors::BoneHitboxFaceClipped.Value.a)
+	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a && !Vars::Colors::BoneHitboxEdgeClipped.Value.a && !Vars::Colors::BoneHitboxFaceClipped.Value.a
+		&& !Vars::Colors::TargetHitboxEdge.Value.a && !Vars::Colors::TargetHitboxFace.Value.a && !Vars::Colors::TargetHitboxEdgeClipped.Value.a && !Vars::Colors::TargetHitboxFaceClipped.Value.a)
 		return {};
 
 	std::vector<DrawBox> vBoxes = {};
@@ -559,7 +560,7 @@ std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBa
 
 	if (vHitboxes.empty())
 	{
-		for (int i = 0; i < pSet->numhitboxes; ++i)
+		for (int i = 0; i < pSet->numhitboxes; i++)
 			vHitboxes.push_back(i);
 	}
 
@@ -568,26 +569,21 @@ std::vector<DrawBox> CVisuals::GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBa
 		auto pBox = pSet->pHitbox(i);
 		if (!pBox) continue;
 
-		matrix3x4 rotation; Math::AngleMatrix(pBox->angle, rotation);
-		matrix3x4 matrix; Math::ConcatTransforms(aBones[pBox->bone], rotation, matrix);
-		Vec3 vAngle; Math::MatrixAngles(matrix, vAngle);
-		Vec3 vOrigin; Math::GetMatrixOrigin(matrix, vOrigin);
-
 		bool bTargeted = i == iTarget;
+		Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);
+		Vec3 vOrigin; Math::GetMatrixOrigin(aBones[pBox->bone], vOrigin);
+		Vec3 vMins = pBox->bbmin * pEntity->m_flModelScale();
+		Vec3 vMaxs = pBox->bbmax * pEntity->m_flModelScale();
 
-		{
-			Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
-			Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
-			if (tEdge.a || tFace.a)
-				vBoxes.push_back({ vOrigin, pBox->bbmin, pBox->bbmax, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace });
-		}
+		Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
+		Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
+		if (tEdge.a || tFace.a)
+			vBoxes.push_back({ vOrigin, vMins, vMaxs, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace });
 
-		{
-			Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeClipped.Value : Vars::Colors::BoneHitboxEdgeClipped.Value;
-			Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFaceClipped.Value : Vars::Colors::BoneHitboxFaceClipped.Value;
-			if (tEdge.a || tFace.a)
-				vBoxes.push_back({ vOrigin, pBox->bbmin, pBox->bbmax, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace, true });
-		}
+		tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeClipped.Value : Vars::Colors::BoneHitboxEdgeClipped.Value;
+		tFace = bTargeted ? Vars::Colors::TargetHitboxFaceClipped.Value : Vars::Colors::BoneHitboxFaceClipped.Value;
+		if (tEdge.a || tFace.a)
+			vBoxes.push_back({ vOrigin, vMins, vMaxs, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace, true });
 	}
 
 	return vBoxes;

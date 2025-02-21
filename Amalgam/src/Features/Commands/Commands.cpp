@@ -76,6 +76,11 @@ void CCommands::Initialize()
 			SDK::Output(std::format("Value of {} is {}", cvarName, foundCVar->GetString()).c_str());
 		});
 
+	Register("menu", [](const std::deque<std::string>& args)
+		{
+			I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.IsOpen = !F::Menu.IsOpen);
+		});
+
 	Register("unload", [](const std::deque<std::string>& args)
 		{
 			if (F::Menu.IsOpen)

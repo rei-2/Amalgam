@@ -970,21 +970,18 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 	//	return false;
 
 	PlayerStorage storage;
-	F::MoveSim.Initialize(target.m_pEntity, storage);
-	target.m_vPos = target.m_pEntity->m_vecOrigin();
-	const float flSize = target.m_pEntity->m_vecMins().DistTo(target.m_pEntity->m_vecMaxs());
+	ProjectileInfo projInfo = {};
 
 	int iMaxTime, iSplash; Info_t tInfo = { pLocal, pWeapon };
-	ProjectileInfo projInfo = {};
+	const float flSize = target.m_pEntity->m_vecMins().DistTo(target.m_pEntity->m_vecMaxs());
 	{
 		if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, projInfo, ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum) || !F::ProjSim.Initialize(projInfo, false))
-		{
-			F::MoveSim.Restore(storage);
 			return false;
-		}
 
 		tInfo.m_vLocalEye = pLocal->GetShootPos();
 		tInfo.m_vTargetEye = target.m_pEntity->As<CTFPlayer>()->GetViewOffset();
+		F::MoveSim.Initialize(target.m_pEntity, storage);
+		target.m_vPos = target.m_pEntity->m_vecOrigin();
 
 		tInfo.m_flLatency = F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke() + Vars::Aimbot::Projectile::LatencyOffset.Value);
 		tInfo.m_iLatency = TIME_TO_TICKS(tInfo.m_flLatency);

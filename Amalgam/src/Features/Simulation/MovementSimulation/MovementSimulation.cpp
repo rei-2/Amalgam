@@ -405,10 +405,9 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 		if (auto pAvgVelocity = H::Entities.GetAvgVelocity(pPlayer->entindex()))
 			pPlayer->m_vecVelocity() = *pAvgVelocity; // only use average velocity here
 
-		if (pPlayer->IsDucking())
+		if (pPlayer->m_bDucked() = pPlayer->IsDucking())
 		{
 			pPlayer->m_fFlags() &= ~FL_DUCKING; // breaks origin's z if FL_DUCKING is not removed
-			pPlayer->m_bDucked() = true; // (mins/maxs will be fine when ducking as long as m_bDucked is true)
 			pPlayer->m_flDucktime() = 0.f;
 			pPlayer->m_flDuckJumpTime() = 0.f;
 			pPlayer->m_bDucking() = false;

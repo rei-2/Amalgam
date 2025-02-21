@@ -10,10 +10,10 @@ BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
 {
 	char windowTitle[1024];
 	GetWindowTextA(hwnd, windowTitle, sizeof(windowTitle));
-	std::string sTitle = windowTitle;
-	if (sTitle.find("Team Fortress 2 - Direct3D") == 0
-		|| sTitle.find("Team Fortress 2 - Vulkan") == 0) // support both dx9 & vulkan
+	switch (FNV1A::Hash32(windowTitle))
 	{
+	case FNV1A::Hash32Const("Team Fortress 2 - Direct3D 9 - 64 Bit"):
+	case FNV1A::Hash32Const("Team Fortress 2 - Vulkan - 64 Bit"):
 		*reinterpret_cast<HWND*>(lParam) = hwnd;
 	}
 
@@ -59,11 +59,8 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t cColor, bool b
 HWND SDK::GetTeamFortressWindow()
 {
 	static HWND hwWindow = nullptr;
-	while (!hwWindow)
-	{
+	if (!hwWindow)
 		EnumWindows(TeamFortressWindow, reinterpret_cast<LPARAM>(&hwWindow));
-		Sleep(100);
-	}
 	return hwWindow;
 }
 

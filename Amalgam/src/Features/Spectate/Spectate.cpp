@@ -5,20 +5,24 @@ void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 	if (!pLocal)
 		return;
 
-	auto pEntity = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iTarget = m_iIntendedTarget))->As<CTFPlayer>();
-	if (!pEntity)
-	{
-		SDK::Output("Spectate", "Null entity", { 175, 150, 255, 255 }, true, false, false, true);
-		m_iTarget = m_iIntendedTarget = -1;
-	}
-	else if (pEntity == pLocal)
-		m_iTarget = m_iIntendedTarget = -1;
+	m_iTarget = m_iIntendedTarget;
+	auto pEntity = m_iTarget != -1
+		? I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iTarget))->As<CTFPlayer>()
+		: nullptr;
+	if (pEntity == pLocal)
+		m_iTarget = -1;
 	if (m_iTarget == -1)
 	{
-		if (pLocal->IsAlive())
+		if (pLocal->IsAlive() && pLocal->m_hObserverTarget())
+		{
+			pLocal->m_vecViewOffset() = pLocal->GetViewOffset();
 			pLocal->m_iObserverMode() = OBS_MODE_NONE;
+			pLocal->m_hObserverTarget().Set(nullptr);
+		}
 		return;
 	}
+	if (!pEntity)
+		return;
 
 	switch (pEntity->m_hObserverTarget() ? pEntity->m_iObserverMode() : OBS_MODE_NONE)
 	{

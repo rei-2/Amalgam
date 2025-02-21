@@ -6,7 +6,8 @@
 void CFakeAngle::Run(CTFPlayer* pLocal)
 {
 	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost()
-		|| !F::AntiAim.AntiAimOn() && (!Vars::CL_Move::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift))
+		|| !F::AntiAim.AntiAimOn() && (!Vars::CL_Move::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift)
+		|| !Vars::Chams::FakeAngle::Enabled.Value && !Vars::Glow::FakeAngle::Enabled.Value)
 	{
 		bBonesSetup = false;
 		return;
@@ -19,7 +20,7 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 	float flOldFrameTime = I::GlobalVars->frametime;
 	int nOldSequence = pLocal->m_nSequence();
 	float flOldCycle = pLocal->m_flCycle();
-	auto& pOldPoseParams = pLocal->m_flPoseParameter();
+	auto pOldPoseParams = pLocal->m_flPoseParameter();
 	char pOldAnimState[sizeof(CTFPlayerAnimState)] = {};
 	memcpy(pOldAnimState, pAnimState, sizeof(CTFPlayerAnimState));
 
