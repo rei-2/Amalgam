@@ -17,7 +17,6 @@ struct Bind_t
 	int Info = 0;
 	int Key = 0;
 	bool Not = false;
-	KeyStorage Storage = {};
 
 	bool Active = false;
 	bool Visible = true;
@@ -38,6 +37,7 @@ public:
 	void RemoveBind(int iBind, bool bForce = true);
 
 	std::vector<Bind_t> vBinds = {};
+	std::unordered_map<int, KeyStorage> m_mKeyStorage;
 };
 
 ADD_FEATURE(CBinds, Binds)

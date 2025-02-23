@@ -456,8 +456,8 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 				if (!bTriggerbot)
 				{
 					float flScale = 0.5f; //Vars::Aimbot::Hitscan::PointScale.Value / 100;
-					Vec3 vMinsS = vMins * flScale;
-					Vec3 vMaxsS = vMaxs * flScale;
+					Vec3 vMinsS = (vMins - vMaxs) / 2 * flScale;
+					Vec3 vMaxsS = (vMaxs - vMins) / 2 * flScale;
 
 					vPoints = {
 						Vec3(),

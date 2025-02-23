@@ -54,7 +54,7 @@ void CPlayerlistCore::SavePlayers()
 		writeTree.put_child("Aliases", aliasTree);
 
 		// Save the file
-		write_json(F::Configs.sConfigPath + "\\Core\\Players.json", writeTree);
+		write_json(F::Configs.m_sConfigPath + "\\Core\\Players.json", writeTree);
 
 		F::PlayerUtils.m_bSavePlayers = false;
 	}
@@ -71,10 +71,10 @@ void CPlayerlistCore::LoadPlayers()
 
 	try
 	{
-		if (std::filesystem::exists(F::Configs.sConfigPath + "\\Core\\Players.json"))
+		if (std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Players.json"))
 		{
 			boost::property_tree::ptree readTree;
-			read_json(F::Configs.sConfigPath + "\\Core\\Players.json", readTree);
+			read_json(F::Configs.m_sConfigPath + "\\Core\\Players.json", readTree);
 			F::PlayerUtils.m_mPlayerTags.clear();
 
 			bool bNewTags = bool(readTree.get_child_optional("NewTags")); // newer system to support adding default tags better
@@ -130,10 +130,10 @@ void CPlayerlistCore::LoadPlayers()
 			}
 		}
 		// support legacy format & convert over
-		if (std::filesystem::exists(F::Configs.sConfigPath + "\\Core\\Playerlist.json"))
+		if (std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Playerlist.json"))
 		{
 			boost::property_tree::ptree readTree;
-			read_json(F::Configs.sConfigPath + "\\Core\\Playerlist.json", readTree);
+			read_json(F::Configs.m_sConfigPath + "\\Core\\Playerlist.json", readTree);
 
 			for (auto& it : readTree)
 			{
@@ -188,7 +188,7 @@ void CPlayerlistCore::SaveTags()
 		writeTree.put_child("Tags", tagTree);
 
 		// Save the file
-		write_json(F::Configs.sConfigPath + "\\Core\\Tags.json", writeTree);
+		write_json(F::Configs.m_sConfigPath + "\\Core\\Tags.json", writeTree);
 
 		F::PlayerUtils.m_bSaveTags = false;
 	}
@@ -205,10 +205,10 @@ void CPlayerlistCore::LoadTags()
 
 	try
 	{
-		if (std::filesystem::exists(F::Configs.sConfigPath + "\\Core\\Tags.json"))
+		if (std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Tags.json"))
 		{
 			boost::property_tree::ptree readTree;
-			read_json(F::Configs.sConfigPath + "\\Core\\Tags.json", readTree);
+			read_json(F::Configs.m_sConfigPath + "\\Core\\Tags.json", readTree);
 			F::PlayerUtils.m_vTags = {
 				{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
 				{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },

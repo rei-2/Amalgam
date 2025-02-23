@@ -175,7 +175,7 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 				bool bFound = false; // ensure no duplicates are assigned
 				for (auto& pair : val)
 				{
-					if (pair.first == sMat)
+					if (FNV1A::Hash32(pair.first.c_str()) == FNV1A::Hash32(sMat.c_str()))
 					{
 						bFound = true;
 						break;
@@ -239,22 +239,22 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 
 CConfigs::CConfigs()
 {
-	sConfigPath = std::filesystem::current_path().string() + "\\Amalgam";
-	sVisualsPath = sConfigPath + "\\Visuals";
+	m_sConfigPath = std::filesystem::current_path().string() + "\\Amalgam";
+	m_sVisualsPath = m_sConfigPath + "\\Visuals";
 
-	if (!std::filesystem::exists(sConfigPath))
-		std::filesystem::create_directory(sConfigPath);
+	if (!std::filesystem::exists(m_sConfigPath))
+		std::filesystem::create_directory(m_sConfigPath);
 
-	if (!std::filesystem::exists(sVisualsPath))
-		std::filesystem::create_directory(sVisualsPath);
+	if (!std::filesystem::exists(m_sVisualsPath))
+		std::filesystem::create_directory(m_sVisualsPath);
 
 	// Create 'Core' folder for Attribute-Changer & Playerlist
-	if (!std::filesystem::exists(sConfigPath + "\\Core"))
-		std::filesystem::create_directory(sConfigPath + "\\Core");
+	if (!std::filesystem::exists(m_sConfigPath + "\\Core"))
+		std::filesystem::create_directory(m_sConfigPath + "\\Core");
 
 	// Create 'Materials' folder for custom materials
-	if (!std::filesystem::exists(sConfigPath + "\\Materials"))
-		std::filesystem::create_directory(sConfigPath + "\\Materials");
+	if (!std::filesystem::exists(m_sConfigPath + "\\Materials"))
+		std::filesystem::create_directory(m_sConfigPath + "\\Materials");
 }
 
 #define IsType(type) var->m_iType == typeid(type).hash_code()
@@ -354,8 +354,8 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 		}
 		writeTree.put_child("ConVars", varTree);
 
-		write_json(sConfigPath + "\\" + sConfigName + sConfigExtension, writeTree);
-		sCurrentConfig = sConfigName; sCurrentVisuals = "";
+		write_json(m_sConfigPath + "\\" + sConfigName + m_sConfigExtension, writeTree);
+		m_sCurrentConfig = sConfigName; m_sCurrentVisuals = "";
 		if (bNotify)
 			F::Notifications.Add("Config " + sConfigName + " saved");
 	}
@@ -371,7 +371,7 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 {
 	// Check if the config exists
-	if (!std::filesystem::exists(sConfigPath + "\\" + sConfigName + sConfigExtension))
+	if (!std::filesystem::exists(m_sConfigPath + "\\" + sConfigName + m_sConfigExtension))
 	{
 		// Save default config if one doesn't yet exist
 		if (sConfigName == std::string("default"))
@@ -386,7 +386,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
 		boost::property_tree::ptree readTree;
-		read_json(sConfigPath + "\\" + sConfigName + sConfigExtension, readTree);
+		read_json(m_sConfigPath + "\\" + sConfigName + m_sConfigExtension, readTree);
 		
 		bool bLegacy = false;
 		if (const auto condTree = readTree.get_child_optional("Binds"))
@@ -467,7 +467,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 
 		H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
 
-		sCurrentConfig = sConfigName; sCurrentVisuals = "";
+		m_sCurrentConfig = sConfigName; m_sCurrentVisuals = "";
 		if (bNotify)
 			F::Notifications.Add("Config " + sConfigName + " loaded");
 	}
@@ -511,7 +511,7 @@ bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
 			else SaveMisc(WindowBox_t, writeTree)
 		}
 
-		write_json(sConfigPath + "\\Visuals\\" + sConfigName + sConfigExtension, writeTree);
+		write_json(m_sConfigPath + "\\Visuals\\" + sConfigName + m_sConfigExtension, writeTree);
 		if (bNotify)
 			F::Notifications.Add("Visual config " + sConfigName + " saved");
 	}
@@ -526,7 +526,7 @@ bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
 bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 {
 	// Check if the visual config exists
-	if (!std::filesystem::exists(sVisualsPath + "\\" + sConfigName + sConfigExtension))
+	if (!std::filesystem::exists(m_sVisualsPath + "\\" + sConfigName + m_sConfigExtension))
 	{
 		//if (sConfigName == std::string("default"))
 		//	SaveVisual("default");
@@ -538,7 +538,7 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
 		boost::property_tree::ptree readTree;
-		read_json(sConfigPath + "\\Visuals\\" + sConfigName + sConfigExtension, readTree);
+		read_json(m_sConfigPath + "\\Visuals\\" + sConfigName + m_sConfigExtension, readTree);
 
 		for (auto& var : g_Vars)
 		{
@@ -558,7 +558,7 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 			else LoadMisc(WindowBox_t, readTree)
 		}
 
-		sCurrentVisuals = sConfigName;
+		m_sCurrentVisuals = sConfigName;
 		if (bNotify)
 			F::Notifications.Add("Visual config " + sConfigName + " loaded");
 	}
@@ -579,7 +579,7 @@ void CConfigs::RemoveConfig(const std::string& sConfigName, bool bNotify)
 	{
 		if (FNV1A::Hash32(sConfigName.c_str()) != FNV1A::Hash32Const("default"))
 		{
-			std::filesystem::remove(sConfigPath + "\\" + sConfigName + sConfigExtension);
+			std::filesystem::remove(m_sConfigPath + "\\" + sConfigName + m_sConfigExtension);
 
 			LoadConfig("default", false);
 
@@ -599,7 +599,7 @@ void CConfigs::RemoveVisual(const std::string& sConfigName, bool bNotify)
 {
 	try
 	{
-		std::filesystem::remove(sVisualsPath + "\\" + sConfigName + sConfigExtension);
+		std::filesystem::remove(m_sVisualsPath + "\\" + sConfigName + m_sConfigExtension);
 
 		if (bNotify)
 			F::Notifications.Add("Visual config " + sConfigName + " deleted");

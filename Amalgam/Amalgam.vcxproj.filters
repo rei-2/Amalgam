@@ -189,6 +189,8 @@
     <ClCompile Include="src\Hooks\CTFPlayer_BuildTransformations.cpp" />
     <ClCompile Include="src\Hooks\CBaseAnimating_SetSequence.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_EstimateAbsVelocity.cpp" />
+    <ClCompile Include="src\Hooks\HostState_Shutdown.cpp" />
+    <ClCompile Include="include\ImGui\LanguageDefinitions.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

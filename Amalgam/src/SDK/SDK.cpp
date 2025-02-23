@@ -6,7 +6,7 @@
 
 #pragma warning (disable : 6385)
 
-BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
+static BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
 {
 	char windowTitle[1024];
 	GetWindowTextA(hwnd, windowTitle, sizeof(windowTitle));

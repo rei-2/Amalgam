@@ -21,9 +21,8 @@ class CMenu
 public:
 	void Render();
 
-	bool IsOpen = false;
-	bool ConfigLoaded = false;
-	bool InKeybind = false;
+	bool m_bIsOpen = false;
+	bool m_bInKeybind = false;
 };
 
 ADD_FEATURE(CMenu, Menu);

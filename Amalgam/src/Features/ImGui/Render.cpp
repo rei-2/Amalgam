@@ -90,6 +90,11 @@ void CRender::LoadFonts()
 	static bool bHasLoaded = false;
 
 	auto& io = ImGui::GetIO();
+	if (bHasLoaded)
+	{
+		ImGui_ImplDX9_InvalidateDeviceObjects();
+		io.Fonts->ClearFonts();
+	}
 
 	ImFontConfig fontConfig;
 	fontConfig.OversampleH = 2;
@@ -99,7 +104,7 @@ void CRender::LoadFonts()
 	FontRegular = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(13), &fontConfig, fontRange);
 	FontBold = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdanab.ttf)", H::Draw.Scale(13), &fontConfig, fontRange);
 	FontLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(14), &fontConfig, fontRange);
-	FontMono = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(15), &fontConfig, fontRange);
+	FontMono = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\cour.ttf)", H::Draw.Scale(16), &fontConfig, fontRange); // windows mono font installed by default
 #else
 	FontSmall = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(12), &fontConfig, fontRange);
 	FontRegular = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(13), &fontConfig, fontRange);
@@ -116,8 +121,6 @@ void CRender::LoadFonts()
 	io.Fonts->Build();
 	io.ConfigDebugHighlightIdConflicts = false;
 
-	if (bHasLoaded)
-		ImGui_ImplDX9_InvalidateDeviceObjects();
 	bHasLoaded = true;
 }
 

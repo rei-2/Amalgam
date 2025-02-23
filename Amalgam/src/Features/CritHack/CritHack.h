@@ -18,6 +18,8 @@ struct WeaponStorage_t
 
 	std::deque<int> m_vCritCommands = {};
 	std::deque<int> m_vSkipCommands = {};
+
+	bool m_bActive = false;
 };
 
 class CCritHack
@@ -34,6 +36,8 @@ private:
 
 	void ResetWeapons(CTFPlayer* pLocal);
 	void Reset();
+
+	int m_iFillStart = 0;
 
 	int m_iCritDamage = 0.f;
 	int m_iAllDamage = 0.f;

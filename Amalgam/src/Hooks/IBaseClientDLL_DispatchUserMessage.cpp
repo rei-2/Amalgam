@@ -7,8 +7,12 @@
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-//#include <boost/algorithm/string/split.hpp>
-//#include <boost/algorithm/string/classification.hpp>
+
+//#define DEBUG_VISUALS
+#ifdef DEBUG_VISUALS
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#endif
 
 MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL, 36), bool,
 	void* rcx, UserMessageType type, bf_read& msgData)
@@ -46,7 +50,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 			if (F::NoSpreadHitscan.ParsePlayerPerf(sMsg))
 				return true;
 
-			/*
+#ifdef DEBUG_VISUALS
 			if (sMsg.find("[BoxAngles] ") == 0)
 			{
 				try
@@ -91,7 +95,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 
 				return true;
 			}
-			*/
+#endif
 
 			if (Vars::Misc::Automation::AntiAutobalance.Value && FNV1A::Hash32(sMsg.c_str()) == FNV1A::Hash32Const("#TF_Autobalance_TeamChangePending"))
 				I::EngineClient->ClientCmd_Unrestricted("retry");

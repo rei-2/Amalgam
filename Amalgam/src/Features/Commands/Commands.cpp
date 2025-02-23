@@ -78,13 +78,13 @@ void CCommands::Initialize()
 
 	Register("menu", [](const std::deque<std::string>& args)
 		{
-			I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.IsOpen = !F::Menu.IsOpen);
+			I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = !F::Menu.m_bIsOpen);
 		});
 
 	Register("unload", [](const std::deque<std::string>& args)
 		{
-			if (F::Menu.IsOpen)
-				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.IsOpen = false);
+			if (F::Menu.m_bIsOpen)
+				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = false);
 			U::Core.m_bUnload = true;
 		});
 }

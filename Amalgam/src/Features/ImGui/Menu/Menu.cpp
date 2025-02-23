@@ -232,8 +232,6 @@ void CMenu::MenuAimbot()
 						FSlider("high min distance##ground", Vars::Aimbot::Projectile::GroundHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 						FSlider("max changes##ground", Vars::Aimbot::Projectile::GroundMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
 						FSlider("max change time##ground", Vars::Aimbot::Projectile::GroundMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
-						FSlider("new weight##ground", Vars::Aimbot::Projectile::GroundNewWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("old weight##ground", Vars::Aimbot::Projectile::GroundOldWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Right | FSlider_Min | FSlider_Precision);
 
 						FText("air");
 						FSlider("samples##air", Vars::Aimbot::Projectile::AirSamples, 3, 66, 1, "%i", FSlider_Left);
@@ -244,14 +242,10 @@ void CMenu::MenuAimbot()
 						FSlider("high min distance##air", Vars::Aimbot::Projectile::AirHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 						FSlider("max changes##air", Vars::Aimbot::Projectile::AirMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
 						FSlider("max change time##air", Vars::Aimbot::Projectile::AirMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
-						FSlider("new weight##air", Vars::Aimbot::Projectile::AirNewWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("old weight##air", Vars::Aimbot::Projectile::AirOldWeight, 0.f, 200.f, 5.f, "%g%%", FSlider_Right | FSlider_Min | FSlider_Precision);
 
 						FText("");
 						FSlider("velocity average count", Vars::Aimbot::Projectile::VelocityAverageCount, 1, 10, 1, "%i", FSlider_Left);
 						FSlider("vertical shift", Vars::Aimbot::Projectile::VerticalShift, 0.f, 10.f, 0.5f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
-						FSlider("latency offset", Vars::Aimbot::Projectile::LatencyOffset, -1.f, 1.f, 0.1f, "%g", FSlider_Left | FSlider_Precision);
-						FSlider("hull increase", Vars::Aimbot::Projectile::HullIncrease, 0.f, 3.f, 0.5f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 
 						FSlider("drag override", Vars::Aimbot::Projectile::DragOverride, 0.f, 1.f, 0.01f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
 						FSlider("time override", Vars::Aimbot::Projectile::TimeOverride, 0.f, 2.f, 0.01f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
@@ -269,9 +263,7 @@ void CMenu::MenuAimbot()
 						FSlider("direct splash count", Vars::Aimbot::Projectile::SplashCountDirect, 1, 100, 1, "%i", FSlider_Left | FSlider_Min);
 						FSlider("arc splash count", Vars::Aimbot::Projectile::SplashCountArc, 1, 100, 1, "%i", FSlider_Right | FSlider_Min);
 						FSlider("splash trace interval", Vars::Aimbot::Projectile::SplashTraceInterval, 1, 10, 1, "%i", FSlider_Left);
-						FSlider("delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Right);
-						FToggle("strafe delta", Vars::Aimbot::Projectile::StrafeDelta);
-						FTooltip("this was a test and should probably stay off");
+						FSlider("delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Left);
 						FDropdown("delta mode", Vars::Aimbot::Projectile::DeltaMode, { "average", "max" }, {}, FDropdown_Right);
 					} EndSection();
 				}
@@ -1020,10 +1012,8 @@ void CMenu::MenuVisuals()
 				if (Section("Indicators"))
 				{
 					FDropdown("Indicators", Vars::Menu::Indicators, { "Ticks", "Crit hack", "Spectators", "Ping", "Conditions", "Seed prediction" }, {}, FDropdown_Multi);
-					PushDisabled(I::EngineClient->IsConnected()); // seems to cause crashes while changing ingame
-						if (FSlider("Scale", Vars::Menu::Scale, 0.75f, 2.f, 0.25f, "%g", FSlider_Min | FSlider_Precision | FSlider_NoAutoUpdate))
-							H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
-					PopDisabled();
+					if (FSlider("Scale", Vars::Menu::Scale, 0.75f, 2.f, 0.25f, "%g", FSlider_Min | FSlider_Precision | FSlider_NoAutoUpdate))
+						H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
 					FToggle("Cheap text", Vars::Menu::CheapText);
 				} EndSection();
 
@@ -1302,9 +1292,9 @@ void CMenu::MenuSettings()
 				if (Section("Config"))
 				{
 					if (FButton("Configs folder", FButton_Left))
-						ShellExecuteA(NULL, NULL, F::Configs.sConfigPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+						ShellExecuteA(NULL, NULL, F::Configs.m_sConfigPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 					if (FButton("Visuals folder", FButton_Right | FButton_SameLine))
-						ShellExecuteA(NULL, NULL, F::Configs.sVisualsPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
+						ShellExecuteA(NULL, NULL, F::Configs.m_sVisualsPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 					static int iCurrentType = 0;
 					FTabs({ "GENERAL", "VISUALS", }, &iCurrentType, { GetColumnWidth() / 2, H::Draw.Scale(40) }, { H::Draw.Scale(8), GetCursorPos().y }, false);
@@ -1318,20 +1308,20 @@ void CMenu::MenuSettings()
 						FSDropdown("Config name", &newName, {}, FSDropdown_AutoUpdate | FDropdown_Left);
 						if (FButton("Create", FButton_Fit | FButton_SameLine, { 0, 40 }) && newName.length() > 0)
 						{
-							if (!std::filesystem::exists(F::Configs.sConfigPath + "\\" + newName))
+							if (!std::filesystem::exists(F::Configs.m_sConfigPath + "\\" + newName))
 								F::Configs.SaveConfig(newName);
 							newName.clear();
 						}
 
 						std::vector<std::pair<std::filesystem::directory_entry, std::string>> vConfigs = {};
 						bool bDefaultFound = false;
-						for (auto& entry : std::filesystem::directory_iterator(F::Configs.sConfigPath))
+						for (auto& entry : std::filesystem::directory_iterator(F::Configs.m_sConfigPath))
 						{
-							if (!entry.is_regular_file() || entry.path().extension() != F::Configs.sConfigExtension)
+							if (!entry.is_regular_file() || entry.path().extension() != F::Configs.m_sConfigExtension)
 								continue;
 
 							std::string sConfigName = entry.path().filename().string();
-							sConfigName.erase(sConfigName.end() - F::Configs.sConfigExtension.size(), sConfigName.end());
+							sConfigName.erase(sConfigName.end() - F::Configs.m_sConfigExtension.size(), sConfigName.end());
 							if (FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32Const("default"))
 								bDefaultFound = true;
 
@@ -1352,7 +1342,7 @@ void CMenu::MenuSettings()
 
 						for (auto& [entry, sConfigName] : vConfigs)
 						{
-							bool bCurrentConfig = FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32(F::Configs.sCurrentConfig.c_str());
+							bool bCurrentConfig = FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32(F::Configs.m_sCurrentConfig.c_str());
 							ImVec2 vOriginalPos = GetCursorPos();
 
 							SetCursorPos({ H::Draw.Scale(14), vOriginalPos.y + H::Draw.Scale(11) });
@@ -1366,7 +1356,7 @@ void CMenu::MenuSettings()
 							SetCursorPos({ GetWindowWidth() - H::Draw.Scale(++iOffset) * 25, vOriginalPos.y + H::Draw.Scale(9) });
 							if (IconButton(ICON_MD_SAVE))
 							{
-								if (!bCurrentConfig || F::Configs.sCurrentVisuals.length())
+								if (!bCurrentConfig || F::Configs.m_sCurrentVisuals.length())
 									OpenPopup(std::format("Confirmation## SaveConfig{}", sConfigName).c_str());
 								else
 									F::Configs.SaveConfig(sConfigName);
@@ -1424,20 +1414,20 @@ void CMenu::MenuSettings()
 						FSDropdown("Config name", &newName, {}, FSDropdown_AutoUpdate | FDropdown_Left);
 						if (FButton("Create", FButton_Fit | FButton_SameLine, { 0, 40 }) && newName.length() > 0)
 						{
-							if (!std::filesystem::exists(F::Configs.sVisualsPath + "\\" + newName))
+							if (!std::filesystem::exists(F::Configs.m_sVisualsPath + "\\" + newName))
 								F::Configs.SaveVisual(newName);
 							newName.clear();
 						}
 
-						for (auto& entry : std::filesystem::directory_iterator(F::Configs.sVisualsPath))
+						for (auto& entry : std::filesystem::directory_iterator(F::Configs.m_sVisualsPath))
 						{
-							if (!entry.is_regular_file() || entry.path().extension() != F::Configs.sConfigExtension)
+							if (!entry.is_regular_file() || entry.path().extension() != F::Configs.m_sConfigExtension)
 								continue;
 
 							std::string sConfigName = entry.path().filename().string();
-							sConfigName.erase(sConfigName.end() - F::Configs.sConfigExtension.size(), sConfigName.end());
+							sConfigName.erase(sConfigName.end() - F::Configs.m_sConfigExtension.size(), sConfigName.end());
 
-							bool bCurrentConfig = FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32(F::Configs.sCurrentVisuals.c_str());
+							bool bCurrentConfig = FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32(F::Configs.m_sCurrentVisuals.c_str());
 							ImVec2 vOriginalPos = GetCursorPos();
 
 							SetCursorPos({ H::Draw.Scale(14), vOriginalPos.y + H::Draw.Scale(11) });
@@ -2501,7 +2491,7 @@ void CMenu::MenuSettings()
 							LockedMaterial = pair.m_bLocked;
 
 							TextEditor.SetText(F::Materials.GetVMT(FNV1A::Hash32(CurrentMaterial.c_str())));
-							TextEditor.SetReadOnly(LockedMaterial);
+							TextEditor.SetReadOnlyEnabled(LockedMaterial);
 						}
 
 						SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(28) });
@@ -2512,8 +2502,8 @@ void CMenu::MenuSettings()
 				TableNextColumn();
 				if (CurrentMaterial.length())
 				{
-					auto count = std::ranges::count(TextEditor.GetText(), '\n'); // doesn't account for text editor size otherwise
-					if (Section("Editor", H::Draw.Scale(83) + 6 + FCalcTextSize("A", F::Render.FontMono).y * count, true))
+					SetCursorPosY(GetScrollY() + GetStyle().WindowPadding.y);
+					if (Section("Editor", GetWindowSize().y - GetStyle().WindowPadding.y * 2, true))
 					{
 						// Toolbar
 						if (!LockedMaterial)
@@ -2521,7 +2511,6 @@ void CMenu::MenuSettings()
 							if (FButton("Save", FButton_Fit))
 							{
 								auto sText = TextEditor.GetText();
-								sText.erase(sText.end() - 1, sText.end()); // get rid of random newline
 								F::Materials.EditMaterial(CurrentMaterial.c_str(), sText.c_str());
 							}
 							SameLine();
@@ -2537,6 +2526,17 @@ void CMenu::MenuSettings()
 						DebugDummy({ 0, H::Draw.Scale(8) });
 
 						PushFont(F::Render.FontMono);
+						TextEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cpp);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Background, F::Render.Background);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Default, F::Render.Active);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Identifier, F::Render.Active);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Cursor, F::Render.Active);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::LineNumber, F::Render.Inactive);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Comment, F::Render.Inactive);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::MultiLineComment, F::Render.Inactive);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Punctuation, F::Render.Inactive);
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::ControlCharacter, ImColor(F::Render.Inactive.Value.x, F::Render.Inactive.Value.y, F::Render.Inactive.Value.z, 0.1f));
+						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::String, F::Render.Accent);
 						TextEditor.Render("TextEditor");
 						PopFont();
 					} EndSection();
@@ -2595,11 +2595,11 @@ void CMenu::DrawBinds()
 {
 	using namespace ImGui;
 
-	if (IsOpen ? false : !Vars::Menu::ShowBinds.Value || I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo())
+	if (m_bIsOpen ? false : !Vars::Menu::ShowBinds.Value || I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo())
 		return;
 
 	static DragBox_t old = { -2147483648, -2147483648 };
-	DragBox_t info = IsOpen ? FGet(Vars::Menu::BindsDisplay) : Vars::Menu::BindsDisplay.Value;
+	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay) : Vars::Menu::BindsDisplay.Value;
 	if (info != old)
 		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
 
@@ -2613,7 +2613,7 @@ void CMenu::DrawBinds()
 				if (iParent != tBind.Parent)
 					continue;
 
-				if (tBind.Visible || IsOpen)
+				if (tBind.Visible || m_bIsOpen)
 				{
 					std::string sType; std::string sInfo;
 					switch (tBind.Type)
@@ -2662,7 +2662,7 @@ void CMenu::DrawBinds()
 					vBinds.push_back({ tBind.Active, tBind.Name.c_str(), sType, sInfo, iBind, tBind });
 				}
 
-				if (tBind.Active || IsOpen)
+				if (tBind.Active || m_bIsOpen)
 					getBinds(iBind);
 			}
 		};
@@ -2671,7 +2671,7 @@ void CMenu::DrawBinds()
 	float flNameWidth = 0, flInfoWidth = 0, flStateWidth = 0;
 	if (vBinds.empty())
 	{
-		if (!IsOpen)
+		if (!m_bIsOpen)
 			return;
 		else
 			flNameWidth = FCalcTextSize("Binds", F::Render.FontLarge).x + H::Draw.Scale(10);
@@ -2689,7 +2689,7 @@ void CMenu::DrawBinds()
 		flNameWidth += H::Draw.Scale(9), flInfoWidth += H::Draw.Scale(9), flStateWidth += H::Draw.Scale(9);
 	}
 
-	float flWidth = flNameWidth + flInfoWidth + flStateWidth + (IsOpen ? H::Draw.Scale(88) : H::Draw.Scale(14));
+	float flWidth = flNameWidth + flInfoWidth + flStateWidth + (m_bIsOpen ? H::Draw.Scale(88) : H::Draw.Scale(14));
 	float flHeight = H::Draw.Scale(18 * vBinds.size() + 40);
 	SetNextWindowSize({ flWidth, flHeight });
 	PushStyleVar(ImGuiStyleVar_WindowMinSize, { H::Draw.Scale(40), H::Draw.Scale(40) });
@@ -2699,7 +2699,7 @@ void CMenu::DrawBinds()
 		ImVec2 vWindowPos = GetWindowPos();
 
 		info.x = vWindowPos.x; info.y = vWindowPos.y; old = info;
-		if (IsOpen)
+		if (m_bIsOpen)
 			FSet(Vars::Menu::BindsDisplay, info);
 
 		PushFont(F::Render.FontLarge);
@@ -2727,7 +2727,7 @@ void CMenu::DrawBinds()
 			FText(sState.c_str());
 			PopStyleColor();
 
-			if (IsOpen)
+			if (m_bIsOpen)
 			{	// buttons
 				SetCursorPos({ flWidth - H::Draw.Scale(25), H::Draw.Scale(33 + 18 * i) });
 				bool bDelete = IconButton(ICON_MD_DELETE);
@@ -2864,19 +2864,30 @@ void CMenu::Render()
 	using namespace ImGui;
 
 	for (int iKey = 0; iKey < 256; iKey++)
+	{
 		U::KeyHandler.StoreKey(iKey);
 
-	if (!ConfigLoaded || !(ImGui::GetIO().DisplaySize.x > 160.f && ImGui::GetIO().DisplaySize.y > 28.f))
+		// don't drop inputs for binds
+		auto& tMainKey = U::KeyHandler.m_mKeyStorage[iKey];
+		auto& tBindKey = F::Binds.m_mKeyStorage[iKey];
+		tBindKey.m_bIsDown = tMainKey.m_bIsDown || tBindKey.m_bIsDown;
+		tBindKey.m_bIsPressed = tMainKey.m_bIsPressed || tBindKey.m_bIsPressed;
+		tBindKey.m_bIsDouble = tMainKey.m_bIsDouble || tBindKey.m_bIsDouble;
+		tBindKey.m_bIsReleased = tMainKey.m_bIsReleased || tBindKey.m_bIsReleased;
+		tBindKey.m_dPressTime = tMainKey.m_dPressTime;
+	}
+
+	if (!F::Configs.m_bConfigLoaded || !(ImGui::GetIO().DisplaySize.x > 160.f && ImGui::GetIO().DisplaySize.y > 28.f))
 		return;
 
-	InKeybind = false;
+	m_bInKeybind = false;
 	if (U::KeyHandler.Pressed(Vars::Menu::MenuPrimaryKey.Value) || U::KeyHandler.Pressed(Vars::Menu::MenuSecondaryKey.Value))
-		I::MatSystemSurface->SetCursorAlwaysVisible(IsOpen = !IsOpen);
+		I::MatSystemSurface->SetCursorAlwaysVisible(m_bIsOpen = !m_bIsOpen);
 
 	PushFont(F::Render.FontRegular);
 
 	DrawBinds();
-	if (IsOpen)
+	if (m_bIsOpen)
 	{
 		DrawMenu();
 

@@ -6,69 +6,69 @@
 void CKeyHandler::StoreKey(int iKey, KeyStorage* pStorage)
 {
 	if (!pStorage)
-		pStorage = &StorageMap[iKey];
+		pStorage = &m_mKeyStorage[iKey];
 
 	// down
 	const bool bDown = iKey && GetAsyncKeyState(iKey) & 0x8000 && SDK::IsGameWindowInFocus();
 
 	// pressed
-	const bool bPressed = bDown && !pStorage->bIsDown;
+	const bool bPressed = bDown && !pStorage->m_bIsDown;
 
 	// double click
 	const double dFloatTime = SDK::PlatFloatTime();
-	const bool bDouble = bPressed && dFloatTime < pStorage->dPressTime + 0.25;
+	const bool bDouble = bPressed && dFloatTime < pStorage->m_dPressTime + 0.25;
 
 	// released
-	const bool bReleased = !bDown && pStorage->bIsDown;
+	const bool bReleased = !bDown && pStorage->m_bIsDown;
 
-	pStorage->bIsDown = bDown;
-	pStorage->bIsPressed = bPressed;
-	pStorage->bIsDouble = bDouble;
-	pStorage->bIsReleased = bReleased;
+	pStorage->m_bIsDown = bDown;
+	pStorage->m_bIsPressed = bPressed;
+	pStorage->m_bIsDouble = bDouble;
+	pStorage->m_bIsReleased = bReleased;
 	if (bPressed)
-		pStorage->dPressTime = dFloatTime;
+		pStorage->m_dPressTime = dFloatTime;
 }
 
 bool CKeyHandler::Down(int iKey, const bool bStore, KeyStorage* pStorage)
 {
 	if (!pStorage)
-		pStorage = &StorageMap[iKey];
+		pStorage = &m_mKeyStorage[iKey];
 
 	if (bStore)
 		StoreKey(iKey, pStorage);
 
-	return pStorage->bIsDown;
+	return pStorage->m_bIsDown;
 }
 
 bool CKeyHandler::Pressed(int iKey, const bool bStore, KeyStorage* pStorage)
 {
 	if (!pStorage)
-		pStorage = &StorageMap[iKey];
+		pStorage = &m_mKeyStorage[iKey];
 
 	if (bStore)
 		StoreKey(iKey, pStorage);
 
-	return pStorage->bIsPressed;
+	return pStorage->m_bIsPressed;
 }
 
 bool CKeyHandler::Double(int iKey, const bool bStore, KeyStorage* pStorage)
 {
 	if (!pStorage)
-		pStorage = &StorageMap[iKey];
+		pStorage = &m_mKeyStorage[iKey];
 
 	if (bStore)
 		StoreKey(iKey, pStorage);
 
-	return pStorage->bIsDouble;
+	return pStorage->m_bIsDouble;
 }
 
 bool CKeyHandler::Released(int iKey, const bool bStore, KeyStorage* pStorage)
 {
 	if (!pStorage)
-		pStorage = &StorageMap[iKey];
+		pStorage = &m_mKeyStorage[iKey];
 
 	if (bStore)
 		StoreKey(iKey, pStorage);
 
-	return pStorage->bIsReleased;
+	return pStorage->m_bIsReleased;
 }

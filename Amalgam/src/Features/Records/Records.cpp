@@ -124,7 +124,9 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		{
 			sID.replace(0, 5, "");
 			sID.pop_back();
-			int iID = std::stoi(sID);
+			uint32_t iID = std::stoi(sID);
+			if (H::Entities.InParty(iID)) // ignore party
+				return;
 
 			auto sName = pEvent->GetString("name");
 			TagsOnJoin(sName, iID);
@@ -146,7 +148,8 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 		{
 			PlayerInfo_t pi{};
-			if (n == pLocal->entindex() || !I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer)
+			if (n == pLocal->entindex() || !I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer
+				|| H::Entities.InParty(pi.friendsID)) // ignore party
 				continue;
 
 			TagsOnJoin(pi.name, pi.friendsID);

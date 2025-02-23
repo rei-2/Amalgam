@@ -148,7 +148,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 
 	ssErrorStream << "\n\n\n\n";
 	std::ofstream file;
-	file.open(F::Configs.sConfigPath + "\\crash_log.txt", std::ios_base::app);
+	file.open(F::Configs.m_sConfigPath + "\\crash_log.txt", std::ios_base::app);
 	file << ssErrorStream.str();
 	file.close();
 

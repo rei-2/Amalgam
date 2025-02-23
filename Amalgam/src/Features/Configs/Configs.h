@@ -46,11 +46,13 @@ public:
 	boost::property_tree::ptree ColorToTree(const Color_t& color);
 	void TreeToColor(const boost::property_tree::ptree& tree, Color_t& out);
 
-	std::string sCurrentConfig = "default";
-	std::string sCurrentVisuals = "default";
-	std::string sConfigPath;
-	std::string sVisualsPath;
-	const std::string sConfigExtension = ".json";
+	std::string m_sCurrentConfig = "default";
+	std::string m_sCurrentVisuals = "default";
+	std::string m_sConfigPath;
+	std::string m_sVisualsPath;
+	const std::string m_sConfigExtension = ".json";
+
+	bool m_bConfigLoaded = false;
 };
 
 ADD_FEATURE(CConfigs, Configs);

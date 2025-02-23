@@ -30,7 +30,7 @@ bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		return false;
 	}
 
-	if (I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible())
+	if (I::EngineVGui->IsGameUIVisible())
 		return false;
 
 	return true;

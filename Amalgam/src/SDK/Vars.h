@@ -108,8 +108,8 @@ namespace Vars
 		CVar(CheapText, false)
 
 		SUBNAMESPACE_BEGIN(Theme)
-			CVar(Accent, Color_t(255, 101, 101, 255), VISUAL)
-			CVar(Background, Color_t(23, 23, 23, 250), VISUAL)
+			CVar(Accent, Color_t(175, 150, 255, 255), VISUAL)
+			CVar(Background, Color_t(0, 0, 0, 250), VISUAL)
 			CVar(Inactive, Color_t(150, 150, 150, 255), VISUAL)
 			CVar(Active, Color_t(255, 255, 255, 255), VISUAL)
 		SUBNAMESPACE_END(Theme)
@@ -166,8 +166,6 @@ namespace Vars
 			CVar(GroundHighMinimumDistance, 2500.f, DEBUGVAR)
 			CVar(GroundMaxChanges, 0, DEBUGVAR)
 			CVar(GroundMaxChangeTime, 0, DEBUGVAR)
-			CVar(GroundNewWeight, 100.f, DEBUGVAR)
-			CVar(GroundOldWeight, 100.f, DEBUGVAR)
 
 			CVar(AirSamples, 33, DEBUGVAR)
 			CVar(AirStraightFuzzyValue, 10.f, DEBUGVAR)
@@ -177,13 +175,9 @@ namespace Vars
 			CVar(AirHighMinimumDistance, 100000.f, DEBUGVAR)
 			CVar(AirMaxChanges, 1, DEBUGVAR)
 			CVar(AirMaxChangeTime, 10, DEBUGVAR)
-			CVar(AirNewWeight, 100.f, DEBUGVAR)
-			CVar(AirOldWeight, 100.f, DEBUGVAR)
 
 			CVar(VelocityAverageCount, 5, DEBUGVAR)
 			CVar(VerticalShift, 5.f, DEBUGVAR)
-			CVar(LatencyOffset, 0.f, DEBUGVAR)
-			CVar(HullIncrease, 0.f, DEBUGVAR)
 			CVar(DragOverride, 0.f, DEBUGVAR)
 			CVar(TimeOverride, 0.f, DEBUGVAR)
 			CVar(HuntsmanLerp, 50.f, DEBUGVAR)
@@ -199,7 +193,6 @@ namespace Vars
 			CVar(SplashTraceInterval, 10, DEBUGVAR)
 			CVar(DeltaCount, 5, DEBUGVAR)
 			CVarEnum(DeltaMode, 0, DEBUGVAR, Average, Max)
-			CVar(StrafeDelta, false, DEBUGVAR)
 		SUBNAMESPACE_END(Projectile)
 
 		SUBNAMESPACE_BEGIN(Melee)
@@ -835,7 +828,7 @@ namespace Vars
 		CVar(BoundHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
 		CVar(BoundHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
 
-		CVar(SpellFootstep, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(SpellFootstep, Color_t(255, 255, 255, 255), VISUAL)
 	NAMESPACE_END(Colors)
 
 	NAMESPACE_BEGIN(Logging)

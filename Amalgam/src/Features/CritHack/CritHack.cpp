@@ -11,10 +11,14 @@
 
 void CCritHack::Fill(const CUserCmd* pCmd, int n)
 {
-	static int iStart = pCmd->command_number;
+	if (!m_iFillStart)
+		m_iFillStart = pCmd->command_number;
 
 	for (auto& [iSlot, tStorage] : m_mStorage)
 	{
+		if (!tStorage.m_bActive)
+			continue;
+
 		for (auto it = tStorage.m_vCritCommands.begin(); it != tStorage.m_vCritCommands.end();)
 		{
 			if (*it <= pCmd->command_number)
@@ -35,7 +39,7 @@ void CCritHack::Fill(const CUserCmd* pCmd, int n)
 			if (tStorage.m_vCritCommands.size() >= unsigned(n))
 				break;
 
-			const int iCmdNum = iStart + i;
+			const int iCmdNum = m_iFillStart + i;
 			if (IsCritCommand(iSlot, tStorage.m_iEntIndex, tStorage.m_flMultCritChance, iCmdNum))
 				tStorage.m_vCritCommands.push_back(iCmdNum);
 		}
@@ -44,13 +48,13 @@ void CCritHack::Fill(const CUserCmd* pCmd, int n)
 			if (tStorage.m_vSkipCommands.size() >= unsigned(n))
 				break;
 
-			const int iCmdNum = iStart + i;
+			const int iCmdNum = m_iFillStart + i;
 			if (IsCritCommand(iSlot, tStorage.m_iEntIndex, tStorage.m_flMultCritChance, iCmdNum, false))
 				tStorage.m_vSkipCommands.push_back(iCmdNum);
 		}
 	}
 
-	iStart += n;
+	m_iFillStart += n;
 }
 
 
@@ -263,7 +267,8 @@ void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 	if (!pLocal->m_hMyWeapons())
 		return;
 
-	std::unordered_map<int, bool> mWeapons = {};
+	for (auto& [iSlot, tStorage] : m_mStorage)
+		tStorage.m_bActive = false;
 
 	for (int i = 0; i < MAX_WEAPONS; i++)
 	{
@@ -273,23 +278,14 @@ void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 
 		int iSlot = pWeapon->GetSlot();
 		auto& tStorage = m_mStorage[iSlot];
-		mWeapons[iSlot] = true;
+		tStorage.m_bActive = true;
 
 		int iEntIndex = pWeapon->entindex();
 		int iDefIndex = pWeapon->m_iItemDefinitionIndex();
 		float flMultCritChance = SDK::AttribHookValue(1.f, "mult_crit_chance", pWeapon);
 
 		if (tStorage.m_iEntIndex != iEntIndex || tStorage.m_iDefIndex != iDefIndex || tStorage.m_flMultCritChance != flMultCritChance)
-		{
 			tStorage = { iEntIndex, iDefIndex, flMultCritChance };
-			SDK::Output("Crithack", std::format("Resetting weapon {}", iDefIndex).c_str(), { 0, 255, 255, 255 }, Vars::Debug::Logging.Value);
-		}
-	}
-
-	for (auto& [iSlot, _] : m_mStorage)
-	{
-		if (!mWeapons.contains(iSlot))
-			m_mStorage.erase(iSlot);
 	}
 }
 
@@ -297,14 +293,14 @@ void CCritHack::Reset()
 {
 	m_mStorage = {};
 
+	m_iFillStart = 0;
+	
 	m_iCritDamage = 0;
 	m_iAllDamage = 0;
 
 	m_bCritBanned = false;
 	m_iDamageTilUnban = 0;
 	m_flCritChance = 0.f;
-
-	SDK::Output("Crithack", "Resetting all", { 0, 255, 255, 255 }, Vars::Debug::Logging.Value);
 }
 
 

@@ -827,6 +827,7 @@
     <ClCompile Include="include\ImGui\imgui_stdlib.cpp" />
     <ClCompile Include="include\ImGui\imgui_tables.cpp" />
     <ClCompile Include="include\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="include\ImGui\LanguageDefinitions.cpp" />
     <ClCompile Include="include\ImGui\TextEditor.cpp" />
     <ClCompile Include="include\MinHook\buffer.c" />
     <ClCompile Include="include\MinHook\hde\hde32.c" />
@@ -912,6 +913,7 @@
     <ClCompile Include="src\Hooks\CBasePlayer_ItemPostFrame.cpp" />
     <ClCompile Include="src\Hooks\CThirdPersonManager_Update.cpp" />
     <ClCompile Include="src\Hooks\CViewRender_PerformScreenOverlay.cpp" />
+    <ClCompile Include="src\Hooks\HostState_Shutdown.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_DispatchUserMessage.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_FrameStageNotify.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_LevelShutdown.cpp" />

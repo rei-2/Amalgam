@@ -617,13 +617,8 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 	float flLowMinimumSamples = bGround ? Vars::Aimbot::Projectile::GroundLowMinimumSamples.Value : Vars::Aimbot::Projectile::AirLowMinimumSamples.Value;
 	float flHighMinimumDistance = bGround ? Vars::Aimbot::Projectile::GroundHighMinimumDistance.Value : Vars::Aimbot::Projectile::AirHighMinimumDistance.Value;
 	float flHighMinimumSamples = bGround ? Vars::Aimbot::Projectile::GroundHighMinimumSamples.Value : Vars::Aimbot::Projectile::AirHighMinimumSamples.Value;
-	float flNewWeight = (bGround ? Vars::Aimbot::Projectile::GroundNewWeight.Value : Vars::Aimbot::Projectile::AirNewWeight.Value) / 100;
-	float flOldWeight = (bGround ? Vars::Aimbot::Projectile::GroundOldWeight.Value : Vars::Aimbot::Projectile::AirOldWeight.Value) / 100;
-	float flMaxWeight = std::max(flNewWeight, flOldWeight);
-	if (!flMaxWeight)
-		return;
 
-	float flAverageYaw = 0.f, flAverageDelta = 0.f, flTotalWeight = 0.f;
+	float flAverageYaw = 0.f;
 	int iTicks = 0, iSkips = 0, iDeltaChanges = 0;
 	for (; iTicks < iSamples; iTicks++)
 	{
@@ -647,51 +642,22 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 		}
 		*/
 
-		float flWeight = powf(Math::RemapValClamped(iTicks, 0, iSamples, flNewWeight, flOldWeight) / flMaxWeight, flMaxWeight);
-		flYaw *= flWeight / flMult, flTotalWeight += flWeight;
-
 		flAverageYaw += flYaw;
-		if (Vars::Aimbot::Projectile::StrafeDelta.Value)
-		{
-			static float flStaticYaw;
-			float flLastYaw = flStaticYaw;
-			flStaticYaw = flYaw;
-			if (iTicks > 0)
-			{
-				static float flStaticDelta;
-				float flLastDelta = flStaticDelta;
-				float flDelta = flStaticDelta = flLastYaw - flYaw;
-				if (iTicks > 1 && sign(flDelta) != sign(flLastDelta))
-					iDeltaChanges++;
-
-				flAverageDelta += flDelta;
-			}
-		}
 	}
 	iTicks -= iSkips;
 
-	if (!flTotalWeight || iTicks <= 3) // valid strafes not high enough
+	if (iTicks <= 3) // valid strafes not high enough
 		return;
-	if (iTicks > 6) // valid strafes probably fine for this
-		flAverageDelta /= std::max(iDeltaChanges, 1);
-	else
-		flAverageDelta = 0.f;
 
 	float flDistance = 0.f;
 	if (auto pLocal = H::Entities.GetLocal())
 		flDistance = pLocal->m_vecOrigin().DistTo(playerStorage.m_pPlayer->m_vecOrigin());
 
 	int iMinimumStrafes = flDistance < flLowMinimumDistance ? flLowMinimumSamples : Math::RemapValClamped(flDistance, flLowMinimumDistance, flHighMinimumDistance, flLowMinimumSamples + 1, flHighMinimumSamples);
-	flAverageYaw /= flTotalWeight;
-	flAverageYaw *= std::min(float(iTicks) / iMinimumStrafes, 1.f);
-	flAverageDelta = std::clamp(flAverageDelta / std::max(iTicks, iMinimumStrafes), -0.05f, 0.05f);
-	if (fabsf(flAverageYaw) < 0.1f)
-		return;
-
-	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} ({}) from {} ({}) {}", flAverageYaw, flAverageDelta, iTicks, iMinimumStrafes, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), {100, 255, 150, 255}, Vars::Debug::Logging.Value);
-	
+	flAverageYaw /= std::max(iTicks, iMinimumStrafes);
 	playerStorage.m_flAverageYaw = flAverageYaw;
-	playerStorage.m_flAverageDelta = flAverageDelta;
+
+	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} from {} ({}) {}", flAverageYaw, iTicks, iMinimumStrafes, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), {100, 255, 150, 255}, Vars::Debug::Logging.Value);
 }
 
 bool CMovementSimulation::StrafePrediction(PlayerStorage& playerStorage, int iSamples)
@@ -721,7 +687,7 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 	float flCorrection = 0.f;
 	if (playerStorage.m_flAverageYaw)
 	{
-		float flYaw = playerStorage.m_flAverageYaw, flDelta = playerStorage.m_flAverageDelta;
+		float flYaw = playerStorage.m_flAverageYaw;
 
 		float flMult = 1.f;
 		if (!playerStorage.m_pPlayer->IsOnGround())
@@ -733,9 +699,6 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 			flMult = 0.f < flPrevVelZ && flPrevVelZ <= 250.f ? 0.25f : 1.f; // flEntFriction will be 0.25f if flPrevVelZ is between 0.f and 250.f
 		}
 		playerStorage.m_MoveData.m_vecViewAngles.y += flYaw * flMult + flCorrection;
-
-		//playerStorage.m_flAverageYaw = std::clamp(flYaw + flDelta* flMult, sign(flYaw) == -1 ? flYaw : 0, sign(flYaw) == 1 ? flYaw : 0);
-		playerStorage.m_flAverageYaw = sign(flYaw) == -1 ? std::min(flYaw + flDelta * flMult, 0.f) : std::max(flYaw + flDelta * flMult, 0.f);
 	}
 	else
 	{
@@ -756,7 +719,7 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 	}
 	*/
 
-	float flOldSpeed = playerStorage.m_MoveData.m_flClientMaxSpeed, flOldSide = playerStorage.m_MoveData.m_flSideMove;
+	float flOldSpeed = playerStorage.m_MoveData.m_flClientMaxSpeed;
 	if (playerStorage.m_PlayerData.m_fFlags & FL_DUCKING && playerStorage.m_pPlayer->IsOnGround())
 		playerStorage.m_MoveData.m_flClientMaxSpeed /= 3;
 

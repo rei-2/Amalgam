@@ -50,10 +50,10 @@ MAKE_HOOK(Direct3DDevice9_Reset, U::Memory.GetVFunc(I::DirectXDevice, 16), HRESU
 
 LONG __stdcall WndProc::Func(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (F::Menu.IsOpen)
+	if (F::Menu.m_bIsOpen)
 	{
 		ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
-		if (ImGui::GetIO().WantTextInput || F::Menu.InKeybind)
+		if (ImGui::GetIO().WantTextInput || F::Menu.m_bInKeybind)
 		{
 			I::InputSystem->ResetInputState();
 			return 1;
@@ -69,7 +69,7 @@ LONG __stdcall WndProc::Func(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 MAKE_HOOK(VGuiSurface_LockCursor, U::Memory.GetVFunc(I::MatSystemSurface, 62), void,
 	void* rcx)
 {
-	if (F::Menu.IsOpen)
+	if (F::Menu.m_bIsOpen)
 		return I::MatSystemSurface->UnlockCursor();
 
 	CALL_ORIGINAL(rcx);
@@ -78,7 +78,7 @@ MAKE_HOOK(VGuiSurface_LockCursor, U::Memory.GetVFunc(I::MatSystemSurface, 62), v
 MAKE_HOOK(VGuiSurface_SetCursor, U::Memory.GetVFunc(I::MatSystemSurface, 51), void,
 	void* rcx, HCursor cursor)
 {
-	if (F::Menu.IsOpen)
+	if (F::Menu.m_bIsOpen)
 	{
 		switch (F::Render.Cursor)
 		{

@@ -1414,7 +1414,7 @@ namespace ImGui
 		PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, { H::Draw.Scale(4), 0 });
 		PushStyleColor(ImGuiCol_PopupBg, F::Render.Foreground.Value);
 		ImVec4 tempColor = ColorToVec(*tColor);
-		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tempColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Round, vSize);
+		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tempColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Round | ImGuiColorEditFlags_LargeAlphaGrid, vSize);
 		if (bReturn)
 			*tColor = VecToColor(tempColor);
 		PopStyleColor();
@@ -1584,7 +1584,7 @@ namespace ImGui
 
 		if (GetActiveID() == uId)
 		{
-			F::Menu.InKeybind = true;
+			F::Menu.m_bInKeybind = true;
 
 			//FButton("...", flags | FButton_NoUpper, sizeOffset);
 			FButton(std::format("{}: ...", sLabel).c_str(), iFlags | FButton_NoUpper, vSize, iSizeOffset);

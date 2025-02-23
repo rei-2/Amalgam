@@ -400,7 +400,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& target, std::v
 					SDK::Trace(vPoint, vTargetEye, MASK_SHOT, &filter, &trace);
 					bNormal = trace.DidHit();
 #ifdef SPLASH_DEBUG2
-					G::LineStorage.push_back({ { vPoint, trace.endpos }, I::GlobalVars->curtime + 60.f, !bNormal ? Vars::Colors::HealthBar.Value.StartColor : Vars::Colors::HealthBar.Value.EndColor });
+					G::LineStorage.push_back({ { vPoint, trace.endpos }, I::GlobalVars->curtime + 60.f, bNormal ? Vars::Colors::IndicatorGood.Value : Vars::Colors::IndicatorBad.Value });
 #endif
 					if (!bNormal)
 					{
@@ -423,7 +423,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& target, std::v
 #ifndef SPLASH_DEBUG2
 						if (checkPoint(trace, bErase, bNormal))
 #else
-						G::LineStorage.push_back({ { vPoint, trace.endpos }, I::GlobalVars->curtime + 60.f, Vars::Colors::HealthBar.Value.StartColor });
+						G::LineStorage.push_back({ { vPoint, trace.endpos }, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorBad.Value });
 						if (checkPoint(trace, bErase, bNormal, &vPoint))
 #endif
 						{
@@ -451,7 +451,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& target, std::v
 #ifndef SPLASH_DEBUG2
 								if (checkPoint(trace, bErase, bNormal))
 #else
-								G::LineStorage.push_back({ { vFrom, trace.endpos }, I::GlobalVars->curtime + 60.f, bErases ? Vars::Colors::HealthBar.Value.StartColor : Vars::Colors::HealthBar.Value.EndColor });
+								G::LineStorage.push_back({ { vFrom, trace.endpos }, I::GlobalVars->curtime + 60.f, bErases ? Vars::Colors::IndicatorBad.Value : Vars::Colors::IndicatorGood.Value });
 								if (checkPoint(trace, bErase, bNormal, &vPoint))
 #endif
 								{
@@ -801,8 +801,6 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 	}
 
 	bool bPrimeTime = false;
-	if (Vars::Aimbot::General::AimType.Value != Vars::Aimbot::General::AimTypeEnum::Smooth)
-		projInfo.m_vHull += Vec3(Vars::Aimbot::Projectile::HullIncrease.Value, Vars::Aimbot::Projectile::HullIncrease.Value, Vars::Aimbot::Projectile::HullIncrease.Value);
 
 	const Vec3 vOriginal = target.m_pEntity->GetAbsOrigin();
 	target.m_pEntity->SetAbsOrigin(target.m_vPos);
@@ -983,7 +981,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 		F::MoveSim.Initialize(target.m_pEntity, storage);
 		target.m_vPos = target.m_pEntity->m_vecOrigin();
 
-		tInfo.m_flLatency = F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke() + Vars::Aimbot::Projectile::LatencyOffset.Value);
+		tInfo.m_flLatency = F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke());
 		tInfo.m_iLatency = TIME_TO_TICKS(tInfo.m_flLatency);
 
 		iMaxTime = TIME_TO_TICKS(std::min(projInfo.m_flLifetime, Vars::Aimbot::Projectile::PredictionTime.Value));
@@ -1414,6 +1412,9 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 void CAimbotProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	const bool bSuccess = RunMain(pLocal, pWeapon, pCmd);
+#if defined(SPLASH_DEBUG1) || defined(SPLASH_DEBUG2) || defined(SPLASH_DEBUG4)
+	SDK::Output("Traces", std::format("{}", G::LineStorage.size()).c_str());
+#endif
 
 	float flAmount = 0.f;
 	if (pWeapon->GetWeaponID() == TF_WEAPON_PIPEBOMBLAUNCHER)
