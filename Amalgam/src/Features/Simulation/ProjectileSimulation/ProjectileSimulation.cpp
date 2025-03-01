@@ -3,7 +3,7 @@
 #include "../../EnginePrediction/EnginePrediction.h"
 #include "../../CritHack/CritHack.h"
 
-bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
+bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tInfo, int iFlags, float flAutoCharge)
 {
 	if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsTaunting() || !pWeapon)
 		return false;
@@ -73,7 +73,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	if (Vars::Visuals::Trajectory::Overwrite.Value)
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffX.Value, Vars::Visuals::Trajectory::OffY.Value, Vars::Visuals::Trajectory::OffZ.Value }, vPos, vAngle, !bTrace ? true : Vars::Visuals::Trajectory::Pipes.Value, bQuick);
-		out = { TF_PROJECTILE_NONE, vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::NoSpin.Value, Vars::Visuals::Trajectory::LifeTime.Value };
+		tInfo = { TF_PROJECTILE_NONE, vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::NoSpin.Value, Vars::Visuals::Trajectory::LifeTime.Value };
 		return true;
 	}
 
@@ -84,7 +84,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, int(SDK::AttribHookValue(0, "centerfire_projectile", pWeapon)) == 1 ? 0.f : 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		float flSpeed = pPlayer->InCond(TF_COND_RUNE_PRECISION) ? 3000.f : SDK::AttribHookValue(1100.f, "mult_projectile_speed", pWeapon);
-		out = { TF_PROJECTILE_ROCKET, vPos, vAngle, { 0.f, 0.f, 0.f }, flSpeed, 0.f, true };
+		tInfo = { TF_PROJECTILE_ROCKET, vPos, vAngle, { 0.f, 0.f, 0.f }, flSpeed, 0.f, true };
 		return true;
 	}
 	case TF_WEAPON_PARTICLE_CANNON:
@@ -97,7 +97,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		if (pWeapon->GetWeaponID() == TF_WEAPON_DRG_POMSON)
 			vPos.z -= 13.f;
 		float flSpeed = bCowMangler ? 1100.f : 1200.f;
-		out = { TF_PROJECTILE_ENERGY_RING, vPos, vAngle, bCowMangler ? Vec3() : Vec3(1.f, 1.f, 1.f), flSpeed, 0.f, true };
+		tInfo = { TF_PROJECTILE_ENERGY_RING, vPos, vAngle, bCowMangler ? Vec3() : Vec3(1.f, 1.f, 1.f), flSpeed, 0.f, true };
 		return true;
 	}
 	case TF_WEAPON_GRENADELAUNCHER: // vphysics projectiles affected by server start gravity
@@ -111,7 +111,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		float flLifetime = flMortar
 			? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime : flMortar
 			: SDK::AttribHookValue(2.2f, "fuse_mult", pWeapon);
-		out = { bCannon ? TF_PROJECTILE_CANNONBALL : TF_PROJECTILE_PIPEBOMB, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, pWeapon->m_iItemDefinitionIndex() == Demoman_m_TheLochnLoad, flLifetime };
+		tInfo = { bCannon ? TF_PROJECTILE_CANNONBALL : TF_PROJECTILE_PIPEBOMB, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, pWeapon->m_iItemDefinitionIndex() == Demoman_m_TheLochnLoad, flLifetime };
 		return true;
 	}
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
@@ -121,19 +121,19 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			? SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon) * flAutoCharge
 			: (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f);
 		float flSpeed = Math::RemapValClamped(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 900.f, 2400.f);
-		out = { TF_PROJECTILE_PIPEBOMB_REMOTE, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, false };
+		tInfo = { TF_PROJECTILE_PIPEBOMB_REMOTE, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, false };
 		return true;
 	}
 	case TF_WEAPON_FLAREGUN:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		out = { TF_PROJECTILE_FLARE, vPos, vAngle, { 1.f, 1.f, 1.f }, SDK::AttribHookValue(2000.f, "mult_projectile_speed", pWeapon), 0.3f * flGravity, true};
+		tInfo = { TF_PROJECTILE_FLARE, vPos, vAngle, { 1.f, 1.f, 1.f }, SDK::AttribHookValue(2000.f, "mult_projectile_speed", pWeapon), 0.3f * flGravity, true};
 		return true;
 	}
 	case TF_WEAPON_FLAREGUN_REVENGE:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		out = { TF_PROJECTILE_FLARE, vPos, vAngle, { 1.f, 1.f, 1.f }, 3000.f, 0.45f * flGravity, true };
+		tInfo = { TF_PROJECTILE_FLARE, vPos, vAngle, { 1.f, 1.f, 1.f }, 3000.f, 0.45f * flGravity, true };
 		return true;
 	}
 	case TF_WEAPON_COMPOUND_BOW:
@@ -142,30 +142,30 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		float flCharge = pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f;
 		float flSpeed = Math::RemapValClamped(flCharge, 0.f, 1.f, 1800.f, 2600.f);
 		flGravity = Math::RemapValClamped(flCharge, 0.f, 1.f, 0.5f, 0.1f) * flGravity;
-		out = { TF_PROJECTILE_ARROW, vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
+		tInfo = { TF_PROJECTILE_ARROW, vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
 		return true;
 	}
 	case TF_WEAPON_CROSSBOW:
 	case TF_WEAPON_SHOTGUN_BUILDING_RESCUE:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		out = { TF_PROJECTILE_ARROW, vPos, vAngle, pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW ? Vec3(3.f, 3.f, 3.f) : Vec3(1.f, 1.f, 1.f), 2400.f, 0.2f * flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
+		tInfo = { TF_PROJECTILE_ARROW, vPos, vAngle, pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW ? Vec3(3.f, 3.f, 3.f) : Vec3(1.f, 1.f, 1.f), 2400.f, 0.2f * flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
 		return true;
 	}
 	case TF_WEAPON_SYRINGEGUN_MEDIC:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 6.f, -8.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		out = { TF_PROJECTILE_SYRINGE, vPos, vAngle, { 1.f, 1.f, 1.f }, 1000.f, 0.3f * flGravity, true };
+		tInfo = { TF_PROJECTILE_SYRINGE, vPos, vAngle, { 1.f, 1.f, 1.f }, 1000.f, 0.3f * flGravity, true };
 		return true;
 	}
-	case TF_WEAPON_FLAMETHROWER: // this inherits player velocity, possibly account for
+	case TF_WEAPON_FLAMETHROWER:
 	{
 		static auto tf_flamethrower_boxsize = U::ConVars.FindVar("tf_flamethrower_boxsize");
 		const float flHull = tf_flamethrower_boxsize ? tf_flamethrower_boxsize->GetFloat() : 12.f;
 		bool bFlipped = cl_flipviewmodels ? cl_flipviewmodels->GetBool() : false;
 
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 40.f, bFlipped ? -5.f : 5.f /*doesn't flip*/, 0.f}, vPos, vAngle, true, bQuick);
-		out = { TF_PROJECTILE_FLAME_ROCKET, vPos, vAngle, { flHull, flHull, flHull }, 1000.f, 0.f, true, 0.33f };
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 40.f, bFlipped ? -5.f : 5.f /*doesn't flip*/, 0.f }, vPos, vAngle, true, bQuick);
+		tInfo = { TF_PROJECTILE_FLAME_ROCKET, vPos, vAngle, { flHull, flHull, flHull }, 1000.f, 0.f, true, 0.285f };
 		return true;
 	}
 	case TF_WEAPON_FLAME_BALL:
@@ -173,13 +173,13 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		bool bFlipped = cl_flipviewmodels ? cl_flipviewmodels->GetBool() : false;
 
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 70.f, bFlipped ? -7.f : 7.f /*doesn't flip*/, -9.f}, vPos, vAngle, !bTrace ? true : false, bQuick);
-		out = { TF_PROJECTILE_BALLOFFIRE, vPos, vAngle, { 1.f, 1.f, 1.f /*damaging hull much bigger, shouldn't matter here*/ }, 3000.f, 0.f, true, 0.2f };
+		tInfo = { TF_PROJECTILE_BALLOFFIRE, vPos, vAngle, { 1.f, 1.f, 1.f /*damaging hull much bigger, shouldn't matter here*/ }, 3000.f, 0.f, true, 0.2f };
 		return true;
 	}
 	case TF_WEAPON_CLEAVER:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, true, bQuick);
-		out = { TF_PROJECTILE_CLEAVER, vPos, vAngle, { 1.f, 1.f, 10.f /*weird, probably still inaccurate*/ }, 3000.f, 1.f, !bTrace ? true : false, 2.2f };
+		tInfo = { TF_PROJECTILE_CLEAVER, vPos, vAngle, { 1.f, 1.f, 10.f /*weird, probably still inaccurate*/ }, 3000.f, 1.f, !bTrace ? true : false, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_BAT_WOOD:
@@ -192,25 +192,25 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 0.f, 0.f, 0.f }, vPos, vAngle, true, bQuick);
 		Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 		vPos = (bQuick ? pPlayer->GetAbsOrigin() : pPlayer->m_vecOrigin()) + (Vec3(0, 0, 50) + vForward * 32.f) * pPlayer->m_flModelScale(); // why?
-		out = { bWrapAssassin ? TF_PROJECTILE_FESTIVE_ARROW : TF_PROJECTILE_THROWABLE, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed ? tf_scout_stunball_base_speed->GetInt() : 3000.f, 1.f, false, bWrapAssassin ? 2.3f : 100.f };
+		tInfo = { bWrapAssassin ? TF_PROJECTILE_FESTIVE_ARROW : TF_PROJECTILE_THROWABLE, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed ? tf_scout_stunball_base_speed->GetInt() : 3000.f, 1.f, false, bWrapAssassin ? 2.3f : 100.f };
 		return true;
 	}
 	case TF_WEAPON_JAR:
 	case TF_WEAPON_JAR_MILK:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, true, bQuick);
-		out = { TF_PROJECTILE_JAR, vPos, vAngle, { 3.f, 3.f, 3.f }, 1000.f, 1.f, false, 2.2f };
+		tInfo = { TF_PROJECTILE_JAR, vPos, vAngle, { 3.f, 3.f, 3.f }, 1000.f, 1.f, false, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_JAR_GAS:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, true, bQuick);
-		out = { TF_PROJECTILE_JAR_GAS, vPos, vAngle, { 3.f, 3.f, 3.f }, 2000.f, 1.f, false, 2.2f };
+		tInfo = { TF_PROJECTILE_JAR_GAS, vPos, vAngle, { 3.f, 3.f, 3.f }, 2000.f, 1.f, false, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_GRAPPLINGHOOK:
 	{
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, -8.f, -3.f }, vPos, vAngle, false, bQuick);
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, -8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		static auto tf_grapplinghook_projectile_speed = U::ConVars.FindVar("tf_grapplinghook_projectile_speed");
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
 		float flSpeed = tf_grapplinghook_projectile_speed ? tf_grapplinghook_projectile_speed->GetFloat() : 1500.f;
@@ -224,7 +224,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			}
 		}
 		float flLifetime = (tf_grapplinghook_max_distance ? tf_grapplinghook_max_distance->GetFloat() : 2000.f) / flSpeed;
-		out = { TF_PROJECTILE_GRAPPLINGHOOK, vPos, vAngle, { 1.2f, 1.2f, 1.2f }, flSpeed, 0.f, false, flLifetime };
+		tInfo = { TF_PROJECTILE_GRAPPLINGHOOK, vPos, vAngle, { 1.2f, 1.2f, 1.2f }, flSpeed, 0.f, false, flLifetime };
 		return true;
 	}
 	}
@@ -239,37 +239,38 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case Heavy_s_SecondBanana:
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 0.f, 0.f, -8.f }, vPos, vAngle, true, bQuick);
 		vAngle -= Vec3(10, 0, 0);
-		out = { TF_PROJECTILE_BREAD_MONSTER, vPos, vAngle, bQuick ? Vec3(4.f, 4.f, 4.f) : Vec3(17.f, 17.f, 17.f), 500.f, 1.f * flGravity, false };
+		tInfo = { TF_PROJECTILE_BREAD_MONSTER, vPos, vAngle, bQuick ? Vec3(4.f, 4.f, 4.f) : Vec3(17.f, 17.f, 17.f), 500.f, 1.f * flGravity, false };
 		return true;
 	}
 
 	return false;
 }
 
-bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& out, int iFlags, float flAutoCharge)
+bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tInfo, int iFlags, float flAutoCharge)
 {
 	bool InitCheck = iFlags & ProjSimEnum::InitCheck;
 	bool bQuick = iFlags & ProjSimEnum::Quick;
 
 	const float flOldCurrentTime = I::GlobalVars->curtime;
 	I::GlobalVars->curtime = TICKS_TO_TIME(pPlayer->m_nTickBase());
-	bool bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, out, iFlags, flAutoCharge);
-	out.m_bQuick = bQuick;
+	bool bReturn = GetInfoMain(pPlayer, pWeapon, vAngles, tInfo, iFlags, flAutoCharge);
+	tInfo.m_pOwner = pPlayer;
+	tInfo.m_bQuick = bQuick;
 	I::GlobalVars->curtime = flOldCurrentTime;
 
 	if (!bReturn || !InitCheck)
 		return bReturn;
 
 	const Vec3 vStart = bQuick ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
-	const Vec3 vEnd = out.m_vPos;
+	const Vec3 vEnd = tInfo.m_vPos;
 
 	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {};
-	SDK::TraceHull(vStart, vEnd, out.m_vHull * -1.f, out.m_vHull, MASK_SOLID, &filter, &trace);
+	SDK::TraceHull(vStart, vEnd, tInfo.m_vHull * -1.f, tInfo.m_vHull, MASK_SOLID, &filter, &trace);
 	return !trace.DidHit();
 }
 
-bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
+bool CProjectileSimulation::Initialize(ProjectileInfo& tInfo, bool bSimulate)
 {
 	if (!env)
 		env = I::Physics->CreateEnvironment();
@@ -287,7 +288,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 		params.rotInertiaLimit = 0.f;
 		params.enableCollisions = false;
 
-		obj = env->CreatePolyObject(col, 0, info.m_vPos, info.m_vAng, &params);
+		obj = env->CreatePolyObject(col, 0, tInfo.m_vPos, tInfo.m_vAng, &params);
 
 		obj->Wake();
 	}
@@ -303,7 +304,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 
 		// these values were dumped from the server by firing the projectiles with 0 0 0 angles
 		// they are calculated in CPhysicsObject::RecomputeDragBases
-		switch (info.m_iType)
+		switch (tInfo.m_iType)
 		{
 		case TF_PROJECTILE_NONE:
 			flDrag = Vars::Visuals::Trajectory::Drag.Value;
@@ -360,10 +361,10 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 
 	//set position and velocity
 	{
-		Vec3 vForward, vRight, vUp; Math::AngleVectors(info.m_vAng, &vForward, &vRight, &vUp);
-		Vec3 vVelocity = vForward * info.m_flVelocity, vAngularVelocity;
+		Vec3 vForward, vRight, vUp; Math::AngleVectors(tInfo.m_vAng, &vForward, &vRight, &vUp);
+		Vec3 vVelocity = vForward * tInfo.m_flVelocity, vAngularVelocity;
 
-		switch (info.m_iType)
+		switch (tInfo.m_iType)
 		{
 		case TF_PROJECTILE_NONE:
 			vVelocity += vUp * Vars::Visuals::Trajectory::UpVelocity.Value;
@@ -373,7 +374,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 		case TF_PROJECTILE_PIPEBOMB_REMOTE:
 		case TF_PROJECTILE_PIPEBOMB_PRACTICE:
 		case TF_PROJECTILE_CANNONBALL:
-			if (!info.m_bQuick && G::CurrentUserCmd)
+			if (!tInfo.m_bQuick && G::CurrentUserCmd)
 			{
 				vVelocity += vUp * 200.f + vUp * SDK::RandomFloat(-10.f, 10.f) + vRight * SDK::RandomFloat(-10.f, 10.f);
 				vAngularVelocity = { 600.f, float(SDK::RandomInt(-1200, 1200)), 0.f };
@@ -385,29 +386,42 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 		case TF_PROJECTILE_CLEAVER:
 			vVelocity = vForward * 10 + vUp;
 			vVelocity.Normalize();
-			vVelocity *= info.m_flVelocity;
+			vVelocity *= tInfo.m_flVelocity;
 			vAngularVelocity = { 0.f, 500.f, 0.f };
 			break;
 		case TF_PROJECTILE_THROWABLE:
 		case TF_PROJECTILE_FESTIVE_ARROW:
 			vVelocity = vForward * 10 + vUp;
 			vVelocity.Normalize();
-			vVelocity *= info.m_flVelocity;
+			vVelocity *= tInfo.m_flVelocity;
 			vAngularVelocity = { 0.f, 100.f, 0.f };
 			break;
 		case TF_PROJECTILE_JAR:
 		case TF_PROJECTILE_JAR_GAS:
 			vVelocity += vUp * 200.f;
 			vAngularVelocity = { 300.f, 0.f, 0.f };
+			break;
+		case TF_PROJECTILE_FLAME_ROCKET:
+			if (bSimulate && tInfo.m_pOwner)
+			{
+				Vec3 vOwnerVelocity = tInfo.m_pOwner->m_vecVelocity();
+				if (!vOwnerVelocity.IsZero())
+				{
+					float flOwnerVelocity = vOwnerVelocity.Length();
+
+					float flDot = vForward.Dot(vOwnerVelocity) / flOwnerVelocity;
+					vVelocity = vForward * (tInfo.m_flVelocity + flOwnerVelocity * flDot);
+				}
+			}
 		}
 
-		if (info.m_bNoSpin)
+		if (tInfo.m_bNoSpin)
 			vAngularVelocity.Zero();
 
-		if (bSimulate && obj->m_dragBasis.IsZero()) // don't include vphysics projectiles
-			vVelocity.z += 400.f * info.m_flGravity * TICK_INTERVAL; // i don't know why this makes it more accurate but it does
+		if (bSimulate && !F::ProjSim.obj->IsDragEnabled() && obj->m_dragBasis.IsZero()) // don't include vphysics projectiles
+			vVelocity.z += 400.f * tInfo.m_flGravity * TICK_INTERVAL; // i don't know why this makes it more accurate but it does
 
-		obj->SetPosition(info.m_vPos, info.m_vAng, true);
+		obj->SetPosition(tInfo.m_vPos, tInfo.m_vAng, true);
 		obj->SetVelocity(&vVelocity, &vAngularVelocity);
 	}
 
@@ -417,7 +431,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 		float vMaxAngularVelocity = 1000000.f;
 
 		//only pipes need k_flMaxVelocity and k_flMaxAngularVelocity
-		switch (info.m_iType)
+		switch (tInfo.m_iType)
 		{
 		case TF_PROJECTILE_NONE:
 			if (Vars::Visuals::Trajectory::MaxVelocity.Value)
@@ -442,23 +456,23 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& info, bool bSimulate)
 
 		env->SetPerformanceSettings(&params);
 		env->SetAirDensity(2.f);
-		env->SetGravity({ 0.f, 0.f, -(800.f * info.m_flGravity) });
+		env->SetGravity({ 0.f, 0.f, -(800.f * tInfo.m_flGravity) });
 
-		env->ResetSimulationClock(); // not needed?
+		env->ResetSimulationClock();
 	}
 
-	RunTick(info, false); // simulate an initial time because dumb
+	RunTick(tInfo, false); // simulate an initial time because dumb
 
 	return true;
 }
 
-void CProjectileSimulation::RunTick(ProjectileInfo& info, bool bPath)
+void CProjectileSimulation::RunTick(ProjectileInfo& tInfo, bool bPath) // bug: per frame projectile trace can cause inconsistencies?
 {
 	if (!env)
 		return;
 
 	if (bPath)
-		info.m_vPath.push_back(GetOrigin());
+		tInfo.m_vPath.push_back(GetOrigin());
 
 	env->Simulate(TICK_INTERVAL);
 

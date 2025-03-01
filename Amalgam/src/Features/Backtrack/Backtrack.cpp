@@ -37,7 +37,7 @@ float CBacktrack::GetReal(int iFlow, bool bNoFake)
 	if (!pNetChan)
 		return 0.f;
 
-	if (iFlow != -1)
+	if (iFlow != MAX_FLOWS)
 		return pNetChan->GetLatency(iFlow) - (bNoFake && iFlow == FLOW_INCOMING ? m_flFakeLatency : 0.f);
 	return pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - (bNoFake ? m_flFakeLatency : 0.f);
 }
@@ -121,8 +121,8 @@ std::deque<TickRecord> CBacktrack::GetValidRecords(std::deque<TickRecord>* pReco
 	if (!pNetChan)
 		return vRecords;
 
-	float flCorrect = std::clamp(pNetChan->GetLatency(FLOW_OUTGOING) + pNetChan->GetLatency(FLOW_INCOMING) + ROUND_TO_TICKS(m_flFakeInterp), 0.f, m_flMaxUnlag);
-	int iServerTick = m_iTickCount + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(pNetChan->GetLatency(FLOW_OUTGOING));
+	float flCorrect = std::clamp(F::Backtrack.GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(m_flFakeInterp), 0.f, m_flMaxUnlag);
+	int iServerTick = m_iTickCount + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(F::Backtrack.GetReal(FLOW_OUTGOING));
 
 	for (auto& tRecord : *pRecords)
 	{
@@ -278,10 +278,12 @@ void CBacktrack::Run(CUserCmd* pCmd)
 
 void CBacktrack::ResolverUpdate(CBaseEntity* pEntity)
 {
+	/*
 	if (!pEntity)
 		return;
 
 	m_mRecords[pEntity].clear();
+	*/
 }
 
 void CBacktrack::ReportShot(int iIndex)

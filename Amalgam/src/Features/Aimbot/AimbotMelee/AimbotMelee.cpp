@@ -116,8 +116,8 @@ int CAimbotMelee::GetSwingTime(CTFWeaponBase* pWeapon)
 }
 
 void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> targets,
-								   Vec3& vEyePos, std::unordered_map<CBaseEntity*, std::deque<TickRecord>>& pRecordMap,
-								   std::unordered_map<CBaseEntity*, std::deque<Vec3>>& mPaths)
+								   Vec3& vEyePos, std::unordered_map<int, std::deque<TickRecord>>& pRecordMap,
+								   std::unordered_map<int, std::deque<Vec3>>& mPaths)
 {
 	// swing prediction / auto warp
 	const int iSwingTicks = GetSwingTime(pWeapon);
@@ -128,11 +128,11 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 	if ((Vars::Aimbot::Melee::SwingPrediction.Value || iDoubletapTicks) && pWeapon->m_flSmackTime() < 0.f && iMax)
 	{
 		PlayerStorage localStorage;
-		std::unordered_map<CBaseEntity*, PlayerStorage> targetStorage;
+		std::unordered_map<int, PlayerStorage> targetStorage;
 
 		F::MoveSim.Initialize(pLocal, localStorage, false, iDoubletapTicks);
 		for (auto& target : targets)
-			F::MoveSim.Initialize(target.m_pEntity, targetStorage[target.m_pEntity], false);
+			F::MoveSim.Initialize(target.m_pEntity, targetStorage[target.m_pEntity->entindex()], false);
 
 		for (int i = 0; i < iMax; i++) // intended for plocal to collide with targets
 		{
@@ -146,12 +146,14 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			{
 				for (auto& target : targets)
 				{
-					F::MoveSim.RunTick(targetStorage[target.m_pEntity]);
-					if (!targetStorage[target.m_pEntity].m_bFailed)
-						pRecordMap[target.m_pEntity].push_front({
-							!Vars::Aimbot::Melee::SwingPredictLag.Value || targetStorage[target.m_pEntity].m_bPredictNetworked ? target.m_pEntity->m_flSimulationTime() + TICKS_TO_TIME(i + 1) : 0.f,
+					auto& tStorage = targetStorage[target.m_pEntity->entindex()];
+
+					F::MoveSim.RunTick(tStorage);
+					if (!tStorage.m_bFailed)
+						pRecordMap[target.m_pEntity->entindex()].push_front({
+							!Vars::Aimbot::Melee::SwingPredictLag.Value || tStorage.m_bPredictNetworked ? target.m_pEntity->m_flSimulationTime() + TICKS_TO_TIME(i + 1) : 0.f,
 							{},
-							Vars::Aimbot::Melee::SwingPredictLag.Value ? targetStorage[target.m_pEntity].m_vPredictedOrigin : targetStorage[target.m_pEntity].m_MoveData.m_vecAbsOrigin
+							Vars::Aimbot::Melee::SwingPredictLag.Value ? tStorage.m_vPredictedOrigin : tStorage.m_MoveData.m_vecAbsOrigin
 						});
 				}
 			}
@@ -163,9 +165,9 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
 			if (!bAlwaysDraw)
 			{
-				mPaths[pLocal] = localStorage.m_vPath;
+				mPaths[pLocal->entindex()] = localStorage.m_vPath;
 				for (auto& target : targets)
-					mPaths[target.m_pEntity] = targetStorage[target.m_pEntity].m_vPath;
+					mPaths[target.m_pEntity->entindex()] = targetStorage[target.m_pEntity->entindex()].m_vPath;
 			}
 			else
 			{
@@ -175,22 +177,22 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
-					G::PathStorage.push_back({ localStorage.m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
+					G::PathStorage.push_back({ localStorage.m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
 					for (auto& target : targets)
-						G::PathStorage.push_back({ targetStorage[target.m_pEntity].m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
+						G::PathStorage.push_back({ targetStorage[target.m_pEntity->entindex()].m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
 				}
 				if (Vars::Colors::PlayerPathClipped.Value.a)
 				{
-					G::PathStorage.push_back({ localStorage.m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
+					G::PathStorage.push_back({ localStorage.m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
 					for (auto& target : targets)
-						G::PathStorage.push_back({ targetStorage[target.m_pEntity].m_vPath, I::GlobalVars->curtime + 5.f, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
+						G::PathStorage.push_back({ targetStorage[target.m_pEntity->entindex()].m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
 				}
 			}
 		}
 
 		F::MoveSim.Restore(localStorage);
 		for (auto& target : targets)
-			F::MoveSim.Restore(targetStorage[target.m_pEntity]);
+			F::MoveSim.Restore(targetStorage[target.m_pEntity->entindex()]);
 	}
 }
 
@@ -366,7 +368,8 @@ int CAimbotMelee::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWe
 
 			return true;
 		}
-		else if (Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth)
+		else if (Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth
+			|| Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Assistive)
 		{
 			auto vAngle = Math::CalcAngle(vEyePos, target.m_vPos);
 
@@ -398,17 +401,15 @@ Vec3 CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, int iMethod)
 		vReturn = vToAngle;
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
-	{
-		auto shortDist = [](const float flAngleA, const float flAngleB)
-			{
-				const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
-				return fmodf(2 * flDelta, 360.f) - flDelta;
-			};
-		const float t = 1.f - Vars::Aimbot::General::Smoothing.Value / 100.f;
-		vReturn.x = vCurAngle.x - shortDist(vCurAngle.x, vToAngle.x) * t;
-		vReturn.y = vCurAngle.y - shortDist(vCurAngle.y, vToAngle.y) * t;
+		vReturn = vCurAngle.LerpAngle(vToAngle, Vars::Aimbot::General::AssistStrength.Value / 100.f);
 		break;
-	}
+	case Vars::Aimbot::General::AimTypeEnum::Assistive:
+		Vec3 vMouseDelta = G::CurrentUserCmd->viewangles.DeltaAngle(G::LastUserCmd->viewangles);
+		Vec3 vTargetDelta = vToAngle.DeltaAngle(G::LastUserCmd->viewangles);
+		float flMouseDelta = vMouseDelta.Length2D(), flTargetDelta = vTargetDelta.Length2D();
+		vTargetDelta = vTargetDelta.Normalized() * std::min(flMouseDelta, flTargetDelta);
+		vReturn = vCurAngle - vMouseDelta + vMouseDelta.LerpAngle(vTargetDelta, Vars::Aimbot::General::AssistStrength.Value / 100.f);
+		break;
 	}
 
 	return vReturn;
@@ -421,6 +422,7 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
+	case Vars::Aimbot::General::AimTypeEnum::Assistive:
 		pCmd->viewangles = vAngle;
 		I::EngineClient->SetViewAngles(vAngle);
 		break;
@@ -467,13 +469,13 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	const bool bShouldSwing = iDoubletapTicks <= (GetSwingTime(pWeapon) ? 14 : 0) || Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
 
 	Vec3 vEyePos = pLocal->GetShootPos();
-	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> pRecordMap;
-	std::unordered_map<CBaseEntity*, std::deque<Vec3>> mPaths;
+	std::unordered_map<int, std::deque<TickRecord>> pRecordMap;
+	std::unordered_map<int, std::deque<Vec3>> mPaths;
 	SimulatePlayers(pLocal, pWeapon, targets, vEyePos, pRecordMap, mPaths);
 
 	for (auto& target : targets)
 	{
-		const auto iResult = CanHit(target, pLocal, pWeapon, vEyePos, pRecordMap[target.m_pEntity]);
+		const auto iResult = CanHit(target, pLocal, pWeapon, vEyePos, pRecordMap[target.m_pEntity->entindex()]);
 		if (!iResult) continue;
 		if (iResult == 2)
 		{
@@ -519,13 +521,13 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			{
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
-					G::PathStorage.push_back({ mPaths[pLocal], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
-					G::PathStorage.push_back({ mPaths[target.m_pEntity], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
+					G::PathStorage.push_back({ mPaths[pLocal->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
+					G::PathStorage.push_back({ mPaths[target.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value });
 				}
 				if (Vars::Colors::PlayerPathClipped.Value.a)
 				{
-					G::PathStorage.push_back({ mPaths[pLocal], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
-					G::PathStorage.push_back({ mPaths[target.m_pEntity], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
+					G::PathStorage.push_back({ mPaths[pLocal->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
+					G::PathStorage.push_back({ mPaths[target.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true });
 				}
 			}
 		}

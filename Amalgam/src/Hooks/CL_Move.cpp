@@ -15,6 +15,12 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void,
 		return CALL_ORIGINAL(accumulated_extra_samples, bFinalTick);
 
 	F::Backtrack.m_iTickCount = I::GlobalVars->tickcount + 1;
+	if (!Vars::Misc::Game::NetworkFix.Value)
+	{
+		auto pNetChan = I::EngineClient->GetNetChannelInfo();
+		if (pNetChan && !pNetChan->IsLoopback())
+			F::Backtrack.m_iTickCount++;
+	}
 
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();

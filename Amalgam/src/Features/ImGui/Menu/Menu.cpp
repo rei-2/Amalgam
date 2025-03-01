@@ -132,13 +132,13 @@ void CMenu::MenuAimbot()
 				TableNextColumn();
 				if (Section("General"))
 				{
-					FDropdown("Aim type", Vars::Aimbot::General::AimType, { "Off", "Plain", "Smooth", "Silent", "Locking" }, {}, FDropdown_Left);
+					FDropdown("Aim type", Vars::Aimbot::General::AimType, { "Off", "Plain", "Smooth", "Silent", "Locking", "Assistive" }, {}, FDropdown_Left);
 					FDropdown("Target selection", Vars::Aimbot::General::TargetSelection, { "FOV", "Distance" }, {}, FDropdown_Right);
 					FDropdown("Target", Vars::Aimbot::General::Target, { "Players", "Sentries", "Dispensers", "Teleporters", "Stickies", "NPCs", "Bombs" }, {}, FDropdown_Multi | FDropdown_Left);
 					FDropdown("Ignore", Vars::Aimbot::General::Ignore, { "Friends", "Party", "Invulnerable", "Cloaked", "Unsimulated players", "Dead Ringer", "Vaccinator", "Disguised", "Taunting" }, {}, FDropdown_Multi | FDropdown_Right);
 					FSlider("Aim FOV", Vars::Aimbot::General::AimFOV, 0.f, 180.f, 1.f, "%g", FSlider_Clamp | FSlider_Precision);
-					PushTransparent(FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Smooth);
-						FSlider("Smoothing## Hitscan", Vars::Aimbot::General::Smoothing, 0.f, 100.f, 1.f, "%g%%", FSlider_Clamp | FSlider_Precision);
+					PushTransparent(FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Smooth && FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Assistive);
+						FSlider("Assist strength", Vars::Aimbot::General::AssistStrength, 0.f, 100.f, 1.f, "%g%%", FSlider_Clamp | FSlider_Precision);
 					PopTransparent();
 					FSlider("Max targets", Vars::Aimbot::General::MaxTargets, 1, 6, 1, "%i", FSlider_Min);
 					PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & Vars::Aimbot::General::IgnoreEnum::Cloaked));
@@ -195,20 +195,29 @@ void CMenu::MenuAimbot()
 				TableNextColumn();
 				if (Section("Hitscan"))
 				{
-					FDropdown("Hitboxes", Vars::Aimbot::Hitscan::Hitboxes, { "Head", "Body", "Pelvis", "Arms", "Legs" }, { 1 << 0, 1 << 2, 1 << 1, 1 << 3, 1 << 4 }, FDropdown_Multi, 0, nullptr, "Hitscan hitboxes");
-					FDropdown("Modifiers## Hitscan", Vars::Aimbot::Hitscan::Modifiers, { "Tapfire", "Wait for headshot", "Wait for charge", "Scoped only", "Auto scope", "Bodyaim if lethal", "Auto rev minigun", "Extinguish team" }, {}, FDropdown_Multi, 0, nullptr, "Hitscan modifiers");
+					FDropdown("Hitboxes## Hitscan", Vars::Aimbot::Hitscan::Hitboxes, { "Head", "Body", "Pelvis", "Arms", "Legs", "##Divider", "Bodyaim if lethal" }, {}, FDropdown_Multi | FDropdown_Left, 0, nullptr, "Hitscan hitboxes");
+					FDropdown("Modifiers## Hitscan", Vars::Aimbot::Hitscan::Modifiers, { "Tapfire", "Wait for headshot", "Wait for charge", "Scoped only", "Auto scope", "Auto rev minigun", "Extinguish team" }, {}, FDropdown_Multi | FDropdown_Right, 0, nullptr, "Hitscan modifiers");
 					FSlider("Point scale", Vars::Aimbot::Hitscan::PointScale, 0.f, 100.f, 5.f, "%g%%", FSlider_Clamp | FSlider_Precision);
 					PushTransparent(!(FGet(Vars::Aimbot::Hitscan::Modifiers) & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire));
 						FSlider("Tapfire distance", Vars::Aimbot::Hitscan::TapFireDist, 250.f, 1000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
 					PopTransparent();
 				} EndSection();
+				if (Vars::Debug::Info.Value)
+				{
+					if (Section("debug## hitscan"))
+					{
+						FSlider("bone size subtract", Vars::Aimbot::Hitscan::BoneSizeSubtract, 0.f, 4.f, 0.25f, "%g", FSlider_Min);
+						FSlider("bone size minimum scale", Vars::Aimbot::Hitscan::BoneSizeMinimumScale, 0.f, 1.f, 0.1f, "%g", FSlider_Clamp);
+					} EndSection();
+				}
 				if (Section("Projectile"))
 				{
 					FDropdown("Predict", Vars::Aimbot::Projectile::StrafePrediction, { "Air strafing", "Ground strafing" }, {}, FDropdown_Multi | FDropdown_Left);
 					FDropdown("Splash", Vars::Aimbot::Projectile::SplashPrediction, { "Off", "Include", "Prefer", "Only" }, {}, FDropdown_Right);
-					FDropdown("Auto detonate", Vars::Aimbot::Projectile::AutoDetonate, { "Stickies", "Flares", "##Divider", "Ignore self damage" }, {}, FDropdown_Multi | FDropdown_Left);
+					FDropdown("Auto detonate", Vars::Aimbot::Projectile::AutoDetonate, { "Stickies", "Flares", "##Divider", "Prevent self damage", "Ignore cloak" }, {}, FDropdown_Multi | FDropdown_Left);
 					FDropdown("Auto airblast", Vars::Aimbot::Projectile::AutoAirblast, { "Enabled", "##Divider", "Redirect simple", "Redirect advanced", "##Divider", "Respect FOV"}, {}, FDropdown_Multi | FDropdown_Right); // todo: finish redirect advanced!!
-					FDropdown("Modifiers## Projectile", Vars::Aimbot::Projectile::Modifiers, { "Charge shot", "Cancel charge", "Bodyaim if lethal", "Use prime time", "Aim blast at feet" }, {}, FDropdown_Multi, 0, nullptr, "Projectile modifiers");
+					FDropdown("Hitboxes## Projectile", Vars::Aimbot::Projectile::Hitboxes, { "Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Aim blast at feet" }, {}, FDropdown_Multi | FDropdown_Left, 0, nullptr, "Projectile hitboxes");
+					FDropdown("Modifiers## Projectile", Vars::Aimbot::Projectile::Modifiers, { "Charge shot", "Cancel charge", "Use prime time" }, {}, FDropdown_Multi | FDropdown_Right, 0, nullptr, "Projectile modifiers");
 					FSlider("Max simulation time", Vars::Aimbot::Projectile::PredictionTime, 0.1f, 10.f, 0.25f, "%gs", FSlider_Min | FSlider_Precision);
 					PushTransparent(!FGet(Vars::Aimbot::Projectile::StrafePrediction));
 						FSlider("Hit chance", Vars::Aimbot::Projectile::Hitchance, 0.f, 100.f, 5.f, "%g%%", FSlider_Clamp | FSlider_Precision);
@@ -254,15 +263,20 @@ void CMenu::MenuAimbot()
 						FSlider("huntsman add", Vars::Aimbot::Projectile::HuntsmanAdd, 0.f, 20.f, 1.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
 						FSlider("huntsman add low", Vars::Aimbot::Projectile::HuntsmanAddLow, 0.f, 20.f, 1.f, "%g", FSlider_Right | FSlider_Clamp | FSlider_Precision);
 						FSlider("huntsman clamp", Vars::Aimbot::Projectile::HuntsmanClamp, 0.f, 10.f, 0.5f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+						FToggle("huntsman pull point", Vars::Aimbot::Projectile::HuntsmanPullPoint, FToggle_Right);
+						SetCursorPosY(GetCursorPosY() + 8);
 
-						FToggle("splash grates", Vars::Aimbot::Projectile::SplashGrates, FToggle_Left);
-						bool bHovered; FDropdown("rocket splash mode", Vars::Aimbot::Projectile::RocketSplashMode, { "regular", "special light", "special heavy" }, {}, FDropdown_Right, 0, &bHovered);
-						FTooltip("special splash type for rockets, more expensive", bHovered);
-						SetCursorPosY(GetCursorPosY() - 24);
 						FSlider("splash points", Vars::Aimbot::Projectile::SplashPoints, 1, 400, 5, "%i", FSlider_Left | FSlider_Min);
+						FToggle("splash grates", Vars::Aimbot::Projectile::SplashGrates, FToggle_Right);
+						SetCursorPosY(GetCursorPosY() + 8);
 						FSlider("direct splash count", Vars::Aimbot::Projectile::SplashCountDirect, 1, 100, 1, "%i", FSlider_Left | FSlider_Min);
 						FSlider("arc splash count", Vars::Aimbot::Projectile::SplashCountArc, 1, 100, 1, "%i", FSlider_Right | FSlider_Min);
 						FSlider("splash trace interval", Vars::Aimbot::Projectile::SplashTraceInterval, 1, 10, 1, "%i", FSlider_Left);
+						bool bHovered;
+						FDropdown("splash mode", Vars::Aimbot::Projectile::SplashMode, { "multi", "single" }, {}, FDropdown_Left, 0, & bHovered);
+						FTooltip("debug option to test performance,\nleave on multi if you want splash to work properly", bHovered);
+						FDropdown("rocket splash mode", Vars::Aimbot::Projectile::RocketSplashMode, { "regular", "special light", "special heavy" }, {}, FDropdown_Right, 0, &bHovered);
+						FTooltip("special splash type for rockets, more expensive", bHovered);
 						FSlider("delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Left);
 						FDropdown("delta mode", Vars::Aimbot::Projectile::DeltaMode, { "average", "max" }, {}, FDropdown_Right);
 					} EndSection();
@@ -2205,11 +2219,11 @@ void CMenu::MenuSettings()
 						FColorPicker("Color", &tTag.Color, 0, FColorPicker_Dropdown);
 
 						PushDisabled(iID == DEFAULT_TAG || iID == IGNORED_TAG);
-						int iLabel = Disabled ? 0 : tTag.Label;
-						FDropdown("Type", &iLabel, { "Priority", "Label" }, {}, FDropdown_Right);
-						tTag.Label = iLabel;
-						if (Disabled)
-							tTag.Label = false;
+							int iLabel = Disabled ? 0 : tTag.Label;
+							FDropdown("Type", &iLabel, { "Priority", "Label" }, {}, FDropdown_Right);
+							tTag.Label = iLabel;
+							if (Disabled)
+								tTag.Label = false;
 						PopDisabled();
 					} EndChild();
 
@@ -2226,7 +2240,7 @@ void CMenu::MenuSettings()
 
 						SetCursorPos({ GetWindowWidth() - H::Draw.Scale(96), H::Draw.Scale(8) });
 						PushDisabled(tTag.Name.empty());
-						bCreate = FButton("##CreateButton", FButton_None, { 40, 40 });
+							bCreate = FButton("##CreateButton", FButton_None, { 40, 40 });
 						PopDisabled();
 						SetCursorPos({ GetWindowWidth() - H::Draw.Scale(84), H::Draw.Scale(28) });
 						PushTransparent(tTag.Name.empty());
@@ -2561,7 +2575,7 @@ void CMenu::AddDraggable(const char* sTitle, ConfigVar<DragBox_t>& var, bool bSh
 		return;
 
 	static std::unordered_map<const char*, std::pair<DragBox_t, float>> old = {};
-	DragBox_t info = FGet(var);
+	DragBox_t info = FGet(var, true);
 	const float sizeX = H::Draw.Scale(100), sizeY = H::Draw.Scale(40);
 	SetNextWindowSize({ sizeX, sizeY }, ImGuiCond_Always);
 	if (!old.contains(sTitle) || info != old[sTitle].first || sizeX != old[sTitle].second)
@@ -2599,7 +2613,7 @@ void CMenu::DrawBinds()
 		return;
 
 	static DragBox_t old = { -2147483648, -2147483648 };
-	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay) : Vars::Menu::BindsDisplay.Value;
+	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay, true) : Vars::Menu::BindsDisplay.Value;
 	if (info != old)
 		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
 
@@ -2786,7 +2800,7 @@ void CMenu::DrawCameraWindow()
 		return;
 
 	static WindowBox_t old = { -2147483648, -2147483648 };
-	WindowBox_t info = FGet(Vars::Visuals::Simulation::ProjectileWindow);
+	WindowBox_t info = FGet(Vars::Visuals::Simulation::ProjectileWindow, true);
 	if (info != old)
 	{
 		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
@@ -2827,7 +2841,7 @@ void CMenu::DrawRadar()
 		return;
 
 	static WindowBox_t old = { -2147483648, -2147483648 };
-	WindowBox_t info = FGet(Vars::Radar::Main::Window);
+	WindowBox_t info = FGet(Vars::Radar::Main::Window, true);
 	if (info != old)
 	{
 		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
@@ -2864,18 +2878,7 @@ void CMenu::Render()
 	using namespace ImGui;
 
 	for (int iKey = 0; iKey < 256; iKey++)
-	{
 		U::KeyHandler.StoreKey(iKey);
-
-		// don't drop inputs for binds
-		auto& tMainKey = U::KeyHandler.m_mKeyStorage[iKey];
-		auto& tBindKey = F::Binds.m_mKeyStorage[iKey];
-		tBindKey.m_bIsDown = tMainKey.m_bIsDown || tBindKey.m_bIsDown;
-		tBindKey.m_bIsPressed = tMainKey.m_bIsPressed || tBindKey.m_bIsPressed;
-		tBindKey.m_bIsDouble = tMainKey.m_bIsDouble || tBindKey.m_bIsDouble;
-		tBindKey.m_bIsReleased = tMainKey.m_bIsReleased || tBindKey.m_bIsReleased;
-		tBindKey.m_dPressTime = tMainKey.m_dPressTime;
-	}
 
 	if (!F::Configs.m_bConfigLoaded || !(ImGui::GetIO().DisplaySize.x > 160.f && ImGui::GetIO().DisplaySize.y > 28.f))
 		return;
@@ -2901,8 +2904,19 @@ void CMenu::Render()
 		AddDraggable("Seed prediction", Vars::Menu::SeedPredictionDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::SeedPrediction);
 
 		F::Render.Cursor = GetMouseCursor();
-		//vDisabled.clear();
-		//vTransparent.clear();
+
+		if (!vDisabled.empty())
+		{
+			IM_ASSERT_USER_ERROR(0, "Calling PopDisabled() too little times: stack overflow.");
+			Disabled = false;
+			vDisabled.clear();
+		}
+		if (!vTransparent.empty())
+		{
+			IM_ASSERT_USER_ERROR(0, "Calling PopTransparent() too little times: stack overflow.");
+			Transparent = false;
+			vTransparent.clear();
+		}
 	}
 	else
 		mActiveMap.clear();

@@ -96,6 +96,8 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		return;
 
 	auto& tStorage = m_mStorage[iSlot];
+	if (!tStorage.m_bActive)
+		return;
 
 	static float flOldBucket = 0.f; static int iOldID = 0, iOldCritChecks = 0, iOldCritSeedRequests = 0;
 	const float flBucket = pWeapon->m_flCritTokenBucket(); const int iID = pWeapon->GetWeaponID(), iCritChecks = pWeapon->m_nCritChecks(), iCritSeedRequests = pWeapon->m_nCritSeedRequests();
@@ -319,6 +321,8 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		return;
 
 	auto& tStorage = m_mStorage[iSlot];
+	if (!tStorage.m_bActive)
+		return;
 
 	if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && pCmd->buttons & IN_ATTACK)
 		pCmd->buttons &= ~IN_ATTACK2;
@@ -339,14 +343,8 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
 	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
 
-	//static bool bFirstTimePredicted = true;
-	//if (!I::ClientState->chokedcommands)
-	//	bFirstTimePredicted = true;
-	//if (bAttacking && bFirstTimePredicted)
 	if (bAttacking)
 	{
-	//	bFirstTimePredicted = false;
-
 		const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
 		const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
 		if (bCanCrit && bPressed && closestCrit)
@@ -354,8 +352,6 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		else if (Vars::CritHack::AvoidRandom.Value && closestSkip)
 			pCmd->command_number = closestSkip;
 	}
-	//else if (Vars::CritHack::AvoidRandom.Value && closestSkip)
-	//	pCmd->command_number = closestSkip;
 
 	//if (pCmd->command_number == closestCrit || pCmd->command_number == closestSkip)
 	m_iWishRandomSeed = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
@@ -396,15 +392,6 @@ bool CCritHack::CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pW
 {
 	if (!I::Prediction->m_bFirstTimePredicted || !pLocal || !pWeapon)
 		return false;
-
-	if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN || pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
-	{
-		static int iStaticAmmo = pLocal->GetAmmoCount(pWeapon->m_iPrimaryAmmoType());
-		int iOldAmmo = iStaticAmmo;
-		int iNewAmmo = iStaticAmmo = pLocal->GetAmmoCount(pWeapon->m_iPrimaryAmmoType());
-		if (iOldAmmo == iNewAmmo)
-			return false;
-	}
 
 	if (m_iWishRandomSeed)
 	{
@@ -506,6 +493,9 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 	else
 	{
 		auto& tStorage = m_mStorage[iSlot];
+		if (!tStorage.m_bActive)
+			return;
+
 		auto bRapidFire = pWeapon->IsRapidFire();
 		float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
 

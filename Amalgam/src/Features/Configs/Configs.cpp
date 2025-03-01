@@ -190,7 +190,9 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 			// remove invalid materials
 			for (auto it = val.begin(); it != val.end();)
 			{
-				if (FNV1A::Hash32(it->first.c_str()) == FNV1A::Hash32Const("None") || FNV1A::Hash32(it->first.c_str()) != FNV1A::Hash32Const("Original") && !F::Materials.m_mMaterials.contains(FNV1A::Hash32(it->first.c_str())))
+				auto uHash = FNV1A::Hash32(it->first.c_str());
+				if (uHash == FNV1A::Hash32Const("None")
+					|| uHash != FNV1A::Hash32Const("Original") && !F::Materials.m_mMaterials.contains(uHash))
 					it = val.erase(it);
 				else
 					++it;

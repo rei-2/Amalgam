@@ -52,7 +52,7 @@ public:
 	}
 };
 
-MAKE_SIGNATURE(CBasePlayer_PostDataUpdate_SetAbsVelocity_Call, "client.dll", "E8 ? ? ? ? 0F 28 74 24 ? 8B D6", 0x5);
+MAKE_SIGNATURE(CBasePlayer_PostDataUpdate_SetAbsVelocity_Call, "client.dll", "0F 28 74 24 ? 8B D6", 0x0);
 
 MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 	void* rcx, const Vec3& vecAbsVelocity)
@@ -65,7 +65,7 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 	const auto pPlayer = reinterpret_cast<CTFPlayer*>(rcx);
 	if (pPlayer->IsDormant() || !G::VelocityMap.contains(pPlayer->entindex()) || G::VelocityMap[pPlayer->entindex()].empty())
 		return CALL_ORIGINAL(rcx, vecAbsVelocity);
-
+	
 	auto& vRecords = G::VelocityMap[pPlayer->entindex()];
 	bool bGrounded = pPlayer->IsOnGround();
 

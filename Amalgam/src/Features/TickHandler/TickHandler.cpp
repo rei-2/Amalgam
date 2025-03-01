@@ -254,8 +254,8 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 
 #ifndef TICKBASE_DEBUG
 		while (m_iShiftedTicks > m_iShiftedGoal)
-			//CLMoveFunc(accumulated_extra_samples, m_iShiftedTicks - 1 == m_iShiftedGoal);
-			CLMoveFunc(accumulated_extra_samples, bFinalTick);
+			CLMoveFunc(accumulated_extra_samples, m_iShiftedTicks - 1 == m_iShiftedGoal);
+			//CLMoveFunc(accumulated_extra_samples, bFinalTick);
 #else
 		if (Vars::Debug::Info.Value)
 			SDK::Output("Pre loop", "", { 0, 255, 255, 255 });

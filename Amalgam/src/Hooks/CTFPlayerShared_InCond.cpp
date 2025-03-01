@@ -50,7 +50,8 @@ MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool,
 			return false;
 		break;
 	case TF_COND_FREEZE_INPUT:
-		return false;
+		if (CALL_ORIGINAL(rcx, TF_COND_HALLOWEEN_KART) ? Vars::Misc::Automation::KartControl.Value : true)
+			return false;
 	}
 
 	return CALL_ORIGINAL(rcx, nCond);

@@ -8,7 +8,7 @@ int CNetVars::GetOffset(RecvTable* pTable, const char* szNetVar)
 	auto uHash = FNV1A::Hash32(szNetVar);
 	for (int i = 0; i < pTable->m_nProps; i++)
 	{
-		RecvProp Prop = pTable->m_pProps[i];
+		RecvProp& Prop = pTable->m_pProps[i];
 
 		if (uHash == FNV1A::Hash32(Prop.m_pVarName))
 			return Prop.GetOffset();

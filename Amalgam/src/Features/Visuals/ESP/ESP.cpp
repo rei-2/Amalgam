@@ -1,6 +1,7 @@
 #include "ESP.h"
 
 #include "../../Players/PlayerUtils.h"
+#include "../../Spectate/Spectate.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 
 MAKE_SIGNATURE(CTFPlayerSharedUtils_GetEconItemViewByLoadoutSlot, "client.dll", "48 89 6C 24 ? 56 41 54 41 55 41 56 41 57 48 83 EC", 0x0);
@@ -27,13 +28,23 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Players) || !Vars::ESP::Player.Value)
 		return;
 
+	auto pObserverTarget = pLocal->m_hObserverTarget().Get();
+	int iObserverMode = pLocal->m_iObserverMode();
+	if (F::Spectate.m_iTarget != -1)
+	{
+		pObserverTarget = F::Spectate.m_pTargetTarget;
+		iObserverMode = F::Spectate.m_iTargetMode;
+	}
+
 	auto pResource = H::Entities.GetPR();
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		int iIndex = pPlayer->entindex();
 
-		if (pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON ? pLocal->m_hObserverTarget().Get() == pPlayer : iIndex == I::EngineClient->GetLocalPlayer())
+		if ((iObserverMode == OBS_MODE_FIRSTPERSON || iObserverMode == OBS_MODE_THIRDPERSON)
+			? pObserverTarget == pPlayer
+			: iIndex == I::EngineClient->GetLocalPlayer())
 		{
 			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Local) || !I::Input->CAM_IsThirdPerson())
 				continue;

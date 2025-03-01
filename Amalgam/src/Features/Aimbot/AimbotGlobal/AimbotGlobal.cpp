@@ -184,14 +184,24 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 			return false;
 
 		auto pOwner = pBuilding->m_hBuilder().Get();
-		if (pOwner && F::PlayerUtils.IsIgnored(pOwner->entindex()))
-			return true;
+		if (pOwner)
+		{
+			if (F::PlayerUtils.IsIgnored(pOwner->entindex()))
+				return true;
+
+			if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Friends && H::Entities.IsFriend(pOwner->entindex())
+				|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Party && H::Entities.InParty(pOwner->entindex()))
+				return true;
+		}
 
 		return false;
 	}
 	case ETFClassID::CTFGrenadePipebombProjectile:
 	{
 		auto pProjectile = pEntity->As<CTFGrenadePipebombProjectile>();
+
+		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Stickies))
+			return true;
 
 		if (pLocal->m_iTeamNum() == pEntity->m_iTeamNum())
 			return true;
@@ -210,6 +220,9 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 	case ETFClassID::CMerasmus:
 	case ETFClassID::CTFBaseBoss:
 	{
+		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs))
+			return true;
+
 		if (pEntity->m_iTeamNum() != 5)
 			return true;
 
@@ -218,7 +231,18 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 	case ETFClassID::CTFTankBoss:
 	case ETFClassID::CZombie:
 	{
+		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs))
+			return true;
+
 		if (pLocal->m_iTeamNum() == pEntity->m_iTeamNum())
+			return true;
+
+		return false;
+	}
+	case ETFClassID::CTFPumpkinBomb:
+	case ETFClassID::CTFGenericBomb:
+	{
+		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Bombs))
 			return true;
 
 		return false;

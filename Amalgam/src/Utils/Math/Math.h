@@ -302,16 +302,21 @@ namespace Math
 		}
 	}
 
-	inline bool RayToOBB(const Vec3& vOrigin, const Vec3& vDirection, const Vec3& vMins, const Vec3& vMaxs, const matrix3x4& mMatrix)
+	inline bool RayToOBB(const Vec3& vOrigin, const Vec3& vDirection, const Vec3& vMins, const Vec3& vMaxs, const matrix3x4& mMatrix, float flScale = 1.f)
 	{
+		if (!flScale)
+			return false;
+
 		Vec3 vDelta = Vec3(mMatrix[0][3], mMatrix[1][3], mMatrix[2][3]) - vOrigin;
 
-		Vec3 X = { mMatrix[0][0], mMatrix[1][0], mMatrix[2][0] };
-		Vec3 Y = { mMatrix[0][1], mMatrix[1][1], mMatrix[2][1] };
-		Vec3 Z = { mMatrix[0][2], mMatrix[1][2], mMatrix[2][2] };
+		Vec3 X = Vec3(mMatrix[0][0], mMatrix[1][0], mMatrix[2][0]) / flScale;
+		Vec3 Y = Vec3(mMatrix[0][1], mMatrix[1][1], mMatrix[2][1]) / flScale;
+		Vec3 Z = Vec3(mMatrix[0][2], mMatrix[1][2], mMatrix[2][2]) / flScale;
+		if (flScale != 1.f)
+			X /= flScale, Y /= flScale, Z /= flScale;
 
-		Vec3 f = { X.Dot(vDirection), Y.Dot(vDirection), Z.Dot(vDirection) };
-		Vec3 e = { X.Dot(vDelta), Y.Dot(vDelta), Z.Dot(vDelta) };
+		Vec3 f = Vec3(X.Dot(vDirection), Y.Dot(vDirection), Z.Dot(vDirection));
+		Vec3 e = Vec3(X.Dot(vDelta), Y.Dot(vDelta), Z.Dot(vDelta));
 
 		float t[6] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
 
@@ -319,7 +324,7 @@ namespace Math
 		{
 			if (floatCompare(f[i], 0.f))
 			{
-				if (-e[i] + vMins[i] > 0.f || -e[i] + vMaxs[i] < 0.f)
+				if (-e[i] + vMins[i] * flScale > 0.f || -e[i] + vMaxs[i] * flScale < 0.f)
 					return false;
 
 				f[i] = 0.00001f;

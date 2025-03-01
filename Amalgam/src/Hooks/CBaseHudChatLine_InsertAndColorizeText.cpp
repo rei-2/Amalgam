@@ -73,15 +73,17 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 					continue;
 			}
 
+			size_t iPos = 0;
 			while (true)
 			{
 				std::string sMessage2 = sMessage;
 				std::transform(sMessage2.begin(), sMessage2.end(), sMessage2.begin(), ::tolower);
 
-				auto iFind = sMessage2.find(sFind);
+				auto iFind = sMessage2.find(sFind, iPos);
 				if (iFind == std::string::npos)
 					break;
 
+				iPos = iFind + sReplace.length();
 				sMessage = sMessage.replace(iFind, sFind.length(), sReplace);
 			}
 		}

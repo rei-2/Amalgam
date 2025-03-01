@@ -17,6 +17,24 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	if (G::Unload || !F::Configs.m_bConfigLoaded)
 		return;
 
+	for (int iKey = 0; iKey < 256; iKey++)
+	{
+		// don't delay inputs for binds
+		auto& tKey = m_mKeyStorage[iKey];
+
+		bool bOldIsDown = tKey.m_bIsDown;
+		bool bOldIsPressed = tKey.m_bIsPressed;
+		bool bOldIsDouble = tKey.m_bIsDouble;
+		bool bOldIsReleased = tKey.m_bIsReleased;
+
+		U::KeyHandler.StoreKey(iKey, &tKey);
+
+		tKey.m_bIsDown = tKey.m_bIsDown || bOldIsDown;
+		tKey.m_bIsPressed = tKey.m_bIsPressed || bOldIsPressed;
+		tKey.m_bIsDouble = tKey.m_bIsDouble || bOldIsDouble;
+		tKey.m_bIsReleased = tKey.m_bIsReleased || bOldIsReleased;
+	}
+
 	auto setVars = [](int iBind)
 		{
 			const bool bDefault = iBind == DEFAULT_BIND;
@@ -123,6 +141,7 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		};
 	getBinds(DEFAULT_BIND);
 
+	// clear inputs for binds
 	for (int iKey = 0; iKey < 256; iKey++)
 		U::KeyHandler.StoreKey(iKey, &m_mKeyStorage[iKey]);
 }

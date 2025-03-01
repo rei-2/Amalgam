@@ -9,7 +9,7 @@
 
 #pragma warning (disable: 4172)
 
-const char* SearchForDLL(const char* pszDLLSearch)
+static const char* SearchForDLL(const char* pszDLLSearch)
 {
 	HANDLE hProcessSnap = INVALID_HANDLE_VALUE;
 	PROCESSENTRY32 pe32;

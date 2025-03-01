@@ -21,6 +21,9 @@ void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 		}
 		return;
 	}
+
+	m_pOriginalTarget = pLocal->m_hObserverTarget().Get();
+	m_iOriginalMode = pLocal->m_iObserverMode();
 	if (!pEntity)
 		return;
 
@@ -36,6 +39,18 @@ void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 	pLocal->m_iObserverMode() = Vars::Visuals::ThirdPerson::Enabled.Value ? OBS_MODE_THIRDPERSON : OBS_MODE_FIRSTPERSON;
 	pLocal->m_vecViewOffset() = pEntity->GetViewOffset();
 	Vars::Visuals::ThirdPerson::Enabled.Value ? I::Input->CAM_ToThirdPerson() : I::Input->CAM_ToFirstPerson();
+
+	m_pTargetTarget = pLocal->m_hObserverTarget().Get();
+	m_iTargetMode = pLocal->m_iObserverMode();
+}
+
+void CSpectate::NetUpdateStart(CTFPlayer* pLocal)
+{
+	if (!pLocal || m_iTarget == -1)
+		return;
+
+	pLocal->m_hObserverTarget().Set(m_pOriginalTarget);
+	pLocal->m_iObserverMode() = m_iOriginalMode;
 }
 
 void CSpectate::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd)

@@ -96,35 +96,28 @@ static inline bool CheckEntities(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUse
 		if (vOrigin.DistTo(vPos) > flRadius)
 			continue;
 
-		bool isPlayer = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players
-			&& pEntity->IsPlayer() && !F::AimbotGlobal.ShouldIgnore(pEntity->As<CTFPlayer>(), pLocal, pWeapon);
-		bool isSentry = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry
-			&& pEntity->IsSentrygun();
-		bool isDispenser = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser
-			&& pEntity->IsDispenser();
-		bool isTeleporter = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter
-			&& pEntity->IsTeleporter();
-		bool isSticky = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Stickies
-			&& pEntity->GetClassID() == ETFClassID::CTFGrenadePipebombProjectile && pEntity->As<CTFGrenadePipebombProjectile>()->HasStickyEffects() && (pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheQuickiebombLauncher || pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance);
-		bool isNPC = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs
-			&& pEntity->IsNPC();
-		bool isBomb = Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Bombs
-			&& pEntity->IsBomb();
-		if (isPlayer || isSentry || isDispenser || isTeleporter || isNPC || isBomb || isSticky)
+		if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
+			continue;
+
+		if (Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::IgnoreCloak && pEntity->IsPlayer())
 		{
-			if (!SDK::VisPosProjectile(pProjectile, pEntity, vOrigin, isPlayer ? pEntity->GetAbsOrigin() + pEntity->As<CTFPlayer>()->GetViewOffset() : pEntity->GetCenter(), MASK_SHOT))
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (pPlayer->IsInvisible() && pPlayer->GetInvisPercentage() >= Vars::Aimbot::General::IgnoreCloakPercentage.Value)
 				continue;
-
-			if (pCmd && pWeapon && pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance)
-			{
-				Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), vOrigin);
-				SDK::FixMovement(pCmd, vAngleTo);
-				pCmd->viewangles = vAngleTo;
-				G::PSilentAngles = true;
-			}
-
-			return true;
 		}
+
+		if (!SDK::VisPosProjectile(pProjectile, pEntity, vOrigin, pEntity->IsPlayer() ? pEntity->GetAbsOrigin() + pEntity->As<CTFPlayer>()->GetViewOffset() : pEntity->GetCenter(), MASK_SHOT))
+			continue;
+
+		if (pCmd && pWeapon && pWeapon->m_iItemDefinitionIndex() == Demoman_s_TheScottishResistance)
+		{
+			Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), vOrigin);
+			SDK::FixMovement(pCmd, vAngleTo);
+			pCmd->viewangles = vAngleTo;
+			G::PSilentAngles = true;
+		}
+
+		return true;
 	}
 
 	return false;
@@ -167,7 +160,7 @@ static inline bool CheckLocal(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEn
 	if (vOrigin.DistTo(vPos) > flRadius)
 		return false;
 
-	if (!SDK::VisPosProjectile(pProjectile, pLocal, vOrigin, pLocal->GetAbsOrigin() + pLocal->m_vecViewOffset(), MASK_SHOT))
+	if (!SDK::VisPosWorld(pProjectile, pLocal, vOrigin, pLocal->GetAbsOrigin() + pLocal->m_vecViewOffset(), MASK_SHOT))
 		return false;
 
 	return true;

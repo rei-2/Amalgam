@@ -11,8 +11,8 @@ class CAimbotMelee
 
 	int GetSwingTime(CTFWeaponBase* pWeapon);
 	void SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> targets, Vec3& vEyePos,
-						 std::unordered_map<CBaseEntity*, std::deque<TickRecord>>& pRecordMap,
-						 std::unordered_map<CBaseEntity*, std::deque<Vec3>>& mPaths);
+						 std::unordered_map<int, std::deque<TickRecord>>& pRecordMap,
+						 std::unordered_map<int, std::deque<Vec3>>& mPaths);
 	bool CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEyeAngles);
 	int CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord>& vSimRecords);
 	

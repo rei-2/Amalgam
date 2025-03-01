@@ -77,6 +77,14 @@ bool CTraceFilterProjectile::ShouldHitEntity(IHandleEntity* pServerEntity, int n
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
 	case ETFClassID::CObjectTeleporter: return true;
+	case ETFClassID::CTFMedigunShield:
+	{
+		auto pLocal = H::Entities.GetLocal();
+		auto pWeapon = H::Entities.GetWeapon();
+
+		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
+		return iTargetTeam != iLocalTeam;
+	}
 	case ETFClassID::CTFPlayer:
 	{
 		auto pLocal = H::Entities.GetLocal();

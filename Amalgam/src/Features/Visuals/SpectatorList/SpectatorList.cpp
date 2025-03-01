@@ -1,6 +1,7 @@
 #include "SpectatorList.h"
 
 #include "../../Players/PlayerUtils.h"
+#include "../../Spectate/Spectate.h"
 
 bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 {
@@ -9,8 +10,19 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
+		int iIndex = pPlayer->entindex();
+		bool bLocal = pEntity->entindex() == I::EngineClient->GetLocalPlayer();
 
-		if (pPlayer->IsAlive() || pPlayer->m_hObserverTarget().Get() != pTarget || pEntity->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo())
+		auto pObserverTarget = pPlayer->m_hObserverTarget().Get();
+		int iObserverMode = pPlayer->m_iObserverMode();
+		if (bLocal && F::Spectate.m_iTarget != -1)
+		{
+			pObserverTarget = F::Spectate.m_pOriginalTarget;
+			iObserverMode = F::Spectate.m_iOriginalMode;
+		}
+
+		if (pPlayer->IsAlive() || pObserverTarget != pTarget
+			|| bLocal && !I::EngineClient->IsPlayingDemo() && F::Spectate.m_iTarget == -1)
 		{
 			auto it = m_mRespawnCache.find(pPlayer->entindex());
 			if (it != m_mRespawnCache.end())
@@ -18,10 +30,8 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 			continue;
 		}
 
-		int iIndex = pPlayer->entindex();
-
 		std::string sMode;
-		switch (pPlayer->m_iObserverMode())
+		switch (iObserverMode)
 		{
 		case OBS_MODE_FIRSTPERSON: sMode = "1st"; break;
 		case OBS_MODE_THIRDPERSON: sMode = "3rd"; break;

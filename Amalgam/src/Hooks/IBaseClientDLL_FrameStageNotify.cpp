@@ -11,16 +11,45 @@
 #include "../Features/Visuals/Chams/Chams.h"
 #include "../Features/Visuals/Glow/Glow.h"
 #include "../Features/Spectate/Spectate.h"
+#include "../Features/Binds/Binds.h"
 
 MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 35), void,
 	void* rcx, ClientFrameStage_t curStage)
 {
+	if (G::Unload)
+		return CALL_ORIGINAL(rcx, curStage);
+
+	switch (curStage)
+	{
+	case FRAME_RENDER_START:
+		for (int iKey = 0; iKey < 256; iKey++)
+		{
+			// don't drop inputs for binds
+			auto& tKey = F::Binds.m_mKeyStorage[iKey];
+
+			bool bOldIsDown = tKey.m_bIsDown;
+			bool bOldIsPressed = tKey.m_bIsPressed;
+			bool bOldIsDouble = tKey.m_bIsDouble;
+			bool bOldIsReleased = tKey.m_bIsReleased;
+
+			U::KeyHandler.StoreKey(iKey, &tKey);
+
+			tKey.m_bIsDown = tKey.m_bIsDown || bOldIsDown;
+			tKey.m_bIsPressed = tKey.m_bIsPressed || bOldIsPressed;
+			tKey.m_bIsDouble = tKey.m_bIsDouble || bOldIsDouble;
+			tKey.m_bIsReleased = tKey.m_bIsReleased || bOldIsReleased;
+		}
+	}
+
 	CALL_ORIGINAL(rcx, curStage);
 
 	switch (curStage)
 	{
 	case FRAME_NET_UPDATE_START:
 	{
+		auto pLocal = H::Entities.GetLocal();
+		F::Spectate.NetUpdateStart(pLocal);
+
 		H::Entities.Clear();
 		break;
 	}
