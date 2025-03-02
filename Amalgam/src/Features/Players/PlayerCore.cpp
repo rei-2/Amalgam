@@ -171,10 +171,10 @@ void CPlayerlistCore::SaveTags()
 
 		boost::property_tree::ptree tagTree;
 		{
-			int iID = -1;
-			for (auto& tTag : F::PlayerUtils.m_vTags)
+			for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
 			{
-				iID++;
+				int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
+				auto& tTag = *it;
 
 				boost::property_tree::ptree tagEntry;
 				tagEntry.put("Name", tTag.Name);

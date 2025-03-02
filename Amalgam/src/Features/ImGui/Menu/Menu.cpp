@@ -2012,11 +2012,10 @@ void CMenu::MenuSettings()
 							{
 								PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
 
-								int iID = -1;
-								for (auto& tTag : F::PlayerUtils.m_vTags)
+								for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
 								{
-									iID++;
-
+									int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
+									auto& tTag = *it;
 									if (!tTag.Assignable || F::PlayerUtils.HasTag(player.m_uFriendsID, iID))
 										continue;
 

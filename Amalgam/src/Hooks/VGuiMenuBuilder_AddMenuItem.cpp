@@ -41,13 +41,20 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
             FriendsID = pi.friendsID;
             PlayerName = pi.name;
 
-            const bool bIgnored = F::PlayerUtils.HasTag(FriendsID, F::PlayerUtils.TagToIndex(IGNORED_TAG));
-            const bool bCheater = F::PlayerUtils.HasTag(FriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG));
-
             CALL_ORIGINAL(rcx, "History", "history", "profile");
             CALL_ORIGINAL(rcx, I::EngineClient->GetPlayerForUserID(F::Spectate.m_iIntendedTarget) == PlayerIndex ? "Unspectate" : "Spectate", "spectate", "profile");
-            CALL_ORIGINAL(rcx, std::format("{} {}", bIgnored ? "Unignore" : "Ignore", PlayerName).c_str(), "ignoreplayer", "tags");
-            CALL_ORIGINAL(rcx, std::format("{} {}", bCheater ? "Unmark" : "Mark", PlayerName).c_str(), "markplayer", "tags");
+
+            CALL_ORIGINAL(rcx, std::format("Tags for {}", PlayerName).c_str(), "namelabel", "tags");
+            for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
+            {
+                int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
+                auto& tTag = *it;
+                if (!tTag.Assignable)
+                    continue;
+
+                bool bHasTag = F::PlayerUtils.HasTag(FriendsID, iID);
+                CALL_ORIGINAL(rcx, std::format("{} {}", bHasTag ? "Remove" : "Add", tTag.Name).c_str(), std::format("modifytag{}", iID).c_str(), "tags");
+            }
         }
 
         return ret;
@@ -59,7 +66,7 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
 MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCommand(), void,
     void* rcx, const char* command)
 {
-    if (!Vars::Visuals::UI::ScoreboardUtility.Value)
+    if (!Vars::Visuals::UI::ScoreboardUtility.Value && !command)
         return CALL_ORIGINAL(rcx, command);
 
     auto uHash = FNV1A::Hash32(command);
@@ -72,18 +79,21 @@ MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCo
         if (auto pResource = H::Entities.GetPR())
             F::Spectate.SetTarget(pResource->GetUserID(PlayerIndex));
         break;
-    case FNV1A::Hash32Const("ignoreplayer"):
-        if (!F::PlayerUtils.HasTag(FriendsID, F::PlayerUtils.TagToIndex(IGNORED_TAG)))
-            F::PlayerUtils.AddTag(FriendsID, F::PlayerUtils.TagToIndex(IGNORED_TAG), true, PlayerName);
-        else
-            F::PlayerUtils.RemoveTag(FriendsID, F::PlayerUtils.TagToIndex(IGNORED_TAG), true, PlayerName);
-        break;
-    case FNV1A::Hash32Const("markplayer"):
-        if (!F::PlayerUtils.HasTag(FriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG)))
-            F::PlayerUtils.AddTag(FriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), true, PlayerName);
-        else
-            F::PlayerUtils.RemoveTag(FriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), true, PlayerName);
-        break;
-    default: CALL_ORIGINAL(rcx, command);
+    default:
+        if (strstr(command, "modifytag"))
+        {
+            try
+            {
+                std::string sTag = command;
+                sTag = sTag.replace(0, strlen("modifytag"), "");
+                int iID = std::stoi(sTag);
+                if (!F::PlayerUtils.HasTag(FriendsID, iID))
+                    F::PlayerUtils.AddTag(FriendsID, iID, true, PlayerName);
+                else
+                    F::PlayerUtils.RemoveTag(FriendsID, iID, true, PlayerName);
+            }
+            catch (...) {}
+        }
+        CALL_ORIGINAL(rcx, command);
     }
 }
