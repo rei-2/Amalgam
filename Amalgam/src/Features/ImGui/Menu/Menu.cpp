@@ -155,18 +155,18 @@ void CMenu::MenuAimbot()
 					FToggle("Always melee crit", Vars::CritHack::AlwaysMeleeCrit, FToggle_Left);
 					FToggle("No spread", Vars::Aimbot::General::NoSpread, FToggle_Right);
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug## aimbot"))
+					if (Section("Debug## Aimbot"))
 					{
-						FSlider("hitscan peek", Vars::Aimbot::General::HitscanPeek, 0, 5);
-						FToggle("peek dt only", Vars::Aimbot::General::PeekDTOnly);
-						FTooltip("this should probably stay on if you want to be able to\ntarget hitboxes other than the highest priority one");
-						FSlider("nospread offset## nospread", Vars::Aimbot::General::NoSpreadOffset, -1.f, 1.f, 0.1f, "%g", FSlider_Precision);
-						FSlider("nospread average", Vars::Aimbot::General::NoSpreadAverage, 1, 25, 1, "%d", FSlider_Min);
-						FSlider("nospread interval", Vars::Aimbot::General::NoSpreadInterval, 0.05f, 5.f, 0.1f, "%gs", FSlider_Min);
-						FSlider("nospread backup", Vars::Aimbot::General::NoSpreadBackupInterval, 2.f, 10.f, 0.1f, "%gs", FSlider_Min);
-						FDropdown("aim holds fire", Vars::Aimbot::General::AimHoldsFire, { "false", "minigun only", "always" });
+						FSlider("Hitscan peek", Vars::Aimbot::General::HitscanPeek, 0, 5);
+						FToggle("Peek DT only", Vars::Aimbot::General::PeekDTOnly);
+						FTooltip("This should probably stay on if you want to be able to\ntarget hitboxes other than the highest priority one");
+						FSlider("No spread offset", Vars::Aimbot::General::NoSpreadOffset, -1.f, 1.f, 0.1f, "%g", FSlider_Precision);
+						FSlider("No spread average", Vars::Aimbot::General::NoSpreadAverage, 1, 25, 1, "%d", FSlider_Min);
+						FSlider("No spread interval", Vars::Aimbot::General::NoSpreadInterval, 0.05f, 5.f, 0.1f, "%gs", FSlider_Min);
+						FSlider("No spread backup", Vars::Aimbot::General::NoSpreadBackupInterval, 2.f, 10.f, 0.1f, "%gs", FSlider_Min);
+						FDropdown("Aim holds fire", Vars::Aimbot::General::AimHoldsFire, { "False", "Minigun only", "Always" });
 					} EndSection();
 				}
 				if (Section("Backtrack"))
@@ -177,11 +177,11 @@ void CMenu::MenuAimbot()
 					FSlider("Fake interp", Vars::Backtrack::Interp, 0, F::Backtrack.m_flMaxUnlag * 1000, 5, "%i", FSlider_Clamp | FSlider_Precision);
 					FSlider("Window", Vars::Backtrack::Window, 1, 200, 5, "%i", FSlider_Clamp, nullptr, "Backtrack window");
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug## backtrack"))
+					if (Section("Debug## Backtrack"))
 					{
-						FSlider("offset", Vars::Backtrack::Offset, -1, 1);
+						FSlider("Offset", Vars::Backtrack::Offset, -1, 1);
 					} EndSection();
 				}
 				if (Section("Healing"))
@@ -202,12 +202,12 @@ void CMenu::MenuAimbot()
 						FSlider("Tapfire distance", Vars::Aimbot::Hitscan::TapFireDist, 250.f, 1000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
 					PopTransparent();
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug## hitscan"))
+					if (Section("Debug## Hitscan"))
 					{
-						FSlider("bone size subtract", Vars::Aimbot::Hitscan::BoneSizeSubtract, 0.f, 4.f, 0.25f, "%g", FSlider_Min);
-						FSlider("bone size minimum scale", Vars::Aimbot::Hitscan::BoneSizeMinimumScale, 0.f, 1.f, 0.1f, "%g", FSlider_Clamp);
+						FSlider("Bone size subtract", Vars::Aimbot::Hitscan::BoneSizeSubtract, 0.f, 4.f, 0.25f, "%g", FSlider_Min);
+						FSlider("Bone size minimum scale", Vars::Aimbot::Hitscan::BoneSizeMinimumScale, 0.f, 1.f, 0.1f, "%g", FSlider_Clamp);
 					} EndSection();
 				}
 				if (Section("Projectile"))
@@ -228,57 +228,57 @@ void CMenu::MenuAimbot()
 						FSlider("Auto release", Vars::Aimbot::Projectile::AutoRelease, 0.f, 100.f, 5.f, "%g%%", FSlider_Clamp | FSlider_Precision);
 					PopTransparent();
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug## projectile"))
+					if (Section("Debug## Projectile"))
 					{
-						FText("\nground");
-						FSlider("samples##ground", Vars::Aimbot::Projectile::GroundSamples, 3, 66, 1, "%i", FSlider_Left);
-						FSlider("straight fuzzy value##ground", Vars::Aimbot::Projectile::GroundStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Precision);
-						FSlider("low min samples##ground", Vars::Aimbot::Projectile::GroundLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
-						FSlider("high min samples##ground", Vars::Aimbot::Projectile::GroundHighMinimumSamples, 3, 66, 1, "%i", FSlider_Right);
-						FSlider("low min distance##ground", Vars::Aimbot::Projectile::GroundLowMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("high min distance##ground", Vars::Aimbot::Projectile::GroundHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
-						FSlider("max changes##ground", Vars::Aimbot::Projectile::GroundMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("max change time##ground", Vars::Aimbot::Projectile::GroundMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FText("\nGround");
+						FSlider("Samples## Ground", Vars::Aimbot::Projectile::GroundSamples, 3, 66, 1, "%i", FSlider_Left);
+						FSlider("Straight fuzzy value## Ground", Vars::Aimbot::Projectile::GroundStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Precision);
+						FSlider("Low min samples## Ground", Vars::Aimbot::Projectile::GroundLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
+						FSlider("High min samples## Ground", Vars::Aimbot::Projectile::GroundHighMinimumSamples, 3, 66, 1, "%i", FSlider_Right);
+						FSlider("Low min distance## Ground", Vars::Aimbot::Projectile::GroundLowMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("High min distance## Ground", Vars::Aimbot::Projectile::GroundHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FSlider("Max changes## Ground", Vars::Aimbot::Projectile::GroundMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("Max change time## Ground", Vars::Aimbot::Projectile::GroundMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
 
-						FText("air");
-						FSlider("samples##air", Vars::Aimbot::Projectile::AirSamples, 3, 66, 1, "%i", FSlider_Left);
-						FSlider("straight fuzzy value##air", Vars::Aimbot::Projectile::AirStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Precision);
-						FSlider("low min samples##air", Vars::Aimbot::Projectile::AirLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
-						FSlider("high min samples##air", Vars::Aimbot::Projectile::AirHighMinimumSamples, 3, 66, 1, "%i", FSlider_Right);
-						FSlider("low min distance##air", Vars::Aimbot::Projectile::AirLowMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("high min distance##air", Vars::Aimbot::Projectile::AirHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
-						FSlider("max changes##air", Vars::Aimbot::Projectile::AirMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("max change time##air", Vars::Aimbot::Projectile::AirMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FText("Air");
+						FSlider("Samples## Air", Vars::Aimbot::Projectile::AirSamples, 3, 66, 1, "%i", FSlider_Left);
+						FSlider("Straight fuzzy value## Air", Vars::Aimbot::Projectile::AirStraightFuzzyValue, 0.f, 500.f, 25.f, "%g", FSlider_Right | FSlider_Precision);
+						FSlider("Low min samples## Air", Vars::Aimbot::Projectile::AirLowMinimumSamples, 3, 66, 1, "%i", FSlider_Left);
+						FSlider("High min samples## Air", Vars::Aimbot::Projectile::AirHighMinimumSamples, 3, 66, 1, "%i", FSlider_Right);
+						FSlider("Low min distance## Air", Vars::Aimbot::Projectile::AirLowMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("High min distance## Air", Vars::Aimbot::Projectile::AirHighMinimumDistance, 0.f, 10000.f, 100.f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FSlider("Max changes## Air", Vars::Aimbot::Projectile::AirMaxChanges, 0, 5, 1, "%i", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("Max change time## Air", Vars::Aimbot::Projectile::AirMaxChangeTime, 0, 66, 1, "%i", FSlider_Right | FSlider_Min | FSlider_Precision);
 
 						FText("");
-						FSlider("velocity average count", Vars::Aimbot::Projectile::VelocityAverageCount, 1, 10, 1, "%i", FSlider_Left);
-						FSlider("vertical shift", Vars::Aimbot::Projectile::VerticalShift, 0.f, 10.f, 0.5f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FSlider("Velocity average count", Vars::Aimbot::Projectile::VelocityAverageCount, 1, 10, 1, "%i", FSlider_Left);
+						FSlider("Vertical shift", Vars::Aimbot::Projectile::VerticalShift, 0.f, 10.f, 0.5f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
 
-						FSlider("drag override", Vars::Aimbot::Projectile::DragOverride, 0.f, 1.f, 0.01f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
-						FSlider("time override", Vars::Aimbot::Projectile::TimeOverride, 0.f, 2.f, 0.01f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
-						FSlider("huntsman lerp", Vars::Aimbot::Projectile::HuntsmanLerp, 0.f, 100.f, 1.f, "%g%%", FSlider_Left | FSlider_Clamp | FSlider_Precision);
-						FSlider("huntsman lerp low", Vars::Aimbot::Projectile::HuntsmanLerpLow, 0.f, 100.f, 1.f, "%g%%", FSlider_Right | FSlider_Clamp | FSlider_Precision);
-						FSlider("huntsman add", Vars::Aimbot::Projectile::HuntsmanAdd, 0.f, 20.f, 1.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
-						FSlider("huntsman add low", Vars::Aimbot::Projectile::HuntsmanAddLow, 0.f, 20.f, 1.f, "%g", FSlider_Right | FSlider_Clamp | FSlider_Precision);
-						FSlider("huntsman clamp", Vars::Aimbot::Projectile::HuntsmanClamp, 0.f, 10.f, 0.5f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
-						FToggle("huntsman pull point", Vars::Aimbot::Projectile::HuntsmanPullPoint, FToggle_Right);
+						FSlider("Drag override", Vars::Aimbot::Projectile::DragOverride, 0.f, 1.f, 0.01f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision);
+						FSlider("Time override", Vars::Aimbot::Projectile::TimeOverride, 0.f, 2.f, 0.01f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision);
+						FSlider("Huntsman lerp", Vars::Aimbot::Projectile::HuntsmanLerp, 0.f, 100.f, 1.f, "%g%%", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+						FSlider("Huntsman lerp low", Vars::Aimbot::Projectile::HuntsmanLerpLow, 0.f, 100.f, 1.f, "%g%%", FSlider_Right | FSlider_Clamp | FSlider_Precision);
+						FSlider("Huntsman add", Vars::Aimbot::Projectile::HuntsmanAdd, 0.f, 20.f, 1.f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+						FSlider("Huntsman add low", Vars::Aimbot::Projectile::HuntsmanAddLow, 0.f, 20.f, 1.f, "%g", FSlider_Right | FSlider_Clamp | FSlider_Precision);
+						FSlider("Huntsman clamp", Vars::Aimbot::Projectile::HuntsmanClamp, 0.f, 10.f, 0.5f, "%g", FSlider_Left | FSlider_Clamp | FSlider_Precision);
+						FToggle("Huntsman pull point", Vars::Aimbot::Projectile::HuntsmanPullPoint, FToggle_Right);
 						SetCursorPosY(GetCursorPosY() + 8);
 
-						FSlider("splash points", Vars::Aimbot::Projectile::SplashPoints, 1, 400, 5, "%i", FSlider_Left | FSlider_Min);
-						FToggle("splash grates", Vars::Aimbot::Projectile::SplashGrates, FToggle_Right);
+						FSlider("Splash points", Vars::Aimbot::Projectile::SplashPoints, 1, 400, 5, "%i", FSlider_Left | FSlider_Min);
+						FToggle("Splash grates", Vars::Aimbot::Projectile::SplashGrates, FToggle_Right);
 						SetCursorPosY(GetCursorPosY() + 8);
-						FSlider("direct splash count", Vars::Aimbot::Projectile::SplashCountDirect, 1, 100, 1, "%i", FSlider_Left | FSlider_Min);
-						FSlider("arc splash count", Vars::Aimbot::Projectile::SplashCountArc, 1, 100, 1, "%i", FSlider_Right | FSlider_Min);
-						FSlider("splash trace interval", Vars::Aimbot::Projectile::SplashTraceInterval, 1, 10, 1, "%i", FSlider_Left);
+						FSlider("Direct splash count", Vars::Aimbot::Projectile::SplashCountDirect, 1, 100, 1, "%i", FSlider_Left | FSlider_Min);
+						FSlider("Arc splash count", Vars::Aimbot::Projectile::SplashCountArc, 1, 100, 1, "%i", FSlider_Right | FSlider_Min);
+						FSlider("Splash trace interval", Vars::Aimbot::Projectile::SplashTraceInterval, 1, 10, 1, "%i", FSlider_Left);
 						bool bHovered;
-						FDropdown("splash mode", Vars::Aimbot::Projectile::SplashMode, { "multi", "single" }, {}, FDropdown_Left, 0, & bHovered);
-						FTooltip("debug option to test performance,\nleave on multi if you want splash to work properly", bHovered);
-						FDropdown("rocket splash mode", Vars::Aimbot::Projectile::RocketSplashMode, { "regular", "special light", "special heavy" }, {}, FDropdown_Right, 0, &bHovered);
-						FTooltip("special splash type for rockets, more expensive", bHovered);
-						FSlider("delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Left);
-						FDropdown("delta mode", Vars::Aimbot::Projectile::DeltaMode, { "average", "max" }, {}, FDropdown_Right);
+						FDropdown("Splash mode", Vars::Aimbot::Projectile::SplashMode, { "Multi", "Single" }, {}, FDropdown_Left, 0, & bHovered);
+						FTooltip("Debug option to test performance,\nleave on multi if you want splash to work properly", bHovered);
+						FDropdown("Rocket splash mode", Vars::Aimbot::Projectile::RocketSplashMode, { "Regular", "Special light", "Special heavy" }, {}, FDropdown_Right, 0, &bHovered);
+						FTooltip("Special splash type for rockets, more expensive", bHovered);
+						FSlider("Delta count", Vars::Aimbot::Projectile::DeltaCount, 1, 5, 1, "%i", FSlider_Left);
+						FDropdown("Delta mode", Vars::Aimbot::Projectile::DeltaMode, { "Average", "Max" }, {}, FDropdown_Right);
 					} EndSection();
 				}
 				if (Section("Melee"))
@@ -288,15 +288,15 @@ void CMenu::MenuAimbot()
 					FToggle("Swing prediction", Vars::Aimbot::Melee::SwingPrediction, FToggle_Left);
 					FToggle("Whip teammates", Vars::Aimbot::Melee::WhipTeam, FToggle_Right);
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug## melee"))
+					if (Section("Debug## Melee"))
 					{
-						FSlider("swing ticks", Vars::Aimbot::Melee::SwingTicks, 10, 14, 1, "%i", FSlider_Left);
-						FToggle("swing predict lag", Vars::Aimbot::Melee::SwingPredictLag, FToggle_Right);
+						FSlider("Swing ticks", Vars::Aimbot::Melee::SwingTicks, 10, 14, 1, "%i", FSlider_Left);
+						FToggle("Swing predict lag", Vars::Aimbot::Melee::SwingPredictLag, FToggle_Right);
 						SetCursorPosY(GetCursorPosY() + 8);
-						FToggle("backstab account ping", Vars::Aimbot::Melee::BackstabAccountPing, FToggle_Left);
-						FToggle("backstab double test", Vars::Aimbot::Melee::BackstabDoubleTest, FToggle_Right);
+						FToggle("Backstab account ping", Vars::Aimbot::Melee::BackstabAccountPing, FToggle_Left);
+						FToggle("Backstab double test", Vars::Aimbot::Melee::BackstabDoubleTest, FToggle_Right);
 					}
 					EndSection();
 				}
@@ -334,11 +334,11 @@ void CMenu::MenuAimbot()
 					FToggle("Unchoke on attack", Vars::CL_Move::Fakelag::UnchokeOnAttack, FToggle_Left);
 					FToggle("Retain blastjump", Vars::CL_Move::Fakelag::RetainBlastJump, FToggle_Right);
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug"))
+					if (Section("Debug"))
 					{
-						FToggle("retain blastjump soldier only", Vars::CL_Move::Fakelag::RetainSoldierOnly);
+						FToggle("Retain blastjump soldier only", Vars::CL_Move::Fakelag::RetainSoldierOnly);
 					} EndSection();
 				}
 				if (Section("Anti Aim"))
@@ -504,21 +504,6 @@ void CMenu::MenuVisuals()
 					FSlider("Dormant decay", Vars::ESP::DormantTime, 0.015f, 5.0f, 0.1f, "%gs", FSlider_Left | FSlider_Min | FSlider_Precision);
 					FToggle("Dormant priority only", Vars::ESP::DormantPriority, FToggle_Right); DebugDummy({ 0, H::Draw.Scale(8) });
 				} EndSection();
-				if (Vars::Debug::Info.Value)
-				{
-					if (Section("debug"))
-					{
-						FColorPicker("indicator good", Vars::Colors::IndicatorGood, 0, FColorPicker_Left);
-						FColorPicker("indicator text good", Vars::Colors::IndicatorTextGood, 0, FColorPicker_Middle | FColorPicker_SameLine);
-						FColorPicker("indicator bad", Vars::Colors::IndicatorBad, 0, FColorPicker_Left);
-						FColorPicker("indicator text bad", Vars::Colors::IndicatorTextBad, 0, FColorPicker_Middle | FColorPicker_SameLine);
-						FColorPicker("indicator mid", Vars::Colors::IndicatorMid, 0, FColorPicker_Left);
-						FColorPicker("indicator text mid", Vars::Colors::IndicatorTextMid, 0, FColorPicker_Middle | FColorPicker_SameLine);
-						FColorPicker("indicator misc", Vars::Colors::IndicatorMisc, 0, FColorPicker_Left);
-						FColorPicker("indicator text misc", Vars::Colors::IndicatorTextMisc, 0, FColorPicker_Middle | FColorPicker_SameLine);
-					}
-					EndSection();
-				}
 
 				EndTable();
 			}
@@ -831,38 +816,38 @@ void CMenu::MenuVisuals()
 						FSlider("Draw duration## Simulation", Vars::Visuals::Simulation::DrawDuration, 0.f, 10.f, 1.f, "%g", FSlider_Min | FSlider_Precision, nullptr, "Simulation draw duration");
 					PopTransparent();
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug## part1"))
+					if (Section("Debug## Part1"))
 					{
-						FSlider("seperator spacing", Vars::Visuals::Simulation::SeparatorSpacing, 1, 16, 1, "%d", FSlider_Left);
-						FSlider("seperator length", Vars::Visuals::Simulation::SeparatorLength, 2, 16, 1, "%d", FSlider_Right);
+						FSlider("Seperator spacing", Vars::Visuals::Simulation::SeparatorSpacing, 1, 16, 1, "%d", FSlider_Left);
+						FSlider("Seperator length", Vars::Visuals::Simulation::SeparatorLength, 2, 16, 1, "%d", FSlider_Right);
 					} EndSection();
-					if (Section("debug## part2"))
+					if (Section("Debug## Part2"))
 					{
-						FToggle("simulation overwrite", Vars::Visuals::Trajectory::Overwrite);
-						FSlider("off x", Vars::Visuals::Trajectory::OffX, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
-						FSlider("off y", Vars::Visuals::Trajectory::OffY, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
-						FSlider("off z", Vars::Visuals::Trajectory::OffZ, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
-						FToggle("pipes", Vars::Visuals::Trajectory::Pipes);
-						FSlider("hull", Vars::Visuals::Trajectory::Hull, 0.f, 10.f, 0.5f, "%g", FSlider_Min | FSlider_Precision);
-						FSlider("speed", Vars::Visuals::Trajectory::Speed, 0.f, 5000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
-						FSlider("gravity", Vars::Visuals::Trajectory::Gravity, 0.f, 1.f, 0.1f, "%g", FSlider_Precision);
-						FToggle("no spin", Vars::Visuals::Trajectory::NoSpin);
-						FSlider("lifetime", Vars::Visuals::Trajectory::LifeTime, 0.f, 10.f, 0.1f, "%g", FSlider_Min | FSlider_Precision);
-						FSlider("up vel", Vars::Visuals::Trajectory::UpVelocity, 0.f, 1000.f, 50.f, "%g", FSlider_Precision);
-						FSlider("ang vel x", Vars::Visuals::Trajectory::AngVelocityX, -1000.f, 1000.f, 50.f, "%g", FSlider_Precision);
-						FSlider("ang vel y", Vars::Visuals::Trajectory::AngVelocityY, -1000.f, 1000.f, 50.f, "%g", FSlider_Precision);
-						FSlider("ang vel z", Vars::Visuals::Trajectory::AngVelocityZ, -1000.f, 1000.f, 50.f, "%g", FSlider_Precision);
-						FSlider("drag", Vars::Visuals::Trajectory::Drag, 0.f, 2.f, 0.1f, "%g", FSlider_Precision);
-						FSlider("drag x", Vars::Visuals::Trajectory::DragBasisX, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
-						FSlider("drag y", Vars::Visuals::Trajectory::DragBasisY, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
-						FSlider("drag z", Vars::Visuals::Trajectory::DragBasisZ, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
-						FSlider("ang drag x", Vars::Visuals::Trajectory::AngDragBasisX, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
-						FSlider("ang drag y", Vars::Visuals::Trajectory::AngDragBasisY, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
-						FSlider("ang drag z", Vars::Visuals::Trajectory::AngDragBasisZ, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
-						FSlider("max vel", Vars::Visuals::Trajectory::MaxVelocity, 0.f, 4000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
-						FSlider("max ang vel", Vars::Visuals::Trajectory::MaxAngularVelocity, 0.f, 7200.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
+						FToggle("Simulation override", Vars::Visuals::Trajectory::Override);
+						FSlider("Offset X", Vars::Visuals::Trajectory::OffX, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
+						FSlider("Offset Y", Vars::Visuals::Trajectory::OffY, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
+						FSlider("Offset Z", Vars::Visuals::Trajectory::OffZ, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
+						FToggle("Pipes", Vars::Visuals::Trajectory::Pipes);
+						FSlider("Hull", Vars::Visuals::Trajectory::Hull, 0.f, 10.f, 0.5f, "%g", FSlider_Min | FSlider_Precision);
+						FSlider("Speed", Vars::Visuals::Trajectory::Speed, 0.f, 5000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
+						FSlider("Gravity", Vars::Visuals::Trajectory::Gravity, 0.f, 1.f, 0.1f, "%g", FSlider_Precision);
+						FToggle("No spin", Vars::Visuals::Trajectory::NoSpin);
+						FSlider("Lifetime", Vars::Visuals::Trajectory::LifeTime, 0.f, 10.f, 0.1f, "%g", FSlider_Min | FSlider_Precision);
+						FSlider("Up velocity", Vars::Visuals::Trajectory::UpVelocity, 0.f, 1000.f, 50.f, "%g", FSlider_Precision);
+						FSlider("Angular velocity X", Vars::Visuals::Trajectory::AngVelocityX, -1000.f, 1000.f, 50.f, "%g", FSlider_Precision);
+						FSlider("Angular velocity Y", Vars::Visuals::Trajectory::AngVelocityY, -1000.f, 1000.f, 50.f, "%g", FSlider_Precision);
+						FSlider("Angular velocity Z", Vars::Visuals::Trajectory::AngVelocityZ, -1000.f, 1000.f, 50.f, "%g", FSlider_Precision);
+						FSlider("Drag", Vars::Visuals::Trajectory::Drag, 0.f, 2.f, 0.1f, "%g", FSlider_Precision);
+						FSlider("Drag X", Vars::Visuals::Trajectory::DragBasisX, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
+						FSlider("Drag Y", Vars::Visuals::Trajectory::DragBasisY, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
+						FSlider("Drag Z", Vars::Visuals::Trajectory::DragBasisZ, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
+						FSlider("Angular drag X", Vars::Visuals::Trajectory::AngDragBasisX, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
+						FSlider("Angular drag Y", Vars::Visuals::Trajectory::AngDragBasisY, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
+						FSlider("Angular drag Z", Vars::Visuals::Trajectory::AngDragBasisZ, 0.f, 0.1f, 0.01f, "%.15g", FSlider_Precision);
+						FSlider("Max velocity", Vars::Visuals::Trajectory::MaxVelocity, 0.f, 4000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
+						FSlider("Max angular velocity", Vars::Visuals::Trajectory::MaxAngularVelocity, 0.f, 7200.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
 					} EndSection();
 				}
 				if (Section("Hitbox"))
@@ -897,11 +882,11 @@ void CMenu::MenuVisuals()
 					FSlider("Thirdperson right", Vars::Visuals::ThirdPerson::Right, -500.f, 500.f, 5.f, "%g", FSlider_Precision);
 					FSlider("Thirdperson up", Vars::Visuals::ThirdPerson::Up, -500.f, 500.f, 5.f, "%g", FSlider_Precision);
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug"))
+					if (Section("Debug"))
 					{
-						FToggle("thirdperson scales", Vars::Visuals::ThirdPerson::Scale);
+						FToggle("Thirdperson scales", Vars::Visuals::ThirdPerson::Scale);
 					} EndSection();
 				}
 				if (Section("Out of FOV arrows"))
@@ -1030,6 +1015,21 @@ void CMenu::MenuVisuals()
 						H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
 					FToggle("Cheap text", Vars::Menu::CheapText);
 				} EndSection();
+				if (Vars::Debug::Options.Value)
+				{
+					if (Section("Debug"))
+					{
+						FColorPicker("Indicator good", Vars::Colors::IndicatorGood, 0, FColorPicker_Left);
+						FColorPicker("Indicator text good", Vars::Colors::IndicatorTextGood, 0, FColorPicker_Middle | FColorPicker_SameLine);
+						FColorPicker("Indicator bad", Vars::Colors::IndicatorBad, 0, FColorPicker_Left);
+						FColorPicker("Indicator text bad", Vars::Colors::IndicatorTextBad, 0, FColorPicker_Middle | FColorPicker_SameLine);
+						FColorPicker("Indicator mid", Vars::Colors::IndicatorMid, 0, FColorPicker_Left);
+						FColorPicker("Indicator text mid", Vars::Colors::IndicatorTextMid, 0, FColorPicker_Middle | FColorPicker_SameLine);
+						FColorPicker("Indicator misc", Vars::Colors::IndicatorMisc, 0, FColorPicker_Left);
+						FColorPicker("Indicator text misc", Vars::Colors::IndicatorTextMisc, 0, FColorPicker_Middle | FColorPicker_SameLine);
+					}
+					EndSection();
+				}
 
 				EndTable();
 			}
@@ -1083,13 +1083,13 @@ void CMenu::MenuMisc()
 					FToggle("Break jump", Vars::Misc::Movement::BreakJump, FToggle_Right);
 					FToggle("Shield turn rate", Vars::Misc::Movement::ShieldTurnRate);
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
-					if (Section("debug"))
+					if (Section("Debug"))
 					{
-						FSlider("timing offset", Vars::Misc::Movement::TimingOffset, 0, 3);
-						FSlider("choke count", Vars::Misc::Movement::ChokeCount, 0, 3);
-						FSlider("apply timing offset above", Vars::Misc::Movement::ApplyAbove, 0, 8);
+						FSlider("Timing offset", Vars::Misc::Movement::TimingOffset, 0, 3);
+						FSlider("Choke count", Vars::Misc::Movement::ChokeCount, 0, 3);
+						FSlider("Apply timing offset above", Vars::Misc::Movement::ApplyAbove, 0, 8);
 					} EndSection();
 				}
 				if (Section("Exploits"))
@@ -1103,7 +1103,7 @@ void CMenu::MenuMisc()
 					SetCursorPosY(GetCursorPosY() - 8);
 					FToggle("Equip region unlock", Vars::Misc::Exploits::EquipRegionUnlock, FToggle_Left);
 				} EndSection();
-				if (Vars::Debug::Info.Value)
+				if (Vars::Debug::Options.Value)
 				{
 					if (Section("Convar spoofer"))
 					{
@@ -1516,13 +1516,14 @@ void CMenu::MenuSettings()
 				{
 					FToggle("Debug info", Vars::Debug::Info, FToggle_Left);
 					FToggle("Debug logging", Vars::Debug::Logging, FToggle_Right);
-					FToggle("Show server hitboxes", Vars::Debug::ServerHitbox, FToggle_Left); FTooltip("Only localhost servers");
-					FToggle("Anti aim lines", Vars::Debug::AntiAimLines, FToggle_Right);
-	#ifdef DEBUG_TRACES
+					FToggle("Debug options", Vars::Debug::Options, FToggle_Left);
+					FToggle("Show server hitboxes", Vars::Debug::ServerHitbox, FToggle_Right); FTooltip("Only localhost servers");
+					FToggle("Anti aim lines", Vars::Debug::AntiAimLines, FToggle_Left);
+					FToggle("Crash logging", Vars::Debug::CrashLogging, FToggle_Right);
+#ifdef DEBUG_TRACES
 					FToggle("Visualize traces", Vars::Debug::VisualizeTraces, FToggle_Left);
 					FToggle("Visualize trace hits", Vars::Debug::VisualizeTraceHits, FToggle_Right);
 	#endif
-					FToggle("Crash logging", Vars::Debug::CrashLogging);
 				} EndSection();
 				if (Section("Extra"))
 				{
@@ -1571,7 +1572,7 @@ void CMenu::MenuSettings()
 							EndPopup();
 						}
 					}
-					if (Vars::Debug::Info.Value)
+					if (Vars::Debug::Options.Value)
 					{
 						if (FButton("Restore lines", FButton_Left))
 							F::Visuals.RestoreLines();

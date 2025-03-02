@@ -448,7 +448,7 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 							target.m_bBacktrack = true;
 							return true;
 						}
-						else if (iReturn == 2 && vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < target.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
+						else if (iReturn == 2 ? vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < target.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() : true)
 							target.m_vAngleTo = vAngles;
 						iReturn = 2;
 					}
@@ -493,21 +493,21 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 			const matrix3x4& transform = target.m_pEntity->RenderableToWorldTransform();
 			for (auto& vPoint : vPoints)
 			{
-				Vec3 vTransformed = target.m_pEntity->GetCenter() + vPoint;
+				Vec3 vOrigin = target.m_pEntity->GetCenter() + vPoint;
 
-				if (vEyePos.DistToSqr(vTransformed) > flMaxRange)
+				if (vEyePos.DistToSqr(vOrigin) > flMaxRange)
 					continue;
 
 				if (bRunPeekCheck)
 				{
 					bRunPeekCheck = false;
-					if (!SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vTransformed))
+					if (!SDK::VisPos(pLocal, target.m_pEntity, vPeekPos, vOrigin))
 						goto nextTick; // if we can't hit our primary hitbox, don't bother
 				}
 
-				if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vTransformed))
+				if (SDK::VisPos(pLocal, target.m_pEntity, vEyePos, vOrigin))
 				{
-					auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vTransformed));
+					auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vOrigin));
 					Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
 
 					Vec3 vCheckMins = (vMins + flBoneSubtract) * flBoneScale, vCheckMaxs = (vMaxs - flBoneSubtract) * flBoneScale;
@@ -515,10 +515,10 @@ int CAimbotHitscan::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase* p
 					{
 						target.m_vAngleTo = vAngles;
 						target.m_tRecord = tRecord;
-						target.m_vPos = vTransformed;
+						target.m_vPos = vOrigin;
 						return true;
 					}
-					else if (iReturn == 2 && vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < target.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
+					else if (iReturn == 2 ? vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < target.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() : true)
 						target.m_vAngleTo = vAngles;
 					iReturn = 2;
 				}

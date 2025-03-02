@@ -710,7 +710,7 @@ void CAimbotProjectile::CalculateAngle(const Vec3& vLocalPos, const Vec3& vTarge
 	int iFlags = (bAccuracy ? ProjSimEnum::Trace : ProjSimEnum::None) | ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
 	if (iFlags & ProjSimEnum::Trace)
 	{
-		if (Vars::Visuals::Trajectory::Overwrite.Value)
+		if (Vars::Visuals::Trajectory::Override.Value)
 		{
 			if (!Vars::Visuals::Trajectory::Pipes.Value)
 				mTraceCount["Setup trace"]++;
@@ -851,7 +851,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 	int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
 	if (iFlags & ProjSimEnum::Trace)
 	{
-		if (Vars::Visuals::Trajectory::Overwrite.Value)
+		if (Vars::Visuals::Trajectory::Override.Value)
 		{
 			if (!Vars::Visuals::Trajectory::Pipes.Value)
 				mTraceCount["Setup trace"]++;
@@ -1101,7 +1101,7 @@ int CAimbotProjectile::CanHit(Target_t& target, CTFPlayer* pLocal, CTFWeaponBase
 		int iFlags = ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
 		if (iFlags & ProjSimEnum::Trace)
 		{
-			if (Vars::Visuals::Trajectory::Overwrite.Value)
+			if (Vars::Visuals::Trajectory::Override.Value)
 			{
 				if (!Vars::Visuals::Trajectory::Pipes.Value)
 					mTraceCount["Setup trace"]++;

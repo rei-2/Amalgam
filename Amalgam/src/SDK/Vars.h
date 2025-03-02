@@ -562,7 +562,7 @@ namespace Vars
 		SUBNAMESPACE_END(ProjectileTrajectory)
 
 		SUBNAMESPACE_BEGIN(Trajectory)
-			CVar(Overwrite, false, DEBUGVAR)
+			CVar(Override, false, DEBUGVAR)
 			CVar(OffX, 16.f, DEBUGVAR)
 			CVar(OffY, 8.f, DEBUGVAR)
 			CVar(OffZ, -6.f, DEBUGVAR)
@@ -878,6 +878,7 @@ namespace Vars
 	NAMESPACE_BEGIN(Debug)
 		CVar(Info, false, NOSAVE)
 		CVar(Logging, false, NOSAVE)
+		CVar(Options, false, NOSAVE)
 		CVar(ServerHitbox, false, NOSAVE)
 		CVar(AntiAimLines, false)
 		CVar(CrashLogging, true)
