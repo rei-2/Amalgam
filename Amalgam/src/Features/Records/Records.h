@@ -5,8 +5,6 @@ class CRecords
 {
 	void OutputInfo(int flags, std::string sName, std::string sOutput, std::string sChat);
 
-	void TagsOnJoin(std::string sName, uint32_t friendsID);
-	void AliasOnJoin(std::string sName, uint32_t friendsID);
 	bool m_bInfoOnJoin = false;
 
 public:
@@ -21,6 +19,9 @@ public:
 	void ReportResolver(int iIndex, std::string sAction, std::string sAxis, bool bValue);
 	void ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue);
 	void ReportResolver(std::string sMessage);
+
+	void TagsOnJoin(std::string sName, uint32_t friendsID);
+	void AliasOnJoin(std::string sName, uint32_t friendsID);
 };
 
 ADD_FEATURE(CRecords, Records)
