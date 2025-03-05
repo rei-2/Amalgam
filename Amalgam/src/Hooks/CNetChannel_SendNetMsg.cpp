@@ -53,8 +53,7 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 			return false;
 		break;
 	case clc_RespondCvarValue:
-		// causes b1g crash
-		if (Vars::Visuals::Removals::ConvarQueries.Value)
+		if (Vars::Misc::Game::RemoveConvarQueries.Value)
 		{
 			auto pMsg = reinterpret_cast<uintptr_t*>(&msg);
 			if (!pMsg) break;
@@ -75,7 +74,7 @@ MAKE_HOOK(CNetChan_SendNetMsg, S::CNetChan_SendNetMsg(), bool,
 			if (!defaultValue) break;
 
 			pMsg[7] = uintptr_t(defaultValue);
-			SDK::Output("Removals::ConvarQueries", msg.ToString());
+			SDK::Output("Remove convar queries", msg.ToString());
 		}
 		break;
 	case clc_Move:

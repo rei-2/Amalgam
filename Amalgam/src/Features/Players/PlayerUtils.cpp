@@ -44,7 +44,7 @@ void CPlayerlistUtils::AddTag(uint32_t friendsID, int iID, bool bSave, std::stri
 	if (!HasTag(friendsID, iID))
 	{
 		m_mPlayerTags[friendsID].push_back(iID);
-		m_bSavePlayers = bSave;
+		m_bSave = bSave;
 		if (sName.length())
 		{
 			if (PriorityLabel_t* pTag = GetTag(iID))
@@ -69,7 +69,7 @@ void CPlayerlistUtils::RemoveTag(uint32_t friendsID, int iID, bool bSave, std::s
 		if (iID == *it)
 		{
 			_vTags.erase(it);
-			m_bSavePlayers = bSave;
+			m_bSave = bSave;
 			if (sName.length())
 			{
 				if (auto pTag = GetTag(iID))
@@ -147,6 +147,12 @@ int CPlayerlistUtils::GetPriority(uint32_t friendsID, bool bCache)
 		if (!tTag.Label)
 			vPriorities.push_back(tTag.Priority);
 	}
+	if (H::Entities.IsF2P(friendsID))
+	{
+		auto& tTag = m_vTags[TagToIndex(F2P_TAG)];
+		if (!tTag.Label)
+			vPriorities.push_back(tTag.Priority);
+	}
 
 	if (vPriorities.size())
 	{
@@ -194,6 +200,12 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, int iMo
 			if (!_pTag->Label)
 				vTags.push_back(_pTag);
 		}
+		if (H::Entities.IsF2P(friendsID))
+		{
+			auto _pTag = &m_vTags[TagToIndex(F2P_TAG)];
+			if (!_pTag->Label)
+				vTags.push_back(_pTag);
+		}
 	}
 	if ((!iMode || iMode == 2) && !vTags.size())
 	{
@@ -212,6 +224,12 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t friendsID, int iMo
 		if (H::Entities.InParty(friendsID))
 		{
 			auto _pTag = &m_vTags[TagToIndex(PARTY_TAG)];
+			if (_pTag->Label)
+				vTags.push_back(_pTag);
+		}
+		if (H::Entities.IsF2P(friendsID))
+		{
+			auto _pTag = &m_vTags[TagToIndex(F2P_TAG)];
 			if (_pTag->Label)
 				vTags.push_back(_pTag);
 		}
@@ -341,15 +359,7 @@ void CPlayerlistUtils::UpdatePlayers()
 			if (!pResource->GetValid(n) || !pResource->GetConnected(n))
 				continue;
 
-			bool bFake = true, bFriend = false, bParty = false;
 			PlayerInfo_t pi{};
-			if (I::EngineClient->GetPlayerInfo(n, &pi))
-			{
-				bFake = pi.fakeplayer;
-				bFriend = H::Entities.IsFriend(n);
-				bParty = H::Entities.InParty(n);
-			}
-
 			m_vPlayerCache.push_back({
 				pResource->GetPlayerName(n),
 				pResource->GetAccountID(n),
@@ -358,9 +368,10 @@ void CPlayerlistUtils::UpdatePlayers()
 				pResource->GetClass(n),
 				pResource->IsAlive(n),
 				n == I::EngineClient->GetLocalPlayer(),
-				bFriend,
-				bParty,
-				bFake
+				!I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer,
+				H::Entities.IsFriend(pResource->GetAccountID(n)),
+				H::Entities.InParty(pResource->GetAccountID(n)),
+				H::Entities.IsF2P(pResource->GetAccountID(n))
 			});
 		}
 	}

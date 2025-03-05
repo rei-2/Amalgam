@@ -39,6 +39,8 @@ class CEntities
 	std::unordered_map<uint32_t, bool> m_mUFriends;
 	std::unordered_map<int, bool> m_mIParty;
 	std::unordered_map<uint32_t, bool> m_mUParty;
+	std::unordered_map<int, bool> m_mIF2P;
+	std::unordered_map<uint32_t, bool> m_mUF2P;
 	std::unordered_map<int, int> m_mIPriorities;
 	std::unordered_map<uint32_t, int> m_mUPriorities;
 
@@ -79,6 +81,8 @@ public:
 	bool IsFriend(uint32_t friendsID);
 	bool InParty(int iIndex);
 	bool InParty(uint32_t friendsID);
+	bool IsF2P(int iIndex);
+	bool IsF2P(uint32_t friendsID);
 	int GetPriority(int iIndex);
 	int GetPriority(uint32_t friendsID);
 

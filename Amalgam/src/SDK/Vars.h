@@ -467,10 +467,8 @@ namespace Vars
 			CVar(ScreenEffects, false, VISUAL)
 			CVar(ViewPunch, false, VISUAL)
 			CVar(AngleForcing, false, VISUAL)
-			CVar(MOTD, false, VISUAL)
-			CVar(ConvarQueries, false, VISUAL)
 			CVar(PostProcessing, false, VISUAL)
-			CVar(DSP, false, VISUAL)
+			CVar(MOTD, false, VISUAL)
 		SUBNAMESPACE_END(Removals)
 
 		SUBNAMESPACE_BEGIN(UI)
@@ -707,6 +705,7 @@ namespace Vars
 			CVarEnum(Block, 0b0000, NONE, Footsteps = 1 << 0, Noisemaker = 1 << 1, FryingPan = 1 << 2, Water = 1 << 3)
 			CVar(GiantWeaponSounds, false)
 			CVar(HitsoundAlways, false)
+			CVar(RemoveDSP, false, VISUAL)
 		SUBNAMESPACE_END(Sound)
 
 		SUBNAMESPACE_BEGIN(Game)
@@ -714,6 +713,7 @@ namespace Vars
 			CVar(PredictionErrorJitterFix, false)
 			CVar(SetupBonesOptimization, false)
 			CVar(F2PChatBypass, false)
+			CVar(RemoveConvarQueries, false, VISUAL)
 		SUBNAMESPACE_END(Game)
 
 		SUBNAMESPACE_BEGIN(Queueing)

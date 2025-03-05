@@ -8,23 +8,35 @@ void CPlayerlistCore::Run()
 	static Timer saveTimer{ };
 	if (saveTimer.Run(1000))
 	{
-		LoadTags();
-		SaveTags();
-		LoadPlayers();
-		SavePlayers();
+		LoadPlayerlist();
+		SavePlayerlist();
 	}
 }
 
-void CPlayerlistCore::SavePlayers()
+void CPlayerlistCore::SavePlayerlist()
 {
-	if (!F::PlayerUtils.m_bSavePlayers || F::PlayerUtils.m_bLoadPlayers) // terrible if we end up saving while loading
+	if (!F::PlayerUtils.m_bSave || F::PlayerUtils.m_bLoad) // terrible if we end up saving while loading
 		return;
 
 	try
 	{
 		boost::property_tree::ptree writeTree;
 
-		writeTree.put("NewTags", true);
+		boost::property_tree::ptree configTree;
+		for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
+		{
+			int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
+			auto& tTag = *it;
+
+			boost::property_tree::ptree tagEntry;
+			tagEntry.put("Name", tTag.Name);
+			tagEntry.put_child("Color", F::Configs.ColorToTree(tTag.Color));
+			tagEntry.put("Priority", tTag.Priority);
+			tagEntry.put("Label", tTag.Label);
+
+			configTree.put_child(std::to_string(F::PlayerUtils.IndexToTag(iID)), tagEntry);
+		}
+		writeTree.put_child("Config", configTree);
 
 		boost::property_tree::ptree tagTree;
 		for (auto& [friendsID, vTags] : F::PlayerUtils.m_mPlayerTags)
@@ -56,17 +68,19 @@ void CPlayerlistCore::SavePlayers()
 		// Save the file
 		write_json(F::Configs.m_sConfigPath + "\\Core\\Players.json", writeTree);
 
-		F::PlayerUtils.m_bSavePlayers = false;
+		F::PlayerUtils.m_bSave = false;
+		SDK::Output("Amalgam", "Saved playerlist", { 175, 150, 255, 255 }, true, false, false, true);
+		SDK::Output("Saved playerlist", nullptr, {}, false, false, true, false);
 	}
 	catch (...)
 	{
-		SDK::Output("SavePlayers", "Failed", { 175, 150, 255, 255 });
+		SDK::Output("SavePlayerlist", "Failed", { 175, 150, 255, 255 }, true, false, false, true);
 	}
 }
 
-void CPlayerlistCore::LoadPlayers()
+void CPlayerlistCore::LoadPlayerlist()
 {
-	if (!F::PlayerUtils.m_bLoadPlayers)
+	if (!F::PlayerUtils.m_bLoad)
 		return;
 
 	try
@@ -77,7 +91,100 @@ void CPlayerlistCore::LoadPlayers()
 			read_json(F::Configs.m_sConfigPath + "\\Core\\Players.json", readTree);
 			F::PlayerUtils.m_mPlayerTags.clear();
 
-			bool bNewTags = bool(readTree.get_child_optional("NewTags")); // newer system to support adding default tags better
+			int iTagsVersion = readTree.get_child_optional("NewTags") ? 1 : 0; // support for old tag savings
+			if (auto configTree = readTree.get_child_optional("Config"))
+			{
+				iTagsVersion = 2;
+
+				F::PlayerUtils.m_vTags = {
+					{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
+					{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
+					{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
+					{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
+					{ "Party", { 100, 50, 255, 255 }, 0, true, false, true },
+					{ "F2P", { 255, 255, 255, 255 }, 0, true, false, true }
+				};
+
+				for (auto& it : *configTree)
+				{
+					PriorityLabel_t tTag = {};
+					if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
+					if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.Color); }
+					if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.Priority = *getValue; }
+					if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.Label = *getValue; }
+
+					int iID = -1;
+					try
+					{	// new id based indexing
+						iID = std::stoi(it.first);
+						iID = F::PlayerUtils.TagToIndex(iID);
+					}
+					catch (...) {}
+
+					if (iID > -1 && iID < F::PlayerUtils.m_vTags.size())
+					{
+						F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
+						F::PlayerUtils.m_vTags[iID].Color = tTag.Color;
+						F::PlayerUtils.m_vTags[iID].Priority = tTag.Priority;
+						F::PlayerUtils.m_vTags[iID].Label = tTag.Label;
+					}
+					else
+						F::PlayerUtils.m_vTags.push_back(tTag);
+				}
+			}
+			else if (iTagsVersion < 2 && std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Tags.json"))
+			{	// support legacy file
+				boost::property_tree::ptree readTree2;
+				read_json(F::Configs.m_sConfigPath + "\\Core\\Tags.json", readTree2);
+				F::PlayerUtils.m_vTags = {
+					{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
+					{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
+					{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
+					{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
+					{ "Party", { 100, 50, 255, 255 }, 0, true, false, true },
+					{ "F2P", { 255, 255, 255, 255 }, 0, true, false, true }
+				};
+
+				bool bNewTags = bool(readTree2.get_child_optional("NewTags")); // newer system to support adding default tags better
+
+				auto tagTree = readTree2.get_child_optional("Tags");
+				if (!tagTree)
+					tagTree = readTree2; // support format w/o tag tree
+
+				for (auto& it : *tagTree)
+				{
+					PriorityLabel_t tTag = {};
+					if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
+					if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.Color); }
+					if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.Priority = *getValue; }
+					if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.Label = *getValue; }
+
+					int iID = -1;
+					try
+					{	// new id based indexing
+						iID = std::stoi(it.first);
+						if (bNewTags)
+							iID = F::PlayerUtils.TagToIndex(iID);
+						else if (iID > 3)
+							iID += TAG_COUNT - 3;
+					}
+					catch (...)
+					{	// old string based indexing
+						tTag.Name = it.first;
+						iID = F::PlayerUtils.GetTag(it.first);
+					}
+
+					if (iID > -1 && iID < F::PlayerUtils.m_vTags.size())
+					{
+						F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
+						F::PlayerUtils.m_vTags[iID].Color = tTag.Color;
+						F::PlayerUtils.m_vTags[iID].Priority = tTag.Priority;
+						F::PlayerUtils.m_vTags[iID].Label = tTag.Label;
+					}
+					else
+						F::PlayerUtils.m_vTags.push_back(tTag);
+				}
+			}
 
 			auto tagTree = readTree.get_child_optional("Tags");
 			if (!tagTree)
@@ -95,7 +202,7 @@ void CPlayerlistCore::LoadPlayers()
 					try
 					{	// new id based indexing
 						iID = std::stoi(sTag);
-						if (bNewTags)
+						if (iTagsVersion != 0)
 							iID = F::PlayerUtils.TagToIndex(iID);
 						else if (iID > 3)
 							iID += TAG_COUNT - 3;
@@ -129,139 +236,13 @@ void CPlayerlistCore::LoadPlayers()
 				}
 			}
 		}
-		// support legacy format & convert over
-		if (std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Playerlist.json"))
-		{
-			boost::property_tree::ptree readTree;
-			read_json(F::Configs.m_sConfigPath + "\\Core\\Playerlist.json", readTree);
 
-			for (auto& it : readTree)
-			{
-				uint32_t friendsID = std::stoi(it.first);
-
-				int iPriority = 2;
-				if (auto getValue = it.second.get_optional<int>("Mode")) { iPriority = std::max(*getValue, 0); }
-
-				switch (iPriority)
-				{
-				case 1: F::PlayerUtils.AddTag(friendsID, F::PlayerUtils.TagToIndex(IGNORED_TAG), false); break;
-				case 4: F::PlayerUtils.AddTag(friendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), false); break;
-				}
-			}
-		}
-
-		F::PlayerUtils.m_bLoadPlayers = false;
+		F::PlayerUtils.m_bLoad = false;
+		SDK::Output("Amalgam", "Loaded playerlist", { 175, 150, 255, 255 }, true, false, false, true);
+		SDK::Output("Loaded playerlist", nullptr, {}, false, false, true, false);
 	}
 	catch (...)
 	{
-		SDK::Output("LoadPlayers", "Failed", { 175, 150, 255, 255 });
-	}
-}
-
-void CPlayerlistCore::SaveTags()
-{
-	if (!F::PlayerUtils.m_bSaveTags || F::PlayerUtils.m_bLoadTags) // terrible if we end up saving while loading
-		return;
-
-	try
-	{
-		boost::property_tree::ptree writeTree;
-
-		writeTree.put("NewTags", true);
-
-		boost::property_tree::ptree tagTree;
-		{
-			for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
-			{
-				int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
-				auto& tTag = *it;
-
-				boost::property_tree::ptree tagEntry;
-				tagEntry.put("Name", tTag.Name);
-				tagEntry.put_child("Color", F::Configs.ColorToTree(tTag.Color));
-				tagEntry.put("Priority", tTag.Priority);
-				tagEntry.put("Label", tTag.Label);
-
-				tagTree.put_child(std::to_string(F::PlayerUtils.IndexToTag(iID)), tagEntry);
-			}
-		}
-		writeTree.put_child("Tags", tagTree);
-
-		// Save the file
-		write_json(F::Configs.m_sConfigPath + "\\Core\\Tags.json", writeTree);
-
-		F::PlayerUtils.m_bSaveTags = false;
-	}
-	catch (...)
-	{
-		SDK::Output("SaveTags", "Failed", { 175, 150, 255, 255 });
-	}
-}
-
-void CPlayerlistCore::LoadTags()
-{
-	if (!F::PlayerUtils.m_bLoadTags)
-		return;
-
-	try
-	{
-		if (std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Tags.json"))
-		{
-			boost::property_tree::ptree readTree;
-			read_json(F::Configs.m_sConfigPath + "\\Core\\Tags.json", readTree);
-			F::PlayerUtils.m_vTags = {
-				{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
-				{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
-				{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
-				{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
-				{ "Party", { 100, 50, 255, 255 }, 0, true, false, true }
-			};
-
-			bool bNewTags = bool(readTree.get_child_optional("NewTags")); // newer system to support adding default tags better
-
-			auto tagTree = readTree.get_child_optional("Tags");
-			if (!tagTree)
-				tagTree = readTree; // support format w/o tag tree
-
-			for (auto& it : *tagTree)
-			{
-				PriorityLabel_t tTag = {};
-				if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
-				if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.Color); }
-				if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.Priority = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.Label = *getValue; }
-
-				int iID = -1;
-				try
-				{	// new id based indexing
-					iID = std::stoi(it.first);
-					if (bNewTags)
-						iID = F::PlayerUtils.TagToIndex(iID);
-					else if (iID > 3)
-						iID += TAG_COUNT - 3;
-				}
-				catch (...)
-				{	// old string based indexing
-					tTag.Name = it.first;
-					iID = F::PlayerUtils.GetTag(it.first);
-				}
-
-				if (iID > -1 && iID < F::PlayerUtils.m_vTags.size())
-				{
-					F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
-					F::PlayerUtils.m_vTags[iID].Color = tTag.Color;
-					F::PlayerUtils.m_vTags[iID].Priority = tTag.Priority;
-					F::PlayerUtils.m_vTags[iID].Label = tTag.Label;
-				}
-				else
-					F::PlayerUtils.m_vTags.push_back(tTag);
-			}
-		}
-
-		F::PlayerUtils.m_bLoadTags = false;
-	}
-	catch (...)
-	{
-		SDK::Output("LoadTags", "Failed", { 175, 150, 255, 255 });
+		SDK::Output("LoadPlayerlist", "Failed", { 175, 150, 255, 255 }, true, false, false, true);
 	}
 }

@@ -710,10 +710,8 @@ void CMenu::MenuVisuals()
 					FToggle("Screen effects", Vars::Visuals::Removals::ScreenEffects, FToggle_Right, nullptr, "Screen effects removal");
 					FToggle("View punch", Vars::Visuals::Removals::ViewPunch, FToggle_Left, nullptr, "View punch removal");
 					FToggle("Angle forcing", Vars::Visuals::Removals::AngleForcing, FToggle_Right, nullptr, "Angle forcing removal");
-					FToggle("MOTD", Vars::Visuals::Removals::MOTD, FToggle_Left, nullptr, "MOTD removal");
-					FToggle("Convar queries", Vars::Visuals::Removals::ConvarQueries, FToggle_Right, nullptr, "Convar queries removal");
 					FToggle("Post processing", Vars::Visuals::Removals::PostProcessing, FToggle_Left, nullptr, "Post processing removal");
-					FToggle("DSP", Vars::Visuals::Removals::DSP, FToggle_Right, nullptr, "DSP removal");
+					FToggle("MOTD", Vars::Visuals::Removals::MOTD, FToggle_Right, nullptr, "MOTD removal");
 				} EndSection();
 				if (Section("UI"))
 				{
@@ -1144,6 +1142,7 @@ void CMenu::MenuMisc()
 					FDropdown("Block", Vars::Misc::Sound::Block, { "Footsteps", "Noisemaker", "Frying pan", "Water" }, {}, FDropdown_Multi, 0, nullptr, "Sound block");
 					FToggle("Giant weapon sounds", Vars::Misc::Sound::GiantWeaponSounds, FToggle_Left);
 					FToggle("Hitsound always", Vars::Misc::Sound::HitsoundAlways, FToggle_Right);
+					FToggle("Remove DSP", Vars::Misc::Sound::RemoveDSP);
 				} EndSection();
 				if (Section("Game"))
 				{
@@ -1151,6 +1150,7 @@ void CMenu::MenuMisc()
 					FToggle("Prediction error jitter fix", Vars::Misc::Game::PredictionErrorJitterFix, FToggle_Right);
 					FToggle("Bones optimization", Vars::Misc::Game::SetupBonesOptimization, FToggle_Left);
 					FToggle("F2P chat bypass", Vars::Misc::Game::F2PChatBypass, FToggle_Right);
+					FToggle("Remove convar queries", Vars::Misc::Game::RemoveConvarQueries);
 				} EndSection();
 				if (Section("Queueing"))
 				{
@@ -1837,6 +1837,10 @@ void CMenu::MenuSettings()
 		case 2:
 			if (Section("Players"))
 			{
+				SetCursorPos({ GetWindowWidth() - H::Draw.Scale(25), GetCursorPosY() - H::Draw.Scale(15) });
+				if (IconButton(ICON_MD_DOWNLOAD)) // if you make any changes to the file directly
+					F::PlayerUtils.m_bLoad = true;
+
 				if (I::EngineClient->IsInGame())
 				{
 					std::lock_guard lock(F::PlayerUtils.m_mutex);
@@ -1873,18 +1877,6 @@ void CMenu::MenuSettings()
 								lOffset = H::Draw.Scale(29);
 								SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
 								IconImage(ICON_MD_PERSON);
-							}
-							else if (player.m_bFriend)
-							{
-								lOffset = H::Draw.Scale(29);
-								SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
-								IconImage(ICON_MD_GROUP);
-							}
-							else if (player.m_bParty)
-							{
-								lOffset = H::Draw.Scale(29);
-								SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
-								IconImage(ICON_MD_GROUPS);
 							}
 							else if (F::Spectate.m_iIntendedTarget == player.m_iUserID)
 							{
@@ -1931,28 +1923,37 @@ void CMenu::MenuSettings()
 								SetCursorPos({ vOriginalPos.x + lOffset, vOriginalPos.y });
 								if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(bResolver ? 128 : 48), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
 								{
-									PushFont(F::Render.FontSmall);
-
-									const auto vDrawPos = GetDrawPos();
-									float flTagOffset = 0;
+									std::vector<std::pair<PriorityLabel_t*, int>> vTags = {};
+									if (player.m_bFriend)
+										vTags.push_back({ &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)], 0 });
+									if (player.m_bParty)
+										vTags.push_back({ &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)], 0 });
+									if (player.m_bF2P)
+										vTags.push_back({ &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(F2P_TAG)], 0 });
 									for (auto& iID : F::PlayerUtils.m_mPlayerTags[player.m_uFriendsID])
 									{
 										auto pTag = F::PlayerUtils.GetTag(iID);
-										if (!pTag)
-											continue;
+										if (pTag)
+											vTags.push_back({ pTag, iID });
+									}
 
+									PushFont(F::Render.FontSmall);
+									const auto vDrawPos = GetDrawPos();
+									float flTagOffset = 0;
+									for (auto& [pTag, iID] : vTags)
+									{
 										ImColor tagColor = ColorToVec(pTag->Color);
-										float flTagWidth = FCalcTextSize(pTag->Name.c_str()).x + H::Draw.Scale(25);
+										float flTagWidth = FCalcTextSize(pTag->Name.c_str()).x + H::Draw.Scale(!iID ? 10 : 25);
 										float flTagHeight = H::Draw.Scale(20);
 										ImVec2 vTagPos = { flTagOffset, H::Draw.Scale(4) };
 
-										PushStyleColor(ImGuiCol_Text, IsColorBright(tagColor) ? ImVec4{ 0, 0, 0, 1 } : ImVec4{ 1, 1, 1, 1 });
+										PushStyleColor(ImGuiCol_Text, IsColorDark(tagColor) ? ImVec4{ 1, 1, 1, 1 } : ImVec4{ 0, 0, 0, 1 });
 
 										GetWindowDrawList()->AddRectFilled(vDrawPos + vTagPos, { vDrawPos.x + vTagPos.x + flTagWidth, vDrawPos.y + vTagPos.y + flTagHeight }, tagColor, H::Draw.Scale(3));
 										SetCursorPos({ vTagPos.x + H::Draw.Scale(5), vTagPos.y + H::Draw.Scale(4) });
 										FText(pTag->Name.c_str());
 										SetCursorPos({ vTagPos.x + flTagWidth - H::Draw.Scale(18), vTagPos.y + H::Draw.Scale(2) });
-										if (IconButton(ICON_MD_CANCEL))
+										if (iID && IconButton(ICON_MD_CANCEL))
 											F::PlayerUtils.RemoveTag(player.m_uFriendsID, iID, true, player.m_sName);
 
 										PopStyleColor();
@@ -2056,12 +2057,12 @@ void CMenu::MenuSettings()
 										auto find = F::PlayerUtils.m_mPlayerAliases.find(player.m_uFriendsID);
 										if (find != F::PlayerUtils.m_mPlayerAliases.end())
 											F::PlayerUtils.m_mPlayerAliases.erase(find);
-										F::PlayerUtils.m_bSavePlayers = true;
+										F::PlayerUtils.m_bSave = true;
 									}
 									else
 									{
 										F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID] = sInput;
-										F::PlayerUtils.m_bSavePlayers = true;
+										F::PlayerUtils.m_bSave = true;
 
 										F::Records.AliasChanged(player.m_sName, bHasAlias ? "Changed" : "Added", sInput);
 									}
@@ -2255,7 +2256,7 @@ void CMenu::MenuSettings()
 
 						if (bCreate)
 						{
-							F::PlayerUtils.m_bSaveTags = true;
+							F::PlayerUtils.m_bSave = true;
 							if (iID > -1 || iID < F::PlayerUtils.m_vTags.size())
 							{
 								F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
@@ -2314,6 +2315,7 @@ void CMenu::MenuSettings()
 							case CHEATER_TAG: IconImage(ICON_MD_FLAG); break;
 							case FRIEND_TAG: IconImage(ICON_MD_GROUP); break;
 							case PARTY_TAG: IconImage(ICON_MD_GROUPS); break;
+							case F2P_TAG: IconImage(ICON_MD_MONEY_OFF); break;
 							}
 						}
 
@@ -2337,7 +2339,7 @@ void CMenu::MenuSettings()
 							if (FButton("Yes", FButton_Left))
 							{
 								F::PlayerUtils.m_vTags.erase(it);
-								F::PlayerUtils.m_bSaveTags = F::PlayerUtils.m_bSavePlayers = true;
+								F::PlayerUtils.m_bSave = F::PlayerUtils.m_bSave = true;
 
 								for (auto& [friendsID, vTags] : F::PlayerUtils.m_mPlayerTags)
 								{

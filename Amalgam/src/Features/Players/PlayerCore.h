@@ -3,10 +3,8 @@
 
 class CPlayerlistCore
 {
-	void SavePlayers();
-	void LoadPlayers();
-	void SaveTags();
-	void LoadTags();
+	void SavePlayerlist();
+	void LoadPlayerlist();
 
 public:
 	void Run();

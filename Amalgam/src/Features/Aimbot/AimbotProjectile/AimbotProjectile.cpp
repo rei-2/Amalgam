@@ -1481,6 +1481,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		if (!iResult) continue;
 		if (iResult == 2)
 		{
+			G::Target = { target.m_pEntity->entindex(), I::GlobalVars->tickcount };
 			Aim(pCmd, target.m_vAngleTo);
 			break;
 		}

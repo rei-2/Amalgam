@@ -104,15 +104,21 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					if (pTag && pTag->Label)
 						vTags.push_back(pTag);
 				}
-				if (H::Entities.IsFriend(iIndex))
+				if (H::Entities.IsFriend(pi.friendsID))
 				{
 					auto pTag = &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)];
 					if (pTag->Label)
 						vTags.push_back(pTag);
 				}
-				if (H::Entities.InParty(iIndex))
+				if (H::Entities.InParty(pi.friendsID))
 				{
 					auto pTag = &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)];
+					if (pTag->Label)
+						vTags.push_back(pTag);
+				}
+				if (H::Entities.IsF2P(pi.friendsID))
+				{
+					auto pTag = &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(F2P_TAG)];
 					if (pTag->Label)
 						vTags.push_back(pTag);
 				}

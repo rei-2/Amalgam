@@ -6,6 +6,8 @@
 #include "../../../Features/Backtrack/Backtrack.h"
 #include "../../../Features/CheaterDetection/CheaterDetection.h"
 
+MAKE_SIGNATURE(CGCClientSharedObjectCache_FindTypeCache, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F B7 59 ? BE", 0x0);
+
 void CEntities::Store()
 {
 	auto pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer());
@@ -138,16 +140,63 @@ void CEntities::Store()
 		}
 	}
 
+	bool bShouldUpdateInfo = !(I::GlobalVars->tickcount % 67);
 	std::unordered_map<uint32_t, bool> mParty = {};
-	if (auto pParty = I::TFGCClientSystem->GetParty())
+	std::unordered_map<uint32_t, bool> mF2P = {};
+	if (bShouldUpdateInfo)
 	{
-		int iPartyCount = pParty->GetNumMembers();
-		for (int i = 0; i < iPartyCount; i++)
+		m_mIFriends.clear();
+		m_mUFriends.clear();
+		m_mIParty.clear();
+		m_mUParty.clear();
+		m_mIF2P.clear();
+		m_mUF2P.clear();
+
+		if (auto pParty = I::TFGCClientSystem->GetParty())
 		{
-			auto sID = CSteamID(); pParty->GetMember(&sID, i);
-			mParty[sID.GetAccountID()] = true;
+			int iPartyCount = pParty->GetNumMembers();
+			for (int i = 0; i < iPartyCount; i++)
+			{
+				auto cSteamID = CSteamID(); pParty->GetMember(&cSteamID, i);
+				mParty[cSteamID.GetAccountID()] = true;
+			}
+		}
+		if (auto pSOCache = *reinterpret_cast<uintptr_t*>(uintptr_t(I::TFGCClientSystem) + 1072))
+		{
+			if (auto pTypeCache = S::CGCClientSharedObjectCache_FindTypeCache.Call<uintptr_t>(pSOCache, 2004))
+			{
+				if (int iCacheCount = *reinterpret_cast<int*>(pTypeCache + 40))
+				{
+					if (auto pLobby = *reinterpret_cast<uintptr_t*>(*reinterpret_cast<uintptr_t*>(pTypeCache + 8) + 8 * uintptr_t(iCacheCount - 1)))
+					{
+						pLobby -= 8; // i assume from the dynamic_cast?
+						for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
+						{
+							PlayerInfo_t pi{};
+							if (!I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer)
+								continue;
+
+							auto CTFLobbyShared_GetMemberIndexBySteamID = reinterpret_cast<int(*)(uintptr_t, CSteamID&)>(U::Memory.GetVFunc(reinterpret_cast<void*>(pLobby), 4));
+							auto CTFLobbyShared_GetMemberDetails = reinterpret_cast<uintptr_t*(*)(uintptr_t, void*, int)>(U::Memory.GetVFunc(reinterpret_cast<void*>(pLobby), 13));
+							
+							CSteamID cSteamID = { pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual };
+							int iMemberID = CTFLobbyShared_GetMemberIndexBySteamID(pLobby, cSteamID);
+							if (iMemberID == -1)
+								continue;
+
+							void* pDetails[2];
+							CTFLobbyShared_GetMemberDetails(pLobby, pDetails, iMemberID);
+
+							auto ConstTFLobbyPlayer_Proto = reinterpret_cast<uintptr_t(*)(void*)>(U::Memory.GetVFunc(pDetails, 0));
+							
+							mF2P[pi.friendsID] = *reinterpret_cast<bool*>(ConstTFLobbyPlayer_Proto(pDetails) + 69);
+						}
+					}
+				}
+			}
 		}
 	}
+
 	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 	{
 		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CTFPlayer>();
@@ -178,11 +227,15 @@ void CEntities::Store()
 		m_mGroups[EGroupType::PLAYERS_ALL].push_back(pEntity);
 		m_mGroups[pEntity->m_iTeamNum() != m_pLocal->m_iTeamNum() ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_TEAMMATES].push_back(pEntity);
 
-		PlayerInfo_t pi{};
-		if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
+		if (bShouldUpdateInfo)
 		{
-			m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
-			m_mIParty[n] = m_mUParty[pi.friendsID] = mParty.contains(pi.friendsID) && n != I::EngineClient->GetLocalPlayer();
+			PlayerInfo_t pi{};
+			if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
+			{
+				m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
+				m_mIParty[n] = m_mUParty[pi.friendsID] = mParty.contains(pi.friendsID) && n != I::EngineClient->GetLocalPlayer();
+				m_mIF2P[n] = m_mUF2P[pi.friendsID] = mF2P.contains(pi.friendsID) ? mF2P[pi.friendsID] : false;
+			}
 		}
 	}
 
@@ -247,10 +300,6 @@ void CEntities::Clear(bool bShutdown)
 	m_pLocalWeapon = nullptr;
 	m_pPlayerResource = nullptr;
 	m_mGroups.clear();
-	m_mIFriends.clear();
-	m_mUFriends.clear();
-	m_mIParty.clear();
-	m_mUParty.clear();
 	m_mIPriorities.clear();
 	m_mUPriorities.clear();
 	m_bSettingUpBones = false;
@@ -441,6 +490,8 @@ bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
 bool CEntities::IsFriend(uint32_t friendsID) { return m_mUFriends[friendsID]; }
 bool CEntities::InParty(int iIndex) { return m_mIParty[iIndex]; }
 bool CEntities::InParty(uint32_t friendsID) { return m_mUParty[friendsID]; }
+bool CEntities::IsF2P(int iIndex) { return m_mIF2P[iIndex]; }
+bool CEntities::IsF2P(uint32_t friendsID) { return m_mUF2P[friendsID]; }
 int CEntities::GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
 int CEntities::GetPriority(uint32_t friendsID) { return m_mUPriorities[friendsID]; }
 
