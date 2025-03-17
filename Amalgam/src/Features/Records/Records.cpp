@@ -40,13 +40,13 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::VoteCast))
 			return;
 
-		const int iIndex = pEvent->GetInt("entityid");
-		const auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
+		int iIndex = pEvent->GetInt("entityid");
+		auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
 		if (!pEntity || pEntity->GetClassID() != ETFClassID::CTFPlayer)
 			return;
 
-		const bool bVotedYes = pEvent->GetInt("vote_option") == 0;
-		const bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
+		bool bVotedYes = pEvent->GetInt("vote_option") == 0;
+		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
 
 		PlayerInfo_t pi{};
 		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi))
@@ -64,12 +64,12 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::ClassChanges))
 			return;
 
-		const int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
-		const auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
+		int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+		auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
 		if (!pEntity || iIndex == pLocal->entindex())
 			return;
 
-		const bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
+		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
 
 		PlayerInfo_t pi{};
 		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi) || pi.fakeplayer)
@@ -87,16 +87,16 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Damage))
 			return;
 
-		const int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
-		const auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
+		int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+		auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
 		if (!pEntity || iIndex == pLocal->entindex())
 			return;
 
-		const int nAttacker = pEvent->GetInt("attacker");
-		const int nHealth = pEvent->GetInt("health");
-		const int nDamage = pEvent->GetInt("damageamount");
-		const bool bCrit = pEvent->GetBool("crit");
-		const int maxHealth = pEntity->As<CTFPlayer>()->GetMaxHealth();
+		int nAttacker = pEvent->GetInt("attacker");
+		int nHealth = pEvent->GetInt("health");
+		int nDamage = pEvent->GetInt("damageamount");
+		bool bCrit = pEvent->GetBool("crit");
+		int iMaxHealth = pEntity->As<CTFPlayer>()->GetMaxHealth();
 
 		PlayerInfo_t pi{};
 		if (!I::EngineClient->GetPlayerInfo(I::EngineClient->GetLocalPlayer(), &pi) || nAttacker != pi.userID ||
@@ -104,8 +104,8 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			return;
 
 		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-		std::string sOutput = std::format("You hit {} for {} damage{}({} / {})", (sName), (nDamage), (bCrit ? " (crit) " : " "), (nHealth), (maxHealth));
-		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{}{}({} / {})", (yellow), (sName), (red), (nDamage), (bCrit ? " (crit) " : " "), (yellow), (nHealth), (maxHealth));
+		std::string sOutput = std::format("You hit {} for {} damage{}({} / {})", (sName), (nDamage), (bCrit ? " (crit) " : " "), (nHealth), (iMaxHealth));
+		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{}{}({} / {})", (yellow), (sName), (red), (nDamage), (bCrit ? " (crit) " : " "), (yellow), (nHealth), (iMaxHealth));
 		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage", sOutput, sChat);
 
 		return;
@@ -169,14 +169,14 @@ void CRecords::UserMessage(bf_read& msgData)
 	if (!pLocal)
 		return;
 
-	const int iTeam = msgData.ReadByte();
-	/*const int iVoteID =*/ msgData.ReadLong();
-	const int iCaller = msgData.ReadByte();
+	int iTeam = msgData.ReadByte();
+	/*int iVoteID =*/ msgData.ReadLong();
+	int iCaller = msgData.ReadByte();
 	char sReason[256]; msgData.ReadString(sReason, sizeof(sReason));
 	char sTarget[256]; msgData.ReadString(sTarget, sizeof(sTarget));
-	const int iTarget = msgData.ReadByte() >> 1;
+	int iTarget = msgData.ReadByte() >> 1;
 	msgData.Seek(0);
-	const bool bSameTeam = iTeam == pLocal->m_iTeamNum();
+	bool bSameTeam = iTeam == pLocal->m_iTeamNum();
 
 	PlayerInfo_t piTarget{}, piCaller{};
 	if (!iCaller || !iTarget || !I::EngineClient->GetPlayerInfo(iCaller, &piCaller) || !I::EngineClient->GetPlayerInfo(iTarget, &piTarget))
@@ -210,7 +210,7 @@ void CRecords::TagsOnJoin(std::string sName, uint32_t friendsID)
 	for (auto& iID : F::PlayerUtils.m_mPlayerTags[friendsID])
 	{
 		if (auto pTag = F::PlayerUtils.GetTag(iID))
-			vColorsTags.push_back({ pTag->Color.ToHexA(), pTag->Name });
+			vColorsTags.emplace_back(pTag->Color.ToHexA(), pTag->Name);
 	}
 
 	std::string sOutputText, sChatText;

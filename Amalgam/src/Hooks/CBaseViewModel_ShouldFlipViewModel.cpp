@@ -5,5 +5,10 @@ MAKE_SIGNATURE(CBaseViewModel_ShouldFlipViewModel, "client.dll", "8B 91 ? ? ? ? 
 MAKE_HOOK(CBaseViewModel_ShouldFlipViewModel, S::CBaseViewModel_ShouldFlipViewModel(), bool,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CBaseViewModel_ShouldFlipViewModel.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	return G::FlipViewmodels = CALL_ORIGINAL(rcx);
 }

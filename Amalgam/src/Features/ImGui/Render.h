@@ -17,11 +17,13 @@ public:
 
 	// Colors
 	ImColor Accent = {};
-	ImColor AccentLight = {};
-	ImColor Background = {};
-	ImColor Foreground = {};
-	ImColor Foremost = {};
-	ImColor ForemostLight = {};
+	ImColor AccentL = {};
+	ImColor Background0 = {};
+	ImColor Background0p5 = {};
+	ImColor Background1 = {};
+	ImColor Background1p5 = {};
+	ImColor Background1p5L = {};
+	ImColor Background2 = {};
 	ImColor Inactive = {};
 	ImColor Active = {};
 

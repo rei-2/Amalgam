@@ -67,7 +67,7 @@ float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOff
 	CTraceFilterWorldAndPropsOnly filter = {};
 	SDK::Trace(vCenter, vEndPos, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
 
-	vEdgeTrace.push_back({ vCenter, trace.endpos });
+	vEdgeTrace.emplace_back(vCenter, trace.endpos);
 
 	return (trace.startpos - trace.endpos).Length2D();
 }
@@ -236,6 +236,8 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	vAngles.x = iAntiBackstab != 2 ? GetPitch(pCmd->viewangles.x) : pCmd->viewangles.x;
 	vAngles.y = !iAntiBackstab ? GetYaw(pLocal, pCmd, bSendPacket) : pCmd->viewangles.y;
 
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		Math::ClampAngles(vAngles);
 	SDK::FixMovement(pCmd, vAngles);
 	pCmd->viewangles.x = vAngles.x;
 	pCmd->viewangles.y = vAngles.y;

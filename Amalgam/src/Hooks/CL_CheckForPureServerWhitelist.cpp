@@ -5,6 +5,11 @@ MAKE_SIGNATURE(CL_CheckForPureServerWhitelist, "engine.dll", "40 56 48 83 EC ? 8
 MAKE_HOOK(CL_CheckForPureServerWhitelist, S::CL_CheckForPureServerWhitelist(), void,
 	void **pFilesToReload)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CL_CheckForPureServerWhitelist.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(pFilesToReload);
+#endif
+
 	if (Vars::Misc::Exploits::BypassPure.Value)
 		return;
 

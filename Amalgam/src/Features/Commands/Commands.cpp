@@ -16,7 +16,7 @@ bool CCommands::Run(const std::string& cmd, std::deque<std::string>& args)
 	return true;
 }
 
-void CCommands::Register(const std::string & name, CommandCallback callback)
+void CCommands::Register(const std::string& name, CommandCallback callback)
 {
 	CommandMap[FNV1A::Hash32(name.c_str())] = std::move(callback);
 }

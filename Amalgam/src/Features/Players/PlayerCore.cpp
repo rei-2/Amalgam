@@ -5,12 +5,12 @@
 
 void CPlayerlistCore::Run()
 {
-	static Timer saveTimer{ };
-	if (saveTimer.Run(1000))
-	{
-		LoadPlayerlist();
-		SavePlayerlist();
-	}
+	static Timer tTimer = {};
+	if (!tTimer.Run(1.f))
+		return;
+
+	LoadPlayerlist();
+	SavePlayerlist();
 }
 
 void CPlayerlistCore::SavePlayerlist()

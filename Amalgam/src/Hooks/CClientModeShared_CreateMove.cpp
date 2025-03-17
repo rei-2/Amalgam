@@ -13,11 +13,30 @@
 #include "../Features/Visuals/FakeAngle/FakeAngle.h"
 #include "../Features/Spectate/Spectate.h"
 
+#define MATH_EPSILON (1.f / 16)
+#define PSILENT_EPSILON (1.f - MATH_EPSILON)
+#define REAL_EPSILON (0.1f + MATH_EPSILON)
+#define SNAP_SIZE_EPSILON (10.f - MATH_EPSILON)
+#define SNAP_NOISE_EPSILON (0.5f + MATH_EPSILON)
+
+struct CmdHistory_t
+{
+	Vec3 m_vAngle;
+	bool m_bAttack1;
+	bool m_bAttack2;
+	bool m_bSendingPacket;
+};
+
 MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
 
 MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 21), bool,
 	CClientModeShared* rcx, float flInputSampleTime, CUserCmd* pCmd)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CClientModeShared_CreateMove.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
+#endif
+
 	G::Buttons = pCmd ? pCmd->buttons : G::Buttons;
 
 	const bool bReturn = CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
@@ -33,7 +52,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
 
 	// correct tick_count for fakeinterp / nointerp
-	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.m_flFakeInterp) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
+	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.GetFakeInterp()) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
 	if (G::Buttons & IN_DUCK) // lol
 		pCmd->buttons |= IN_DUCK;
 
@@ -126,11 +145,6 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 			default:
 				if (pWeapon->GetSlot() != SLOT_MELEE)
 				{
-					/*
-					if (pWeapon->IsInReload())
-						G::CanPrimaryAttack = pWeapon->HasPrimaryAmmoForShot();
-					*/
-
 					bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
 					bool bReload = pWeapon->IsInReload();
 					if (!bAmmo && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
@@ -205,7 +219,62 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	G::LastUserCmd = pCmd;
 	F::NoSpreadHitscan.AskForPlayerPerf();
 
-	//const bool bShouldSkip = G::PSilentAngles || G::SilentAngles || G::AntiAim || G::AvoidingBackstab;
-	//return bShouldSkip ? false : CALL_ORIGINAL(rcx, edx, input_sample_frametime, pCmd);
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	{
+		Math::ClampAngles(pCmd->viewangles); // shouldn't happen, but failsafe
+
+		static std::deque<CmdHistory_t> vHistory;
+		vHistory.emplace_front(pCmd->viewangles, pCmd->buttons & IN_ATTACK, pCmd->buttons & IN_ATTACK2, *pSendPacket);
+		if (vHistory.size() > 5)
+			vHistory.pop_back();
+
+		if (vHistory.size() < 3)
+			return false;
+
+		// prevent trigger checks, though this shouldn't happen ordinarily
+		if (!vHistory[0].m_bAttack1 && vHistory[1].m_bAttack1 && !vHistory[2].m_bAttack1)
+			pCmd->buttons |= IN_ATTACK;
+		if (!vHistory[0].m_bAttack2 && vHistory[1].m_bAttack2 && !vHistory[2].m_bAttack2)
+			pCmd->buttons |= IN_ATTACK2;
+		
+		// don't care if we are actually attacking or not, a miss is less important than a detection
+		if (vHistory[0].m_bAttack1 || vHistory[1].m_bAttack1 || vHistory[2].m_bAttack1)
+		{
+			// prevent silent aim checks
+			if (Math::CalcFov(vHistory[0].m_vAngle, vHistory[1].m_vAngle) > PSILENT_EPSILON
+				&& Math::CalcFov(vHistory[0].m_vAngle, vHistory[2].m_vAngle) < REAL_EPSILON)
+			{
+				pCmd->viewangles = vHistory[1].m_vAngle.LerpAngle(vHistory[0].m_vAngle, 0.5f);
+				if (Math::CalcFov(pCmd->viewangles, vHistory[2].m_vAngle) < REAL_EPSILON)
+					pCmd->viewangles = vHistory[0].m_vAngle + Vec3(0.f, REAL_EPSILON * 2);
+				vHistory[0].m_vAngle = pCmd->viewangles;
+				vHistory[0].m_bSendingPacket = *pSendPacket = vHistory[1].m_bSendingPacket;
+				G::Choking = !*pSendPacket;
+			}
+
+			// prevent aim snap checks
+			if (vHistory.size() == 5)
+			{	// not my fault the original code is so atrocious
+				float flDelta01 = Math::CalcFov(vHistory[0].m_vAngle, vHistory[1].m_vAngle);
+				float flDelta12 = Math::CalcFov(vHistory[1].m_vAngle, vHistory[2].m_vAngle);
+				float flDelta23 = Math::CalcFov(vHistory[2].m_vAngle, vHistory[3].m_vAngle);
+				float flDelta34 = Math::CalcFov(vHistory[3].m_vAngle, vHistory[4].m_vAngle);
+
+				if ((
+						flDelta12 > SNAP_SIZE_EPSILON && flDelta23 < SNAP_NOISE_EPSILON && vHistory[2].m_vAngle != vHistory[3].m_vAngle
+					 || flDelta23 > SNAP_SIZE_EPSILON && flDelta12 < SNAP_NOISE_EPSILON && vHistory[1].m_vAngle != vHistory[2].m_vAngle
+					)
+					&& flDelta01 < SNAP_NOISE_EPSILON && vHistory[0].m_vAngle != vHistory[1].m_vAngle
+					&& flDelta34 < SNAP_NOISE_EPSILON && vHistory[3].m_vAngle != vHistory[4].m_vAngle)
+				{
+					pCmd->viewangles.y += SNAP_NOISE_EPSILON * 2;
+					vHistory[0].m_vAngle = pCmd->viewangles;
+					vHistory[0].m_bSendingPacket = *pSendPacket = vHistory[1].m_bSendingPacket;
+					G::Choking = !*pSendPacket;
+				}
+			}
+		}
+	}
+
 	return false;
 }

@@ -5,6 +5,11 @@ MAKE_SIGNATURE(CSkyboxView_Enable3dSkyboxFog, "client.dll", "40 57 48 83 EC ? E8
 MAKE_HOOK(CSkyboxView_Enable3dSkyboxFog, S::CSkyboxView_Enable3dSkyboxFog(), void,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CSkyboxView_Enable3dSkyboxFog.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	if (!(Vars::Visuals::World::Modulations.Value & Vars::Visuals::World::ModulationsEnum::Fog) || I::EngineClient->IsTakingScreenshot() && Vars::Visuals::UI::CleanScreenshots.Value)
 		return CALL_ORIGINAL(rcx);
 

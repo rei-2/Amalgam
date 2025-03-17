@@ -19,6 +19,8 @@ class CMisc
 	void TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd);
 
+	void EdgeJump(CTFPlayer* pLocal, CUserCmd* pCmd, bool bPost = false);
+
 	Vec3 vPeekReturnPos = {};
 	//bool bSteamCleared = false;
 

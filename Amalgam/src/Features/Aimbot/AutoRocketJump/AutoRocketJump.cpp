@@ -185,8 +185,8 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 							{
 								//G::LineStorage.clear(); G::BoxStorage.clear();
 								Vec3 angles; Math::VectorAngles(trace.plane.normal, angles);
-								G::BoxStorage.push_back({ trace.endpos + trace.plane.normal, { -1.f, -1.f, -1.f }, { 1.f, 1.f, 1.f }, angles, I::GlobalVars->curtime + 5.f, {}, { 0, 0, 0, 0 }, true });
-								G::LineStorage.push_back({ { localStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal }, I::GlobalVars->curtime + 5.f, {}, true });
+								G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3(-1.f, -1.f, -1.f), Vec3(1.f, 1.f, 1.f), angles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
+								G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(localStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal), I::GlobalVars->curtime + 5.f, Color_t(), true);
 							}
 						}
 

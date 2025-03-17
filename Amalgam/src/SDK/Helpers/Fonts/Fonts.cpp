@@ -2,10 +2,10 @@
 
 void CFonts::Reload(float flDPI)
 {
-	m_mapFonts[FONT_ESP] = { "Verdana", int(12.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
-	m_mapFonts[FONT_INDICATORS] = { "Verdana", int(13.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
+	m_mFonts[FONT_ESP] = { "Verdana", int(12.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
+	m_mFonts[FONT_INDICATORS] = { "Verdana", int(13.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
 
-	for (auto& [_, fFont] : m_mapFonts)
+	for (auto& [_, fFont] : m_mFonts)
 	{
 		I::MatSystemSurface->SetFontGlyphSet
 		(
@@ -22,5 +22,5 @@ void CFonts::Reload(float flDPI)
 
 const Font_t& CFonts::GetFont(EFonts eFont)
 {
-	return m_mapFonts[eFont];
+	return m_mFonts[eFont];
 }

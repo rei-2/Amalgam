@@ -183,7 +183,7 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 				if (bFound)
 					continue;
 
-				val.push_back({ sMat, tColor });
+				val.emplace_back(sMat, tColor);
 			}
 
 			// remove invalid materials
@@ -278,7 +278,7 @@ CConfigs::CConfigs()
 			if (!bLegacy)\
 			{\
 				int iBind = std::stoi(it.first);\
-				if ((F::Binds.vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
+				if ((F::Binds.m_vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
 					continue;\
 				LoadJson(*mapTree, it.first, var->As<type>()->Map[iBind]);\
 			}\
@@ -290,16 +290,16 @@ CConfigs::CConfigs()
 					iBind = DEFAULT_BIND;\
 				else\
 				{\
-					for (auto it2 = F::Binds.vBinds.begin(); it2 != F::Binds.vBinds.end(); it2++)\
+					for (auto it2 = F::Binds.m_vBinds.begin(); it2 != F::Binds.m_vBinds.end(); it2++)\
 					{\
-						if (uHash == FNV1A::Hash32(it2->Name.c_str()))\
+						if (uHash == FNV1A::Hash32(it2->m_sName.c_str()))\
 						{\
-							iBind = std::distance(F::Binds.vBinds.begin(), it2);\
+							iBind = std::distance(F::Binds.m_vBinds.begin(), it2);\
 							break;\
 						}\
 					}\
 				}\
-				if (iBind == -2 || (F::Binds.vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
+				if (iBind == -2 || (F::Binds.m_vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
 					continue;\
 				LoadJson(*mapTree, it.first, var->As<type>()->Map[iBind]);\
 			}\
@@ -317,21 +317,22 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 		boost::property_tree::ptree writeTree;
 
 		boost::property_tree::ptree bindTree;
-		for (auto it = F::Binds.vBinds.begin(); it != F::Binds.vBinds.end(); it++)
+		for (auto it = F::Binds.m_vBinds.begin(); it != F::Binds.m_vBinds.end(); it++)
 		{
+			int iID = std::distance(F::Binds.m_vBinds.begin(), it);
 			auto& tBind = *it;
 
 			boost::property_tree::ptree bindTree2;
-			bindTree2.put("Name", tBind.Name);
-			bindTree2.put("Type", tBind.Type);
-			bindTree2.put("Info", tBind.Info);
-			bindTree2.put("Key", tBind.Key);
-			bindTree2.put("Not", tBind.Not);
-			bindTree2.put("Active", tBind.Active);
-			bindTree2.put("Visible", tBind.Visible);
-			bindTree2.put("Parent", tBind.Parent);
+			bindTree2.put("Name", tBind.m_sName);
+			bindTree2.put("Type", tBind.m_iType);
+			bindTree2.put("Info", tBind.m_iInfo);
+			bindTree2.put("Key", tBind.m_iKey);
+			bindTree2.put("Not", tBind.m_bNot);
+			bindTree2.put("Active", tBind.m_bActive);
+			bindTree2.put("Visible", tBind.m_bVisible);
+			bindTree2.put("Parent", tBind.m_iParent);
 
-			bindTree.push_back(std::make_pair("", bindTree2));
+			bindTree.put_child(std::to_string(iID), bindTree2);
 		}
 		writeTree.put_child("Binds", bindTree);
 
@@ -395,28 +396,28 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 		bool bLegacy = false;
 		if (const auto condTree = readTree.get_child_optional("Binds"))
 		{
-			F::Binds.vBinds.clear();
+			F::Binds.m_vBinds.clear();
 
 			for (auto& it : *condTree)
 			{
 				Bind_t tBind = {};
-				if (auto getValue = it.second.get_optional<std::string>("Name")) { tBind.Name = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.Type = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.Info = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.Key = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.Not = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.Active = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.Visible = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Parent")) { tBind.Parent = *getValue; }
+				if (auto getValue = it.second.get_optional<std::string>("Name")) { tBind.m_sName = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.m_iType = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.m_iInfo = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.m_iKey = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Parent")) { tBind.m_iParent = *getValue; }
 
-				F::Binds.vBinds.push_back(tBind);
+				F::Binds.m_vBinds.push_back(tBind);
 			}
 		}
 		else if (const auto condTree = readTree.get_child_optional("Conditions"))
 		{	// support old string based indexing
 			bLegacy = true;
 
-			F::Binds.vBinds.clear();
+			F::Binds.m_vBinds.clear();
 
 			for (auto& it : *condTree)
 			{
@@ -424,26 +425,26 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 					continue;
 
 				Bind_t tBind = { it.first };
-				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.Type = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.Info = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.Key = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.Not = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.Active = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.Visible = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.m_iType = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.m_iInfo = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.m_iKey = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
 				if (auto getValue = it.second.get_optional<std::string>("Parent"))
 				{
 					auto uHash = FNV1A::Hash32(getValue->c_str());
-					for (auto it = F::Binds.vBinds.begin(); it != F::Binds.vBinds.end(); it++)
+					for (auto it = F::Binds.m_vBinds.begin(); it != F::Binds.m_vBinds.end(); it++)
 					{
-						if (FNV1A::Hash32(it->Name.c_str()) == uHash)
+						if (FNV1A::Hash32(it->m_sName.c_str()) == uHash)
 						{
-							tBind.Parent = std::distance(F::Binds.vBinds.begin(), it);
+							tBind.m_iParent = std::distance(F::Binds.m_vBinds.begin(), it);
 							break;
 						}
 					}
 				}
 
-				F::Binds.vBinds.push_back(tBind);
+				F::Binds.m_vBinds.push_back(tBind);
 			}
 		}
 
@@ -635,7 +636,7 @@ void CConfigs::ResetConfig(const std::string& sConfigName, bool bNotify)
 	{
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
-		F::Binds.vBinds.clear();
+		F::Binds.m_vBinds.clear();
 
 		for (auto& var : g_Vars)
 		{

@@ -6,6 +6,11 @@ MAKE_SIGNATURE(CTFPlayer_OnHasNewItems_Add_Call, "client.dll", "E9 ? ? ? ? 48 8B
 MAKE_HOOK(NotificationQueue_Add, S::NotificationQueue_Add(), int,
 	CEconNotification* pNotification)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::NotificationQueue_Add.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(pNotification);
+#endif
+
 	static const auto dwDesired = S::CTFPlayer_OnHasNewItems_Add_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 

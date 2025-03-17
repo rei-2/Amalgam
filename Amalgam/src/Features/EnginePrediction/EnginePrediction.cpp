@@ -56,7 +56,7 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 		m_vOriginalOrigin = pLocal->m_vecOrigin();
 		m_vOriginalVelocity = pLocal->m_vecVelocity();
 
-		Vec3 vOriginalMove = { pCmd->forwardmove, pCmd->sidemove };
+		Vec2 vOriginalMove = { pCmd->forwardmove, pCmd->sidemove };
 		int iOriginalButtons = pCmd->buttons;
 
 		bool bOriginalWarp = F::Ticks.m_bAntiWarp;
@@ -114,12 +114,6 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->curtime = TICKS_TO_TIME(I::GlobalVars->tickcount);
 	I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
 
-	// fix
-	if (pLocal->m_hGroundEntity())
-		pLocal->m_fFlags() |= FL_ONGROUND;
-	else
-		pLocal->m_fFlags() &= ~FL_ONGROUND;
-
 	Simulate(pLocal, pCmd);
 
 	F::Ticks.SaveShootPos(pLocal);
@@ -139,6 +133,7 @@ void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 	{
 		pLocal->m_vecOrigin() = m_vOriginalOrigin;
 		pLocal->m_vecVelocity() = m_vOriginalVelocity;
+		pLocal->SetAbsVelocity(m_vOriginalVelocity);
 
 		Simulate(pLocal, pCmd);
 	}

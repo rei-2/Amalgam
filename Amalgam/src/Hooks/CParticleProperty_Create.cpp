@@ -9,6 +9,11 @@ MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect_CreateName_Call, "client.dll", 
 MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*,
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, const char* pszAttachmentName)
 {
+#ifdef DEBUG_HOOKS
+    if (!Vars::Hooks::CParticleProperty_Create.Map[DEFAULT_BIND])
+        return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, pszAttachmentName);
+#endif
+
     static const auto dwUpdateEffects1 = S::CWeaponMedigun_UpdateEffects_CreateName_Call1();
     static const auto dwUpdateEffects2 = S::CWeaponMedigun_UpdateEffects_CreateName_Call2();
     static const auto dwManageChargeEffect = S::CWeaponMedigun_ManageChargeEffect_CreateName_Call();
@@ -88,6 +93,11 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
 MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), void*,
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, int iAttachmentPoint, Vector vecOriginOffset)
 {
+#ifdef DEBUG_HOOKS
+    if (!Vars::Hooks::CParticleProperty_Create.Map[DEFAULT_BIND])
+        return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, iAttachmentPoint, vecOriginOffset);
+#endif
+
     if (FNV1A::Hash32(Vars::Visuals::Particles::ProjectileTrail.Value.c_str()) != FNV1A::Hash32Const("Off"))
     {
         switch (FNV1A::Hash32(pszParticleName))

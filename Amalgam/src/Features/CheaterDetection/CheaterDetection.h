@@ -1,6 +1,12 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
+struct AngleHistory_t
+{
+	Vec3 m_vAngle;
+	bool m_bAttacking;
+};
+
 struct PlayerInfo
 {
 	uint32_t m_uFriendsID = 0;
@@ -16,7 +22,7 @@ struct PlayerInfo
 
 	struct AimFlicking_t
 	{
-		std::deque<std::pair<Vec3, bool>> m_vAngles = {}; // store last 3 angles & if damage was dealt
+		std::deque<AngleHistory_t> m_vAngles = {}; // store last 3 angles & if damage was dealt
 	} m_AimFlicking;
 					
 	struct DuckSpeed_t

@@ -7,14 +7,13 @@ static float EaseInOutCubic(float x)
 
 void CNotifications::Add(const std::string& sText, float flLifeTime, float flPanTime)
 {
-	vNotifications.push_back({ sText, float(SDK::PlatFloatTime()), flLifeTime, flPanTime });
+	vNotifications.emplace_back(sText, float(SDK::PlatFloatTime()), flLifeTime, flPanTime);
 }
 
 void CNotifications::Draw()
 {
 	while (vNotifications.size() > iMaxNotifySize)
 		vNotifications.pop_front();
-
 	for (auto it = vNotifications.begin(); it != vNotifications.end();)
 	{
 		if (it->m_flCreateTime + it->m_flLifeTime <= SDK::PlatFloatTime())

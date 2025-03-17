@@ -12,17 +12,17 @@
 
 struct ListPlayer
 {
-	const char* m_sName;
+	std::string m_sName;
 	uint32_t m_uFriendsID;
 	int m_iUserID;
 	int m_iTeam;
-	int m_iClass;
 	bool m_bAlive;
 	bool m_bLocal;
 	bool m_bFake;
 	bool m_bFriend;
 	bool m_bParty;
 	bool m_bF2P;
+	int m_iLevel;
 };
 
 struct PriorityLabel_t

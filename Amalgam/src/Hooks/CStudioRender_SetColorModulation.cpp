@@ -3,6 +3,11 @@
 MAKE_HOOK(CStudioRender_SetColorModulation, U::Memory.GetVFunc(I::StudioRender, 27), void,
 	void* rcx, const float* pColor)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CStudioRender_SetColorModulation.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pColor);
+#endif
+
 	if (Vars::Visuals::World::Modulations.Value & Vars::Visuals::World::ModulationsEnum::Prop && G::DrawingProps && !(Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot()))
 	{
 		const float flCustomBlend[3] = {

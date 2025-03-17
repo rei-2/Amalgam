@@ -1,21 +1,21 @@
 #include "Timer.h"
 
-#include <chrono>
+#include "../../SDK/SDK.h"
 
 Timer::Timer()
 {
-	Last = std::chrono::steady_clock::now();
+	m_flLast = SDK::PlatFloatTime();
 }
 
-bool Timer::Check(unsigned ms) const
+bool Timer::Check(float flS) const
 {
-	const auto currentTime = std::chrono::steady_clock::now();
-	return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - Last).count() >= ms;
+	float flCurrentTime = SDK::PlatFloatTime();
+	return flCurrentTime - m_flLast >= flS;
 }
 
-bool Timer::Run(unsigned ms)
+bool Timer::Run(float flS)
 {
-	if (Check(ms))
+	if (Check(flS))
 	{
 		Update();
 		return true;
@@ -25,5 +25,5 @@ bool Timer::Run(unsigned ms)
 
 inline void Timer::Update()
 {
-	Last = std::chrono::steady_clock::now();
+	m_flLast = SDK::PlatFloatTime();
 }

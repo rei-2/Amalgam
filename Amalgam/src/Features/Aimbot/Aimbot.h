@@ -11,7 +11,8 @@ private:
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
-	bool bRan = false;
+	bool m_bRan = false;
+	bool m_bRunningSecondary = false;
 };
 
 ADD_FEATURE(CAimbot, Aimbot)

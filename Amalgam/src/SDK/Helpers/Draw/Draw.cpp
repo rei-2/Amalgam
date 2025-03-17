@@ -6,7 +6,7 @@
 #include <array>
 #include <ranges>
 
-MAKE_SIGNATURE(CDraw_GetIcon, "client.dll", "40 53 48 81 EC ? ? ? ? 48 8B DA", 0x0);
+MAKE_SIGNATURE(CHudBaseDeathNotice_GetIcon, "client.dll", "40 53 48 81 EC ? ? ? ? 48 8B DA", 0x0);
 
 void CDraw::UpdateScreenSize()
 {
@@ -17,7 +17,6 @@ void CDraw::UpdateScreenSize()
 void CDraw::UpdateW2SMatrix()
 {
 	CViewSetup ViewSetup = {};
-
 	if (I::BaseClientDLL->GetPlayerView(ViewSetup))
 	{
 		static VMatrix WorldToView = {};
@@ -28,7 +27,7 @@ void CDraw::UpdateW2SMatrix()
 	}
 }
 
-void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const char* str, ...)
+void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str, ...)
 {
 	if (str == nullptr)
 		return;
@@ -43,10 +42,10 @@ void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const E
 
 	wsprintfW(wstr, L"%hs", cbuffer);
 
-	const auto dwFont = font.m_dwFont;
+	const auto dwFont = tFont.m_dwFont;
 
 	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
-	switch (align)
+	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
 	case ALIGN_TOP: x -= w / 2; break;
@@ -61,10 +60,10 @@ void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const E
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
 	I::MatSystemSurface->DrawSetTextFont(dwFont);
-	I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
-void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const EAlign& align, const wchar_t* str, ...)
+void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* str, ...)
 {
 	if (str == nullptr)
 		return;
@@ -76,10 +75,10 @@ void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const E
 	vswprintf_s(wstr, str, va_alist);
 	va_end(va_alist);
 
-	const auto dwFont = font.m_dwFont;
+	const auto dwFont = tFont.m_dwFont;
 
 	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
-	switch (align)
+	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
 	case ALIGN_TOP: x -= w / 2; break;
@@ -94,11 +93,11 @@ void CDraw::String(const Font_t& font, int x, int y, const Color_t& clr, const E
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
 	I::MatSystemSurface->DrawSetTextFont(dwFont);
-	I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
 
-void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr, const Color_t& out, const EAlign& align, const char* str, ...)
+void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const char* str, ...)
 {
 	if (str == nullptr)
 		return;
@@ -113,10 +112,10 @@ void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr,
 
 	wsprintfW(wstr, L"%hs", cbuffer);
 
-	const auto dwFont = font.m_dwFont;
+	const auto dwFont = tFont.m_dwFont;
 
 	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
-	switch (align)
+	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
 	case ALIGN_TOP: x -= w / 2; break;
@@ -129,30 +128,30 @@ void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr,
 	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
 	}
 
-	auto outline = out;
+	auto tColorOutline = tColorOut;
 	std::vector<std::pair<int, int>> vOutline = { { 1, 1 } };
 	if (!Vars::Menu::CheapText.Value)
 	{
 		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
-		outline.a /= 2;
+		tColorOutline.a /= 2;
 	}
-	if (outline.a)
+	if (tColorOutline.a)
 	{
 		for (auto& [x2, y2] : vOutline)
 		{
 			I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
 			I::MatSystemSurface->DrawSetTextFont(dwFont);
-			I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
+			I::MatSystemSurface->DrawSetTextColor(tColorOutline.r, tColorOutline.g, tColorOutline.b, tColorOutline.a);
 			I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 		}
 	}
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
 	I::MatSystemSurface->DrawSetTextFont(dwFont);
-	I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
-void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr, const Color_t& out, const EAlign& align, const wchar_t* str, ...)
+void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const wchar_t* str, ...)
 {
 	if (str == nullptr)
 		return;
@@ -164,10 +163,10 @@ void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr,
 	vswprintf_s(wstr, str, va_alist);
 	va_end(va_alist);
 
-	const auto dwFont = font.m_dwFont;
+	const auto dwFont = tFont.m_dwFont;
 
 	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
-	switch (align)
+	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
 	case ALIGN_TOP: x -= w / 2; break;
@@ -180,167 +179,165 @@ void CDraw::StringOutlined(const Font_t& font, int x, int y, const Color_t& clr,
 	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
 	}
 
-	auto outline = out;
+	auto tColorOutline = tColorOut;
 	std::vector<std::pair<int, int>> vOutline = { { 1, 1 } };
 	if (!Vars::Menu::CheapText.Value)
 	{
 		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
-		outline.a /= 2;
+		tColorOutline.a /= 2;
 	}
-	if (outline.a)
+	if (tColorOutline.a)
 	{
 		for (auto& [x2, y2] : vOutline)
 		{
 			I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
 			I::MatSystemSurface->DrawSetTextFont(dwFont);
-			I::MatSystemSurface->DrawSetTextColor(outline.r, outline.g, outline.b, outline.a);
+			I::MatSystemSurface->DrawSetTextColor(tColorOutline.r, tColorOutline.g, tColorOutline.b, tColorOutline.a);
 			I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 		}
 	}
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
 	I::MatSystemSurface->DrawSetTextFont(dwFont);
-	I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
 
-void CDraw::Line(int x1, int y1, int x2, int y2, const Color_t& clr)
+void CDraw::Line(int x1, int y1, int x2, int y2, const Color_t& tColor)
 {
-	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawLine(x1, y1, x2, y2);
 }
 
-void CDraw::FillPolygon(std::vector<Vertex_t> vertices, const Color_t& clr)
+void CDraw::FillPolygon(std::vector<Vertex_t> vVertices, const Color_t& tColor)
+{
+	static int iId = 0;
+	if (!I::MatSystemSurface->IsTextureIDValid(iId))
+		iId = I::MatSystemSurface->CreateNewTextureID();
+
+	I::MatSystemSurface->DrawSetColor(tColor.r, tColor.g, tColor.b, tColor.a);
+	I::MatSystemSurface->DrawSetTexture(iId);
+	I::MatSystemSurface->DrawTexturedPolygon(int(vVertices.size()), vVertices.data());
+}
+void CDraw::LinePolygon(std::vector<Vertex_t> vVertices, const Color_t& tColor)
 {
 	static int id = 0;
 	if (!I::MatSystemSurface->IsTextureIDValid(id))
 		id = I::MatSystemSurface->CreateNewTextureID();
 
-	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawSetTexture(id);
-	I::MatSystemSurface->DrawTexturedPolygon(int(vertices.size()), vertices.data());
-}
-void CDraw::LinePolygon(std::vector<Vertex_t> vertices, const Color_t& clr)
-{
-	static int id = 0;
-	if (!I::MatSystemSurface->IsTextureIDValid(id))
-		id = I::MatSystemSurface->CreateNewTextureID();
-
-	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
-	I::MatSystemSurface->DrawSetTexture(id);
-	I::MatSystemSurface->DrawTexturedPolyLine(vertices.data(), int(vertices.size()));
+	I::MatSystemSurface->DrawTexturedPolyLine(vVertices.data(), int(vVertices.size()));
 }
 
-void CDraw::FillRect(int x, int y, int w, int h, const Color_t& clr)
+void CDraw::FillRect(int x, int y, int w, int h, const Color_t& tColor)
 {
-	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawFilledRect(x, y, x + w, y + h);
 }
-void CDraw::LineRect(int x, int y, int w, int h, const Color_t& clr)
+void CDraw::LineRect(int x, int y, int w, int h, const Color_t& tColor)
 {
-	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
+	I::MatSystemSurface->DrawSetColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawOutlinedRect(x, y, x + w, y + h);
 }
-void CDraw::GradientRect(int x, int y, int w, int h, const Color_t& top_clr, const Color_t& bottom_clr, bool horizontal)
+void CDraw::GradientRect(int x, int y, int w, int h, const Color_t& tColorTop, const Color_t& tColorBottom, bool bHorizontal)
 {
-	I::MatSystemSurface->DrawSetColor(top_clr.r, top_clr.g, top_clr.b, top_clr.a);
-	I::MatSystemSurface->DrawFilledRectFade(x, y, x + w, y + h, top_clr.a, bottom_clr.a, horizontal);
-	I::MatSystemSurface->DrawSetColor(bottom_clr.r, bottom_clr.g, bottom_clr.b, bottom_clr.a);
-	I::MatSystemSurface->DrawFilledRectFade(x, y, x + w, y + h, top_clr.a, bottom_clr.a, horizontal);
+	I::MatSystemSurface->DrawSetColor(tColorTop.r, tColorTop.g, tColorTop.b, tColorTop.a);
+	I::MatSystemSurface->DrawFilledRectFade(x, y, x + w, y + h, tColorTop.a, tColorBottom.a, bHorizontal);
+	I::MatSystemSurface->DrawSetColor(tColorBottom.r, tColorBottom.g, tColorBottom.b, tColorBottom.a);
+	I::MatSystemSurface->DrawFilledRectFade(x, y, x + w, y + h, tColorTop.a, tColorBottom.a, bHorizontal);
 }
-void CDraw::FillRectOutline(int x, int y, int w, int h, const Color_t& clr, const Color_t& out)
+void CDraw::FillRectOutline(int x, int y, int w, int h, const Color_t& tColor, const Color_t& tColorOut)
 {
-	FillRect(x, y, w, h, clr);
-	LineRect(x - 1, y - 1, w + 2, h + 2, out);
+	FillRect(x, y, w, h, tColor);
+	LineRect(x - 1, y - 1, w + 2, h + 2, tColorOut);
 }
-void CDraw::LineRectOutline(int x, int y, int w, int h, const Color_t& clr, const Color_t& out, bool inside)
+void CDraw::LineRectOutline(int x, int y, int w, int h, const Color_t& tColor, const Color_t& tColorOut, bool bInside)
 {
-	LineRect(x, y, w, h, clr);
-	LineRect(x - 1, y - 1, w + 2, h + 2, out);
-	if (inside)
-		LineRect(x + 1, y + 1, w - 2, h - 2, out);
+	LineRect(x, y, w, h, tColor);
+	LineRect(x - 1, y - 1, w + 2, h + 2, tColorOut);
+	if (bInside)
+		LineRect(x + 1, y + 1, w - 2, h - 2, tColorOut);
 }
-void CDraw::FillRectPercent(int x, int y, int w, int h, float t, const Color_t& clr, const Color_t& out, const EAlign& align, bool adjust)
+void CDraw::FillRectPercent(int x, int y, int w, int h, float t, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, bool bAdjust)
 {
-	if (!adjust)
-		FillRect(x - 1, y - 1, w + 2, h + 2, out);
+	if (!bAdjust)
+		FillRect(x - 1, y - 1, w + 2, h + 2, tColorOut);
 	int nw = w, nh = h;
-	switch (align)
+	switch (eAlign)
 	{
 	case ALIGN_LEFT: nw *= t; break;
 	case ALIGN_RIGHT: nw *= t; x += w - nw; break;
 	case ALIGN_TOP: nh *= t; break;
 	case ALIGN_BOTTOM: nh *= t; y += h - nh; break;
 	}
-	if (adjust)
-		FillRect(x - 1, y - 1, nw + 2, nh + 2, out);
-	FillRect(x, y, nw, nh, clr);
+	if (bAdjust)
+		FillRect(x - 1, y - 1, nw + 2, nh + 2, tColorOut);
+	FillRect(x, y, nw, nh, tColor);
 }
-void CDraw::FillRoundRect(int x, int y, int w, int h, int radius, const Color_t& clr, int iCount)
+void CDraw::FillRoundRect(int x, int y, int w, int h, int iRadius, const Color_t& tColor, int iCount)
 {
-	std::vector<Vertex_t> vertices = {};
+	std::vector<Vertex_t> vVertices = {};
 
 	int _iCount = std::max(iCount / 4, 2);
 	float flDelta = 90.f / (_iCount - 1);
 	for (int i = 0; i < 4; i++)
 	{
-		const int _x = x + ((i < 2) ? (w - radius) : radius);
-		const int _y = y + ((i % 3) ? (h - radius) : radius);
+		const int _x = x + ((i < 2) ? (w - iRadius) : iRadius);
+		const int _y = y + ((i % 3) ? (h - iRadius) : iRadius);
 
 		const float a = 90.f * i;
 		for (int j = 0; j < _iCount; j++)
 		{
 			const float _a = DEG2RAD(a + j * flDelta);
-			vertices.emplace_back(Vertex_t({ { _x + radius * sinf(_a), _y - radius * cosf(_a) } }));
+			vVertices.emplace_back(Vertex_t({ { _x + iRadius * sinf(_a), _y - iRadius * cosf(_a) } }));
 		}
 	}
 
-	FillPolygon(vertices, clr);
+	FillPolygon(vVertices, tColor);
 }
-void CDraw::LineRoundRect(int x, int y, int w, int h, int radius, const Color_t& clr, int iCount)
+void CDraw::LineRoundRect(int x, int y, int w, int h, int iRadius, const Color_t& tColor, int iCount)
 {
-	std::vector<Vertex_t> vertices = {};
+	std::vector<Vertex_t> vVertices = {};
 
 	w -= 1, h -= 1;
 	int _iCount = std::max(iCount / 4, 2);
 	float flDelta = 90.f / (_iCount - 1);
 	for (int i = 0; i < 4; i++)
 	{
-		const int _x = x + ((i < 2) ? (w - radius) : radius);
-		const int _y = y + ((i % 3) ? (h - radius) : radius);
+		const int _x = x + ((i < 2) ? (w - iRadius) : iRadius);
+		const int _y = y + ((i % 3) ? (h - iRadius) : iRadius);
 
 		const float a = 90.f * i;
 		for (int j = 0; j < _iCount; j++)
 		{
 			const float _a = DEG2RAD(a + j * flDelta);
-			vertices.emplace_back(Vertex_t({ { _x + radius * sinf(_a), _y - radius * cosf(_a) } }));
+			vVertices.emplace_back(Vertex_t({ { _x + iRadius * sinf(_a), _y - iRadius * cosf(_a) } }));
 		}
 	}
 
-	LinePolygon(vertices, clr);
+	LinePolygon(vVertices, tColor);
 }
 
-void CDraw::FillCircle(int x, int y, float radius, int segments, const Color_t clr)
+void CDraw::FillCircle(int x, int y, float iRadius, int iSegments, const Color_t clr)
 {
-	std::vector<Vertex_t> vertices = {};
+	std::vector<Vertex_t> vVertices = {};
 
-	const float step = static_cast<float>(PI) * 2.0f / segments;
+	const float step = static_cast<float>(PI) * 2.0f / iSegments;
 	for (float a = 0; a < PI * 2.0f; a += step)
-		vertices.emplace_back(Vertex_t({ radius * cosf(a) + x, radius * sinf(a) + y }));
+		vVertices.emplace_back(Vector2D{ iRadius * cosf(a) + x, iRadius * sinf(a) + y });
 
-	FillPolygon(vertices, clr);
-
-	vertices.clear();
+	FillPolygon(vVertices, clr);
 }
-void CDraw::LineCircle(int x, int y, float radius, int segments, const Color_t& clr)
+void CDraw::LineCircle(int x, int y, float iRadius, int iSegments, const Color_t& clr)
 {
 	I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
-	I::MatSystemSurface->DrawOutlinedCircle(x, y, radius, segments);
+	I::MatSystemSurface->DrawOutlinedCircle(x, y, iRadius, iSegments);
 }
 
-void CDraw::Texture(int x, int y, int w, int h, int id, const EAlign& align)
+void CDraw::Texture(int x, int y, int w, int h, int iId, const EAlign& eAlign)
 {
-	switch (align)
+	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
 	case ALIGN_TOP: x -= w / 2; break;
@@ -354,21 +351,21 @@ void CDraw::Texture(int x, int y, int w, int h, int id, const EAlign& align)
 	}
 
 	int nTexture = 0;
-	if (ICONS::TEXTURES[id].first != -1)
-		nTexture = ICONS::TEXTURES[id].first;
+	if (ICONS::TEXTURES[iId].first != -1)
+		nTexture = ICONS::TEXTURES[iId].first;
 	else
 	{
-		nTexture = ICONS::TEXTURES[id].first = I::MatSystemSurface->CreateNewTextureID();
-		I::MatSystemSurface->DrawSetTextureFile(nTexture, ICONS::TEXTURES[id].second.c_str(), false, true);
+		nTexture = ICONS::TEXTURES[iId].first = I::MatSystemSurface->CreateNewTextureID();
+		I::MatSystemSurface->DrawSetTextureFile(nTexture, ICONS::TEXTURES[iId].second.c_str(), false, true);
 	}
 
 	I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
 	I::MatSystemSurface->DrawSetTexture(nTexture);
 	I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
 }
-CHudTexture* CDraw::GetIcon(const char* szIcon, int eIconFormat) // Thanks myzarfin
+CHudTexture* CDraw::GetIcon(const char* szIcon, int eIconFormat)
 {
-	return S::CDraw_GetIcon.Call<CHudTexture*>(nullptr, szIcon, eIconFormat);
+	return S::CHudBaseDeathNotice_GetIcon.Call<CHudTexture*>(nullptr, szIcon, eIconFormat);
 }
 int CDraw::CreateTextureFromArray(const unsigned char* rgba, int w, int h)
 {
@@ -376,28 +373,28 @@ int CDraw::CreateTextureFromArray(const unsigned char* rgba, int w, int h)
 	I::MatSystemSurface->DrawSetTextureRGBAEx(nTextureIdOut, rgba, w, h, IMAGE_FORMAT_RGBA8888);
 	return nTextureIdOut;
 }
-void CDraw::DrawHudTexture(float x, float y, float s, const CHudTexture* texture, Color_t clr)
+void CDraw::DrawHudTexture(float x, float y, float s, const CHudTexture* pTexture, Color_t clr)
 {
-	if (!texture)
+	if (!pTexture)
 		return;
 
-	if (texture->bRenderUsingFont)
+	if (pTexture->bRenderUsingFont)
 	{
-		I::MatSystemSurface->DrawSetTextFont(texture->hFont);
+		I::MatSystemSurface->DrawSetTextFont(pTexture->hFont);
 		I::MatSystemSurface->DrawSetTextColor(clr.r, clr.g, clr.b, clr.a);
 		I::MatSystemSurface->DrawSetTextPos(x, y);
-		I::MatSystemSurface->DrawUnicodeChar(texture->cCharacterInFont);
+		I::MatSystemSurface->DrawUnicodeChar(pTexture->cCharacterInFont);
 	}
-	else if (texture->textureId != -1)
+	else if (pTexture->textureId != -1)
 	{
-		I::MatSystemSurface->DrawSetTexture(texture->textureId);
+		I::MatSystemSurface->DrawSetTexture(pTexture->textureId);
 		I::MatSystemSurface->DrawSetColor(clr.r, clr.g, clr.b, clr.a);
-		I::MatSystemSurface->DrawTexturedSubRect(x, y, x + texture->Width() * s, y + texture->Height() * s, texture->texCoords[0], texture->texCoords[1], texture->texCoords[2], texture->texCoords[3]);
+		I::MatSystemSurface->DrawTexturedSubRect(x, y, x + pTexture->Width() * s, y + pTexture->Height() * s, pTexture->texCoords[0], pTexture->texCoords[1], pTexture->texCoords[2], pTexture->texCoords[3]);
 	}
 }
-void CDraw::DrawHudTextureByName(float x, float y, float s, const char* textureName, Color_t clr)
+void CDraw::DrawHudTextureByName(float x, float y, float s, const char* sTexture, Color_t clr)
 {
-	const CHudTexture* pIcon = GetIcon(textureName, 0);
+	const CHudTexture* pIcon = GetIcon(sTexture, 0);
 
 	if (!pIcon)
 		return;
@@ -417,11 +414,11 @@ void CDraw::DrawHudTextureByName(float x, float y, float s, const char* textureN
 	}
 }
 
-void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& align)
+void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& eAlign)
 {
 	if (const auto nID = static_cast<uint64>(nFriendID + 0x0110000100000000))
 	{
-		switch (align)
+		switch (eAlign)
 		{
 		case ALIGN_TOPLEFT: break;
 		case ALIGN_TOP: x -= w / 2; break;
@@ -434,33 +431,31 @@ void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAl
 		case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
 		}
 
-		if (m_Avatars.contains(nID))
-		{
-			// The avatar has been cached
+		if (m_mAvatars.contains(nID))
+		{	// The avatar has been cached
 			I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
-			I::MatSystemSurface->DrawSetTexture(m_Avatars[nID]);
+			I::MatSystemSurface->DrawSetTexture(m_mAvatars[nID]);
 			I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
 		}
 		else
-		{
-			// Retrieve the avatar
+		{	// Retrieve the avatar
 			const int nAvatar = I::SteamFriends->GetMediumFriendAvatar(CSteamID(nID));
 
 			uint32 newW = 0, newH = 0;
 			if (I::SteamUtils->GetImageSize(nAvatar, &newW, &newH))
 			{
-				const size_t nSize = 4 * size_t(newW) * size_t(newH) * sizeof(uint8);
+				const uint32 nSize = newW * newH * uint32(sizeof(uint8) * 4);
 				auto* pData = static_cast<uint8*>(std::malloc(nSize));
 				if (!pData)
 					return;
 
-				if (I::SteamUtils->GetImageRGBA(nAvatar, pData, static_cast<int>(nSize)))
+				if (I::SteamUtils->GetImageRGBA(nAvatar, pData, nSize))
 				{
 					const int nTextureID = I::MatSystemSurface->CreateNewTextureID(true);
 					if (I::MatSystemSurface->IsTextureIDValid(nTextureID))
 					{
 						I::MatSystemSurface->DrawSetTextureRGBA(nTextureID, pData, newW, newH, 0, false);
-						m_Avatars[nID] = nTextureID;
+						m_mAvatars[nID] = nTextureID;
 					}
 				}
 
@@ -471,13 +466,13 @@ void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAl
 }
 void CDraw::ClearAvatarCache()
 {
-	for (int iID : m_Avatars | std::views::values)
+	for (int iID : m_mAvatars | std::views::values)
 	{
 		I::MatSystemSurface->DeleteTextureByID(iID);
 		I::MatSystemSurface->DestroyTextureID(iID);
 	}
 
-	m_Avatars.clear();
+	m_mAvatars.clear();
 }
 
 void CDraw::StartClipping(int x, int y, int w, int h)

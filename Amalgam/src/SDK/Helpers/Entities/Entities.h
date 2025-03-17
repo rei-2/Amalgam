@@ -18,6 +18,12 @@ struct DormantData
 	float LastUpdate = 0.f;
 };
 
+struct VelFixRecord
+{
+	Vec3 m_vecOrigin;
+	float m_flSimulationTime;
+};
+
 class CEntities
 {
 	CTFPlayer* m_pLocal = nullptr;
@@ -34,6 +40,7 @@ class CEntities
 	std::unordered_map<int, DormantData> m_mDormancy;
 	std::unordered_map<int, Vec3> m_mAvgVelocities;
 	std::unordered_map<int, uint32_t> m_mModels;
+	std::unordered_map<int, std::deque<VelFixRecord>> m_mOrigins;
 
 	std::unordered_map<int, bool> m_mIFriends;
 	std::unordered_map<uint32_t, bool> m_mUFriends;
@@ -41,6 +48,8 @@ class CEntities
 	std::unordered_map<uint32_t, bool> m_mUParty;
 	std::unordered_map<int, bool> m_mIF2P;
 	std::unordered_map<uint32_t, bool> m_mUF2P;
+	std::unordered_map<int, int> m_mILevels;
+	std::unordered_map<uint32_t, int> m_mULevels;
 	std::unordered_map<int, int> m_mIPriorities;
 	std::unordered_map<uint32_t, int> m_mUPriorities;
 
@@ -76,6 +85,7 @@ public:
 	Vec3* GetAvgVelocity(int iIndex);
 	void SetAvgVelocity(int iIndex, Vec3 vAvgVelocity);
 	uint32_t GetModel(int iIndex);
+	std::deque<VelFixRecord>* GetOrigins(int iIndex);
 
 	bool IsFriend(int iIndex);
 	bool IsFriend(uint32_t friendsID);
@@ -83,6 +93,8 @@ public:
 	bool InParty(uint32_t friendsID);
 	bool IsF2P(int iIndex);
 	bool IsF2P(uint32_t friendsID);
+	int GetLevel(int iIndex);
+	int GetLevel(uint32_t friendsID);
 	int GetPriority(int iIndex);
 	int GetPriority(uint32_t friendsID);
 

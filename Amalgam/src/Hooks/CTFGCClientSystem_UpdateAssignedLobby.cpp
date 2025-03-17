@@ -3,6 +3,11 @@
 MAKE_HOOK(CTFGCClientSystem_UpdateAssignedLobby, S::CTFGCClientSystem_UpdateAssignedLobby(), bool,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFGCClientSystem_UpdateAssignedLobby.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	bool bReturn = CALL_ORIGINAL(rcx);
 
 	if (rcx && Vars::Misc::Game::F2PChatBypass.Value)

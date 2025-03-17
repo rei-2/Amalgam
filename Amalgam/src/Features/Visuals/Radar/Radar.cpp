@@ -1,6 +1,7 @@
 #include "Radar.h"
 
 #include "../../Players/PlayerUtils.h"
+#include "../../ImGui/Menu/Menu.h"
 
 bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, int& y, int& z)
 {
@@ -49,27 +50,27 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 void CRadar::DrawBackground()
 {
 	const WindowBox_t& info = Vars::Radar::Main::Window.Value;
-	const auto& themeBack = Vars::Menu::Theme::Background.Value;
-	const auto& themeAccent = Vars::Menu::Theme::Accent.Value;
-	const Color_t backgroundColor = { themeBack.r, themeBack.g, themeBack.b, static_cast<byte>(Vars::Radar::Main::BackAlpha.Value) };
-	const Color_t accentColor = { themeAccent.r, themeAccent.g, themeAccent.b, static_cast<byte>(Vars::Radar::Main::LineAlpha.Value) };
+	const Color_t& tThemeBack = Vars::Menu::Theme::Background.Value;
+	const Color_t& tThemeAccent = Vars::Menu::Theme::Accent.Value;
+	const Color_t tColorBackground = { tThemeBack.r, tThemeBack.g, tThemeBack.b, byte(Vars::Radar::Main::BackAlpha.Value) };
+	const Color_t tColorAccent = { tThemeAccent.r, tThemeAccent.g, tThemeAccent.b, byte(Vars::Radar::Main::LineAlpha.Value) };
 
 	switch (Vars::Radar::Main::Style.Value)
 	{
 	case Vars::Radar::Main::StyleEnum::Circle:
 	{
 		const float flRadius = info.w / 2.f;
-		H::Draw.FillCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, backgroundColor);
-		H::Draw.LineCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, accentColor);
+		H::Draw.FillCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, tColorBackground);
+		H::Draw.LineCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, tColorAccent);
 		break;
 	}
 	case Vars::Radar::Main::StyleEnum::Rectangle:
-		H::Draw.FillRect(info.x, info.y, info.w, info.w, backgroundColor);
-		H::Draw.LineRect(info.x, info.y, info.w, info.w, accentColor);
+		H::Draw.FillRect(info.x, info.y, info.w, info.w, tColorBackground);
+		H::Draw.LineRect(info.x, info.y, info.w, info.w, tColorAccent);
 	}
 
-	H::Draw.Line(info.x + info.w / 2, info.y, info.x + info.w / 2, info.y + info.w, accentColor);
-	H::Draw.Line(info.x, info.y + info.w / 2, info.x + info.w, info.y + info.w / 2, accentColor);
+	H::Draw.Line(info.x + info.w / 2, info.y, info.x + info.w / 2, info.y + info.w - 1, tColorAccent);
+	H::Draw.Line(info.x, info.y + info.w / 2, info.x + info.w - 1, info.y + info.w / 2, tColorAccent);
 }
 
 void CRadar::DrawPoints(CTFPlayer* pLocal)
@@ -376,7 +377,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 
 void CRadar::Run(CTFPlayer* pLocal)
 {
-	if (!Vars::Radar::Main::Enabled.Value)
+	if (!Vars::Radar::Main::Enabled.Value || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo() && !F::Menu.m_bIsOpen)
 		return;
 
 	DrawBackground();

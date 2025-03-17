@@ -956,6 +956,11 @@ enum
 
 class CBaseEntity;
 
+struct CUtlString
+{
+	char* m_pString;
+};
+
 struct FireBulletsInfo_t
 {
 	int m_iShots;
@@ -2833,7 +2838,7 @@ enum ETFMatchGroup
 	k_eTFMatchGroup_Event_Placeholder = 8,
 	k_eTFMatchGroup_Event_Default = 8,
 	k_eTFMatchGroup_Event_First = 8,
-	k_eTFMatchGroup_Event_Last = 8,
+	k_eTFMatchGroup_Event_Last = 8
 };
 
 enum

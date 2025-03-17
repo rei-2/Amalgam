@@ -189,6 +189,8 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 		*pGlow = Glow_t(Vars::Glow::World::Stencil.Value, Vars::Glow::World::Blur.Value);
 		*pColor = Vars::Colors::Halloween.Value;
 		return Vars::Glow::World::Bombs.Value;
+	case ETFClassID::CTFMedigunShield:
+		return false;
 	}
 
 	// player glow
@@ -329,8 +331,9 @@ void CGlow::Store(CTFPlayer* pLocal)
 			continue;
 
 		Glow_t tGlow = {}; Color_t tColor = {};
-		if (GetGlow(pLocal, pEntity, &tGlow, &tColor) && SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity)))
-			mvEntities[tGlow].push_back({ pEntity, tColor });
+		if (GetGlow(pLocal, pEntity, &tGlow, &tColor)
+			&& SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity) /*&& pEntity->GetClassID() != ETFClassID::CTFMedigunShield*/))
+			mvEntities[tGlow].emplace_back(pEntity, tColor);
 
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
 		{
@@ -349,7 +352,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 					if (bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() || bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
 					{
 						tGlow = Glow_t(Vars::Glow::Backtrack::Stencil.Value, Vars::Glow::Backtrack::Blur.Value);
-						mvEntities[tGlow].push_back({ pEntity, tColor, true });
+						mvEntities[tGlow].emplace_back(pEntity, tColor, true);
 					}
 				}
 			}
@@ -358,7 +361,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 			if (Vars::Glow::FakeAngle::Enabled.Value && (Vars::Glow::FakeAngle::Stencil.Value || Vars::Glow::FakeAngle::Blur.Value) && pEntity == pLocal && F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup)
 			{
 				tGlow = Glow_t(Vars::Glow::FakeAngle::Stencil.Value, Vars::Glow::FakeAngle::Blur.Value);
-				mvEntities[tGlow].push_back({ pEntity, tColor, true });
+				mvEntities[tGlow].emplace_back(pEntity, tColor, true);
 			}
 		}
 	}

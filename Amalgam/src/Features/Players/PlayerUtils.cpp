@@ -344,35 +344,37 @@ const char* CPlayerlistUtils::GetPlayerName(int iIndex, const char* sDefault, in
 
 void CPlayerlistUtils::UpdatePlayers()
 {
-	static Timer updateTimer{};
-	if (updateTimer.Run(1000))
+	static Timer tTimer = {};
+	if (!tTimer.Run(1.f))
+		return;
+
+	std::lock_guard lock(m_mutex);
+	m_vPlayerCache.clear();
+
+	auto pResource = H::Entities.GetPR();
+	if (!pResource)
+		return;
+
+	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 	{
-		std::lock_guard lock(m_mutex);
-		m_vPlayerCache.clear();
+		if (!pResource->GetValid(n) || !pResource->GetConnected(n))
+			continue;
 
-		auto pResource = H::Entities.GetPR();
-		if (!pResource)
-			return;
-
-		for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
-		{
-			if (!pResource->GetValid(n) || !pResource->GetConnected(n))
-				continue;
-
-			PlayerInfo_t pi{};
-			m_vPlayerCache.push_back({
-				pResource->GetPlayerName(n),
-				pResource->GetAccountID(n),
-				pResource->GetUserID(n),
-				pResource->GetTeam(n),
-				pResource->GetClass(n),
-				pResource->IsAlive(n),
-				n == I::EngineClient->GetLocalPlayer(),
-				!I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer,
-				H::Entities.IsFriend(pResource->GetAccountID(n)),
-				H::Entities.InParty(pResource->GetAccountID(n)),
-				H::Entities.IsF2P(pResource->GetAccountID(n))
-			});
-		}
+		PlayerInfo_t pi{};
+		auto friendsID = pResource->GetAccountID(n);
+		auto sName = pResource->GetPlayerName(n);
+		m_vPlayerCache.emplace_back(
+			sName ? sName : "",
+			friendsID,
+			pResource->GetUserID(n),
+			pResource->GetTeam(n),
+			pResource->IsAlive(n),
+			n == I::EngineClient->GetLocalPlayer(),
+			!I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer,
+			H::Entities.IsFriend(friendsID),
+			H::Entities.InParty(friendsID),
+			H::Entities.IsF2P(friendsID),
+			H::Entities.GetLevel(friendsID)
+		);
 	}
 }

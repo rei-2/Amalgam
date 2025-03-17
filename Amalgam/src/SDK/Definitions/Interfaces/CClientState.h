@@ -29,11 +29,6 @@ private:
 	unsigned int m_nShouldCheckCreationTick : 1;
 };
 
-struct CUtlString
-{
-	char* m_pString;
-};
-
 struct CClockDriftMgr
 {
 	float m_ClockOffsets[16];

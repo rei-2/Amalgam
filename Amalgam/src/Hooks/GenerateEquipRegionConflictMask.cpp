@@ -8,12 +8,22 @@ MAKE_SIGNATURE(CEquipSlotItemSelectionPanel_UpdateModelPanelsForSelection_GetIte
 MAKE_HOOK(GenerateEquipRegionConflictMask, S::GenerateEquipRegionConflictMask(), uint32_t,
 	int iClass, int iUpToSlot, int iIgnoreSlot)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::GenerateEquipRegionConflictMask.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(iClass, iUpToSlot, iIgnoreSlot);
+#endif
+
 	return Vars::Misc::Exploits::EquipRegionUnlock.Value ? 0 : CALL_ORIGINAL(iClass, iUpToSlot, iIgnoreSlot);
 }
 
 MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_GetItemInLoadoutForClass(), void*,
 	void* rcx, int iClass, int iSlot, CSteamID* pID)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::GenerateEquipRegionConflictMask.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, iClass, iSlot, pID);
+#endif
+
 	static const auto dwDesired = S::CEquipSlotItemSelectionPanel_UpdateModelPanelsForSelection_GetItemInLoadoutForClass_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
@@ -23,6 +33,11 @@ MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_G
 MAKE_HOOK(CTFPlayerInventory_VerifyChangedLoadoutsAreValid, S::CTFPlayerInventory_VerifyChangedLoadoutsAreValid(), void,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::GenerateEquipRegionConflictMask.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	if (!Vars::Misc::Exploits::EquipRegionUnlock.Value)
 		CALL_ORIGINAL(rcx);
 }

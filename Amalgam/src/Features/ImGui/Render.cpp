@@ -55,34 +55,37 @@ void CRender::LoadColors()
 		};
 
 	Accent = ColorToVec(Vars::Menu::Theme::Accent.Value);
-	AccentLight = ImColor(Accent.Value.x * 1.1f, Accent.Value.y * 1.1f, Accent.Value.z * 1.1f, Accent.Value.w);
-	Background = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 1.f / 9));
-	Foreground = ColorToVec(Vars::Menu::Theme::Background.Value);
-	Foremost = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 2.f / 9));
-	ForemostLight = ImColor(Foremost.Value.x * 1.1f, Foremost.Value.y * 1.1f, Foremost.Value.z * 1.1f, Foremost.Value.w);
+	AccentL = ImColor(Accent.Value.x * 1.1f, Accent.Value.y * 1.1f, Accent.Value.z * 1.1f, Accent.Value.w);
+	Background0 = ColorToVec(Vars::Menu::Theme::Background.Value);
+	Background0p5 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 0.5f / 9));
+	Background1 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 1.f / 9));
+	Background1p5 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 1.5f / 9));
+	Background1p5L = ImColor(Background1p5.Value.x * 1.1f, Background1p5.Value.y * 1.1f, Background1p5.Value.z * 1.1f, Background1p5.Value.w);
+	Background2 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 2.f / 9));
 	Inactive = ColorToVec(Vars::Menu::Theme::Inactive.Value);
 	Active = ColorToVec(Vars::Menu::Theme::Active.Value);
 
 	ImVec4* colors = GetStyle().Colors;
+	colors[ImGuiCol_Border] = Background2;
 	colors[ImGuiCol_Button] = {};
 	colors[ImGuiCol_ButtonHovered] = {};
 	colors[ImGuiCol_ButtonActive] = {};
-	colors[ImGuiCol_FrameBg] = Foremost;
-	colors[ImGuiCol_FrameBgHovered] = ForemostLight;
-	colors[ImGuiCol_FrameBgActive] = Foremost;
+	colors[ImGuiCol_FrameBg] = Background1p5;
+	colors[ImGuiCol_FrameBgHovered] = Background1p5L;
+	colors[ImGuiCol_FrameBgActive] = Background1p5;
 	colors[ImGuiCol_Header] = {};
-	colors[ImGuiCol_HeaderHovered] = { ForemostLight.Value.x * 1.1f, ForemostLight.Value.y * 1.1f, ForemostLight.Value.z * 1.1f, Foremost.Value.w }; // divd by 1.1
-	colors[ImGuiCol_HeaderActive] = Foremost;
-	colors[ImGuiCol_ModalWindowDimBg] = { Background.Value.x, Background.Value.y, Background.Value.z, 0.4f };
-	colors[ImGuiCol_PopupBg] = ForemostLight;
+	colors[ImGuiCol_HeaderHovered] = { Background1p5L.Value.x * 1.1f, Background1p5L.Value.y * 1.1f, Background1p5L.Value.z * 1.1f, Background1p5.Value.w }; // divd by 1.1
+	colors[ImGuiCol_HeaderActive] = Background1p5;
+	colors[ImGuiCol_ModalWindowDimBg] = { Background0.Value.x, Background0.Value.y, Background0.Value.z, 0.4f };
+	colors[ImGuiCol_PopupBg] = Background1p5L;
 	colors[ImGuiCol_ResizeGrip] = {};
 	colors[ImGuiCol_ResizeGripActive] = {};
 	colors[ImGuiCol_ResizeGripHovered] = {};
 	colors[ImGuiCol_ScrollbarBg] = {};
 	colors[ImGuiCol_SliderGrab] = Accent;
-	colors[ImGuiCol_SliderGrabActive] = AccentLight;
+	colors[ImGuiCol_SliderGrabActive] = AccentL;
 	colors[ImGuiCol_Text] = Active;
-	colors[ImGuiCol_WindowBg] = Foreground;
+	colors[ImGuiCol_WindowBg] = {};
 }
 
 void CRender::LoadFonts()

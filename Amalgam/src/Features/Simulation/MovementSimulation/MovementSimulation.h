@@ -1,5 +1,6 @@
 #pragma once
 #include "../../../SDK/SDK.h"
+#include <functional>
 
 struct PlayerData
 {
@@ -64,6 +65,7 @@ struct PlayerStorage
 	float m_flSimTime = 0.f;
 	float m_flPredictedDelta = 0.f;
 	float m_flPredictedSimTime = 0.f;
+	bool m_bDirectMove = true;
 
 	bool m_bPredictNetworked = true;
 	Vec3 m_vPredictedOrigin = {};
@@ -105,7 +107,10 @@ public:
 	void Store();
 
 	bool Initialize(CBaseEntity* pEntity, PlayerStorage& playerStorageOut, bool useHitchance = true, bool cancelStrafe = false);
-	void RunTick(PlayerStorage& playerStorage, bool bPath = true);
+	float GetPlayerGravity(CTFPlayer* pEntity);
+	bool SetDuck(PlayerStorage& playerStorage, bool bDuck);
+	void RunTick(PlayerStorage& playerStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
+	void RunTick(PlayerStorage& playerStorage, bool bPath, std::function<void(CMoveData&)> fCallback);
 	void Restore(PlayerStorage& playerStorage);
 
 	float GetPredictedDelta(CBaseEntity* pEntity);

@@ -11,6 +11,11 @@ MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_SetBgColor_Call, "client.dll", "4
 MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayerPanel_GetTeam.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	static const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_GetTeam_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
@@ -28,6 +33,11 @@ static int CTFTeamStatusPlayerPanel_Update_PlayerIndex;
 MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(), bool,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayerPanel_GetTeam.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	CTFTeamStatusPlayerPanel_Update_PlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
 	return CALL_ORIGINAL(rcx);
 }
@@ -35,6 +45,11 @@ MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(),
 MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void,
 	void* rcx, Color_t color)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayerPanel_GetTeam.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, color);
+#endif
+
 	static const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_SetBgColor_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 

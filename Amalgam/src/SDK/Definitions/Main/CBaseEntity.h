@@ -194,4 +194,18 @@ public:
 	{
 		S::CBaseEntity_InvalidateBoneCache.Call<void>(this);
 	}
+
+	inline int SolidMask()
+	{
+		if (IsPlayer())
+		{
+			switch (m_iTeamNum())
+			{
+			case TF_TEAM_RED: return MASK_PLAYERSOLID | CONTENTS_BLUETEAM;
+			case TF_TEAM_BLUE: return MASK_PLAYERSOLID | CONTENTS_REDTEAM;
+			}
+			return MASK_PLAYERSOLID;
+		}
+		return MASK_SOLID;
+	}
 };

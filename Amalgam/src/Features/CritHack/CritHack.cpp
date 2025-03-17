@@ -293,7 +293,7 @@ void CCritHack::ResetWeapons(CTFPlayer* pLocal)
 
 void CCritHack::Reset()
 {
-	m_mStorage = {};
+	m_mStorage.clear();
 
 	m_iFillStart = 0;
 	
@@ -303,6 +303,8 @@ void CCritHack::Reset()
 	m_bCritBanned = false;
 	m_iDamageTilUnban = 0;
 	m_flCritChance = 0.f;
+
+	m_mHealthStorage.clear();
 }
 
 
@@ -343,7 +345,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
 	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
 
-	if (bAttacking)
+	if (bAttacking && !Vars::Misc::Game::AntiCheatCompatibility.Value)
 	{
 		const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
 		const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
@@ -353,7 +355,6 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 			pCmd->command_number = closestSkip;
 	}
 
-	//if (pCmd->command_number == closestCrit || pCmd->command_number == closestSkip)
 	m_iWishRandomSeed = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
 
 	if (pCmd->command_number == closestCrit)
@@ -408,17 +409,40 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 	{
 	case FNV1A::Hash32Const("player_hurt"):
 	{
-		auto pWeapon = H::Entities.GetWeapon();
-		if (!pLocal || !pWeapon)
+		if (!pLocal || !pLocal->m_hMyWeapons())
 			return;
 
-		const int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
-		const int iAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
-		const bool bCrit = pEvent->GetBool("crit") || pEvent->GetBool("minicrit");
-		const int iDamage = m_mHealthStorage.contains(iVictim) ? std::min(pEvent->GetInt("damageamount"), m_mHealthStorage[iVictim]) : pEvent->GetInt("damageamount");
-		const auto iWeaponID = pEvent->GetInt("weaponid");
+		int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+		int iAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
+		bool bCrit = pEvent->GetBool("crit") || pEvent->GetBool("minicrit");
+		int iDamage = pEvent->GetInt("damageamount");
+		int iHealth = pEvent->GetInt("health");
+		int iWeaponID = pEvent->GetInt("weaponid");
 
-		if (iVictim == iAttacker || iAttacker != pLocal->entindex() || iWeaponID != pWeapon->GetWeaponID() || pWeapon->GetSlot() == SLOT_MELEE) // weapon id stuff is dumb simplification
+		if (m_mHealthStorage.contains(iVictim) && !iHealth)
+			iDamage = std::min(iDamage, m_mHealthStorage[iVictim]);
+		if (iHealth)
+		{
+			if (m_mHealthStorage.contains(iVictim))
+				m_mHealthStorage[iVictim] = std::min(iHealth, m_mHealthStorage[iVictim]);
+			else
+				m_mHealthStorage[iVictim] = iHealth;
+		}
+
+		if (iVictim == iAttacker || iAttacker != pLocal->entindex())
+			return;
+
+		CTFWeaponBase* pWeapon = nullptr;
+		for (int i = 0; i < MAX_WEAPONS; i++)
+		{
+			auto pWeapon2 = pLocal->GetWeaponFromSlot(i);
+			if (!pWeapon2 || pWeapon2->GetWeaponID() != iWeaponID)
+				continue;
+
+			pWeapon = pWeapon2;
+			break;
+		}
+		if (!pWeapon || pWeapon->GetSlot() == SLOT_MELEE)
 			return;
 
 		m_iAllDamage += iDamage;
@@ -439,17 +463,6 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 
 void CCritHack::Store()
 {
-	auto pResource = H::Entities.GetPR();
-	if (!pResource)
-		return;
-
-	for (auto it = m_mHealthStorage.begin(); it != m_mHealthStorage.end();)
-	{
-		if (I::ClientEntityList->GetClientEntity(it->first))
-			++it;
-		else
-			it = m_mHealthStorage.erase(it);
-	}
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
@@ -457,6 +470,19 @@ void CCritHack::Store()
 			m_mHealthStorage[pPlayer->entindex()] = pPlayer->m_iHealth();
 	}
 }
+
+/*
+MAKE_SIGNATURE(CTFGameStats_FindPlayerStats, "server.dll", "4C 8B C1 48 85 D2 75", 0x0);
+MAKE_SIGNATURE(GetServerAnimating, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
+
+static void* pCTFGameStats = nullptr;
+MAKE_HOOK(CTFGameStats_FindPlayerStats, S::CTFGameStats_FindPlayerStats(), void*,
+	void* rcx, CBasePlayer* pPlayer)
+{
+	pCTFGameStats = rcx;
+	return CALL_ORIGINAL(rcx, pPlayer);
+}
+*/
 
 void CCritHack::Draw(CTFPlayer* pLocal)
 {
@@ -492,6 +518,8 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 	}
 	else
 	{
+		y -= nTall;
+
 		auto& tStorage = m_mStorage[iSlot];
 		if (!tStorage.m_bActive)
 			return;
@@ -499,14 +527,17 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		auto bRapidFire = pWeapon->IsRapidFire();
 		float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
 
+		if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, "Anticheat compatibility");
+
 		if (tStorage.m_flDamage > 0)
 		{
 			if (pLocal->IsCritBoosted())
-				H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextMisc.Value, Vars::Menu::Theme::Background.Value, align, "Crit Boosted");
+				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextMisc.Value, Vars::Menu::Theme::Background.Value, align, "Crit Boosted");
 			else if (pWeapon->m_flCritTime() > flTickBase)
 			{
 				float flTime = pWeapon->m_flCritTime() - flTickBase;
-				H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextMisc.Value, Vars::Menu::Theme::Background.Value, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
+				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextMisc.Value, Vars::Menu::Theme::Background.Value, align, std::format("Streaming crits {:.1f}s", flTime).c_str());
 			}
 			else if (!m_bCritBanned)
 			{
@@ -515,19 +546,19 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 					if (bRapidFire && flTickBase < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
 					{
 						float flTime = pWeapon->m_flLastRapidFireCritCheckTime() + 1.f - flTickBase;
-						H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Wait {:.1f}s", flTime).c_str());
+						H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Wait {:.1f}s", flTime).c_str());
 					}
 					else
-						H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value, align, "Crit Ready");
+						H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value, align, "Crit Ready");
 				}
 				else
 				{
 					int iShots = tStorage.m_iNextCrit;
-					H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Crit in {}{} shot{}", iShots, iShots == 1000 ? "+" : "", iShots == 1 ? "" : "s").c_str());
+					H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Crit in {}{} shot{}", iShots, iShots == 1000 ? "+" : "", iShots == 1 ? "" : "s").c_str());
 				}
 			}
 			else
-				H::Draw.StringOutlined(fFont, x, y, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
+				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
 
 			int iCrits = tStorage.m_iAvailableCrits;
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("{}{} / {} potential crits", iCrits, iCrits == 1000 ? "+" : "", tStorage.m_iPotentialCrits).c_str());
@@ -539,7 +570,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 			}
 		}
 		else
-			H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Calculating");
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Calculating");
 
 		if (Vars::Debug::Info.Value)
 		{
@@ -548,6 +579,24 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("CritChance: {:.2f} ({:.2f})", m_flCritChance, m_flCritChance + 0.1f).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Force: {}, Skip: {}", tStorage.m_vCritCommands.size(), tStorage.m_vSkipCommands.size()).c_str());
+		
+			/*
+			if (pCTFGameStats)
+			{
+				if (auto pServerAnimating = S::GetServerAnimating.Call<void*>(pLocal->entindex()))
+				{
+					if (void* pPlayerStats = S::CTFGameStats_FindPlayerStats.Call<void*>(pCTFGameStats, pServerAnimating))
+					{
+						H::Draw.StringOutlined(fFont, x, y += nTall * 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align,
+							std::format(
+								"AllDamage: {}, CritDamage: {}",
+								*reinterpret_cast<int*>(uintptr_t(pPlayerStats) + 324), *reinterpret_cast<int*>(uintptr_t(pPlayerStats) + 328)
+							).c_str()
+						);
+					}
+				}
+			}
+			*/
 		}
 	}
 }

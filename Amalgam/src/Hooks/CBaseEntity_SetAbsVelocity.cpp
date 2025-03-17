@@ -57,19 +57,25 @@ MAKE_SIGNATURE(CBasePlayer_PostDataUpdate_SetAbsVelocity_Call, "client.dll", "0F
 MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 	void* rcx, const Vec3& vecAbsVelocity)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CBaseEntity_SetAbsVelocity.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, vecAbsVelocity);
+#endif
+
 	static const auto dwDesired = S::CBasePlayer_PostDataUpdate_SetAbsVelocity_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 	if (dwRetAddr != dwDesired)
 		return CALL_ORIGINAL(rcx, vecAbsVelocity);
 	
 	const auto pPlayer = reinterpret_cast<CTFPlayer*>(rcx);
-	if (pPlayer->IsDormant() || !G::VelocityMap.contains(pPlayer->entindex()) || G::VelocityMap[pPlayer->entindex()].empty())
+	if (pPlayer->IsDormant())
 		return CALL_ORIGINAL(rcx, vecAbsVelocity);
-	
-	auto& vRecords = G::VelocityMap[pPlayer->entindex()];
-	bool bGrounded = pPlayer->IsOnGround();
 
-	auto& tOldRecord = vRecords.front();
+	auto pRecords = H::Entities.GetOrigins(pPlayer->entindex());
+	if (!pRecords || pRecords->empty())
+		return CALL_ORIGINAL(rcx, vecAbsVelocity);
+
+	auto& tOldRecord = pRecords->front();
 	auto tNewRecord = VelFixRecord(pPlayer->m_vecOrigin() + Vec3(0, 0, pPlayer->m_vecMaxs().z - pPlayer->m_vecMins().z), pPlayer->m_flSimulationTime());
 
 	int iDeltaTicks = TIME_TO_TICKS(tNewRecord.m_flSimulationTime - tOldRecord.m_flSimulationTime);
@@ -80,7 +86,9 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 	static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
 	float flDist = powf(sv_lagcompensation_teleport_dist ? sv_lagcompensation_teleport_dist->GetFloat() : 64.f, 2.f) * iDeltaTicks;
 	if ((tNewRecord.m_vecOrigin - tOldRecord.m_vecOrigin).Length2DSqr() >= flDist)
-		return vRecords.clear();
+		return pRecords->clear();
+
+	bool bGrounded = pPlayer->IsOnGround();
 
 	AxisInfo tAxisInfo = {};
 	for (int i = 0; i < 3; i++)
@@ -105,7 +113,7 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 			flVelocityRange = { vDeltas.front() / flDeltaTime, vDeltas.back() / flDeltaTime };
 		}
 
-		for (auto& tRecord : vRecords)
+		for (auto& tRecord : *pRecords)
 		{
 			if (tAxisInfo[i].m_flOldSimulationTime <= tRecord.m_flSimulationTime)
 				continue;

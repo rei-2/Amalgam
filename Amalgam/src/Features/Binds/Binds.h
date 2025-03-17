@@ -12,16 +12,16 @@ namespace BindEnum
 
 struct Bind_t
 {
-	std::string Name = "";
-	int Type = 0;
-	int Info = 0;
-	int Key = 0;
-	bool Not = false;
+	std::string m_sName = "";
+	int m_iType = 0;
+	int m_iInfo = 0;
+	int m_iKey = 0;
+	bool m_bNot = false;
 
-	bool Active = false;
-	bool Visible = true;
+	bool m_bActive = false;
+	bool m_bVisible = true;
 
-	int Parent = -1;
+	int m_iParent = -1;
 };
 
 class CBinds
@@ -33,10 +33,10 @@ public:
 
 	bool HasChildren(int iBind);
 	int GetParent(int iBind);
-	void AddBind(int iBind, Bind_t tCond);
+	void AddBind(int iBind, Bind_t& tCond);
 	void RemoveBind(int iBind, bool bForce = true);
 
-	std::vector<Bind_t> vBinds = {};
+	std::vector<Bind_t> m_vBinds = {};
 	std::unordered_map<int, KeyStorage> m_mKeyStorage;
 };
 

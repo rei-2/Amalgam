@@ -7,6 +7,11 @@ MAKE_SIGNATURE(CBaseHudChatLine_InsertAndColorizeText, "client.dll", "44 89 44 2
 MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndColorizeText(), void,
 	void* rcx, wchar_t* buf, int clientIndex)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CBaseHudChatLine_InsertAndColorizeText.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, buf, clientIndex);
+#endif
+
 	std::string sMessage = SDK::ConvertWideToUTF8(buf);
 
 	if (clientIndex)
@@ -61,7 +66,7 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 			PlayerInfo_t pi{}; int iType = 0;
 			const char* sReplace = F::PlayerUtils.GetPlayerName(pEntity->entindex(), nullptr, &iType);
 			if (sReplace && iType == 1 && I::EngineClient->GetPlayerInfo(pEntity->entindex(), &pi))
-				vReplace.push_back({ pi.name, sReplace });
+				vReplace.emplace_back(pi.name, sReplace);
 		}
 		for (auto& [sFind, sReplace] : vReplace)
 		{

@@ -51,6 +51,12 @@ namespace Math
 		v.z = 0.f;
 	}
 
+	inline void ClampAngles(Vec2& v)
+	{
+		v.x = std::clamp(NormalizeAngle(v.x), -89.f, 89.f);
+		v.y = NormalizeAngle(v.y);
+	}
+
 	inline float AngleDiffRad(float flAngle1, float flAngle2) noexcept
 	{
 		double delta = NormalizeRad(flAngle1 - flAngle2);

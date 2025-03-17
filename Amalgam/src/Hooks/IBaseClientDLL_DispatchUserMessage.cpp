@@ -17,6 +17,11 @@
 MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL, 36), bool,
 	void* rcx, UserMessageType type, bf_read& msgData)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::IBaseClientDLL_DispatchUserMessage.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, type, msgData);
+#endif
+
 	auto bufData = reinterpret_cast<const char*>(msgData.m_pData);
 	msgData.SetAssertOnOverflow(false);
 	msgData.Seek(0);
@@ -68,7 +73,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 					Color_t tColor = { byte(std::stoi(vValues[12])), byte(std::stoi(vValues[13])), byte(std::stoi(vValues[14])), byte(255 - std::stoi(vValues[15])) };
 					float flDuration = std::stof(vValues[16]);
 
-					G::BoxStorage.push_back({ vOrigin, vMins, vMaxs, vAngles, I::GlobalVars->curtime + flDuration, tColor, { 0, 0, 0, 0 } });
+					G::BoxStorage.emplace_back(vOrigin, vMins, vMaxs, vAngles, I::GlobalVars->curtime + flDuration, tColor, Color_t(0, 0, 0, 0));
 				}
 				catch (...) {}
 
@@ -89,7 +94,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 					Color_t tColor = { byte(std::stoi(vValues[6])), byte(std::stoi(vValues[7])), byte(std::stoi(vValues[8])), byte(255 - std::stoi(vValues[9])) };
 					float flDuration = std::stof(vValues[10]);
 
-					G::LineStorage.push_back({ { vStart, vEnd }, I::GlobalVars->curtime + flDuration, tColor });
+					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vStart, vEnd), I::GlobalVars->curtime + flDuration, tColor);
 				}
 				catch (...) {}
 

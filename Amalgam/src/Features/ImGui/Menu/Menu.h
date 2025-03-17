@@ -7,11 +7,11 @@ class CMenu
 {
 	void DrawMenu();
 
-	void MenuAimbot();
-	void MenuVisuals();
-	void MenuMisc();
-	void MenuLogs();
-	void MenuSettings();
+	void MenuAimbot(int iTab);
+	void MenuVisuals(int iTab);
+	void MenuMisc(int iTab);
+	void MenuLogs(int iTab);
+	void MenuSettings(int iTab);
 
 	void AddDraggable(const char* sTitle, ConfigVar<DragBox_t>& info, bool bShouldDraw);
 	void DrawBinds();

@@ -10,6 +10,11 @@ MAKE_SIGNATURE(CBasePlayer_BuildFirstPersonMeathookTransformations_ShouldDrawThi
 MAKE_HOOK(CTFPlayer_ShouldDraw, S::CTFPlayer_ShouldDraw(), bool,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayer_ShouldDraw.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	auto pLocal = H::Entities.GetLocal();
 	if (pLocal && F::Spectate.m_iTarget != -1 && pLocal->IsAlive() && pLocal->m_hObserverTarget().Get())
 		return Vars::Visuals::ThirdPerson::Enabled.Value ? true : rcx != pLocal->m_hObserverTarget().Get()->GetClientRenderable();
@@ -20,6 +25,11 @@ MAKE_HOOK(CTFPlayer_ShouldDraw, S::CTFPlayer_ShouldDraw(), bool,
 MAKE_HOOK(CBasePlayer_ShouldDrawThisPlayer, S::CBasePlayer_ShouldDrawThisPlayer(), bool,
 	void* rcx)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayer_ShouldDraw.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
 	static const auto dwUndesired = S::CBasePlayer_BuildFirstPersonMeathookTransformations_ShouldDrawThisPlayer_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
@@ -37,5 +47,10 @@ MAKE_HOOK(CBasePlayer_ShouldDrawThisPlayer, S::CBasePlayer_ShouldDrawThisPlayer(
 MAKE_HOOK(CViewRender_DrawViewModels, S::CViewRender_DrawViewModels(), void,
 	void* rcx, const CViewSetup& viewRender, bool drawViewmodel)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayer_ShouldDraw.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, viewRender, drawViewmodel);
+#endif
+
 	CALL_ORIGINAL(rcx, viewRender, F::Spectate.m_iTarget != -1 ? false : drawViewmodel);
 }

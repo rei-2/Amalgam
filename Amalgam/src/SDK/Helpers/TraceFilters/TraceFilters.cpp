@@ -122,6 +122,15 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
 	case ETFClassID::CFuncConveyor: return true;
+	case ETFClassID::CFuncRespawnRoomVisualizer:
+		if (nContentsMask & MASK_PLAYERSOLID)
+		{
+			switch (pEntity->m_iTeamNum())
+			{
+			case TF_TEAM_RED: return nContentsMask & CONTENTS_REDTEAM;
+			case TF_TEAM_BLUE: return nContentsMask & CONTENTS_BLUETEAM;
+			}
+		}
 	}
 
 	return false;

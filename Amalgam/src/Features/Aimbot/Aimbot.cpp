@@ -38,10 +38,11 @@ bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 
 void CAimbot::RunAimbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSecondaryType)
 {
-	EWeaponType eWeaponType = !bSecondaryType ? G::PrimaryWeaponType : G::SecondaryWeaponType;
+	m_bRunningSecondary = bSecondaryType;
+	EWeaponType eWeaponType = !m_bRunningSecondary ? G::PrimaryWeaponType : G::SecondaryWeaponType;
 
 	bool bOriginal;
-	if (bSecondaryType)
+	if (m_bRunningSecondary)
 		bOriginal = G::CanPrimaryAttack, G::CanPrimaryAttack = G::CanSecondaryAttack;
 
 	switch (eWeaponType)
@@ -51,19 +52,19 @@ void CAimbot::RunAimbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 	case EWeaponType::MELEE: F::AimbotMelee.Run(pLocal, pWeapon, pCmd); break;
 	}
 
-	if (bSecondaryType)
+	if (m_bRunningSecondary)
 		G::CanPrimaryAttack = bOriginal;
 }
 
 void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (F::AimbotProjectile.m_bLastTickCancel)
+	if (F::AimbotProjectile.m_iLastTickCancel)
 	{
-		pCmd->weaponselect = F::AimbotProjectile.m_bLastTickCancel;
-		F::AimbotProjectile.m_bLastTickCancel = 0;
+		pCmd->weaponselect = F::AimbotProjectile.m_iLastTickCancel;
+		F::AimbotProjectile.m_iLastTickCancel = 0;
 	}
 
-	bRan = false;
+	m_bRan = false;
 	if (abs(G::Target.second - I::GlobalVars->tickcount) > 32)
 		G::Target = { 0, 0 };
 	if (abs(G::AimPosition.second - I::GlobalVars->tickcount) > 32)

@@ -12,6 +12,11 @@ static int GetNetworkBase(int nTick, int nEntity)
 MAKE_HOOK(RecvProxy_SimulationTime, S::RecvProxy_SimulationTime(), void,
 	const CRecvProxyData* pData, void* pStruct, void* pOut)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::RecvProxy_SimulationTime.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(pData, pStruct, pOut);
+#endif
+
 	auto pEntity = reinterpret_cast<CBaseEntity*>(pStruct);
 	if (!pEntity || !pEntity->IsPlayer() || pEntity->entindex() == I::EngineClient->GetLocalPlayer())
 		return CALL_ORIGINAL(pData, pStruct, pOut);
@@ -29,6 +34,4 @@ MAKE_HOOK(RecvProxy_SimulationTime, S::RecvProxy_SimulationTime(), void,
 		t -= 256;
 
 	pEntity->m_flSimulationTime() = TICKS_TO_TIME(t);
-
-	//CALL_ORIGINAL(pData, pStruct, pOut);
 }

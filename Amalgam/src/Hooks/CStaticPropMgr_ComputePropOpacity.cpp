@@ -41,6 +41,11 @@ public:
 MAKE_HOOK(CStaticPropMgr_ComputePropOpacity, S::CStaticPropMgr_ComputePropOpacity(), void,
 	void* rcx, CStaticProp* pProp)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CStaticPropMgr_ComputePropOpacity.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pProp);
+#endif
+
 	if (Vars::Visuals::World::NoPropFade.Value && pProp)
 	{
 		pProp->m_Alpha = 255;

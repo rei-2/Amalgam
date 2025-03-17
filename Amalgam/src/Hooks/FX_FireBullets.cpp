@@ -10,6 +10,11 @@ MAKE_SIGNATURE(CTFWeaponBaseGun_FireBullet_FireBullets_Call, "client.dll", "0F 2
 MAKE_HOOK(FX_FireBullets, S::FX_FireBullets(), void,
 	void* pWpn, int iPlayer, const Vec3& vecOrigin, const Vec3& vecAngles, int iWeapon, int iMode, int iSeed, float flSpread, float flDamage, bool bCritical)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::FX_FireBullets.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
+#endif
+
 	static const auto dwDesired = S::CTFWeaponBaseGun_FireBullet_FireBullets_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
@@ -27,6 +32,11 @@ MAKE_SIGNATURE(FX_FireBullets_Server, "server.dll", "48 89 5C 24 ? 4C 89 4C 24 ?
 MAKE_HOOK(FX_FireBullets_Server, S::FX_FireBullets_Server(), void,
 	void* pWpn, int iPlayer, const Vec3& vecOrigin, const Vec3& vecAngles, int iWeapon, int iMode, int iSeed, float flSpread, float flDamage, bool bCritical)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::FX_FireBullets.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
+#endif
+
 	if (Vars::Aimbot::General::NoSpread.Value)
 		SDK::Output("FX_FireBullets", std::format("{}", iSeed).c_str(), { 0, 255, 0, 255 });
 	return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);

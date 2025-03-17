@@ -11,6 +11,11 @@ MAKE_SIGNATURE(CL_Move, "engine.dll", "40 55 53 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E
 MAKE_HOOK(CL_Move, S::CL_Move(), void,
 	float accumulated_extra_samples, bool bFinalTick)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CL_Move.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(accumulated_extra_samples, bFinalTick);
+#endif
+
 	if (G::Unload)
 		return CALL_ORIGINAL(accumulated_extra_samples, bFinalTick);
 

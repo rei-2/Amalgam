@@ -9,6 +9,11 @@ static std::wstring sOverride;
 MAKE_HOOK(CTFHudDeathNotice_AddAdditionalMsg, S::CTFHudDeathNotice_AddAdditionalMsg(), void,
 	void* rcx, int iKillerID, int iVictimID, const char* pMsgKey)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFHudDeathNotice_AddAdditionalMsg.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, iKillerID, iVictimID, pMsgKey);
+#endif
+
 	if (iKillerID == I::EngineClient->GetLocalPlayer() && (!Vars::Visuals::Misc::LocalDominationOverride.Value.empty() || !Vars::Visuals::Misc::LocalRevengeOverride.Value.empty())
 		|| (!Vars::Visuals::Misc::DominationOverride.Value.empty() || !Vars::Visuals::Misc::RevengeOverride.Value.empty()))
 	{
@@ -53,6 +58,11 @@ MAKE_HOOK(CTFHudDeathNotice_AddAdditionalMsg, S::CTFHudDeathNotice_AddAdditional
 MAKE_HOOK(CLocalizedStringTable_Find, S::CLocalizedStringTable_Find(), wchar_t*,
 	void* rcx, const char* pName)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFHudDeathNotice_AddAdditionalMsg.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pName);
+#endif
+
 	if (bShouldOverride)
 		return (wchar_t*)sOverride.c_str();
 	return CALL_ORIGINAL(rcx, pName);

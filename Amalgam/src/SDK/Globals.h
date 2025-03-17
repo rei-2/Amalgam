@@ -6,12 +6,6 @@
 
 MAKE_SIGNATURE(RandomSeed, "client.dll", "0F B6 1D ? ? ? ? 89 9D", 0x0);
 
-struct VelFixRecord
-{
-	Vec3 m_vecOrigin;
-	float m_flSimulationTime;
-};
-
 struct DrawLine
 {
 	std::pair<Vec3, Vec3> m_vPair;
@@ -71,8 +65,6 @@ namespace G
 	inline bool UpdatingAnims = false;
 	inline bool DrawingProps = false;
 	inline bool FlipViewmodels = false;
-
-	inline std::unordered_map<int, std::deque<VelFixRecord>> VelocityMap = {};
 
 	inline std::vector<DrawLine> LineStorage = {};
 	inline std::vector<DrawPath> PathStorage = {};

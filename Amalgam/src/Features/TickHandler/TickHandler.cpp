@@ -100,7 +100,9 @@ Vec3 CTickshiftHandler::GetShootPos()
 bool CTickshiftHandler::CanChoke()
 {
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-	const int iMaxTicks = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	int iMaxTicks = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		iMaxTicks = std::min(iMaxTicks, 8);
 
 	return I::ClientState->chokedcommands < 21 && F::Ticks.m_iShiftedTicks + I::ClientState->chokedcommands < iMaxTicks;
 }
@@ -228,6 +230,8 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
 	m_iMaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		m_iMaxShift = std::min(m_iMaxShift, 8);
 	m_iMaxShift -= std::max(24 - std::clamp(Vars::CL_Move::Doubletap::RechargeLimit.Value, 1, 24), F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
 
 	while (m_iShiftedTicks > m_iMaxShift)

@@ -18,6 +18,9 @@ float CBacktrack::GetLerp()
 	if (!Vars::Backtrack::Enabled.Value)
 		return G::Lerp;
 
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, 0.1f);
+
 	return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, m_flMaxUnlag);
 }
 
@@ -42,6 +45,15 @@ float CBacktrack::GetReal(int iFlow, bool bNoFake)
 	return pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - (bNoFake ? m_flFakeLatency : 0.f);
 }
 
+// Returns the current fake interp
+float CBacktrack::GetFakeInterp()
+{
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		return std::min(m_flFakeInterp, 0.1f);
+
+	return m_flFakeInterp;
+}
+
 // Returns the current anticipated choke
 int CBacktrack::GetAnticipatedChoke(int iMethod)
 {
@@ -55,24 +67,24 @@ int CBacktrack::GetAnticipatedChoke(int iMethod)
 
 void CBacktrack::SendLerp()
 {
+	static Timer tTimer = {};
+	if (!tTimer.Run(0.1f))
+		return;
+
 	auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
 	if (!pNetChan || !I::EngineClient->IsConnected())
 		return;
 
-	static Timer interpTimer{};
-	if (interpTimer.Run(100))
-	{
-		float flTarget = GetLerp();
-		if (flTarget == m_flWishInterp)
-			return;
+	float flTarget = GetLerp();
+	if (flTarget == m_flWishInterp)
+		return;
 
-		NET_SetConVar cl_interp("cl_interp", std::to_string(m_flWishInterp = flTarget).c_str());
-		pNetChan->SendNetMsg(cl_interp);
-		NET_SetConVar cl_interp_ratio("cl_interp_ratio", "1.0");
-		pNetChan->SendNetMsg(cl_interp_ratio);
-		NET_SetConVar cl_interpolate("cl_interpolate", "1");
-		pNetChan->SendNetMsg(cl_interpolate);
-	}
+	NET_SetConVar cl_interp("cl_interp", std::to_string(m_flWishInterp = flTarget).c_str());
+	pNetChan->SendNetMsg(cl_interp);
+	NET_SetConVar cl_interp_ratio("cl_interp_ratio", "1");
+	pNetChan->SendNetMsg(cl_interp_ratio);
+	NET_SetConVar cl_interpolate("cl_interpolate", "1");
+	pNetChan->SendNetMsg(cl_interpolate);
 }
 
 // Manages cl_interp client value
@@ -94,7 +106,7 @@ void CBacktrack::UpdateDatagram()
 	if (pNetChan->m_nInSequenceNr > m_iLastInSequence)
 	{
 		m_iLastInSequence = pNetChan->m_nInSequenceNr;
-		m_dSequences.push_front(CIncomingSequence(pNetChan->m_nInReliableState, pNetChan->m_nInSequenceNr, I::GlobalVars->realtime));
+		m_dSequences.emplace_front(pNetChan->m_nInReliableState, pNetChan->m_nInSequenceNr, I::GlobalVars->realtime);
 	}
 
 	if (m_dSequences.size() > 67)
@@ -121,13 +133,14 @@ std::deque<TickRecord> CBacktrack::GetValidRecords(std::deque<TickRecord>* pReco
 	if (!pNetChan)
 		return vRecords;
 
-	float flCorrect = std::clamp(F::Backtrack.GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(m_flFakeInterp), 0.f, m_flMaxUnlag);
+	float flCorrect = std::clamp(F::Backtrack.GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(GetFakeInterp()), 0.f, m_flMaxUnlag);
 	int iServerTick = m_iTickCount + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(F::Backtrack.GetReal(FLOW_OUTGOING));
 
 	for (auto& tRecord : *pRecords)
 	{
 		float flDelta = fabsf(flCorrect - TICKS_TO_TIME(iServerTick - TIME_TO_TICKS(tRecord.m_flSimTime)));
-		if (flDelta > float(Vars::Backtrack::Window.Value) / 1000)
+		float flWindow = Vars::Misc::Game::AntiCheatCompatibility.Value ? 0 : Vars::Backtrack::Window.Value;
+		if (flDelta > flWindow / 1000)
 			continue;
 
 		vRecords.push_back(tRecord);
@@ -184,43 +197,45 @@ void CBacktrack::MakeRecords()
 			|| !H::Entities.GetBones(pPlayer->entindex()) || !H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
-		const TickRecord curRecord = {
+		auto& vRecords = m_mRecords[pPlayer];
+
+		const TickRecord* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
+		vRecords.emplace_front(
 			pPlayer->m_flSimulationTime(),
 			*reinterpret_cast<BoneMatrix*>(H::Entities.GetBones(pPlayer->entindex())),
 			pPlayer->m_vecOrigin(),
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
 			m_mDidShoot[pPlayer->entindex()]
-		};
+		);
+		const TickRecord& tCurRecord = vRecords.front();
 
 		bool bLagComp = false;
-		if (!m_mRecords[pPlayer].empty())
+		if (pLastRecord)
 		{
-			const Vec3 vDelta = curRecord.m_vOrigin - m_mRecords[pPlayer].front().m_vOrigin;
+			const Vec3 vDelta = tCurRecord.m_vOrigin - pLastRecord->m_vOrigin;
 			
 			static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
 			const float flDist = powf(sv_lagcompensation_teleport_dist ? sv_lagcompensation_teleport_dist->GetFloat() : 64.f, 2.f);
 			if (vDelta.Length2DSqr() > flDist)
 			{
 				bLagComp = true;
-				for (auto& pRecord : m_mRecords[pPlayer])
-					pRecord.m_bInvalid = true;
+				for (size_t i = 1; i < vRecords.size(); i++)
+					vRecords[i].m_bInvalid = true;
 			}
 
-			for (auto& pRecord : m_mRecords[pPlayer])
+			for (auto& pRecord : vRecords)
 			{
 				if (!pRecord.m_bInvalid)
 					continue;
 
-				pRecord.m_BoneMatrix = curRecord.m_BoneMatrix;
-				pRecord.m_vOrigin = curRecord.m_vOrigin;
-				pRecord.m_bOnShot = curRecord.m_bOnShot;
+				pRecord.m_BoneMatrix = tCurRecord.m_BoneMatrix;
+				pRecord.m_vOrigin = tCurRecord.m_vOrigin;
+				pRecord.m_bOnShot = tCurRecord.m_bOnShot;
 			}
 		}
 
-		m_mRecords[pPlayer].push_front(curRecord);
 		H::Entities.SetLagCompensation(pPlayer->entindex(), bLagComp);
-
 		m_mDidShoot[pPlayer->entindex()] = false;
 	}
 }
@@ -233,21 +248,23 @@ void CBacktrack::CleanRecords()
 		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer())
 			continue;
 
+		auto& vRecords = m_mRecords[pPlayer];
+
 		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 		{
-			m_mRecords[pPlayer].clear();
+			vRecords.clear();
 			continue;
 		}
 
 		//const int iOldSize = pRecords.size();
 
 		const int flDeadtime = I::GlobalVars->curtime + GetReal() - m_flMaxUnlag; // int ???
-		while (!m_mRecords[pPlayer].empty())
+		while (!vRecords.empty())
 		{
-			if (m_mRecords[pPlayer].back().m_flSimTime >= flDeadtime)
+			if (vRecords.back().m_flSimTime >= flDeadtime)
 				break;
 
-			m_mRecords[pPlayer].pop_back();
+			vRecords.pop_back();
 		}
 
 		//const int iNewSize = pRecords.size();
@@ -258,7 +275,7 @@ void CBacktrack::CleanRecords()
 
 
 
-void CBacktrack::FrameStageNotify()
+void CBacktrack::Store()
 {
 	UpdateDatagram();
 	if (!I::EngineClient->IsInGame())

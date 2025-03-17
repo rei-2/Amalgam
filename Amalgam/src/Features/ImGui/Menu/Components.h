@@ -11,9 +11,22 @@
 enum FTabs_
 {
 	FTabs_None = 0,
+	FTabs_Horizontal = 0,
 	FTabs_Vertical = 1 << 0,
-	FTabs_HorizontalIcons = 1 << 1,
-	//FTabs_PageStyle = 1 << 2
+	FTabs_HorizontalIcons = 0,
+	FTabs_VerticalIcons = 1 << 1,
+	FTabs_AlignCenter = 0,
+	FTabs_AlignLeft = 1 << 2,
+	FTabs_AlignRight = 1 << 3,
+	FTabs_AlignTop = 1 << 4,
+	FTabs_AlignBottom = 1 << 5,
+	FTabs_AlignForward = 0,
+	FTabs_AlignReverse = 1 << 6,
+	FTabs_BarLeft = 1 << 7,
+	FTabs_BarRight = 1 << 8,
+	FTabs_BarTop = 1 << 9,
+	FTabs_BarBottom = 1 << 10,
+	FTabs_Fit = 1 << 11
 };
 
 enum FText_
@@ -85,6 +98,8 @@ enum FColorPicker_
 	FColorPicker_Dropdown = 1 << 3,
 	FColorPicker_Tooltip = 1 << 4
 };
+
+//#define ALTERNATE_FULL_SLIDER
 
 static inline ImVec2  operator*(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
 static inline ImVec2  operator/(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x / rhs, lhs.y / rhs); }
@@ -194,9 +209,11 @@ namespace ImGui
 		bool bWithin = x <= vMouse.x && vMouse.x < x + w
 					&& y <= vMouse.y && vMouse.y < y + h;
 
-		//ImDrawList* pDrawList = GetForegroundDrawList();
-		//ImVec2 vDrawPos = GetDrawPos() - GetWindowPos();
-		//pDrawList->AddRectFilled({ vDrawPos.x + x, vDrawPos.y + y }, { vDrawPos.x + x + w, vDrawPos.y + y + h }, bWithin ? ImColor(1.f, 0.f, 0.f, 0.5f) : ImColor(0.f, 1.f, 1.f, 0.5f));
+		/*
+		ImDrawList* pDrawList = GetForegroundDrawList();
+		ImVec2 vDrawPos = GetDrawPos() - GetWindowPos();
+		pDrawList->AddRectFilled({ vDrawPos.x + x, vDrawPos.y + y }, { vDrawPos.x + x + w, vDrawPos.y + y + h }, bWithin ? ImColor(1.f, 0.f, 0.f, 0.5f) : ImColor(0.f, 1.f, 1.f, 0.5f));
+		*/
 
 		return bWithin;
 	}
@@ -211,23 +228,91 @@ namespace ImGui
 
 	inline void DebugDummy(ImVec2 vSize)
 	{
+		/*
 		ImVec2 vOriginalPos = GetCursorPos();
-
-		//PushStyleColor(ImGuiCol_Button, { 0.f, 0.f, 0.f, 0.5f });
-		//Button("##", { std::max(vSize.x, 2.f), std::max(vSize.y, 2.f) });
-		//PopStyleColor();
-
-		SetCursorPos(vOriginalPos); Dummy(vSize);
+		PushStyleColor(ImGuiCol_Button, { 0.f, 0.f, 0.f, 0.5f });
+		Button("##", { std::max(vSize.x, 2.f), std::max(vSize.y, 2.f) });
+		PopStyleColor();
+		SetCursorPos(vOriginalPos);
+		*/
+		
+		Dummy(vSize);
 	}
 	inline void DebugShift(ImVec2 vSize)
 	{
 		ImVec2 vOriginalPos = GetCursorPos();
 
-		//PushStyleColor(ImGuiCol_Button, { 1.f, 1.f, 1.f, 0.5f });
-		//Button("##", { std::max(vSize.x, 2.f), std::max(vSize.y, 2.f) });
-		//PopStyleColor();
+		/*
+		PushStyleColor(ImGuiCol_Button, { 1.f, 1.f, 1.f, 0.5f });
+		Button("##", { std::max(vSize.x, 2.f), std::max(vSize.y, 2.f) });
+		PopStyleColor();
+		*/
 
 		SetCursorPos({ vOriginalPos.x + vSize.x, vOriginalPos.y + vSize.y });
+	}
+
+	inline void RenderBackground(ImU32 uBackground)
+	{
+		ImVec2 vSize = GetWindowSize();
+		ImVec2 vDrawPos = GetDrawPos();
+		ImDrawList* pDrawList = GetWindowDrawList();
+
+		pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y }, { vDrawPos.x + vSize.x, vDrawPos.y + vSize.y }, uBackground, H::Draw.Scale(3));
+	}
+
+	inline void RenderBackground(ImU32 uBackground, ImU32 uBorder, float flInset = H::Draw.Scale())
+	{
+		ImVec2 vSize = GetWindowSize();
+		ImVec2 vDrawPos = GetDrawPos();
+		ImDrawList* pDrawList = GetWindowDrawList();
+
+		pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBackground, H::Draw.Scale(3));
+		
+		flInset += H::Draw.Scale(0.5f) - 0.5f - H::Draw.Scale();
+		pDrawList->AddRect({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
+	}
+
+	inline void RenderTwoToneBackground(float flSize, ImU32 uTitle, ImU32 uBackground, bool bHorizontal = false)
+	{
+		ImVec2 vSize = GetWindowSize();
+		ImVec2 vDrawPos = GetDrawPos();
+		ImDrawList* pDrawList = GetWindowDrawList();
+
+		if (!bHorizontal)
+		{
+			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y }, { vDrawPos.x + vSize.x, vDrawPos.y + flSize }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + flSize }, { vDrawPos.x + vSize.x, vDrawPos.y + vSize.y }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+		}
+		else
+		{
+			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y }, { vDrawPos.x + flSize, vDrawPos.y + vSize.y }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomLeft);
+			pDrawList->AddRectFilled({ vDrawPos.x + flSize, vDrawPos.y }, { vDrawPos.x + vSize.x, vDrawPos.y + vSize.y }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight);
+		}
+	}
+
+	inline void RenderTwoToneBackground(float flSize, ImU32 uTitle, ImU32 uBackground, ImU32 uBorder, float flInset = H::Draw.Scale(), bool bVertical = true, bool bTwoToneBorder = true)
+	{
+		ImVec2 vSize = GetWindowSize();
+		ImVec2 vDrawPos = GetDrawPos();
+		ImDrawList* pDrawList = GetWindowDrawList();
+
+		if (bVertical)
+		{
+			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y + flSize }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flSize }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
+			if (bTwoToneBorder)
+				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flSize - H::Draw.Scale() }, {vDrawPos.x - flInset + vSize.x, vDrawPos.y + flSize }, uBorder);
+		}
+		else
+		{
+			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + flSize, vDrawPos.y - flInset + vSize.y }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomLeft);
+			pDrawList->AddRectFilled({ vDrawPos.x + flSize, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight);
+			if (bTwoToneBorder)
+				pDrawList->AddRectFilled({ vDrawPos.x + flSize - H::Draw.Scale(), vDrawPos.y + flInset }, { vDrawPos.x + flSize, vDrawPos.y - flInset + vSize.y }, uBorder);
+		}
+		
+		flInset += H::Draw.Scale(0.5f) - 0.5f - H::Draw.Scale();
+		pDrawList->AddRect({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 	}
 
 	inline void AddSteppedRect(ImVec2 vPos, ImVec2 vPosMin, ImVec2 vPosMax, ImVec2 vClipMin, ImVec2 vClipMax, float flVMin, float flVMax, float flStep, ImU32 uPrimary, ImU32 uSecondary, float flStepWidth)
@@ -243,7 +328,7 @@ namespace ImGui
 			float flMin = flVMin - fnmodf(flVMin + flStep / 2, flStep) + flStep / 2, max = flVMax - fnmodf(flVMax + flStep / 2, flStep) + flStep / 2;
 
 			if (fabsf(flVMin - flMin) < 0.001f)
-				vSteps.push_back({ vPosMin.x, vPosMin.x + flStepWidth });
+				vSteps.emplace_back(vPosMin.x, vPosMin.x + flStepWidth);
 			while (true)
 			{
 				flMin += flStep;
@@ -252,10 +337,10 @@ namespace ImGui
 
 				float flPercent = std::clamp((flMin - flVMin) / (flVMax - flVMin), 0.f, 1.f);
 				float flPosition = vPosMin.x + (vPosMax.x - vPosMin.x) * flPercent;
-				vSteps.push_back({ roundf(flPosition - flStepWidth / 2), roundf(flPosition + flStepWidth / 2) });
+				vSteps.emplace_back(roundf(flPosition - flStepWidth / 2), roundf(flPosition + flStepWidth / 2));
 			}
 			if (fabsf(flVMax - max) < 0.001f)
-				vSteps.push_back({ vPosMax.x - flStepWidth, vPosMax.x });
+				vSteps.emplace_back(vPosMax.x - flStepWidth, vPosMax.x);
 
 			if (!vSteps.empty())
 			{
@@ -319,25 +404,85 @@ namespace ImGui
 			PopStyleVar();
 	}
 
-	inline std::string TruncateText(const char* sText, int iPixels)
+	inline std::string TruncateText(std::string sText, int iPixels, ImFont* pFont = nullptr, std::string sEnd = "...", size_t* pLength = nullptr)
 	{
-		std::string sOriginal = sText;
-		if (sOriginal.empty())
+		if (sText.empty())
 			return "";
+		else if (FCalcTextSize(sText.c_str(), pFont).x < iPixels) // no unnecessary truncation
+			return sText;
 
 		std::string sTruncated = "";
-		int i = 0; while (FCalcTextSize(sTruncated.c_str()).x < iPixels)
+		size_t i = 0;
+		while (FCalcTextSize(std::format("{}{}{}", sTruncated, sText[i + 1], sEnd).c_str(), pFont).x < iPixels)
 		{
-			i++; sTruncated = sOriginal.substr(0, i);
-			if (i == sOriginal.size())
+			sTruncated += sText[i++];
+			if (i >= sText.length())
 			{
-				i = 0; break;
+				i = 0;
+				break;
 			}
 		}
 		if (i)
-			sTruncated += "...";
+			sTruncated += sEnd;
+		if (pLength)
+			*pLength = i;
 
 		return sTruncated;
+	}
+
+	inline std::vector<std::string> WrapText(std::string sText, int iPixels, ImFont* pFont = nullptr)
+	{
+		if (sText.empty())
+			return { "" };
+		else if (FCalcTextSize(sText.c_str(), pFont).x < iPixels) // no unnecessary wrapping
+			return { sText };
+
+		std::vector<std::string> vWords = { "" };
+		for (char iChar : sText)
+		{
+			if (iChar == ' ' || iChar == '\n' || iChar == '\t')
+				vWords.push_back(std::string(1, iChar));
+			else
+				vWords.back().push_back(iChar);
+		}
+
+		std::vector<std::string> vWrapped = { "" };
+		int iWord = 0;
+		for (auto& sWord : vWords)
+		{
+			begin:
+			if (sWord.empty())
+				continue;
+
+			auto sSeparator = iWord ? std::string(1, sWord[0]) : "";
+			if (sWord[0] == ' ' || sWord[0] == '\n' || sWord[0] == '\t')
+				sWord.erase(0, 1);
+			if (sSeparator != "\n" && FCalcTextSize(std::format("{}{}{}", vWrapped.back(), sSeparator, sWord).c_str(), pFont).x < iPixels)
+			{
+				vWrapped.back() += std::format("{}{}", sSeparator, sWord);
+				iWord++;
+			}
+			else
+			{
+				bool bContinue = false, bFirstWord = !iWord; iWord = 0;
+				if (bFirstWord)
+				{
+					size_t i = 0;
+					vWrapped.back() += TruncateText(sWord, iPixels, pFont, "-", &i);
+					if (!i) // i don't know why it fucking does this, but i don't care enough to fix it
+						bContinue = true;
+					else
+						sWord = sWord.substr(i, sWord.length() - i);
+				}
+				if (vWrapped.back().empty())
+					break; // don't do the same thing over and over
+				vWrapped.push_back("");
+				if (!bContinue)
+					goto begin;
+			}
+		}
+
+		return vWrapped;
 	}
 
 	inline const char* FormatText(const char* fmt, ...)
@@ -407,15 +552,37 @@ namespace ImGui
 		return Disabled ? false : bReturn;
 	}
 
-	std::unordered_map<const char*, float> mLastHeights;
-	std::vector<const char*> vStoredLabels;
-	inline bool Section(const char* sLabel, float flMinHeight = 1.f, bool bForceHeight = false)
+	inline bool FBeginPopup(const char* str_id, ImGuiWindowFlags flags = ImGuiWindowFlags_None)
+	{
+		PushStyleVar(ImGuiStyleVar_PopupBorderSize, H::Draw.Scale(1));
+		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
+		bool bReturn = BeginPopup(str_id, flags);
+		PopStyleColor();
+		PopStyleVar();
+		return bReturn;
+	}
+
+	inline bool FBeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags flags = ImGuiWindowFlags_None)
+	{
+		PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
+		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
+		bool bReturn = BeginPopupModal(name, p_open, flags);
+		PopStyleColor();
+		PopStyleVar();
+		return bReturn;
+	}
+
+	static std::unordered_map<const char*, float> mLastHeights;
+	static std::vector<const char*> vStoredLabels;
+	inline bool Section(const char* sLabel, bool bExtraPadding = false, float flMinHeight = 28.f, bool bForceHeight = false)
 	{
 		vStoredLabels.push_back(sLabel);
 		if (!bForceHeight && mLastHeights.contains(sLabel) && mLastHeights[sLabel] > flMinHeight)
 			flMinHeight = mLastHeights[sLabel];
 		PushStyleVar(ImGuiStyleVar_CellPadding, { 0, 0 });
 		const bool bReturn = BeginChild(sLabel, { GetColumnWidth(), flMinHeight }, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding);
+		if (bReturn)
+			RenderTwoToneBackground(H::Draw.Scale(28), F::Render.Background0, F::Render.Background0p5, F::Render.Background2);
 
 		PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), 0 });
 		if (sLabel[0] != '#')
@@ -424,12 +591,11 @@ namespace ImGui
 
 			PushStyleColor(ImGuiCol_Text, F::Render.Accent.Value);
 			PushFont(F::Render.FontBold);
-			SetCursorPosY(vOriginalPos.y + 1);
 			TextUnformatted(StripDoubleHash(sLabel).c_str());
 			PopFont();
 			PopStyleColor();
 
-			SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(16) });
+			SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(bExtraPadding ? 27 : 19) });
 		}
 
 		return bReturn;
@@ -448,8 +614,8 @@ namespace ImGui
 	}
 
 	// widgets
-	inline bool FTabs(std::vector<const char*> vEntries, int* pVar, const ImVec2 vSize, const ImVec2 vPos, int iFlags = FTabs_None, std::vector<const char*> vIcons = {})
-	{
+	inline bool FTabs(std::vector<std::vector<const char*>> vEntries, std::vector<int*> vVars, const ImVec2 vSize, const ImVec2 vPos, int iFlags = FTabs_None, std::vector<std::vector<const char*>> vIcons = {}, ImVec2 vAllTextOffset = {}, ImVec2 vAllBarOffset = {}, ImVec2 vSubTextOffset = {}, ImVec2 vSubBarOffset = {}, float flBarSizeMod = 0.f, float flBarThickness = 1.f)
+	{	// WOW fuck this
 		if (!vIcons.empty() && vIcons.size() != vEntries.size())
 		{
 			IM_ASSERT_USER_ERROR(0, "FTabs() vIcons size mismatch to vEntries.");
@@ -457,80 +623,284 @@ namespace ImGui
 		}
 
 		ImDrawList* pDrawList = GetWindowDrawList();
-		const int iOriginalTab = pVar ? *pVar : 0;
-
-		bool bVertical = iFlags & FTabs_Vertical;
-		bool bHorizontalIcons = iFlags & FTabs_HorizontalIcons;
-		//bool bPageStyle = iFlags & FTabs_PageStyle;
-
-		for (size_t i = 0; i < vEntries.size(); i++)
+		bool bChanged = false;
+		std::pair<int, int> pOriginal;
 		{
-			ImVec2 vNewPos = bVertical ? ImVec2(vPos.x, vPos.y + vSize.y * i) : ImVec2(vPos.x + vSize.x * i, vPos.y);
-			ImVec2 vDrawPos = GetDrawPos() + vNewPos;
-
-			if (i != iOriginalTab)
-				PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			else
-			{
-				if (!bVertical)
-					pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + vSize.y - H::Draw.Scale(2) }, { vDrawPos.x + vSize.x, vDrawPos.y + vSize.y }, F::Render.Accent);
-				else
-					pDrawList->AddRectFilled({ vDrawPos.x + vSize.x - H::Draw.Scale(2), vDrawPos.y }, { vDrawPos.x + vSize.x, vDrawPos.y + vSize.y }, F::Render.Accent);
-			}
-			SetCursorPos(vNewPos);
-			if (Button(std::format("##{}", vEntries[i]).c_str(), vSize) && i != iOriginalTab && pVar)
-			{
-				if (vStoredLabels.size() == 0)
-					mLastHeights.clear();
-				*pVar = int(i);
-			}
-			if (!Disabled && IsItemHovered())
-				SetMouseCursor(ImGuiMouseCursor_Hand);
-
-			ImVec2 vOriginalPos = GetCursorPos();
-			std::string sStripped = StripDoubleHash(vEntries[i]);
-			ImVec2 vTextSize = FCalcTextSize(sStripped.c_str());
-			if (!vIcons.empty())
-			{
-				ImVec2 vIconSize = IconSize(vIcons[i]);
-				if (!bHorizontalIcons)
-				{
-					SetCursorPos({ vNewPos.x + (vSize.x - vTextSize.x) / 2, vNewPos.y + (vSize.y - vTextSize.y) / 2 + vIconSize.y / 1.5f });
-					TextUnformatted(sStripped.c_str());
-
-					SetCursorPos({ vNewPos.x + vSize.x / 2 - vIconSize.x / 2, vNewPos.y + vSize.y / 2 - vIconSize.y / 1.5f });
-					IconImage(vIcons[i]);
-				}
-				else
-				{
-					SetCursorPos({ vNewPos.x + (vSize.x - vTextSize.x) / 2 + vIconSize.x / 1.5f, vNewPos.y + (vSize.y - vTextSize.y) / 2 });
-					TextUnformatted(sStripped.c_str());
-
-					SetCursorPos({ vNewPos.x + vSize.x / 2 - vTextSize.x / 2 - vIconSize.x / 1.5f, vNewPos.y + vSize.y / 2 - vIconSize.y / 2 });
-					IconImage(vIcons[i]);
-				}
-			}
-			else
-			{
-				SetCursorPos({ vNewPos.x + (vSize.x - vTextSize.x) / 2, vNewPos.y + (vSize.y - vTextSize.y) / 2 });
-				TextUnformatted(sStripped.c_str());
-			}
-			SetCursorPos(vOriginalPos);
-
-			if (i != iOriginalTab)
-				PopStyleColor();
+			auto pVar1 = !vVars.empty() ? vVars[0] : nullptr;
+			auto pVar2 = pVar1 && vEntries[*pVar1].size() > 1 && *pVar1 + 1 < vVars.size() ? vVars[*pVar1 + 1] : nullptr;
+			pOriginal = { pVar1 ? *pVar1 : -1, pVar2 ? *pVar2 : -1 };
 		}
-		return pVar ? *pVar != iOriginalTab : false;
+
+		bool bIcons = !vIcons.empty();
+		bool bVertical = iFlags & FTabs_Vertical;
+		bool bVerticalIcons = iFlags & FTabs_VerticalIcons;
+		bool bFit = iFlags & FTabs_Fit;
+		bool bReverse = iFlags & FTabs_AlignReverse;
+		int iAlign = iFlags & FTabs_AlignLeft ? 1 : iFlags & FTabs_AlignRight ? 2 : iFlags & FTabs_AlignTop ? 3 : iFlags & FTabs_AlignBottom ? 4 : 0;
+		int iBar = iFlags & FTabs_BarLeft ? 1 : iFlags & FTabs_BarRight ? 2 : iFlags & FTabs_BarTop ? 3 : iFlags & FTabs_BarBottom ? 4 : bVertical ? 2 : 4;
+
+		ImVec2 vOffset = vPos;
+		for (size_t i = bReverse ? vEntries.size() - 1 : 0; i < vEntries.size(); (bReverse ? i-- : i++))
+		{
+			for (size_t j = bReverse ? vEntries[i].size() - 1 : 0; j < vEntries[i].size(); (bReverse ? j-- : j++))
+			{
+				if (j && i != pOriginal.first)
+					continue;
+
+				int iTabState = 0;
+				if (vEntries[i].size() <= 1)
+				{
+					if (i == pOriginal.first)
+						iTabState = 2;
+				}
+				else if (!j)
+				{
+					if (i == pOriginal.first)
+						iTabState = 1;
+				}
+				else
+				{
+					if (i == pOriginal.first && j - 1 == pOriginal.second)
+						iTabState = 2;
+				}
+
+				auto sEntry = vEntries[i][j];
+				auto sIcon = i < vIcons.size() && j < vIcons[i].size() ? vIcons[i][j] : nullptr;
+				int* pVar = nullptr;
+				if (!vVars.empty())
+				{
+					if (!j)
+						pVar = vVars[0];
+					else if (i + 1 < vVars.size())
+						pVar = vVars[i + 1];
+				}
+
+				ImVec2 vNewSize = vSize;
+				if (bFit)
+				{
+					if (!bVertical)
+						vNewSize.x += FCalcTextSize(StripDoubleHash(sEntry).c_str()).x + (sIcon && !bVerticalIcons ? IconSize(sIcon).x : 0.f);
+					else
+						vNewSize.y += FCalcTextSize(StripDoubleHash(sEntry).c_str()).y + (sIcon && bVerticalIcons ? IconSize(sIcon).x : 0.f);
+				}
+				if (bReverse)
+				{
+					if (!bVertical)
+						vOffset.x -= vNewSize.x;
+					else
+						vOffset.y -= vNewSize.y;
+				}
+				ImVec2 vDrawPos = GetDrawPos() + vOffset;
+				ImVec2 vCurTextOffset = vAllTextOffset + (j ? vSubTextOffset : ImVec2());
+				ImVec2 vCurBarOffset = vAllBarOffset + (j ? vSubBarOffset : ImVec2());
+
+				if (!iTabState)
+					PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
+				else if (iTabState == 2)
+				{
+					switch (iBar)
+					{
+					case 1: // left
+						pDrawList->AddRectFilled(
+							{ vDrawPos.x + vCurBarOffset.x, vDrawPos.y + vCurBarOffset.y + flBarSizeMod },
+							{ vDrawPos.x + vCurBarOffset.x + H::Draw.Scale(flBarThickness), vDrawPos.y + vCurBarOffset.y - flBarSizeMod + vNewSize.y },
+							F::Render.Accent
+						);
+						break;
+					case 2: // right
+						pDrawList->AddRectFilled(
+							{ vDrawPos.x + vCurBarOffset.x + vNewSize.x - H::Draw.Scale(flBarThickness), vDrawPos.y + vCurBarOffset.y + flBarSizeMod },
+							{ vDrawPos.x + vCurBarOffset.x + vNewSize.x, vDrawPos.y + vCurBarOffset.y - flBarSizeMod + vNewSize.y },
+							F::Render.Accent
+						);
+						break;
+					case 3: // top
+						pDrawList->AddRectFilled(
+							{ vDrawPos.x + vCurBarOffset.x + flBarSizeMod, vDrawPos.y + vCurBarOffset.y },
+							{ vDrawPos.x + vCurBarOffset.x - flBarSizeMod + vNewSize.x, vDrawPos.y + vCurBarOffset.y + H::Draw.Scale(flBarThickness) },
+							F::Render.Accent
+						);
+						break;
+					case 4: // bottom
+						pDrawList->AddRectFilled(
+							{ vDrawPos.x + vCurBarOffset.x + flBarSizeMod, vDrawPos.y + vCurBarOffset.y + vNewSize.y - H::Draw.Scale(flBarThickness) },
+							{ vDrawPos.x + vCurBarOffset.x - flBarSizeMod + vNewSize.x, vDrawPos.y + vCurBarOffset.y + vNewSize.y },
+							F::Render.Accent
+						);
+						break;
+					}
+				}
+
+				SetCursorPos(vOffset);
+				if (Button(std::format("##{}", sEntry).c_str(), vNewSize) && !iTabState && pVar)
+				{
+					*pVar = int(!j ? i : j - 1);
+					bChanged = true;
+					if (vStoredLabels.size() == 0)
+						mLastHeights.clear();
+				}
+				if (!Disabled && IsItemHovered())
+					SetMouseCursor(ImGuiMouseCursor_Hand);
+
+				ImVec2 vOriginalPos = GetCursorPos();
+				std::string sStripped = StripDoubleHash(sEntry);
+
+				ImVec2 vTextSize = FCalcTextSize(sStripped.c_str());
+				ImVec2 vIconSize = { H::Draw.Scale(16), H::Draw.Scale(16) }; //IconSize(vIcons[i]);
+
+				ImVec2 vTextOffset, vIconOffset;
+				if (bIcons)
+				{
+					if (!bVerticalIcons)
+					{
+						switch (iAlign)
+						{
+						case 0: // center
+							vTextOffset = { (vNewSize.x - vTextSize.x) / 2 + vIconSize.x / 1.5f, (vNewSize.y - vTextSize.y) / 2 };
+							vIconOffset = { (vNewSize.x - vTextSize.x) / 2 - vIconSize.x / 1.5f, (vNewSize.y - vIconSize.y) / 2 };
+							break;
+						case 1: // left
+							vTextOffset = { vIconSize.x * 1.5f, (vNewSize.y - vTextSize.y) / 2 };
+							vIconOffset = { 0.f, (vNewSize.y - vIconSize.y) / 2 };
+							break;
+						case 2: // right
+							vTextOffset = { vNewSize.x - vTextSize.x, (vNewSize.y - vTextSize.y) / 2 };
+							vIconOffset = { vNewSize.x - vTextSize.x - vIconSize.x * 1.5f, (vNewSize.y - vIconSize.y) / 2 };
+							break;
+						case 3: // top
+							vTextOffset = { (vNewSize.x - vTextSize.x) / 2 + vIconSize.x / 1.5f, { (vIconSize.y - vTextSize.y) / 2 } };
+							vIconOffset = { (vNewSize.x - vTextSize.x) / 2 - vIconSize.x / 1.5f, 0.f };
+							break;
+						case 4: // bottom
+							vTextOffset = { (vNewSize.x - vTextSize.x) / 2 + vIconSize.x / 1.5f, vNewSize.y - vTextSize.y - (vIconSize.y - vTextSize.y) / 2 };
+							vIconOffset = { (vNewSize.x - vTextSize.x) / 2 - vIconSize.x / 1.5f, vNewSize.y - vIconSize.y };
+							break;
+						}
+					}
+					else
+					{
+						switch (iAlign)
+						{
+						case 0: // center
+							vTextOffset = { (vNewSize.x - vTextSize.x) / 2, (vNewSize.y - vTextSize.y) / 2 + vIconSize.y / 1.5f };
+							vIconOffset = { (vNewSize.x - vIconSize.x) / 2, (vNewSize.y - vTextSize.y) / 2 - vIconSize.y / 1.5f };
+							break;
+						case 1: // left
+							vTextOffset = { 0.f, (vNewSize.y - vTextSize.y) / 2 + vIconSize.y / 1.5f };
+							vIconOffset = { (vTextSize.x - vIconSize.x) / 2, (vNewSize.y - vTextSize.y) / 2 - vIconSize.y / 1.5f };
+							break;
+						case 2: // right
+							vTextOffset = { vNewSize.x - vTextSize.x, (vNewSize.y - vTextSize.y) / 2 + vIconSize.y / 1.5f };
+							vIconOffset = { vNewSize.x - (vTextSize.x + vIconSize.x) / 2, (vNewSize.y - vTextSize.y) / 2 - vIconSize.y / 1.5f };
+							break;
+						case 3: // top
+							vTextOffset = { (vNewSize.x - vTextSize.x) / 2, vIconSize.y * 1.5f };
+							vIconOffset = { (vNewSize.x - vIconSize.x) / 2, 0.f };
+							break;
+						case 4: // bottom
+							vTextOffset = { (vNewSize.x - vTextSize.x) / 2, vNewSize.y - vTextSize.y };
+							vIconOffset = { (vNewSize.x - vIconSize.x) / 2, vNewSize.y - vTextSize.y - vIconSize.y * 1.5f };
+							break;
+						}
+					}
+				}
+				else
+				{
+					switch (iAlign)
+					{
+					case 0: // center
+						vTextOffset = { (vNewSize.x - vTextSize.x) / 2, (vNewSize.y - vTextSize.y) / 2 };
+						break;
+					case 1: // left
+						vTextOffset = { 0.f, (vNewSize.y - vTextSize.y) / 2 };
+						break;
+					case 2: // right
+						vTextOffset = { vNewSize.x - vTextSize.x, (vNewSize.y - vTextSize.y) / 2 };
+						break;
+					case 3: // top
+						vTextOffset = { (vNewSize.x - vTextSize.x) / 2, 0.f };
+						break;
+					case 4: // bottom
+						vTextOffset = { (vNewSize.x - vTextSize.x) / 2, vNewSize.y - vTextSize.y };
+						break;
+					}
+				}
+
+				SetCursorPos(vOffset + vCurTextOffset + vTextOffset);
+				TextUnformatted(sStripped.c_str());
+
+				if (sIcon)
+				{
+					SetCursorPos(vOffset + vCurTextOffset + vIconOffset);
+					IconImage(sIcon);
+				}
+
+				SetCursorPos(vOriginalPos);
+
+				if (!iTabState)
+					PopStyleColor();
+
+				if (!bReverse)
+				{
+					if (!bVertical)
+						vOffset.x += vNewSize.x;
+					else
+						vOffset.y += vNewSize.y;
+				}
+			}
+		}
+
+		return bChanged;
 	}
 
-	inline bool FSelectable(const char* sLabel, ImVec4 tColor = { 0.2f, 0.6f, 0.85f, 1.f }, bool bSelected = false, int iFlags = ImGuiSelectableFlags_None, const ImVec2& vSize = {})
+	inline bool FTabs(std::vector<const char*> vEntries, int* pVar, const ImVec2 vSize, const ImVec2 vPos, int iFlags = FTabs_None, std::vector<const char*> vIcons = {}, ImVec2 vAllTextOffset = {}, ImVec2 vAllBarOffset = {}, ImVec2 vSubTextOffset = {}, ImVec2 vSubBarOffset = {}, float flBarSizeMod = 0.f, float flBarThickness = 1.f)
 	{
-		PushStyleColor(ImGuiCol_HeaderHovered, tColor);
-		tColor.x /= 1.1f; tColor.y /= 1.1f; tColor.z /= 1.1f;
-		PushStyleColor(ImGuiCol_HeaderActive, tColor);
+		std::vector<std::vector<const char*>> vNewEntries;
+		for (auto& sEntry : vEntries)
+			vNewEntries.push_back({ sEntry });
+		std::vector<std::vector<const char*>> vNewIcons;
+		for (auto& sIcon : vIcons)
+			vNewIcons.push_back({ sIcon });
+
+		return FTabs(vNewEntries, { pVar }, vSize, vPos, iFlags, vNewIcons, vAllTextOffset, vAllBarOffset, vSubTextOffset, vSubBarOffset, flBarSizeMod, flBarThickness);
+	}
+
+	inline bool FSelectable(const char* sLabel, ImVec4* pColor, float flRounding = H::Draw.Scale(3), bool bSelected = false, int iFlags = ImGuiSelectableFlags_None, const ImVec2& vSize = {})
+	{
+		PushStyleVar(ImGuiStyleVar_FrameRounding, flRounding);
+		if (pColor)
+		{
+			auto tColor = *pColor;
+			PushStyleColor(ImGuiCol_HeaderHovered, tColor);
+			tColor.x /= 1.1f; tColor.y /= 1.1f; tColor.z /= 1.1f;
+			PushStyleColor(ImGuiCol_HeaderActive, tColor);
+		}
 		const bool bReturn = Selectable(sLabel, bSelected, iFlags, vSize);
-		PopStyleColor(2);
+		if (pColor)
+			PopStyleColor(2);
+		PopStyleVar();
 		return bReturn;
+	}
+
+	inline bool FSelectable(const char* sLabel, ImVec4 tColor = { 0.2f, 0.6f, 0.85f, 1.f }, float flRounding = H::Draw.Scale(3), bool bSelected = false, int iFlags = ImGuiSelectableFlags_None, const ImVec2& vSize = {})
+	{
+		return FSelectable(sLabel, &tColor, flRounding, bSelected, iFlags, vSize);
+	}
+
+	static std::vector<std::pair<float, float>> vRowSizes;
+	inline void AddRowSize(float flPosY, float flSizeY)
+	{
+		flPosY += GetDrawPos().y;
+		if (!vRowSizes.empty() && vRowSizes.back().first != flPosY)
+			vRowSizes.clear();
+		vRowSizes.emplace_back(flPosY, flSizeY);
+	}
+	inline float GetRowSize()
+	{
+		float flMax = 0.f;
+		for (auto& [_, flSize] : vRowSizes)
+			flMax = std::max(flMax, flSize);
+		return flMax;
 	}
 
 	inline bool FButton(const char* sLabel, int iFlags = FButton_None, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
@@ -582,7 +952,9 @@ namespace ImGui
 		PopStyleVar();
 		PopStyleColor();
 
-		SetCursorPos(vOriginalPos); DebugDummy({ vSize.x, vSize.y + H::Draw.Scale(8) });
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, vSize.y + H::Draw.Scale(8));
+		DebugDummy({ vSize.x, GetRowSize() });
 
 		if (Transparent || Disabled)
 			PopStyleVar();
@@ -595,17 +967,23 @@ namespace ImGui
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
 
-		float flSizeX = GetWindowWidth();
+		ImVec2 vSize;
+
+		vSize.x = GetWindowWidth();
 		if (iFlags & (FToggle_Left | FToggle_Right))
-			flSizeX = flSizeX / 2 - GetStyle().WindowPadding.x * 1.5f;
+			vSize.x = vSize.x / 2 - GetStyle().WindowPadding.x * 1.5f;
 		else
-			flSizeX -= GetStyle().WindowPadding.x * 2;
+			vSize.x -= GetStyle().WindowPadding.x * 2;
 		if (iFlags & FToggle_Right)
-			SameLine(flSizeX + GetStyle().WindowPadding.x * 2.f);
+			SameLine(vSize.x + GetStyle().WindowPadding.x * 2.f);
 
 		ImVec2 vOriginalPos = GetCursorPos();
 
-		bool bReturn = Button(std::format("##{}", sLabel).c_str(), { flSizeX, H::Draw.Scale(24) });
+		auto vWrapped = WrapText(StripDoubleHash(sLabel), vSize.x - H::Draw.Scale(24));
+		int iWraps = std::min(int(vWrapped.size()), 2); // prevent too many wraps
+		vSize.y = H::Draw.Scale(6 + 18 * iWraps);
+
+		bool bReturn = Button(std::format("##{}", sLabel).c_str(), vSize);
 		if (Disabled)
 			bReturn = false;
 		if (bReturn)
@@ -613,15 +991,20 @@ namespace ImGui
 		if (!Disabled && IsItemHovered())
 			SetMouseCursor(ImGuiMouseCursor_Hand);
 
-		SetCursorPos({ vOriginalPos.x + H::Draw.Scale(4), vOriginalPos.y + H::Draw.Scale(4) });
+		SetCursorPos({ vOriginalPos.x + H::Draw.Scale(4), vOriginalPos.y + H::Draw.Scale(-5 + 9 * iWraps) });
 		IconImage(*pVar ? ICON_MD_CHECK_BOX : ICON_MD_CHECK_BOX_OUTLINE_BLANK, *pVar ? (iFlags & FToggle_PlainColor ? F::Render.Active.Value : F::Render.Accent.Value) : F::Render.Inactive.Value);
 
-		SetCursorPos({ vOriginalPos.x + H::Draw.Scale(24), vOriginalPos.y + H::Draw.Scale(5) });
 		PushStyleColor(ImGuiCol_Text, *pVar ? F::Render.Active.Value : F::Render.Inactive.Value);
-		TextUnformatted(StripDoubleHash(sLabel).c_str());
+		for (size_t i = 0; i < iWraps; i++)
+		{
+			SetCursorPos({ vOriginalPos.x + H::Draw.Scale(24), vOriginalPos.y + H::Draw.Scale(5 + 18 * i) });
+			TextUnformatted(vWrapped[i].c_str());
+		}
 		PopStyleColor();
 
-		SetCursorPos(vOriginalPos); DebugDummy({ flSizeX, H::Draw.Scale(24) });
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, vSize.y);
+		DebugDummy({ vSize.x, GetRowSize() });
 
 		if (Transparent || Disabled)
 			PopStyleVar();
@@ -629,7 +1012,7 @@ namespace ImGui
 		if (pHovered && IsWindowHovered())
 		{
 			vOriginalPos += GetDrawPos();
-			*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y, flSizeX, H::Draw.Scale(24));
+			*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y, vSize.x, vSize.y);
 		}
 
 		return bReturn;
@@ -650,21 +1033,49 @@ namespace ImGui
 		if (Transparent || Disabled)
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
 
-		float flSizeX = GetWindowWidth();
-		if (iFlags & (FSlider_Left | FSlider_Right))
-			flSizeX = flSizeX / 2 - GetStyle().WindowPadding.x * 1.5f;
+		ImVec2 vSize;
+		bool bFull = !(iFlags & (FSlider_Left | FSlider_Right));
+
+		vSize.x = GetWindowWidth();
+		if (!bFull)
+			vSize.x = vSize.x / 2 - GetStyle().WindowPadding.x * 1.5f;
 		else
-			flSizeX -= GetStyle().WindowPadding.x * 2;
+			vSize.x -= GetStyle().WindowPadding.x * 2;
 		if (iFlags & FSlider_Right)
-			SameLine(flSizeX + GetStyle().WindowPadding.x * 2);
+			SameLine(vSize.x + GetStyle().WindowPadding.x * 2);
 
 		ImVec2 vOriginalPos = GetCursorPos(), vDrawPos = GetDrawPos();
 		PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
 
-		ImVec2 vTextPos = { vOriginalPos.x + H::Draw.Scale(6), vOriginalPos.y + H::Draw.Scale(iFlags & (FSlider_Left | FSlider_Right) ? 3 : 5) };
-		SetCursorPos(vTextPos);
-		TextUnformatted(StripDoubleHash(sLabel).c_str());
+		static std::unordered_map<uint32_t, float> mEntryWidth = {};
+		float& flEntryWidth = mEntryWidth[FNV1A::Hash32(sLabel)];
+#ifdef ALTERNATE_FULL_SLIDER
+		auto vWrapped = WrapText(StripDoubleHash(sLabel), bFull ? vSize.x / 2 - H::Draw.Scale(24) : vSize.x - flEntryWidth - H::Draw.Scale(20));
+#else
+		auto vWrapped = WrapText(StripDoubleHash(sLabel), vSize.x - H::Draw.Scale(20) - flEntryWidth);
+#endif
+		int iWraps = std::min(int(vWrapped.size()), 2); // prevent too many wraps
+#ifdef ALTERNATE_FULL_SLIDER
+		vSize.y = H::Draw.Scale(H::Draw.Scale(bFull ? 6 : 14) + 18 * iWraps);
+#else
+		vSize.y = H::Draw.Scale(14 + 18 * iWraps);
+#endif
 
+		for (size_t i = 0; i < iWraps; i++)
+		{
+#ifdef ALTERNATE_FULL_SLIDER
+			SetCursorPos({ vOriginalPos.x + H::Draw.Scale(6), vOriginalPos.y + H::Draw.Scale((bFull ? 5 : 3) + 18 * i) });
+#else
+			SetCursorPos({ vOriginalPos.x + H::Draw.Scale(6), vOriginalPos.y + H::Draw.Scale(3 + 18 * i) });
+#endif
+			TextUnformatted(vWrapped[i].c_str());
+		}
+
+#ifdef ALTERNATE_FULL_SLIDER
+		float flTextY = vOriginalPos.y + H::Draw.Scale(bFull ? -4 + 9 * iWraps : -15 + 18 * iWraps);
+#else
+		float flTextY = vOriginalPos.y + H::Draw.Scale(-15 + 18 * iWraps);
+#endif
 		{
 			auto uHash2 = FNV1A::Hash32Const(std::format("{}## Text", sLabel).c_str());
 
@@ -673,7 +1084,7 @@ namespace ImGui
 				sText = pVar2 ? FormatText(fmt, flSVar1, flSVar2) : FormatText(fmt, flSVar1);
 			else
 			{
-				SetCursorPos({ -1000, vTextPos.y }); // lol
+				SetCursorPos({ -1000, flTextY }); // lol
 				SetKeyboardFocusHere();
 				InputText("##SliderText", &sInput, ImGuiInputTextFlags_CharsDecimal); sText = sInput;
 
@@ -707,12 +1118,17 @@ namespace ImGui
 					mActiveMap[uHash2] = false;
 			}
 			float flWidth = FCalcTextSize(sText.c_str()).x;
-			if (iFlags & (FSlider_Left | FSlider_Right))
-				SetCursorPos({ vOriginalPos.x + flSizeX - flWidth - H::Draw.Scale(6), vTextPos.y });
+#ifdef ALTERNATE_FULL_SLIDER
+			if (bFull)
+				SetCursorPos({ vOriginalPos.x + vSize.x - H::Draw.Scale(36), flTextY });
 			else
-				SetCursorPos({ vOriginalPos.x + flSizeX - H::Draw.Scale(36), vTextPos.y });
+				SetCursorPos({ vOriginalPos.x + vSize.x - flWidth - H::Draw.Scale(6), flTextY });
+#else
+				SetCursorPos({ vOriginalPos.x + vSize.x - flWidth - H::Draw.Scale(6), flTextY });
+#endif
 
 			ImVec2 vOriginalPos2 = GetCursorPos();
+			flEntryWidth = FCalcTextSize(sText.c_str()).x;
 			TextUnformatted(sText.c_str());
 			if (!Disabled)
 			{
@@ -730,9 +1146,13 @@ namespace ImGui
 		}
 
 		vDrawPos += vOriginalPos;
-		ImVec2 vMins = { flSizeX / 2 - H::Draw.Scale(10), H::Draw.Scale(11) }, vMaxs = { flSizeX - H::Draw.Scale(50), H::Draw.Scale(13) };
-		if (iFlags & (FSlider_Left | FSlider_Right))
-			vMins = { H::Draw.Scale(6), H::Draw.Scale(24) }, vMaxs = { flSizeX - H::Draw.Scale(6), H::Draw.Scale(26) };
+#ifdef ALTERNATE_FULL_SLIDER
+		ImVec2 vMins = { vSize.x / 2 - H::Draw.Scale(10), vSize.y / 2 - H::Draw.Scale(1) }, vMaxs = { vSize.x - H::Draw.Scale(50), vSize.y / 2 + H::Draw.Scale(1) };
+		if (!bFull)
+			vMins = { H::Draw.Scale(6), vSize.y - H::Draw.Scale(8) }, vMaxs = { vSize.x - H::Draw.Scale(6), vSize.y - H::Draw.Scale(6) };
+#else
+		ImVec2 vMins = { H::Draw.Scale(6), vSize.y - H::Draw.Scale(8) }, vMaxs = { vSize.x - H::Draw.Scale(6), vSize.y - H::Draw.Scale(6) };
+#endif
 		ImColor vAccent = F::Render.Accent, vMuted = vAccent, vWashed = vAccent, vTransparent = vAccent;
 		{
 			float flA = GetStyle().Alpha;
@@ -816,7 +1236,9 @@ namespace ImGui
 		PopStyleColor();
 		SetCursorPos({ vOriginalPos.x + vMins.x - 6, vOriginalPos.y + vMins.y - 6 });
 		Button("##", { vMaxs.x - vMins.x + 12, 14 }); // don't drag it around
-		SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(iFlags & (FSlider_Left | FSlider_Right) ? 32 : 24) });
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, vSize.y);
+		DebugDummy({ vSize.x, GetRowSize() });
 
 		if (Transparent || Disabled)
 			PopStyleVar();
@@ -824,9 +1246,7 @@ namespace ImGui
 		if (pHovered && IsWindowHovered())
 		{
 			vOriginalPos += GetDrawPos();
-			//float w = (iFlags & (FSlider_Left | FSlider_Right) ? GetWindowWidth() / 2 + 4 : GetWindowWidth()) - 2 * GetStyle().WindowPadding.x;
-			//float h = H::Draw.Scale(iFlags & (FSlider_Left | FSlider_Right) ? 32.f : 24.f);
-			*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y, flSizeX, H::Draw.Scale(iFlags & (FSlider_Left | FSlider_Right) ? 32.f : 24.f));
+			*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y, vSize.x, vSize.y);
 		}
 
 		return *pVar1 != flOriginal1 || pVar2 && *pVar2 != flOriginal2;
@@ -953,7 +1373,7 @@ namespace ImGui
 					bool bFlagActive = *pVar & vValues[i];
 
 					ImVec2 vOriginalPos2 = GetCursorPos();
-					if (Selectable(std::format("##{}", sEntry).c_str(), bFlagActive, ImGuiSelectableFlags_DontClosePopups))
+					if (FSelectable(std::format("##{}", sEntry).c_str(), nullptr, 0, bFlagActive, ImGuiSelectableFlags_DontClosePopups))
 					{
 						if (bFlagActive)
 							*pVar &= ~vValues[i];
@@ -983,7 +1403,7 @@ namespace ImGui
 						SetCursorPos(vOriginalPos2);
 					}
 
-					if (Selectable(std::format("##{}", sEntry).c_str(), *pVar == vValues[i]))
+					if (FSelectable(std::format("##{}", sEntry).c_str(), nullptr, 0, *pVar == vValues[i]))
 						*pVar = vValues[i], bReturn = true;
 
 					ImVec2 vOriginalPos3 = GetCursorPos();
@@ -1016,19 +1436,22 @@ namespace ImGui
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y - H::Draw.Scale(6) });
 			PushFont(F::Render.FontSmall);
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			TextUnformatted(StripDoubleHash(sLabel).c_str());
+			TextUnformatted(TruncateText(StripDoubleHash(sLabel), flSizeX - H::Draw.Scale(45)).c_str());
 			PopStyleColor();
 			PopFont();
 
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y + H::Draw.Scale(8) });
-			TextUnformatted(TruncateText(sPreview.c_str(), flSizeX - H::Draw.Scale(55)).c_str());
+			TextUnformatted(TruncateText(sPreview, flSizeX - H::Draw.Scale(45)).c_str());
 
 			SetCursorPos({ vOriginalPos2.x + flSizeX - H::Draw.Scale(24), vOriginalPos2.y - H::Draw.Scale(1) });
-			IconImage(bActive ? ICON_MD_ARROW_DROP_UP : ICON_MD_ARROW_DROP_DOWN);
+			IconImage(bActive ? ICON_MD_KEYBOARD_ARROW_UP : ICON_MD_KEYBOARD_ARROW_DOWN);
 
 			EndComboPreview();
 		}
-		SetCursorPos(vOriginalPos); DebugDummy({ flSizeX, H::Draw.Scale(48) });
+
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, H::Draw.Scale(48));
+		DebugDummy({ flSizeX, GetRowSize() });
 
 		PopItemWidth();
 		PopStyleVar();
@@ -1168,7 +1591,7 @@ namespace ImGui
 
 					bool bActive = FNV1A::Hash32(pVar->c_str()) == FNV1A::Hash32(sEntry.c_str());
 					ImVec2 vOriginalPos3 = GetCursorPos();
-					if (Selectable(std::format("##{}", sEntry).c_str(), bActive))
+					if (FSelectable(std::format("##{}", sEntry).c_str(), nullptr, 0, bActive))
 						*pVar = sEntry, bReturn = true;
 
 					ImVec2 vOriginalPos4 = GetCursorPos();
@@ -1201,7 +1624,7 @@ namespace ImGui
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y - H::Draw.Scale(5) });
 			PushFont(F::Render.FontSmall);
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			TextUnformatted(StripDoubleHash(sLabel).c_str());
+			TextUnformatted(TruncateText(StripDoubleHash(sLabel), flSizeX - H::Draw.Scale(vEntries.empty() ? 24 : 45)).c_str());
 			PopStyleColor();
 			PopFont();
 
@@ -1221,14 +1644,14 @@ namespace ImGui
 				PopStyleVar();
 			}
 			else
-				TextUnformatted(TruncateText(var->c_str(), flSizeX - H::Draw.Scale(entries.empty() ? 35 : 55)).c_str());
+				TextUnformatted(TruncateText(var, flSizeX - H::Draw.Scale(entries.empty() ? 24 : 45)).c_str());
 			*/
-			TextUnformatted(TruncateText(mActiveMap[uHash] ? sPreview.c_str() : pVar->c_str(), flSizeX - H::Draw.Scale(vEntries.empty() ? 35 : 55)).c_str());
+			TextUnformatted(TruncateText(mActiveMap[uHash] ? sPreview : *pVar, flSizeX - H::Draw.Scale(vEntries.empty() ? 24 : 45)).c_str());
 
 			if (!vEntries.empty())
 			{
 				SetCursorPos({ vOriginalPos2.x + flSizeX - H::Draw.Scale(24), vOriginalPos2.y - H::Draw.Scale(1) });
-				IconImage(mActiveMap[uHash] ? ICON_MD_ARROW_DROP_UP : ICON_MD_ARROW_DROP_DOWN);
+				IconImage(mActiveMap[uHash] ? ICON_MD_KEYBOARD_ARROW_UP : ICON_MD_KEYBOARD_ARROW_DOWN);
 			}
 
 			if (mActiveMap[uHash] || iFlags & FSDropdown_Custom || vEntries.empty())
@@ -1248,7 +1671,9 @@ namespace ImGui
 			PopStyleVar();
 		}
 
-		SetCursorPos(vOriginalPos); DebugDummy({ flSizeX, H::Draw.Scale(48) });
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, H::Draw.Scale(48));
+		DebugDummy({ flSizeX, GetRowSize() });
 
 		if (Transparent || Disabled)
 			PopStyleVar();
@@ -1330,7 +1755,7 @@ namespace ImGui
 				int iEntry = bFlagActive ? std::distance(pVar->begin(), mIts[sEntry]) + 1 : 0;
 
 				ImVec2 vOriginalPos2 = GetCursorPos();
-				if (Selectable(std::format("##{}", sEntry).c_str(), bFlagActive, ImGuiSelectableFlags_DontClosePopups))
+				if (FSelectable(std::format("##{}", sEntry).c_str(), nullptr, 0, bFlagActive, ImGuiSelectableFlags_DontClosePopups))
 				{
 					if (bFlagActive)
 						pVar->erase(cFind->second);
@@ -1369,19 +1794,21 @@ namespace ImGui
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y - H::Draw.Scale(5) });
 			PushFont(F::Render.FontSmall);
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			TextUnformatted(StripDoubleHash(sLabel).c_str());
+			TextUnformatted(TruncateText(StripDoubleHash(sLabel), flSizeX - H::Draw.Scale(45)).c_str());
 			PopStyleColor();
 			PopFont();
 
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y + H::Draw.Scale(8) });
-			TextUnformatted(TruncateText(sPreview.c_str(), flSizeX - H::Draw.Scale(55)).c_str());
+			TextUnformatted(TruncateText(sPreview, flSizeX - H::Draw.Scale(45)).c_str());
 
 			SetCursorPos({ vOriginalPos2.x + flSizeX - H::Draw.Scale(24), vOriginalPos2.y - H::Draw.Scale(1) });
-			IconImage(bActive ? ICON_MD_ARROW_DROP_UP : ICON_MD_ARROW_DROP_DOWN, true);
+			IconImage(bActive ? ICON_MD_KEYBOARD_ARROW_UP : ICON_MD_KEYBOARD_ARROW_DOWN, true);
 
 			EndComboPreview();
 		}
-		SetCursorPos(vOriginalPos); DebugDummy({ flSizeX, H::Draw.Scale(48) });
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, H::Draw.Scale(48));
+		DebugDummy({ vSize.x, GetRowSize() });
 
 		PopItemWidth();
 		PopStyleVar();
@@ -1412,9 +1839,9 @@ namespace ImGui
 		PushStyleVar(ImGuiStyleVar_FramePadding, { H::Draw.Scale(2), H::Draw.Scale(2) });
 		PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, H::Draw.Scale(4) });
 		PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, { H::Draw.Scale(4), 0 });
-		PushStyleColor(ImGuiCol_PopupBg, F::Render.Foreground.Value);
+		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
 		ImVec4 tempColor = ColorToVec(*tColor);
-		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tempColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_Round | ImGuiColorEditFlags_LargeAlphaGrid, vSize);
+		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tempColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_LargeAlphaGrid, vSize);
 		if (bReturn)
 			*tColor = VecToColor(tempColor);
 		PopStyleColor();
@@ -1434,64 +1861,74 @@ namespace ImGui
 			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
 
 		bool bReturn = false;
+
+		ImVec2 vOriginalPos;
+		ImVec2 vSize = { H::Draw.Scale(12), H::Draw.Scale(12) };
 		if (!(iFlags & FColorPicker_Dropdown))
 		{
-			int iPos = H::Draw.Scale(14);
-			if (iFlags & FColorPicker_Left)
-				iPos += H::Draw.Scale(iOffset * 12);
-			else if (iFlags & FColorPicker_Middle)
-				iPos += GetContentRegionMax().x / 2 - H::Draw.Scale(iOffset * 12);
-			else
-				iPos = GetContentRegionMax().x - H::Draw.Scale(18 + iOffset * 12);
-			if (iFlags & FColorPicker_SameLine)
-				SameLine(iPos);
-			else
-				SetCursorPosX(iPos);
-
-			ImVec2 vOriginalPos = GetCursorPos();
-			DebugShift({ 0, H::Draw.Scale(6) });
-
-			bReturn = ColorPicker(sLabel, tColor, !(iFlags & (FColorPicker_Left | FColorPicker_Middle)) || iFlags & FColorPicker_Tooltip);
 			if (iFlags & (FColorPicker_Left | FColorPicker_Middle))
 			{
-				SetCursorPos({ vOriginalPos.x + H::Draw.Scale(18), vOriginalPos.y + H::Draw.Scale(5) });
-				TextUnformatted(StripDoubleHash(sLabel).c_str());
-				SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(24) });
+				vSize.x = GetWindowWidth() / 2 - GetStyle().WindowPadding.x * 1.5f;
+				if (iFlags & FColorPicker_Middle)
+					SameLine(vSize.x + GetStyle().WindowPadding.x * 2.f);
+				SetCursorPosX(GetCursorPosX() - H::Draw.Scale(iOffset * 12));
+
+				vOriginalPos = GetCursorPos();
+
+				auto vWrapped = WrapText(StripDoubleHash(sLabel), vSize.x - H::Draw.Scale(24));
+				int iWraps = std::min(int(vWrapped.size()), 2); // prevent too many wraps
+				vSize.y = H::Draw.Scale(6 + 18 * iWraps);
+
+				SetCursorPos({ vOriginalPos.x + H::Draw.Scale(6), vOriginalPos.y + H::Draw.Scale(-3 + 9 * iWraps) });
+				bReturn = ColorPicker(sLabel, tColor, iFlags & FColorPicker_Tooltip);
+
+				for (size_t i = 0; i < iWraps; i++)
+				{
+					SetCursorPos({ vOriginalPos.x + H::Draw.Scale(24), vOriginalPos.y + H::Draw.Scale(5 + 18 * i) });
+					TextUnformatted(vWrapped[i].c_str());
+				}
+
+				SetCursorPos(vOriginalPos);
+				AddRowSize(vOriginalPos.y, vSize.y);
+				DebugDummy({ vSize.x, GetRowSize() });
 			}
 			else
 			{
-				SetCursorPos(vOriginalPos); DebugDummy({});
-			}
+				if (iFlags & FColorPicker_SameLine)
+					SameLine();
+				SetCursorPosX(GetContentRegionMax().x - H::Draw.Scale(18 + iOffset * 12));
 
-			if (pHovered && IsWindowHovered())
-			{
-				vOriginalPos += GetDrawPos();
-				ImVec2 vSize;
-				if (iFlags & (FColorPicker_Left | FColorPicker_Middle))
-				{
-					vOriginalPos.x -= H::Draw.Scale(6);
-					vSize = { GetWindowWidth() / 2 - GetStyle().WindowPadding.x * 1.5f, H::Draw.Scale(24) };
-				}
-				else
-				{
-					vOriginalPos.y += H::Draw.Scale(6);
-					vSize = { H::Draw.Scale(12), H::Draw.Scale(12) };
-				}
-				*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y, vSize.x, vSize.y);
+				vOriginalPos = GetCursorPos();
+
+				SetCursorPosY(vOriginalPos.y + H::Draw.Scale(6));
+				bReturn = ColorPicker(sLabel, tColor, true);
+
+				SetCursorPos(vOriginalPos);
+				DebugDummy({});
+				vOriginalPos.y += H::Draw.Scale(6);
 			}
 		}
 		else
 		{
-			SameLine(); DebugShift({ H::Draw.Scale(-8), 0 });
-			ImVec2 vOriginalPos = GetCursorPos(); DebugShift({ 0, H::Draw.Scale(8) });
-			bReturn = ColorPicker(sLabel, tColor, iFlags & FColorPicker_Tooltip, iFlags);
-			SetCursorPos(vOriginalPos); DebugDummy({ H::Draw.Scale(10), H::Draw.Scale(48) });
+			vSize = { H::Draw.Scale(10), H::Draw.Scale(40) };
 
-			if (pHovered && IsWindowHovered())
-			{
-				vOriginalPos += GetDrawPos();
-				*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y + H::Draw.Scale(8), H::Draw.Scale(10), H::Draw.Scale(40));
-			}
+			SameLine();
+			SetCursorPosX(GetCursorPosX() - H::Draw.Scale(8));
+			vOriginalPos = GetCursorPos();
+			SetCursorPosY(GetCursorPosY() + H::Draw.Scale(8));
+
+			bReturn = ColorPicker(sLabel, tColor, iFlags & FColorPicker_Tooltip, iFlags);
+			SetCursorPos(vOriginalPos);
+			AddRowSize(vOriginalPos.y, H::Draw.Scale(48));
+			DebugDummy({ vSize.x, GetRowSize() });
+
+			vOriginalPos.y += H::Draw.Scale(8);
+			vSize = { H::Draw.Scale(10), H::Draw.Scale(40) };
+		}
+		if (pHovered && IsWindowHovered())
+		{
+			vOriginalPos += GetDrawPos();
+			*pHovered = IsMouseWithin(vOriginalPos.x, vOriginalPos.y, vSize.x, vSize.y);
 		}
 
 		if (Transparent || Disabled)
@@ -1742,12 +2179,12 @@ namespace ImGui
 				}
 				bool bHovered = bFlagActive ? IsItemHovered() : false;
 
-				if (Selectable(std::format("##{}", sEntry).c_str(), bFlagActive, ImGuiSelectableFlags_DontClosePopups))
+				if (FSelectable(std::format("##{}", sEntry).c_str(), nullptr, 0, bFlagActive, ImGuiSelectableFlags_DontClosePopups))
 				{
 					if (bFlagActive)
 						pVar->erase(cFind->second);
 					else
-						pVar->push_back({ sEntry, {} });
+						pVar->emplace_back(sEntry, Color_t());
 					bReturn = true;
 				}
 				bHovered = !bHovered && IsItemHovered();
@@ -1756,7 +2193,7 @@ namespace ImGui
 				ImVec2 vOriginalPos3 = GetCursorPos();
 				SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(40 + 6 * int(log10(std::max(pVar->size(), 1ui64)))), vOriginalPos2.y + H::Draw.Scale(1) });
 				PushStyleColor(ImGuiCol_Text, bFlagActive ? F::Render.Active.Value : F::Render.Inactive.Value);
-				TextUnformatted(bHovered ? sEntry.c_str() : TruncateText(sEntry.c_str(), flSizeX - (bFlagActive ? 92 : 70)).c_str());
+				TextUnformatted(bHovered ? sEntry.c_str() : TruncateText(sEntry, flSizeX - (bFlagActive ? 82 : 60)).c_str());
 				PopStyleColor();
 
 				if (bFlagActive)
@@ -1782,19 +2219,21 @@ namespace ImGui
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y - H::Draw.Scale(5) });
 			PushFont(F::Render.FontSmall);
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			TextUnformatted(StripDoubleHash(sLabel).c_str());
+			TextUnformatted(TruncateText(StripDoubleHash(sLabel), flSizeX - H::Draw.Scale(45)).c_str());
 			PopStyleColor();
 			PopFont();
 
 			SetCursorPos({ vOriginalPos2.x + H::Draw.Scale(12), vOriginalPos2.y + H::Draw.Scale(8) });
-			TextUnformatted(TruncateText(sPreview.c_str(), flSizeX - H::Draw.Scale(55)).c_str());
+			TextUnformatted(TruncateText(sPreview, flSizeX - H::Draw.Scale(45)).c_str());
 
 			SetCursorPos({ vOriginalPos2.x + flSizeX - H::Draw.Scale(24), vOriginalPos2.y - H::Draw.Scale(1) });
-			IconImage(bActive ? ICON_MD_ARROW_DROP_UP : ICON_MD_ARROW_DROP_DOWN);
+			IconImage(bActive ? ICON_MD_KEYBOARD_ARROW_UP : ICON_MD_KEYBOARD_ARROW_DOWN);
 
 			EndComboPreview();
 		}
-		SetCursorPos(vOriginalPos); DebugDummy({ flSizeX, H::Draw.Scale(48) });
+		SetCursorPos(vOriginalPos);
+		AddRowSize(vOriginalPos.y, H::Draw.Scale(48));
+		DebugDummy({ flSizeX, GetRowSize() });
 
 		PopItemWidth();
 		PopStyleVar();
@@ -1936,7 +2375,7 @@ namespace ImGui
 				return a < b;
 			});
 		for (auto _iBind : vValues)
-			vStrings.push_back(std::format("{}## Bind{}", _iBind != DEFAULT_BIND && _iBind < F::Binds.vBinds.size() ? F::Binds.vBinds[_iBind].Name : sBind, _iBind));
+			vStrings.push_back(std::format("{}## Bind{}", _iBind != DEFAULT_BIND && _iBind < F::Binds.m_vBinds.size() ? F::Binds.m_vBinds[_iBind].m_sName : sBind, _iBind));
 		for (auto& sEntry : vStrings)
 			vEntries.push_back(sEntry.c_str());
 
@@ -1946,8 +2385,8 @@ namespace ImGui
 		int iModified = -2;
 		if (FDropdown("Bind", &iBind, vEntries, vValues, FDropdown_Modifiable, -60, nullptr, &iModified))
 		{
-			if (iBind != DEFAULT_BIND && iBind < F::Binds.vBinds.size())
-				tBind = F::Binds.vBinds[iBind];
+			if (iBind != DEFAULT_BIND && iBind < F::Binds.m_vBinds.size())
+				tBind = F::Binds.m_vBinds[iBind];
 			else
 				tBind = { sBind };
 			if (var.Map.contains(iBind))
@@ -1958,7 +2397,7 @@ namespace ImGui
 		{
 			if (iModified == -1 || bClickedNew)
 			{
-				iBind = int(F::Binds.vBinds.size());
+				iBind = int(F::Binds.m_vBinds.size());
 				tBind = { sBind };
 				F::Binds.AddBind(iBind, tBind);
 			}
@@ -1980,46 +2419,46 @@ namespace ImGui
 			ImVec2 vOriginalPos = GetCursorPos();
 
 			SetCursorPos({ GetWindowWidth() - H::Draw.Scale(34), H::Draw.Scale(40) });
-			if (IconButton(tBind.Visible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF, { 1, 1, 1, -1 }, &bHovered))
-				tBind.Visible = !tBind.Visible;
+			if (IconButton(tBind.m_bVisible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF, { 1, 1, 1, -1 }, &bHovered))
+				tBind.m_bVisible = !tBind.m_bVisible;
 			bLastHovered = bLastHovered || bHovered;
 
 			SetCursorPos({ GetWindowWidth() - H::Draw.Scale(59), H::Draw.Scale(40) });
-			if (IconButton(!tBind.Not ? ICON_MD_CODE : ICON_MD_CODE_OFF, { 1, 1, 1, -1 }, &bHovered))
-				tBind.Not = !tBind.Not;
+			if (IconButton(!tBind.m_bNot ? ICON_MD_CODE : ICON_MD_CODE_OFF, { 1, 1, 1, -1 }, &bHovered))
+				tBind.m_bNot = !tBind.m_bNot;
 			bLastHovered = bLastHovered || bHovered;
 
 			SetCursorPos(vOriginalPos);
 		}
 
-		FDropdown("Type", &tBind.Type, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdown_Left, 0, &bHovered);
+		FDropdown("Type", &tBind.m_iType, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdown_Left, 0, &bHovered);
 		bLastHovered = bLastHovered || bHovered;
-		switch (tBind.Type)
+		switch (tBind.m_iType)
 		{
-		case BindEnum::Key: tBind.Info = std::clamp(tBind.Info, 0, 2); FDropdown("Behavior", &tBind.Info, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case BindEnum::Class: tBind.Info = std::clamp(tBind.Info, 0, 8); FDropdown("Class", &tBind.Info, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case BindEnum::WeaponType: tBind.Info = std::clamp(tBind.Info, 0, 2); FDropdown("Weapon type", &tBind.Info, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case BindEnum::ItemSlot: tBind.Info = std::max(tBind.Info, 0); FDropdown("Item slot", &tBind.Info, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::Key: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Behavior", &tBind.m_iInfo, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::Class: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 8); FDropdown("Class", &tBind.m_iInfo, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::WeaponType: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Weapon type", &tBind.m_iInfo, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::ItemSlot: tBind.m_iInfo = std::max(tBind.m_iInfo, 0); FDropdown("Item slot", &tBind.m_iInfo, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdown_Right, 0, &bHovered); break;
 		}
 		bLastHovered = bLastHovered || bHovered;
 
-		if (tBind.Type == 0)
+		if (tBind.m_iType == 0)
 		{
-			FKeybind("Key", tBind.Key, FKeybind_None, { 0, 30 }, 0, &bHovered);
+			FKeybind("Key", tBind.m_iKey, FKeybind_None, { 0, 30 }, 0, &bHovered);
 			bLastHovered = bLastHovered || bHovered;
 		}
 
-		if (!Disabled && iBind != DEFAULT_BIND && iBind < F::Binds.vBinds.size())
+		if (!Disabled && iBind != DEFAULT_BIND && iBind < F::Binds.m_vBinds.size())
 		{
 			var.Map[iBind] = val;
 
 			// don't completely override to retain misc info
-			auto& _tBind = F::Binds.vBinds[iBind];
-			_tBind.Type = tBind.Type;
-			_tBind.Info = tBind.Info;
-			_tBind.Key = tBind.Key;
-			_tBind.Visible = tBind.Visible;
-			_tBind.Not = tBind.Not;
+			auto& _tBind = F::Binds.m_vBinds[iBind];
+			_tBind.m_iType = tBind.m_iType;
+			_tBind.m_iInfo = tBind.m_iInfo;
+			_tBind.m_iKey = tBind.m_iKey;
+			_tBind.m_bVisible = tBind.m_bVisible;
+			_tBind.m_bNot = tBind.m_bNot;
 		}
 
 		DebugDummy({ 0, H::Draw.Scale(8) });
@@ -2043,10 +2482,12 @@ namespace ImGui
 				OpenPopup(std::format("{}::{}", var.m_sName.c_str(), sLabel).c_str());\
 				staticVal = val;\
 			}\
-			PushStyleColor(ImGuiCol_PopupBg, F::Render.Foreground.Value);\
+			PushStyleVar(ImGuiStyleVar_PopupBorderSize, H::Draw.Scale(1));\
+			PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);\
 			SetNextWindowSize({ H::Draw.Scale(300), 0 });\
 			bool bPopup = BeginPopup(std::format("{}::{}", var.m_sName.c_str(), sLabel).c_str());\
 			PopStyleColor();\
+			PopStyleVar();\
 			if (bPopup)\
 			{\
 				std::string sLower = !sBindOverride.empty() ? sBindOverride : StripDoubleHash(sLabel);\

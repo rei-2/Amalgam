@@ -59,7 +59,7 @@ void CMovementSimulation::Store(PlayerStorage& playerStorage)
 
 void CMovementSimulation::Reset(PlayerStorage& playerStorage)
 {
-	if (auto pGameRules = I::TFGameRules->Get())
+	if (auto pGameRules = I::TFGameRules())
 	{
 		if (auto pViewVectors = pGameRules->GetViewVectors())
 		{
@@ -120,14 +120,11 @@ void CMovementSimulation::Reset(PlayerStorage& playerStorage)
 }
 
 
-static inline float GetPlayerGravity(CTFPlayer* pEntity)
+float CMovementSimulation::GetPlayerGravity(CTFPlayer* pEntity)
 {
 	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
 
-	float flGravity = pEntity->m_flGravity() ? pEntity->m_flGravity() : 1.f;
-	if (auto pGameRules = I::TFGameRules->Get())
-		return sv_gravity->GetFloat() * pGameRules->m_flGravityMultiplier() * flGravity;
-	return sv_gravity->GetFloat() * flGravity;
+	return sv_gravity->GetFloat();
 }
 
 void CMovementSimulation::Store()
@@ -155,7 +152,7 @@ void CMovementSimulation::Store()
 			vDirection,
 			vAngles,
 			pPlayer->m_flSimulationTime(),
-			pPlayer->IsOnGround() ? 0 : pPlayer->m_nWaterLevel() < 2 ? 1 : 2,
+			pPlayer->m_nWaterLevel() >= 2 ? 2 : pPlayer->IsOnGround() ? 0 : 1,
 			vVelocity,
 			vOrigin
 		};
@@ -174,7 +171,7 @@ void CMovementSimulation::Store()
 			{
 				CGameTrace trace = {};
 				CTraceFilterWorldAndPropsOnly filter = {};
-				SDK::TraceHull(pRecord->m_vOrigin, pRecord->m_vOrigin + pRecord->m_vVelocity * TICK_INTERVAL, pPlayer->m_vecMins() + 0.125f, pPlayer->m_vecMaxs() - 0.125f, MASK_PLAYERSOLID, &filter, &trace);
+				SDK::TraceHull(pRecord->m_vOrigin, pRecord->m_vOrigin + pRecord->m_vVelocity * TICK_INTERVAL, pPlayer->m_vecMins() + 0.125f, pPlayer->m_vecMaxs() - 0.125f, pPlayer->SolidMask(), &filter, &trace);
 				if (trace.DidHit() && trace.plane.normal.z < 0.707f)
 				{
 					pRecord = nullptr;
@@ -203,8 +200,18 @@ void CMovementSimulation::Store()
 
 			//if (bLocal)
 			{
-				if (tRecord.m_iMode != 0 || bLocal && Vars::Misc::Movement::Bunnyhop.Value && G::Buttons & IN_JUMP && !(F::EnginePrediction.m_iFlags & FL_DUCKING))
-					tRecord.m_vDirection = Vec3(vVelocity.x, vVelocity.y, 0).Normalized() * flMaxSpeed;
+				switch (tRecord.m_iMode)
+				{
+				case 0:
+					if (bLocal && Vars::Misc::Movement::Bunnyhop.Value && G::Buttons & IN_JUMP)
+						tRecord.m_vDirection = (vVelocity * Vec3(1, 1, 0)).Normalized() * flMaxSpeed;
+					break;
+				case 1:
+					tRecord.m_vDirection = (vVelocity * Vec3(1, 1, 0)).Normalized() * flMaxSpeed;
+					break;
+				case 2:
+					tRecord.m_vDirection *= 2;
+				}
 			}
 			//else
 			{
@@ -291,8 +298,8 @@ void CMovementSimulation::Store()
 						if (Vars::Debug::Info.Value)
 						{
 							G::LineStorage.clear();
-							G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.1f, { 255, 0, 0, 255 } });
-							G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + vWishDir * flAccelSpeed }, I::GlobalVars->curtime + 0.1f, { 0, 255, 0, 255 } });
+							G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection), I::GlobalVars->curtime + 0.1f, Color_t(255, 0, 0) });
+							G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tRecord.m_vOrigin, tRecord.m_vOrigin + vWishDir * flAccelSpeed), I::GlobalVars->curtime + 0.1f, Color_t(0, 255, 0));
 						}
 
 						float flAng1 = Math::VelocityToAngles(tRecord.m_vDirection).y, flAng2 = Math::VelocityToAngles(vWishDir).y;
@@ -347,7 +354,7 @@ void CMovementSimulation::Store()
 			}
 
 			//if (Vars::Debug::Info.Value)
-			//	G::LineStorage.push_back({ { tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection }, I::GlobalVars->curtime + 0.5f, bSet ? Color_t(SDK::StdRandomInt(200, 255), SDK::StdRandomInt(200, 255), SDK::StdRandomInt(200, 255), 255) : Color_t(0, 0, 0, 255) });
+			//	G::LineStorage.emplace_back({ std::pair<Vec3, Vec3>(tRecord.m_vOrigin, tRecord.m_vOrigin + tRecord.m_vDirection), I::GlobalVars->curtime + 0.5f, bSet ? Color_t(SDK::StdRandomInt(200, 255), SDK::StdRandomInt(200, 255), SDK::StdRandomInt(200, 255)) : Color_t(0, 0, 0) });
 		}
 			
 		vRecords.push_front(tRecord);
@@ -426,7 +433,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 			playerStorageOut.m_bBunnyHop = true;
 
 		// fixes issues with origin tolerance
-		if (auto pGameRules = I::TFGameRules->Get())
+		if (auto pGameRules = I::TFGameRules())
 		{
 			if (auto pViewVectors = pGameRules->GetViewVectors())
 			{
@@ -438,10 +445,10 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 		}
 
 		//for some reason if xy vel is zero it doesn't predict
-		if (fabsf(pPlayer->m_vecVelocity().x) < 0.01f)
-			pPlayer->m_vecVelocity().x = 0.015f;
-		if (fabsf(pPlayer->m_vecVelocity().y) < 0.01f)
-			pPlayer->m_vecVelocity().y = 0.015f;
+		//if (fabsf(pPlayer->m_vecVelocity().x) < 0.01f)
+		//	pPlayer->m_vecVelocity().x = 0.015f;
+		//if (fabsf(pPlayer->m_vecVelocity().y) < 0.01f)
+		//	pPlayer->m_vecVelocity().y = 0.015f;
 	}
 
 	// setup move data
@@ -451,7 +458,9 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& player
 		return false;
 	}
 
-	const int iStrafeSamples = pPlayer->IsOnGround() ? Vars::Aimbot::Projectile::GroundSamples.Value : Vars::Aimbot::Projectile::AirSamples.Value;
+	const int iStrafeSamples = playerStorageOut.m_bDirectMove
+		? Vars::Aimbot::Projectile::GroundSamples.Value
+		: Vars::Aimbot::Projectile::AirSamples.Value;
 
 	// calculate strafe if desired
 	bool bCalculated = cancelStrafe ? false : StrafePrediction(playerStorageOut, iStrafeSamples);
@@ -521,6 +530,7 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& playerStorage)
 	playerStorage.m_MoveData.m_flMaxSpeed = SDK::MaxSpeed(playerStorage.m_pPlayer);
 	playerStorage.m_MoveData.m_flClientMaxSpeed = playerStorage.m_MoveData.m_flMaxSpeed;
 
+	if (!(playerStorage.m_MoveData.m_vecVelocity * Vec3(1, 1, 0)).IsZero())
 	{
 		if (!vRecords.empty())
 		{
@@ -543,7 +553,7 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& playerStorage)
 			if (playerStorage.m_pPlayer->m_vecVelocity().Length2D() <= playerStorage.m_MoveData.m_flMaxSpeed * 0.1f)
 				playerStorage.m_MoveData.m_flForwardMove = playerStorage.m_MoveData.m_flSideMove = 0.f;
 		}
-		//SDK::Output("Shit", std::format("{}, {}, {}", playerStorage.m_MoveData.m_vecViewAngles.y, playerStorage.m_MoveData.m_flForwardMove, playerStorage.m_MoveData.m_flSideMove).c_str());
+		//SDK::Output("Move", std::format("{}: {}, {}, {}", !vRecords.empty(), playerStorage.m_MoveData.m_vecViewAngles.y, playerStorage.m_MoveData.m_flForwardMove, playerStorage.m_MoveData.m_flSideMove).c_str());
 	}
 
 	playerStorage.m_MoveData.m_vecAngles = playerStorage.m_MoveData.m_vecOldAngles = playerStorage.m_MoveData.m_vecViewAngles;
@@ -559,38 +569,32 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& playerStorage)
 	playerStorage.m_flSimTime = playerStorage.m_pPlayer->m_flSimulationTime();
 	playerStorage.m_flPredictedSimTime = playerStorage.m_flSimTime + playerStorage.m_flPredictedDelta;
 	playerStorage.m_vPredictedOrigin = playerStorage.m_MoveData.m_vecAbsOrigin;
+	playerStorage.m_bDirectMove = playerStorage.m_pPlayer->IsOnGround() || playerStorage.m_pPlayer->m_nWaterLevel() >= 2;
 
 	return true;
 }
 
-static int GetYawDifference(std::deque<MoveData>& vRecords, size_t i, float* pYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0, float flMaxSpeed = 0.f)
+static bool GetYawDifference(MoveData& tRecord1, MoveData& tRecord2, bool bStart, float* pYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0, float flMaxSpeed = 0.f)
 {
-	if (vRecords.size() <= i + 2)
-		return false;
-
-	const auto& pRecord1 = vRecords[i], &pRecord2 = vRecords[i + 1];
-	if (pRecord1.m_iMode != pRecord2.m_iMode)
-		return 2;
-
-	const float flYaw1 = Math::VelocityToAngles(pRecord1.m_vDirection).y, flYaw2 = Math::VelocityToAngles(pRecord2.m_vDirection).y;
-	const float flTime1 = pRecord1.m_flSimTime, flTime2 = pRecord2.m_flSimTime;
+	const float flYaw1 = Math::VelocityToAngles(tRecord1.m_vDirection).y, flYaw2 = Math::VelocityToAngles(tRecord2.m_vDirection).y;
+	const float flTime1 = tRecord1.m_flSimTime, flTime2 = tRecord2.m_flSimTime;
 	const int iTicks = std::max(TIME_TO_TICKS(flTime1 - flTime2), 1);
 
 	*pYaw = flYaw1 - flYaw2;
 	*pYaw = fmodf(*pYaw + 180.f, 360.f);
 	*pYaw += *pYaw < 0 ? 180.f : -180.f;
-	*pYaw /= iTicks;
+	//*pYaw /= iTicks;
 	if (flMaxSpeed)
-		*pYaw *= std::clamp(pRecord1.m_vVelocity.Length2D() / flMaxSpeed, 0.f, 1.f);
+		*pYaw *= std::clamp(tRecord1.m_vVelocity.Length2D() / flMaxSpeed, 0.f, 1.f);
 
 	static int iSign = 0;
 	const int iLastSign = iSign;
 	const int iCurSign = iSign = *pYaw > 0 ? 1 : -1;
 
 	static int iChanges, iStart;
-	bool bStraight = fabsf(*pYaw) * pRecord1.m_vVelocity.Length2D() * iTicks <= flStraightFuzzyValue; // dumb way to get straight bool
+	bool bStraight = fabsf(*pYaw) * tRecord1.m_vVelocity.Length2D() * iTicks <= flStraightFuzzyValue; // dumb way to get straight bool
 	bool bChanged = iLastSign && iCurSign && iLastSign != iCurSign;
-	if (!i)
+	if (bStart)
 	{
 		iChanges = 0, iStart = TIME_TO_TICKS(flTime1);
 		if (bStraight && ++iChanges > iMaxChanges)
@@ -608,8 +612,10 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 {
 	auto pPlayer = playerStorage.m_pPlayer;
 	auto& vRecords = mRecords[pPlayer->entindex()];
+	if (vRecords.empty())
+		return;
 
-	bool bGround = pPlayer->IsOnGround();
+	bool bGround = playerStorage.m_bDirectMove;
 	float flStraightFuzzyValue = bGround ? Vars::Aimbot::Projectile::GroundStraightFuzzyValue.Value : Vars::Aimbot::Projectile::AirStraightFuzzyValue.Value;
 	int iMaxChanges = bGround ? Vars::Aimbot::Projectile::GroundMaxChanges.Value : Vars::Aimbot::Projectile::AirMaxChanges.Value;
 	int iMaxChangeTime = bGround ? Vars::Aimbot::Projectile::GroundMaxChangeTime.Value : Vars::Aimbot::Projectile::AirMaxChangeTime.Value;
@@ -618,51 +624,48 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& playerStorage, int iSampl
 	float flHighMinimumDistance = bGround ? Vars::Aimbot::Projectile::GroundHighMinimumDistance.Value : Vars::Aimbot::Projectile::AirHighMinimumDistance.Value;
 	float flHighMinimumSamples = bGround ? Vars::Aimbot::Projectile::GroundHighMinimumSamples.Value : Vars::Aimbot::Projectile::AirHighMinimumSamples.Value;
 
-	float flAverageYaw = 0.f;
-	int iTicks = 0, iSkips = 0, iDeltaChanges = 0;
-	for (; iTicks < iSamples; iTicks++)
+	float flAverageYaw = 0.f; int iTicks = 0, iTicks2 = 0;
+	iSamples = std::min(iSamples, int(vRecords.size()));
+	for (size_t i = 1; i < iSamples; i++)
 	{
-		float flYaw = 0.f;
-		int iResult = GetYawDifference(vRecords, iTicks, &flYaw, flStraightFuzzyValue, iMaxChanges, iMaxChangeTime, playerStorage.m_MoveData.m_flMaxSpeed);
-		SDK::Output("GetYawDifference", std::format("{}: {}, {}", iTicks, flYaw, iResult).c_str(), { 50, 127, 75, 255 }, Vars::Debug::Logging.Value);
-		if (!iResult)
-			break;
-		else if (iResult == 2)
-		{
-			iSkips++;
+		auto& tRecord1 = vRecords[i - 1];
+		auto& tRecord2 = vRecords[i];
+		if (tRecord1.m_iMode != tRecord2.m_iMode)
 			continue;
-		}
 
-		float flMult = 1.f;
-		/*
-		if (!pPlayer->IsOnGround())
-		{
-			float flPrevVelZ = vRecords[iTicks].m_vVelocity.z - GetPlayerGravity(pPlayer) * TICK_INTERVAL;
-			flMult = 0.f < flPrevVelZ && flPrevVelZ <= 250.f ? 0.25f : 1.f; // flEntFriction will be 0.25f if flPrevVelZ is between 0.f and 250.f
-		}
-		*/
+		float flYaw = 0.f;
+		bool bResult = GetYawDifference(tRecord1, tRecord2, !iTicks, &flYaw, flStraightFuzzyValue, iMaxChanges, iMaxChangeTime, playerStorage.m_MoveData.m_flMaxSpeed);
+		SDK::Output("GetYawDifference", std::format("{} ({}): {}, {}", i, iTicks, flYaw, bResult).c_str(), { 50, 127, 75, 255 }, Vars::Debug::Logging.Value);
+		if (!bResult)
+			break;
 
 		flAverageYaw += flYaw;
+		iTicks += std::max(TIME_TO_TICKS(tRecord1.m_flSimTime - tRecord2.m_flSimTime), 1);
+		iTicks2++;
 	}
-	iTicks -= iSkips;
-
 	if (iTicks <= 3) // valid strafes not high enough
 		return;
 
-	float flDistance = 0.f;
-	if (auto pLocal = H::Entities.GetLocal())
-		flDistance = pLocal->m_vecOrigin().DistTo(playerStorage.m_pPlayer->m_vecOrigin());
+	SDK::Output("Ticks", std::format("{}, {}", iTicks, iTicks2).c_str(), { 150, 255, 175, 255 }, Vars::Debug::Logging.Value);
 
-	int iMinimumStrafes = flDistance < flLowMinimumDistance ? flLowMinimumSamples : Math::RemapValClamped(flDistance, flLowMinimumDistance, flHighMinimumDistance, flLowMinimumSamples + 1, flHighMinimumSamples);
-	flAverageYaw /= std::max(iTicks, iMinimumStrafes);
+	int iMinimum = 1;
+	if (pPlayer->entindex() != I::EngineClient->GetLocalPlayer())
+	{
+		float flDistance = 0.f;
+		if (auto pLocal = H::Entities.GetLocal())
+			flDistance = pLocal->m_vecOrigin().DistTo(playerStorage.m_pPlayer->m_vecOrigin());
+		iMinimum = flDistance < flLowMinimumDistance ? flLowMinimumSamples : Math::RemapValClamped(flDistance, flLowMinimumDistance, flHighMinimumDistance, flLowMinimumSamples + 1, flHighMinimumSamples);
+	}
+
+	flAverageYaw /= std::max(iTicks, iMinimum);
 	playerStorage.m_flAverageYaw = flAverageYaw;
 
-	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} from {} ({}) {}", flAverageYaw, iTicks, iMinimumStrafes, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), {100, 255, 150, 255}, Vars::Debug::Logging.Value);
+	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} from {} ({}) {}", flAverageYaw, iTicks, iMinimum, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), {100, 255, 150, 255}, Vars::Debug::Logging.Value);
 }
 
 bool CMovementSimulation::StrafePrediction(PlayerStorage& playerStorage, int iSamples)
 {
-	if (playerStorage.m_pPlayer->IsOnGround()
+	if (playerStorage.m_bDirectMove
 		? !(Vars::Aimbot::Projectile::StrafePrediction.Value & Vars::Aimbot::Projectile::StrafePredictionEnum::Ground)
 		: !(Vars::Aimbot::Projectile::StrafePrediction.Value & Vars::Aimbot::Projectile::StrafePredictionEnum::Air))
 		return false;
@@ -671,7 +674,43 @@ bool CMovementSimulation::StrafePrediction(PlayerStorage& playerStorage, int iSa
 	return true;
 }
 
-void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
+bool CMovementSimulation::SetDuck(PlayerStorage& playerStorage, bool bDuck) // this only touches origin, bounds
+{
+	if (bDuck == playerStorage.m_pPlayer->m_bDucked())
+		return true;
+
+	auto pGameRules = I::TFGameRules();
+	auto pViewVectors = pGameRules ? pGameRules->GetViewVectors() : nullptr;
+	float flScale = playerStorage.m_pPlayer->m_flModelScale();
+
+	if (!playerStorage.m_pPlayer->IsOnGround())
+	{
+		Vec3 vHullMin = (pViewVectors ? pViewVectors->m_vHullMin : Vec3(-24, -24, 0)) * flScale;
+		Vec3 vHullMax = (pViewVectors ? pViewVectors->m_vHullMax : Vec3(24, 24, 82)) * flScale;
+		Vec3 vDuckHullMin = (pViewVectors ? pViewVectors->m_vDuckHullMin : Vec3(-24, -24, 0)) * flScale;
+		Vec3 vDuckHullMax = (pViewVectors ? pViewVectors->m_vDuckHullMax : Vec3(24, 24, 62)) * flScale;
+
+		if (bDuck)
+			playerStorage.m_MoveData.m_vecAbsOrigin += (vHullMax - vHullMin) - (vDuckHullMax - vDuckHullMin);
+		else
+		{
+			Vec3 vOrigin = playerStorage.m_MoveData.m_vecAbsOrigin - ((vHullMax - vHullMin) - (vDuckHullMax - vDuckHullMin));
+
+			CGameTrace trace = {};
+			CTraceFilterWorldAndPropsOnly filter = {};
+			SDK::TraceHull(vOrigin, vOrigin, vHullMin, vHullMax, playerStorage.m_pPlayer->SolidMask(), &filter, &trace);
+			if (trace.DidHit())
+				return false;
+
+			playerStorage.m_MoveData.m_vecAbsOrigin = vOrigin;
+		}
+	}
+	playerStorage.m_pPlayer->m_bDucked() = bDuck;
+
+	return true;
+}
+
+void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath, std::function<void(CMoveData&)>* pCallback)
 {
 	if (playerStorage.m_bFailed || !playerStorage.m_pPlayer || !playerStorage.m_pPlayer->IsPlayer())
 		return;
@@ -690,7 +729,7 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 		float flYaw = playerStorage.m_flAverageYaw;
 
 		float flMult = 1.f;
-		if (!playerStorage.m_pPlayer->IsOnGround())
+		if (!playerStorage.m_bDirectMove)
 		{
 			if (!playerStorage.m_pPlayer->InCond(TF_COND_SHIELD_CHARGE))
 				flCorrection = 90.f * sign(flYaw);
@@ -700,36 +739,22 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 		}
 		playerStorage.m_MoveData.m_vecViewAngles.y += flYaw * flMult + flCorrection;
 	}
-	else
-	{
-		if (!playerStorage.m_pPlayer->IsOnGround())
-			playerStorage.m_MoveData.m_flForwardMove = playerStorage.m_MoveData.m_flSideMove = 0.f;
-		//else
-		//	playerStorage.m_MoveData.m_vecViewAngles.y = Math::VelocityToAngles(playerStorage.m_MoveData.m_vecVelocity).y;
-	}
-
-	/*
-	{
-		Vec3 vMove = Vec3(playerStorage.m_MoveData.m_flForwardMove, -playerStorage.m_MoveData.m_flSideMove, playerStorage.m_MoveData.m_flUpMove);
-
-		Vec3 v1 = playerStorage.m_MoveData.m_vecAbsOrigin;
-		Vec3 v2 = v1 + (vMove.IsZero() ? Vec3(0, 0, 1) : Math::RotatePoint(vMove.Normalized() * 12, {}, { 0, playerStorage.m_MoveData.m_vecViewAngles.y, 0 }));
-
-		G::LineStorage.push_back({ { v1, v2 }, I::GlobalVars->curtime + 5.f, Color_t(SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), SDK::RandomInt(0, 255), 255) });
-	}
-	*/
+	else if (!playerStorage.m_bDirectMove)
+		playerStorage.m_MoveData.m_flForwardMove = playerStorage.m_MoveData.m_flSideMove = 0.f;
 
 	float flOldSpeed = playerStorage.m_MoveData.m_flClientMaxSpeed;
-	if (playerStorage.m_PlayerData.m_fFlags & FL_DUCKING && playerStorage.m_pPlayer->IsOnGround())
+	if (playerStorage.m_pPlayer->m_bDucked() && playerStorage.m_pPlayer->IsOnGround() && playerStorage.m_pPlayer->m_nWaterLevel() < 2)
 		playerStorage.m_MoveData.m_flClientMaxSpeed /= 3;
 
-	if (playerStorage.m_bBunnyHop && !(playerStorage.m_PlayerData.m_fFlags & FL_DUCKING))
+	if (playerStorage.m_bBunnyHop && playerStorage.m_pPlayer->IsOnGround() && !playerStorage.m_pPlayer->m_bDucked())
 	{
 		playerStorage.m_MoveData.m_nOldButtons = 0;
 		playerStorage.m_MoveData.m_nButtons |= IN_JUMP;
 	}
 
 	I::GameMovement->ProcessMovement(playerStorage.m_pPlayer, &playerStorage.m_MoveData);
+	if (pCallback)
+		(*pCallback)(playerStorage.m_MoveData);
 
 	playerStorage.m_MoveData.m_flClientMaxSpeed = flOldSpeed;
 
@@ -740,15 +765,26 @@ void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath)
 		playerStorage.m_vPredictedOrigin = playerStorage.m_MoveData.m_vecAbsOrigin;
 		playerStorage.m_flPredictedSimTime += playerStorage.m_flPredictedDelta;
 	}
+	bool bLastbDirectMove = playerStorage.m_bDirectMove;
+	playerStorage.m_bDirectMove = playerStorage.m_pPlayer->IsOnGround() || playerStorage.m_pPlayer->m_nWaterLevel() >= 2;
 
 	if (playerStorage.m_flAverageYaw)
 		playerStorage.m_MoveData.m_vecViewAngles.y -= flCorrection;
-	else if (playerStorage.m_pPlayer->IsOnGround() && !playerStorage.m_MoveData.m_flForwardMove && !playerStorage.m_MoveData.m_flSideMove && !playerStorage.m_MoveData.m_vecVelocity.IsZero())
+	else if (playerStorage.m_bDirectMove && !bLastbDirectMove
+		&& !playerStorage.m_MoveData.m_flForwardMove && !playerStorage.m_MoveData.m_flSideMove
+		&& !(playerStorage.m_MoveData.m_vecVelocity * Vec3(1, 1, 0)).IsZero())
 	{
-		Vec3 vMove = Math::RotatePoint(playerStorage.m_MoveData.m_vecVelocity * Vec3(1, 1, 0), {}, { 0, -playerStorage.m_MoveData.m_vecViewAngles.y, 0 });
+		float flMaxSpeed = SDK::MaxSpeed(playerStorage.m_pPlayer);
+		Vec3 vDirection = (playerStorage.m_MoveData.m_vecVelocity * Vec3(1, 1, 0)).Normalized() * flMaxSpeed;
+		Vec3 vMove = Math::RotatePoint(vDirection, {}, { 0, -playerStorage.m_MoveData.m_vecViewAngles.y, 0 });
 		playerStorage.m_MoveData.m_flForwardMove = vMove.x;
 		playerStorage.m_MoveData.m_flSideMove = -vMove.y;
 	}
+}
+
+void CMovementSimulation::RunTick(PlayerStorage& playerStorage, bool bPath, std::function<void(CMoveData&)> fCallback)
+{
+	RunTick(playerStorage, bPath, &fCallback);
 }
 
 void CMovementSimulation::Restore(PlayerStorage& playerStorage)

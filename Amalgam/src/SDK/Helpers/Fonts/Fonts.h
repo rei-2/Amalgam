@@ -19,7 +19,7 @@ struct Font_t
 class CFonts
 {
 private:
-	std::unordered_map<EFonts, Font_t> m_mapFonts = {};
+	std::unordered_map<EFonts, Font_t> m_mFonts = {};
 
 public:
 	void Reload(float flDPI = 1.f);

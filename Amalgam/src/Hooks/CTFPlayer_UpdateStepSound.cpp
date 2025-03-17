@@ -6,6 +6,11 @@ MAKE_SIGNATURE(CTFPlayer_FireEvent_UpdateStepSound_Call, "client.dll", "4D 85 F6
 MAKE_HOOK(CTFPlayer_UpdateStepSound, S::CTFPlayer_UpdateStepSound(), void,
 	void* rcx, void* psurface, const Vec3& vecOrigin, const Vec3& vecVelocity)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFPlayer_UpdateStepSound.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, psurface, vecOrigin, vecVelocity);
+#endif
+
 	static const auto dwDesired = S::CTFPlayer_FireEvent_UpdateStepSound_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 

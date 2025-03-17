@@ -1,9 +1,12 @@
 #pragma once
 #include "Interface.h"
 #include "../Main/CBaseHandle.h"
+#include "../Misc/IMatchGroupDescription.h"
 #include "../../../Utils/NetVars/NetVars.h"
 
-MAKE_SIGNATURE(CTFGameRules_Get, "client.dll", "48 8B 0D ? ? ? ? 4C 8B C3 48 8B D7 48 8B 01 FF 90 ? ? ? ? 84 C0", 0x0);
+MAKE_SIGNATURE(TFGameRules, "client.dll", "48 8B 0D ? ? ? ? 4C 8B C3 48 8B D7 48 8B 01 FF 90 ? ? ? ? 84 C0", 0x0);
+MAKE_SIGNATURE(CTFGameRules_GetCurrentMatchGroup, "client.dll", "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 33 D2 E8 ? ? ? ? 84 C0 74 ? 8B 83 ? ? ? ? 48 83 C4", 0x0);
+MAKE_SIGNATURE(GetMatchGroupDescription, "client.dll", "48 63 01 85 C0 78", 0x0);
 
 class CBaseEntity;
 typedef CHandle<CBaseEntity> EHANDLE;
@@ -41,18 +44,6 @@ public:
 class CTFGameRules : public CTeamplayRoundBasedRules
 {
 public:
-	CTFGameRules* Get()
-	{
-		return *reinterpret_cast<CTFGameRules**>(U::Memory.RelToAbs(S::CTFGameRules_Get()));
-	}
-
-public:
-	__inline CViewVectors* GetViewVectors()
-	{
-		return reinterpret_cast<CViewVectors*(*)()>(U::Memory.GetVFunc(this, 31))();
-	}
-
-public:
 	NETVAR(m_nGameType, int, "CTFGameRulesProxy", "m_nGameType");
 	NETVAR(m_nStopWatchState, int, "CTFGameRulesProxy", "m_nStopWatchState");
 	NETVAR(m_pszTeamGoalStringRed, const char*, "CTFGameRulesProxy", "m_pszTeamGoalStringRed");
@@ -77,7 +68,6 @@ public:
 	NETVAR(m_bHaveMinPlayersToEnableReady, bool, "CTFGameRulesProxy", "m_bHaveMinPlayersToEnableReady");
 	NETVAR(m_bBountyModeEnabled, bool, "CTFGameRulesProxy", "m_bBountyModeEnabled");
 	NETVAR(m_bCompetitiveMode, bool, "CTFGameRulesProxy", "m_bCompetitiveMode");
-	NETVAR(m_flGravityMultiplier, float, "CTFGameRulesProxy", "m_flGravityMultiplier");
 	NETVAR(m_nMatchGroupType, int, "CTFGameRulesProxy", "m_nMatchGroupType");
 	NETVAR(m_bMatchEnded, bool, "CTFGameRulesProxy", "m_bMatchEnded");
 	NETVAR(m_bHelltowerPlayersInHell, bool, "CTFGameRulesProxy", "m_bHelltowerPlayersInHell");
@@ -108,6 +98,11 @@ public:
 	NETVAR(m_nForceEscortPushLogic, int, "CTFGameRulesProxy", "m_nForceEscortPushLogic");
 	NETVAR(m_bRopesHolidayLightsAllowed, bool, "CTFGameRulesProxy", "m_bRopesHolidayLightsAllowed");
 
+	inline CViewVectors* GetViewVectors()
+	{
+		return reinterpret_cast<CViewVectors * (*)()>(U::Memory.GetVFunc(this, 31))();
+	}
+
 	inline bool IsPlayerReady(int playerIndex)
 	{
 		if (playerIndex > 101)
@@ -120,6 +115,23 @@ public:
 
 		return ReadyStatus[playerIndex];
 	}
+
+	inline int GetCurrentMatchGroup()
+	{
+		return S::CTFGameRules_GetCurrentMatchGroup.Call<int>(this);
+	}
+
+	inline IMatchGroupDescription* GetMatchGroupDescription()
+	{
+		int iCurrentMatchGroup = GetCurrentMatchGroup();
+		return S::GetMatchGroupDescription.Call<IMatchGroupDescription*>(std::ref(iCurrentMatchGroup));
+	}
 };
 
-MAKE_INTERFACE_NULL(CTFGameRules, TFGameRules);
+namespace I
+{
+	inline CTFGameRules* TFGameRules()
+	{
+		return *reinterpret_cast<CTFGameRules**>(U::Memory.RelToAbs(S::TFGameRules()));
+	}
+};

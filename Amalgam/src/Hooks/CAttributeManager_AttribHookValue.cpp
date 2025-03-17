@@ -11,6 +11,11 @@ static int ColorToInt(const Color_t& col)
 MAKE_HOOK(CAttributeManager_AttribHookInt, S::CAttributeManager_AttribHookInt(), int,
 	int value, const char* name, void* econent, void* buffer, bool isGlobalConstString)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CAttributeManager_AttribHookValue.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(value, name, econent, buffer, isGlobalConstString);
+#endif
+
 	static const auto dwDesired = S::CTFPlayer_FireEvent_AttribHookValue_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 

@@ -5,6 +5,11 @@ MAKE_SIGNATURE(CViewRender_PerformScreenOverlay, "client.dll", "4C 8B DC 49 89 5
 MAKE_HOOK(CViewRender_PerformScreenOverlay, S::CViewRender_PerformScreenOverlay(), void,
 	void* rcx, int x, int y, int w, int h)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CViewRender_PerformScreenOverlay.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, x, y, w, h);
+#endif
+
 	if (!Vars::Visuals::Removals::ScreenOverlays.Value || Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
 		CALL_ORIGINAL(rcx, x, y, w, h);
 }

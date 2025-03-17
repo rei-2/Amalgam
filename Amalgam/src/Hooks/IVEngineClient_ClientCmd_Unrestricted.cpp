@@ -24,6 +24,11 @@ private:
 MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVFunc(I::EngineClient, 106), void,
 	void* rcx, const char* szCmdString)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::IVEngineClient_ClientCmd_Unrestricted.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, szCmdString);
+#endif
+
 	std::string sCmdString = szCmdString;
 	std::transform(sCmdString.begin(), sCmdString.end(), sCmdString.begin(), ::tolower);
 

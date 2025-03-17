@@ -169,6 +169,8 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFGenericBomb:
 		*pChams = Chams_t(Vars::Chams::World::Visible.Value, Vars::Chams::World::Occluded.Value);
 		return Vars::Chams::World::Bombs.Value;
+	case ETFClassID::CTFMedigunShield:
+		return false;
 	}
 
 	// player chams
@@ -223,17 +225,17 @@ void CChams::StencilEnd(IMatRenderContext* pRenderContext, bool bTwoModels)
 
 void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* pRenderContext, bool bExtra)
 {
-	auto visibleMaterials = chams.Visible.size() ? chams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
-	auto occludedMaterials = chams.Occluded.size() ? chams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
+	auto vVisibleMaterials = chams.Visible.size() ? chams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
+	auto vOccludedMaterials = chams.Occluded.size() ? chams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
 
 	StencilBegin(pRenderContext, !bExtra);
 
 	StencilVisible(pRenderContext, !bExtra);
-	for (auto it = visibleMaterials.begin(); it != visibleMaterials.end(); it++)
+	for (auto& [sName, tColor] : vVisibleMaterials)
 	{
-		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(sName.c_str()));
 
-		F::Materials.SetColor(pMaterial, it->second);
+		F::Materials.SetColor(pMaterial, tColor);
 		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
 		if (pMaterial && pMaterial->m_bInvertCull)
@@ -249,11 +251,11 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 	if (!bExtra)
 	{
 		StencilOccluded(pRenderContext);
-		for (auto it = occludedMaterials.begin(); it != occludedMaterials.end(); it++)
+		for (auto& [sName, tColor] : vOccludedMaterials)
 		{
-			auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+			auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(sName.c_str()));
 
-			F::Materials.SetColor(pMaterial, it->second);
+			F::Materials.SetColor(pMaterial, tColor);
 			I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
 			if (pMaterial && pMaterial->m_bInvertCull)
@@ -292,8 +294,9 @@ void CChams::Store(CTFPlayer* pLocal)
 			continue;
 
 		Chams_t tChams = {};
-		if (GetChams(pLocal, pEntity, &tChams) && SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity)))
-			vEntities.push_back({ pEntity, tChams });
+		if (GetChams(pLocal, pEntity, &tChams)
+			&& SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity) /*&& pEntity->GetClassID() != ETFClassID::CTFMedigunShield*/))
+			vEntities.emplace_back(pEntity, tChams);
 
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
 		{
@@ -312,7 +315,7 @@ void CChams::Store(CTFPlayer* pLocal)
 					if (bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() || bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
 					{
 						tChams = Chams_t(Vars::Chams::Backtrack::Visible.Value, {});
-						vEntities.push_back({ pEntity, tChams, true });
+						vEntities.emplace_back(pEntity, tChams, true);
 					}
 				}
 			}
@@ -321,7 +324,7 @@ void CChams::Store(CTFPlayer* pLocal)
 			if (Vars::Chams::FakeAngle::Enabled.Value && pEntity == pLocal && F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup)
 			{
 				tChams = Chams_t(Vars::Chams::FakeAngle::Visible.Value, {});
-				vEntities.push_back({ pEntity, tChams, true });
+				vEntities.emplace_back(pEntity, tChams, true);
 			}
 		}
 	}
@@ -458,11 +461,11 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 
 	auto& vMaterials = Vars::Chams::Viewmodel::WeaponVisible.Value;
 
-	for (auto it = vMaterials.begin(); it != vMaterials.end(); it++)
+	for (auto& [sName, tColor] : vMaterials)
 	{
-		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(sName.c_str()));
 
-		F::Materials.SetColor(pMaterial, it->second);
+		F::Materials.SetColor(pMaterial, tColor);
 		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
 		if (pMaterial && pMaterial->m_bInvertCull)
@@ -494,11 +497,11 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 
 	auto& vMaterials = Vars::Chams::Viewmodel::HandsVisible.Value;
 
-	for (auto it = vMaterials.begin(); it != vMaterials.end(); it++)
+	for (auto& [sName, tColor] : vMaterials)
 	{
-		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(it->first.c_str()));
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(sName.c_str()));
 
-		F::Materials.SetColor(pMaterial, it->second);
+		F::Materials.SetColor(pMaterial, tColor);
 		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
 		if (pMaterial && pMaterial->m_bInvertCull)

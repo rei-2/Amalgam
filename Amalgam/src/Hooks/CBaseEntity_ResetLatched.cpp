@@ -5,7 +5,12 @@ MAKE_SIGNATURE(CBaseEntity_ResetLatched, "client.dll", "40 56 48 83 EC ? 48 8B 0
 MAKE_HOOK(CBaseEntity_ResetLatched, S::CBaseEntity_ResetLatched(), void,
 	void* rcx)
 {
-	if (Vars::Misc::Game::PredictionErrorJitterFix.Value)
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CBaseEntity_ResetLatched.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx);
+#endif
+
+	if (Vars::Misc::Game::PredictionErrorJitterFix.Value && rcx == H::Entities.GetLocal())
 		return;
 
 	CALL_ORIGINAL(rcx);

@@ -112,7 +112,7 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 	if (pEntity->IsDormant())
 		return true;
 
-	if (auto pGameRules = I::TFGameRules->Get())
+	if (auto pGameRules = I::TFGameRules())
 	{
 		if (pGameRules->m_bTruceActive() && pLocal->m_iTeamNum() != pEntity->m_iTeamNum())
 			return true;
@@ -223,7 +223,7 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::NPCs))
 			return true;
 
-		if (pEntity->m_iTeamNum() != 5)
+		if (pEntity->m_iTeamNum() != TF_TEAM_HALLOWEEN)
 			return true;
 
 		return false;

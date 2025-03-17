@@ -53,6 +53,11 @@ unsigned int GetDatacenter(uint32_t uHash)
 MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::SteamNetworkingUtils, 8), int,
 	void* rcx, SteamNetworkingPOPID popID, SteamNetworkingPOPID* pViaRelayPoP)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::ISteamNetworkingUtils_GetPingToDataCenter.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, popID, pViaRelayPoP);
+#endif
+
 	int iReturn = CALL_ORIGINAL(rcx, popID, pViaRelayPoP);
 	if (!Vars::Misc::Queueing::ForceRegions.Value || iReturn < 0)
 		return iReturn;
@@ -68,11 +73,13 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueForMatch(), void,
 	void* rcx, int eMatchGroup)
 {
-	//if (Vars::Misc::Queueing::ForceRegions.Value)
-	{
-		I::TFGCClientSystem->SetPendingPingRefresh(true);
-		I::TFGCClientSystem->PingThink();
-	}
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::ISteamNetworkingUtils_GetPingToDataCenter.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, eMatchGroup);
+#endif
+
+	I::TFGCClientSystem->SetPendingPingRefresh(true);
+	I::TFGCClientSystem->PingThink();
 
 	CALL_ORIGINAL(rcx, eMatchGroup);
 }

@@ -7,6 +7,11 @@ MAKE_SIGNATURE(CBaseEntity_FireBullets, "client.dll", "48 89 74 24 ? 55 57 41 55
 MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 	void* rcx, CBaseCombatWeapon* pWeapon, const FireBulletsInfo_t& info, bool bDoEffects, int nDamageType, int nCustomDamageType)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CBaseEntity_FireBullets.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pWeapon, info, nDamageType, nDamageType, nCustomDamageType);
+#endif
+
 	auto pLocal = H::Entities.GetLocal();
 	auto pPlayer = reinterpret_cast<CBaseEntity*>(rcx);
 	if (!pLocal || pPlayer != pLocal)
@@ -58,7 +63,7 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 		if (bClear)
 			G::LineStorage.clear();
 
-		G::LineStorage.push_back({ { trace.startpos, trace.endpos }, I::GlobalVars->curtime + 5.f, Vars::Colors::Line.Value, true });
+		G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 5.f, Vars::Colors::Line.Value, true);
 	}
 	else if (uHash == FNV1A::Hash32Const("Beam"))
 	{

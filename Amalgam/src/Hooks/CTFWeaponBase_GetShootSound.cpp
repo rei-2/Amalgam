@@ -5,6 +5,11 @@ MAKE_SIGNATURE(CTFWeaponBase_GetShootSound, "client.dll", "40 55 56 41 56 48 83 
 MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const char*,
 	void* rcx, int iIndex)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFWeaponBase_GetShootSound.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, iIndex);
+#endif
+
 	if (Vars::Misc::Sound::GiantWeaponSounds.Value)
 	{
 		auto pWeapon = reinterpret_cast<CBaseCombatWeapon*>(rcx);
@@ -15,7 +20,7 @@ MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const c
 			// credits: KGB
 
 			int nOldTeam = pWeapon->m_iTeamNum();
-			pWeapon->m_iTeamNum() = 4;
+			pWeapon->m_iTeamNum() = TF_TEAM_COUNT;
 			auto ret = CALL_ORIGINAL(rcx, iIndex);
 			pWeapon->m_iTeamNum() = nOldTeam;
 

@@ -24,6 +24,8 @@
 
 #define CONTENTS_TEAM1			0x800	// per team contents used to differentiate collisions 
 #define CONTENTS_TEAM2			0x1000	// between players and objects on different teams
+#define CONTENTS_REDTEAM		CONTENTS_TEAM1
+#define CONTENTS_BLUETEAM		CONTENTS_TEAM2
 
 // ignore CONTENTS_OPAQUE on surfaces that have SURF_NODRAW
 #define CONTENTS_IGNORE_NODRAW_OPAQUE	0x2000

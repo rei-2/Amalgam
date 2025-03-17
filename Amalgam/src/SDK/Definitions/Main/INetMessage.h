@@ -233,9 +233,9 @@ public:
 	};
 
 public:
-	int			m_nTick;
-	float		m_flHostFrameTime;
-	float		m_flHostFrameTimeStdDeviation;
+	int m_nTick;
+	float m_flHostFrameTime;
+	float m_flHostFrameTimeStdDeviation;
 };
 
 class CLC_VoiceData : public CNetMessage
@@ -287,8 +287,9 @@ class SVC_FixAngle : public CNetMessage
 	SVC_FixAngle(bool bRelative, QAngle angle) { m_bReliable = false; m_bRelative = bRelative; m_Angle = angle; }
 
 public:
-	bool			m_bRelative;
-	QAngle			m_Angle;
+	byte pad1[8];
+	bool m_bRelative;
+	QAngle m_Angle;
 };
 
 class CLC_BaselineAck : public CNetMessage
@@ -307,6 +308,6 @@ public:
 	int	GetGroup() const { return ENTITIES; }
 
 public:
-	int		m_nBaselineTick;	// sequence number of baseline
-	int		m_nBaselineNr;		// 0 or 1 		
+	int m_nBaselineTick;	// sequence number of baseline
+	int m_nBaselineNr;		// 0 or 1 		
 };

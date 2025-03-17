@@ -57,7 +57,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 		{
 			std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-			m_vSpectators.push_back({ sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), H::Entities.InParty(pPlayer->entindex()), pPlayer->entindex() });
+			m_vSpectators.emplace_back(sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), H::Entities.InParty(pPlayer->entindex()), pPlayer->entindex());
 		}
 	}
 

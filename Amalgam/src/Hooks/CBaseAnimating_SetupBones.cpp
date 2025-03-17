@@ -5,6 +5,11 @@ MAKE_SIGNATURE(CBaseAnimating_SetupBones, "client.dll", "48 8B C4 44 89 40 ? 48 
 MAKE_HOOK(CBaseAnimating_SetupBones, S::CBaseAnimating_SetupBones(), bool,
 	void* rcx, matrix3x4* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CBaseAnimating_SetupBones.Map[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+#endif
+
 	if (Vars::Misc::Game::SetupBonesOptimization.Value && !H::Entities.IsSettingUpBones())
 	{
 		auto pBaseEntity = reinterpret_cast<CBaseEntity*>(uintptr_t(rcx) - 8);

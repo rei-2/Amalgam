@@ -48,7 +48,7 @@ public:
 	void FOV(CTFPlayer* pLocal, CViewSetup* pView);
 	void ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView);
 	void DrawSightlines();
-	void Store();
+	void Store(CTFPlayer* pLocal);
 	void DrawPickupTimers();
 	void Event(IGameEvent* pEvent, uint32_t uHash);
 

@@ -55,12 +55,13 @@ public:
 	float GetLerp();
 	float GetFake();
 	float GetReal(int iFlow = MAX_FLOWS, bool bNoFake = true);
+	float GetFakeInterp();
 	int GetAnticipatedChoke(int iMethod = Vars::Aimbot::General::AimType.Value);
 
 	std::deque<TickRecord>* GetRecords(CBaseEntity* pEntity);
 	std::deque<TickRecord> GetValidRecords(std::deque<TickRecord>* pRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false);
 
-	void FrameStageNotify();
+	void Store();
 	void Run(CUserCmd* pCmd);
 	void Reset();
 	void SetLerp(IGameEvent* pEvent);
@@ -74,7 +75,7 @@ public:
 
 	float m_flFakeLatency = 0.f;
 	float m_flFakeInterp = 0.015f;
-	float m_flWishInterp = 0.015f;
+	float m_flWishInterp = -1.f;
 };
 
 ADD_FEATURE(CBacktrack, Backtrack)

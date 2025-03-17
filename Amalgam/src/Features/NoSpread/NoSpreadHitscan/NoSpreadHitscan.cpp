@@ -70,8 +70,8 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 	if (G::Choking)
 		return;
 
-	static Timer playerperfTimer{};
-	if (!m_bWaitingForPlayerPerf ? playerperfTimer.Run(Vars::Aimbot::General::NoSpreadInterval.Value * 1000) : playerperfTimer.Run(Vars::Aimbot::General::NoSpreadBackupInterval.Value * 1000))
+	static Timer tTimer = {};
+	if (!m_bWaitingForPlayerPerf ? tTimer.Run(Vars::Aimbot::General::NoSpreadInterval.Value) : tTimer.Run(Vars::Aimbot::General::NoSpreadBackupInterval.Value))
 	{
 		I::ClientState->SendStringCmd("playerperf");
 		m_bWaitingForPlayerPerf = true;

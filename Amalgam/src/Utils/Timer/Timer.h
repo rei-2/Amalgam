@@ -8,11 +8,11 @@
 class Timer
 {
 private:
-	std::chrono::steady_clock::time_point Last;
+	float m_flLast = 0.f;
 
 public:
 	Timer();
-	bool Check(unsigned ms) const;
-	bool Run(unsigned ms);
+	bool Check(float flS) const;
+	bool Run(float flS);
 	inline void Update();
 };
