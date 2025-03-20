@@ -112,6 +112,9 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 	if (pEntity->IsDormant())
 		return true;
 
+	if (Vars::Misc::Movement::AutoRocketJump.Value)
+		return true;
+
 	if (auto pGameRules = I::TFGameRules())
 	{
 		if (pGameRules->m_bTruceActive() && pLocal->m_iTeamNum() != pEntity->m_iTeamNum())
