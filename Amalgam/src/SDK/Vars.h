@@ -141,7 +141,7 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Hitscan)
 			CVarEnum(Hitboxes, 0b000111, NONE, Head = 1 << 0, Body = 1 << 1, Pelvis = 1 << 2, Arms = 1 << 3, Legs = 1 << 4, BodyaimIfLethal = 1 << 5)
-			CVarEnum(Modifiers, 0b01000000, NONE, Tapfire = 1 << 0, WaitForHeadshot = 1 << 1, WaitForCharge = 1 << 2, ScopedOnly = 1 << 3, AutoScope = 1 << 4, AutoRev = 1 << 5, ExtinguishTeam = 1 << 6)
+			CVarEnum(Modifiers, 0b0100000, NONE, Tapfire = 1 << 0, WaitForHeadshot = 1 << 1, WaitForCharge = 1 << 2, ScopedOnly = 1 << 3, AutoScope = 1 << 4, AutoRev = 1 << 5, ExtinguishTeam = 1 << 6)
 			CVar(PointScale, 0.f)
 			CVar(TapFireDist, 1000.f)
 
@@ -600,6 +600,7 @@ namespace Vars
 			CVar(Up, 0.f, VISUAL)
 			CVar(Crosshair, false, VISUAL)
 			CVar(Scale, true, DEBUGVAR)
+			CVar(Collide, true, DEBUGVAR)
 		SUBNAMESPACE_END(ThirdPerson)
 
 		SUBNAMESPACE_BEGIN(FOVArrows)

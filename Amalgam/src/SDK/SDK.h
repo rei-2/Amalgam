@@ -108,9 +108,9 @@ namespace SDK
 	void FixMovement(CUserCmd* pCmd, const Vec3& vTargetAngle);
 	bool StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd);
 
-	Vec3 ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& a, Vec3& b);
-	void WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& a, Vec3& b, float scale);
-	void WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& pDestination);
+	Vec3 ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vFrom, Vec3& vTo);
+	void WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vFrom, Vec3& vTo, float flScale = 1.f);
+	void WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vTo, float flScale = 1.f);
 
 	void GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, bool bPipes = false, bool bInterp = false);
 	void GetProjectileFireSetupAirblast(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vPosIn, Vec3& vAngOut, bool bInterp = false);

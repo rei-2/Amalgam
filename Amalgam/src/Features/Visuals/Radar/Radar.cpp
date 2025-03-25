@@ -65,8 +65,8 @@ void CRadar::DrawBackground()
 		break;
 	}
 	case Vars::Radar::Main::StyleEnum::Rectangle:
-		H::Draw.FillRect(info.x, info.y, info.w, info.w, tColorBackground);
-		H::Draw.LineRect(info.x, info.y, info.w, info.w, tColorAccent);
+		H::Draw.FillRoundRect(info.x, info.y, info.w, info.w, H::Draw.Scale(3), tColorBackground);
+		H::Draw.LineRoundRect(info.x, info.y, info.w, info.w, H::Draw.Scale(3), tColorAccent);
 	}
 
 	H::Draw.Line(info.x + info.w / 2, info.y, info.x + info.w / 2, info.y + info.w - 1, tColorAccent);

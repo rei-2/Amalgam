@@ -685,20 +685,20 @@ bool CMovementSimulation::SetDuck(PlayerStorage& playerStorage, bool bDuck) // t
 
 	if (!playerStorage.m_pPlayer->IsOnGround())
 	{
-		Vec3 vHullMin = (pViewVectors ? pViewVectors->m_vHullMin : Vec3(-24, -24, 0)) * flScale;
-		Vec3 vHullMax = (pViewVectors ? pViewVectors->m_vHullMax : Vec3(24, 24, 82)) * flScale;
-		Vec3 vDuckHullMin = (pViewVectors ? pViewVectors->m_vDuckHullMin : Vec3(-24, -24, 0)) * flScale;
-		Vec3 vDuckHullMax = (pViewVectors ? pViewVectors->m_vDuckHullMax : Vec3(24, 24, 62)) * flScale;
+		Vec3 vHullMins = (pViewVectors ? pViewVectors->m_vHullMin : Vec3(-24, -24, 0)) * flScale;
+		Vec3 vHullMaxs = (pViewVectors ? pViewVectors->m_vHullMax : Vec3(24, 24, 82)) * flScale;
+		Vec3 vDuckHullMins = (pViewVectors ? pViewVectors->m_vDuckHullMin : Vec3(-24, -24, 0)) * flScale;
+		Vec3 vDuckHullMaxs = (pViewVectors ? pViewVectors->m_vDuckHullMax : Vec3(24, 24, 62)) * flScale;
 
 		if (bDuck)
-			playerStorage.m_MoveData.m_vecAbsOrigin += (vHullMax - vHullMin) - (vDuckHullMax - vDuckHullMin);
+			playerStorage.m_MoveData.m_vecAbsOrigin += (vHullMaxs - vHullMins) - (vDuckHullMaxs - vDuckHullMins);
 		else
 		{
-			Vec3 vOrigin = playerStorage.m_MoveData.m_vecAbsOrigin - ((vHullMax - vHullMin) - (vDuckHullMax - vDuckHullMin));
+			Vec3 vOrigin = playerStorage.m_MoveData.m_vecAbsOrigin - ((vHullMaxs - vHullMins) - (vDuckHullMaxs - vDuckHullMins));
 
 			CGameTrace trace = {};
 			CTraceFilterWorldAndPropsOnly filter = {};
-			SDK::TraceHull(vOrigin, vOrigin, vHullMin, vHullMax, playerStorage.m_pPlayer->SolidMask(), &filter, &trace);
+			SDK::TraceHull(vOrigin, vOrigin, vHullMins, vHullMaxs, playerStorage.m_pPlayer->SolidMask(), &filter, &trace);
 			if (trace.DidHit())
 				return false;
 

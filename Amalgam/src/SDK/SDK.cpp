@@ -619,42 +619,37 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 }
 
-Vec3 SDK::ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& a, Vec3& b)
+Vec3 SDK::ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vFrom, Vec3& vTo)
 {
-	const Vec3 diff = (b - a);
-	if (diff.Length() == 0.f)
-		return { 0.f, 0.f, 0.f };
+	const Vec3 vDiff = vTo - vFrom;
+	if (!vDiff.Length())
+		return {};
 
-	const float x = diff.x;
-	const float y = diff.y;
-	const Vec3 vSilent(x, y, 0);
-	Vec3 ang;
-	Math::VectorAngles(vSilent, ang);
-	const float yaw = DEG2RAD(ang.y - pCmd->viewangles.y);
-	const float pitch = DEG2RAD(ang.x - pCmd->viewangles.x);
-	Vec3 move = { cos(yaw) * 450.f, -sin(yaw) * 450.f, -cos(pitch) * 450.f };
+	Vec3 vSilent = { vDiff.x, vDiff.y, 0 };
+	Vec3 vAngle; Math::VectorAngles(vSilent, vAngle);
+	const float flYaw = DEG2RAD(vAngle.y - pCmd->viewangles.y);
+	const float flPitch = DEG2RAD(vAngle.x - pCmd->viewangles.x);
 
-	// Only apply upmove in water
-	if (!(I::EngineTrace->GetPointContents(pLocal->GetEyePosition()) & CONTENTS_WATER))
-		move.z = pCmd->upmove;
-	return move;
+	Vec3 vMove = { cos(flYaw) * 450.f, -sin(flYaw) * 450.f, -cos(flPitch) * 450.f };
+	if (!(I::EngineTrace->GetPointContents(pLocal->GetShootPos()) & CONTENTS_WATER)) // only apply upmove in water
+		vMove.z = pCmd->upmove;
+
+	return vMove;
 }
 
-void SDK::WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& a, Vec3& b, float scale)
+void SDK::WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vFrom, Vec3& vTo, float flScale)
 {
-	// Calculate how to get to a vector
-	const auto result = ComputeMove(pCmd, pLocal, a, b);
+	const auto vResult = ComputeMove(pCmd, pLocal, vFrom, vTo);
 
-	// Push our move to usercmd
-	pCmd->forwardmove = result.x * scale;
-	pCmd->sidemove = result.y * scale;
-	pCmd->upmove = result.z * scale;
+	pCmd->forwardmove = vResult.x * flScale;
+	pCmd->sidemove = vResult.y * flScale;
+	pCmd->upmove = vResult.z * flScale;
 }
 
-void SDK::WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& pDestination)
+void SDK::WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vTo, float flScale)
 {
-	Vec3 localPos = pLocal->m_vecOrigin();
-	WalkTo(pCmd, pLocal, localPos, pDestination, 1.f);
+	Vec3 vLocalPos = pLocal->m_vecOrigin();
+	WalkTo(pCmd, pLocal, vLocalPos, vTo, flScale);
 }
 
 

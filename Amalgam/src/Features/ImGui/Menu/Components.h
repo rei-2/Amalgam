@@ -1310,11 +1310,9 @@ namespace ImGui
 		}
 
 		std::string sPreview = "";
-		if (iFlags & FDropdown_Multi && !*pVar)
-			sPreview = "None";
-		else
+		if (!(iFlags & FDropdown_Multi) || *pVar)
 		{
-			int i = 0; for (auto& iValue : vValues)
+			size_t i = 0; for (auto& iValue : vValues)
 			{
 				while (FNV1A::Hash32(vEntries[i]) == FNV1A::Hash32Const("##Divider"))
 					i++;
@@ -1325,8 +1323,13 @@ namespace ImGui
 					sPreview = std::format("{}##", StripDoubleHash(vEntries[i]).c_str());
 				i++;
 			}
-			sPreview.pop_back(); sPreview.pop_back();
+			if (sPreview.length() > 1)
+			{
+				sPreview.pop_back(); sPreview.pop_back();
+			}
 		}
+		if (sPreview.empty())
+			sPreview = "None";
 
 		PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, H::Draw.Scale(13.5f) });
 		float flSizeX = GetWindowWidth();
@@ -2014,8 +2017,6 @@ namespace ImGui
 	}
 	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = FKeybind_None, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
-		static bool bCanceled = false;
-
 		ImGuiID uId = GetID(sLabel);
 		PushID(sLabel);
 
@@ -2023,13 +2024,14 @@ namespace ImGui
 		{
 			F::Menu.m_bInKeybind = true;
 
-			//FButton("...", flags | FButton_NoUpper, sizeOffset);
-			FButton(std::format("{}: ...", sLabel).c_str(), iFlags | FButton_NoUpper, vSize, iSizeOffset);
-			bool bHovered = IsItemHovered();
+			bool bHovered = false;
+			FButton(std::format("{}: ...", sLabel).c_str(), iFlags | FButton_NoUpper, vSize, iSizeOffset, &bHovered);
+			if (pHovered)
+				*pHovered = bHovered;
 
-			if (bHovered && IsMouseClicked(ImGuiMouseButton_Left))
+			if (bHovered && IsMouseReleased(ImGuiMouseButton_Left))
 			{
-				bCanceled = true;
+				SDK::Output("ClearActiveID");
 				ClearActiveID();
 			}
 			else
@@ -2046,13 +2048,10 @@ namespace ImGui
 					}
 				}
 
-				if (iKeyPressed)
+				if (iKeyPressed && (iKeyPressed != VK_LBUTTON || !bHovered))
 				{
 					switch (iKeyPressed)
 					{
-					case VK_LBUTTON:
-						iOutput = bHovered ? iOutput : iKeyPressed;
-						break;
 					case VK_ESCAPE:
 						if (iFlags & FKeybind_AllowNone)
 						{
@@ -2064,18 +2063,18 @@ namespace ImGui
 						if (iFlags & FKeybind_AllowMenu || iKeyPressed != Vars::Menu::MenuPrimaryKey.Value && iKeyPressed != Vars::Menu::MenuSecondaryKey.Value)
 							iOutput = iKeyPressed;
 					}
+					SDK::Output("ClearActiveID");
 					ClearActiveID();
 				}
+
+				GetCurrentContext()->ActiveIdAllowOverlap = true;
 			}
-
-			GetCurrentContext()->ActiveIdAllowOverlap = true;
 		}
-		//else if (FButton(VK2STR(output).c_str(), flags | FButton_NoUpper) && !bCanceled)
-		else if (FButton(std::format("{}: {}", sLabel, VK2STR(iOutput)).c_str(), iFlags | FButton_NoUpper, vSize, iSizeOffset) && !bCanceled)
+		else if (FButton(std::format("{}: {}", sLabel, VK2STR(iOutput)).c_str(), iFlags | FButton_NoUpper, vSize, iSizeOffset, pHovered))
+		{
+			SDK::Output("SetActiveID");
 			SetActiveID(uId, GetCurrentWindow());
-
-		if (bCanceled && !IsMouseDown(ImGuiMouseButton_Left) && !IsMouseReleased(ImGuiMouseButton_Left))
-			bCanceled = false;
+		}
 
 		PopID();
 	}
@@ -2442,7 +2441,7 @@ namespace ImGui
 		}
 		bLastHovered = bLastHovered || bHovered;
 
-		if (tBind.m_iType == 0)
+		if (tBind.m_iType == BindEnum::Key)
 		{
 			FKeybind("Key", tBind.m_iKey, FKeybind_None, { 0, 30 }, 0, &bHovered);
 			bLastHovered = bLastHovered || bHovered;

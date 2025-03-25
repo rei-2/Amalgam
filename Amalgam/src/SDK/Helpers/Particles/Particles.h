@@ -73,22 +73,20 @@ public:
 
 	inline void DispatchParticleEffect(int iEffectIndex, const Vec3& vecOrigin, const Vec3& vecStart, const Vec3& vecAngles, CBaseEntity* pEntity = nullptr)
 	{
-		CEffectData data{};
+		CEffectData data = {};
 		data.m_nHitBox = iEffectIndex;
 		data.m_vOrigin = vecOrigin;
 		data.m_vStart = vecStart;
 		data.m_vAngles = vecAngles;
-
-		if (pEntity) {
+		data.m_bCustomColors = true;
+		if (pEntity)
+		{
 			data.m_nEntIndex = pEntity->entindex();
 			data.m_fFlags |= (1 << 0);
 			data.m_nDamageType = 2;
 		}
-		else {
+		else
 			data.m_nEntIndex = 0;
-		}
-
-		data.m_bCustomColors = true;
 
 		DispatchEffect("ParticleEffect", data);
 	}

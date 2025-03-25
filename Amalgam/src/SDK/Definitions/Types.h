@@ -652,14 +652,14 @@ struct Color_t
 		return std::format("\x8{:02X}{:02X}{:02X}{:02X}", r, g, b, a);
 	}
 
-	Color_t Lerp(Color_t to, float t) const
+	Color_t Lerp(Color_t to, float t, bool bAlpha = true) const
 	{
 		//a + (b - a) * t
 		return {
 			byte(r + (to.r - r) * t),
 			byte(g + (to.g - g) * t),
 			byte(b + (to.b - b) * t),
-			byte(a + (to.a - a) * t),
+			byte(bAlpha ? a + (to.a - a) * t : a),
 		};
 	}
 };

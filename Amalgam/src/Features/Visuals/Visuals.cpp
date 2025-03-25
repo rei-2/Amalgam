@@ -814,15 +814,23 @@ void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
 		vOffset += vRight * Vars::Visuals::ThirdPerson::Right.Value * flScale;
 		vOffset += vUp * Vars::Visuals::ThirdPerson::Up.Value * flScale;
 		vOffset -= vForward * Vars::Visuals::ThirdPerson::Distance.Value * flScale;
-		float flHull = 9.f * flScale;
-		Vec3 vMins = { -flHull, -flHull, -flHull }, vMaxs = { flHull, flHull, flHull };
-		Vec3 vDiff = pView->origin - pLocal->GetEyePosition();
 
-		CGameTrace trace = {};
-		CTraceFilterWorldAndPropsOnly filter = {};
-		SDK::TraceHull(pView->origin - vDiff, pView->origin + vOffset - vDiff, vMins, vMaxs, MASK_SOLID, &filter, &trace);
+		Vec3 vOrigin = pLocal->GetEyePosition(); //pView->origin
+		Vec3 vStart = vOrigin;
+		Vec3 vEnd = vOrigin + vOffset;
 
-		pView->origin += vOffset * trace.fraction - vDiff;
+		if (Vars::Visuals::ThirdPerson::Collide.Value)
+		{
+			float flHull = 9.f * flScale;
+			Vec3 vMins = { -flHull, -flHull, -flHull }, vMaxs = { flHull, flHull, flHull };
+
+			CGameTrace trace = {};
+			CTraceFilterWorldAndPropsOnly filter = {};
+			SDK::TraceHull(vStart, vEnd, vMins, vMaxs, MASK_SOLID, &filter, &trace);
+			vEnd = trace.endpos;
+		}
+
+		pView->origin = vEnd;
 	}
 }
 

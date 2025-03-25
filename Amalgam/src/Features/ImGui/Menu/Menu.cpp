@@ -16,19 +16,13 @@ void CMenu::DrawMenu()
 {
 	using namespace ImGui;
 
-	ImVec2 vMainWindowPos = {};
-	ImVec2 vMainWindowSize = {};
-
 	SetNextWindowSize({ 750, 500 }, ImGuiCond_FirstUseEver);
 	PushStyleVar(ImGuiStyleVar_WindowMinSize, { H::Draw.Scale(750), H::Draw.Scale(500) });
 	PushStyleVar(ImGuiStyleVar_ChildRounding, H::Draw.Scale(3));
 	if (Begin("Main", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBackground))
 	{
-		auto vWindowPos = vMainWindowPos = GetWindowPos();
-		auto vWindowSize = vMainWindowSize = GetWindowSize();
-
-		vWindowPos = GetWindowPos();
-		vWindowSize = GetWindowSize();
+		ImVec2 vWindowPos = GetWindowPos();
+		ImVec2 vWindowSize = GetWindowSize();
 
 		PushClipRect({ 0, 0 }, { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }, false);
 		RenderTwoToneBackground(H::Draw.Scale(140), F::Render.Background0, F::Render.Background1, F::Render.Background2, 0.f, false);
@@ -39,7 +33,10 @@ void CMenu::DrawMenu()
 		
 		float flOffset = 0.f;
 		Bind_t tBind;
-		if (F::Binds.GetBind(CurrentBind, &tBind)) // bind
+		if (!F::Binds.GetBind(CurrentBind, &tBind))
+			CurrentBind = DEFAULT_BIND;
+
+		if (CurrentBind != DEFAULT_BIND) // bind
 		{
 			flOffset = H::Draw.Scale(60);
 			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + H::Draw.Scale(59) }, { vDrawPos.x + H::Draw.Scale(139), vDrawPos.y + H::Draw.Scale(60) }, F::Render.Background2);
@@ -856,7 +853,8 @@ void CMenu::MenuVisuals(int iTab)
 			{
 				if (Section("Debug", true))
 				{
-					FToggle("Thirdperson scales", Vars::Visuals::ThirdPerson::Scale);
+					FToggle("Thirdperson scales", Vars::Visuals::ThirdPerson::Scale, FToggle_Left);
+					FToggle("Thirdperson collides", Vars::Visuals::ThirdPerson::Collide, FToggle_Right);
 				} EndSection();
 			}
 			if (Section("Out of FOV arrows", true))
@@ -969,10 +967,18 @@ void CMenu::MenuVisuals(int iTab)
 				FSDropdown("Chat info prefix", Vars::Menu::CheatPrefix, {}, FDropdown_Right);
 				FKeybind("Primary key", Vars::Menu::MenuPrimaryKey.Map[DEFAULT_BIND], FButton_Left | FKeybind_AllowMenu);
 				FKeybind("Secondary key", Vars::Menu::MenuSecondaryKey.Map[DEFAULT_BIND], FButton_Right | FButton_SameLine | FKeybind_AllowMenu);
-				if (Vars::Menu::MenuPrimaryKey.Map[DEFAULT_BIND] == VK_LBUTTON)
-					Vars::Menu::MenuPrimaryKey.Map[DEFAULT_BIND] = VK_INSERT;
-				if (Vars::Menu::MenuSecondaryKey.Map[DEFAULT_BIND] == VK_LBUTTON)
-					Vars::Menu::MenuSecondaryKey.Map[DEFAULT_BIND] = VK_F3;
+				switch (Vars::Menu::MenuPrimaryKey.Map[DEFAULT_BIND])
+				{
+				case VK_LBUTTON:
+				case VK_RBUTTON:
+					Vars::Menu::MenuPrimaryKey.Map[DEFAULT_BIND] = Vars::Menu::MenuPrimaryKey.Default;
+				}
+				switch (Vars::Menu::MenuSecondaryKey.Map[DEFAULT_BIND])
+				{
+				case VK_LBUTTON:
+				case VK_RBUTTON:
+					Vars::Menu::MenuSecondaryKey.Map[DEFAULT_BIND] = Vars::Menu::MenuSecondaryKey.Default;
+				}
 			} EndSection();
 
 			/* Column 2 */
@@ -1788,14 +1794,14 @@ void CMenu::MenuSettings(int iTab)
 				std::lock_guard lock(F::PlayerUtils.m_mutex);
 				const auto& playerCache = F::PlayerUtils.m_vPlayerCache;
 
-				auto getTeamColor = [](int team, bool alive)
+				auto getTeamColor = [&](int team, bool alive)
 					{
 						switch (team)
 						{
-						case 3: return Color_t(50, 75, 100, alive ? 255 : 127);
-						case 2: return Color_t(125, 50, 50, alive ? 255 : 127);
+						case 3: return Color_t(100, 150, 200, alive ? 255 : 127).Lerp(Vars::Menu::Theme::Background.Value, 0.5f, false);
+						case 2: return Color_t(200, 100, 100, alive ? 255 : 127).Lerp(Vars::Menu::Theme::Background.Value, 0.5f, false);
 						}
-						return Color_t(100, 100, 100, 255);
+						return Color_t(127, 127, 127, 255).Lerp(Vars::Menu::Theme::Background.Value, 0.5f, false);
 					};
 				auto drawPlayer = [getTeamColor](const ListPlayer& player, int x, int y)
 					{
@@ -2237,14 +2243,12 @@ void CMenu::MenuSettings(int iTab)
 
 					bool bClicked = false, bDelete = false;
 
-					ImColor imColor = ColorToVec(_tTag.Color);
-					imColor.Value.x /= 3; imColor.Value.y /= 3; imColor.Value.z /= 3;
-
 					ImVec2 vOriginalPos = { !_tTag.Label ? GetStyle().WindowPadding.x : GetWindowWidth() * 2 / 3 + GetStyle().WindowPadding.x / 2, H::Draw.Scale(96 + 36 * y) };
 
 					// background
 					float flWidth = GetWindowWidth() * (_tTag.Label ? 1.f / 3 : 2.f / 3) - GetStyle().WindowPadding.x * 1.5f;
 					float flHeight = H::Draw.Scale(28);
+					ImColor imColor = ColorToVec(_tTag.Color.Lerp(Vars::Menu::Theme::Background.Value, 0.5f, false));
 					ImVec2 vDrawPos = GetDrawPos() + vOriginalPos;
 					GetWindowDrawList()->AddRectFilled(vDrawPos, { vDrawPos.x + flWidth, vDrawPos.y + flHeight }, imColor, H::Draw.Scale(3));
 
@@ -2581,11 +2585,6 @@ void CMenu::DrawBinds()
 	if (m_bIsOpen ? false : I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo())
 		return;
 
-	static DragBox_t old = { -2147483648, -2147483648 };
-	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay, true) : Vars::Menu::BindsDisplay.Value;
-	if (info != old)
-		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
-
 	std::vector<std::tuple<bool, const char*, std::string, std::string, int, Bind_t&>> vInfo;
 	std::function<void(int)> getBinds = [&](int iParent)
 		{
@@ -2652,6 +2651,11 @@ void CMenu::DrawBinds()
 	getBinds(DEFAULT_BIND);
 	if (vInfo.empty())
 		return;
+
+	static DragBox_t old = { -2147483648, -2147483648 };
+	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay, true) : Vars::Menu::BindsDisplay.Value;
+	if (info != old)
+		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
 
 	float flNameWidth = 0, flInfoWidth = 0, flStateWidth = 0;
 	PushFont(F::Render.FontSmall);

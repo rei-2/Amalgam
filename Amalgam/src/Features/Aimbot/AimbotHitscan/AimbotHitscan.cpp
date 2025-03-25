@@ -335,12 +335,14 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 	auto RayToOBB = [&](const Vec3& vOrigin, const Vec3& vDirection, const Vec3& vMins, const Vec3& vMaxs, const matrix3x4& mMatrix, float flScale = 1.f) -> bool
 		{
+			/*
 			switch (Vars::Aimbot::General::AimType.Value)
 			{
 			case Vars::Aimbot::General::AimTypeEnum::Smooth:
 			case Vars::Aimbot::General::AimTypeEnum::Assistive:
 				return Math::RayToOBB(vOrigin, vDirection, vMins, vMaxs, mMatrix, flScale);
 			}
+			*/
 
 			return true;
 		};
@@ -378,6 +380,11 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				float flModelScale = tTarget.m_pEntity->As<CBaseAnimating>()->m_flModelScale();
 				float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::PointScale.Value / 100.f);
 				float flBoneSubtract = Vars::Aimbot::Hitscan::BoneSizeSubtract.Value;
+
+				auto pGameRules = I::TFGameRules();
+				auto pViewVectors = pGameRules ? pGameRules->GetViewVectors() : nullptr;
+				Vec3 vHullMins = (pViewVectors ? pViewVectors->m_vHullMin : Vec3(-24, -24, 0)) * flModelScale;
+				Vec3 vHullMaxs = (pViewVectors ? pViewVectors->m_vHullMax : Vec3(24, 24, 82)) * flModelScale;
 
 				Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);
 				Vec3 vMins = pBox->bbmin;
@@ -418,6 +425,8 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 					}
 				}
 
+				auto pCollideable = tTarget.m_pEntity->GetCollideable();
+				const matrix3x4& transform = pCollideable ? pCollideable->CollisionToWorldTransform() : tTarget.m_pEntity->RenderableToWorldTransform();
 				for (auto& vPoint : vPoints)
 				{
 					Vec3 vOrigin = {}; Math::VectorTransform(vPoint, aBones[pBox->bone], vOrigin); vOrigin += vOffset;
@@ -437,22 +446,26 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 						auto vAngles = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(pLocal->GetShootPos(), vOrigin));
 						Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
 
-						// for the time being, no vischecks against other hitboxes
-						Vec3 vCheckMins = (vMins + flBoneSubtract / flModelScale) * flBoneScale, vCheckMaxs = (vMaxs - flBoneSubtract / flModelScale) * flBoneScale;
-						if (RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale))
+						// not perfect but it will do for now
+						if (Math::RayToOBB(vEyePos, vForward, vHullMins, vHullMaxs, transform))
 						{
-							flPreferredRecord = tRecord.m_flSimTime;
+							// for the time being, no vischecks against other hitboxes
+							Vec3 vCheckMins = (vMins + flBoneSubtract / flModelScale) * flBoneScale, vCheckMaxs = (vMaxs - flBoneSubtract / flModelScale) * flBoneScale;
+							if (RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale))
+							{
+								flPreferredRecord = tRecord.m_flSimTime;
 
-							tTarget.m_vAngleTo = vAngles;
-							tTarget.m_tRecord = tRecord;
-							tTarget.m_vPos = vOrigin;
-							tTarget.m_nAimedHitbox = iHitbox;
-							tTarget.m_bBacktrack = true;
-							return true;
+								tTarget.m_vAngleTo = vAngles;
+								tTarget.m_tRecord = tRecord;
+								tTarget.m_vPos = vOrigin;
+								tTarget.m_nAimedHitbox = iHitbox;
+								tTarget.m_bBacktrack = true;
+								return true;
+							}
+							else if (iReturn == 2 ? vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() : true)
+								tTarget.m_vAngleTo = vAngles;
+							iReturn = 2;
 						}
-						else if (iReturn == 2 ? vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() : true)
-							tTarget.m_vAngleTo = vAngles;
-						iReturn = 2;
 					}
 				}
 			}
@@ -492,7 +505,8 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				}
 			}
 
-			const matrix3x4& transform = tTarget.m_pEntity->RenderableToWorldTransform();
+			auto pCollideable = tTarget.m_pEntity->GetCollideable();
+			const matrix3x4& transform = pCollideable ? pCollideable->CollisionToWorldTransform() : tTarget.m_pEntity->RenderableToWorldTransform();
 			for (auto& vPoint : vPoints)
 			{
 				Vec3 vOrigin = tTarget.m_pEntity->GetCenter() + vPoint;
