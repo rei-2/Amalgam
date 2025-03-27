@@ -32,7 +32,7 @@ struct ProjectileInfo
 
 class CProjectileSimulation
 {
-	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tInfo, int iFlags, float flAutoCharge);
+	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags, float flAutoCharge);
 
 	const objectparams_t g_PhysDefaultObjectParams =
 	{
@@ -50,9 +50,9 @@ class CProjectileSimulation
 	};
 
 public:
-	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tInfo, int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
-	bool Initialize(ProjectileInfo& tInfo, bool bSimulate = true);
-	void RunTick(ProjectileInfo& tInfo, bool bPath = true);
+	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
+	bool Initialize(ProjectileInfo& tProjInfo, bool bSimulate = true);
+	void RunTick(ProjectileInfo& tProjInfo, bool bPath = true);
 	Vec3 GetOrigin();
 	Vec3 GetVelocity();
 

@@ -1,8 +1,6 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-#pragma warning ( disable : 4091 )
-
 class CIncomingSequence
 {
 public:

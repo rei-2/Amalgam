@@ -89,12 +89,15 @@ struct MoveData
 class CMovementSimulation
 {
 private:
-	void Store(PlayerStorage& playerStorage);
-	void Reset(PlayerStorage& playerStorage);
+	void Store(PlayerStorage& tStorage);
+	void Reset(PlayerStorage& tStorage);
 
-	bool SetupMoveData(PlayerStorage& playerStorage);
-	void GetAverageYaw(PlayerStorage& playerStorage, int iSamples);
-	bool StrafePrediction(PlayerStorage& playerStorage, int iSamples);
+	bool SetupMoveData(PlayerStorage& tStorage);
+	void GetAverageYaw(PlayerStorage& tStorage, int iSamples);
+	bool StrafePrediction(PlayerStorage& tStorage, int iSamples);
+
+	void SetBounds(CTFPlayer* pPlayer);
+	void RestoreBounds(CTFPlayer* pPlayer);
 
 	bool m_bOldInPrediction = false;
 	bool m_bOldFirstTimePredicted = false;
@@ -106,12 +109,12 @@ private:
 public:
 	void Store();
 
-	bool Initialize(CBaseEntity* pEntity, PlayerStorage& playerStorageOut, bool useHitchance = true, bool cancelStrafe = false);
+	bool Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool useHitchance = true, bool cancelStrafe = false);
 	float GetPlayerGravity(CTFPlayer* pEntity);
-	bool SetDuck(PlayerStorage& playerStorage, bool bDuck);
-	void RunTick(PlayerStorage& playerStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
-	void RunTick(PlayerStorage& playerStorage, bool bPath, std::function<void(CMoveData&)> fCallback);
-	void Restore(PlayerStorage& playerStorage);
+	bool SetDuck(PlayerStorage& tStorage, bool bDuck);
+	void RunTick(PlayerStorage& tStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
+	void RunTick(PlayerStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback);
+	void Restore(PlayerStorage& tStorage);
 
 	float GetPredictedDelta(CBaseEntity* pEntity);
 };

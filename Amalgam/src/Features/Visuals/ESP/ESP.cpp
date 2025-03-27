@@ -429,7 +429,7 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 	{
 		auto pBuilding = pEntity->As<CBaseObject>();
 		auto pOwner = pBuilding->m_hBuilder().Get();
-		int iIndex = pOwner ? pOwner->entindex() : 0;
+		int iIndex = pOwner ? pOwner->entindex() : -1;
 
 		if (pOwner)
 		{
@@ -583,11 +583,10 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			break;
 		}
 		}
+		int iIndex = pOwner ? pOwner->entindex() : -1;
 
 		if (pOwner)
 		{
-			int iIndex = pOwner->entindex();
-
 			if (iIndex == I::EngineClient->GetLocalPlayer())
 			{
 				if (!(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Local))
@@ -664,6 +663,13 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			//case ETFClassID::CTFProjectile_Syringe: szName = "Syringe";
 			}
 			tCache.m_vText.emplace_back(ESPTextEnum::Top, szName, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
+		}
+
+		if (Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Owner && pOwner)
+		{
+			PlayerInfo_t pi{};
+			if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
+				tCache.m_vText.emplace_back(ESPTextEnum::Top, F::PlayerUtils.GetPlayerName(iIndex, pi.name), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 		}
 
 		if (Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Flags)

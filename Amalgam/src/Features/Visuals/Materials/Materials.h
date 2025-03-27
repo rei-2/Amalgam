@@ -1,8 +1,6 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
-#define MaterialFolder (F::Configs.m_sConfigPath + "\\Materials")
-
 struct Material_t
 {
 	IMaterial* m_pMaterial;

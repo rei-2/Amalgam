@@ -128,26 +128,26 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 
 	if ((Vars::Aimbot::Melee::SwingPrediction.Value || iDoubletapTicks) && pWeapon->m_flSmackTime() < 0.f && iMax)
 	{
-		PlayerStorage localStorage;
-		std::unordered_map<int, PlayerStorage> targetStorage;
+		PlayerStorage tStorage;
+		std::unordered_map<int, PlayerStorage> mStorage;
 
-		F::MoveSim.Initialize(pLocal, localStorage, false, iDoubletapTicks);
+		F::MoveSim.Initialize(pLocal, tStorage, false, iDoubletapTicks);
 		for (auto& tTarget : vTargets)
-			F::MoveSim.Initialize(tTarget.m_pEntity, targetStorage[tTarget.m_pEntity->entindex()], false);
+			F::MoveSim.Initialize(tTarget.m_pEntity, mStorage[tTarget.m_pEntity->entindex()], false);
 
 		for (int i = 0; i < iMax; i++) // intended for plocal to collide with targets
 		{
 			if (i < iMax)
 			{
 				if (pLocal->InCond(TF_COND_SHIELD_CHARGE) && iMax - i <= GetSwingTime(pWeapon)) // demo charge fix for swing pred
-					localStorage.m_MoveData.m_flMaxSpeed = localStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal, false, true);
-				F::MoveSim.RunTick(localStorage);
+					tStorage.m_MoveData.m_flMaxSpeed = tStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal, false, true);
+				F::MoveSim.RunTick(tStorage);
 			}
 			if (i < iSwingTicks - iDoubletapTicks)
 			{
 				for (auto& tTarget : vTargets)
 				{
-					auto& tStorage = targetStorage[tTarget.m_pEntity->entindex()];
+					auto& tStorage = mStorage[tTarget.m_pEntity->entindex()];
 
 					F::MoveSim.RunTick(tStorage);
 					if (!tStorage.m_bFailed)
@@ -159,16 +159,16 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 				}
 			}
 		}
-		vEyePos = localStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset();
+		vEyePos = tStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset();
 
 		if (Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value)
 		{
 			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
 			if (!bAlwaysDraw)
 			{
-				mPaths[pLocal->entindex()] = localStorage.m_vPath;
+				mPaths[pLocal->entindex()] = tStorage.m_vPath;
 				for (auto& tTarget : vTargets)
-					mPaths[tTarget.m_pEntity->entindex()] = targetStorage[tTarget.m_pEntity->entindex()].m_vPath;
+					mPaths[tTarget.m_pEntity->entindex()] = mStorage[tTarget.m_pEntity->entindex()].m_vPath;
 			}
 			else
 			{
@@ -178,22 +178,22 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
-					G::PathStorage.emplace_back(localStorage.m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
+					G::PathStorage.emplace_back(tStorage.m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
 					for (auto& tTarget : vTargets)
-						G::PathStorage.emplace_back(targetStorage[tTarget.m_pEntity->entindex()].m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
+						G::PathStorage.emplace_back(mStorage[tTarget.m_pEntity->entindex()].m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
 				}
 				if (Vars::Colors::PlayerPathClipped.Value.a)
 				{
-					G::PathStorage.emplace_back(localStorage.m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
+					G::PathStorage.emplace_back(tStorage.m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
 					for (auto& tTarget : vTargets)
-						G::PathStorage.emplace_back(targetStorage[tTarget.m_pEntity->entindex()].m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
+						G::PathStorage.emplace_back(mStorage[tTarget.m_pEntity->entindex()].m_vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
 				}
 			}
 		}
 
-		F::MoveSim.Restore(localStorage);
+		F::MoveSim.Restore(tStorage);
 		for (auto& tTarget : vTargets)
-			F::MoveSim.Restore(targetStorage[tTarget.m_pEntity->entindex()]);
+			F::MoveSim.Restore(mStorage[tTarget.m_pEntity->entindex()]);
 	}
 }
 

@@ -1,0 +1,261 @@
+#include "../SDK/SDK.h"
+#include <functional>
+#include <regex>
+
+MAKE_SIGNATURE(Cbuf_ExecuteCommand, "engine.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8D 3D", 0x0);
+
+enum cmd_source_t
+{
+	src_client,
+	src_command
+};
+
+static std::string sCmdString;
+
+#define PRE_STR "\x07\x07\x07\x07\x07\x07\x07"
+static std::vector<std::pair<std::string, std::string>> vReplace = {
+    { "\\x1", "\x1" },
+    { "\\x01", "\x1" },
+    { "\\x2", PRE_STR"\x2" },
+    { "\\x02", PRE_STR"\x2" },
+    { "\\x3", PRE_STR"\x3" },
+    { "\\x03", PRE_STR"\x3" },
+    { "\\x4", PRE_STR"\x4" },
+    { "\\x04", PRE_STR"\x4" },
+    { "\\x5", PRE_STR"\x5" },
+    { "\\x05", PRE_STR"\x5" },
+    { "\\x6", PRE_STR"\x6" },
+    { "\\x06", PRE_STR"\x6" },
+    { "\\x7", PRE_STR"\x7" },
+    { "\\x07", PRE_STR"\x7" },
+    { "\\x8", PRE_STR"\x8" },
+    { "\\x08", PRE_STR"\x8" },
+
+    { "\\t", "\t" },
+    //{ "\\n", "\n" },
+    //{ "\\0", "0" },
+
+    { "\\{default}", "\x1" },
+    { "\\{clear}", PRE_STR"\x8""00000000" },
+    { "\\{red}", PRE_STR"\x7""ff0000" },
+    { "\\{green}", PRE_STR"\x7""00ff00" },
+    { "\\{blue}", PRE_STR"\x7""0000ff" },
+    { "\\{yellow}", PRE_STR"\x7""ffff00" },
+    { "\\{pink}", PRE_STR"\x7""ff00ff" },
+    { "\\{cyan}", PRE_STR"\x7""00ffff" },
+    { "\\{orange}", PRE_STR"\x7""ff7000" },
+    { "\\{purple}", PRE_STR"\x7""7f00ff" },
+    { "\\{brown}", PRE_STR"\x7""583927" },
+    { "\\{gray}", PRE_STR"\x7""cccccc" },
+    { "\\{black}", PRE_STR"\x7""000000" },
+    { "\\{bluteam}", PRE_STR"\x7""99ccff" },
+    { "\\{blueteam}", PRE_STR"\x7""99ccff" },
+    { "\\{redteam}", PRE_STR"\x7""ff4040" },
+    { "\\{normal}", PRE_STR"\x7""b2b2b2" },
+    { "\\{unique}", PRE_STR"\x7""ffd700" },
+    { "\\{strange}", PRE_STR"\x7""cf6a32" },
+    { "\\{vintage}", PRE_STR"\x7""476291" },
+    { "\\{haunted}", PRE_STR"\x7""38f3ab" },
+    { "\\{genuine}", PRE_STR"\x7""4d7455" },
+    { "\\{unusual}", PRE_STR"\x7""8650ac" },
+    { "\\{collectors}", PRE_STR"\x7""aa0000" },
+    { "\\{community}", PRE_STR"\x7""70b04a" },
+    { "\\{selfmade}", PRE_STR"\x7""70b04a" },
+    { "\\{valve}", PRE_STR"\x7""a50f79" },
+    { "\\{elite}", PRE_STR"\x7""eb4b4b" },
+    { "\\{assassin}", PRE_STR"\x7""d32ce6" },
+    { "\\{commando}", PRE_STR"\x7""8847ff" },
+    { "\\{mercenary}", PRE_STR"\x7""4b69ff" },
+};
+static std::vector<std::function<void()>> vRegex = {
+    [&]()
+    {
+        auto sRegex = R"(\\\{rgb:(\d+),(\d+),(\d+)\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 4)
+                break;
+
+            int r = std::clamp(std::stoi(match[1]), 0, 255);
+            int g = std::clamp(std::stoi(match[2]), 0, 255);
+            int b = std::clamp(std::stoi(match[3]), 0, 255);
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"\x7""{:02x}{:02x}{:02x}", r, g, b));
+        }
+    },
+    [&]()
+    {
+        auto sRegex = R"(\\\{rgba:(\d+),(\d+),(\d+),(\d+)\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 5)
+                break;
+
+            int r = std::clamp(std::stoi(match[1]), 0, 255);
+            int g = std::clamp(std::stoi(match[2]), 0, 255);
+            int b = std::clamp(std::stoi(match[3]), 0, 255);
+            int a = std::clamp(std::stoi(match[4]), 0, 255);
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"\x8""{:02x}{:02x}{:02x}{:02x}", r, g, b, a));
+        }
+    },
+    [&]()
+    {
+        auto sRegex = R"(\\\{hsv:(?:(\d+)|(\d+),(\d+),(\d+))\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 5)
+                break;
+
+            int h, s, v;
+            if (!match[1].str().empty())
+            {
+                h = std::clamp(std::stoi(match[1]), 0, 360);
+                s = 100;
+                v = 100;
+            }
+            else
+            {
+                h = std::clamp(std::stoi(match[2]), 0, 360);
+                s = std::clamp(std::stoi(match[3]), 0, 100);
+                v = std::clamp(std::stoi(match[4]), 0, 100);
+            }
+
+            int r, g, b;
+            {
+                float s2 = s / 100.f;
+                float v2 = v / 100.f;
+
+                float r2, g2, b2;
+                if (s2 == 0)
+                    r2 = g2 = b2 = v2;
+                else
+                {
+                    float h2 = h / 60.f;
+                    int i = floor(h2);
+                    float f = h2 - i;
+                    float p = v2 * (1 - s2);
+                    float q = v2 * (1 - f * s2);
+                    float t = v2 * (1 - (1 - f) * s2);
+
+                    switch (i)
+                    {
+                        case 0: r2 = v2; g2 = t; b2 = p; break;
+                        case 1: r2 = q; g2 = v2; b2 = p; break;
+                        case 2: r2 = p; g2 = v2; b2 = t; break;
+                        case 3: r2 = p; g2 = q; b2 = v2; break;
+                        case 4: r2 = t; g2 = p; b2 = v2; break;
+                        default: r2 = v2; g2 = p; b2 = q; break;
+                    }
+                }
+                r = std::clamp(r2 * 255.f, 0.f, 255.f);
+                g = std::clamp(g2 * 255.f, 0.f, 255.f);
+                b = std::clamp(b2 * 255.f, 0.f, 255.f);
+            }
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"\x7""{:02x}{:02x}{:02x}", r, g, b));
+        }
+    },
+    [&]()
+    {
+        auto sRegex = R"(\\\{(\d+)(?:s| )\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 2)
+                break;
+
+            int n = std::stoi(match[1]);
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::string(n, ' '));
+        }
+    },
+    [&]()
+    {
+        auto sRegex = R"(\\\{(\d+)t\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 2)
+                break;
+
+            int n = std::stoi(match[1]);
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::string(n, '\t'));
+        }
+    },
+    /*
+    [&]()
+    {
+        auto sRegex = R"(\\\{(\d+)n\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 2)
+                break;
+
+            int n = std::stoi(match[1]);
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::string(n, '\n'));
+        }
+    },
+    */
+};
+
+MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
+	CCommand& args, cmd_source_t source)
+{
+	if (args.ArgC())
+	{
+		std::string sCommand = args[0];
+		std::deque<std::string> vArgs;
+		for (int i = 1; i < args.ArgC(); i++)
+			vArgs.push_back(args[i]);
+
+		switch (FNV1A::Hash32(sCommand.c_str()))
+		{
+		case FNV1A::Hash32Const("say"):
+		case FNV1A::Hash32Const("say_team"):
+		{
+			sCmdString = args.m_pArgSBuffer;
+			sCmdString = sCmdString.replace(0, args.m_nArgv0Size, "");
+
+			for (auto& pReplace : vReplace)
+			{
+				size_t iPos = 0;
+				while (true)
+				{
+					std::string sFind = pReplace.first;
+					std::string sReplace = pReplace.second;
+
+					auto iFind = sCmdString.find(sFind, iPos);
+					if (iFind == std::string::npos)
+						break;
+
+					iPos = iFind + sReplace.length();
+					sCmdString = sCmdString.replace(iFind, sFind.length(), sReplace);
+					//if (FNV1A::Hash32(sFind.c_str()) == FNV1A::Hash32Const("\\0"))
+					//	sCmdString[iFind + 1] = '\0';
+				}
+			}
+			for (auto& fRegex : vRegex)
+				fRegex();
+
+			sCmdString = std::format("{} {}", sCommand, sCmdString);
+			strncpy_s(args.m_pArgSBuffer, sCmdString.c_str(), COMMAND_MAX_LENGTH);
+			args.m_nArgv0Size = int(sCommand.length() + 1);
+		}
+		}
+	}
+
+	CALL_ORIGINAL(args, source);
+}

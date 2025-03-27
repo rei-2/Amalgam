@@ -6,7 +6,7 @@
 #include "../../Features/CritHack/CritHack.h"
 #include "../../Features/Misc/Misc.h"
 #include "../../Features/PacketManip/AntiAim/AntiAim.h"
-#include "../../Features/Records/Records.h"
+#include "../../Features/Output/Output.h"
 #include "../../Features/Resolver/Resolver.h"
 #include "../../Features/Visuals/Visuals.h"
 
@@ -43,7 +43,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	auto pLocal = H::Entities.GetLocal();
 	auto uHash = FNV1A::Hash32(pEvent->GetName());
 
-	F::Records.Event(pEvent, uHash, pLocal);
+	F::Output.Event(pEvent, uHash, pLocal);
 	if (I::EngineClient->IsPlayingDemo())
 		return;
 

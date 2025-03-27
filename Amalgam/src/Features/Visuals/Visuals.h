@@ -33,7 +33,7 @@ public:
 	void DrawAntiAim(CTFPlayer* pLocal);
 	void DrawDebugInfo(CTFPlayer* pLocal);
 
-	std::vector<DrawBox> GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBaseAnimating* pEntity, std::vector<int> vHitboxes = {}, int iTarget = -1);
+	std::vector<DrawBox_t> GetHitboxes(matrix3x4 aBones[MAXSTUDIOBONES], CBaseAnimating* pEntity, std::vector<int> vHitboxes = {}, int iTarget = -1);
 	void DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool bZBuffer = false, float flTime = 0.f);
 	void DrawLines();
 	void DrawPaths();

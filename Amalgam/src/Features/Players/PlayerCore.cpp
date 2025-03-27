@@ -66,15 +66,14 @@ void CPlayerlistCore::SavePlayerlist()
 		writeTree.put_child("Aliases", aliasTree);
 
 		// Save the file
-		write_json(F::Configs.m_sConfigPath + "\\Core\\Players.json", writeTree);
+		write_json(F::Configs.m_sCorePath + "Players.json", writeTree);
 
 		F::PlayerUtils.m_bSave = false;
-		SDK::Output("Amalgam", "Saved playerlist", { 175, 150, 255, 255 }, true, false, false, true);
-		SDK::Output("Saved playerlist", nullptr, {}, false, false, true, false);
+		SDK::Output("Amalgam", "Saved playerlist", { 175, 150, 255 }, true, true, true);
 	}
 	catch (...)
 	{
-		SDK::Output("SavePlayerlist", "Failed", { 175, 150, 255, 255 }, true, false, false, true);
+		SDK::Output("SavePlayerlist", "Failed", { 175, 150, 255 }, true, true);
 	}
 }
 
@@ -85,25 +84,26 @@ void CPlayerlistCore::LoadPlayerlist()
 
 	try
 	{
-		if (std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Players.json"))
+		if (std::filesystem::exists(F::Configs.m_sCorePath + "Players.json"))
 		{
 			boost::property_tree::ptree readTree;
-			read_json(F::Configs.m_sConfigPath + "\\Core\\Players.json", readTree);
+			read_json(F::Configs.m_sCorePath + "Players.json", readTree);
+
 			F::PlayerUtils.m_mPlayerTags.clear();
+			F::PlayerUtils.m_mPlayerAliases.clear();
+			F::PlayerUtils.m_vTags = {
+				{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
+				{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
+				{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
+				{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
+				{ "Party", { 100, 50, 255, 255 }, 0, true, false, true },
+				{ "F2P", { 255, 255, 255, 255 }, 0, true, false, true }
+			};
 
 			int iTagsVersion = readTree.get_child_optional("NewTags") ? 1 : 0; // support for old tag savings
 			if (auto configTree = readTree.get_child_optional("Config"))
 			{
 				iTagsVersion = 2;
-
-				F::PlayerUtils.m_vTags = {
-					{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
-					{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
-					{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
-					{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
-					{ "Party", { 100, 50, 255, 255 }, 0, true, false, true },
-					{ "F2P", { 255, 255, 255, 255 }, 0, true, false, true }
-				};
 
 				for (auto& it : *configTree)
 				{
@@ -132,18 +132,10 @@ void CPlayerlistCore::LoadPlayerlist()
 						F::PlayerUtils.m_vTags.push_back(tTag);
 				}
 			}
-			else if (iTagsVersion < 2 && std::filesystem::exists(F::Configs.m_sConfigPath + "\\Core\\Tags.json"))
+			else if (iTagsVersion < 2 && std::filesystem::exists(F::Configs.m_sCorePath + "Tags.json"))
 			{	// support legacy file
 				boost::property_tree::ptree readTree2;
-				read_json(F::Configs.m_sConfigPath + "\\Core\\Tags.json", readTree2);
-				F::PlayerUtils.m_vTags = {
-					{ "Default", { 200, 200, 200, 255 }, 0, false, false, true },
-					{ "Ignored", { 200, 200, 200, 255 }, -1, false, true, true },
-					{ "Cheater", { 255, 100, 100, 255 }, 1, false, true, true },
-					{ "Friend", { 100, 255, 100, 255 }, 0, true, false, true },
-					{ "Party", { 100, 50, 255, 255 }, 0, true, false, true },
-					{ "F2P", { 255, 255, 255, 255 }, 0, true, false, true }
-				};
+				read_json(F::Configs.m_sCorePath + "Tags.json", readTree2);
 
 				bool bNewTags = bool(readTree2.get_child_optional("NewTags")); // newer system to support adding default tags better
 
@@ -238,11 +230,10 @@ void CPlayerlistCore::LoadPlayerlist()
 		}
 
 		F::PlayerUtils.m_bLoad = false;
-		SDK::Output("Amalgam", "Loaded playerlist", { 175, 150, 255, 255 }, true, false, false, true);
-		SDK::Output("Loaded playerlist", nullptr, {}, false, false, true, false);
+		SDK::Output("Amalgam", "Loaded playerlist", { 175, 150, 255 }, true, true, true);
 	}
 	catch (...)
 	{
-		SDK::Output("LoadPlayerlist", "Failed", { 175, 150, 255, 255 }, true, false, false, true);
+		SDK::Output("LoadPlayerlist", "Failed", { 175, 150, 255 }, true, true);
 	}
 }

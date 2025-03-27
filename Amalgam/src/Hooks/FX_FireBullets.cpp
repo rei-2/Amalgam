@@ -38,7 +38,7 @@ MAKE_HOOK(FX_FireBullets_Server, S::FX_FireBullets_Server(), void,
 #endif
 
 	if (Vars::Aimbot::General::NoSpread.Value)
-		SDK::Output("FX_FireBullets", std::format("{}", iSeed).c_str(), { 0, 255, 0, 255 });
+		SDK::Output("FX_FireBullets", std::format("{}", iSeed).c_str(), { 0, 255, 0 });
 	return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
 }
 #endif

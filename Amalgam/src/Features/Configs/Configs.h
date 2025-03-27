@@ -50,6 +50,8 @@ public:
 	std::string m_sCurrentVisuals = "default";
 	std::string m_sConfigPath;
 	std::string m_sVisualsPath;
+	std::string m_sCorePath;
+	std::string m_sMaterialsPath;
 	const std::string m_sConfigExtension = ".json";
 
 	bool m_bConfigLoaded = false;

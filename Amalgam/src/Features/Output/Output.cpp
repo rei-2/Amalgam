@@ -1,4 +1,4 @@
-#include "Records.h"
+#include "Output.h"
 
 #include "../Visuals/Notifications/Notifications.h"
 #include "../Players/PlayerUtils.h"
@@ -9,20 +9,23 @@ static std::string green =	{ '\x7', '3', 'A', 'F', 'F', '4', 'D' }; //3AFF4D
 static std::string blue =	{ '\x7', '0', 'D', '9', '2', 'F', 'F' }; //0D92FF
 static std::string yellow =	{ '\x7', 'C', '8', 'A', '9', '0', '0' }; //C8A900
 
-void CRecords::OutputInfo(int flags, std::string sName, std::string sOutput, std::string sChat)
+void COutput::OutputInfo(int flags, std::string sName, std::string sOutput, std::string sChat)
 {
-	if (flags & Vars::Logging::LogToEnum::Toasts)
-		F::Notifications.Add(sOutput);
+	SDK::Output(sName.c_str(), sOutput.c_str(), Vars::Menu::Theme::Accent.Value,
+		flags & Vars::Logging::LogToEnum::Console,
+		flags & Vars::Logging::LogToEnum::Debug,
+		flags & Vars::Logging::LogToEnum::Toasts,
+		flags & Vars::Logging::LogToEnum::Menu,
+		false,
+		flags & Vars::Logging::LogToEnum::Party,
+		-1, "", ""
+	);
 	if (flags & Vars::Logging::LogToEnum::Chat)
-		I::ClientModeShared->m_pChatElement->ChatPrintf(0, std::format("{}{}\x1 {}", Vars::Menu::Theme::Accent.Value.ToHex(), Vars::Menu::CheatPrefix.Value, sChat).c_str());
-	if (flags & Vars::Logging::LogToEnum::Party)
-		I::EngineClient->ClientCmd_Unrestricted(std::format("tf_party_chat \"{}\"", sOutput).c_str());
-	if (flags & Vars::Logging::LogToEnum::Console)
-		SDK::Output(sName.c_str(), sOutput.c_str(), Vars::Menu::Theme::Accent.Value);
+		SDK::Output(Vars::Menu::CheatPrefix.Value.c_str(), sChat.c_str(), Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");
 }
 
 // Event info
-void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
+void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 {
 	if (uHash == FNV1A::Hash32Const("game_newmap"))
 	{
@@ -160,7 +163,7 @@ void CRecords::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 }
 
 // Vote start
-void CRecords::UserMessage(bf_read& msgData)
+void COutput::UserMessage(bf_read& msgData)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::VoteStart))
 		return;
@@ -190,7 +193,7 @@ void CRecords::UserMessage(bf_read& msgData)
 }
 
 // Cheat detection
-void CRecords::CheatDetection(std::string sName, std::string sAction, std::string sReason)
+void COutput::CheatDetection(std::string sName, std::string sAction, std::string sReason)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::CheatDetection))
 		return;
@@ -201,7 +204,7 @@ void CRecords::CheatDetection(std::string sName, std::string sAction, std::strin
 }
 
 // Tags
-void CRecords::TagsOnJoin(std::string sName, uint32_t friendsID)
+void COutput::TagsOnJoin(std::string sName, uint32_t friendsID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
@@ -254,7 +257,7 @@ void CRecords::TagsOnJoin(std::string sName, uint32_t friendsID)
 	std::string sChat = std::format("{}{}\x1 has the {} {}", (yellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText));
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags", sOutput, sChat);
 }
-void CRecords::TagsChanged(std::string sName, std::string sAction, std::string sColor, std::string sTag)
+void COutput::TagsChanged(std::string sName, std::string sAction, std::string sColor, std::string sTag)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
@@ -266,7 +269,7 @@ void CRecords::TagsChanged(std::string sName, std::string sAction, std::string s
 }
 
 // Aliases
-void CRecords::AliasOnJoin(std::string sName, uint32_t friendsID)
+void COutput::AliasOnJoin(std::string sName, uint32_t friendsID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
@@ -280,7 +283,7 @@ void CRecords::AliasOnJoin(std::string sName, uint32_t friendsID)
 	std::string sChat = std::format("{}{}\x1 has the alias \"{}{}\x1\"", (yellow), (sName), (yellow), (sAlias));
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases", sOutput, sChat);
 }
-void CRecords::AliasChanged(std::string sName, std::string sAction, std::string sAlias)
+void COutput::AliasChanged(std::string sName, std::string sAction, std::string sAlias)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
@@ -291,15 +294,15 @@ void CRecords::AliasChanged(std::string sName, std::string sAction, std::string 
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases", sOutput, sChat);
 }
 
-void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis, float flValue)
+void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis, float flValue)
 {
 	ReportResolver(iIndex, sAction, sAxis, std::format("{}", flValue));
 }
-void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis, bool bValue)
+void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis, bool bValue)
 {
 	ReportResolver(iIndex, sAction, sAxis, std::format("{}", bValue));
 }
-void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue)
+void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
 		return;
@@ -313,7 +316,7 @@ void CRecords::ReportResolver(int iIndex, std::string sAction, std::string sAxis
 	std::string sChat = std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (yellow), (sAxis), (yellow), (sName), (yellow), (sValue));
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver", sOutput, sChat);
 }
-void CRecords::ReportResolver(std::string sMessage)
+void COutput::ReportResolver(std::string sMessage)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
 		return;

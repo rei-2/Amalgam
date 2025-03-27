@@ -17,7 +17,7 @@ static inline bool CheckDXLevel()
 		//const char* sMessage = "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.";
 		const char* sMessage = "You are running with graphics options that Amalgam does not support.\nIt is recommended for -dxlevel to be at least 90.";
 		U::Core.AppendFailText(sMessage);
-		SDK::Output("Amalgam", sMessage, { 175, 150, 255, 255 }, true, false, false, true);
+		SDK::Output("Amalgam", sMessage, { 175, 150, 255 }, true, true);
 		//return false;
 	}
 
@@ -59,8 +59,7 @@ void CCore::Load()
 	F::Configs.LoadConfig(F::Configs.m_sCurrentConfig, false);
 	F::Configs.m_bConfigLoaded = true;
 
-	SDK::Output("Amalgam", "Loaded", { 175, 150, 255, 255 }, true, false, false, true);
-	SDK::Output("Loaded", nullptr, {}, false, false, true, false);
+	SDK::Output("Amalgam", "Loaded", { 175, 150, 255 }, true, true, true);
 }
 
 void CCore::Loop()
@@ -82,11 +81,11 @@ void CCore::Unload()
 		ssFailStream << "\nCtrl + C to copy. Logged to Amalgam\\fail_log.txt. (1)\n";
 		ssFailStream << "Built @ " __DATE__ ", " __TIME__;
 
-		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, false, false, true, MB_OK | MB_ICONERROR);
+		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
 
 		ssFailStream << "\n\n\n\n";
 		std::ofstream file;
-		file.open(F::Configs.m_sConfigPath + "\\fail_log.txt", std::ios_base::app);
+		file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
 		file << ssFailStream.str();
 		file.close();
 
@@ -123,16 +122,16 @@ void CCore::Unload()
 		ssFailStream << "\nCtrl + C to copy. Logged to Amalgam\\fail_log.txt. (2)\n";
 		ssFailStream << "Built @ " __DATE__ ", " __TIME__;
 
-		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, false, false, true, MB_OK | MB_ICONERROR);
+		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
 
 		ssFailStream << "\n\n\n\n";
 		std::ofstream file;
-		file.open(F::Configs.m_sConfigPath + "\\fail_log.txt", std::ios_base::app);
+		file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
 		file << ssFailStream.str();
 		file.close();
 
 		return;
 	}
 
-	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255, 255 }, true, false, false, true);
+	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255 }, true, true);
 }

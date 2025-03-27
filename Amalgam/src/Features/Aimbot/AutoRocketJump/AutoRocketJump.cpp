@@ -9,12 +9,12 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	if (!Vars::Misc::Movement::AutoRocketJump.Value)
 		return true;
 
-	ProjectileInfo projInfo = {};
-	if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, projInfo, ProjSimEnum::NoRandomAngles) || !F::ProjSim.Initialize(projInfo, false))
+	ProjectileInfo tProjInfo = {};
+	if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, tProjInfo, ProjSimEnum::NoRandomAngles) || !F::ProjSim.Initialize(tProjInfo, false))
 		return false;
 	Vec3 vOrigin = pLocal->m_vecOrigin();
 	Vec3 vLocalPos = pLocal->GetShootPos();
-	Vec3 vOffset = projInfo.m_vPos - vLocalPos; vOffset.x = 0; //vOffset.y *= -1;
+	Vec3 vOffset = tProjInfo.m_vPos - vLocalPos; vOffset.x = 0; //vOffset.y *= -1;
 	float flVelocity = F::ProjSim.GetVelocity().Length();
 
 	Vec3 vPoint;
@@ -37,23 +37,23 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		//float flOffset = pLocal->m_vecMaxs().x;
 		float flOffset = sqrtf(2 * powf(vOffset.y, 2.f) + powf(vOffset.z, 2.f));
 		bool bShouldReturn = true;
-		PlayerStorage localStorage;
-		if (F::MoveSim.Initialize(pLocal, localStorage, false))
+		PlayerStorage tStorage;
+		if (F::MoveSim.Initialize(pLocal, tStorage, false))
 		{
 			for (int n = 1; n < 10; n++)
 			{
-				F::MoveSim.RunTick(localStorage);
-				if (!pLocal->IsOnGround())
+				F::MoveSim.RunTick(tStorage);
+				if (!pLocal->IsOnGround() || pLocal->IsSwimming())
 					continue;
 
-				SDK::Output("Velocity", std::format("{}", localStorage.m_MoveData.m_vecVelocity.Length()).c_str());
-				Vec3 vForward = (localStorage.m_MoveData.m_vecVelocity * Vec3(1, 1, 0)).Normalized();
-				vPoint = localStorage.m_MoveData.m_vecAbsOrigin - vForward * flOffset; //- Vec3(0, 0, 20);
+				SDK::Output("Velocity", std::format("{}", tStorage.m_MoveData.m_vecVelocity.Length()).c_str());
+				Vec3 vForward = (tStorage.m_MoveData.m_vecVelocity * Vec3(1, 1, 0)).Normalized();
+				vPoint = tStorage.m_MoveData.m_vecAbsOrigin - vForward * flOffset; //- Vec3(0, 0, 20);
 				bShouldReturn = false;
 				break;
 			}
 		}
-		F::MoveSim.Restore(localStorage);
+		F::MoveSim.Restore(tStorage);
 		if (bShouldReturn)
 			return false;
 	}
@@ -64,13 +64,13 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		m_vAngles.x = flPitch = vAngleTo.x, m_vAngles.y = flYaw = vAngleTo.y;
 	}
 
-	if (!F::ProjSim.GetInfo(pLocal, pWeapon, { flPitch, flYaw, 0 }, projInfo, ProjSimEnum::Trace | ProjSimEnum::NoRandomAngles))
+	if (!F::ProjSim.GetInfo(pLocal, pWeapon, { flPitch, flYaw, 0 }, tProjInfo, ProjSimEnum::Trace | ProjSimEnum::NoRandomAngles))
 		return false;
 
 	{	// correct yaw
-		Vec3 vShootPos = projInfo.m_vPos - vLocalPos; vShootPos.z = 0;
+		Vec3 vShootPos = tProjInfo.m_vPos - vLocalPos; vShootPos.z = 0;
 		Vec3 vTarget = vPoint - vLocalPos;
-		Vec3 vForward; Math::AngleVectors(projInfo.m_vAng, &vForward); vForward.z = 0; vForward.Normalize();
+		Vec3 vForward; Math::AngleVectors(tProjInfo.m_vAng, &vForward); vForward.z = 0; vForward.Normalize();
 		float flA = 1.f;
 		float flB = 2 * (vShootPos.x * vForward.x + vShootPos.y * vForward.y);
 		float flC = vShootPos.Length2DSqr() - vTarget.Length2DSqr();
@@ -84,9 +84,9 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	}
 
 	{	// correct pitch
-		Vec3 vShootPos = Math::RotatePoint(projInfo.m_vPos - vLocalPos, {}, { 0, -flYaw, 0 }); vShootPos.y = 0;
+		Vec3 vShootPos = Math::RotatePoint(tProjInfo.m_vPos - vLocalPos, {}, { 0, -flYaw, 0 }); vShootPos.y = 0;
 		Vec3 vTarget = Math::RotatePoint(vPoint - vLocalPos, {}, { 0, -flYaw, 0 });
-		Vec3 vForward; Math::AngleVectors(projInfo.m_vAng - Vec3(0, flYaw, 0), &vForward); vForward.y = 0; vForward.Normalize();
+		Vec3 vForward; Math::AngleVectors(tProjInfo.m_vAng - Vec3(0, flYaw, 0), &vForward); vForward.y = 0; vForward.Normalize();
 		float flA = 1.f;
 		float flB = 2 * (vShootPos.x * vForward.x + vShootPos.z * vForward.z);
 		float flC = (powf(vShootPos.x, 2) + powf(vShootPos.z, 2)) - (powf(vTarget.x, 2) + powf(vTarget.z, 2));
@@ -139,22 +139,19 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		bool bWillHit = false;
 		if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
 		{
-			PlayerStorage localStorage;
-			ProjectileInfo projInfo = {};
+			PlayerStorage tStorage;
+			ProjectileInfo tProjInfo = {};
 
-			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, m_vAngles, projInfo, ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles) && F::ProjSim.Initialize(projInfo);
-			bool bMoveSimSetup = F::MoveSim.Initialize(pLocal, localStorage, false); // do move sim after to not mess with proj sim
+			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, m_vAngles, tProjInfo, ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles) && F::ProjSim.Initialize(tProjInfo);
+			bool bMoveSimSetup = F::MoveSim.Initialize(pLocal, tStorage, false); // do move sim after to not mess with proj sim
 			if (bMoveSimSetup && bProjSimSetup)
 			{
 				Vec3 vOriginal = F::ProjSim.GetOrigin();
 				for (int n = 1; n < 10; n++)
 				{
-					bool bLastGround = pLocal->IsOnGround();
-					F::MoveSim.RunTick(localStorage);
-					bool bCurGround = pLocal->IsOnGround();
-
 					Vec3 Old = F::ProjSim.GetOrigin();
-					F::ProjSim.RunTick(projInfo);
+					F::MoveSim.RunTick(tStorage);
+					F::ProjSim.RunTick(tProjInfo);
 					Vec3 New = F::ProjSim.GetOrigin();
 
 					CGameTrace trace = {};
@@ -162,7 +159,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 					SDK::Trace(Old, New, MASK_SOLID, &filter, &trace);
 					if (trace.DidHit())
 					{
-						if (!bCurGround)
+						if (!pLocal->IsOnGround() || pLocal->IsSwimming())
 							break;
 
 						auto WillHit = [](CTFPlayer* pLocal, const Vec3& vOrigin, const Vec3& vPoint)
@@ -175,18 +172,18 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 								return vPoint.DistTo(vPos) < 120.f && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
 							};
 
-						bWillHit = WillHit(pLocal, localStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
+						bWillHit = WillHit(pLocal, tStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
 						m_iDelay = std::max(n + (n > Vars::Misc::Movement::ApplyAbove.Value ? Vars::Misc::Movement::TimingOffset.Value : 0), 0);
 
 						if (bWillHit && G::CanPrimaryAttack)
 						{
-							SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", m_iDelay, n).c_str(), { 255, 0, 0, 255 }, Vars::Debug::Logging.Value);
+							SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", m_iDelay, n).c_str(), { 255, 0, 0 }, Vars::Debug::Logging.Value);
 							if (Vars::Debug::Info.Value)
 							{
 								//G::LineStorage.clear(); G::BoxStorage.clear();
 								Vec3 angles; Math::VectorAngles(trace.plane.normal, angles);
 								G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3(-1.f, -1.f, -1.f), Vec3(1.f, 1.f, 1.f), angles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
-								G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(localStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal), I::GlobalVars->curtime + 5.f, Color_t(), true);
+								G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal), I::GlobalVars->curtime + 5.f, Color_t(), true);
 							}
 						}
 
@@ -198,7 +195,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 					//	break;
 				}
 			}
-			F::MoveSim.Restore(localStorage);
+			F::MoveSim.Restore(tStorage);
 		}
 
 		if (bWillHit)
@@ -230,7 +227,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 			}
 		}
 
-		if (m_iFrame == -1 && pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON && G::Buttons & IN_ATTACK2)
+		if (m_iFrame == -1 && pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON && G::OriginalMove.m_iButtons & IN_ATTACK2)
 			pCmd->buttons |= IN_ATTACK2;
 	}
 

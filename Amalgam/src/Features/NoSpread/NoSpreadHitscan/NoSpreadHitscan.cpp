@@ -84,15 +84,14 @@ bool CNoSpreadHitscan::ParsePlayerPerf(std::string sMsg)
 	if (!Vars::Aimbot::General::NoSpread.Value)
 		return false;
 
-	std::smatch matches = {};
-	std::regex_match(sMsg, matches, std::regex(R"((\d+.\d+)\s\d+\s\d+\s\d+.\d+\s\d+.\d+\svel\s\d+.\d+)"));
+	std::smatch match; std::regex_match(sMsg, match, std::regex(R"((\d+.\d+)\s\d+\s\d+\s\d+.\d+\s\d+.\d+\svel\s\d+.\d+)"));
 
-	if (matches.size() == 2)
+	if (match.size() == 2)
 	{
 		m_bWaitingForPlayerPerf = false;
 
 		// credits to kgb for idea
-		float flNewServerTime = std::stof(matches[1].str());
+		float flNewServerTime = std::stof(match[1].str());
 		if (flNewServerTime < m_flServerTime)
 			return true;
 
@@ -135,7 +134,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 
 	m_iSeed = GetSeed(pCmd);
 #ifdef SEEDPRED_DEBUG
-	SDK::Output("CNoSpreadHitscan::Run", std::format("{}: {}", SDK::PlatFloatTime() + m_dTimeDelta, m_iSeed).c_str(), { 255, 0, 0, 255 });
+	SDK::Output("CNoSpreadHitscan::Run", std::format("{}: {}", SDK::PlatFloatTime() + m_dTimeDelta, m_iSeed).c_str(), { 255, 0, 0 });
 #endif
 
 	if (!m_bSynced)

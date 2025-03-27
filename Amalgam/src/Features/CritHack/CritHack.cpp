@@ -342,24 +342,43 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	bool bRapidFire = pWeapon->IsRapidFire();
 	bool bStreamWait = bRapidFire && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
 
-	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
-	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
+	int iClosestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
+	int iClosestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
 
-	if (bAttacking && !Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (bAttacking)
 	{
-		const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
-		const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
-		if (bCanCrit && bPressed && closestCrit)
-			pCmd->command_number = closestCrit;
-		else if (Vars::CritHack::AvoidRandom.Value && closestSkip)
-			pCmd->command_number = closestSkip;
+		const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || iSlot == SLOT_MELEE) && !bStreamWait;
+		const bool bPressed = Vars::CritHack::ForceCrits.Value || iSlot == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::OriginalMove.m_iButtons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
+		if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
+		{
+			if (bCanCrit && bPressed && iClosestCrit)
+				pCmd->command_number = iClosestCrit;
+			else if (Vars::CritHack::AvoidRandom.Value && iClosestSkip)
+				pCmd->command_number = iClosestSkip;
+		}
+		else if (Vars::Misc::Game::AntiCheatCritHack.Value)
+		{
+			bool bShouldAvoid = false;
+
+			bool bCritCommand = IsCritCommand(iSlot, tStorage.m_iEntIndex, tStorage.m_flMultCritChance, pCmd->command_number, true, false);
+			if (bCanCrit && bPressed && !bCritCommand
+				|| Vars::CritHack::AvoidRandom.Value && !bPressed && bCritCommand)
+				bShouldAvoid = true;
+
+			if (bShouldAvoid)
+			{
+				pCmd->buttons &= ~IN_ATTACK;
+				pCmd->viewangles = G::OriginalMove.m_vView;
+				G::PSilentAngles = false;
+			}
+		}
 	}
 
 	m_iWishRandomSeed = MD5_PseudoRandom(pCmd->command_number) & std::numeric_limits<int>::max();
 
-	if (pCmd->command_number == closestCrit)
+	if (pCmd->command_number == iClosestCrit)
 		tStorage.m_vCritCommands.pop_front();
-	else if (pCmd->command_number == closestSkip)
+	else if (pCmd->command_number == iClosestSkip)
 		tStorage.m_vSkipCommands.pop_front();
 }
 
@@ -380,7 +399,7 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
 
 	const bool bCanCrit = tStorage.m_iAvailableCrits > 0 && (!m_bCritBanned || pWeapon->GetSlot() == SLOT_MELEE) && !bStreamWait;
-	const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::Buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
+	const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::OriginalMove.m_iButtons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
 	if (bCanCrit && bPressed && closestCrit)
 		return closestCrit;
 	else if (Vars::CritHack::AvoidRandom.Value && closestSkip)

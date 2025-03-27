@@ -37,7 +37,12 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		return CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
 #endif
 
-	G::Buttons = pCmd ? pCmd->buttons : G::Buttons;
+	if (pCmd)
+	{
+		G::OriginalMove.m_vMove = { pCmd->forwardmove, pCmd->sidemove, pCmd->upmove };
+		G::OriginalMove.m_vView = pCmd->viewangles;
+		G::OriginalMove.m_iButtons = pCmd->buttons;
+	}
 
 	const bool bReturn = CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
 	if (!pCmd || !pCmd->command_number)
@@ -53,7 +58,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 
 	// correct tick_count for fakeinterp / nointerp
 	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.GetFakeInterp()) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
-	if (G::Buttons & IN_DUCK) // lol
+	if (G::OriginalMove.m_iButtons & IN_DUCK) // lol
 		pCmd->buttons |= IN_DUCK;
 
 	auto pLocal = H::Entities.GetLocal();
@@ -169,9 +174,9 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	F::Aimbot.Run(pLocal, pWeapon, pCmd);
 	F::EnginePrediction.End(pLocal, pCmd);
 
+	F::CritHack.Run(pLocal, pWeapon, pCmd);
 	F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
 	F::Ticks.CreateMove(pLocal, pCmd);
-	F::CritHack.Run(pLocal, pWeapon, pCmd);
 	F::NoSpread.Run(pLocal, pWeapon, pCmd);
 	F::Misc.RunPost(pLocal, pCmd, *pSendPacket);
 	F::Resolver.CreateMove(pLocal);

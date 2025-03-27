@@ -1,7 +1,7 @@
 #include "../SDK/SDK.h"
 
 #include "../Features/Misc/Misc.h"
-#include "../Features/Records/Records.h"
+#include "../Features/Output/Output.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "../Features/Misc/AutoVote/AutoVote.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
@@ -29,7 +29,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDL
 	switch (type)
 	{
 	case VoteStart:
-		F::Records.UserMessage(msgData);
+		F::Output.UserMessage(msgData);
 		F::AutoVote.UserMessage(msgData);
 
 		break;

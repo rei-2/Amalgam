@@ -62,7 +62,7 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 				case FNV1A::Hash32Const("cl_interpolate"):
 				case FNV1A::Hash32Const("cl_cmdrate"):
 				case FNV1A::Hash32Const("cl_updaterate"):
-					SDK::Output("SendNetMsg", std::format("{}: {}", localCvar->Name, localCvar->Value).c_str(), { 100, 0, 255, 255 });
+					SDK::Output("SendNetMsg", std::format("{}: {}", localCvar->Name, localCvar->Value).c_str(), { 100, 0, 255 });
 				}
 			}
 		}

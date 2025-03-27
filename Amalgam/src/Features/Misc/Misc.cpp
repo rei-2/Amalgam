@@ -193,17 +193,16 @@ void CMisc::MovementLock(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 	}
 
-	static Vec3 vDir = {};
+	static Vec3 vMove = {}, vView = {};
 	if (!bLock)
 	{
 		bLock = true;
-		vDir = Math::RotatePoint({ pCmd->forwardmove * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1), -pCmd->sidemove, 0.f }, {}, { 0, pCmd->viewangles.y, 0 });
-		vDir.z = pCmd->upmove;
+		vMove = { pCmd->forwardmove, pCmd->sidemove, pCmd->upmove };
+		vView = pCmd->viewangles;
 	}
 
-	Vec3 vMove = Math::RotatePoint(vDir, {}, { 0, -pCmd->viewangles.y, 0 });
-	pCmd->forwardmove = vMove.x * (fmodf(fabsf(pCmd->viewangles.x), 180.f) > 90.f ? -1 : 1);
-	pCmd->sidemove = -vMove.y, pCmd->upmove = vDir.z;
+	pCmd->forwardmove = vMove.x, pCmd->sidemove = vMove.y, pCmd->upmove = vMove.z;
+	SDK::FixMovement(pCmd, vView, pCmd->viewangles);
 }
 
 void CMisc::BreakJump(CTFPlayer* pLocal, CUserCmd* pCmd)

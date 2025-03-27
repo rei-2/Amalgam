@@ -34,14 +34,14 @@ namespace Math
 		*pCos = std::cos(flRadians);
 	}
 
-	inline float NormalizeAngle(float flAngle)
+	inline float NormalizeAngle(float flAngle, float flRange = 360.f)
 	{
-		return std::isfinite(flAngle) ? std::remainder(flAngle, 360.f) : 0.f;
+		return std::isfinite(flAngle) ? std::remainder(flAngle, flRange) : 0.f;
 	}
 
-	inline float NormalizeRad(float flAngle) noexcept
+	inline float NormalizeRad(float flAngle, float flRange = PI * 2)
 	{
-		return std::isfinite(flAngle) ? std::remainder(flAngle, PI * 2) : 0.f;
+		return std::isfinite(flAngle) ? std::remainder(flAngle, flRange) : 0.f;
 	}
 
 	inline void ClampAngles(Vec3& v)
@@ -57,7 +57,7 @@ namespace Math
 		v.y = NormalizeAngle(v.y);
 	}
 
-	inline float AngleDiffRad(float flAngle1, float flAngle2) noexcept
+	inline float AngleDiffRad(float flAngle1, float flAngle2)
 	{
 		double delta = NormalizeRad(flAngle1 - flAngle2);
 		if (flAngle1 > flAngle2)

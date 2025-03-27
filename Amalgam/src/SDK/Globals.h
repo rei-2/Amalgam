@@ -6,7 +6,7 @@
 
 MAKE_SIGNATURE(RandomSeed, "client.dll", "0F B6 1D ? ? ? ? 89 9D", 0x0);
 
-struct DrawLine
+struct DrawLine_t
 {
 	std::pair<Vec3, Vec3> m_vPair;
 	float m_flTime;
@@ -14,7 +14,7 @@ struct DrawLine
 	bool m_bZBuffer = false;
 };
 
-struct DrawPath
+struct DrawPath_t
 {
 	std::deque<Vec3> m_vPath;
 	float m_flTime;
@@ -23,16 +23,23 @@ struct DrawPath
 	bool m_bZBuffer = false;
 };
 
-struct DrawBox
+struct DrawBox_t
 {
-	Vec3 m_vecPos;
-	Vec3 m_vecMins;
-	Vec3 m_vecMaxs;
-	Vec3 m_vecOrientation;
+	Vec3 m_vPos;
+	Vec3 m_vMins;
+	Vec3 m_vMaxs;
+	Vec3 m_vRotation;
 	float m_flTime;
-	Color_t m_colorEdge;
-	Color_t m_colorFace;
+	Color_t m_tColorEdge;
+	Color_t m_tColorFace;
 	bool m_bZBuffer = false;
+};
+
+struct MoveData_t
+{
+	Vec3 m_vMove = {};
+	Vec3 m_vView = {};
+	int m_iButtons = 0;
 };
 
 namespace G
@@ -51,7 +58,7 @@ namespace G
 
 	inline CUserCmd* CurrentUserCmd = nullptr;
 	inline CUserCmd* LastUserCmd = nullptr;
-	inline int Buttons = 0;
+	inline MoveData_t OriginalMove = {};
 
 	inline std::pair<int, int> Target = { 0, 0 };
 	inline std::pair<Vec3, int> AimPosition = {};
@@ -66,9 +73,9 @@ namespace G
 	inline bool DrawingProps = false;
 	inline bool FlipViewmodels = false;
 
-	inline std::vector<DrawLine> LineStorage = {};
-	inline std::vector<DrawPath> PathStorage = {};
-	inline std::vector<DrawBox> BoxStorage = {};
+	inline std::vector<DrawLine_t> LineStorage = {};
+	inline std::vector<DrawPath_t> PathStorage = {};
+	inline std::vector<DrawBox_t> BoxStorage = {};
 
 	inline int* RandomSeed()
 	{

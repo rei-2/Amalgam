@@ -1,7 +1,7 @@
 #include "CheaterDetection.h"
 
 #include "../Players/PlayerUtils.h"
-#include "../Records/Records.h"
+#include "../Output/Output.h"
 
 bool CCheaterDetection::ShouldScan()
 {
@@ -88,7 +88,7 @@ void CCheaterDetection::Infract(CTFPlayer* pEntity, std::string sReason)
 		bMark = mData[pEntity].m_iDetections >= Vars::CheaterDetection::DetectionsRequired.Value;
 	}
 
-	F::Records.CheatDetection(mData[pEntity].m_sName, bMark ? "marked" : "infracted", sReason);
+	F::Output.CheatDetection(mData[pEntity].m_sName, bMark ? "marked" : "infracted", sReason);
 	if (bMark)
 	{
 		mData[pEntity].m_iDetections = 0;

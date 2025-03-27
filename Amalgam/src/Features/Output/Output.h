@@ -1,7 +1,7 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-class CRecords
+class COutput
 {
 	void OutputInfo(int flags, std::string sName, std::string sOutput, std::string sChat);
 
@@ -24,4 +24,4 @@ public:
 	void AliasOnJoin(std::string sName, uint32_t friendsID);
 };
 
-ADD_FEATURE(CRecords, Records)
+ADD_FEATURE(COutput, Output)

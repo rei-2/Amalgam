@@ -149,7 +149,7 @@ void CMaterials::LoadMaterials()
 			"\n}",
 		true);
 	// user materials
-	for (auto& entry : std::filesystem::directory_iterator(MaterialFolder))
+	for (auto& entry : std::filesystem::directory_iterator(F::Configs.m_sMaterialsPath))
 	{
 		// Ignore all non-material files
 		if (!entry.is_regular_file() || entry.path().extension() != std::string(".vmt"))
@@ -248,7 +248,7 @@ std::string CMaterials::GetVMT(uint32_t uHash)
 void CMaterials::AddMaterial(const char* sName)
 {
 	auto uHash = FNV1A::Hash32(sName);
-	if (uHash == FNV1A::Hash32Const("Original") || std::filesystem::exists(std::format("{}\\{}.vmt", MaterialFolder, sName)) || m_mMaterials.contains(uHash))
+	if (uHash == FNV1A::Hash32Const("Original") || std::filesystem::exists(F::Configs.m_sMaterialsPath + sName) || m_mMaterials.contains(uHash))
 		return;
 
 	StoreStruct(
@@ -267,14 +267,14 @@ void CMaterials::AddMaterial(const char* sName)
 	tMaterial.m_pMaterial = Create(sName, kv);
 	StoreVars(tMaterial);
 
-	std::ofstream outStream(std::format("{}\\{}.vmt", MaterialFolder, sName));
+	std::ofstream outStream(F::Configs.m_sMaterialsPath + sName);
 	outStream << tMaterial.m_sVMT;
 	outStream.close();
 }
 
 void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 {
-	if (!std::filesystem::exists(std::format("{}\\{}.vmt", MaterialFolder, sName)))
+	if (!std::filesystem::exists(F::Configs.m_sMaterialsPath + sName))
 		return;
 
 	m_bLoaded = false;
@@ -294,7 +294,7 @@ void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 		tMaterial.m_pMaterial = Create(sName, kv);
 		StoreVars(tMaterial);
 
-		std::ofstream outStream(std::format("{}\\{}.vmt", MaterialFolder, sName));
+		std::ofstream outStream(F::Configs.m_sMaterialsPath + sName);
 		outStream << sVMT;
 		outStream.close();
 	}
@@ -304,7 +304,7 @@ void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 
 void CMaterials::RemoveMaterial(const char* sName)
 {
-	if (!std::filesystem::exists(std::format("{}\\{}.vmt", MaterialFolder, sName)))
+	if (!std::filesystem::exists(F::Configs.m_sMaterialsPath + sName))
 		return;
 
 	m_bLoaded = false;
@@ -317,7 +317,7 @@ void CMaterials::RemoveMaterial(const char* sName)
 
 		m_mMaterials.erase(cham);
 
-		std::filesystem::remove(MaterialFolder + "\\" + sName + ".vmt");
+		std::filesystem::remove(F::Configs.m_sMaterialsPath + sName + ".vmt");
 
 		auto removeFromVar = [&](ConfigVar<std::vector<std::pair<std::string, Color_t>>>& var)
 			{
