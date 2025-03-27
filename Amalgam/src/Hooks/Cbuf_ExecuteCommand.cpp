@@ -13,7 +13,7 @@ enum cmd_source_t
 static std::string sCmdString;
 
 #define PRE_STR "\x07\x07\x07\x07\x07\x07\x07"
-static std::vector<std::pair<std::string, std::string>> vReplace = {
+static std::vector<std::pair<std::string, std::string>> vStatic = {
     { "\\x1", "\x1" },
     { "\\x01", "\x1" },
     { "\\x2", PRE_STR"\x2" },
@@ -30,10 +30,6 @@ static std::vector<std::pair<std::string, std::string>> vReplace = {
     { "\\x07", PRE_STR"\x7" },
     { "\\x8", PRE_STR"\x8" },
     { "\\x08", PRE_STR"\x8" },
-
-    { "\\t", "\t" },
-    //{ "\\n", "\n" },
-    //{ "\\0", "0" },
 
     { "\\{default}", "\x1" },
     { "\\{clear}", PRE_STR"\x8""00000000" },
@@ -66,8 +62,55 @@ static std::vector<std::pair<std::string, std::string>> vReplace = {
     { "\\{assassin}", PRE_STR"\x7""d32ce6" },
     { "\\{commando}", PRE_STR"\x7""8847ff" },
     { "\\{mercenary}", PRE_STR"\x7""4b69ff" },
+
+    { "\\t", "\t" },
 };
-static std::vector<std::function<void()>> vRegex = {
+static std::vector<std::function<void()>> vDynamic = {
+    [&]()
+    {
+        auto pResource = H::Entities.GetPR();
+        if (!pResource)
+            return;
+
+        std::string sFind = "\\{self}";
+        std::string sReplace = pResource->GetPlayerName(I::EngineClient->GetLocalPlayer());
+
+        size_t iPos = 0;
+        while (true)
+        {
+            auto iFind = sCmdString.find(sFind, iPos);
+            if (iFind == std::string::npos)
+                break;
+            
+            iPos = iFind + sReplace.length();
+            sCmdString = sCmdString.replace(iFind, sFind.length(), sReplace);
+        }
+    },
+    [&]()
+    {
+        auto pResource = H::Entities.GetPR();
+        if (!pResource)
+            return;
+
+        std::string sFind = "\\{team}";
+        std::string sReplace = PRE_STR"\x7""cccccc";
+        switch (pResource->GetTeam(I::EngineClient->GetLocalPlayer()))
+        {
+        case TF_TEAM_BLUE: sReplace = PRE_STR"\x7""99ccff"; break;
+        case TF_TEAM_RED: sReplace = PRE_STR"\x7""ff4040"; break;
+        }
+
+        size_t iPos = 0;
+        while (true)
+        {
+            auto iFind = sCmdString.find(sFind, iPos);
+            if (iFind == std::string::npos)
+                break;
+            
+            iPos = iFind + sReplace.length();
+            sCmdString = sCmdString.replace(iFind, sFind.length(), sReplace);
+        }
+    },
     [&]()
     {
         auto sRegex = R"(\\\{rgb:(\d+),(\d+),(\d+)\})";
@@ -164,51 +207,24 @@ static std::vector<std::function<void()>> vRegex = {
     },
     [&]()
     {
-        auto sRegex = R"(\\\{(\d+)(?:s| )\})";
+        auto sRegex = R"(\\\{(\d+):(.+)\})";
 
         while (true)
         {
             std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
-            if (match.size() != 2)
+            if (match.size() != 3)
                 break;
 
             int n = std::stoi(match[1]);
+            auto str = match[2].str();
 
-            sCmdString = sCmdString.replace(match.position(), match.length(), std::string(n, ' '));
+            std::ostringstream sStream;
+            for (int i = 0; i < n; i++)
+                sStream << str;
+
+            sCmdString = sCmdString.replace(match.position(), match.length(), sStream.str());
         }
     },
-    [&]()
-    {
-        auto sRegex = R"(\\\{(\d+)t\})";
-
-        while (true)
-        {
-            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
-            if (match.size() != 2)
-                break;
-
-            int n = std::stoi(match[1]);
-
-            sCmdString = sCmdString.replace(match.position(), match.length(), std::string(n, '\t'));
-        }
-    },
-    /*
-    [&]()
-    {
-        auto sRegex = R"(\\\{(\d+)n\})";
-
-        while (true)
-        {
-            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
-            if (match.size() != 2)
-                break;
-
-            int n = std::stoi(match[1]);
-
-            sCmdString = sCmdString.replace(match.position(), match.length(), std::string(n, '\n'));
-        }
-    },
-    */
 };
 
 MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
@@ -229,28 +245,23 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 			sCmdString = args.m_pArgSBuffer;
 			sCmdString = sCmdString.replace(0, args.m_nArgv0Size, "");
 
-			for (auto& pReplace : vReplace)
+			for (auto& [sFind, sReplace] : vStatic)
 			{
 				size_t iPos = 0;
 				while (true)
 				{
-					std::string sFind = pReplace.first;
-					std::string sReplace = pReplace.second;
-
 					auto iFind = sCmdString.find(sFind, iPos);
 					if (iFind == std::string::npos)
 						break;
 
 					iPos = iFind + sReplace.length();
 					sCmdString = sCmdString.replace(iFind, sFind.length(), sReplace);
-					//if (FNV1A::Hash32(sFind.c_str()) == FNV1A::Hash32Const("\\0"))
-					//	sCmdString[iFind + 1] = '\0';
 				}
 			}
-			for (auto& fRegex : vRegex)
+			for (auto& fRegex : vDynamic)
 				fRegex();
 
-			sCmdString = std::format("{} {}", sCommand, sCmdString);
+			sCmdString = std::format("{} {}", sCommand, sCmdString).substr(0, COMMAND_MAX_LENGTH - 1);
 			strncpy_s(args.m_pArgSBuffer, sCmdString.c_str(), COMMAND_MAX_LENGTH);
 			args.m_nArgv0Size = int(sCommand.length() + 1);
 		}

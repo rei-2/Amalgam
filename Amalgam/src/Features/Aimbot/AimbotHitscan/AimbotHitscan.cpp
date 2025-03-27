@@ -335,14 +335,12 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 	auto RayToOBB = [&](const Vec3& vOrigin, const Vec3& vDirection, const Vec3& vMins, const Vec3& vMaxs, const matrix3x4& mMatrix, float flScale = 1.f) -> bool
 		{
-			/*
 			switch (Vars::Aimbot::General::AimType.Value)
 			{
 			case Vars::Aimbot::General::AimTypeEnum::Smooth:
 			case Vars::Aimbot::General::AimTypeEnum::Assistive:
 				return Math::RayToOBB(vOrigin, vDirection, vMins, vMaxs, mMatrix, flScale);
 			}
-			*/
 
 			return true;
 		};

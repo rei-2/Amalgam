@@ -370,7 +370,7 @@ void CMenu::MenuAimbot(int iTab)
 					FSlider("Spin speed", Vars::AntiHack::AntiAim::SpinSpeed, -30.f, 30.f, 1.f, "%g", FSlider_Left | FSlider_Precision);
 				}
 				PopTransparent();
-				SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetCursorPosY() - H::Draw.Scale(24) });
+				SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetRowPos() + H::Draw.Scale(8) });
 				FToggle("Minwalk", Vars::AntiHack::AntiAim::MinWalk, FToggle_Left);
 				FToggle("Anti-overlap", Vars::AntiHack::AntiAim::AntiOverlap, FToggle_Left);
 				FToggle("Hide pitch on shot", Vars::AntiHack::AntiAim::InvalidShootPitch, FToggle_Right);
@@ -2861,7 +2861,7 @@ void CMenu::MenuSettings(int iTab)
 			PopDisabled();
 
 			if (FButton("Folder", FButton_Fit | FButton_SameLine))
-				ShellExecuteA(nullptr, "open", F::Configs.m_sCorePath.c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
+				ShellExecuteA(NULL, NULL, F::Configs.m_sCorePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		}
 		break;
 	// Materials
@@ -2949,7 +2949,7 @@ void CMenu::MenuSettings(int iTab)
 			} EndSection();
 			SetCursorPosY(GetCursorPosY() - 8);
 			if (FButton("Folder", FButton_Fit))
-				ShellExecuteA(nullptr, "open", F::Configs.m_sMaterialsPath.c_str(), nullptr, nullptr, SW_SHOWDEFAULT);
+				ShellExecuteA(NULL, NULL, F::Configs.m_sMaterialsPath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 
 			/* Column 2 */
 			TableNextColumn();

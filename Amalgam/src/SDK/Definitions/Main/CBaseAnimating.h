@@ -160,6 +160,15 @@ public:
 	{
 		return S::CBaseAnimating_SequenceDuration.Call<float>(this);
 	}
+
+	inline float SequenceDuration(int iSequence)
+	{
+		int iOriginalSequence = m_nSequence();
+		m_nSequence() = iSequence;
+		bool bReturn = S::CBaseAnimating_SequenceDuration.Call<float>(this);
+		m_nSequence() = iOriginalSequence;
+		return bReturn;
+	}
 };
 
 class CBaseAnimatingOverlay : public CBaseAnimating

@@ -67,19 +67,22 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t tColor,
 	}
 }
 
-#pragma warning (push)
-#pragma warning (disable : 4996)
 void SDK::SetClipboard(std::string sString)
 {
 	if (OpenClipboard(nullptr))
 	{
 		EmptyClipboard();
 
-		HGLOBAL clipbuffer = GlobalAlloc(GMEM_DDESHARE, sString.length() + 1);
-		char* buffer = (char*)GlobalLock(clipbuffer);
-		strncpy(buffer, sString.c_str(), sString.length());
-		GlobalUnlock(clipbuffer);
-		SetClipboardData(CF_TEXT, clipbuffer);
+		if (HGLOBAL hMemory = GlobalAlloc(GMEM_DDESHARE, sString.length() + 1))
+		{
+			if (void* pData = GlobalLock(hMemory))
+			{
+				memset(pData, 0, sString.length() + 1);
+				memcpy(pData, sString.c_str(), sString.length());
+				GlobalUnlock(hMemory);
+				SetClipboardData(CF_TEXT, hMemory);
+			}
+		}
 
 		CloseClipboard();
 	}
@@ -90,13 +93,13 @@ std::string SDK::GetClipboard()
 	std::string sString = "";
 	if (OpenClipboard(nullptr))
 	{
-		sString = (char*)GetClipboardData(CF_TEXT);
+		if (void* pData = GetClipboardData(CF_TEXT))
+			sString = (char*)(pData);
 
 		CloseClipboard();
 	}
 	return sString;
 }
-#pragma warning (pop)
 
 HWND SDK::GetTeamFortressWindow()
 {

@@ -806,7 +806,7 @@ void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
 		cam_ideallag->SetValue(0.f);
 
 	if (I::Input->CAM_IsThirdPerson())
-	{	// Thirdperson offset
+	{	// thirdperson offset
 		Vec3 vForward, vRight, vUp; Math::AngleVectors(pView->angles, &vForward, &vRight, &vUp);
 
 		Vec3 vOffset;
