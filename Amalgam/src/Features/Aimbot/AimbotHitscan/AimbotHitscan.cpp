@@ -6,60 +6,43 @@
 #include "../../Visuals/Visuals.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 
-std::vector<Target_t> CAimbotHitscan::GetTargetsMedigun(CTFPlayer* pLocal, CWeaponMedigun* pWeapon)
-{
-	if (!Vars::Aimbot::Healing::AutoHeal.Value)
-		return {};
-
-	std::vector<Target_t> vTargets;
-	const auto iSort = Vars::Aimbot::General::TargetSelection.Value;
-
-	Vec3 vLocalPos = F::Ticks.GetShootPos();
-	Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
-
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
-	{
-		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
-			continue;
-
-		if (Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
-			continue;
-
-		float flFOVTo; Vec3 vPos, vAngleTo;
-		if (!F::AimbotGlobal.PlayerBoneInFOV(pPlayer, vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo, Vars::Aimbot::Hitscan::Hitboxes.Value) && pWeapon->m_hHealingTarget().Get() != pPlayer)
-			continue;
-
-		float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-		vTargets.emplace_back(pPlayer, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo);
-	}
-
-	return vTargets;
-}
-
 std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
-		return GetTargetsMedigun(pLocal, pWeapon->As<CWeaponMedigun>());
-
 	std::vector<Target_t> vTargets;
 	const auto iSort = Vars::Aimbot::General::TargetSelection.Value;
 
 	Vec3 vLocalPos = F::Ticks.GetShootPos();
 	Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
-	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 	{
-		bool bPissRifle = pWeapon->m_iItemDefinitionIndex() == Sniper_m_TheSydneySleeper;
-		for (auto pEntity : H::Entities.GetGroup(bPissRifle ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_ENEMIES))
+		auto eGroupType = EGroupType::GROUP_INVALID;
+		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
+			eGroupType = EGroupType::PLAYERS_ENEMIES;
+		if (pWeapon->m_iItemDefinitionIndex() == Sniper_m_TheSydneySleeper && Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::ExtinguishTeam)
+			eGroupType = EGroupType::PLAYERS_ALL;
+		if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
+			eGroupType = Vars::Aimbot::Healing::AutoHeal.Value ? EGroupType::PLAYERS_TEAMMATES : EGroupType::GROUP_INVALID;
+
+		for (auto pEntity : H::Entities.GetGroup(eGroupType))
 		{
 			bool bTeammate = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (pWeapon->m_iItemDefinitionIndex() == Sniper_m_TheSydneySleeper && bTeammate
-				&& (!(Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::ExtinguishTeam) || !pEntity->As<CTFPlayer>()->InCond(TF_COND_BURNING)))
-				continue;
+			if (bTeammate)
+			{
+				if (pWeapon->m_iItemDefinitionIndex() == Sniper_m_TheSydneySleeper)
+				{
+					if (!pEntity->As<CTFPlayer>()->InCond(TF_COND_BURNING))
+						continue;
+				}
+				else if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
+				{
+					if (pEntity->As<CTFPlayer>()->InCond(TF_COND_STEALTHED)
+						|| Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
+						continue;
+				}
+			}
 
 			float flFOVTo; Vec3 vPos, vAngleTo;
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo, Vars::Aimbot::Hitscan::Hitboxes.Value))
@@ -68,6 +51,9 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
 			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()));
 		}
+
+		if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
+			return vTargets;
 	}
 
 	if (Vars::Aimbot::General::Target.Value)
@@ -210,7 +196,7 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 					float flDistTo = pTarget->m_vecOrigin().DistTo(pLocal->m_vecOrigin());
 
 					float flMult = SDK::AttribHookValue(1.f, "mult_dmg", pWeapon);
-					int iDamage = std::ceil(Math::RemapValClamped(flDistTo, 90.f, 900.f, 60.f, 21.f) * flMult);
+					int iDamage = std::ceil(Math::RemapVal(flDistTo, 90.f, 900.f, 60.f, 21.f) * flMult);
 					if (pPlayer->m_iHealth() <= iDamage)
 						bHeadshot = false;
 				}

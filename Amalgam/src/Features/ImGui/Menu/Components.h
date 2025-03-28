@@ -102,6 +102,8 @@ enum FColorPicker_
 
 //#define ALTERNATE_FULL_SLIDER
 
+static inline bool    operator==(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x == rhs.x && lhs.y == rhs.y; }
+static inline bool    operator!=(const ImVec2& lhs, const ImVec2& rhs) { return lhs.x != rhs.x || lhs.y != rhs.y; }
 static inline ImVec2  operator*(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x * rhs, lhs.y * rhs); }
 static inline ImVec2  operator/(const ImVec2& lhs, const float rhs) { return ImVec2(lhs.x / rhs, lhs.y / rhs); }
 static inline ImVec2  operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
@@ -2362,7 +2364,7 @@ namespace ImGui
 	bool bPushedDisabled = false, bPushedTransparent = false;
 
 	template <class T>
-	inline T FGet(ConfigVar<T>& var, bool bDisable = false)
+	inline T& FGet(ConfigVar<T>& var, bool bDisable = false)
 	{
 		int iBind = GetBind(var);
 		if (bDisable)

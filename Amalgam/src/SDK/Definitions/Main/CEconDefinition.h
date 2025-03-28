@@ -35,7 +35,6 @@ public:
 	virtual const char* GetUnlocalizedHelpText() = 0;
 	virtual void* CreateUIElement(bool bMainMenu) const = 0;
 
-protected:
 	const char* m_pText;
 	const char* m_pSoundFilename;
 	float m_flExpireTime;

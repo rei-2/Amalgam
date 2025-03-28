@@ -312,7 +312,7 @@ public:
 	{
 		static auto tf_spy_invis_time = I::CVar->FindVar("tf_spy_invis_time");
 		const float flInvisTime = tf_spy_invis_time ? tf_spy_invis_time->GetFloat() : 1.f;
-		const float GetInvisPercent = Math::RemapValClamped(m_flInvisChangeCompleteTime() - I::GlobalVars->curtime, flInvisTime, 0.f, 0.f, 100.f);
+		const float GetInvisPercent = Math::RemapVal(m_flInvisChangeCompleteTime() - I::GlobalVars->curtime, flInvisTime, 0.f, 0.f, 100.f);
 
 		return GetInvisPercent;
 	}
@@ -409,7 +409,7 @@ public:
 
 	inline float GetCritMult()
 	{
-		return Math::RemapValClamped(static_cast<float>(m_iCritMult()), 0.f, 255.f, 1.f, 4.f);
+		return Math::RemapVal(static_cast<float>(m_iCritMult()), 0.f, 255.f, 1.f, 4.f);
 	}
 
 	inline void UpdateWearables()

@@ -6,7 +6,6 @@
 class CAimbotHitscan
 {
 	std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-	std::vector<Target_t> GetTargetsMedigun(CTFPlayer* pLocal, CWeaponMedigun* pWeapon);
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	int GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pTarget);

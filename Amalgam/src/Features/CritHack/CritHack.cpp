@@ -125,7 +125,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 			flDamage = flBucketCap / TF_DAMAGE_CRIT_MULTIPLIER;
 	}
 
-	float flMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapValClamped(float(iCritSeedRequests + 1) / (iCritChecks + 1), 0.1f, 1.f, 1.f, 3.f);
+	float flMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapVal(float(iCritSeedRequests + 1) / (iCritChecks + 1), 0.1f, 1.f, 1.f, 3.f);
 	float flCost = flDamage * TF_DAMAGE_CRIT_MULTIPLIER;
 
 	int iPotentialCrits = (flBucketCap - flBaseDamage) / (TF_DAMAGE_CRIT_MULTIPLIER * flDamage / (iSlot == SLOT_MELEE ? 2 : 1) - flBaseDamage);
@@ -138,7 +138,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		{
 			iTestShots++; iTestCrits++;
 
-			float flTestMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapValClamped(float(iTestCrits) / iTestShots, 0.1f, 1.f, 1.f, 3.f);
+			float flTestMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapVal(float(iTestCrits) / iTestShots, 0.1f, 1.f, 1.f, 3.f);
 			flTestBucket = std::min(flTestBucket + flBaseDamage, flBucketCap) - flCost * flTestMult;
 			if (flTestBucket < 0.f)
 				break;
@@ -165,7 +165,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 				{
 					iTestShots2++; iTestCrits2++;
 
-					float flTestMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapValClamped(float(iTestCrits2) / iTestShots2, 0.1f, 1.f, 1.f, 3.f);
+					float flTestMult = iSlot == SLOT_MELEE ? 0.5f : Math::RemapVal(float(iTestCrits2) / iTestShots2, 0.1f, 1.f, 1.f, 3.f);
 					flTestBucket2 = std::min(flTestBucket2 + flBaseDamage, flBucketCap) - flCost * flTestMult;
 					if (flTestBucket2 < 0.f)
 						break;

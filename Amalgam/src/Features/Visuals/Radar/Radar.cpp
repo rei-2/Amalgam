@@ -9,9 +9,8 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 	const float flYaw = -DEG2RAD(I::EngineClient->GetViewAngles().y);
 	const float flSin = sinf(flYaw), flCos = cosf(flYaw);
 
-	const Vec3 vDelta = pLocal->GetAbsOrigin() - pEntity->GetAbsOrigin();
-	auto vPos = Vec2(vDelta.x * flSin + vDelta.y * flCos, vDelta.x * flCos - vDelta.y * flSin);
-	z = vDelta.z;
+	Vec3 vDelta = pLocal->GetAbsOrigin() - pEntity->GetAbsOrigin();
+	Vec2 vPos = { vDelta.x * flSin + vDelta.y * flCos, vDelta.x * flCos - vDelta.y * flSin };
 
 	switch (Vars::Radar::Main::Style.Value)
 	{
@@ -40,37 +39,38 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 		}
 	}
 
-	const WindowBox_t& info = Vars::Radar::Main::Window.Value;
-	x = info.x + vPos.x / flRange * info.w / 2 + float(info.w) / 2;
-	y = info.y + vPos.y / flRange * info.w / 2 + float(info.w) / 2;
+	auto& tWindowBox = Vars::Radar::Main::Window.Value;
+	x = tWindowBox.x + vPos.x / flRange * tWindowBox.w / 2;
+	y = tWindowBox.y + vPos.y / flRange * tWindowBox.w / 2 + tWindowBox.h / 2.f;
+	z = vDelta.z;
 
 	return true;
 }
 
 void CRadar::DrawBackground()
 {
-	const WindowBox_t& info = Vars::Radar::Main::Window.Value;
-	const Color_t& tThemeBack = Vars::Menu::Theme::Background.Value;
-	const Color_t& tThemeAccent = Vars::Menu::Theme::Accent.Value;
-	const Color_t tColorBackground = { tThemeBack.r, tThemeBack.g, tThemeBack.b, byte(Vars::Radar::Main::BackAlpha.Value) };
-	const Color_t tColorAccent = { tThemeAccent.r, tThemeAccent.g, tThemeAccent.b, byte(Vars::Radar::Main::LineAlpha.Value) };
+	auto& tWindowBox = Vars::Radar::Main::Window.Value;
+	Color_t& tThemeBack = Vars::Menu::Theme::Background.Value;
+	Color_t& tThemeAccent = Vars::Menu::Theme::Accent.Value;
+	Color_t tColorBackground = { tThemeBack.r, tThemeBack.g, tThemeBack.b, byte(Vars::Radar::Main::BackAlpha.Value) };
+	Color_t tColorAccent = { tThemeAccent.r, tThemeAccent.g, tThemeAccent.b, byte(Vars::Radar::Main::LineAlpha.Value) };
 
 	switch (Vars::Radar::Main::Style.Value)
 	{
 	case Vars::Radar::Main::StyleEnum::Circle:
 	{
-		const float flRadius = info.w / 2.f;
-		H::Draw.FillCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, tColorBackground);
-		H::Draw.LineCircle(info.x + flRadius, info.y + flRadius, flRadius, 100, tColorAccent);
+		const float flRadius = tWindowBox.w / 2.f;
+		H::Draw.FillCircle(tWindowBox.x, tWindowBox.y + flRadius, flRadius, 100, tColorBackground);
+		H::Draw.LineCircle(tWindowBox.x, tWindowBox.y + flRadius, flRadius, 100, tColorAccent);
 		break;
 	}
 	case Vars::Radar::Main::StyleEnum::Rectangle:
-		H::Draw.FillRoundRect(info.x, info.y, info.w, info.w, H::Draw.Scale(3), tColorBackground);
-		H::Draw.LineRoundRect(info.x, info.y, info.w, info.w, H::Draw.Scale(3), tColorAccent);
+		H::Draw.FillRoundRect(tWindowBox.x - tWindowBox.w / 2, tWindowBox.y, tWindowBox.w, tWindowBox.h, H::Draw.Scale(3), tColorBackground);
+		H::Draw.LineRoundRect(tWindowBox.x - tWindowBox.w / 2, tWindowBox.y, tWindowBox.w, tWindowBox.h, H::Draw.Scale(3), tColorAccent);
 	}
 
-	H::Draw.Line(info.x + info.w / 2, info.y, info.x + info.w / 2, info.y + info.w - 1, tColorAccent);
-	H::Draw.Line(info.x, info.y + info.w / 2, info.x + info.w - 1, info.y + info.w / 2, tColorAccent);
+	H::Draw.Line(tWindowBox.x - tWindowBox.w / 2, tWindowBox.y + tWindowBox.h / 2, tWindowBox.x + tWindowBox.w / 2 - 1, tWindowBox.y + tWindowBox.h / 2, tColorAccent);
+	H::Draw.Line(tWindowBox.x, tWindowBox.y, tWindowBox.x, tWindowBox.y + tWindowBox.h - 1, tColorAccent);
 }
 
 void CRadar::DrawPoints(CTFPlayer* pLocal)

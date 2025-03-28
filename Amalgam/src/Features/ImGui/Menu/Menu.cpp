@@ -764,12 +764,12 @@ void CMenu::MenuVisuals(int iTab)
 				FDropdown("Chat tags", Vars::Visuals::UI::ChatTags, { "Local", "Friends", "Party", "Assigned" }, {}, FDropdown_Right | FDropdown_Multi);
 				PushTransparent(!FGet(Vars::Visuals::UI::FieldOfView));
 				{
-					FSlider("Field of view", Vars::Visuals::UI::FieldOfView, 0, 160, 1, "%i", FSlider_Min);
+					FSlider("Field of view", Vars::Visuals::UI::FieldOfView, 0.f, 160.f, 1.f, "%g", FSlider_Min);
 				}
 				PopTransparent();
 				PushTransparent(!FGet(Vars::Visuals::UI::ZoomFieldOfView));
 				{
-					FSlider("Zoomed field of view", Vars::Visuals::UI::ZoomFieldOfView, 0, 160, 1, "%i", FSlider_Min);
+					FSlider("Zoomed field of view", Vars::Visuals::UI::ZoomFieldOfView, 0.f, 160.f, 1.f, "%g", FSlider_Min);
 				}
 				PopTransparent();
 				PushTransparent(!FGet(Vars::Visuals::UI::AspectRatio));
@@ -810,8 +810,8 @@ void CMenu::MenuVisuals(int iTab)
 			{
 				// https://developer.valvesoftware.com/wiki/Team_Fortress_2/Particles
 				// https://forums.alliedmods.net/showthread.php?t=127111
-				FSDropdown("Bullet trail", Vars::Visuals::Particles::BulletTrail, { "Off", "Machina", "C.A.P.P.E.R", "Short Circuit", "Merasmus ZAP", "Merasmus ZAP 2", "Big Nasty", "Distortion Trail", "Black Ink", "Line", "Beam" }, FDropdown_Left | FSDropdown_Custom);
-				FSDropdown("Crit trail", Vars::Visuals::Particles::CritTrail, { "Off", "Machina", "C.A.P.P.E.R", "Short Circuit", "Merasmus ZAP", "Merasmus ZAP 2", "Big Nasty", "Distortion Trail", "Black Ink", "Line", "Beam" }, FDropdown_Right | FSDropdown_Custom);
+				FSDropdown("Bullet trail", Vars::Visuals::Particles::BulletTrail, { "Off", "Big nasty", "Distortion trail", "Machina", "Sniper rail", "Short circuit", "C.A.P.P.E.R", "Merasmus ZAP", "Merasmus ZAP 2", "Black ink", "Line", "Clipped line", "Beam" }, FDropdown_Left | FSDropdown_Custom);
+				FSDropdown("Crit trail", Vars::Visuals::Particles::CritTrail, { "Off", "Big nasty", "Distortion trail", "Machina", "Sniper rail", "Short circuit", "C.A.P.P.E.R", "Merasmus ZAP", "Merasmus ZAP 2", "Black ink", "Line", "Clipped line", "Beam" }, FDropdown_Right | FSDropdown_Custom);
 				FSDropdown("Medigun beam", Vars::Visuals::Particles::MedigunBeam, { "Off", "None", "Uber", "Dispenser", "Passtime", "Bombonomicon", "White", "Orange" }, FDropdown_Left | FSDropdown_Custom);
 				FSDropdown("Medigun charge", Vars::Visuals::Particles::MedigunCharge, { "Off", "None", "Electrocuted", "Halloween", "Fireball", "Teleport", "Burning", "Scorching", "Purple energy", "Green energy", "Nebula", "Purple stars", "Green stars", "Sunbeams", "Spellbound", "Purple sparks", "Yellow sparks", "Green zap", "Yellow zap", "Plasma", "Frostbite", "Time warp", "Purple souls", "Green souls", "Bubbles", "Hearts" }, FDropdown_Right | FSDropdown_Custom);
 				FSDropdown("Projectile trail", Vars::Visuals::Particles::ProjectileTrail, { "Off", "None", "Rocket", "Critical", "Energy", "Charged", "Ray", "Fireball", "Teleport", "Fire", "Flame", "Sparks", "Flare", "Trail", "Health", "Smoke", "Bubbles", "Halloween", "Monoculus", "Sparkles", "Rainbow" }, FDropdown_Left | FSDropdown_Custom);
@@ -3002,41 +3002,103 @@ void CMenu::MenuSettings(int iTab)
 }
 #pragma endregion
 
-void CMenu::AddDraggable(const char* sTitle, ConfigVar<DragBox_t>& var, bool bShouldDraw)
+struct DragBoxStorage_t
+{
+	DragBox_t m_tDragBox;
+	float m_flScale;
+};
+static std::unordered_map<uint32_t, DragBoxStorage_t> mDragBoxStorage = {};
+void CMenu::AddDraggable(const char* sLabel, ConfigVar<DragBox_t>& var, bool bShouldDraw, ImVec2 vSize)
 {
 	using namespace ImGui;
 
 	if (!bShouldDraw)
 		return;
 
-	static std::unordered_map<const char*, std::pair<DragBox_t, float>> old = {};
-	DragBox_t info = FGet(var, true);
-	const float sizeX = H::Draw.Scale(100), sizeY = H::Draw.Scale(40);
-	SetNextWindowSize({ sizeX, sizeY }, ImGuiCond_Always);
-	if (!old.contains(sTitle) || info != old[sTitle].first || sizeX != old[sTitle].second)
-		SetNextWindowPos({ float(info.x - sizeX / 2), float(info.y) }, ImGuiCond_Always);
+	auto tDragBox = FGet(var, true);
+	auto uHash = FNV1A::Hash32(sLabel);
+
+	bool bContains = mDragBoxStorage.contains(uHash);
+	auto& tStorage = mDragBoxStorage[uHash];
+
+	SetNextWindowSize(vSize, ImGuiCond_Always);
+	if (!bContains || tDragBox != tStorage.m_tDragBox || H::Draw.Scale() != tStorage.m_flScale)
+		SetNextWindowPos({ float(tDragBox.x - vSize.x / 2), float(tDragBox.y) }, ImGuiCond_Always);
 
 	PushStyleColor(ImGuiCol_WindowBg, {});
 	PushStyleColor(ImGuiCol_Border, F::Render.Active.Value);
 	PushStyleVar(ImGuiStyleVar_WindowRounding, H::Draw.Scale(3));
 	PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
-	PushStyleVar(ImGuiStyleVar_WindowMinSize, { sizeX, sizeY });
-	if (Begin(sTitle, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+	PushStyleVar(ImGuiStyleVar_WindowMinSize, vSize);
+	if (Begin(sLabel, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
 	{
 		ImVec2 vWindowPos = GetWindowPos();
 
-		info.x = vWindowPos.x + sizeX / 2; info.y = vWindowPos.y; old[sTitle] = { info, sizeX };
-		FSet(var, info);
+		tDragBox.x = vWindowPos.x + vSize.x / 2, tDragBox.y = vWindowPos.y;
+		tStorage = { tDragBox, H::Draw.Scale() };
+		FSet(var, tDragBox);
 
 		PushFont(F::Render.FontBold);
-		auto size = FCalcTextSize(sTitle);
-		SetCursorPos({ (sizeX - size.x) * 0.5f, (sizeY - size.y) * 0.5f });
-		FText(sTitle);
+		ImVec2 vTextSize = FCalcTextSize(sLabel);
+		SetCursorPos({ (vSize.x - vTextSize.x) * 0.5f, (vSize.y - vTextSize.y) * 0.5f });
+		FText(sLabel);
 		PopFont();
 
 		End();
 	}
 	PopStyleVar(3);
+	PopStyleColor(2);
+}
+
+struct WindowBoxStorage_t
+{
+	WindowBox_t m_tWindowBox;
+	float m_flScale;
+};
+static std::unordered_map<uint32_t, WindowBoxStorage_t> mWindowBoxStorage = {};
+void CMenu::AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& var, bool bShouldDraw, ImVec2 vMinSize, ImVec2 vMaxSize, ImGuiSizeCallback fCustomCallback)
+{
+	using namespace ImGui;
+
+	if (!bShouldDraw)
+		return;
+
+	auto tWindowBox = FGet(var, true);
+	auto uHash = FNV1A::Hash32(sLabel);
+
+	bool bContains = mWindowBoxStorage.contains(uHash);
+	auto& tStorage = mWindowBoxStorage[uHash];
+
+	SetNextWindowSizeConstraints(vMinSize, vMaxSize, fCustomCallback);
+	if (!bContains || tWindowBox != tStorage.m_tWindowBox || H::Draw.Scale() != tStorage.m_flScale)
+	{
+		SetNextWindowPos({ float(tWindowBox.x - tWindowBox.w / 2), float(tWindowBox.y) }, ImGuiCond_Always);
+		SetNextWindowSize({ float(tWindowBox.w), float(tWindowBox.h) }, ImGuiCond_Always);
+	}
+
+	PushStyleColor(ImGuiCol_WindowBg, {});
+	PushStyleColor(ImGuiCol_Border, F::Render.Active.Value);
+	PushStyleVar(ImGuiStyleVar_WindowRounding, H::Draw.Scale(3));
+	PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
+	if (Begin(sLabel, nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+	{
+		ImVec2 vWindowPos = GetWindowPos();
+		ImVec2 vWinSize = GetWindowSize();
+
+		tWindowBox.w = vWinSize.x, tWindowBox.h = vWinSize.y;
+		tWindowBox.x = vWindowPos.x + tWindowBox.w / 2, tWindowBox.y = vWindowPos.y;
+		tStorage = { tWindowBox, H::Draw.Scale() };
+		FSet(var, tWindowBox);
+
+		PushFont(F::Render.FontBold);
+		ImVec2 vTextSize = FCalcTextSize(sLabel);
+		SetCursorPos({ (vWinSize.x - vTextSize.x) * 0.5f, (vWinSize.y - vTextSize.y) * 0.5f });
+		FText(sLabel);
+		PopFont();
+
+		End();
+	}
+	PopStyleVar(2);
 	PopStyleColor(2);
 }
 
@@ -3232,90 +3294,10 @@ void CMenu::DrawBinds()
 	PopStyleVar();
 }
 
-/* Window for the camera feature */
-void CMenu::DrawCameraWindow()
-{
-	using namespace ImGui;
-
-	if (!FGet(Vars::Visuals::Simulation::ProjectileCamera))
-		return;
-
-	static WindowBox_t old = { -2147483648, -2147483648 };
-	WindowBox_t info = FGet(Vars::Visuals::Simulation::ProjectileWindow, true);
-	if (info != old)
-	{
-		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
-		SetNextWindowSize({ float(info.w), float(info.h) }, ImGuiCond_Always);
-	}
-
-	PushStyleColor(ImGuiCol_WindowBg, {});
-	PushStyleColor(ImGuiCol_Border, F::Render.Active.Value);
-	PushStyleVar(ImGuiStyleVar_WindowRounding, H::Draw.Scale(3));
-	PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
-	PushStyleVar(ImGuiStyleVar_WindowMinSize, { H::Draw.Scale(100), H::Draw.Scale(100) });
-	if (Begin("Camera", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
-	{
-		ImVec2 vWindowPos = GetWindowPos();
-		ImVec2 vWinSize = GetWindowSize();
-
-		info.x = vWindowPos.x; info.y = vWindowPos.y; info.w = vWinSize.x; info.h = vWinSize.y; old = info;
-		FSet(Vars::Visuals::Simulation::ProjectileWindow, info);
-
-		PushFont(F::Render.FontBold);
-		auto size = FCalcTextSize("Camera");
-		SetCursorPos({ (vWinSize.x - size.x) * 0.5f, (vWinSize.y - size.y) * 0.5f });
-		FText("Camera");
-		PopFont();
-
-		End();
-	}
-	PopStyleVar(3);
-	PopStyleColor(2);
-}
-
-static void SquareConstraints(ImGuiSizeCallbackData* data)
+static inline void SquareConstraints(ImGuiSizeCallbackData* data)
 {
 	//data->DesiredSize.x = data->DesiredSize.y = std::max(data->DesiredSize.x, data->DesiredSize.y);
 	data->DesiredSize.x = data->DesiredSize.y = (data->DesiredSize.x + data->DesiredSize.y) / 2;
-}
-void CMenu::DrawRadar()
-{
-	using namespace ImGui;
-
-	if (!FGet(Vars::Radar::Main::Enabled))
-		return;
-
-	static WindowBox_t old = { -2147483648, -2147483648 };
-	WindowBox_t info = FGet(Vars::Radar::Main::Window, true);
-	if (info != old)
-	{
-		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
-		SetNextWindowSize({ float(info.w), float(info.w) }, ImGuiCond_Always);
-	}
-
-	PushStyleColor(ImGuiCol_WindowBg, {});
-	PushStyleColor(ImGuiCol_Border, F::Render.Active.Value);
-	PushStyleVar(ImGuiStyleVar_WindowRounding, H::Draw.Scale(3));
-	PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
-	SetNextWindowSizeConstraints({ H::Draw.Scale(100), H::Draw.Scale(100) }, { H::Draw.Scale(1000), H::Draw.Scale(1000) }, SquareConstraints);
-	if (Begin("Radar", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
-	{
-		const ImVec2 vWindowPos = GetWindowPos();
-		const ImVec2 winSize = GetWindowSize();
-
-		info.x = vWindowPos.x; info.y = vWindowPos.y; info.w = winSize.x; old = info;
-		FSet(Vars::Radar::Main::Window, info);
-
-		PushFont(F::Render.FontBold);
-		auto size = FCalcTextSize("Radar");
-		SetCursorPos({ (winSize.x - size.x) * 0.5f, (winSize.y - size.y) * 0.5f });
-		FText("Radar");
-		PopFont();
-
-		End();
-	}
-	PopStyleVar(2);
-	PopStyleColor(2);
 }
 
 void CMenu::Render()
@@ -3339,14 +3321,14 @@ void CMenu::Render()
 	{
 		DrawMenu();
 
-		DrawCameraWindow();
-		DrawRadar();
 		AddDraggable("Ticks", Vars::Menu::TicksDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::Ticks);
 		AddDraggable("Crit hack", Vars::Menu::CritsDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::CritHack);
 		AddDraggable("Spectators", Vars::Menu::SpectatorsDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::Spectators);
 		AddDraggable("Ping", Vars::Menu::PingDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::Ping);
 		AddDraggable("Conditions", Vars::Menu::ConditionsDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::Conditions);
 		AddDraggable("Seed prediction", Vars::Menu::SeedPredictionDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::SeedPrediction);
+		AddResizableDraggable("Camera", Vars::Visuals::Simulation::ProjectileWindow, FGet(Vars::Visuals::Simulation::ProjectileCamera));
+		AddResizableDraggable("Radar", Vars::Radar::Main::Window, FGet(Vars::Radar::Main::Enabled), { H::Draw.Scale(100), H::Draw.Scale(100) }, { H::Draw.Scale(1000), H::Draw.Scale(1000) }, SquareConstraints);
 
 		F::Render.Cursor = GetMouseCursor();
 

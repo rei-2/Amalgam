@@ -18,7 +18,7 @@ MAKE_HOOK(CStudioRender_DrawModelStaticProp, U::Memory.GetVFunc(I::StudioRender,
 
 			float flAlpha = 1.f;
 			if (flDistance < 300.0f)
-				flAlpha = Math::RemapValClamped(flDistance, 150.0f, 300.0f, 0.15f, 1.f);
+				flAlpha = Math::RemapVal(flDistance, 150.0f, 300.0f, 0.15f, 1.f);
 			I::StudioRender->SetAlphaModulation(flAlpha);
 		}
 	}

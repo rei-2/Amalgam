@@ -120,7 +120,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		float flCharge = flAutoCharge > 0.f && pWeapon->m_iItemDefinitionIndex() != Demoman_s_StickyJumper
 			? SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon) * flAutoCharge
 			: (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f);
-		float flSpeed = Math::RemapValClamped(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 900.f, 2400.f);
+		float flSpeed = Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 900.f, 2400.f);
 		tProjInfo = { TF_PROJECTILE_PIPEBOMB_REMOTE, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, false };
 		return true;
 	}
@@ -140,8 +140,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		float flCharge = pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f;
-		float flSpeed = Math::RemapValClamped(flCharge, 0.f, 1.f, 1800.f, 2600.f);
-		flGravity = Math::RemapValClamped(flCharge, 0.f, 1.f, 0.5f, 0.1f) * flGravity;
+		float flSpeed = Math::RemapVal(flCharge, 0.f, 1.f, 1800.f, 2600.f);
+		flGravity = Math::RemapVal(flCharge, 0.f, 1.f, 0.5f, 0.1f) * flGravity;
 		tProjInfo = { TF_PROJECTILE_ARROW, vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
 		return true;
 	}
@@ -238,12 +238,56 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case Heavy_s_TheDalokohsBar:
 	case Heavy_s_SecondBanana:
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 0.f, 0.f, -8.f }, vPos, vAngle, true, bQuick);
-		vAngle -= Vec3(10, 0, 0);
-		tProjInfo = { TF_PROJECTILE_BREAD_MONSTER, vPos, vAngle, bQuick ? Vec3(4.f, 4.f, 4.f) : Vec3(17.f, 17.f, 17.f), 500.f, 1.f * flGravity, false };
+		tProjInfo = { TF_PROJECTILE_BREAD_MONSTER, vPos, vAngle, { 17.f, 17.f, 7.f }, 500.f, 1.f * flGravity, false };
 		return true;
 	}
 
 	return false;
+}
+
+class CTraceFilterWorldPropsObjects : public ITraceFilter
+{
+public:
+	bool ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask) override;
+	TraceType_t GetTraceType() const override;
+	CBaseEntity* pSkip = nullptr;
+};
+bool CTraceFilterWorldPropsObjects::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
+{
+	if (!pServerEntity || pServerEntity == pSkip)
+		return false;
+
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+
+	switch (pEntity->GetClassID())
+	{
+	case ETFClassID::CBaseEntity:
+	case ETFClassID::CBaseDoor:
+	case ETFClassID::CDynamicProp:
+	case ETFClassID::CPhysicsProp:
+	case ETFClassID::CObjectCartDispenser:
+	case ETFClassID::CFuncTrackTrain:
+	case ETFClassID::CFuncConveyor:
+	case ETFClassID::CBaseObject:
+	case ETFClassID::CObjectSentrygun:
+	case ETFClassID::CObjectDispenser:
+	case ETFClassID::CObjectTeleporter: return true;
+	case ETFClassID::CFuncRespawnRoomVisualizer:
+		if (nContentsMask & MASK_PLAYERSOLID)
+		{
+			switch (pEntity->m_iTeamNum())
+			{
+			case TF_TEAM_RED: return nContentsMask & CONTENTS_REDTEAM;
+			case TF_TEAM_BLUE: return nContentsMask & CONTENTS_BLUETEAM;
+			}
+		}
+	}
+
+	return false;
+}
+TraceType_t CTraceFilterWorldPropsObjects::GetTraceType() const
+{
+	return TRACE_EVERYTHING;
 }
 
 bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags, float flAutoCharge)
@@ -265,7 +309,7 @@ bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, 
 	const Vec3 vEnd = tProjInfo.m_vPos;
 
 	CGameTrace trace = {};
-	CTraceFilterWorldAndPropsOnly filter = {};
+	CTraceFilterWorldPropsObjects filter = {};
 	SDK::TraceHull(vStart, vEnd, tProjInfo.m_vHull * -1.f, tProjInfo.m_vHull, MASK_SOLID, &filter, &trace);
 	return !trace.DidHit();
 }
@@ -361,7 +405,11 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 
 	//set position and velocity
 	{
-		Vec3 vForward, vRight, vUp; Math::AngleVectors(tProjInfo.m_vAng, &vForward, &vRight, &vUp);
+		Vec3 vAngleAdd = {};
+		if (tProjInfo.m_iType == TF_PROJECTILE_BREAD_MONSTER)
+			vAngleAdd = Vec3(-10.f, 0.f, 0.f);
+
+		Vec3 vForward, vRight, vUp; Math::AngleVectors(tProjInfo.m_vAng + vAngleAdd, &vForward, &vRight, &vUp);
 		Vec3 vVelocity = vForward * tProjInfo.m_flVelocity, vAngularVelocity;
 
 		switch (tProjInfo.m_iType)

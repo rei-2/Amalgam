@@ -258,8 +258,8 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 					sCmdString = sCmdString.replace(iFind, sFind.length(), sReplace);
 				}
 			}
-			for (auto& fRegex : vDynamic)
-				fRegex();
+			for (auto& fFunction : vDynamic)
+                fFunction();
 
 			sCmdString = std::format("{} {}", sCommand, sCmdString).substr(0, COMMAND_MAX_LENGTH - 1);
 			strncpy_s(args.m_pArgSBuffer, sCmdString.c_str(), COMMAND_MAX_LENGTH);

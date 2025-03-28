@@ -36,8 +36,7 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		|| pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka && pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
 		return false;
 
-	if (pLocal->InCond(TF_COND_SHIELD_CHARGE) || pCmd->buttons & IN_ATTACK2 && (pLocal->m_bShieldEquipped() && pLocal->m_flChargeMeter() == 100.f
-		|| pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX && G::PrimaryWeaponType == EWeaponType::PROJECTILE && pWeapon->HasPrimaryAmmoForShot()))
+	if (pLocal->InCond(TF_COND_SHIELD_CHARGE) || pCmd->buttons & IN_ATTACK2 && pLocal->m_bShieldEquipped() && pLocal->m_flChargeMeter() == 100.f)
 		return false;
 
 	return true;

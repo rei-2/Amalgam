@@ -41,7 +41,7 @@ void CNotifications::Draw()
 			float flLife = std::min(flTime - flCreate, flCreate + tNotification.m_flLifeTime - flTime);
 			if (flLife < flPan)
 			{
-				float flRatio = Math::RemapValClamped(flLife, flPan, 0.f, 0.f, 1.f);
+				float flRatio = Math::RemapVal(flLife, flPan, 0.f, 0.f, 1.f);
 				flEase = EaseInOutCubic(flRatio);
 				x -= (w + 8) * flEase;
 			}

@@ -617,7 +617,7 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& tStorage, int iSamples)
 		float flDistance = 0.f;
 		if (auto pLocal = H::Entities.GetLocal())
 			flDistance = pLocal->m_vecOrigin().DistTo(tStorage.m_pPlayer->m_vecOrigin());
-		iMinimum = flDistance < flLowMinimumDistance ? flLowMinimumSamples : Math::RemapValClamped(flDistance, flLowMinimumDistance, flHighMinimumDistance, flLowMinimumSamples + 1, flHighMinimumSamples);
+		iMinimum = flDistance < flLowMinimumDistance ? flLowMinimumSamples : Math::RemapVal(flDistance, flLowMinimumDistance, flHighMinimumDistance, flLowMinimumSamples + 1, flHighMinimumSamples);
 	}
 
 	flAverageYaw /= std::max(iTicks, iMinimum);

@@ -24,23 +24,31 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 	const Vec3 vLocalPos = F::Ticks.GetShootPos();
 	const Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
-	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 	{
-		EGroupType groupType = EGroupType::PLAYERS_ENEMIES;
-		switch (pWeapon->GetWeaponID())
+		EGroupType eGroupType = EGroupType::GROUP_INVALID;
+		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
+			eGroupType = EGroupType::PLAYERS_ENEMIES;
+		if (Vars::Aimbot::Healing::AutoHeal.Value)
 		{
-		case TF_WEAPON_CROSSBOW: groupType = EGroupType::PLAYERS_ALL; break;
-		case TF_WEAPON_LUNCHBOX: groupType = EGroupType::PLAYERS_TEAMMATES; break;
+			switch (pWeapon->GetWeaponID())
+			{
+			case TF_WEAPON_CROSSBOW: eGroupType = eGroupType == EGroupType::PLAYERS_ENEMIES ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_TEAMMATES; break;
+			case TF_WEAPON_LUNCHBOX: eGroupType = EGroupType::PLAYERS_TEAMMATES; break;
+			}
 		}
 
-		for (auto pEntity : H::Entities.GetGroup(groupType))
+		for (auto pEntity : H::Entities.GetGroup(eGroupType))
 		{
 			bool bTeammate = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (bTeammate && pEntity->As<CTFPlayer>()->m_iHealth() >= pEntity->As<CTFPlayer>()->GetMaxHealth())
-				continue;
+			if (bTeammate)
+			{
+				if (pEntity->As<CTFPlayer>()->m_iHealth() >= pEntity->As<CTFPlayer>()->GetMaxHealth()
+					|| Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
+					continue;
+			}
 
 			float flFOVTo; Vec3 vPos, vAngleTo;
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
@@ -196,7 +204,7 @@ int CAimbotProjectile::GetHitboxPriority(int nHitbox, Target_t& tTarget, Info_t&
 	if (Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::BodyaimIfLethal && bHeadshot)
 	{
 		float flCharge = I::GlobalVars->curtime - tInfo.m_pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime();
-		float flDamage = Math::RemapValClamped(flCharge, 0.f, 1.f, 50.f, 120.f);
+		float flDamage = Math::RemapVal(flCharge, 0.f, 1.f, 50.f, 120.f);
 		if (tInfo.m_pLocal->IsMiniCritBoosted())
 			flDamage *= 1.36f;
 		if (flDamage >= tTarget.m_pEntity->As<CTFPlayer>()->m_iHealth())
@@ -261,7 +269,7 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& tTarg
 				{
 					float flXY = vDelta.Length2D();
 					if (flXY)
-						flLow = Math::RemapValClamped(vDelta.z / flXY, 0.f, 0.5f, 0.f, 1.f);
+						flLow = Math::RemapVal(vDelta.z / flXY, 0.f, 0.5f, 0.f, 1.f);
 					else
 						flLow = 1.f;
 				}
@@ -646,14 +654,14 @@ static inline void SolveProjectileSpeed(CTFWeaponBase* pWeapon, const Vec3& vLoc
 		case Demoman_m_TopShelf:
 		case Demoman_m_Warhawk:
 		case Demoman_m_ButcherBird:
-		case Demoman_m_TheIronBomber: flDrag = Math::RemapValClamped(flVelocity, 1217.f, k_flMaxVelocity, 0.120f, 0.200f); break; // 0.120 normal, 0.200 capped, 0.300 v3000
-		case Demoman_m_TheLochnLoad: flDrag = Math::RemapValClamped(flVelocity, 1504.f, k_flMaxVelocity, 0.070f, 0.085f); break; // 0.070 normal, 0.085 capped, 0.120 v3000
-		case Demoman_m_TheLooseCannon: flDrag = Math::RemapValClamped(flVelocity, 1454.f, k_flMaxVelocity, 0.385f, 0.530f); break; // 0.385 normal, 0.530 capped, 0.790 v3000
+		case Demoman_m_TheIronBomber: flDrag = Math::RemapVal(flVelocity, 1217.f, k_flMaxVelocity, 0.120f, 0.200f); break; // 0.120 normal, 0.200 capped, 0.300 v3000
+		case Demoman_m_TheLochnLoad: flDrag = Math::RemapVal(flVelocity, 1504.f, k_flMaxVelocity, 0.070f, 0.085f); break; // 0.070 normal, 0.085 capped, 0.120 v3000
+		case Demoman_m_TheLooseCannon: flDrag = Math::RemapVal(flVelocity, 1454.f, k_flMaxVelocity, 0.385f, 0.530f); break; // 0.385 normal, 0.530 capped, 0.790 v3000
 		case Demoman_s_StickybombLauncher:
 		case Demoman_s_StickybombLauncherR:
 		case Demoman_s_FestiveStickybombLauncher:
 		case Demoman_s_TheQuickiebombLauncher:
-		case Demoman_s_TheScottishResistance: flDrag = Math::RemapValClamped(flVelocity, 922.f, k_flMaxVelocity, 0.085f, 0.190f); break; // 0.085 low, 0.190 capped, 0.230 v2400
+		case Demoman_s_TheScottishResistance: flDrag = Math::RemapVal(flVelocity, 922.f, k_flMaxVelocity, 0.085f, 0.190f); break; // 0.085 low, 0.190 capped, 0.230 v2400
 		case Scout_s_TheFlyingGuillotine:
 		case Scout_s_TheFlyingGuillotineG: flDrag = 0.31f; break;
 		case Scout_t_TheSandman: flDrag = 0.180f; break;
@@ -959,8 +967,10 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 			if (pHitSolid)
 				*pHitSolid = true;
 
+			bool bTime = bSplash
+				? trace.endpos.DistTo(vPoint) < tProjInfo.m_flVelocity * TICK_INTERVAL + tProjInfo.m_vHull.z
+				: iSimTime - n < 5 || pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX; // projectile so slow it causes problems if we don't waive this check
 			bool bTarget = trace.m_pEnt == tTarget.m_pEntity || bSplash;
-			bool bTime = bSplash ? trace.endpos.DistTo(vPoint) < tProjInfo.m_flVelocity * TICK_INTERVAL + tProjInfo.m_vHull.z : iSimTime - n < 5;
 			bool bValid = bTarget && bTime;
 			if (bValid && bSplash)
 			{
@@ -1610,6 +1620,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 					break;
 				case TF_WEAPON_BAT_WOOD:
 				case TF_WEAPON_BAT_GIFTWRAP:
+				case TF_WEAPON_LUNCHBOX:
 					pCmd->buttons &= ~IN_ATTACK, pCmd->buttons |= IN_ATTACK2;
 				}
 			}
@@ -1688,13 +1699,13 @@ void CAimbotProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd*
 	if (pWeapon->GetWeaponID() == TF_WEAPON_PIPEBOMBLAUNCHER)
 	{
 		const float flCharge = pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f;
-		flAmount = Math::RemapValClamped(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 0.f, 1.f);
+		flAmount = Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 0.f, 1.f);
 	}
 	else if (pWeapon->GetWeaponID() == TF_WEAPON_CANNON)
 	{
 		const float flMortar = SDK::AttribHookValue(0.f, "grenade_launcher_mortar_mode", pWeapon);
 		const float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() : -flMortar;
-		flAmount = flMortar ? Math::RemapValClamped(flCharge, -flMortar, 0.f, 0.f, 1.f) : 0.f;
+		flAmount = flMortar ? Math::RemapVal(flCharge, -flMortar, 0.f, 0.f, 1.f) : 0.f;
 	}
 
 	if (pWeapon->GetWeaponID() == TF_WEAPON_PIPEBOMBLAUNCHER && G::OriginalMove.m_iButtons & IN_ATTACK && Vars::Aimbot::Projectile::AutoRelease.Value && flAmount > Vars::Aimbot::Projectile::AutoRelease.Value / 100)

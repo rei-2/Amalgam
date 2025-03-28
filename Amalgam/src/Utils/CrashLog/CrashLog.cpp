@@ -3,6 +3,7 @@
 #include "../../Features/Configs/Configs.h"
 
 #include <ImageHlp.h>
+#include <Psapi.h>
 #include <deque>
 #include <sstream>
 #include <fstream>
@@ -48,14 +49,9 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 		{
 			tFrame.m_pBase = uintptr_t(hBase);
 
-			char buf[MAX_PATH];
-			if (GetModuleFileNameA(hBase, buf, MAX_PATH))
-			{
-				tFrame.m_sModule = std::format("{}", buf);
-				auto find = tFrame.m_sModule.rfind("\\");
-				if (find != std::string::npos)
-					tFrame.m_sModule.replace(0, find + 1, "");
-			}
+			char buffer[MAX_PATH];
+			if (GetModuleBaseName(hProcess, hBase, buffer, sizeof(buffer) / sizeof(char)))
+				tFrame.m_sModule = buffer;
 			else
 				tFrame.m_sModule = std::format("{:#x}", tFrame.m_pBase);
 		}

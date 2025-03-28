@@ -187,6 +187,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		if (trace.DidHit())
 		{
 			pNormal = &trace.plane.normal;
+			if (n == 1 && trace.startsolid)
+				*pNormal = F::ProjSim.GetVelocity().Normalized();
 			break;
 		}
 	}
@@ -261,7 +263,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 
 			if (Vars::Visuals::Simulation::Box.Value && pNormal)
 			{
-				const float flSize = std::max(tProjInfo.m_vHull.x, 1.f);
+				const float flSize = std::max(tProjInfo.m_vHull.Min(), 1.f);
 				const Vec3 vSize = { 1.f, flSize, flSize };
 				Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
 
@@ -768,18 +770,29 @@ void CVisuals::RenderBox(const Vec3& vPos, const Vec3& vMins, const Vec3& vMaxs,
 
 void CVisuals::FOV(CTFPlayer* pLocal, CViewSetup* pView)
 {
-	int iFOV = pLocal->InCond(TF_COND_ZOOMED) ? Vars::Visuals::UI::ZoomFieldOfView.Value : Vars::Visuals::UI::FieldOfView.Value;
-	pView->fov = pLocal->m_iFOV() = iFOV ? iFOV : pView->fov;
+	bool bZoomed = pLocal->InCond(TF_COND_ZOOMED);
+	static auto fov_desired = U::ConVars.FindVar("fov_desired");
+	float flDefaultFOV = fov_desired->GetFloat();
+	float flRegularOverride = Vars::Visuals::UI::FieldOfView.Value;
+	float flZoomOverride = Vars::Visuals::UI::ZoomFieldOfView.Value;
+	float flDesiredFOV = !bZoomed ? flRegularOverride : flZoomOverride;
 
-	int iDefault = Vars::Visuals::UI::FieldOfView.Value;
-	if (!iDefault)
+	pView->fov = pLocal->m_iFOV() = flDesiredFOV ? flDesiredFOV : pView->fov;
+	pLocal->m_iDefaultFOV() = std::max(flRegularOverride, flDefaultFOV);
+
+	if (!I::Prediction->InPrediction() && (flRegularOverride || flZoomOverride))
 	{
-		static auto fov_desired = U::ConVars.FindVar("fov_desired");
-		if (!fov_desired)
-			return;
-		iDefault = fov_desired->GetInt();
+		float flDeltaTime = (TICKS_TO_TIME(pLocal->m_nFinalPredictedTick()) - pLocal->m_flFOVTime() + TICKS_TO_TIME(I::GlobalVars->interpolation_amount)) / pLocal->m_flFOVRate();
+		if (flDeltaTime < 1.f)
+		{
+			float flRegular = flRegularOverride ? flRegularOverride : flDefaultFOV;
+			float flZoomed = flZoomOverride ? flZoomOverride : 20.f;
+
+			float flFrom = !bZoomed ? flZoomed : flRegular;
+			float flTo = !bZoomed ? flRegular : flZoomed;
+			pView->fov = pLocal->m_iFOV() = Math::SimpleSplineRemapVal(flDeltaTime, 0.f, 1.f, flFrom, flTo);
+		}
 	}
-	pLocal->m_iDefaultFOV() = iDefault;
 }
 
 void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)

@@ -17,8 +17,7 @@ void COutput::OutputInfo(int flags, std::string sName, std::string sOutput, std:
 		flags & Vars::Logging::LogToEnum::Toasts,
 		flags & Vars::Logging::LogToEnum::Menu,
 		false,
-		flags & Vars::Logging::LogToEnum::Party,
-		-1, "", ""
+		flags & Vars::Logging::LogToEnum::Party
 	);
 	if (flags & Vars::Logging::LogToEnum::Chat)
 		SDK::Output(Vars::Menu::CheatPrefix.Value.c_str(), sChat.c_str(), Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");

@@ -52,6 +52,16 @@ public:
 		return ((float*)this)[i];
 	}
 
+	bool operator==(const Vec2& v) const
+	{
+		return x == v.x && y == v.y;
+	}
+
+	bool operator!=(const Vec2& v) const
+	{
+		return x != v.x || y != v.y;
+	}
+
 	Vec2& operator+=(const Vec2& v)
 	{
 		x += v.x; y += v.y; return *this;
@@ -135,6 +145,16 @@ public:
 	void Set(float X = 0.f, float Y = 0.f)
 	{
 		x = X; y = Y;
+	}
+
+	float Min() const
+	{
+		return std::min<float>(x, y);
+	}
+
+	float Max() const
+	{
+		return std::max<float>(x, y);
 	}
 
 	Vec2 Min(const Vec2& v) const
@@ -303,6 +323,16 @@ public:
 		return ((float*)this)[i];
 	}
 
+	bool operator==(const Vec3& v) const
+	{
+		return x == v.x && y == v.y && z == v.z;
+	}
+
+	bool operator!=(const Vec3& v) const
+	{
+		return x != v.x || y != v.y || z != v.z;
+	}
+
 	Vec3& operator+=(const Vec3& v)
 	{
 		x += v.x; y += v.y; z += v.z; return *this;
@@ -383,16 +413,6 @@ public:
 		return Vec3(x / v, y / v, z / v);
 	}
 
-	bool operator==(const Vec3& v) const
-	{
-		return (x == v.x && y == v.y && z == v.z);
-	}
-
-	bool operator!=(const Vec3& v) const
-	{
-		return (x != v.x || y != v.y || z != v.z);
-	}
-
 	void Set(float X = 0.f, float Y = 0.f, float Z = 0.f)
 	{
 		x = X; y = Y; z = Z;
@@ -411,6 +431,16 @@ public:
 	Vec3 Clamp(const Vec3& v1, const Vec3& v2) const
 	{
 		return Max(v1).Min(v2);
+	}
+
+	float Min() const
+	{
+		return std::min<float>(x, std::min<float>(y, z));
+	}
+
+	float Max() const
+	{
+		return std::max<float>(x, std::max<float>(y, z));
 	}
 
 	Vec3 Min(float v) const
@@ -699,7 +729,7 @@ struct Glow_t
 
 struct DragBox_t
 {
-	int x = 100;
+	int x = 150;
 	int y = 100;
 
 	bool operator==(DragBox_t other) const
@@ -715,10 +745,10 @@ struct DragBox_t
 
 struct WindowBox_t
 {
-	int x = 100;
+	int x = 200;
 	int y = 100;
 	int w = 200;
-	int h = 150;
+	int h = 200;
 
 	bool operator==(WindowBox_t other) const
 	{

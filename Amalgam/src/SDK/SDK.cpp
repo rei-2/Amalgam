@@ -7,15 +7,15 @@
 
 #pragma warning (disable : 6385)
 
-static BOOL CALLBACK TeamFortressWindow(HWND hwnd, LPARAM lParam)
+static BOOL CALLBACK TeamFortressWindow(HWND hWindow, LPARAM lParam)
 {
 	char windowTitle[1024];
-	GetWindowTextA(hwnd, windowTitle, sizeof(windowTitle));
+	GetWindowTextA(hWindow, windowTitle, sizeof(windowTitle));
 	switch (FNV1A::Hash32(windowTitle))
 	{
 	case FNV1A::Hash32Const("Team Fortress 2 - Direct3D 9 - 64 Bit"):
 	case FNV1A::Hash32Const("Team Fortress 2 - Vulkan - 64 Bit"):
-		*reinterpret_cast<HWND*>(lParam) = hwnd;
+		*reinterpret_cast<HWND*>(lParam) = hWindow;
 	}
 
 	return TRUE;
@@ -103,15 +103,16 @@ std::string SDK::GetClipboard()
 
 HWND SDK::GetTeamFortressWindow()
 {
-	static HWND hwWindow = nullptr;
-	if (!hwWindow)
-		EnumWindows(TeamFortressWindow, reinterpret_cast<LPARAM>(&hwWindow));
-	return hwWindow;
+	static HWND hWindow = nullptr;
+	if (!hWindow)
+		EnumWindows(TeamFortressWindow, reinterpret_cast<LPARAM>(&hWindow));
+	return hWindow;
 }
 
 bool SDK::IsGameWindowInFocus()
 {
-	return GetForegroundWindow() == GetTeamFortressWindow();
+	HWND hWindow = GetTeamFortressWindow();
+	return hWindow == GetForegroundWindow() || !hWindow;
 }
 
 std::wstring SDK::ConvertUtf8ToWide(const std::string& source)
@@ -505,7 +506,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	case TF_WEAPON_GRENADE_STICKY_BALL:
 	{
 		float flCharge = pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? flTickBase - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f;
-		const float flAmount = Math::RemapValClamped(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 0.f, 1.f);
+		const float flAmount = Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 0.f, 1.f);
 		return !(pCmd->buttons & IN_ATTACK) && flAmount > 0.f || flAmount == 1.f;
 	}
 	case TF_WEAPON_CANNON:
@@ -515,7 +516,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 			return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
 
 		float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? flMortar - (pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - flTickBase) : 0.f;
-		const float flAmount = Math::RemapValClamped(flCharge, 0.f, SDK::AttribHookValue(0.f, "grenade_launcher_mortar_mode", pWeapon), 0.f, 1.f);
+		const float flAmount = Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(0.f, "grenade_launcher_mortar_mode", pWeapon), 0.f, 1.f);
 		return !(pCmd->buttons & IN_ATTACK) && flAmount > 0.f || flAmount == 1.f;
 	}
 	case TF_WEAPON_SNIPERRIFLE_CLASSIC:
@@ -577,6 +578,10 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 			if (pWeapon->HasPrimaryAmmoForShot())
 				return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
 		}
+		return false;
+	case TF_WEAPON_LUNCHBOX:
+		if (G::PrimaryWeaponType == EWeaponType::PROJECTILE && G::CanSecondaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & IN_ATTACK2)
+			return 1;
 		return false;
 	case TF_WEAPON_FLAMETHROWER:
 	case TF_WEAPON_FLAME_BALL:

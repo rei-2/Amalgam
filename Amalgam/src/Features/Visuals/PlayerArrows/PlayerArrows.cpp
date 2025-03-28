@@ -2,7 +2,7 @@
 
 void CPlayerArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_t tColor)
 {
-	const float flMap = Math::RemapValClamped(vFromPos.DistTo(vToPos), Vars::Visuals::FOVArrows::MaxDist.Value, Vars::Visuals::FOVArrows::MaxDist.Value * 0.9f, 0.f, 1.f);
+	const float flMap = Math::RemapVal(vFromPos.DistTo(vToPos), Vars::Visuals::FOVArrows::MaxDist.Value, Vars::Visuals::FOVArrows::MaxDist.Value * 0.9f, 0.f, 1.f);
 	tColor.a = byte(flMap * 255.f);
 	if (!tColor.a)
 		return;
