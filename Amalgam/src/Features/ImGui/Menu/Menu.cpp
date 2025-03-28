@@ -23,9 +23,10 @@ void CMenu::DrawMenu()
 	{
 		ImVec2 vWindowPos = GetWindowPos();
 		ImVec2 vWindowSize = GetWindowSize();
+		float flSideSize = 140.f;
 
 		PushClipRect({ 0, 0 }, { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }, false);
-		RenderTwoToneBackground(H::Draw.Scale(140), F::Render.Background0, F::Render.Background1, F::Render.Background2, 0.f, false);
+		RenderTwoToneBackground(H::Draw.Scale(flSideSize), F::Render.Background0, F::Render.Background1, F::Render.Background2, 0.f, false);
 		PopClipRect();
 
 		ImVec2 vDrawPos = GetDrawPos();
@@ -39,27 +40,27 @@ void CMenu::DrawMenu()
 		if (CurrentBind != DEFAULT_BIND) // bind
 		{
 			flOffset = H::Draw.Scale(60);
-			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + H::Draw.Scale(59) }, { vDrawPos.x + H::Draw.Scale(139), vDrawPos.y + H::Draw.Scale(60) }, F::Render.Background2);
+			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + H::Draw.Scale(59) }, { vDrawPos.x + H::Draw.Scale(flSideSize - 1), vDrawPos.y + H::Draw.Scale(60) }, F::Render.Background2);
 
 			SetCursorPos({ H::Draw.Scale(12), H::Draw.Scale(11) });
 			FText("Editing bind", 0, F::Render.FontRegular);
 			SetCursorPos({ H::Draw.Scale(12), H::Draw.Scale(35) });
 			PushStyleColor(ImGuiCol_Text, F::Render.Accent.Value);
-			FText(TruncateText(tBind.m_sName, H::Draw.Scale(112)).c_str(), 0, F::Render.FontRegular);
+			FText(TruncateText(tBind.m_sName, H::Draw.Scale(flSideSize - 28)).c_str(), 0, F::Render.FontRegular);
 			PopStyleColor();
 
-			SetCursorPos({ H::Draw.Scale(16) + FCalcTextSize("Editing bind").x, H::Draw.Scale(10) });
+			SetCursorPos({ H::Draw.Scale(flSideSize - 27), H::Draw.Scale(10) });
 			if (IconButton(ICON_MD_CANCEL))
 				CurrentBind = DEFAULT_BIND;
 		}
 		else if (!Vars::Menu::CheatName.Value.empty()) // title
 		{
 			flOffset = H::Draw.Scale(36);
-			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + H::Draw.Scale(35) }, { vDrawPos.x + H::Draw.Scale(139), vDrawPos.y + H::Draw.Scale(36) }, F::Render.Background2);
+			pDrawList->AddRectFilled({ vDrawPos.x, vDrawPos.y + H::Draw.Scale(35) }, { vDrawPos.x + H::Draw.Scale(flSideSize - 1), vDrawPos.y + H::Draw.Scale(36) }, F::Render.Background2);
 			
 			SetCursorPos({ H::Draw.Scale(12), H::Draw.Scale(11) });
 			PushStyleColor(ImGuiCol_Text, F::Render.Accent.Value);
-			FText(TruncateText(Vars::Menu::CheatName.Value, H::Draw.Scale(112), F::Render.FontBold).c_str(), 0, F::Render.FontBold);
+			FText(TruncateText(Vars::Menu::CheatName.Value, H::Draw.Scale(flSideSize - 28), F::Render.FontBold).c_str(), 0, F::Render.FontBold);
 			PopStyleColor();
 		}
 
@@ -74,7 +75,7 @@ void CMenu::DrawMenu()
 				{ "SETTINGS", "CONFIG", "BINDS", "PLAYERLIST", "MATERIALS" }
 			},
 			{ &iTab, &iAimbotTab, &iVisualsTab, nullptr, &iLogsTab, &iSettingsTab },
-			{ H::Draw.Scale(124), H::Draw.Scale(36) },
+			{ H::Draw.Scale(flSideSize - 16), H::Draw.Scale(36) },
 			{ H::Draw.Scale(8), H::Draw.Scale(8) + flOffset },
 			FTabs_Vertical | FTabs_HorizontalIcons | FTabs_AlignLeft | FTabs_BarLeft,
 			{ { ICON_MD_PERSON }, { ICON_MD_VISIBILITY }, { ICON_MD_MORE_HORIZ }, { ICON_MD_IMPORT_CONTACTS }, { ICON_MD_SETTINGS } },
@@ -83,10 +84,10 @@ void CMenu::DrawMenu()
 		);
 		PopFont();
 
-		SetCursorPos({ H::Draw.Scale(140), 0 });
+		SetCursorPos({ H::Draw.Scale(flSideSize), 0 });
 		PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0);
 		PushStyleVar(ImGuiStyleVar_WindowPadding, { H::Draw.Scale(8), H::Draw.Scale(8) });
-		if (BeginChild("Page", { vWindowSize.x - H::Draw.Scale(140), vWindowSize.y }, ImGuiChildFlags_AlwaysUseWindowPadding))
+		if (BeginChild("Page", { vWindowSize.x - H::Draw.Scale(flSideSize), vWindowSize.y }, ImGuiChildFlags_AlwaysUseWindowPadding))
 		{
 			switch (iTab)
 			{
@@ -1893,10 +1894,8 @@ void CMenu::MenuSettings(int iTab)
 							sInfo = std::format("{}", _tBind.m_iInfo + 1);
 							break;
 						}
-						if (_tBind.m_bNot)
+						if (_tBind.m_bNot && (_tBind.m_iType != BindEnum::Key || _tBind.m_iInfo == BindEnum::KeyEnum::Hold))
 							sType = std::format("not {}", sType);
-
-						bool bClicked = false, bDelete = false, bEdit = false, bVisibility = false, bNot = false;
 
 						ImVec2 vOriginalPos = { H::Draw.Scale(8) + H::Draw.Scale(28) * x, H::Draw.Scale(108) + H::Draw.Scale(36) * y };
 
@@ -1907,32 +1906,40 @@ void CMenu::MenuSettings(int iTab)
 						GetWindowDrawList()->AddRectFilled(vDrawPos, { vDrawPos.x + flWidth, vDrawPos.y + flHeight }, F::Render.Background1p5, H::Draw.Scale(3));
 
 						// text
-						SetCursorPos({ vOriginalPos.x + H::Draw.Scale(10), vOriginalPos.y + H::Draw.Scale(7) });
-						FText(TruncateText(_tBind.m_sName, (flWidth - H::Draw.Scale(105)) * (1.f / 3) - H::Draw.Scale(20)).c_str());
+						float flTextWidth = flWidth - H::Draw.Scale(127);
+						PushStyleVar(ImGuiStyleVar_Alpha, F::Binds.WillBeEnabled(_iBind) ? 1.f : 0.5f);
 
-						SetCursorPos({ vOriginalPos.x + (flWidth - H::Draw.Scale(105)) * (1.f / 3), vOriginalPos.y + H::Draw.Scale(7) });
+						SetCursorPos({ vOriginalPos.x + H::Draw.Scale(10), vOriginalPos.y + H::Draw.Scale(7) });
+						FText(TruncateText(_tBind.m_sName, flTextWidth* (1.f / 3) - H::Draw.Scale(20)).c_str());
+
+						SetCursorPos({ vOriginalPos.x + flTextWidth * (1.f / 3), vOriginalPos.y + H::Draw.Scale(7) });
 						FText(sType.c_str());
 
-						SetCursorPos({ vOriginalPos.x + (flWidth - H::Draw.Scale(105)) * (2.f / 3), vOriginalPos.y + H::Draw.Scale(7) });
+						SetCursorPos({ vOriginalPos.x + flTextWidth * (2.f / 3), vOriginalPos.y + H::Draw.Scale(7) });
 						FText(sInfo.c_str());
 
 						// buttons
 						int iOffset = -3;
 
-						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
-						bDelete = IconButton(ICON_MD_DELETE);
+						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(6) });
+						bool bDelete = IconButton(ICON_MD_DELETE);
 
-						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
-						bEdit = IconButton(ICON_MD_EDIT);
+						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(6) });
+						bool bEdit = IconButton(ICON_MD_EDIT);
 
-						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
-						bVisibility = IconButton(_tBind.m_bVisible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF);
+						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(6) });
+						bool bNot = IconButton(!_tBind.m_bNot ? ICON_MD_CODE : ICON_MD_CODE_OFF);
 
-						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(5) });
-						bNot = IconButton(!_tBind.m_bNot ? ICON_MD_CODE : ICON_MD_CODE_OFF);
+						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(6) });
+						bool bVisibility = IconButton(_tBind.m_bVisible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF);
+
+						SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(6) });
+						bool bEnable = IconButton(_tBind.m_bEnabled ? ICON_MD_RADIO_BUTTON_ON : ICON_MD_RADIO_BUTTON_OFF);
 
 						SetCursorPos(vOriginalPos);
-						bClicked = Button(std::format("##{}", _iBind).c_str(), { flWidth, flHeight });
+						bool bClicked = Button(std::format("##{}", _iBind).c_str(), { flWidth, flHeight });
+
+						PopStyleVar();
 
 						if (bClicked)
 						{
@@ -1973,6 +1980,8 @@ void CMenu::MenuSettings(int iTab)
 						}
 						if (bEdit)
 							CurrentBind = CurrentBind != _iBind ? _iBind : DEFAULT_BIND;
+						if (bEnable)
+							_tBind.m_bEnabled = !_tBind.m_bEnabled;
 						if (bVisibility)
 							_tBind.m_bVisible = !_tBind.m_bVisible;
 						if (bNot)
@@ -2014,8 +2023,6 @@ void CMenu::MenuSettings(int iTab)
 					};
 				auto drawPlayer = [getTeamColor](const ListPlayer& player, int x, int y)
 					{
-						bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false, bMinwalk = false, bView = false;
-
 						const Color_t teamColor = getTeamColor(player.m_iTeam, player.m_bAlive);
 						const ImColor imColor = ColorToVec(teamColor);
 
@@ -2032,13 +2039,13 @@ void CMenu::MenuSettings(int iTab)
 						if (player.m_bLocal)
 						{
 							lOffset = H::Draw.Scale(29);
-							SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(6) });
 							IconImage(ICON_MD_PERSON);
 						}
 						else if (F::Spectate.m_iIntendedTarget == player.m_iUserID)
 						{
 							lOffset = H::Draw.Scale(29);
-							SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(6) });
 							IconImage(ICON_MD_VISIBILITY);
 						}
 						SetCursorPos({ vOriginalPos.x + lOffset, vOriginalPos.y + H::Draw.Scale(7) });
@@ -2046,31 +2053,33 @@ void CMenu::MenuSettings(int iTab)
 						lOffset += FCalcTextSize(player.m_sName.c_str()).x + H::Draw.Scale(8);
 
 						// buttons
+						bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false, bMinwalk = false, bView = false;
+						
 						int iOffset = 2;
 
 						if (!player.m_bFake)
 						{
 							// right
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
 							bAlias = IconButton(ICON_MD_EDIT);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(5) });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
 							bAdd = IconButton(ICON_MD_ADD);
 						}
 
 						bool bResolver = Vars::AntiHack::Resolver::Enabled.Value && !player.m_bLocal;
 						if (bResolver)
 						{
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
 							bView = IconButton(ICON_MD_NEAR_ME);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
 							bMinwalk = IconButton(ICON_MD_DIRECTIONS_WALK);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
 							bYaw = IconButton(ICON_MD_ARROW_FORWARD);
 
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + 5 });
+							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
 							bPitch = IconButton(ICON_MD_ARROW_UPWARD);
 						}
 
@@ -2480,7 +2489,7 @@ void CMenu::MenuSettings(int iTab)
 					}
 
 					// buttons / icons
-					SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(22), vOriginalPos.y + H::Draw.Scale(5) });
+					SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(22), vOriginalPos.y + H::Draw.Scale(6) });
 					if (!_tTag.Locked)
 						bDelete = IconButton(ICON_MD_DELETE);
 					else
@@ -3102,6 +3111,15 @@ void CMenu::AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& va
 	PopStyleColor(2);
 }
 
+struct BindInfo_t
+{
+	const char* sName;
+	std::string sInfo;
+	std::string sState;
+
+	int iBind;
+	Bind_t& tBind;
+};
 void CMenu::DrawBinds()
 {
 	using namespace ImGui;
@@ -3109,14 +3127,14 @@ void CMenu::DrawBinds()
 	if (m_bIsOpen ? false : I::EngineVGui->IsGameUIVisible() || I::MatSystemSurface->IsCursorVisible() && !I::EngineClient->IsPlayingDemo())
 		return;
 
-	std::vector<std::tuple<bool, const char*, std::string, std::string, int, Bind_t&>> vInfo;
+	std::vector<BindInfo_t> vInfo;
 	std::function<void(int)> getBinds = [&](int iParent)
 		{
 			for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
 			{
 				int iBind = std::distance(F::Binds.m_vBinds.begin(), it);
 				auto& tBind = *it;
-				if (iParent != tBind.m_iParent)
+				if (iParent != tBind.m_iParent || !tBind.m_bEnabled && !m_bIsOpen)
 					continue;
 
 				if (tBind.m_bVisible || m_bIsOpen)
@@ -3162,10 +3180,10 @@ void CMenu::DrawBinds()
 						sInfo = std::format("{}", tBind.m_iInfo + 1);
 						break;
 					}
-					if (tBind.m_bNot)
+					if (tBind.m_bNot && (tBind.m_iType != BindEnum::Key || tBind.m_iInfo == BindEnum::KeyEnum::Hold))
 						sInfo = std::format("not {}", sInfo);
 
-					vInfo.emplace_back(tBind.m_bActive, tBind.m_sName.c_str(), sType, sInfo, iBind, tBind);
+					vInfo.emplace_back(tBind.m_sName.c_str(), sType, sInfo, iBind, tBind);
 				}
 
 				if (tBind.m_bActive || m_bIsOpen)
@@ -3183,7 +3201,7 @@ void CMenu::DrawBinds()
 
 	float flNameWidth = 0, flInfoWidth = 0, flStateWidth = 0;
 	PushFont(F::Render.FontSmall);
-	for (auto& [_, sName, sInfo, sState, iBind, tBind] : vInfo)
+	for (auto& [sName, sInfo, sState, iBind, tBind] : vInfo)
 	{
 		flNameWidth = std::max(flNameWidth, FCalcTextSize(sName).x);
 		flInfoWidth = std::max(flInfoWidth, FCalcTextSize(sInfo.c_str()).x);
@@ -3192,7 +3210,7 @@ void CMenu::DrawBinds()
 	PopFont();
 	flNameWidth += H::Draw.Scale(9), flInfoWidth += H::Draw.Scale(9), flStateWidth += H::Draw.Scale(9);
 
-	float flWidth = flNameWidth + flInfoWidth + flStateWidth + (m_bIsOpen ? H::Draw.Scale(88) : H::Draw.Scale(14));
+	float flWidth = flNameWidth + flInfoWidth + flStateWidth + (m_bIsOpen ? H::Draw.Scale(113) : H::Draw.Scale(14));
 	float flHeight = H::Draw.Scale(18 * vInfo.size() + (Vars::Menu::BindWindowTitle.Value ? 42 : 12));
 	SetNextWindowSize({ flWidth, flHeight });
 	PushStyleVar(ImGuiStyleVar_WindowMinSize, { H::Draw.Scale(40), H::Draw.Scale(40) });
@@ -3223,17 +3241,20 @@ void CMenu::DrawBinds()
 		}
 
 		PushFont(F::Render.FontSmall);
-		int i = 0; for (auto& [bActive, sName, sInfo, sState, iBind, tBind] : vInfo)
+		int i = 0; for (auto& [sName, sInfo, sState, iBind, tBind] : vInfo)
 		{
 			float flPosX = 0;
 
+			if (m_bIsOpen)
+				PushStyleVar(ImGuiStyleVar_Alpha, F::Binds.WillBeEnabled(iBind) ? 1.f : 0.5f);
+
 			SetCursorPos({ flPosX += H::Draw.Scale(12), H::Draw.Scale(iListStart + 18 * i) });
-			PushStyleColor(ImGuiCol_Text, bActive ? F::Render.Accent.Value : F::Render.Inactive.Value);
+			PushStyleColor(ImGuiCol_Text, tBind.m_bActive ? F::Render.Accent.Value : F::Render.Inactive.Value);
 			FText(sName);
 			PopStyleColor();
 
 			SetCursorPos({ flPosX += flNameWidth, H::Draw.Scale(iListStart + 18 * i) });
-			PushStyleColor(ImGuiCol_Text, bActive ? F::Render.Active.Value : F::Render.Inactive.Value);
+			PushStyleColor(ImGuiCol_Text, tBind.m_bActive ? F::Render.Active.Value : F::Render.Inactive.Value);
 			FText(sInfo.c_str());
 
 			SetCursorPos({ flPosX += flInfoWidth, H::Draw.Scale(iListStart + 18 * i) });
@@ -3250,6 +3271,9 @@ void CMenu::DrawBinds()
 
 				SetCursorPos({ flWidth - H::Draw.Scale(75), H::Draw.Scale(iListStart - 1 + 18 * i) });
 				bool bVisibility = IconButton(tBind.m_bVisible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF);
+
+				SetCursorPos({ flWidth - H::Draw.Scale(100), H::Draw.Scale(iListStart - 1 + 18 * i) });
+				bool bEnable = IconButton(tBind.m_bEnabled ? ICON_MD_RADIO_BUTTON_ON : ICON_MD_RADIO_BUTTON_OFF);
 
 				PushFont(F::Render.FontRegular);
 				PushStyleVar(ImGuiStyleVar_WindowPadding, { H::Draw.Scale(8), H::Draw.Scale(8) });
@@ -3276,14 +3300,19 @@ void CMenu::DrawBinds()
 
 					EndPopup();
 				}
-				if (bNot)
-					tBind.m_bNot = !tBind.m_bNot;
+				if (bEnable)
+					tBind.m_bEnabled = !tBind.m_bEnabled;
 				if (bVisibility)
 					tBind.m_bVisible = !tBind.m_bVisible;
+				if (bNot)
+					tBind.m_bNot = !tBind.m_bNot;
 
 				PopStyleVar();
 				PopFont();
 			}
+
+			if (m_bIsOpen)
+				PopStyleVar();
 
 			i++;
 		}

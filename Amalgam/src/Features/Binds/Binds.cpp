@@ -65,7 +65,7 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 			{
 				int iBind = std::distance(m_vBinds.begin(), it.base()) - 1;
 				auto& tBind = *it;
-				if (iParent != tBind.m_iParent)
+				if (iParent != tBind.m_iParent || !tBind.m_bEnabled)
 					continue;
 
 				switch (tBind.m_iType)
@@ -159,19 +159,6 @@ bool CBinds::GetBind(int iID, Bind_t* pBind)
 	return false;
 }
 
-bool CBinds::HasChildren(int iBind)
-{
-	auto it = std::ranges::find_if(m_vBinds, [&](const auto& tBind) { return iBind == tBind.m_iParent; });
-	return it != m_vBinds.end();
-}
-
-int CBinds::GetParent(int iBind)
-{
-	if (iBind > DEFAULT_BIND && iBind < m_vBinds.size())
-		return m_vBinds[iBind].m_iParent;
-	return DEFAULT_BIND;
-}
-
 void CBinds::AddBind(int iBind, Bind_t& tBind)
 {
 	if (iBind == DEFAULT_BIND || iBind >= m_vBinds.size())
@@ -263,4 +250,29 @@ void CBinds::RemoveBind(int iBind, bool bForce)
 			removeBind(iIndex);
 		};
 	searchBinds(iBind);
+}
+
+int CBinds::GetParent(int iBind)
+{
+	if (iBind > DEFAULT_BIND && iBind < m_vBinds.size())
+		return m_vBinds[iBind].m_iParent;
+	return DEFAULT_BIND;
+}
+
+bool CBinds::HasChildren(int iBind)
+{
+	auto it = std::ranges::find_if(m_vBinds, [&](const auto& tBind) { return iBind == tBind.m_iParent; });
+	return it != m_vBinds.end();
+}
+
+bool CBinds::WillBeEnabled(int iBind)
+{
+	Bind_t tBind;
+	while (GetBind(iBind, &tBind))
+	{
+		if (!tBind.m_bEnabled)
+			return false;
+		iBind = tBind.m_iParent;
+	}
+	return true;
 }

@@ -16,10 +16,11 @@ struct Bind_t
 	int m_iType = 0;
 	int m_iInfo = 0;
 	int m_iKey = 0;
-	bool m_bNot = false;
 
-	bool m_bActive = false;
+	bool m_bEnabled = true;
 	bool m_bVisible = true;
+	bool m_bNot = false;
+	bool m_bActive = false;
 
 	int m_iParent = -1;
 };
@@ -31,10 +32,11 @@ public:
 
 	bool GetBind(int iID, Bind_t* pBind);
 
-	bool HasChildren(int iBind);
-	int GetParent(int iBind);
 	void AddBind(int iBind, Bind_t& tCond);
 	void RemoveBind(int iBind, bool bForce = true);
+	int GetParent(int iBind);
+	bool HasChildren(int iBind);
+	bool WillBeEnabled(int iBind);
 
 	std::vector<Bind_t> m_vBinds = {};
 	std::unordered_map<int, KeyStorage> m_mKeyStorage;

@@ -327,9 +327,10 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 			bindTree2.put("Type", tBind.m_iType);
 			bindTree2.put("Info", tBind.m_iInfo);
 			bindTree2.put("Key", tBind.m_iKey);
+			bindTree2.put("Enabled", tBind.m_bEnabled);
+			bindTree2.put("Visible", tBind.m_bVisible);
 			bindTree2.put("Not", tBind.m_bNot);
 			bindTree2.put("Active", tBind.m_bActive);
-			bindTree2.put("Visible", tBind.m_bVisible);
 			bindTree2.put("Parent", tBind.m_iParent);
 
 			bindTree.put_child(std::to_string(iID), bindTree2);
@@ -402,9 +403,10 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.m_iType = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.m_iInfo = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.m_iKey = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Enabled")) { tBind.m_bEnabled = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Parent")) { tBind.m_iParent = *getValue; }
 
 				F::Binds.m_vBinds.push_back(tBind);
@@ -425,9 +427,9 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.m_iType = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.m_iInfo = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.m_iKey = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
 				if (auto getValue = it.second.get_optional<std::string>("Parent"))
 				{
 					auto uHash = FNV1A::Hash32(getValue->c_str());
