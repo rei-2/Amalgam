@@ -6,7 +6,7 @@ MAKE_HOOK(CMatchInviteNotification_OnTick, S::CMatchInviteNotification_OnTick(),
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CMatchInviteNotification_OnTick.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CMatchInviteNotification_OnTick[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

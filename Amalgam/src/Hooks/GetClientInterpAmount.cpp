@@ -8,7 +8,7 @@ MAKE_HOOK(GetClientInterpAmount, S::GetClientInterpAmount(), float,
 	)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::GetClientInterpAmount.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::GetClientInterpAmount[DEFAULT_BIND])
 		return CALL_ORIGINAL();
 #endif
 

@@ -4,7 +4,7 @@ MAKE_HOOK(CStudioRender_SetColorModulation, U::Memory.GetVFunc(I::StudioRender, 
 	void* rcx, const float* pColor)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CStudioRender_SetColorModulation.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CStudioRender_SetColorModulation[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pColor);
 #endif
 

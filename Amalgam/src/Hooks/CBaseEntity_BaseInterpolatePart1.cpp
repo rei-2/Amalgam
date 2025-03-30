@@ -8,7 +8,7 @@ MAKE_HOOK(CBaseEntity_BaseInterpolatePart1, S::CBaseEntity_BaseInterpolatePart1(
 	void* rcx, float& currentTime, Vector& oldOrigin, QAngle& oldAngles, Vector& oldVel, int& bNoMoreChanges)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseEntity_BaseInterpolatePart1.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseEntity_BaseInterpolatePart1[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, currentTime, oldOrigin, oldAngles, oldVel, bNoMoreChanges);
 #endif
 

@@ -11,7 +11,7 @@ MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool,
 	void* rcx, ETFCond nCond)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayerShared_InCond.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayerShared_InCond[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, nCond);
 #endif
 

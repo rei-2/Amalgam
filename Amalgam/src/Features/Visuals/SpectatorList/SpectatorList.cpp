@@ -24,9 +24,8 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		if (pPlayer->IsAlive() || pObserverTarget != pTarget
 			|| bLocal && !I::EngineClient->IsPlayingDemo() && F::Spectate.m_iTarget == -1)
 		{
-			auto it = m_mRespawnCache.find(pPlayer->entindex());
-			if (it != m_mRespawnCache.end())
-				m_mRespawnCache.erase(it);
+			if (m_mRespawnCache.contains(pPlayer->entindex()))
+				m_mRespawnCache.erase(pPlayer->entindex());
 			continue;
 		}
 

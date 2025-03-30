@@ -17,7 +17,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 	void* rcx, ClientFrameStage_t curStage)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IBaseClientDLL_FrameStageNotify.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::IBaseClientDLL_FrameStageNotify[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, curStage);
 #endif
 

@@ -13,7 +13,7 @@ MAKE_HOOK(CSniperDot_GetRenderingPositions, S::CSniperDot_GetRenderingPositions(
 	void* rcx, CTFPlayer* pPlayer, Vec3& vecAttachment, Vec3& vecEndPos, float& flSize)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CSniperDot_GetRenderingPositions.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CSniperDot_GetRenderingPositions[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pPlayer, vecAttachment, vecEndPos, flSize);
 #endif
 
@@ -32,7 +32,7 @@ MAKE_HOOK(CBasePlayer_EyePosition, S::CBasePlayer_EyePosition(), Vec3*,
 	void* rcx, void* rdx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CSniperDot_GetRenderingPositions.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CSniperDot_GetRenderingPositions[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, rdx);
 #endif
 
@@ -48,7 +48,7 @@ MAKE_HOOK(CTFPlayer_EyeAngles, S::CTFPlayer_EyeAngles(), Vec3*,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CSniperDot_GetRenderingPositions.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CSniperDot_GetRenderingPositions[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

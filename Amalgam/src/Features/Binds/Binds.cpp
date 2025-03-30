@@ -167,7 +167,7 @@ void CBinds::AddBind(int iBind, Bind_t& tBind)
 		m_vBinds[iBind] = tBind;
 }
 
-#define HasType(type, bind) IsType(type) && var->As<type>()->Map.find(bind) != var->As<type>()->Map.end()
+#define HasType(type, bind) IsType(type) && var->As<type>()->contains(bind)
 
 #define RemoveType(type, bind)\
 {\

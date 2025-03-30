@@ -352,7 +352,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 					if (bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() || bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
 					{
 						tGlow = Glow_t(Vars::Glow::Backtrack::Stencil.Value, Vars::Glow::Backtrack::Blur.Value);
-						mvEntities[tGlow].emplace_back(pEntity, tColor, true);
+						mvEntities[tGlow].emplace_back(pEntity, Vars::Colors::Backtrack.Value.a ? Vars::Colors::Backtrack.Value : tColor, true);
 					}
 				}
 			}
@@ -361,7 +361,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 			if (Vars::Glow::FakeAngle::Enabled.Value && (Vars::Glow::FakeAngle::Stencil.Value || Vars::Glow::FakeAngle::Blur.Value) && pEntity == pLocal && F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup)
 			{
 				tGlow = Glow_t(Vars::Glow::FakeAngle::Stencil.Value, Vars::Glow::FakeAngle::Blur.Value);
-				mvEntities[tGlow].emplace_back(pEntity, tColor, true);
+				mvEntities[tGlow].emplace_back(pEntity, Vars::Colors::FakeAngle.Value.a ? Vars::Colors::FakeAngle.Value : tColor, true);
 			}
 		}
 	}

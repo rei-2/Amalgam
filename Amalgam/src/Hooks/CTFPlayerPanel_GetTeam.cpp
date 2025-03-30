@@ -12,7 +12,7 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayerPanel_GetTeam.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayerPanel_GetTeam[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 
@@ -34,7 +34,7 @@ MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(),
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayerPanel_GetTeam.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayerPanel_GetTeam[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 
@@ -46,7 +46,7 @@ MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void,
 	void* rcx, Color_t color)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayerPanel_GetTeam.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayerPanel_GetTeam[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, color);
 #endif
 

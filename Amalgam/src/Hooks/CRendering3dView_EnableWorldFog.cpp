@@ -6,7 +6,7 @@ MAKE_HOOK(CRendering3dView_EnableWorldFog, S::CRendering3dView_EnableWorldFog(),
 	)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CRendering3dView_EnableWorldFog.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CRendering3dView_EnableWorldFog[DEFAULT_BIND])
 		return CALL_ORIGINAL();
 #endif
 

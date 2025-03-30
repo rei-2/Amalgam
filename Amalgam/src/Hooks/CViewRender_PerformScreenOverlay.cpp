@@ -6,7 +6,7 @@ MAKE_HOOK(CViewRender_PerformScreenOverlay, S::CViewRender_PerformScreenOverlay(
 	void* rcx, int x, int y, int w, int h)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CViewRender_PerformScreenOverlay.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CViewRender_PerformScreenOverlay[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, x, y, w, h);
 #endif
 

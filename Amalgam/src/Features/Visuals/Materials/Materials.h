@@ -23,18 +23,16 @@ public:
 	void ReloadMaterials();
 
 	IMaterial* Create(char const* szName, KeyValues* pKV);
-	void StoreStruct(std::string sName, std::string sVMT, bool bLocked = false);
-	void StoreVars(Material_t& tMaterial);
 	void Remove(IMaterial* pMaterial);
+	void StoreStruct(std::string sName, std::string sVMT, bool bLocked = false);
+
+	void SetColor(Material_t* pMaterial, Color_t tColor);
 
 	Material_t* GetMaterial(uint32_t uHash);
 	std::string GetVMT(uint32_t uHash);
-
 	void AddMaterial(const char* sName);
 	void EditMaterial(const char* sName, const char* sVMT);
 	void RemoveMaterial(const char* sName);
-
-	void SetColor(Material_t* pMaterial, Color_t tColor);
 
 	std::unordered_map<uint32_t, Material_t> m_mMaterials;
 	std::unordered_map<IMaterial*, bool> m_mMatList;

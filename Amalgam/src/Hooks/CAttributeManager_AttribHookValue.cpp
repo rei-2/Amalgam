@@ -12,7 +12,7 @@ MAKE_HOOK(CAttributeManager_AttribHookInt, S::CAttributeManager_AttribHookInt(),
 	int value, const char* name, void* econent, void* buffer, bool isGlobalConstString)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CAttributeManager_AttribHookValue.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CAttributeManager_AttribHookValue[DEFAULT_BIND])
 		return CALL_ORIGINAL(value, name, econent, buffer, isGlobalConstString);
 #endif
 

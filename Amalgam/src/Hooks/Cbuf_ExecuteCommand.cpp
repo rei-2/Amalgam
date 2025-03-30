@@ -113,7 +113,7 @@ static std::vector<std::function<void()>> vDynamic = {
     },
     [&]()
     {
-        auto sRegex = R"(\\\{rgb:(\d+),(\d+),(\d+)\})";
+        auto sRegex = R"(\\\{rgb:(\d+)?(?:,(\d+))?(?:,(\d+))?\})";
 
         while (true)
         {
@@ -121,16 +121,17 @@ static std::vector<std::function<void()>> vDynamic = {
             if (match.size() != 4)
                 break;
 
-            int r = std::clamp(std::stoi(match[1]), 0, 255);
-            int g = std::clamp(std::stoi(match[2]), 0, 255);
-            int b = std::clamp(std::stoi(match[3]), 0, 255);
+            int r = !match[1].str().empty() ? std::stoi(match[1]) : 255;
+            int g = !match[2].str().empty() ? std::stoi(match[2]) : 255;
+            int b = !match[3].str().empty() ? std::stoi(match[3]) : 255;
 
-            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"\x7""{:02x}{:02x}{:02x}", r, g, b));
+            Color_t tColor; tColor.SetRGB(r, g, b);
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"{}", tColor.ToHex()));
         }
     },
     [&]()
     {
-        auto sRegex = R"(\\\{rgba:(\d+),(\d+),(\d+),(\d+)\})";
+        auto sRegex = R"(\\\{rgba:(\d+)?(?:,(\d+))?(?:,(\d+))?(?:,(\d+))?\})";
 
         while (true)
         {
@@ -138,17 +139,36 @@ static std::vector<std::function<void()>> vDynamic = {
             if (match.size() != 5)
                 break;
 
-            int r = std::clamp(std::stoi(match[1]), 0, 255);
-            int g = std::clamp(std::stoi(match[2]), 0, 255);
-            int b = std::clamp(std::stoi(match[3]), 0, 255);
-            int a = std::clamp(std::stoi(match[4]), 0, 255);
+            int r = !match[1].str().empty() ? std::stoi(match[1]) : 255;
+            int g = !match[2].str().empty() ? std::stoi(match[2]) : 255;
+            int b = !match[3].str().empty() ? std::stoi(match[3]) : 255;
+            int a = !match[4].str().empty() ? std::stoi(match[4]) : 255;
 
-            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"\x8""{:02x}{:02x}{:02x}{:02x}", r, g, b, a));
+            Color_t tColor; tColor.SetRGB(r, g, b, a);
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"{}", tColor.ToHexA()));
         }
     },
     [&]()
     {
-        auto sRegex = R"(\\\{hsv:(?:(\d+)|(\d+),(\d+),(\d+))\})";
+        auto sRegex = R"(\\\{hsv:(\d+)?(?:,(\d+))?(?:,(\d+))?\})";
+
+        while (true)
+        {
+            std::smatch match; std::regex_search(sCmdString, match, std::regex(sRegex));
+            if (match.size() != 4)
+                break;
+
+            int h = !match[1].str().empty() ? std::stoi(match[1]) : 0;
+            int s = !match[2].str().empty() ? std::stoi(match[2]) : 100;
+            int v = !match[3].str().empty() ? std::stoi(match[3]) : 100;
+
+            Color_t tColor; tColor.SetHSV(h, s, v);
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"{}", tColor.ToHex()));
+        }
+    },
+    [&]()
+    {
+        auto sRegex = R"(\\\{hsva:(\d+)?(?:,(\d+))?(?:,(\d+))?(?:,(\d+))?\})";
 
         while (true)
         {
@@ -156,53 +176,13 @@ static std::vector<std::function<void()>> vDynamic = {
             if (match.size() != 5)
                 break;
 
-            int h, s, v;
-            if (!match[1].str().empty())
-            {
-                h = std::clamp(std::stoi(match[1]), 0, 360);
-                s = 100;
-                v = 100;
-            }
-            else
-            {
-                h = std::clamp(std::stoi(match[2]), 0, 360);
-                s = std::clamp(std::stoi(match[3]), 0, 100);
-                v = std::clamp(std::stoi(match[4]), 0, 100);
-            }
+            int h = !match[1].str().empty() ? std::stoi(match[1]) : 0;
+            int s = !match[2].str().empty() ? std::stoi(match[2]) : 100;
+            int v = !match[3].str().empty() ? std::stoi(match[3]) : 100;
+            int a = !match[4].str().empty() ? std::stoi(match[4]) : 255;
 
-            int r, g, b;
-            {
-                float s2 = s / 100.f;
-                float v2 = v / 100.f;
-
-                float r2, g2, b2;
-                if (s2 == 0)
-                    r2 = g2 = b2 = v2;
-                else
-                {
-                    float h2 = h / 60.f;
-                    int i = floor(h2);
-                    float f = h2 - i;
-                    float p = v2 * (1 - s2);
-                    float q = v2 * (1 - f * s2);
-                    float t = v2 * (1 - (1 - f) * s2);
-
-                    switch (i)
-                    {
-                        case 0: r2 = v2; g2 = t; b2 = p; break;
-                        case 1: r2 = q; g2 = v2; b2 = p; break;
-                        case 2: r2 = p; g2 = v2; b2 = t; break;
-                        case 3: r2 = p; g2 = q; b2 = v2; break;
-                        case 4: r2 = t; g2 = p; b2 = v2; break;
-                        default: r2 = v2; g2 = p; b2 = q; break;
-                    }
-                }
-                r = std::clamp(r2 * 255.f, 0.f, 255.f);
-                g = std::clamp(g2 * 255.f, 0.f, 255.f);
-                b = std::clamp(b2 * 255.f, 0.f, 255.f);
-            }
-
-            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"\x7""{:02x}{:02x}{:02x}", r, g, b));
+            Color_t tColor; tColor.SetHSV(h, s, v, a);
+            sCmdString = sCmdString.replace(match.position(), match.length(), std::format(PRE_STR"{}", tColor.ToHexA()));
         }
     },
     [&]()
@@ -230,6 +210,11 @@ static std::vector<std::function<void()>> vDynamic = {
 MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 	CCommand& args, cmd_source_t source)
 {
+#ifdef DEBUG_HOOKS
+    if (!Vars::Hooks::Cbuf_ExecuteCommand[DEFAULT_BIND])
+        return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+#endif
+
 	if (args.ArgC())
 	{
 		std::string sCommand = args[0];

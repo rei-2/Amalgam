@@ -8,7 +8,7 @@ MAKE_HOOK(CBaseEntity_WorldSpaceCenter, S::CBaseEntity_WorldSpaceCenter(), const
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseEntity_WorldSpaceCenter.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseEntity_WorldSpaceCenter[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

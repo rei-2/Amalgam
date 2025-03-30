@@ -38,6 +38,15 @@ public:
 	T Value;
 	std::unordered_map<int, T> Map;
 	ConfigVar(T value, std::string name, int iFlags = 0);
+
+	inline T& operator[](int i)
+	{
+		return Map[i];
+	}
+	inline bool contains(int i) const
+	{
+		return Map.contains(i);
+	}
 };
 
 inline std::vector<CVarBase*> g_Vars;
@@ -91,7 +100,7 @@ namespace Vars
 		CVar(MenuSecondaryKey, VK_F3, NOBIND)
 
 		CVar(BindWindowTitle, true)
-		CVar(BindsDisplay, DragBox_t(), NOBIND)
+		CVar(BindsDisplay, DragBox_t(100, 100), NOBIND)
 		CVar(MenuShowsBinds, false, NOBIND)
 
 		CVarEnum(Indicators, 0b00000, NONE, Ticks = 1 << 0, CritHack = 1 << 1, Spectators = 1 << 2, Ping = 1 << 3, Conditions = 1 << 4, SeedPrediction = 1 << 5)
@@ -114,6 +123,69 @@ namespace Vars
 			CVar(Active, Color_t(255, 255, 255, 255), VISUAL)
 		SUBNAMESPACE_END(Theme)
 	NAMESPACE_END(Menu)
+
+	NAMESPACE_BEGIN(Colors)
+		CVar(FOVCircle, Color_t(255, 255, 255, 100), VISUAL)
+		CVar(Relative, false, VISUAL)
+		CVar(TeamRed, Color_t(225, 60, 60, 255), VISUAL)
+		CVar(TeamBlu, Color_t(75, 175, 225, 255), VISUAL)
+		CVar(Enemy, Color_t(225, 60, 60, 255), VISUAL)
+		CVar(Team, Color_t(75, 175, 225, 255), VISUAL)
+		CVar(Local, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(Target, Color_t(255, 0, 0, 255), VISUAL)
+		CVar(Health, Color_t(0, 225, 75, 255), VISUAL)
+		CVar(Ammo, Color_t(127, 127, 127, 255), VISUAL)
+		CVar(Money, Color_t(0, 150, 75, 255), VISUAL)
+		CVar(Powerup, Color_t(255, 175, 0, 255), VISUAL)
+		CVar(NPC, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(Halloween, Color_t(100, 0, 255, 255), VISUAL)
+		CVar(Backtrack, Color_t(255, 0, 0, 0), VISUAL)
+		CVar(FakeAngle, Color_t(255, 255, 255, 0), VISUAL)
+
+		CVar(IndicatorGood, Color_t(0, 255, 100, 255), DEBUGVAR)
+		CVar(IndicatorMid, Color_t(255, 200, 0, 255), DEBUGVAR)
+		CVar(IndicatorBad, Color_t(255, 0, 0, 255), DEBUGVAR)
+		CVar(IndicatorMisc, Color_t(75, 175, 255, 255), DEBUGVAR)
+		CVar(IndicatorTextGood, Color_t(150, 255, 150, 255), DEBUGVAR)
+		CVar(IndicatorTextMid, Color_t(255, 200, 0, 255), DEBUGVAR)
+		CVar(IndicatorTextBad, Color_t(255, 150, 150, 255), DEBUGVAR)
+		CVar(IndicatorTextMisc, Color_t(100, 255, 255, 255), DEBUGVAR)
+
+		CVar(WorldModulation, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(SkyModulation, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(PropModulation, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(ParticleModulation, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(FogModulation, Color_t(255, 255, 255, 255), VISUAL)
+
+		CVar(Line, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(LineClipped, Color_t(255, 255, 255, 255), VISUAL)
+
+		CVar(PlayerPath, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(PlayerPathClipped, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(ProjectilePath, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(ProjectilePathClipped, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(TrajectoryPath, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(TrajectoryPathClipped, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(ShotPath, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(ShotPathClipped, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(SplashRadius, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(SplashRadiusClipped, Color_t(255, 255, 255, 0), VISUAL)
+
+		CVar(BoneHitboxEdge, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoneHitboxEdgeClipped, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(BoneHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoneHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(TargetHitboxEdge, Color_t(255, 150, 150, 0), VISUAL)
+		CVar(TargetHitboxEdgeClipped, Color_t(255, 150, 150, 255), VISUAL)
+		CVar(TargetHitboxFace, Color_t(255, 150, 150, 0), VISUAL)
+		CVar(TargetHitboxFaceClipped, Color_t(255, 150, 150, 0), VISUAL)
+		CVar(BoundHitboxEdge, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoundHitboxEdgeClipped, Color_t(255, 255, 255, 255), VISUAL)
+		CVar(BoundHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
+		CVar(BoundHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
+
+		CVar(SpellFootstep, Color_t(255, 255, 255, 255), VISUAL)
+	NAMESPACE_END(Colors)
 
 	NAMESPACE_BEGIN(Aimbot)
 		SUBNAMESPACE_BEGIN(General)
@@ -192,8 +264,9 @@ namespace Vars
 			CVar(HuntsmanPullPoint, false, DEBUGVAR)
 			CVar(SplashPoints, 100, DEBUGVAR)
 			CVar(SplashGrates, true, DEBUGVAR)
+			CVar(SplashRotateX, 0.f, DEBUGVAR)
+			CVar(SplashRotateY, 0.f, DEBUGVAR)
 			CVar(SplashNthRoot, 1.f, DEBUGVAR)
-			CVar(SplashRotate, 0.f, DEBUGVAR)
 			CVar(SplashCountDirect, 100, DEBUGVAR)
 			CVar(SplashCountArc, 5, DEBUGVAR)
 			CVar(SplashTraceInterval, 10, DEBUGVAR)
@@ -369,6 +442,7 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Backtrack)
 			CVar(Enabled, false, VISUAL)
+			CVar(IgnoreZ, false, VISUAL)
 			CVarEnum(Draw, 0b0, VISUAL, Last, LastFirst, All)
 				
 			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
@@ -377,6 +451,7 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(FakeAngle)
 			CVar(Enabled, false, VISUAL)
+			CVar(IgnoreZ, false, VISUAL)
 
 			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
 			//CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL) // unused
@@ -781,67 +856,6 @@ namespace Vars
 		SUBNAMESPACE_END(Steam)
 	NAMESPACE_END(Misc)
 
-	NAMESPACE_BEGIN(Colors)
-		CVar(FOVCircle, Color_t(255, 255, 255, 100), VISUAL)
-		CVar(Relative, false, VISUAL)
-		CVar(TeamRed, Color_t(225, 60, 60, 255), VISUAL)
-		CVar(TeamBlu, Color_t(75, 175, 225, 255), VISUAL)
-		CVar(Enemy, Color_t(225, 60, 60, 255), VISUAL)
-		CVar(Team, Color_t(75, 175, 225, 255), VISUAL)
-		CVar(Local, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(Target, Color_t(255, 0, 0, 255), VISUAL)
-		CVar(Health, Color_t(0, 225, 75, 255), VISUAL)
-		CVar(Ammo, Color_t(127, 127, 127, 255), VISUAL)
-		CVar(Money, Color_t(0, 150, 75, 255), VISUAL)
-		CVar(Powerup, Color_t(255, 175, 0, 255), VISUAL)
-		CVar(NPC, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(Halloween, Color_t(100, 0, 255, 255), VISUAL)
-
-		CVar(IndicatorGood, Color_t(0, 255, 100, 255), DEBUGVAR)
-		CVar(IndicatorMid, Color_t(255, 200, 0, 255), DEBUGVAR)
-		CVar(IndicatorBad, Color_t(255, 0, 0, 255), DEBUGVAR)
-		CVar(IndicatorMisc, Color_t(75, 175, 255, 255), DEBUGVAR)
-		CVar(IndicatorTextGood, Color_t(150, 255, 150, 255), DEBUGVAR)
-		CVar(IndicatorTextMid, Color_t(255, 200, 0, 255), DEBUGVAR)
-		CVar(IndicatorTextBad, Color_t(255, 150, 150, 255), DEBUGVAR)
-		CVar(IndicatorTextMisc, Color_t(100, 255, 255, 255), DEBUGVAR)
-
-		CVar(WorldModulation, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(SkyModulation, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(PropModulation, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(ParticleModulation, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(FogModulation, Color_t(255, 255, 255, 255), VISUAL)
-
-		CVar(Line, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(LineClipped, Color_t(255, 255, 255, 255), VISUAL)
-
-		CVar(PlayerPath, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(PlayerPathClipped, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(ProjectilePath, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(ProjectilePathClipped, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(TrajectoryPath, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(TrajectoryPathClipped, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(ShotPath, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(ShotPathClipped, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(SplashRadius, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(SplashRadiusClipped, Color_t(255, 255, 255, 0), VISUAL)
-
-		CVar(BoneHitboxEdge, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(BoneHitboxEdgeClipped, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(BoneHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(BoneHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(TargetHitboxEdge, Color_t(255, 150, 150, 0), VISUAL)
-		CVar(TargetHitboxEdgeClipped, Color_t(255, 150, 150, 255), VISUAL)
-		CVar(TargetHitboxFace, Color_t(255, 150, 150, 0), VISUAL)
-		CVar(TargetHitboxFaceClipped, Color_t(255, 150, 150, 0), VISUAL)
-		CVar(BoundHitboxEdge, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(BoundHitboxEdgeClipped, Color_t(255, 255, 255, 255), VISUAL)
-		CVar(BoundHitboxFace, Color_t(255, 255, 255, 0), VISUAL)
-		CVar(BoundHitboxFaceClipped, Color_t(255, 255, 255, 0), VISUAL)
-
-		CVar(SpellFootstep, Color_t(255, 255, 255, 255), VISUAL)
-	NAMESPACE_END(Colors)
-
 	NAMESPACE_BEGIN(Logging)
 		CVarEnum(Logs, 0b0000011, NONE, VoteStart = 1 << 0, VoteCast = 1 << 1, ClassChanges = 1 << 2, Damage = 1 << 3, CheatDetection = 1 << 4, Tags = 1 << 5, Aliases = 1 << 6, Resolver = 1 << 7)
 		Enum(LogTo, Toasts = 1 << 0, Chat = 1 << 1, Party = 1 << 2, Console = 1 << 3, Menu = 1 << 4, Debug = 1 << 5)
@@ -914,6 +928,7 @@ namespace Vars
 		CVar(CBasePlayer_CalcViewModelView, true, NOSAVE)
 		CVar(CBasePlayer_ItemPostFrame, true, NOSAVE)
 		CVar(CBaseViewModel_ShouldFlipViewModel, true, NOSAVE)
+		CVar(Cbuf_ExecuteCommand, true, NOSAVE)
 		CVar(CClientModeShared_CreateMove, true, NOSAVE)
 		CVar(CClientModeShared_DoPostScreenSpaceEffects, true, NOSAVE)
 		CVar(CClientModeShared_OverrideView, true, NOSAVE)
@@ -978,6 +993,7 @@ namespace Vars
 		CVar(IBaseClientDLL_DispatchUserMessage, true, NOSAVE)
 		CVar(IBaseClientDLL_FrameStageNotify, true, NOSAVE)
 		CVar(IBaseClientDLL_LevelShutdown, true, NOSAVE)
+		CVar(IEngineTrace_SetTraceEntity, true, NOSAVE)
 		CVar(IEngineTrace_TraceRay, true, NOSAVE)
 		CVar(IEngineVGui_Paint, true, NOSAVE)
 		CVar(IInput_GetUserCmd, true, NOSAVE)

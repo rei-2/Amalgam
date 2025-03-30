@@ -9,7 +9,7 @@ MAKE_HOOK(CBaseAnimating_Interpolate, S::CBaseAnimating_Interpolate(), bool,
 	void* rcx, float currentTime)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseAnimating_Interpolate.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseAnimating_Interpolate[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, currentTime);
 #endif
 

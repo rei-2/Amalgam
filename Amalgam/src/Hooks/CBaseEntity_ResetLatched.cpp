@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseEntity_ResetLatched, S::CBaseEntity_ResetLatched(), void,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseEntity_ResetLatched.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseEntity_ResetLatched[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

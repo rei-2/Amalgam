@@ -568,7 +568,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
 		const float flGrappleDistance = tf_grapplinghook_max_distance ? tf_grapplinghook_max_distance->GetFloat() : 2000.f;
 		Trace(vPos, vPos + vForward * flGrappleDistance, MASK_SOLID, &filter, &trace);
-		return trace.DidHit() && !(trace.surface.flags & 0x0004 /*SURF_SKY*/);
+		return trace.DidHit() && !(trace.surface.flags & SURF_SKY);
 	}
 	case TF_WEAPON_MINIGUN:
 		switch (pWeapon->As<CTFMinigun>()->m_iWeaponState())
@@ -661,18 +661,18 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	if (G::Attacking != 1)
 	{
-		const float direction = Math::VelocityToAngles(pLocal->m_vecVelocity() * -1).y;
-		pCmd->viewangles = { 90, direction, 0 };
+		float flDirection = Math::VelocityToAngles(pLocal->m_vecVelocity() * -1).y;
+		pCmd->viewangles = { 90, flDirection, 0 };
 		pCmd->sidemove = 0; pCmd->forwardmove = 0;
 		return true;
 	}
 	else
 	{
-		Vec3 direction = pLocal->m_vecVelocity().toAngle();
-		direction.y = pCmd->viewangles.y - direction.y;
-		const Vec3 negatedDirection = direction.fromAngle() * -pLocal->m_vecVelocity().Length2D();
-		pCmd->forwardmove = negatedDirection.x;
-		pCmd->sidemove = negatedDirection.y;
+		Vec3 vDirection = pLocal->m_vecVelocity().ToAngle();
+		vDirection.y = pCmd->viewangles.y - vDirection.y;
+		Vec3 vNegatedDirection = vDirection.FromAngle() * -pLocal->m_vecVelocity().Length2D();
+		pCmd->forwardmove = vNegatedDirection.x;
+		pCmd->sidemove = vNegatedDirection.y;
 		return false;
 	}
 }

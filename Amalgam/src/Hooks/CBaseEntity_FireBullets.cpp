@@ -8,7 +8,7 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 	void* rcx, CBaseCombatWeapon* pWeapon, const FireBulletsInfo_t& info, bool bDoEffects, int nDamageType, int nCustomDamageType)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseEntity_FireBullets.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseEntity_FireBullets[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pWeapon, info, nDamageType, nDamageType, nCustomDamageType);
 #endif
 

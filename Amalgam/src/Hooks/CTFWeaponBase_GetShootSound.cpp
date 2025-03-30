@@ -6,7 +6,7 @@ MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const c
 	void* rcx, int iIndex)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFWeaponBase_GetShootSound.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFWeaponBase_GetShootSound[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, iIndex);
 #endif
 

@@ -469,7 +469,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 			}
 		}
 
-		H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
+		H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
 
 		m_sCurrentConfig = sConfigName; m_sCurrentVisuals = "";
 		if (bNotify)

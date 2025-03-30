@@ -7,7 +7,7 @@ MAKE_HOOK(CTFWeaponBase_CalcIsAttackCritical, S::CTFWeaponBase_CalcIsAttackCriti
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFWeaponBase_CalcIsAttackCritical.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFWeaponBase_CalcIsAttackCritical[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

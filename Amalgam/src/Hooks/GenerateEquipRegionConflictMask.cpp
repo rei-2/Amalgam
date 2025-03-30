@@ -9,7 +9,7 @@ MAKE_HOOK(GenerateEquipRegionConflictMask, S::GenerateEquipRegionConflictMask(),
 	int iClass, int iUpToSlot, int iIgnoreSlot)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::GenerateEquipRegionConflictMask.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::GenerateEquipRegionConflictMask[DEFAULT_BIND])
 		return CALL_ORIGINAL(iClass, iUpToSlot, iIgnoreSlot);
 #endif
 
@@ -20,7 +20,7 @@ MAKE_HOOK(CTFInventoryManager_GetItemInLoadoutForClass, S::CTFInventoryManager_G
 	void* rcx, int iClass, int iSlot, CSteamID* pID)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::GenerateEquipRegionConflictMask.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::GenerateEquipRegionConflictMask[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, iClass, iSlot, pID);
 #endif
 
@@ -34,7 +34,7 @@ MAKE_HOOK(CTFPlayerInventory_VerifyChangedLoadoutsAreValid, S::CTFPlayerInventor
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::GenerateEquipRegionConflictMask.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::GenerateEquipRegionConflictMask[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

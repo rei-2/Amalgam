@@ -72,6 +72,7 @@ bool CTraceFilterProjectile::ShouldHitEntity(IHandleEntity* pServerEntity, int n
 	case ETFClassID::CBaseDoor:
 	case ETFClassID::CDynamicProp:
 	case ETFClassID::CPhysicsProp:
+	case ETFClassID::CPhysicsPropMultiplayer:
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
 	case ETFClassID::CFuncConveyor:
@@ -121,6 +122,7 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 	case ETFClassID::CBaseDoor:
 	case ETFClassID::CDynamicProp:
 	case ETFClassID::CPhysicsProp:
+	case ETFClassID::CPhysicsPropMultiplayer:
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
 	case ETFClassID::CFuncConveyor: return true;
@@ -135,9 +137,12 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 		}
 	}
 
+	if (pServerEntity->GetRefEHandle().GetSerialNumber() == (1 << 15))
+		return I::ClientEntityList->GetClientEntity(0) != pSkip;
+
 	return false;
 }
 TraceType_t CTraceFilterWorldAndPropsOnly::GetTraceType() const
 {
-	return TRACE_EVERYTHING;
+	return TRACE_EVERYTHING_FILTER_PROPS;
 }

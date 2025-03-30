@@ -6,7 +6,7 @@ MAKE_HOOK(CInventoryManager_ShowItemsPickedUp, S::CInventoryManager_ShowItemsPic
 	void* rcx, bool bForce, bool bReturnToGame, bool bNoPanel)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CInventoryManager_ShowItemsPickedUp.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CInventoryManager_ShowItemsPickedUp[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, bForce, bReturnToGame, bNoPanel);
 #endif
 

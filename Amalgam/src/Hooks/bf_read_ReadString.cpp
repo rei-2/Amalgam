@@ -9,7 +9,7 @@ MAKE_HOOK(bf_read_ReadString, S::bf_read_ReadString(), bool,
 	void* rcx, char* pStr, int maxLen, bool bLine, int* pOutNumChars)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::bf_read_ReadString.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::bf_read_ReadString[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pStr, maxLen, bLine, pOutNumChars);
 #endif
 

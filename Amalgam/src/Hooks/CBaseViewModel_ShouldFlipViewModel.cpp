@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseViewModel_ShouldFlipViewModel, S::CBaseViewModel_ShouldFlipViewMo
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseViewModel_ShouldFlipViewModel.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseViewModel_ShouldFlipViewModel[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

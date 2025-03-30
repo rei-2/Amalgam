@@ -191,6 +191,7 @@
     <ClCompile Include="src\Hooks\VGuiMenuBuilder_AddMenuItem.cpp" />
     <ClCompile Include="src\Features\Output\Output.cpp" />
     <ClCompile Include="src\Hooks\Cbuf_ExecuteCommand.cpp" />
+    <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

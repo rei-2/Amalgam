@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseAnimating_SetSequence, S::CBaseAnimating_SetSequence(), void,
 	void* rcx, int nSequence)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseAnimating_SetSequence.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseAnimating_SetSequence[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, nSequence);
 #endif
 

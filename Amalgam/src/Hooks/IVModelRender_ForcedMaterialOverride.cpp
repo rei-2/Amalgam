@@ -8,7 +8,7 @@ MAKE_HOOK(IVModelRender_ForcedMaterialOverride, U::Memory.GetVFunc(I::ModelRende
 	IVModelRender* rcx, IMaterial* mat, OverrideType_t type)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IVModelRender_ForcedMaterialOverride.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::IVModelRender_ForcedMaterialOverride[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, mat, type);
 #endif
 

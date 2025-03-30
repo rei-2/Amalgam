@@ -54,7 +54,7 @@ MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::Steam
 	void* rcx, SteamNetworkingPOPID popID, SteamNetworkingPOPID* pViaRelayPoP)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::ISteamNetworkingUtils_GetPingToDataCenter.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::ISteamNetworkingUtils_GetPingToDataCenter[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, popID, pViaRelayPoP);
 #endif
 
@@ -74,7 +74,7 @@ MAKE_HOOK(CTFPartyClient_RequestQueueForMatch, S::CTFPartyClient_RequestQueueFor
 	void* rcx, int eMatchGroup)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::ISteamNetworkingUtils_GetPingToDataCenter.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::ISteamNetworkingUtils_GetPingToDataCenter[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, eMatchGroup);
 #endif
 

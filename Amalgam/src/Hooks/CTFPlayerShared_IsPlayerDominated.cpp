@@ -8,7 +8,7 @@ MAKE_HOOK(CTFPlayerShared_IsPlayerDominated, S::CTFPlayerShared_IsPlayerDominate
 	void* rcx, int index)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayerShared_IsPlayerDominated.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayerShared_IsPlayerDominated[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, index);
 #endif
 

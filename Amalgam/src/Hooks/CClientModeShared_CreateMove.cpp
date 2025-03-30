@@ -33,7 +33,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	CClientModeShared* rcx, float flInputSampleTime, CUserCmd* pCmd)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CClientModeShared_CreateMove.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CClientModeShared_CreateMove[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
 #endif
 

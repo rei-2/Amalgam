@@ -8,7 +8,7 @@ MAKE_HOOK(CL_ReadPackets, S::CL_ReadPackets(), void,
 	bool bFinalTick)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CL_ReadPackets.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CL_ReadPackets[DEFAULT_BIND])
 		return CALL_ORIGINAL(bFinalTick);
 #endif
 

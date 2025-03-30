@@ -6,7 +6,7 @@ MAKE_HOOK(ClientModeTFNormal_BIsFriendOrPartyMember, S::ClientModeTFNormal_BIsFr
 	void* rcx, CBaseEntity* pEntity)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::ClientModeTFNormal_BIsFriendOrPartyMember.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::ClientModeTFNormal_BIsFriendOrPartyMember[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pEntity);
 #endif
 

@@ -6,7 +6,7 @@ MAKE_HOOK(DSP_Process, S::DSP_Process(), void,
 	unsigned int idsp, int* pbfront, int* pbrear, int* pbcenter, int sampleCount)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::DSP_Process.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::DSP_Process[DEFAULT_BIND])
 		return CALL_ORIGINAL(idsp, pbfront, pbrear, pbcenter, sampleCount);
 #endif
 

@@ -8,7 +8,7 @@ MAKE_HOOK(CTFInput_ApplyMouse, S::CTFInput_ApplyMouse(), void,
 	void* rcx, QAngle& viewangles, CUserCmd* cmd, float mouse_x, float mouse_y)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFInput_ApplyMouse.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFInput_ApplyMouse[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, viewangles, cmd, mouse_x, mouse_y);
 #endif
 
@@ -45,7 +45,7 @@ MAKE_HOOK(CTFInput_CAM_CapYaw, S::CTFInput_CAM_CapYaw(), float,
 	void* rcx, float fVal)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFInput_ApplyMouse.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFInput_ApplyMouse[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, fVal);
 #endif
 

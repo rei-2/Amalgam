@@ -54,7 +54,7 @@ inline CBaseHandle::CBaseHandle(int iEntry, int iSerialNumber)
 
 inline void CBaseHandle::Init(int iEntry, int iSerialNumber)
 {
-	m_Index = iEntry | (iSerialNumber << NUM_ENT_ENTRY_BITS);
+	m_Index = iEntry | (iSerialNumber << NUM_SERIAL_NUM_SHIFT_BITS);
 }
 
 inline void CBaseHandle::Term()
@@ -74,7 +74,7 @@ inline int CBaseHandle::GetEntryIndex() const
 
 inline int CBaseHandle::GetSerialNumber() const
 {
-	return m_Index >> NUM_ENT_ENTRY_BITS;
+	return m_Index >> NUM_SERIAL_NUM_SHIFT_BITS;
 }
 
 inline int CBaseHandle::ToInt() const

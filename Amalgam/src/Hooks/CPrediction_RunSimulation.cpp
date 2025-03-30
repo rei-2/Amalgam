@@ -9,7 +9,7 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 	void* rcx, int current_command, float curtime, CUserCmd* cmd, CTFPlayer* localPlayer)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CPrediction_RunSimulation.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CPrediction_RunSimulation[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, current_command, curtime, cmd, localPlayer);
 #endif
 

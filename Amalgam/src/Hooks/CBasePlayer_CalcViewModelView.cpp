@@ -6,7 +6,7 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 	void* rcx, CBaseEntity* pOwner, const Vec3& vEyePosition, Vec3& vEyeAngles)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBasePlayer_CalcViewModelView.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBasePlayer_CalcViewModelView[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pOwner, vEyePosition, vEyeAngles);
 #endif
 
@@ -67,7 +67,7 @@ MAKE_HOOK(ClientModeTFNormal_GetViewModelFOV, U::Memory.GetVFunc(I::ClientModeSh
 	/*void* rcx*/)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBasePlayer_CalcViewModelView.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBasePlayer_CalcViewModelView[DEFAULT_BIND])
 		return CALL_ORIGINAL(/*rcx*/);
 #endif
 

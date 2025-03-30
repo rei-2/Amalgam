@@ -7,7 +7,7 @@ MAKE_HOOK(CTFPlayer_IsPlayerClass, S::CTFPlayer_IsPlayerClass(), bool,
 	void* rcx, int iClass)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_IsPlayerClass.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_IsPlayerClass[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, iClass);
 #endif
 

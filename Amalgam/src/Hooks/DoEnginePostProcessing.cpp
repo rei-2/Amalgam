@@ -6,7 +6,7 @@ MAKE_HOOK(DoEnginePostProcessing, S::DoEnginePostProcessing(), void,
 	int x, int y, int w, int h, bool bFlashlightIsOn, bool bPostVGui)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::DoEnginePostProcessing.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::DoEnginePostProcessing[DEFAULT_BIND])
 		return CALL_ORIGINAL(x, y, w, h, bFlashlightIsOn, bPostVGui);
 #endif
 

@@ -4,7 +4,7 @@ MAKE_HOOK(CTFGCClientSystem_UpdateAssignedLobby, S::CTFGCClientSystem_UpdateAssi
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFGCClientSystem_UpdateAssignedLobby.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFGCClientSystem_UpdateAssignedLobby[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

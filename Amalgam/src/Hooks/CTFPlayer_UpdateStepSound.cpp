@@ -7,7 +7,7 @@ MAKE_HOOK(CTFPlayer_UpdateStepSound, S::CTFPlayer_UpdateStepSound(), void,
 	void* rcx, void* psurface, const Vec3& vecOrigin, const Vec3& vecVelocity)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_UpdateStepSound.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_UpdateStepSound[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, psurface, vecOrigin, vecVelocity);
 #endif
 

@@ -6,7 +6,7 @@ MAKE_HOOK(CAchievementMgr_CheckAchievementsEnabled, S::CAchievementMgr_CheckAchi
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CAchievementMgr_CheckAchievementsEnabled.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CAchievementMgr_CheckAchievementsEnabled[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

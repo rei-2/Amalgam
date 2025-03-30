@@ -6,7 +6,7 @@ MAKE_HOOK(R_DrawSkyBox, S::R_DrawSkyBox(), void,
 	float zFar, int nDrawFlags)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::R_DrawSkyBox.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::R_DrawSkyBox[DEFAULT_BIND])
 		return CALL_ORIGINAL(zFar, nDrawFlags);
 #endif
 

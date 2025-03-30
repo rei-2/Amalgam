@@ -142,11 +142,14 @@ namespace ImGui
 			vDisabled.pop_back();
 		Disabled = !vDisabled.empty() ? vDisabled.back() : false;
 	}
-	inline void PushTransparent(bool bTransparent)
+	inline void PushTransparent(bool bTransparent, bool bPushAlpha = false)
 	{
 		vTransparent.push_back(Transparent = bTransparent);
+
+		if (bPushAlpha)
+			PushStyleVar(ImGuiStyleVar_Alpha, !bTransparent ? 1.f : 0.5f);
 	}
-	inline void PopTransparent(int count = 1)
+	inline void PopTransparent(int count = 1, int iPopAlpha = false)
 	{
 		int iSize = int(vTransparent.size());
 		if (iSize < count)
@@ -157,6 +160,9 @@ namespace ImGui
 		for (int i = 0; i < count; i++)
 			vTransparent.pop_back();
 		Transparent = !vTransparent.empty() ? vTransparent.back() : false;
+
+		if (iPopAlpha)
+			PopStyleVar(iPopAlpha);
 	}
 
 	inline float fnmodf(float flX, float flY)
@@ -1907,18 +1913,22 @@ namespace ImGui
 			SetCursorPos(vOriginalPos);
 		}
 
+		PushStyleVar(ImGuiStyleVar_Alpha, 1.f);
 		PushStyleVar(ImGuiStyleVar_FramePadding, { H::Draw.Scale(2), H::Draw.Scale(2) });
 		PushStyleVar(ImGuiStyleVar_ItemSpacing, { 0, H::Draw.Scale(4) });
 		PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, { H::Draw.Scale(4), 0 });
 		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
+
 		ImVec4 tempColor = ColorToVec(*tColor);
 		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tempColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_LargeAlphaGrid, vSize);
 		if (bReturn)
 			*tColor = VecToColor(tempColor);
-		PopStyleColor();
-		PopStyleVar(3);
 		if (!Disabled && IsItemHovered())
 			SetMouseCursor(ImGuiMouseCursor_Hand);
+
+		PopStyleColor();
+		PopStyleVar(4);
+
 		if (bTooltip)
 			FTooltip(sLabel);
 
@@ -2341,7 +2351,7 @@ namespace ImGui
 		int iParent = CurrentBind;
 		while (true)
 		{
-			if (iParent == DEFAULT_BIND || var.Map.contains(iParent))
+			if (iParent == DEFAULT_BIND || var.contains(iParent))
 				break;
 			iParent = F::Binds.GetParent(iParent);
 		}
@@ -2355,10 +2365,10 @@ namespace ImGui
 		while (true)
 		{
 			iParent = F::Binds.GetParent(iParent);
-			if (iParent == DEFAULT_BIND || var.Map.contains(iParent))
+			if (iParent == DEFAULT_BIND || var.contains(iParent))
 				break;
 		}
-		return var.Map[iParent];
+		return var[iParent];
 	}
 
 	bool bPushedDisabled = false, bPushedTransparent = false;
@@ -2373,7 +2383,7 @@ namespace ImGui
 
 			if (CurrentBind == DEFAULT_BIND)
 			{
-				if (Vars::Menu::MenuShowsBinds.Value && var.Map[DEFAULT_BIND] != var.Value)
+				if (Vars::Menu::MenuShowsBinds.Value && var[DEFAULT_BIND] != var.Value)
 				{
 					for (auto& [_iBind, tVal] : var.Map)
 					{
@@ -2395,7 +2405,7 @@ namespace ImGui
 				bPushedTransparent = true;
 			}
 		}
-		return var.Map[iBind];
+		return var[iBind];
 	}
 
 	template <class T>
@@ -2407,7 +2417,7 @@ namespace ImGui
 			auto tVal = GetParentValue(var, iBind);
 
 			if (tVal != val)
-				var.Map[iBind] = val;
+				var[iBind] = val;
 			else if (iBind != DEFAULT_BIND)
 			{
 				for (auto it = var.Map.begin(); it != var.Map.end();)
@@ -2467,8 +2477,8 @@ namespace ImGui
 				tBind = F::Binds.m_vBinds[iBind];
 			else
 				tBind = { sBind };
-			if (var.Map.contains(iBind))
-				val = var.Map[iBind];
+			if (var.contains(iBind))
+				val = var[iBind];
 		}
 		bool bClickedNew = iBind == DEFAULT_BIND && bLastHovered && IsMouseDown(ImGuiMouseButton_Left);
 		if (iModified != -2 || bClickedNew)
@@ -2528,7 +2538,7 @@ namespace ImGui
 
 		if (!Disabled && iBind != DEFAULT_BIND && iBind < F::Binds.m_vBinds.size())
 		{
-			var.Map[iBind] = val;
+			var[iBind] = val;
 
 			// don't completely override to retain misc info
 			auto& _tBind = F::Binds.m_vBinds[iBind];

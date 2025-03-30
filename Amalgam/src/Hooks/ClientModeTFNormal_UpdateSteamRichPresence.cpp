@@ -8,7 +8,7 @@ MAKE_HOOK(ClientModeTFNormal_UpdateSteamRichPresence, S::ClientModeTFNormal_Upda
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::ClientModeTFNormal_UpdateSteamRichPresence.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::ClientModeTFNormal_UpdateSteamRichPresence[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

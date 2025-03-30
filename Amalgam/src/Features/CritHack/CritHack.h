@@ -44,7 +44,7 @@ private:
 	std::unordered_map<int, int> m_mHealthStorage = {};
 
 	bool m_bCritBanned = false;
-	int m_iDamageTilUnban = 0;
+	float m_flDamageTilFlip = 0;
 	float m_flCritChance = 0.f;
 	int m_iWishRandomSeed = 0;
 

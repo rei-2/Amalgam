@@ -21,9 +21,13 @@ static inline void Paint()
 			return I::MatSystemSurface->FinishDrawing();
 
 		// dumb FUCKN+IG CHeck for fonts
-		int w = 0, h = 0; I::MatSystemSurface->GetTextSize(H::Fonts.GetFont(FONT_ESP).m_dwFont, L"", w, h);
-		if (!h)
-			H::Fonts.Reload(Vars::Menu::Scale.Map[DEFAULT_BIND]);
+		static Timer tTimer = {};
+		if (tTimer.Run(1.f))
+		{
+			int w = 0, h = 0; I::MatSystemSurface->GetTextSize(H::Fonts.GetFont(FONT_ESP).m_dwFont, L"", w, h);
+			if (!h)
+				H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+		}
 
 		auto pLocal = H::Entities.GetLocal();
 		if (pLocal && !I::EngineVGui->IsGameUIVisible())
@@ -56,7 +60,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IEngineVGui_Paint.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::IEngineVGui_Paint[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, iMode);
 #endif
 

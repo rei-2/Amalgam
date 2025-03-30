@@ -25,7 +25,7 @@ MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVFunc(I::EngineCli
 	void* rcx, const char* szCmdString)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IVEngineClient_ClientCmd_Unrestricted.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::IVEngineClient_ClientCmd_Unrestricted[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, szCmdString);
 #endif
 

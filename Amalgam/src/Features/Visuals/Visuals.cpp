@@ -284,7 +284,9 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 	}
 	else if (Vars::Visuals::Simulation::ShotPath.Value)
 	{
+		G::BoxStorage.clear();
 		G::PathStorage.clear();
+
 		if (Vars::Colors::ShotPath.Value.a)
 			G::PathStorage.emplace_back(tProjInfo.m_vPath, -float(tProjInfo.m_vPath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ShotPath.Value, Vars::Visuals::Simulation::ShotPath.Value);
 		if (Vars::Colors::ShotPathClipped.Value.a)
@@ -296,8 +298,6 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			const Vec3 vSize = { 1.f, flSize, flSize };
 			Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
 
-			if (Vars::Colors::ShotPath.Value.a || Vars::Colors::TrajectoryPathClipped.Value.a)
-				G::BoxStorage.clear();
 			if (Vars::Colors::ShotPath.Value.a)
 				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, Color_t(0, 0, 0, 0));
 			if (Vars::Colors::ShotPathClipped.Value.a)
@@ -996,24 +996,30 @@ void CVisuals::OverrideWorldTextures()
 		return;
 
 	KeyValues* kv = new KeyValues("LightmappedGeneric");
-	if (uHash == FNV1A::Hash32Const("Dev"))
-		kv->SetString("$basetexture", "dev/dev_measuregeneric01b");
-	else if (uHash == FNV1A::Hash32Const("Camo"))
-		kv->SetString("$basetexture", "patterns/paint_strokes");
-	else if (uHash == FNV1A::Hash32Const("Black"))
-		kv->SetString("$basetexture", "patterns/combat/black");
-	else if (uHash == FNV1A::Hash32Const("White"))
-		kv->SetString("$basetexture", "patterns/combat/white");
-	else if (uHash == FNV1A::Hash32Const("Flat"))
-	{
-		kv->SetString("$basetexture", "vgui/white_additive");
-		kv->SetString("$color2", "[0.12 0.12 0.15]");
-	}
-	else
-		kv->SetString("$basetexture", Vars::Visuals::World::WorldTexture.Value.c_str());
-
 	if (!kv)
 		return;
+
+	switch (uHash)
+	{
+	case FNV1A::Hash32Const("Dev"):
+		kv->SetString("$basetexture", "dev/dev_measuregeneric01b");
+		break;
+	case FNV1A::Hash32Const("Camo"):
+		kv->SetString("$basetexture", "patterns/paint_strokes");
+		break;
+	case FNV1A::Hash32Const("Black"):
+		kv->SetString("$basetexture", "patterns/combat/black");
+		break;
+	case FNV1A::Hash32Const("White"):
+		kv->SetString("$basetexture", "patterns/combat/white");
+		break;
+	case FNV1A::Hash32Const("Flat"):
+		kv->SetString("$basetexture", "vgui/white_additive");
+		kv->SetString("$color2", "[0.12 0.12 0.15]");
+		break;
+	default:
+		kv->SetString("$basetexture", Vars::Visuals::World::WorldTexture.Value.c_str());
+	}
 
 	for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
 	{
@@ -1021,8 +1027,8 @@ void CVisuals::OverrideWorldTextures()
 		if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached() || pMaterial->IsTranslucent() || pMaterial->IsSpriteCard())
 			continue;
 
-		auto sGroup = std::string_view(pMaterial->GetTextureGroupName());
-		auto sName = std::string_view(pMaterial->GetName());
+		std::string_view sGroup = pMaterial->GetTextureGroupName();
+		std::string_view sName = pMaterial->GetName();
 
 		if (!sGroup._Starts_with("World")
 			|| sName.find("water") != std::string_view::npos || sName.find("glass") != std::string_view::npos

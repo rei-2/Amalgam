@@ -11,7 +11,7 @@ MAKE_HOOK(CTFPlayer_ShouldDraw, S::CTFPlayer_ShouldDraw(), bool,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_ShouldDraw.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_ShouldDraw[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 
@@ -26,7 +26,7 @@ MAKE_HOOK(CBasePlayer_ShouldDrawThisPlayer, S::CBasePlayer_ShouldDrawThisPlayer(
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_ShouldDraw.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_ShouldDraw[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 
@@ -48,7 +48,7 @@ MAKE_HOOK(CViewRender_DrawViewModels, S::CViewRender_DrawViewModels(), void,
 	void* rcx, const CViewSetup& viewRender, bool drawViewmodel)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_ShouldDraw.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_ShouldDraw[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, viewRender, drawViewmodel);
 #endif
 

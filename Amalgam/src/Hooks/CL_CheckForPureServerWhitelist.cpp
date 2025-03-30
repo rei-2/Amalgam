@@ -6,7 +6,7 @@ MAKE_HOOK(CL_CheckForPureServerWhitelist, S::CL_CheckForPureServerWhitelist(), v
 	void **pFilesToReload)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CL_CheckForPureServerWhitelist.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CL_CheckForPureServerWhitelist[DEFAULT_BIND])
 		return CALL_ORIGINAL(pFilesToReload);
 #endif
 

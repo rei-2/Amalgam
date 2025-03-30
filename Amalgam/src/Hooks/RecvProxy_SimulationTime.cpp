@@ -13,7 +13,7 @@ MAKE_HOOK(RecvProxy_SimulationTime, S::RecvProxy_SimulationTime(), void,
 	const CRecvProxyData* pData, void* pStruct, void* pOut)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::RecvProxy_SimulationTime.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::RecvProxy_SimulationTime[DEFAULT_BIND])
 		return CALL_ORIGINAL(pData, pStruct, pOut);
 #endif
 

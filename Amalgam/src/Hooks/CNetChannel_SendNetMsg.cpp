@@ -10,7 +10,7 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 	CNetChannel* pNetChan, INetMessage& msg, bool bForceReliable, bool bVoice)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CNetChannel_SendNetMsg.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CNetChannel_SendNetMsg[DEFAULT_BIND])
 		return CALL_ORIGINAL(pNetChan, msg, bForceReliable, bVoice);
 #endif
 

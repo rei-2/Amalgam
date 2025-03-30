@@ -11,7 +11,7 @@ MAKE_HOOK(FX_FireBullets, S::FX_FireBullets(), void,
 	void* pWpn, int iPlayer, const Vec3& vecOrigin, const Vec3& vecAngles, int iWeapon, int iMode, int iSeed, float flSpread, float flDamage, bool bCritical)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::FX_FireBullets.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::FX_FireBullets[DEFAULT_BIND])
 		return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
 #endif
 
@@ -33,7 +33,7 @@ MAKE_HOOK(FX_FireBullets_Server, S::FX_FireBullets_Server(), void,
 	void* pWpn, int iPlayer, const Vec3& vecOrigin, const Vec3& vecAngles, int iWeapon, int iMode, int iSeed, float flSpread, float flDamage, bool bCritical)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::FX_FireBullets.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::FX_FireBullets[DEFAULT_BIND])
 		return CALL_ORIGINAL(pWpn, iPlayer, vecOrigin, vecAngles, iWeapon, iMode, iSeed, flSpread, flDamage, bCritical);
 #endif
 

@@ -12,7 +12,7 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CViewRender_LevelInit.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CViewRender_LevelInit[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

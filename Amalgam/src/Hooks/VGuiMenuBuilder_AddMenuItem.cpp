@@ -18,7 +18,7 @@ MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
     void* rcx, int playerIndex)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::VGuiMenuBuilder_AddMenuItem.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::VGuiMenuBuilder_AddMenuItem[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, playerIndex);
 #endif
 
@@ -35,7 +35,7 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
     void* rcx, const char* pszButtonText, const char* pszCommand, const char* pszCategoryName)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::VGuiMenuBuilder_AddMenuItem.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::VGuiMenuBuilder_AddMenuItem[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, pszButtonText, pszCommand, pszCategoryName);
 #endif
 
@@ -78,7 +78,7 @@ MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCo
     void* rcx, const char* command)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::VGuiMenuBuilder_AddMenuItem.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::VGuiMenuBuilder_AddMenuItem[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, command);
 #endif
 

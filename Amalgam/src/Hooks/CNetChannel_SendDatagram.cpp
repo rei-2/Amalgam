@@ -8,7 +8,7 @@ MAKE_HOOK(CNetChannel_SendDatagram, S::CNetChannel_SendDatagram(), int,
 	CNetChannel* pNetChan, bf_write* datagram)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CNetChannel_SendDatagram.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CNetChannel_SendDatagram[DEFAULT_BIND])
 		return CALL_ORIGINAL(pNetChan, datagram);
 #endif
 

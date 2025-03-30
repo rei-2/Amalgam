@@ -6,7 +6,7 @@ MAKE_HOOK(CBasePlayer_CalcPlayerView, S::CBasePlayer_CalcPlayerView(), void,
 	void* rcx, Vector& eyeOrigin, QAngle& eyeAngles, float& fov)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBasePlayer_CalcPlayerView.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBasePlayer_CalcPlayerView[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, eyeOrigin, eyeAngles, fov);
 #endif
 

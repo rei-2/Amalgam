@@ -204,7 +204,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 void CCritHack::CanFireCritical(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	m_bCritBanned = false;
-	m_iDamageTilUnban = 0;
+	m_flDamageTilFlip = 0;
 
 	if (pWeapon->GetSlot() == SLOT_MELEE)
 		m_flCritChance = TF_DAMAGE_CRIT_CHANCE_MELEE * pLocal->GetCritMult();
@@ -218,14 +218,18 @@ void CCritHack::CanFireCritical(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		m_flCritChance = TF_DAMAGE_CRIT_CHANCE * pLocal->GetCritMult();
 	m_flCritChance = SDK::AttribHookValue(m_flCritChance, "mult_crit_chance", pWeapon);
 
-	if (!m_iAllDamage || !m_iCritDamage || pWeapon->GetSlot() == SLOT_MELEE)
-		return;
-
 	const float flNormalizedDamage = m_iCritDamage / TF_DAMAGE_CRIT_MULTIPLIER;
-	const float flObservedCritChance = flNormalizedDamage / (flNormalizedDamage + m_iAllDamage - m_iCritDamage);
 	float flCritChance = m_flCritChance + 0.1f;
-	if (m_bCritBanned = flObservedCritChance > flCritChance)
-		m_iDamageTilUnban = flNormalizedDamage / flCritChance + m_iCritDamage - flNormalizedDamage - m_iAllDamage;
+	if (m_iAllDamage && m_iCritDamage)
+	{
+		const float flObservedCritChance = flNormalizedDamage / (flNormalizedDamage + m_iAllDamage - m_iCritDamage);
+		m_bCritBanned = flObservedCritChance > flCritChance;
+	}
+
+	if (m_bCritBanned)
+		m_flDamageTilFlip = flNormalizedDamage / flCritChance + flNormalizedDamage * 2 - m_iAllDamage;
+	else
+		m_flDamageTilFlip = 3 * (flNormalizedDamage - flCritChance * (flNormalizedDamage + m_iAllDamage - m_iCritDamage)) / (flCritChance - 1);
 }
 
 bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly)
@@ -301,7 +305,7 @@ void CCritHack::Reset()
 	m_iAllDamage = 0;
 
 	m_bCritBanned = false;
-	m_iDamageTilUnban = 0;
+	m_flDamageTilFlip = 0;
 	m_flCritChance = 0.f;
 
 	m_mHealthStorage.clear();
@@ -577,7 +581,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				}
 			}
 			else
-				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Deal {} damage", m_iDamageTilUnban).c_str());
+				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, std::format("Deal {} damage", ceilf(m_flDamageTilFlip)).c_str());
 
 			int iCrits = tStorage.m_iAvailableCrits;
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("{}{} / {} potential crits", iCrits, iCrits == 1000 ? "+" : "", tStorage.m_iPotentialCrits).c_str());
@@ -587,6 +591,9 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				int iShots = tStorage.m_iNextCrit;
 				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Next in {}{} shot{}", iShots, iShots == 1000 ? "+" : "", iShots == 1 ? "" : "s").c_str());
 			}
+
+			if (!m_bCritBanned && iSlot != SLOT_MELEE && m_flDamageTilFlip)
+				H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value, align, std::format("{} damage", floor(m_flDamageTilFlip)).c_str());
 		}
 		else
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, "Calculating");

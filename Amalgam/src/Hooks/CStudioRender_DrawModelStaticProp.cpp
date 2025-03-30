@@ -4,7 +4,7 @@ MAKE_HOOK(CStudioRender_DrawModelStaticProp, U::Memory.GetVFunc(I::StudioRender,
 	void* rcx, const DrawModelState_t& pState, const matrix3x4& modelToWorld, int flags)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CStudioRender_DrawModelStaticProp.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CStudioRender_DrawModelStaticProp[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pState, modelToWorld, flags);
 #endif
 

@@ -6,7 +6,7 @@ MAKE_HOOK(CTFPlayerInventory_GetMaxItemCount, S::CTFPlayerInventory_GetMaxItemCo
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayerInventory_GetMaxItemCount.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayerInventory_GetMaxItemCount[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

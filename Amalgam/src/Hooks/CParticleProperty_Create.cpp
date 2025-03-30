@@ -10,7 +10,7 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, const char* pszAttachmentName)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::CParticleProperty_Create.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::CParticleProperty_Create[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, pszAttachmentName);
 #endif
 
@@ -94,7 +94,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
 	void* rcx, const char* pszParticleName, ParticleAttachment_t iAttachType, int iAttachmentPoint, Vector vecOriginOffset)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::CParticleProperty_Create.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::CParticleProperty_Create[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, iAttachmentPoint, vecOriginOffset);
 #endif
 

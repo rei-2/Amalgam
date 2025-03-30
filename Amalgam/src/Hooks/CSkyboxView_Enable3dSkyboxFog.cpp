@@ -6,7 +6,7 @@ MAKE_HOOK(CSkyboxView_Enable3dSkyboxFog, S::CSkyboxView_Enable3dSkyboxFog(), voi
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CSkyboxView_Enable3dSkyboxFog.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CSkyboxView_Enable3dSkyboxFog[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

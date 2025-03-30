@@ -6,7 +6,7 @@ MAKE_HOOK(CThirdPersonManager_Update, S::CThirdPersonManager_Update(), void,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CThirdPersonManager_Update.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CThirdPersonManager_Update[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 }

@@ -70,7 +70,7 @@ MAKE_HOOK(CBasePlayer_ItemPostFrame, S::CBasePlayer_ItemPostFrame(), void,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBasePlayer_ItemPostFrame.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBasePlayer_ItemPostFrame[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

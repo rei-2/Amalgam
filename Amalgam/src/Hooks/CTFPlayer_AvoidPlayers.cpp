@@ -6,7 +6,7 @@ MAKE_HOOK(CTFPlayer_AvoidPlayers, S::CTFPlayer_AvoidPlayers(), void,
 	void* rcx, CUserCmd* pCmd)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_AvoidPlayers.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_AvoidPlayers[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pCmd);
 #endif
 

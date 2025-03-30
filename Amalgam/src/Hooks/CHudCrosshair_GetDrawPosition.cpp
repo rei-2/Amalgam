@@ -6,7 +6,7 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 	float* pX, float* pY, bool* pbBehindCamera, Vec3 angleCrosshairOffset)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CHudCrosshair_GetDrawPosition.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CHudCrosshair_GetDrawPosition[DEFAULT_BIND])
 		return CALL_ORIGINAL(pX, pY, pbBehindCamera, angleCrosshairOffset);
 #endif
 

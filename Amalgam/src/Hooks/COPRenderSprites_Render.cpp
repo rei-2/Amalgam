@@ -64,7 +64,7 @@ MAKE_HOOK(COPRenderSprites_Render, S::COPRenderSprites_Render(), void,
     void* rcx, IMatRenderContext* pRenderContext, CParticleCollection* pParticles, void* pContext)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::COPRenderSprites_Render.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::COPRenderSprites_Render[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, pRenderContext, pParticles, pContext);
 #endif
 
@@ -157,7 +157,7 @@ MAKE_HOOK(COPRenderSprites_RenderSpriteCard, S::COPRenderSprites_RenderSpriteCar
     void* rcx, void* meshBuilder, void* pCtx, SpriteRenderInfo_t& info, int hParticle, void* pSortList, void* pCamera)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::COPRenderSprites_Render.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::COPRenderSprites_Render[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, meshBuilder, pCtx, info, hParticle, pSortList, pCamera);
 #endif
 
@@ -174,7 +174,7 @@ MAKE_HOOK(COPRenderSprites_RenderTwoSequenceSpriteCard, S::COPRenderSprites_Rend
     void* rcx, void* meshBuilder, void* pCtx, SpriteRenderInfo_t& info, int hParticle, void* pSortList, void* pCamera)
 {
 #ifdef DEBUG_HOOKS
-    if (!Vars::Hooks::COPRenderSprites_Render.Map[DEFAULT_BIND])
+    if (!Vars::Hooks::COPRenderSprites_Render[DEFAULT_BIND])
         return CALL_ORIGINAL(rcx, meshBuilder, pCtx, info, hParticle, pSortList, pCamera);
 #endif
 

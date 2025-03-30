@@ -6,7 +6,7 @@ MAKE_HOOK(IBaseClientDLL_LevelShutdown, U::Memory.GetVFunc(I::BaseClientDLL, 7),
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IBaseClientDLL_LevelShutdown.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::IBaseClientDLL_LevelShutdown[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

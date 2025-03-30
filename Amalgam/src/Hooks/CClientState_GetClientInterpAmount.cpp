@@ -6,7 +6,7 @@ MAKE_HOOK(CClientState_GetClientInterpAmount, S::CClientState_GetClientInterpAmo
 	CClientState* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CClientState_GetClientInterpAmount.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CClientState_GetClientInterpAmount[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

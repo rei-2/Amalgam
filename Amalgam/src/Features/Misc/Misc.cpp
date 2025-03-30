@@ -401,11 +401,11 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 		if (!Vars::Misc::Movement::FastStop.Value || !flSpeed)
 			return;
 
-		Vec3 direction = pLocal->m_vecVelocity().toAngle();
-		direction.y = pCmd->viewangles.y - direction.y;
-		const Vec3 negatedDirection = direction.fromAngle() * -flSpeed;
-		pCmd->forwardmove = negatedDirection.x;
-		pCmd->sidemove = negatedDirection.y;
+		Vec3 vDirection = pLocal->m_vecVelocity().ToAngle();
+		vDirection.y = pCmd->viewangles.y - vDirection.y;
+		Vec3 vNegatedDirection = vDirection.FromAngle() * -flSpeed;
+		pCmd->forwardmove = vNegatedDirection.x;
+		pCmd->sidemove = vNegatedDirection.y;
 
 		break;
 	}
@@ -419,13 +419,12 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 			return;
 
-		const Vec3 vecMove(pCmd->forwardmove, pCmd->sidemove, 0.f);
-		const float flLength = vecMove.Length();
-		Vec3 angMoveReverse;
-		Math::VectorAngles(vecMove * -1.f, angMoveReverse);
+		Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove, 0.f };
+		float flLength = vMove.Length();
+		Vec3 vAngMoveReverse; Math::VectorAngles(vMove * -1.f, vAngMoveReverse);
 		pCmd->forwardmove = -flLength;
 		pCmd->sidemove = 0.f;
-		pCmd->viewangles.y = fmodf(pCmd->viewangles.y - angMoveReverse.y, 360.f);
+		pCmd->viewangles.y = fmodf(pCmd->viewangles.y - vAngMoveReverse.y, 360.f);
 		pCmd->viewangles.z = 270.f;
 		G::PSilentAngles = true;
 

@@ -31,7 +31,7 @@ MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 	SVC_PacketEntities* entmsg)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CL_ProcessPacketEntities.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CL_ProcessPacketEntities[DEFAULT_BIND])
 		return CALL_ORIGINAL(entmsg);
 #endif
 

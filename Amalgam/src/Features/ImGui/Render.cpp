@@ -55,13 +55,12 @@ void CRender::LoadColors()
 		};
 
 	Accent = ColorToVec(Vars::Menu::Theme::Accent.Value);
-	AccentL = ImColor(Accent.Value.x * 1.1f, Accent.Value.y * 1.1f, Accent.Value.z * 1.1f, Accent.Value.w);
 	Background0 = ColorToVec(Vars::Menu::Theme::Background.Value);
-	Background0p5 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 0.5f / 9));
-	Background1 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 1.f / 9));
-	Background1p5 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 1.5f / 9));
-	Background1p5L = ImColor(Background1p5.Value.x * 1.1f, Background1p5.Value.y * 1.1f, Background1p5.Value.z * 1.1f, Background1p5.Value.w);
-	Background2 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127, Vars::Menu::Theme::Background.Value.a }, 2.f / 9));
+	Background0p5 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 0.5f / 9, LerpEnum::NoAlpha));
+	Background1 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 1.f / 9, LerpEnum::NoAlpha));
+	Background1p5 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 1.5f / 9, LerpEnum::NoAlpha));
+	Background1p5L = { Background1p5.Value.x * 1.1f, Background1p5.Value.y * 1.1f, Background1p5.Value.z * 1.1f, Background1p5.Value.w };
+	Background2 = ColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 2.f / 9, LerpEnum::NoAlpha));
 	Inactive = ColorToVec(Vars::Menu::Theme::Inactive.Value);
 	Active = ColorToVec(Vars::Menu::Theme::Active.Value);
 
@@ -82,8 +81,6 @@ void CRender::LoadColors()
 	colors[ImGuiCol_ResizeGripActive] = {};
 	colors[ImGuiCol_ResizeGripHovered] = {};
 	colors[ImGuiCol_ScrollbarBg] = {};
-	colors[ImGuiCol_SliderGrab] = Accent;
-	colors[ImGuiCol_SliderGrabActive] = AccentL;
 	colors[ImGuiCol_Text] = Active;
 	colors[ImGuiCol_WindowBg] = {};
 }

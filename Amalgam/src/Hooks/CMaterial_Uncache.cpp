@@ -8,7 +8,7 @@ MAKE_HOOK(CMaterial_Uncache, S::CMaterial_Uncache(), void,
 	IMaterial* rcx, bool bPreserveVars)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CMaterial_Uncache.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CMaterial_Uncache[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, bPreserveVars);
 #endif
 

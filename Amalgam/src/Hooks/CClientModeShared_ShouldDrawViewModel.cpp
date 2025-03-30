@@ -6,7 +6,7 @@ MAKE_HOOK(CClientModeShared_ShouldDrawViewModel, U::Memory.GetVFunc(I::ClientMod
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CClientModeShared_ShouldDrawViewModel.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CClientModeShared_ShouldDrawViewModel[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

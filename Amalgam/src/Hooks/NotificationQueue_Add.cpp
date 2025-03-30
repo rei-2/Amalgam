@@ -6,7 +6,7 @@ MAKE_HOOK(NotificationQueue_Add, S::NotificationQueue_Add(), int,
 	CEconNotification* pNotification)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::NotificationQueue_Add.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::NotificationQueue_Add[DEFAULT_BIND])
 		return CALL_ORIGINAL(pNotification);
 #endif
 

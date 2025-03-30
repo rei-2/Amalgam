@@ -18,9 +18,8 @@ void CMaterials::Remove(IMaterial* pMaterial)
 	if (!pMaterial)
 		return;
 
-	auto it = m_mMatList.find(pMaterial);
-	if (it != m_mMatList.end())
-		m_mMatList.erase(it);
+	if (m_mMatList.contains(pMaterial))
+		m_mMatList.erase(pMaterial);
 
 	pMaterial->DecrementReferenceCount();
 	pMaterial->DeleteIfUnreferenced();
@@ -39,7 +38,7 @@ void CMaterials::StoreStruct(std::string sName, std::string sVMT, bool bLocked)
 	m_mMaterials[FNV1A::Hash32(sName.c_str())] = tMaterial;
 }
 
-void CMaterials::StoreVars(Material_t& tMaterial)
+static inline void StoreVars(Material_t& tMaterial)
 {
 	if (tMaterial.m_bStored || !tMaterial.m_pMaterial)
 		return;
@@ -57,6 +56,14 @@ void CMaterials::StoreVars(Material_t& tMaterial)
 	auto $invertcull = tMaterial.m_pMaterial->FindVar("$invertcull", &bFound, false);
 	if (bFound && $invertcull && $invertcull->GetIntValueInternal())
 		tMaterial.m_bInvertCull = true;
+}
+
+static inline void RemoveVars(Material_t& tMaterial)
+{
+	tMaterial.m_bStored = false;
+	tMaterial.m_phongtint = nullptr;
+	tMaterial.m_envmaptint = nullptr;
+	tMaterial.m_bInvertCull = false;
 }
 
 static inline void ModifyKeyValues(KeyValues* pKV)
@@ -206,6 +213,8 @@ void CMaterials::ReloadMaterials()
 	LoadMaterials();
 }
 
+
+
 void CMaterials::SetColor(Material_t* pMaterial, Color_t tColor)
 {
 	float r = float(tColor.r) / 255.f;
@@ -238,9 +247,8 @@ Material_t* CMaterials::GetMaterial(uint32_t uHash)
 
 std::string CMaterials::GetVMT(uint32_t uHash)
 {
-	const auto cham = m_mMaterials.find(uHash);
-	if (cham != m_mMaterials.end())
-		return cham->second.m_sVMT;
+	if (m_mMaterials.contains(uHash))
+		return m_mMaterials[uHash].m_sVMT;
 
 	return "";
 }
@@ -248,7 +256,7 @@ std::string CMaterials::GetVMT(uint32_t uHash)
 void CMaterials::AddMaterial(const char* sName)
 {
 	auto uHash = FNV1A::Hash32(sName);
-	if (uHash == FNV1A::Hash32Const("Original") || std::filesystem::exists(F::Configs.m_sMaterialsPath + sName) || m_mMaterials.contains(uHash))
+	if (uHash == FNV1A::Hash32Const("Original") || std::filesystem::exists(F::Configs.m_sMaterialsPath + sName + ".vmt") || m_mMaterials.contains(uHash))
 		return;
 
 	StoreStruct(
@@ -265,26 +273,27 @@ void CMaterials::AddMaterial(const char* sName)
 	ModifyKeyValues(kv);
 
 	tMaterial.m_pMaterial = Create(sName, kv);
-	StoreVars(tMaterial);
+	//StoreVars(tMaterial);
 
-	std::ofstream outStream(F::Configs.m_sMaterialsPath + sName);
+	std::ofstream outStream(F::Configs.m_sMaterialsPath + sName + ".vmt");
 	outStream << tMaterial.m_sVMT;
 	outStream.close();
 }
 
 void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 {
-	if (!std::filesystem::exists(F::Configs.m_sMaterialsPath + sName))
+	if (!std::filesystem::exists(F::Configs.m_sMaterialsPath + sName + ".vmt"))
 		return;
 
 	m_bLoaded = false;
 
-	const auto cham = m_mMaterials.find(FNV1A::Hash32(sName));
-	if (cham != m_mMaterials.end() && !cham->second.m_bLocked)
+	auto uHash = FNV1A::Hash32(sName);
+	if (m_mMaterials.contains(uHash) && !m_mMaterials[uHash].m_bLocked)
 	{
-		auto& tMaterial = cham->second;
+		auto& tMaterial = m_mMaterials[uHash];
 
 		Remove(tMaterial.m_pMaterial);
+		RemoveVars(tMaterial);
 		tMaterial.m_sVMT = sVMT;
 
 		KeyValues* kv = new KeyValues(sName);
@@ -292,9 +301,9 @@ void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 		ModifyKeyValues(kv);
 
 		tMaterial.m_pMaterial = Create(sName, kv);
-		StoreVars(tMaterial);
+		//StoreVars(tMaterial);
 
-		std::ofstream outStream(F::Configs.m_sMaterialsPath + sName);
+		std::ofstream outStream(F::Configs.m_sMaterialsPath + sName + ".vmt");
 		outStream << sVMT;
 		outStream.close();
 	}
@@ -304,18 +313,16 @@ void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 
 void CMaterials::RemoveMaterial(const char* sName)
 {
-	if (!std::filesystem::exists(F::Configs.m_sMaterialsPath + sName))
+	if (!std::filesystem::exists(F::Configs.m_sMaterialsPath + sName + ".vmt"))
 		return;
 
 	m_bLoaded = false;
 
 	auto uHash = FNV1A::Hash32(sName);
-	const auto cham = m_mMaterials.find(uHash);
-	if (cham != m_mMaterials.end() && !cham->second.m_bLocked)
+	if (m_mMaterials.contains(uHash) && !m_mMaterials[uHash].m_bLocked)
 	{
-		Remove(cham->second.m_pMaterial);
-
-		m_mMaterials.erase(cham);
+		Remove(m_mMaterials[uHash].m_pMaterial);
+		m_mMaterials.erase(uHash);
 
 		std::filesystem::remove(F::Configs.m_sMaterialsPath + sName + ".vmt");
 

@@ -7,7 +7,7 @@ MAKE_HOOK(CTFPlayer_BRenderAsZombie, S::CTFPlayer_BRenderAsZombie(), bool,
 	void* rcx, bool bWeaponsCheck)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CTFPlayer_BRenderAsZombie.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_BRenderAsZombie[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, bWeaponsCheck);
 #endif
 

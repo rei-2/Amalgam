@@ -8,7 +8,7 @@ MAKE_HOOK(ISteamFriends_GetFriendPersonaName, U::Memory.GetVFunc(I::SteamFriends
 	void* rcx, CSteamID steamIDFriend)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::ISteamFriends_GetFriendPersonaName.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::ISteamFriends_GetFriendPersonaName[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, steamIDFriend);
 #endif
 

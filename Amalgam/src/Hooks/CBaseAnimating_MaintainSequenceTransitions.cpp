@@ -6,7 +6,7 @@ MAKE_HOOK(CBaseAnimating_MaintainSequenceTransitions, S::CBaseAnimating_Maintain
 	void* rcx, void* boneSetup, float flCycle, Vec3 pos[], Vector4D q[])
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseAnimating_MaintainSequenceTransitions.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseAnimating_MaintainSequenceTransitions[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, boneSetup, flCycle, pos, q);
 #endif
 }

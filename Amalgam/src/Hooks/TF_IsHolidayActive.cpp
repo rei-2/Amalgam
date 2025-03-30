@@ -24,7 +24,7 @@ MAKE_HOOK(TF_IsHolidayActive, S::TF_IsHolidayActive(), bool,
 	int eHoliday)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::TF_IsHolidayActive.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::TF_IsHolidayActive[DEFAULT_BIND])
 		return CALL_ORIGINAL(eHoliday);
 #endif
 

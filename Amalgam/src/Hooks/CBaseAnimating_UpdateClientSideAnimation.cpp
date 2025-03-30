@@ -8,7 +8,7 @@ MAKE_HOOK(CBaseAnimating_UpdateClientSideAnimation, S::CBaseAnimating_UpdateClie
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseAnimating_UpdateClientSideAnimation.Map[DEFAULT_BIND])
+	if (!Vars::Hooks::CBaseAnimating_UpdateClientSideAnimation[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 
