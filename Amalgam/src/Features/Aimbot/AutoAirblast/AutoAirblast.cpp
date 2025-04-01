@@ -10,18 +10,8 @@ static inline bool ShouldTargetProjectile(CBaseEntity* pProjectile, CTFPlayer* p
 	switch (pProjectile->GetClassID())
 	{
 	case ETFClassID::CTFGrenadePipebombProjectile:
-	case ETFClassID::CTFProjectile_Cleaver:
-	case ETFClassID::CTFStunBall:
-	{
 		if (pProjectile->As<CTFGrenadePipebombProjectile>()->m_bTouched())
-			return false; // ignore landed vphysics objects
-		break;
-	}
-	case ETFClassID::CTFProjectile_Arrow:
-	{
-		if (pProjectile->GetAbsVelocity().IsZero())
-			return false; // ignore arrows with no velocity / not moving
-	}
+			return false;
 	}
 
 	return true;
@@ -46,7 +36,7 @@ static inline Vec3 PredictOrigin(Vec3& vOrigin, Vec3 vVelocity, float flLatency,
 bool CAutoAirblast::CanAirblastEntity(CTFPlayer* pLocal, CBaseEntity* pEntity, Vec3& vAngle, Vec3& vPos)
 {
 	Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
-	const Vec3 vOrigin = pLocal->GetShootPos() + (vForward * 128.f);
+	const Vec3 vOrigin = pLocal->GetShootPos() + vForward * 128.f;
 
 	CBaseEntity* pTarget;
 	for (CEntitySphereQuery sphere(vOrigin, 128.f);
@@ -66,7 +56,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 		return;
 
 	const int iWeaponID = pWeapon->GetWeaponID();
-	if (iWeaponID != TF_WEAPON_FLAMETHROWER && iWeaponID != TF_WEAPON_FLAME_BALL || pWeapon->m_iItemDefinitionIndex() == Pyro_m_ThePhlogistinator)
+	if (iWeaponID != TF_WEAPON_FLAMETHROWER && iWeaponID != TF_WEAPON_FLAME_BALL || !SDK::AttribHookValue(0, "airblast_disabled", pWeapon))
 		return;
 
 	const Vec3 vEyePos = pLocal->GetShootPos();

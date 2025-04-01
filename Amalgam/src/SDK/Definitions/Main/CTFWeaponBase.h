@@ -253,25 +253,6 @@ public:
 		return m_flNextSecondaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
 	}
 
-	inline bool HasPrimaryAmmoForShot()
-	{
-		if (IsEnergyWeapon())
-			return m_flEnergy() > 0.f;
-
-		int nClip1 = m_iClip1();
-
-		if (nClip1 == -1)
-		{
-			if (auto pOwner = m_hOwnerEntity().Get())
-			{
-				int nAmmoCount = pOwner->As<CTFPlayer>()->GetAmmoCount(m_iPrimaryAmmoType());
-				return nAmmoCount > (m_iItemDefinitionIndex() == Engi_m_TheWidowmaker ? 29 : 0);
-			}
-		}
-
-		return nClip1 > 0;
-	}
-
 	inline bool IsInReload()
 	{
 		return m_bInReload() || m_iReloadMode() != 0;
@@ -310,6 +291,18 @@ public:
 		return 1;
 	}
 
+	inline int GetAmmoPerShot(bool bAttribHookValue = true)
+	{
+		if (auto pWeaponInfo = GetWeaponInfo())
+		{
+			if (!bAttribHookValue)
+				return pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
+			int iAmmoPerShot = SDK::AttribHookValue(0, "mod_ammo_per_shot", this);
+			return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
+		}
+		return 1;
+	}
+
 	inline bool IsRapidFire()
 	{
 		if (auto pWeaponInfo = GetWeaponInfo())
@@ -340,6 +333,16 @@ public:
 		if (GetClassID() == ETFClassID::CTFRevolver && SDK::AttribHookValue(0, "set_weapon_mode", this) == 1)
 			return flCurTime - m_flLastFireTime() > 1.f;
 		return false;
+	}
+
+	inline bool HasPrimaryAmmoForShot()
+	{
+		if (IsEnergyWeapon())
+			return m_flEnergy() > 0.f;
+
+		int iClip = m_iClip1();
+		auto pOwner = m_hOwnerEntity().Get();
+		return (iClip == -1 && pOwner ? pOwner->As<CTFPlayer>()->GetAmmoCount(m_iPrimaryAmmoType()) : iClip) >= GetAmmoPerShot();
 	}
 
 	inline void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
@@ -449,6 +452,11 @@ public:
 	NETVAR(m_flChargeBeginTime, float, "CTFPipebombLauncher", "m_flChargeBeginTime");
 
 	NETVAR_OFF(m_Pipebombs, CUtlVector<CHandle<CTFGrenadePipebombProjectile>>, "CTFPipebombLauncher", "m_flChargeBeginTime", -28);
+
+	inline int GetDetonateType()
+	{
+		return SDK::AttribHookValue(0, "set_detonate_mode", this);
+	}
 };
 
 class CTFSniperRifle : public CTFWeaponBase
@@ -519,6 +527,11 @@ public:
 	NETVAR(m_flDetonateTime, float, "CTFGrenadeLauncher", "m_flDetonateTime");
 	NETVAR(m_iCurrentTube, int, "CTFGrenadeLauncher", "m_iCurrentTube");
 	NETVAR(m_iGoalTube, int, "CTFGrenadeLauncher", "m_iGoalTube");
+
+	inline int GetDetonateType()
+	{
+		return SDK::AttribHookValue(0, "set_detonate_mode", this);
+	}
 };
 
 class CTFSniperRifleClassic : public CTFSniperRifle
@@ -532,4 +545,13 @@ class CTFParticleCannon : public CTFWeaponBase
 public:
 	NETVAR(m_flChargeBeginTime, float, "CTFParticleCannon", "m_flChargeBeginTime");
 	NETVAR(m_iChargeEffect, int, "CTFParticleCannon", "m_iChargeEffect");
+};
+
+class CTFFlareGun : public CTFWeaponBase
+{
+public:
+	inline int GetFlareGunType()
+	{
+		return SDK::AttribHookValue(0, "set_weapon_mode", this);
+	}
 };

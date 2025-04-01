@@ -132,6 +132,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 				break;
 			case TF_WEAPON_MEDIGUN:
 			case TF_WEAPON_BUILDER:
+			case TF_WEAPON_LASER_POINTER:
 				break;
 			case TF_WEAPON_PARTICLE_CANNON:
 			{

@@ -246,8 +246,8 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 				if (pPlayer->IsCritBoosted())
 					pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON ? bMiniCrits = true : bCrits = true;
 				if (pPlayer->IsMiniCritBoosted())
-					pWeapon && pWeapon->m_iItemDefinitionIndex() == Sniper_t_TheBushwacka ? bCrits = true : bMiniCrits = true;
-				if (pWeapon && pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheMarketGardener && pPlayer->InCond(TF_COND_BLASTJUMPING))
+					pWeapon && SDK::AttribHookValue(0, "minicrits_become_crits", pWeapon) == 1 ? bCrits = true : bMiniCrits = true;
+				if (pWeapon && SDK::AttribHookValue(0, "crit_while_airborne", pWeapon) && pPlayer->InCond(TF_COND_BLASTJUMPING))
 					bCrits = true, bMiniCrits = false;
 
 				if (bCrits)
@@ -644,7 +644,7 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			//case ETFClassID::CTFProjectile_Throwable:
 			//case ETFClassID::CTFProjectile_ThrowableBrick:
 			//case ETFClassID::CTFProjectile_ThrowableRepel: szName = "Throwable"; break;
-			case ETFClassID::CTFProjectile_Arrow: szName = "Arrow"; break;
+			case ETFClassID::CTFProjectile_Arrow: szName = pEntity->As<CTFProjectile_Arrow>()->m_iProjectileType() == TF_PROJECTILE_BUILDING_REPAIR_BOLT ? "Repair" : "Arrow"; break;
 			case ETFClassID::CTFProjectile_GrapplingHook: szName = "Grapple"; break;
 			case ETFClassID::CTFProjectile_HealingBolt: szName = "Heal"; break;
 			//case ETFClassID::CTFBaseRocket:
@@ -700,12 +700,18 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			case ETFClassID::CTFProjectile_ThrowableRepel:
 				if (pEntity->As<CTFWeaponBaseGrenadeProj>()->m_bCritical())
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Crit", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				if (pEntity->As<CTFWeaponBaseGrenadeProj>()->m_iDeflected() && (pEntity->GetClassID() != ETFClassID::CTFGrenadePipebombProjectile || !pEntity->GetAbsVelocity().IsZero()))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Reflected", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				break;
 			case ETFClassID::CTFProjectile_Arrow:
 			case ETFClassID::CTFProjectile_GrapplingHook:
 			case ETFClassID::CTFProjectile_HealingBolt:
 				if (pEntity->As<CTFProjectile_Arrow>()->m_bCritical())
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Crit", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				if (pEntity->As<CTFBaseRocket>()->m_iDeflected())
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Reflected", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				if (pEntity->As<CTFProjectile_Arrow>()->m_bArrowAlight())
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Alight", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				break;
 			case ETFClassID::CTFProjectile_Rocket:
 			case ETFClassID::CTFProjectile_BallOfFire:
@@ -716,14 +722,20 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 			case ETFClassID::CTFProjectile_SpellKartOrb:
 				if (pEntity->As<CTFProjectile_Rocket>()->m_bCritical())
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Crit", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				if (pEntity->As<CTFBaseRocket>()->m_iDeflected())
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Reflected", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				break;
 			case ETFClassID::CTFProjectile_EnergyBall:
 				if (pEntity->As<CTFProjectile_EnergyBall>()->m_bChargedShot())
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Charge", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				if (pEntity->As<CTFBaseRocket>()->m_iDeflected())
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Reflected", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				break;
 			case ETFClassID::CTFProjectile_Flare:
 				if (pEntity->As<CTFProjectile_Flare>()->m_bCritical())
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Crit", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				if (pEntity->As<CTFBaseRocket>()->m_iDeflected())
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Reflected", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				break;
 			}
 		}

@@ -12,7 +12,7 @@ Enum(ProjSim,
 
 struct ProjectileInfo
 {
-	ProjectileType_t m_iType{};
+	uint32_t m_uType = 0;
 
 	Vec3 m_vPos = {};
 	Vec3 m_vAng = {};
@@ -51,7 +51,7 @@ class CProjectileSimulation
 
 public:
 	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
-	bool Initialize(ProjectileInfo& tProjInfo, bool bSimulate = true);
+	bool Initialize(ProjectileInfo& tProjInfo, bool bSimulate = true, bool bVelocities = true);
 	void RunTick(ProjectileInfo& tProjInfo, bool bPath = true);
 	Vec3 GetOrigin();
 	Vec3 GetVelocity();

@@ -27,6 +27,10 @@ void CVisuals::DrawFOV(CTFPlayer* pLocal)
 	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->InCond(TF_COND_STUNNED) && pLocal->m_iStunFlags() & (TF_STUN_CONTROLS | TF_STUN_LOSER_STATE) || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
+	auto pWeapon = H::Entities.GetWeapon();
+	if (pWeapon && SDK::AttribHookValue(1, "mult_dmg", pWeapon) == 0)
+		return;
+
 	if (Vars::Aimbot::General::AimFOV.Value >= 90.f)
 		return;
 
@@ -217,9 +221,12 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		case TF_WEAPON_GRENADELAUNCHER:
 			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Pipes)
 				flRadius = 146.f;
+			break;
+		case TF_WEAPON_FLAREGUN:
+		case TF_WEAPON_FLAREGUN_REVENGE:
+			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::ScorchShot && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
+				flRadius = 110.f;
 		}
-		if (!flRadius && pWeapon->m_iItemDefinitionIndex() == Pyro_s_TheScorchShot && Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::ScorchShot)
-			flRadius = 110.f;
 
 		if (flRadius)
 		{
@@ -343,7 +350,7 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::ScorchShot)
 			{
 				pWeapon = pEntity->As<CTFProjectile_Flare>()->m_hLauncher().Get()->As<CTFWeaponBase>();
-				bShouldDraw = pWeapon && pWeapon->m_iItemDefinitionIndex() == ETFWeapons::Pyro_s_TheScorchShot;
+				bShouldDraw = pWeapon && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT;
 			}
 		}
 		if (!bShouldDraw)

@@ -14,7 +14,7 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 	{
-		bool bDisciplinary = Vars::Aimbot::Melee::WhipTeam.Value && pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheDisciplinaryAction;
+		bool bDisciplinary = Vars::Aimbot::Melee::WhipTeam.Value && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0;
 		for (auto pEntity : H::Entities.GetGroup(bDisciplinary ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_ENEMIES))
 		{
 			bool bTeammate = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
@@ -32,15 +32,8 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 	if (Vars::Aimbot::General::Target.Value)
 	{
-		bool bWrench = pWeapon->GetWeaponID() == TF_WEAPON_WRENCH, bDestroySapper = false;
-		switch (pWeapon->m_iItemDefinitionIndex())
-		{
-		case Pyro_t_Homewrecker:
-		case Pyro_t_TheMaul:
-		case Pyro_t_NeonAnnihilator:
-		case Pyro_t_NeonAnnihilatorG:
-			bDestroySapper = true;
-		}
+		bool bWrench = pWeapon->GetWeaponID() == TF_WEAPON_WRENCH;
+		bool bDestroySapper = pWeapon->GetWeaponID() == TF_WEAPON_FIREAXE && SDK::AttribHookValue(0, "set_dmg_apply_to_sapper", pWeapon);
 
 		for (auto pEntity : H::Entities.GetGroup(bWrench || bDestroySapper ? EGroupType::BUILDINGS_ALL : EGroupType::BUILDINGS_ENEMIES))
 		{

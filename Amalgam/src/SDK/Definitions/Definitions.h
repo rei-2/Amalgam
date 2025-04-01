@@ -731,6 +731,21 @@ enum medigun_resist_types_t
 	MEDIGUN_NUM_RESISTS
 };
 
+enum DetonateTypes_t
+{
+	TF_DETONATE_MODE_STANDARD = 0,
+	TF_DETONATE_MODE_DOT,
+	TF_DETONATE_MODE_AIR,
+};
+
+enum FlareGunTypes_t
+{
+	FLAREGUN_NORMAL = 0,
+	FLAREGUN_DETONATE,
+	FLAREGUN_GRORDBORT,
+	FLAREGUN_SCORCHSHOT
+};
+
 enum PrecipitationType_t
 {
 	PRECIPITATION_TYPE_RAIN = 0,

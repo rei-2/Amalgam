@@ -16,6 +16,6 @@ MAKE_HOOK(CPhysicsObject_OutputDebugInfo, S::CPhysicsObject_OutputDebugInfo(), v
 	SDK::Output("Ang Velocity", std::format("{}, {}, {} ({})", angSpeed.x, angSpeed.y, angSpeed.z, angSpeed.Length()).c_str());
 	*/
 
-	SDK::Output("Linear drag", std::format("{}, {}, {} ({})", *reinterpret_cast<float*>(uintptr_t(rcx) + 10i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 11i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 12i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 22i64 * 4)).c_str());
-	SDK::Output("Angular drag", std::format("{}, {}, {} ({})", *reinterpret_cast<float*>(uintptr_t(rcx) + 13i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 14i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 15i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 23i64 * 4)).c_str());
+	SDK::Output("Linear drag", std::format("{:.6f}, {:.6f}, {:.6f} ({})", *reinterpret_cast<float*>(uintptr_t(rcx) + 10i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 11i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 12i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 22i64 * 4)).c_str());
+	SDK::Output("Angular drag", std::format("{:.6f}, {:.6f}, {:.6f} ({})", *reinterpret_cast<float*>(uintptr_t(rcx) + 13i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 14i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 15i64 * 4), *reinterpret_cast<float*>(uintptr_t(rcx) + 23i64 * 4)).c_str());
 }

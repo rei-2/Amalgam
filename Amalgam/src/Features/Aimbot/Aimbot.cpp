@@ -23,12 +23,8 @@ bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		|| pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return false;
 
-	switch (pWeapon->m_iItemDefinitionIndex())
-	{
-	case Soldier_m_RocketJumper:
-	case Demoman_s_StickyJumper:
+	if (SDK::AttribHookValue(1, "mult_dmg", pWeapon) == 0)
 		return false;
-	}
 
 	if (I::EngineVGui->IsGameUIVisible())
 		return false;

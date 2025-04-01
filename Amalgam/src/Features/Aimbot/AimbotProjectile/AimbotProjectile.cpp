@@ -84,12 +84,16 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Stickies)
 	{
 		bool bShouldAim = false;
-		switch (pWeapon->m_iItemDefinitionIndex())
+		switch (pWeapon->GetWeaponID())
 		{
-		case Demoman_s_TheQuickiebombLauncher:
-		case Demoman_s_TheScottishResistance:
-		case Pyro_s_TheScorchShot:
-			bShouldAim = true;
+		case TF_WEAPON_PIPEBOMBLAUNCHER:
+			if (SDK::AttribHookValue(0, "stickies_detonate_stickies", pWeapon) == 1)
+				bShouldAim = true;
+			break;
+		case TF_WEAPON_FLAREGUN:
+		case TF_WEAPON_FLAREGUN_REVENGE:
+			if (pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
+				bShouldAim = true;
 		}
 
 		if (bShouldAim)
@@ -151,9 +155,12 @@ static inline float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pLocal = 
 	case TF_WEAPON_PARTICLE_CANNON:
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 		flRadius = 146.f;
+		break;
+	case TF_WEAPON_FLAREGUN:
+	case TF_WEAPON_FLAREGUN_REVENGE:
+		if (pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
+			flRadius = 110.f;
 	}
-	if (!flRadius && pWeapon->m_iItemDefinitionIndex() == Pyro_s_TheScorchShot)
-		flRadius = 110.f;
 	if (!flRadius)
 		return 0.f;
 

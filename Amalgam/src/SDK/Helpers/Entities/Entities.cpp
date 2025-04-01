@@ -14,7 +14,7 @@ void CEntities::Store()
 
 	m_pLocal = pLocal->As<CTFPlayer>();
 	m_pLocalWeapon = m_pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
-	
+
 	for (int n = I::EngineClient->GetMaxClients() + 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
 	{
 		auto pEntity = I::ClientEntityList->GetClientEntity(n)->As<CBaseEntity>();
@@ -92,6 +92,10 @@ void CEntities::Store()
 		case ETFClassID::CTFProjectile_EnergyRing:
 		//case ETFClassID::CTFProjectile_Syringe:
 		{
+			if ((nClassID == ETFClassID::CTFProjectile_Cleaver || nClassID == ETFClassID::CTFStunBall) && pEntity->As<CTFGrenadePipebombProjectile>()->m_bTouched()
+				|| (nClassID == ETFClassID::CTFProjectile_Arrow || nClassID == ETFClassID::CTFProjectile_GrapplingHook) && pEntity->GetAbsVelocity().IsZero())
+				break;
+
 			m_mGroups[EGroupType::WORLD_PROJECTILES].push_back(pEntity);
 
 			if (nClassID == ETFClassID::CTFGrenadePipebombProjectile)
@@ -104,7 +108,7 @@ void CEntities::Store()
 			if (nClassID == ETFClassID::CTFProjectile_Flare)
 			{
 				auto pLauncher = pEntity->As<CTFProjectile_Flare>()->m_hLauncher().Get()->As<CTFWeaponBase>();
-				if (pEntity->m_hOwnerEntity().Get() == m_pLocal && pLauncher && pLauncher->m_iItemDefinitionIndex() == ETFWeapons::Pyro_s_TheDetonator)
+				if (pEntity->m_hOwnerEntity().Get() == m_pLocal && pLauncher && pLauncher->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_DETONATE)
 					m_mGroups[EGroupType::MISC_LOCAL_FLARES].push_back(pEntity);
 			}
 

@@ -482,9 +482,8 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
 		if (!pWeapon
 			|| pWeapon->GetWeaponID() != TF_WEAPON_KNIFE
-			&& pWeapon->m_iItemDefinitionIndex() != Heavy_t_TheHolidayPunch
-			&& pWeapon->m_iItemDefinitionIndex() != Pyro_m_TheBackburner
-			&& pWeapon->m_iItemDefinitionIndex() != Pyro_m_FestiveBackburner
+			&& !(G::PrimaryWeaponType == EWeaponType::MELEE && SDK::AttribHookValue(0, "crit_from_behind", pWeapon) > 0)
+			&& !(pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER && SDK::AttribHookValue(0, "set_flamethrower_back_crit", pWeapon) == 1)
 			|| F::PlayerUtils.IsIgnored(pPlayer->entindex()))
 			continue;
 

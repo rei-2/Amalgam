@@ -1982,12 +1982,10 @@ void CMenu::MenuSettings(int iTab)
 								// make sure bind can't be parented to itself or any of its children
 								int _iBind2 = _iBind;
 								Bind_t _tBind2;
-								while (true)
+								while (F::Binds.GetBind(_iBind2, &_tBind2))
 								{
 									if (_iBind2 == iBind)
 										tBind.m_iParent = DEFAULT_BIND;
-									if (!F::Binds.GetBind(_iBind2, &_tBind2))
-										break;
 									_iBind2 = _tBind2.m_iParent;
 								}
 							}
@@ -2928,6 +2926,9 @@ void CMenu::MenuSettings(int iTab)
 	case 3:
 		if (BeginTable("MaterialsTable", 2))
 		{
+			TableSetupColumn("MaterialsTable1", ImGuiTableColumnFlags_WidthFixed, H::Draw.Scale(288));
+			TableSetupColumn("MaterialsTable2", ImGuiTableColumnFlags_WidthFixed, GetWindowWidth());
+
 			static TextEditor TextEditor;
 			static std::string CurrentMaterial;
 			static bool LockedMaterial;

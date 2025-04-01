@@ -344,7 +344,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 				if (pWeapon && G::PrimaryWeaponType != EWeaponType::PROJECTILE)
 				{
 					bool bShowFriendly = false, bShowEnemy = true;
-					if (pWeapon->m_iItemDefinitionIndex() == Soldier_t_TheDisciplinaryAction)
+					if (G::PrimaryWeaponType == EWeaponType::MELEE && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
 						bShowFriendly = true;
 					if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
 						bShowFriendly = true, bShowEnemy = false;

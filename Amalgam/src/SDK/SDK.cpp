@@ -418,7 +418,6 @@ EWeaponType SDK::GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryTy
 	case TF_WEAPON_INVIS:
 	case TF_WEAPON_BUFF_ITEM:
 	case TF_WEAPON_GRAPPLINGHOOK:
-	case TF_WEAPON_LASER_POINTER:
 	case TF_WEAPON_ROCKETPACK:
 		return EWeaponType::UNKNOWN;
 	case TF_WEAPON_CLEAVER:
@@ -479,7 +478,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_KNIFE:
-			return pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack;
+			return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK;
 		case TF_WEAPON_BAT_WOOD:
 		case TF_WEAPON_BAT_GIFTWRAP:
 		{
