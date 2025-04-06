@@ -22,7 +22,7 @@ void CResolver::StoreSniperDots(CTFPlayerResource* pResource)
 	{
 		if (auto pOwner = pEntity->m_hOwnerEntity().Get())
 		{
-			int iUserID = pResource->GetUserID(pOwner->entindex());
+			int iUserID = pResource->m_iUserID(pOwner->entindex());
 			m_mSniperDots[iUserID] = pEntity->m_vecOrigin();
 		}
 	}
@@ -32,7 +32,7 @@ std::optional<float> CResolver::GetPitchForSniperDot(CTFPlayer* pEntity, CTFPlay
 {
 	if (m_mSniperDots.contains(pEntity->entindex()))
 	{
-		int iUserID = pResource->GetUserID(pEntity->entindex());
+		int iUserID = pResource->m_iUserID(pEntity->entindex());
 
 		const Vec3 vOrigin = m_mSniperDots[iUserID];
 		const Vec3 vEyeOrigin = pEntity->m_vecOrigin() + pEntity->GetViewOffset();
@@ -61,7 +61,7 @@ void CResolver::FrameStageNotify()
 		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 			continue;
 
-		int iUserID = pResource->GetUserID(pPlayer->entindex());
+		int iUserID = pResource->m_iUserID(pPlayer->entindex());
 		auto& tData = m_mResolverData[iUserID];
 
 		if (tData.m_flYaw)
@@ -162,7 +162,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 		{
 			if (auto pTarget = getPlayerClosestToFOV())
 			{
-				int iUserID = pResource->GetUserID(pTarget->entindex());
+				int iUserID = pResource->m_iUserID(pTarget->entindex());
 				auto& tData = m_mResolverData[iUserID];
 
 				float& flYaw = tData.m_flYaw;
@@ -184,7 +184,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 		{
 			if (auto pTarget = getPlayerClosestToFOV())
 			{
-				int iUserID = pResource->GetUserID(pTarget->entindex());
+				int iUserID = pResource->m_iUserID(pTarget->entindex());
 				auto& tData = m_mResolverData[iUserID];
 
 				if (fabsf(pTarget->m_angEyeAnglesX()) != 90.f)
@@ -211,7 +211,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 		{
 			if (auto pTarget = getPlayerClosestToFOV())
 			{
-				int iUserID = pResource->GetUserID(pTarget->entindex());
+				int iUserID = pResource->m_iUserID(pTarget->entindex());
 				auto& tData = m_mResolverData[iUserID];
 
 				bool& bMinwalk = tData.m_bMinwalk;
@@ -233,7 +233,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 		{
 			if (auto pTarget = getPlayerClosestToFOV())
 			{
-				int iUserID = pResource->GetUserID(pTarget->entindex());
+				int iUserID = pResource->m_iUserID(pTarget->entindex());
 				auto& tData = m_mResolverData[iUserID];
 
 				bool& bView = tData.m_bView;
@@ -274,7 +274,7 @@ void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase*
 	if (!pResource)
 		return;
 
-	m_iWaitingForTarget = pResource->GetUserID(pTarget->entindex());
+	m_iWaitingForTarget = pResource->m_iUserID(pTarget->entindex());
 	m_flWaitingForDamage = I::GlobalVars->curtime + F::Backtrack.GetReal() + 0.1f;
 	if (iHitbox == HITBOX_HEAD && G::CanHeadshot)
 	{
@@ -391,7 +391,7 @@ bool CResolver::GetAngles(CTFPlayer* pPlayer, float* pYaw, float* pPitch, bool* 
 	if (!pResource)
 		return false;
 
-	int iUserID = pResource->GetUserID(pPlayer->entindex());
+	int iUserID = pResource->m_iUserID(pPlayer->entindex());
 	auto& tData = m_mResolverData[iUserID];
 
 	bool bYaw = tData.m_bYaw, bPitch = tData.m_bPitch;

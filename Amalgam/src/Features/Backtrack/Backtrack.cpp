@@ -117,7 +117,7 @@ void CBacktrack::UpdateDatagram()
 
 std::deque<TickRecord>* CBacktrack::GetRecords(CBaseEntity* pEntity)
 {
-	if (m_mRecords[pEntity].empty())
+	if (!m_mRecords.contains(pEntity))
 		return nullptr;
 
 	return &m_mRecords[pEntity];
@@ -206,32 +206,39 @@ void CBacktrack::MakeRecords()
 			pPlayer->m_vecOrigin(),
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
-			m_mDidShoot[pPlayer->entindex()]
+			m_mDidShoot[pPlayer->entindex()],
+			pPlayer->m_vecOrigin()
 		);
 		const TickRecord& tCurRecord = vRecords.front();
 
 		bool bLagComp = false;
 		if (pLastRecord)
 		{
-			const Vec3 vDelta = tCurRecord.m_vOrigin - pLastRecord->m_vOrigin;
+			const Vec3 vDelta = tCurRecord.m_vBreak - pLastRecord->m_vBreak;
 			
 			static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
-			const float flDist = powf(sv_lagcompensation_teleport_dist ? sv_lagcompensation_teleport_dist->GetFloat() : 64.f, 2.f);
+			const float flDist = powf(sv_lagcompensation_teleport_dist->GetFloat(), 2.f);
 			if (vDelta.Length2DSqr() > flDist)
 			{
 				bLagComp = true;
-				for (size_t i = 1; i < vRecords.size(); i++)
-					vRecords[i].m_bInvalid = true;
+				if (!H::Entities.GetLagCompensation(pPlayer->entindex()))
+				{
+					vRecords.resize(1);
+					vRecords.front().m_flSimTime = std::numeric_limits<float>::max(); // hack
+				}
+				std::for_each(vRecords.begin(), vRecords.end(), [](auto& tRecord) { tRecord.m_bInvalid = true; });
 			}
 
-			for (auto& pRecord : vRecords)
+			for (auto& tRecord : vRecords)
 			{
-				if (!pRecord.m_bInvalid)
+				if (!tRecord.m_bInvalid)
 					continue;
 
-				pRecord.m_BoneMatrix = tCurRecord.m_BoneMatrix;
-				pRecord.m_vOrigin = tCurRecord.m_vOrigin;
-				pRecord.m_bOnShot = tCurRecord.m_bOnShot;
+				tRecord.m_BoneMatrix = tCurRecord.m_BoneMatrix;
+				tRecord.m_vOrigin = tCurRecord.m_vOrigin;
+				tRecord.m_vMins = tCurRecord.m_vMins;
+				tRecord.m_vMaxs = tCurRecord.m_vMaxs;
+				tRecord.m_bOnShot = tCurRecord.m_bOnShot;
 			}
 		}
 
@@ -259,12 +266,14 @@ void CBacktrack::CleanRecords()
 		//const int iOldSize = pRecords.size();
 
 		const int flDeadtime = I::GlobalVars->curtime + GetReal() - m_flMaxUnlag; // int ???
+		if (vRecords.size() > 1 && vRecords.back().m_flSimTime == std::numeric_limits<float>::max())
+			vRecords.pop_back();
 		while (!vRecords.empty())
 		{
-			if (vRecords.back().m_flSimTime >= flDeadtime)
+			if (vRecords.back().m_flSimTime < flDeadtime || vRecords.size() > 1 && vRecords.back().m_flSimTime == std::numeric_limits<float>::max())
+				vRecords.pop_back();
+			else
 				break;
-
-			vRecords.pop_back();
 		}
 
 		//const int iNewSize = pRecords.size();
@@ -282,7 +291,7 @@ void CBacktrack::Store()
 		return;
 
 	static auto sv_maxunlag = U::ConVars.FindVar("sv_maxunlag");
-	m_flMaxUnlag = sv_maxunlag ? sv_maxunlag->GetFloat() : 1.f;
+	m_flMaxUnlag = sv_maxunlag->GetFloat();
 	
 	MakeRecords();
 	CleanRecords();
@@ -329,7 +338,7 @@ void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 				return 0.f;
 
 			static auto host_timescale = U::ConVars.FindVar("host_timescale");
-			float flTimescale = host_timescale ? host_timescale->GetFloat() : 1.f;
+			float flTimescale = host_timescale->GetFloat();
 
 			static float flStaticReal = 0.f;
 			float flFake = GetFake(), flReal = TICKS_TO_TIME(pLocal->m_nTickBase() - m_nOldTickBase);

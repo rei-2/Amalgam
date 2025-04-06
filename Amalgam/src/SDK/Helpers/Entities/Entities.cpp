@@ -145,7 +145,7 @@ void CEntities::Store()
 	static Timer tTimer = {};
 	bool bShouldUpdateInfo = tTimer.Run(1.f);
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-	int iMaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	int iMaxShift = sv_maxusrcmdprocessticks->GetInt();
 	int iLag;
 	{
 		static int iStaticTickcout = I::GlobalVars->tickcount;
@@ -218,12 +218,12 @@ void CEntities::Store()
 			continue;
 
 		auto pResource = GetPR();
-		if (pResource && pResource->GetValid(n))
+		if (pResource && pResource->m_bValid(n))
 		{
 			if (pPlayer->IsDormant())
 			{
-				pPlayer->m_lifeState() = pResource->IsAlive(n) ? LIFE_ALIVE : LIFE_DEAD;
-				pPlayer->m_iHealth() = pResource->GetHealth(n);
+				pPlayer->m_lifeState() = pResource->m_bAlive(n) ? LIFE_ALIVE : LIFE_DEAD;
+				pPlayer->m_iHealth() = pResource->m_iHealth(n);
 				if (m_mDormancy.contains(n))
 				{
 					auto& tDormancy = m_mDormancy[n];
@@ -233,7 +233,7 @@ void CEntities::Store()
 						m_mDormancy.erase(n);
 				}
 			}
-			else if (pResource->IsAlive(n))
+			else if (pResource->m_bAlive(n))
 				m_mDormancy[n] = { pPlayer->m_vecOrigin(), I::EngineClient->Time() };
 		}
 
@@ -474,14 +474,14 @@ uint32_t CEntities::GetModel(int iIndex) { return m_mModels[iIndex]; }
 std::deque<VelFixRecord>* CEntities::GetOrigins(int iIndex) { return m_mOrigins.contains(iIndex) ? &m_mOrigins[iIndex] : nullptr; }
 
 bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
-bool CEntities::IsFriend(uint32_t friendsID) { return m_mUFriends[friendsID]; }
+bool CEntities::IsFriend(uint32_t uFriendsID) { return m_mUFriends[uFriendsID]; }
 bool CEntities::InParty(int iIndex) { return m_mIParty[iIndex]; }
-bool CEntities::InParty(uint32_t friendsID) { return m_mUParty[friendsID]; }
+bool CEntities::InParty(uint32_t uFriendsID) { return m_mUParty[uFriendsID]; }
 bool CEntities::IsF2P(int iIndex) { return m_mIF2P[iIndex]; }
-bool CEntities::IsF2P(uint32_t friendsID) { return m_mUF2P[friendsID]; }
+bool CEntities::IsF2P(uint32_t uFriendsID) { return m_mUF2P[uFriendsID]; }
 int CEntities::GetLevel(int iIndex) { return m_mILevels.contains(iIndex) ? m_mILevels[iIndex] : -2; }
-int CEntities::GetLevel(uint32_t friendsID) { return m_mULevels.contains(friendsID) ? m_mULevels[friendsID] : -2; }
+int CEntities::GetLevel(uint32_t uFriendsID) { return m_mULevels.contains(uFriendsID) ? m_mULevels[uFriendsID] : -2; }
 int CEntities::GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
-int CEntities::GetPriority(uint32_t friendsID) { return m_mUPriorities[friendsID]; }
+int CEntities::GetPriority(uint32_t uFriendsID) { return m_mUPriorities[uFriendsID]; }
 
 bool CEntities::IsSettingUpBones() { return m_bSettingUpBones; }

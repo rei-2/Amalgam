@@ -10,11 +10,6 @@
 #undef min
 #undef max
 
-#define PI 3.14159265358979323846
-#define M_RADPI 57.295779513082
-#define DEG2RAD(x) ((float)(x) * (float)((float)(PI) / 180.f))
-#define RAD2DEG(x) ((float)(x) * (float)(180.f / (float)(PI)))
-
 #pragma warning (push)
 #pragma warning (disable : 26451)
 #pragma warning (disable : 4244)

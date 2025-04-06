@@ -195,14 +195,12 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 
 void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
 {
-	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !pLocal || !pLocal->IsAlive() || !Vars::Aimbot::General::NoSpread.Value)
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !Vars::Aimbot::General::NoSpread.Value || !pLocal->IsAlive())
 		return;
 
-	{
-		auto pWeapon = H::Entities.GetWeapon();
-		if (!pWeapon || !ShouldRun(pLocal, pWeapon))
-			return;
-	}
+	auto pWeapon = H::Entities.GetWeapon();
+	if (!pWeapon || !ShouldRun(pLocal, pWeapon))
+		return;
 
 	int x = Vars::Menu::SeedPredictionDisplay.Value.x;
 	int y = Vars::Menu::SeedPredictionDisplay.Value.y + 8;

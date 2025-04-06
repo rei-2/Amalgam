@@ -404,8 +404,6 @@ namespace ImGui
 			else if (iFlags & FText_Right)
 				SetCursorPosX(flWindowWidth - flTextWidth - GetStyle().WindowPadding.x);
 		}
-		auto vDrawPos = GetDrawPos();
-		auto vCursorPos = GetCursorPos();
 		TextUnformatted(sText);
 
 		if (pFont)
@@ -563,24 +561,56 @@ namespace ImGui
 		return Disabled ? false : bReturn;
 	}
 
-	inline bool FBeginPopup(const char* str_id, ImGuiWindowFlags flags = ImGuiWindowFlags_None)
+	inline bool FBeginPopup(const char* sLabel, ImGuiWindowFlags iFlags = ImGuiWindowFlags_None)
 	{
 		PushStyleVar(ImGuiStyleVar_PopupBorderSize, H::Draw.Scale(1));
 		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
-		bool bReturn = BeginPopup(str_id, flags);
+		bool bReturn = BeginPopup(sLabel, iFlags);
 		PopStyleColor();
 		PopStyleVar();
 		return bReturn;
 	}
 
-	inline bool FBeginPopupModal(const char* name, bool* p_open, ImGuiWindowFlags flags = ImGuiWindowFlags_None)
+	inline bool FBeginPopupModal(const char* sLabel, bool* pOpen, ImGuiWindowFlags iFlags = ImGuiWindowFlags_None)
 	{
 		PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
 		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
-		bool bReturn = BeginPopupModal(name, p_open, flags);
+		bool bReturn = BeginPopupModal(sLabel, pOpen, iFlags);
 		PopStyleColor();
 		PopStyleVar();
 		return bReturn;
+	}
+
+	inline bool FBeginMenu(const char* sLabel, ImVec4* pColor, float flRounding = H::Draw.Scale(3), bool bEnabled = true)
+	{
+		ImDrawList* pDrawList = GetWindowDrawList();
+		ImVec2 vDrawPos = GetDrawPos();
+		ImVec2 vOriginalPos = GetCursorPos();
+		ImVec2 vPos = vOriginalPos + vDrawPos + ImVec2(GetWindowWidth() - H::Draw.Scale(30), -H::Draw.Scale(1));
+
+		PushStyleVar(ImGuiStyleVar_PopupBorderSize, H::Draw.Scale(1));
+		PushStyleVar(ImGuiStyleVar_FrameRounding, flRounding);
+		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
+		if (pColor)
+		{
+			auto tColor = *pColor;
+			PushStyleColor(ImGuiCol_HeaderHovered, tColor);
+			tColor.x /= 1.1f; tColor.y /= 1.1f; tColor.z /= 1.1f;
+			PushStyleColor(ImGuiCol_HeaderActive, tColor);
+		}
+		bool bReturn = BeginMenu(sLabel, bEnabled, false);
+		if (pColor)
+			PopStyleColor(2);
+		PopStyleColor();
+		PopStyleVar(2);
+
+		pDrawList->AddText(F::Render.IconFont, F::Render.IconFont->FontSize, vPos, F::Render.Inactive, ICON_MD_KEYBOARD_ARROW_RIGHT);
+		return bReturn;
+	}
+
+	inline bool FBeginMenu(const char* sLabel, ImVec4 tColor = { 0.2f, 0.6f, 0.85f, 1.f }, float flRounding = H::Draw.Scale(3), bool bEnabled = true)
+	{
+		return FBeginMenu(sLabel, &tColor, flRounding, bEnabled);
 	}
 
 	static std::unordered_map<const char*, float> mLastHeights;
@@ -891,7 +921,7 @@ namespace ImGui
 			tColor.x /= 1.1f; tColor.y /= 1.1f; tColor.z /= 1.1f;
 			PushStyleColor(ImGuiCol_HeaderActive, tColor);
 		}
-		const bool bReturn = Selectable(sLabel, bSelected, iFlags, vSize);
+		bool bReturn = Selectable(sLabel, bSelected, iFlags, vSize);
 		if (pColor)
 			PopStyleColor(2);
 		PopStyleVar();

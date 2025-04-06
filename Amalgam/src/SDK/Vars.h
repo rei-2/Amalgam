@@ -571,9 +571,9 @@ namespace Vars
 			CVar(Pitch, 0, VISUAL)
 			CVar(Yaw, 0, VISUAL)
 			CVar(Roll, 0, VISUAL)
-			CVar(FieldOfView, 0.f, VISUAL)
 			CVar(SwayScale, 0.f, VISUAL)
 			CVar(SwayInterp, 0.f, VISUAL)
+			CVar(FieldOfView, 0.f, VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
 
 		SUBNAMESPACE_BEGIN(Particles)

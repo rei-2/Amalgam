@@ -921,6 +921,7 @@
     <ClCompile Include="src\Hooks\CL_ReadPackets.cpp" />
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
+    <ClCompile Include="src\Hooks\CTFScatterGun_FireBullet.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendDatagram.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendNetMsg.cpp" />
@@ -1201,6 +1202,7 @@
     <ClInclude Include="src\SDK\Definitions\Main\CSniperDot.h" />
     <ClInclude Include="src\SDK\Definitions\Main\IAchievementMgr.h" />
     <ClInclude Include="src\SDK\Definitions\Main\MD5.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\bitvec.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\BSPFlags.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IMoveHelper.h" />

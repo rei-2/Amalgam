@@ -20,7 +20,7 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 	bool bFlip = false;
 	{
 		static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
-		if (cl_flipviewmodels ? cl_flipviewmodels->GetBool() : false)
+		if (cl_flipviewmodels->GetBool())
 			bFlip = !bFlip;
 		auto pWeapon = H::Entities.GetWeapon();
 		if (pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW)

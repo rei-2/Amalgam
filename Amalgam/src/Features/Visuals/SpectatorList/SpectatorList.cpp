@@ -37,18 +37,18 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		default: continue;
 		}
 
-		int respawnIn = 0; float respawnTime = 0;
+		float flRespawnTime = 0.f, flRespawnIn = 0.f;
+		bool bRespawnTimeIncreased = false; // theoretically the respawn times could be changed by the map but oh well
 		if (auto pResource = H::Entities.GetPR())
 		{
-			respawnTime = pResource->GetNextRespawnTime(iIndex);
-			respawnIn = std::max(respawnTime - I::GlobalVars->curtime, 0.f);
+			flRespawnTime = pResource->m_flNextRespawnTime(iIndex);
+			flRespawnIn = std::max(flRespawnTime - TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick), 0.f);
 		}
-		bool respawnTimeIncreased = false; // theoretically the respawn times could be changed by the map but oh well
 		if (!m_mRespawnCache.contains(iIndex))
-			m_mRespawnCache[iIndex] = respawnTime;
-		if (m_mRespawnCache[iIndex] + 0.9f < respawnTime)
+			m_mRespawnCache[iIndex] = flRespawnTime;
+		if (m_mRespawnCache[iIndex] + 0.9f < flRespawnTime)
 		{
-			respawnTimeIncreased = true;
+			bRespawnTimeIncreased = true;
 			m_mRespawnCache[iIndex] = -1.f;
 		}
 
@@ -56,7 +56,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 		{
 			std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-			m_vSpectators.emplace_back(sName, sMode, respawnIn, respawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), H::Entities.InParty(pPlayer->entindex()), pPlayer->entindex());
+			m_vSpectators.emplace_back(sName, sMode, flRespawnIn, bRespawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), H::Entities.InParty(pPlayer->entindex()), pPlayer->entindex());
 		}
 	}
 
@@ -146,6 +146,6 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].Color;
 		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
 			color = color.Lerp({ 255, 150, 0, 255 }, 0.5f);
-		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, std::format("{} - {} (respawn {}s)", Spectator.m_sName, Spectator.m_sMode, Spectator.m_iRespawnIn).c_str());
+		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, std::format("{} ({} - respawn {}s)", Spectator.m_sName, Spectator.m_sMode, ceilf(Spectator.m_flRespawnIn)).c_str());
 	}
 }

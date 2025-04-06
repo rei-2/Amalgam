@@ -31,18 +31,21 @@ public:
 	}
 };
 
-#define MAKE_HOOK(name, address, type, ...) namespace Hooks \
-{\
-	namespace name\
-	{\
+#define MAKE_HOOK(name, address, type, ...) \
+namespace Hooks \
+{ \
+	namespace name \
+	{ \
 		void Init(); \
 		inline CHook Hook(#name, Init); \
 		using FN = type(__fastcall*)(__VA_ARGS__); \
 		type __fastcall Func(__VA_ARGS__); \
-	}\
+	} \
 } \
 void Hooks::name::Init() { Hook.Create(reinterpret_cast<void*>(address), Func); } \
 type __fastcall Hooks::name::Func(__VA_ARGS__)
+
+#define CALL_ORIGINAL Hook.As<FN>()
 
 class CHooks
 {
@@ -58,5 +61,3 @@ public:
 };
 
 ADD_FEATURE_CUSTOM(CHooks, Hooks, U);
-
-#define CALL_ORIGINAL Hook.As<FN>()

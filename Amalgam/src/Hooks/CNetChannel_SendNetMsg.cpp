@@ -162,7 +162,7 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 		if (!F::Ticks.m_bSpeedhack)
 		{
 			static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-			const int iAllowedNewCommands = std::max((sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24) - F::Ticks.m_iShiftedTicks, 0);
+			const int iAllowedNewCommands = std::max(sv_maxusrcmdprocessticks->GetInt() - F::Ticks.m_iShiftedTicks, 0);
 			const int iCmdCount = pMsg->m_nNewCommands + pMsg->m_nBackupCommands - 3;
 			if (iCmdCount > iAllowedNewCommands)
 			{

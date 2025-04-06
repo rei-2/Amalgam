@@ -21,14 +21,14 @@ MAKE_HOOK(CTFBadgePanel_SetupBadge, S::CTFBadgePanel_SetupBadge(), void,
 	if (!I::EngineClient->GetPlayerInfo(I::EngineClient->GetLocalPlayer(), &pi))
 		return CALL_ORIGINAL(rcx, pMatchDesc, levelInfo, steamID);
 
-	auto friendsID = steamID.GetAccountID();
+	uint32_t uFriendsID = steamID.GetAccountID();
 	// probably only need to worry about local, friends, a/o party
 	bool bShouldHide = false;
-	if (pi.friendsID == friendsID)
+	if (pi.friendsID == uFriendsID)
 		bShouldHide = Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Local;
-	else if (H::Entities.IsFriend(friendsID))
+	else if (H::Entities.IsFriend(uFriendsID))
 		bShouldHide = Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Friends;
-	else if (H::Entities.InParty(friendsID))
+	else if (H::Entities.InParty(uFriendsID))
 		bShouldHide = Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Party;
 	if (!bShouldHide)
 		return CALL_ORIGINAL(rcx, pMatchDesc, levelInfo, steamID);

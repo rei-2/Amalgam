@@ -565,7 +565,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		CGameTrace trace = {};
 		CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
-		const float flGrappleDistance = tf_grapplinghook_max_distance ? tf_grapplinghook_max_distance->GetFloat() : 2000.f;
+		const float flGrappleDistance = tf_grapplinghook_max_distance->GetFloat();
 		Trace(vPos, vPos + vForward * flGrappleDistance, MASK_SOLID, &filter, &trace);
 		return trace.DidHit() && !(trace.surface.flags & SURF_SKY);
 	}
@@ -751,10 +751,10 @@ TraceType_t CTraceFilterSetup::GetTraceType() const
 	return TRACE_EVERYTHING;
 }
 
-void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, bool bPipes, bool bInterp)
+void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, bool bPipes, bool bInterp, bool bAllowFlip)
 {
 	static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
-	if (cl_flipviewmodels && cl_flipviewmodels->GetBool())
+	if (bAllowFlip && cl_flipviewmodels->GetBool())
 		vOffset.y *= -1.f;
 
 	const Vec3 vShootPos = bInterp ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();

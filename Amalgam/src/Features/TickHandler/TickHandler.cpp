@@ -97,10 +97,26 @@ Vec3 CTickshiftHandler::GetShootPos()
 	return m_vShootPos;
 }
 
+void CTickshiftHandler::SaveShootAngle(CUserCmd* pCmd, bool bSendPacket)
+{
+	static auto sv_maxusrcmdprocessticks_holdaim = U::ConVars.FindVar("sv_maxusrcmdprocessticks_holdaim");
+
+	if (bSendPacket)
+		m_bShootAngle = false;
+	if (!m_bShootAngle && G::Attacking == 1 && sv_maxusrcmdprocessticks_holdaim->GetBool())
+		m_vShootAngle = pCmd->viewangles, m_bShootAngle = true;
+}
+Vec3* CTickshiftHandler::GetShootAngle()
+{
+	if (m_bShootAngle && I::ClientState->chokedcommands)
+		return &m_vShootAngle;
+	return nullptr;
+}
+
 bool CTickshiftHandler::CanChoke()
 {
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-	int iMaxTicks = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	int iMaxTicks = sv_maxusrcmdprocessticks->GetInt();
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 		iMaxTicks = std::min(iMaxTicks, 8);
 
@@ -229,7 +245,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 		m_iWait = 2;
 
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-	m_iMaxShift = sv_maxusrcmdprocessticks ? sv_maxusrcmdprocessticks->GetInt() : 24;
+	m_iMaxShift = sv_maxusrcmdprocessticks->GetInt();
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 		m_iMaxShift = std::min(m_iMaxShift, 8);
 	m_iMaxShift -= std::max(24 - std::clamp(Vars::CL_Move::Doubletap::RechargeLimit.Value, 1, 24), F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
@@ -306,13 +322,17 @@ void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CT
 	CLMove(accumulated_extra_samples, bFinalTick);
 }
 
-void CTickshiftHandler::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd)
+void CTickshiftHandler::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
 {
 	if (!pLocal)
 		return;
 
 	Doubletap(pLocal, pCmd);
 	AntiWarp(pLocal, pCmd);
+	ManagePacket(pCmd, pSendPacket);
+
+	F::Ticks.SaveShootPos(pLocal);
+	F::Ticks.SaveShootAngle(pCmd, *pSendPacket);
 }
 
 void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
@@ -350,6 +370,8 @@ int CTickshiftHandler::GetTicks(CTFWeaponBase* pWeapon)
 
 int CTickshiftHandler::GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks)
 {
+	iTicks = std::min(m_iMaxShift + 1, iTicks);
+
 	int iDelay = 1;
 	switch (pWeapon->GetWeaponID())
 	{

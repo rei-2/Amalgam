@@ -203,13 +203,13 @@ void COutput::CheatDetection(std::string sName, std::string sAction, std::string
 }
 
 // Tags
-void COutput::TagsOnJoin(std::string sName, uint32_t friendsID)
+void COutput::TagsOnJoin(std::string sName, uint32_t uFriendsID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
 
 	std::vector<std::pair<std::string, std::string>> vColorsTags = {};
-	for (auto& iID : F::PlayerUtils.m_mPlayerTags[friendsID])
+	for (auto& iID : F::PlayerUtils.m_mPlayerTags[uFriendsID])
 	{
 		if (auto pTag = F::PlayerUtils.GetTag(iID))
 			vColorsTags.emplace_back(pTag->Color.ToHexA(), pTag->Name);
@@ -268,15 +268,15 @@ void COutput::TagsChanged(std::string sName, std::string sAction, std::string sC
 }
 
 // Aliases
-void COutput::AliasOnJoin(std::string sName, uint32_t friendsID)
+void COutput::AliasOnJoin(std::string sName, uint32_t uFriendsID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
 
-	if (!F::PlayerUtils.m_mPlayerAliases.contains(friendsID))
+	if (!F::PlayerUtils.m_mPlayerAliases.contains(uFriendsID))
 		return;
 
-	auto& sAlias = F::PlayerUtils.m_mPlayerAliases[friendsID];
+	auto& sAlias = F::PlayerUtils.m_mPlayerAliases[uFriendsID];
 
 	std::string sOutput = std::format("{} has the alias \"{}\"", (sName), (sAlias));
 	std::string sChat = std::format("{}{}\x1 has the alias \"{}{}\x1\"", (yellow), (sName), (yellow), (sAlias));

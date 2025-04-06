@@ -59,30 +59,30 @@ public:
 		return iID;
 	}
 
-	void AddTag(uint32_t friendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	void AddTag(uint32_t friendsID, int iID, bool bSave = true, std::string sName = "");
+	void AddTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	void AddTag(uint32_t uFriendsID, int iID, bool bSave = true, std::string sName = "");
 	void AddTag(int iIndex, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
 	void AddTag(int iIndex, int iID, bool bSave = true, std::string sName = "");
-	void RemoveTag(uint32_t friendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	void RemoveTag(uint32_t friendsID, int iID, bool bSave = true, std::string sName = "");
+	void RemoveTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	void RemoveTag(uint32_t uFriendsID, int iID, bool bSave = true, std::string sName = "");
 	void RemoveTag(int iIndex, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
 	void RemoveTag(int iIndex, int iID, bool bSave = true, std::string sName = "");
-	bool HasTags(uint32_t friendsID, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	bool HasTags(uint32_t friendsID);
+	bool HasTags(uint32_t uFriendsID, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	bool HasTags(uint32_t uFriendsID);
 	bool HasTags(int iIndex, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
 	bool HasTags(int iIndex);
-	bool HasTag(uint32_t friendsID, int iID, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	bool HasTag(uint32_t friendsID, int iID);
+	bool HasTag(uint32_t uFriendsID, int iID, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	bool HasTag(uint32_t uFriendsID, int iID);
 	bool HasTag(int iIndex, int iID, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
 	bool HasTag(int iIndex, int iID);
 
-	int GetPriority(uint32_t friendsID, bool bCache = true);
+	int GetPriority(uint32_t uFriendsID, bool bCache = true);
 	int GetPriority(int iIndex, bool bCache = true);
-	PriorityLabel_t* GetSignificantTag(uint32_t friendsID, int iMode = 1); // iMode: 0 - Priorities & Labels, 1 - Priorities, 2 - Labels
+	PriorityLabel_t* GetSignificantTag(uint32_t uFriendsID, int iMode = 1); // iMode: 0 - Priorities & Labels, 1 - Priorities, 2 - Labels
 	PriorityLabel_t* GetSignificantTag(int iIndex, int iMode = 1); // iMode: 0 - Priorities & Labels, 1 - Priorities, 2 - Labels
-	bool IsIgnored(uint32_t friendsID);
+	bool IsIgnored(uint32_t uFriendsID);
 	bool IsIgnored(int iIndex);
-	bool IsPrioritized(uint32_t friendsID);
+	bool IsPrioritized(uint32_t uFriendsID);
 	bool IsPrioritized(int iIndex);
 
 	const char* GetPlayerName(int iIndex, const char* sDefault, int* pType = nullptr);

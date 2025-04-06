@@ -20,8 +20,8 @@ public:
 	void ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue);
 	void ReportResolver(std::string sMessage);
 
-	void TagsOnJoin(std::string sName, uint32_t friendsID);
-	void AliasOnJoin(std::string sName, uint32_t friendsID);
+	void TagsOnJoin(std::string sName, uint32_t uFriendsID);
+	void AliasOnJoin(std::string sName, uint32_t uFriendsID);
 };
 
 ADD_FEATURE(COutput, Output)

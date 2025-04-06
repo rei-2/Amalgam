@@ -73,7 +73,7 @@ static std::vector<std::function<void()>> vDynamic = {
             return;
 
         std::string sFind = "\\{self}";
-        std::string sReplace = pResource->GetPlayerName(I::EngineClient->GetLocalPlayer());
+        std::string sReplace = pResource->m_pszPlayerName(I::EngineClient->GetLocalPlayer());
 
         size_t iPos = 0;
         while (true)
@@ -94,7 +94,7 @@ static std::vector<std::function<void()>> vDynamic = {
 
         std::string sFind = "\\{team}";
         std::string sReplace = PRE_STR"\x7""cccccc";
-        switch (pResource->GetTeam(I::EngineClient->GetLocalPlayer()))
+        switch (pResource->m_iTeam(I::EngineClient->GetLocalPlayer()))
         {
         case TF_TEAM_BLUE: sReplace = PRE_STR"\x7""99ccff"; break;
         case TF_TEAM_RED: sReplace = PRE_STR"\x7""ff4040"; break;

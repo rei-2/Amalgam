@@ -808,15 +808,15 @@ void CMenu::MenuVisuals(int iTab)
 				FSlider("Yaw", Vars::Visuals::Viewmodel::Yaw, -180, 180, 5, "%i", FSlider_Right | FSlider_Clamp | FSlider_Precision, nullptr, "Viewmodel yaw");
 				FSlider("Offset Z", Vars::Visuals::Viewmodel::OffsetZ, -45, 45, 5, "%i", FSlider_Left | FSlider_Precision, nullptr, "Viewmodel offset z");
 				FSlider("Roll", Vars::Visuals::Viewmodel::Roll, -180, 180, 5, "%i", FSlider_Right | FSlider_Clamp | FSlider_Precision, nullptr, "Viewmodel roll");
-				PushTransparent(!FGet(Vars::Visuals::Viewmodel::FieldOfView));
-				{
-					FSlider("Field of view## Viewmodel", Vars::Visuals::Viewmodel::FieldOfView, 0.f, 180.f, 1.f, "%.0f", FSlider_Clamp | FSlider_Precision, nullptr, "Viewmodel field of view");
-				}
-				PopTransparent();
 				PushTransparent(!FGet(Vars::Visuals::Viewmodel::SwayScale) || !FGet(Vars::Visuals::Viewmodel::SwayInterp));
 				{
 					FSlider("Sway scale", Vars::Visuals::Viewmodel::SwayScale, 0.f, 5.f, 0.5f, "%g", FSlider_Left | FSlider_Min | FSlider_Precision, nullptr, "Viewmodel sway scale");
 					FSlider("Sway interp", Vars::Visuals::Viewmodel::SwayInterp, 0.f, 1.f, 0.1f, "%g", FSlider_Right | FSlider_Min | FSlider_Precision, nullptr, "Viewmodel sway interp");
+				}
+				PopTransparent();
+				PushTransparent(!FGet(Vars::Visuals::Viewmodel::FieldOfView));
+				{
+					FSlider("Field of view## Viewmodel", Vars::Visuals::Viewmodel::FieldOfView, 0.f, 180.f, 1.f, "%.0f", FSlider_Clamp | FSlider_Precision, nullptr, "Viewmodel field of view");
 				}
 				PopTransparent();
 			} EndSection();
@@ -897,9 +897,9 @@ void CMenu::MenuVisuals(int iTab)
 				if (Section("Debug## Part2", true))
 				{
 					FToggle("Simulation override", Vars::Visuals::Trajectory::Override);
-					FSlider("Offset X", Vars::Visuals::Trajectory::OffX, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
-					FSlider("Offset Y", Vars::Visuals::Trajectory::OffY, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
-					FSlider("Offset Z", Vars::Visuals::Trajectory::OffZ, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
+					FSlider("Offset X## Simulation", Vars::Visuals::Trajectory::OffX, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
+					FSlider("Offset Y## Simulation", Vars::Visuals::Trajectory::OffY, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
+					FSlider("Offset Z## Simulation", Vars::Visuals::Trajectory::OffZ, -25.f, 25.f, 0.5f, "%g", FSlider_Precision);
 					FToggle("Pipes", Vars::Visuals::Trajectory::Pipes);
 					FSlider("Hull", Vars::Visuals::Trajectory::Hull, 0.f, 10.f, 0.5f, "%g", FSlider_Min | FSlider_Precision);
 					FSlider("Speed", Vars::Visuals::Trajectory::Speed, 0.f, 5000.f, 50.f, "%g", FSlider_Min | FSlider_Precision);
@@ -2088,50 +2088,25 @@ void CMenu::MenuSettings(int iTab)
 							SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(6) });
 							IconImage(ICON_MD_VISIBILITY);
 						}
+						else if (player.m_bFriend)
+						{
+							lOffset = H::Draw.Scale(29);
+							SetCursorPos({ vOriginalPos.x + H::Draw.Scale(7), vOriginalPos.y + H::Draw.Scale(6) });
+							IconImage(ICON_MD_GROUP);
+						}
 						SetCursorPos({ vOriginalPos.x + lOffset, vOriginalPos.y + H::Draw.Scale(7) });
 						FText(player.m_sName.c_str());
 						lOffset += FCalcTextSize(player.m_sName.c_str()).x + H::Draw.Scale(8);
 
 						// buttons
-						bool bClicked = false, bAdd = false, bAlias = false, bPitch = false, bYaw = false, bMinwalk = false, bView = false;
-						
-						int iOffset = 2;
-
-						if (!player.m_bFake)
-						{
-							// right
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
-							bAlias = IconButton(ICON_MD_EDIT);
-
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
-							bAdd = IconButton(ICON_MD_ADD);
-						}
-
-						bool bResolver = Vars::AntiHack::Resolver::Enabled.Value && !player.m_bLocal;
-						if (bResolver)
-						{
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
-							bView = IconButton(ICON_MD_NEAR_ME);
-
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
-							bMinwalk = IconButton(ICON_MD_DIRECTIONS_WALK);
-
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
-							bYaw = IconButton(ICON_MD_ARROW_FORWARD);
-
-							SetCursorPos({ vOriginalPos.x + flWidth - H::Draw.Scale(iOffset += 20), vOriginalPos.y + H::Draw.Scale(6) });
-							bPitch = IconButton(ICON_MD_ARROW_UPWARD);
-						}
-
+						bool bClicked = false;
 						if (!player.m_bFake)
 						{
 							// tag bar
 							SetCursorPos({ vOriginalPos.x + lOffset, vOriginalPos.y });
-							if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(bResolver ? 128 : 48), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
+							if (BeginChild(std::format("TagBar{}", player.m_uFriendsID).c_str(), { flWidth - lOffset - H::Draw.Scale(4), flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoBackground))
 							{
 								std::vector<std::pair<PriorityLabel_t*, int>> vTags = {};
-								if (player.m_bFriend)
-									vTags.emplace_back(&F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)], 0);
 								if (player.m_bParty)
 									vTags.emplace_back(&F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)], 0);
 								if (player.m_bF2P)
@@ -2169,33 +2144,15 @@ void CMenu::MenuSettings(int iTab)
 								PopFont();
 							} EndChild();
 
-							//bClicked = IsItemClicked();
-							bClicked = IsItemHovered() && IsMouseClicked(ImGuiMouseButton_Right) || bClicked;
-
-							SetCursorPos(vOriginalPos);
-							/*bClicked = */Button(std::format("##{}", player.m_sName).c_str(), { flWidth, 28 }) || bClicked;
-							bClicked = IsItemHovered() && IsMouseClicked(ImGuiMouseButton_Right) || bClicked;
+							bClicked = IsItemHovered() && IsMouseClicked(ImGuiMouseButton_Right);
 						}
-
 						SetCursorPos(vOriginalPos);
-						DebugDummy({ 0, H::Draw.Scale(28) });
-
-						if (bClicked)
-							OpenPopup(std::format("Clicked{}", player.m_uFriendsID).c_str());
-						else if (bAdd)
-							OpenPopup(std::format("Add{}", player.m_uFriendsID).c_str());
-						else if (bAlias)
-							OpenPopup(std::format("Alias{}", player.m_uFriendsID).c_str());
-						else if (bYaw)
-							OpenPopup(std::format("Yaw{}", player.m_uFriendsID).c_str());
-						else if (bPitch)
-							OpenPopup(std::format("Pitch{}", player.m_uFriendsID).c_str());
-						else if (bMinwalk)
-							OpenPopup(std::format("Minwalk{}", player.m_uFriendsID).c_str());
-						else if (bView)
-							OpenPopup(std::format("View{}", player.m_uFriendsID).c_str());
+						Button(std::format("##{}", player.m_sName).c_str(), { flWidth, 28 });
+						bClicked = bClicked || IsItemHovered() && IsMouseClicked(ImGuiMouseButton_Right);
 
 						// popups
+						if (bClicked)
+							OpenPopup(std::format("Clicked{}", player.m_uFriendsID).c_str());
 						if (FBeginPopup(std::format("Clicked{}", player.m_uFriendsID).c_str()))
 						{
 							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
@@ -2214,173 +2171,182 @@ void CMenu::MenuSettings(int iTab)
 								PopStyleColor();
 							}
 
-							if (FSelectable("Profile"))
-								I::SteamFriends->ActivateGameOverlayToUser("steamid", CSteamID(player.m_uFriendsID, k_EUniversePublic, k_EAccountTypeIndividual));
+							if (!player.m_bFake)
+							{
+								if (FSelectable("Profile"))
+									I::SteamFriends->ActivateGameOverlayToUser("steamid", CSteamID(player.m_uFriendsID, k_EUniversePublic, k_EAccountTypeIndividual));
 
-							if (FSelectable("History"))
-								I::SteamFriends->ActivateGameOverlayToWebPage(std::format("https://steamhistory.net/id/{}", CSteamID(player.m_uFriendsID, k_EUniversePublic, k_EAccountTypeIndividual).ConvertToUint64()).c_str());
+								if (FSelectable("History"))
+									I::SteamFriends->ActivateGameOverlayToWebPage(std::format("https://steamhistory.net/id/{}", CSteamID(player.m_uFriendsID, k_EUniversePublic, k_EAccountTypeIndividual).ConvertToUint64()).c_str());
+							}
 
 							if (FSelectable(F::Spectate.m_iIntendedTarget == player.m_iUserID ? "Unspectate" : "Spectate"))
 								F::Spectate.SetTarget(player.m_iUserID);
 
-							if (!player.m_bLocal && FSelectable("Votekick"))
-								I::ClientState->SendStringCmd(std::format("callvote kick {}", player.m_iUserID).c_str());
-
-							PopStyleVar();
-							EndPopup();
-						}
-						else if (FBeginPopup(std::format("Add{}", player.m_uFriendsID).c_str()))
-						{
-							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
-
-							for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
+							if (FBeginMenu("Votekick"))
 							{
-								int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
-								auto& tTag = *it;
-								if (!tTag.Assignable || F::PlayerUtils.HasTag(player.m_uFriendsID, iID))
-									continue;
+								if (FSelectable("No Reason"))
+									I::ClientState->SendStringCmd(std::format("callvote Kick \"{} other\"", player.m_iUserID).c_str());
 
-								auto imColor = ColorToVec(tTag.Color);
-								PushStyleColor(ImGuiCol_Text, imColor);
-								imColor.x /= 3; imColor.y /= 3; imColor.z /= 3;
-								if (FSelectable(tTag.Name.c_str(), imColor))
-									F::PlayerUtils.AddTag(player.m_uFriendsID, iID, true, player.m_sName);
-								PopStyleColor();
+								if (FSelectable("Cheating"))
+									I::ClientState->SendStringCmd(std::format("callvote Kick \"{} cheating\"", player.m_iUserID).c_str());
+
+								if (FSelectable("Idle"))
+									I::ClientState->SendStringCmd(std::format("callvote Kick \"{} idle\"", player.m_iUserID).c_str());
+
+								if (FSelectable("Scamming"))
+									I::ClientState->SendStringCmd(std::format("callvote Kick \"{} scamming\"", player.m_iUserID).c_str());
+								
+								ImGui::EndMenu();
 							}
 
-							PopStyleVar();
-							EndPopup();
-						}
-						else if (FBeginPopup(std::format("Alias{}", player.m_uFriendsID).c_str()))
-						{
-							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
-
-							FText("Alias");
-
-							bool bHasAlias = F::PlayerUtils.m_mPlayerAliases.contains(player.m_uFriendsID);
-							static std::string sInput = "";
-
-							PushStyleVar(ImGuiStyleVar_FramePadding, { H::Draw.Scale(8), H::Draw.Scale(8) });
-							PushItemWidth(H::Draw.Scale(150));
-							bool bEnter = InputText("##Alias", &sInput, ImGuiInputTextFlags_EnterReturnsTrue);
-							if (!IsItemFocused())
-								sInput = bHasAlias ? F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID] : "";
-							PopItemWidth();
-							PopStyleVar();
-
-							if (bEnter)
+							if (!player.m_bFake)
 							{
-								if (sInput.empty() && F::PlayerUtils.m_mPlayerAliases.contains(player.m_uFriendsID))
+								if (FBeginMenu("Add tag"))
 								{
-									F::Output.AliasChanged(player.m_sName, "Removed", F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID]);
-
-									auto find = F::PlayerUtils.m_mPlayerAliases.find(player.m_uFriendsID);
-									if (find != F::PlayerUtils.m_mPlayerAliases.end())
-										F::PlayerUtils.m_mPlayerAliases.erase(find);
-									F::PlayerUtils.m_bSave = true;
-								}
-								else
-								{
-									F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID] = sInput;
-									F::PlayerUtils.m_bSave = true;
-
-									F::Output.AliasChanged(player.m_sName, bHasAlias ? "Changed" : "Added", sInput);
-								}
-							}
-
-							PopStyleVar();
-							EndPopup();
-						}
-						else if (FBeginPopup(std::format("Yaw{}", player.m_uFriendsID).c_str()))
-						{
-							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
-
-							static std::vector<std::pair<std::string, float>> vYaws = {
-								{ "Auto", 0.f },
-								{ "Forward", 0.f },
-								{ "Left", 90.f },
-								{ "Right", -90.f },
-								{ "Backwards", 180.f }
-							};
-							for (auto& [sYaw, flValue] : vYaws)
-							{
-								if (FSelectable(sYaw.c_str()))
-								{
-									switch (FNV1A::Hash32(sYaw.c_str()))
+									for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
 									{
-									case FNV1A::Hash32Const("Auto"):
-										F::Resolver.SetYaw(player.m_iUserID, 0.f, true);
-										break;
-									default:
-										F::Resolver.SetYaw(player.m_iUserID, flValue);
+										int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
+										auto& tTag = *it;
+										if (!tTag.Assignable || F::PlayerUtils.HasTag(player.m_uFriendsID, iID))
+											continue;
+
+										auto imColor = ColorToVec(tTag.Color);
+										PushStyleColor(ImGuiCol_Text, imColor);
+										imColor.x /= 3; imColor.y /= 3; imColor.z /= 3;
+										if (FSelectable(tTag.Name.c_str(), imColor))
+											F::PlayerUtils.AddTag(player.m_uFriendsID, iID, true, player.m_sName);
+										PopStyleColor();
 									}
+
+									ImGui::EndMenu();
 								}
-							}
 
-							PopStyleVar();
-							EndPopup();
-						}
-						else if (FBeginPopup(std::format("Pitch{}", player.m_uFriendsID).c_str()))
-						{
-							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
-
-							static std::vector<std::pair<std::string, float>> vPitches = {
-								{ "Auto", 0.f },
-								{ "Up", -90.f },
-								{ "Down", 90.f },
-								{ "Zero", 0.f },
-								{ "Inverse", 0.f }
-							};
-							for (auto& [sPitch, flValue] : vPitches)
-							{
-								if (FSelectable(sPitch.c_str()))
+								if (FBeginMenu("Alias"))
 								{
-									switch (FNV1A::Hash32(sPitch.c_str()))
+									bool bHasAlias = F::PlayerUtils.m_mPlayerAliases.contains(player.m_uFriendsID);
+									static std::string sInput = "";
+
+									PushStyleVar(ImGuiStyleVar_FramePadding, { H::Draw.Scale(8), H::Draw.Scale(8) });
+									PushItemWidth(H::Draw.Scale(150));
+									bool bEnter = InputText("##Alias", &sInput, ImGuiInputTextFlags_EnterReturnsTrue);
+									if (!IsItemFocused())
+										sInput = bHasAlias ? F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID] : "";
+									PopItemWidth();
+									PopStyleVar();
+
+									if (bEnter)
 									{
-									case FNV1A::Hash32Const("Auto"):
-										F::Resolver.SetPitch(player.m_iUserID, 0.f, false, true);
-										break;
-									case FNV1A::Hash32Const("Inverse"):
-										F::Resolver.SetPitch(player.m_iUserID, 0.f, true);
-										break;
-									default:
-										F::Resolver.SetPitch(player.m_iUserID, flValue);
+										if (sInput.empty() && F::PlayerUtils.m_mPlayerAliases.contains(player.m_uFriendsID))
+										{
+											F::Output.AliasChanged(player.m_sName, "Removed", F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID]);
+
+											auto find = F::PlayerUtils.m_mPlayerAliases.find(player.m_uFriendsID);
+											if (find != F::PlayerUtils.m_mPlayerAliases.end())
+												F::PlayerUtils.m_mPlayerAliases.erase(find);
+											F::PlayerUtils.m_bSave = true;
+										}
+										else
+										{
+											F::PlayerUtils.m_mPlayerAliases[player.m_uFriendsID] = sInput;
+											F::PlayerUtils.m_bSave = true;
+
+											F::Output.AliasChanged(player.m_sName, bHasAlias ? "Changed" : "Added", sInput);
+										}
 									}
+
+									ImGui::EndMenu();
 								}
 							}
 
-							PopStyleVar();
-							EndPopup();
-						}
-						else if (FBeginPopup(std::format("Minwalk{}", player.m_uFriendsID).c_str()))
-						{
-							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
-
-							static std::vector<std::pair<std::string, bool>> vPitches = {
-								{ "Minwalk on", true },
-								{ "Minwalk off", false }
-							};
-							for (auto& [sPitch, bValue] : vPitches)
+							if (Vars::AntiHack::Resolver::Enabled.Value && !player.m_bLocal)
 							{
-								if (FSelectable(sPitch.c_str()))
-									F::Resolver.SetMinwalk(player.m_iUserID, bValue);
-							}
+								if (FBeginMenu("Set yaw"))
+								{
+									static std::vector<std::pair<std::string, float>> vYaws = {
+										{ "Auto", 0.f },
+										{ "Forward", 0.f },
+										{ "Left", 90.f },
+										{ "Right", -90.f },
+										{ "Backwards", 180.f }
+									};
+									for (auto& [sYaw, flValue] : vYaws)
+									{
+										if (FSelectable(sYaw.c_str()))
+										{
+											switch (FNV1A::Hash32(sYaw.c_str()))
+											{
+											case FNV1A::Hash32Const("Auto"):
+												F::Resolver.SetYaw(player.m_iUserID, 0.f, true);
+												break;
+											default:
+												F::Resolver.SetYaw(player.m_iUserID, flValue);
+											}
+										}
+									}
 
-							PopStyleVar();
-							EndPopup();
-						}
-						else if (FBeginPopup(std::format("View{}", player.m_uFriendsID).c_str()))
-						{
-							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), H::Draw.Scale(8) });
+									ImGui::EndMenu();
+								}
 
-							static std::vector<std::pair<std::string, bool>> vPitches = {
-								{ "Offset from static view", true },
-								{ "Offset from view to local", false }
-							};
-							for (auto& [sPitch, bValue] : vPitches)
-							{
-								if (FSelectable(sPitch.c_str()))
-									F::Resolver.SetView(player.m_iUserID, bValue);
+								if (FBeginMenu("Set pitch"))
+								{
+									static std::vector<std::pair<std::string, float>> vPitches = {
+										{ "Auto", 0.f },
+										{ "Up", -90.f },
+										{ "Down", 90.f },
+										{ "Zero", 0.f },
+										{ "Inverse", 0.f }
+									};
+									for (auto& [sPitch, flValue] : vPitches)
+									{
+										if (FSelectable(sPitch.c_str()))
+										{
+											switch (FNV1A::Hash32(sPitch.c_str()))
+											{
+											case FNV1A::Hash32Const("Auto"):
+												F::Resolver.SetPitch(player.m_iUserID, 0.f, false, true);
+												break;
+											case FNV1A::Hash32Const("Inverse"):
+												F::Resolver.SetPitch(player.m_iUserID, 0.f, true);
+												break;
+											default:
+												F::Resolver.SetPitch(player.m_iUserID, flValue);
+											}
+										}
+									}
+
+									ImGui::EndMenu();
+								}
+
+								if (FBeginMenu("Set view"))
+								{
+									static std::vector<std::pair<std::string, bool>> vPitches = {
+										{ "Offset from static view", true },
+										{ "Offset from view to local", false }
+									};
+									for (auto& [sPitch, bValue] : vPitches)
+									{
+										if (FSelectable(sPitch.c_str()))
+											F::Resolver.SetView(player.m_iUserID, bValue);
+									}
+
+									ImGui::EndMenu();
+								}
+
+								if (FBeginMenu("Set minwalk"))
+								{
+									static std::vector<std::pair<std::string, bool>> vPitches = {
+										{ "Minwalk on", true },
+										{ "Minwalk off", false }
+									};
+									for (auto& [sPitch, bValue] : vPitches)
+									{
+										if (FSelectable(sPitch.c_str()))
+											F::Resolver.SetMinwalk(player.m_iUserID, bValue);
+									}
+
+									ImGui::EndMenu();
+								}
 							}
 
 							PopStyleVar();
@@ -2576,7 +2542,7 @@ void CMenu::MenuSettings(int iTab)
 							F::PlayerUtils.m_vTags.erase(it);
 							F::PlayerUtils.m_bSave = F::PlayerUtils.m_bSave = true;
 
-							for (auto& [friendsID, vTags] : F::PlayerUtils.m_mPlayerTags)
+							for (auto& [_, vTags] : F::PlayerUtils.m_mPlayerTags)
 							{
 								for (auto it = vTags.begin(); it != vTags.end();)
 								{
@@ -2761,7 +2727,7 @@ void CMenu::MenuSettings(int iTab)
 								{
 									for (auto& player : *tagTree)
 									{
-										uint32_t friendsID = std::stoi(player.first);
+										uint32_t uFriendsID = std::stoi(player.first);
 
 										for (auto& tag : player.second)
 										{
@@ -2781,8 +2747,8 @@ void CMenu::MenuSettings(int iTab)
 											if (!pTag || !pTag->Assignable)
 												continue;
 
-											if (!F::PlayerUtils.HasTag(friendsID, iID, mPlayerTags))
-												F::PlayerUtils.AddTag(friendsID, iID, false, "", mPlayerTags);
+											if (!F::PlayerUtils.HasTag(uFriendsID, iID, mPlayerTags))
+												F::PlayerUtils.AddTag(uFriendsID, iID, false, "", mPlayerTags);
 										}
 									}
 								}
@@ -2791,11 +2757,11 @@ void CMenu::MenuSettings(int iTab)
 								{
 									for (auto& player : *aliasTree)
 									{
-										uint32_t friendsID = std::stoi(player.first);
+										uint32_t uFriendsID = std::stoi(player.first);
 										std::string sAlias = player.second.data();
 
 										if (!sAlias.empty())
-											mPlayerAliases[friendsID] = player.second.data();
+											mPlayerAliases[uFriendsID] = player.second.data();
 									}
 								}
 							}
@@ -2861,19 +2827,19 @@ void CMenu::MenuSettings(int iTab)
 
 						if (FButton("Import", FButton_Left))
 						{
-							for (auto& [friendsID, vTags] : mPlayerTags)
+							for (auto& [uFriendsID, vTags] : mPlayerTags)
 							{
 								for (auto& iTag : vTags)
 								{
 									int iID = mAs.contains(iTag) ? mAs[iTag] : -1;
-									if (iID != -1 && !F::PlayerUtils.HasTag(friendsID, iID))
-										F::PlayerUtils.AddTag(friendsID, iID, false);
+									if (iID != -1 && !F::PlayerUtils.HasTag(uFriendsID, iID))
+										F::PlayerUtils.AddTag(uFriendsID, iID, false);
 								}
 							}
-							for (auto& [friendsID, sAlias] : mPlayerAliases)
+							for (auto& [uFriendsID, sAlias] : mPlayerAliases)
 							{
-								if (!F::PlayerUtils.m_mPlayerAliases.contains(friendsID))
-									F::PlayerUtils.m_mPlayerAliases[friendsID] = sAlias;
+								if (!F::PlayerUtils.m_mPlayerAliases.contains(uFriendsID))
+									F::PlayerUtils.m_mPlayerAliases[uFriendsID] = sAlias;
 							}
 							
 							F::PlayerUtils.m_bSave = true;

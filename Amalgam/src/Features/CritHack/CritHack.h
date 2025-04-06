@@ -10,7 +10,7 @@ struct WeaponStorage_t
 	int m_iDefIndex = -1;
 	float m_flMultCritChance = 1.f;
 
-	float m_flDamage = 0.f;
+	float m_flDamage = -1.f;
 	float m_flCost = 0.f;
 	int m_iAvailableCrits = 0;
 	int m_iPotentialCrits = 0;
@@ -20,6 +20,19 @@ struct WeaponStorage_t
 	std::deque<int> m_vSkipCommands = {};
 
 	bool m_bActive = false;
+};
+
+struct HealthHistory_t
+{
+	int m_iNewHealth = 0;
+	int m_iOldHealth = 0;
+
+	struct HealthStorage_t
+	{
+		int m_iOldHealth = 0;
+		float m_flTime = 0.f;
+	};
+	std::unordered_map<int, HealthStorage_t> m_mHistory = {};
 };
 
 class CCritHack
@@ -37,11 +50,17 @@ private:
 	void ResetWeapons(CTFPlayer* pLocal);
 	void Reset();
 
+	void StoreHealthHistory(int iIndex, int iHealth, bool bDamage = false);
+
 	int m_iFillStart = 0;
 
-	int m_iCritDamage = 0.f;
-	int m_iAllDamage = 0.f;
-	std::unordered_map<int, int> m_mHealthStorage = {};
+	int m_iCritDamage = 0;
+	int m_iRangedDamage = 0;
+	std::unordered_map<int, HealthHistory_t> m_mHealthHistory = {};
+
+	int m_iMeleeDamage = 0;
+	int m_iResourceDamage = 0;
+	int m_iDesyncDamage = 0;
 
 	bool m_bCritBanned = false;
 	float m_flDamageTilFlip = 0;

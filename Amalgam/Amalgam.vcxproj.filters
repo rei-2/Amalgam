@@ -192,6 +192,7 @@
     <ClCompile Include="src\Features\Output\Output.cpp" />
     <ClCompile Include="src\Hooks\Cbuf_ExecuteCommand.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
+    <ClCompile Include="src\Hooks\CTFScatterGun_FireBullet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -572,6 +573,7 @@
     <ClInclude Include="src\SDK\Definitions\Main\CSniperDot.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\IMatchGroupDescription.h" />
     <ClInclude Include="src\Features\Output\Output.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

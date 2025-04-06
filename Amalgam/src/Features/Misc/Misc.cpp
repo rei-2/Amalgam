@@ -106,7 +106,7 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 	case Vars::Misc::Movement::AutoStrafeEnum::Legit:
 	{
 		static auto cl_sidespeed = U::ConVars.FindVar("cl_sidespeed");
-		const float flSideSpeed = cl_sidespeed ? cl_sidespeed->GetFloat() : 450.f;
+		const float flSideSpeed = cl_sidespeed->GetFloat();
 
 		if (pCmd->mousedx)
 		{
@@ -240,8 +240,8 @@ void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	static auto mp_idledealmethod = U::ConVars.FindVar("mp_idledealmethod");
 	static auto mp_idlemaxtime = U::ConVars.FindVar("mp_idlemaxtime");
-	const int iIdleMethod = mp_idledealmethod ? mp_idledealmethod->GetInt() : 1;
-	const float flMaxIdleTime = mp_idlemaxtime ? mp_idlemaxtime->GetFloat() : 3.f;
+	const int iIdleMethod = mp_idledealmethod->GetInt();
+	const float flMaxIdleTime = mp_idlemaxtime->GetFloat();
 
 	if (pCmd->buttons & (IN_MOVELEFT | IN_MOVERIGHT | IN_FORWARD | IN_BACK) || !pLocal->IsAlive())
 		tTimer.Update();
@@ -263,18 +263,15 @@ void CMisc::CheatsBypass()
 {
 	static bool bCheatSet = false;
 	static auto sv_cheats = U::ConVars.FindVar("sv_cheats");
-	if (sv_cheats)
+	if (Vars::Misc::Exploits::CheatsBypass.Value)
 	{
-		if (Vars::Misc::Exploits::CheatsBypass.Value)
-		{
-			sv_cheats->m_nValue = 1;
-			bCheatSet = true;
-		}
-		else if (bCheatSet)
-		{
-			sv_cheats->m_nValue = 0;
-			bCheatSet = false;
-		}
+		sv_cheats->m_nValue = 1;
+		bCheatSet = true;
+	}
+	else if (bCheatSet)
+	{
+		sv_cheats->m_nValue = 0;
+		bCheatSet = false;
 	}
 }
 
@@ -289,11 +286,11 @@ void CMisc::PingReducer()
 		return;
 
 	static auto cl_cmdrate = U::ConVars.FindVar("cl_cmdrate");
-	const int iCmdRate = cl_cmdrate ? cl_cmdrate->GetInt() : 66;
+	const int iCmdRate = cl_cmdrate->GetInt();
 
 	// force highest cl_updaterate command possible
 	static auto sv_maxupdaterate = U::ConVars.FindVar("sv_maxupdaterate");
-	const int iMaxUpdateRate = sv_maxupdaterate ? sv_maxupdaterate->GetInt() : 66;
+	const int iMaxUpdateRate = sv_maxupdaterate->GetInt();
 
 	const int iTarget = Vars::Misc::Exploits::PingReducer.Value ? Vars::Misc::Exploits::PingTarget.Value : iCmdRate;
 	if (m_iWishCmdrate != iTarget)
@@ -315,10 +312,8 @@ void CMisc::WeaponSway()
 	static auto cl_wpn_sway_scale = U::ConVars.FindVar("cl_wpn_sway_scale");
 
 	bool bSway = Vars::Visuals::Viewmodel::SwayInterp.Value || Vars::Visuals::Viewmodel::SwayScale.Value;
-	if (cl_wpn_sway_interp)
-		cl_wpn_sway_interp->SetValue(bSway ? Vars::Visuals::Viewmodel::SwayInterp.Value : 0.f);
-	if (cl_wpn_sway_scale)
-		cl_wpn_sway_scale->SetValue(bSway ? Vars::Visuals::Viewmodel::SwayScale.Value : 0.f);
+	cl_wpn_sway_interp->SetValue(bSway ? Vars::Visuals::Viewmodel::SwayInterp.Value : 0.f);
+	cl_wpn_sway_scale->SetValue(bSway ? Vars::Visuals::Viewmodel::SwayScale.Value : 0.f);
 }
 
 

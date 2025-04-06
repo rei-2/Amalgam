@@ -9,14 +9,14 @@
 class CPlayerResource : public CBaseEntity, public IGameResources
 {
 public:
-	NETVAR(m_iPing, void*, "CPlayerResource", "m_iPing");
-	NETVAR(m_iScore, void*, "CPlayerResource", "m_iScore");
-	NETVAR(m_iDeaths, void*, "CPlayerResource", "m_iDeaths");
-	NETVAR(m_bConnected, void*, "CPlayerResource", "m_bConnected");
-	NETVAR(m_iTeam, void*, "CPlayerResource", "m_iTeam");
-	NETVAR(m_bAlive, void*, "CPlayerResource", "m_bAlive");
-	NETVAR(m_iHealth, void*, "CPlayerResource", "m_iHealth");
-	NETVAR(m_iAccountID, void*, "CPlayerResource", "m_iAccountID");
-	NETVAR(m_bValid, void*, "CPlayerResource", "m_bValid");
-	NETVAR(m_iUserID, void*, "CPlayerResource", "m_iUserID");
+	NETVAR_ARRAY(m_iPing, int, "CPlayerResource", "m_iPing");
+	NETVAR_ARRAY(m_iScore, int, "CPlayerResource", "m_iScore");
+	NETVAR_ARRAY(m_iDeaths, int, "CPlayerResource", "m_iDeaths");
+	NETVAR_ARRAY(m_bConnected, bool, "CPlayerResource", "m_bConnected");
+	NETVAR_ARRAY(m_iTeam, int, "CPlayerResource", "m_iTeam");
+	NETVAR_ARRAY(m_bAlive, bool, "CPlayerResource", "m_bAlive");
+	NETVAR_ARRAY(m_iHealth, int, "CPlayerResource", "m_iHealth");
+	NETVAR_ARRAY(m_iAccountID, unsigned, "CPlayerResource", "m_iAccountID");
+	NETVAR_ARRAY(m_bValid, bool, "CPlayerResource", "m_bValid");
+	NETVAR_ARRAY(m_iUserID, int, "CPlayerResource", "m_iUserID");
 };

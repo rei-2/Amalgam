@@ -34,3 +34,4 @@
 #include "Main/ITexture.h"
 #include "Main/KeyValues.h"
 #include "Main/MD5.h"
+#include "Main/PlayerStats.h"

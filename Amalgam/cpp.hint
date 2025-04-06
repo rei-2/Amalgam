@@ -49,6 +49,16 @@ namespace MAKE_INTERFACE_SCOPE \
 	static int nOffset = U::NetVars.GetNetVar(table, name) + offset; \
 	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset); \
 }
+#define NETVAR_ARRAY(_name, type, table, size, name) inline type& _name(int iIndex) \
+{ \
+	static int nOffset = U::NetVars.GetNetVar(table, name); \
+	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset + iIndex * sizeof(type)); \
+}
+#define NETVAR_ARRAY_OFF(_name, type, table, name, size, offset) inline type& _name(int iIndex) \
+{ \
+	static int nOffset = U::NetVars.GetNetVar(table, name) + offset; \
+	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset + iIndex * sizeof(type)); \
+}
 #define OFFSET(name, type, offset) inline type& name() \
 { \
 	return *reinterpret_cast<type*>(uintptr_t(this) + offset); \

@@ -12,10 +12,9 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	bool bQuick = iFlags & ProjSimEnum::Quick;
 
 	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
-	static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
 
 	bool bDucking = pPlayer->m_fFlags() & FL_DUCKING;
-	float flGravity = (sv_gravity ? sv_gravity->GetFloat() : 800.f) / 800.f;
+	float flGravity = sv_gravity->GetFloat() / 800.f;
 
 	Vec3 vPos, vAngle;
 
@@ -165,19 +164,16 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case TF_WEAPON_FLAMETHROWER:
 	{
 		static auto tf_flamethrower_boxsize = U::ConVars.FindVar("tf_flamethrower_boxsize");
-		const float flHull = tf_flamethrower_boxsize ? tf_flamethrower_boxsize->GetFloat() : 12.f;
-		bool bFlipped = cl_flipviewmodels ? cl_flipviewmodels->GetBool() : false;
+		const float flHull = tf_flamethrower_boxsize->GetFloat();
 
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 40.f, bFlipped ? -5.f : 5.f /*doesn't flip*/, 0.f }, vPos, vAngle, true, bQuick);
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 40.f, 5.f, 0.f }, vPos, vAngle, true, bQuick, false);
 		tProjInfo = { FNV1A::Hash32Const("particles/flamethrower.pcf"), vPos, vAngle, { flHull, flHull, flHull }, 1000.f, 0.f, true, 0.285f };
 		return true;
 	}
 	case TF_WEAPON_FLAME_BALL:
 	{
-		bool bFlipped = cl_flipviewmodels ? cl_flipviewmodels->GetBool() : false;
-
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 70.f, bFlipped ? -7.f : 7.f /*doesn't flip*/, -9.f}, vPos, vAngle, !bTrace ? true : false, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_flameball/c_flameball.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f /*damaging hull much bigger, shouldn't matter here*/ }, 3000.f, 0.f, true, 0.2f };
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 3.f, 7.f, -9.f }, vPos, vAngle, true, bQuick, false);
+		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_flameball/c_flameball.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f /*damaging hull much bigger, shouldn't matter here*/ }, 3000.f, 0.f, true, 0.18f };
 		return true;
 	}
 	case TF_WEAPON_CLEAVER:
@@ -190,14 +186,13 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case TF_WEAPON_BAT_GIFTWRAP:
 	{
 		static auto tf_scout_stunball_base_speed = U::ConVars.FindVar("tf_scout_stunball_base_speed");
-
 		const bool bWrapAssassin = pWeapon->GetWeaponID() == TF_WEAPON_BAT_GIFTWRAP;
 		
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 0.f, 0.f, 0.f }, vPos, vAngle, true, bQuick);
 		Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 		vPos = (bQuick ? pPlayer->GetAbsOrigin() : pPlayer->m_vecOrigin()) + (Vec3(0, 0, 50) + vForward * 32.f) * pPlayer->m_flModelScale(); // why?
 		auto uHash = bWrapAssassin ? FNV1A::Hash32Const("models/weapons/c_models/c_xms_festive_ornament.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_baseball.mdl");
-		tProjInfo = { uHash, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed ? tf_scout_stunball_base_speed->GetInt() : 3000.f, 1.f, false, bWrapAssassin ? 2.3f : 100.f };
+		tProjInfo = { uHash, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed->GetFloat(), 1.f, false, bWrapAssassin ? 2.3f : 100.f };
 		return true;
 	}
 	case TF_WEAPON_JAR:
@@ -222,10 +217,11 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	}
 	case TF_WEAPON_GRAPPLINGHOOK:
 	{
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, -8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		static auto tf_grapplinghook_projectile_speed = U::ConVars.FindVar("tf_grapplinghook_projectile_speed");
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
-		float flSpeed = tf_grapplinghook_projectile_speed ? tf_grapplinghook_projectile_speed->GetFloat() : 1500.f;
+
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, -8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
+		float flSpeed = tf_grapplinghook_projectile_speed->GetFloat();
 		if (pPlayer->InCond(TF_COND_RUNE_AGILITY))
 		{
 			switch (pPlayer->m_iClass())
@@ -235,7 +231,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			default: flSpeed = 3000.f;
 			}
 		}
-		float flLifetime = (tf_grapplinghook_max_distance ? tf_grapplinghook_max_distance->GetFloat() : 2000.f) / flSpeed;
+		float flLifetime = tf_grapplinghook_max_distance->GetFloat() / flSpeed;
 		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl"), vPos, vAngle, { 1.2f, 1.2f, 1.2f }, flSpeed, 0.f, false, flLifetime };
 		return true;
 	}
@@ -502,7 +498,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 				}
 			}
 		}
-		else // in the case of adding already existing projectiles
+		else // in the case of adding projectiles that already exist in the world
 		{
 			vVelocity = tProjInfo.m_vAng;
 
@@ -598,7 +594,7 @@ void CProjectileSimulation::RunTick(ProjectileInfo& tProjInfo, bool bPath) // bu
 	Vec3 vVelocity, vAngular;
 	obj->GetVelocity(&vVelocity, &vAngular);
 	static auto sv_maxvelocity = U::ConVars.FindVar("sv_maxvelocity");
-	const float flMaxVel = sv_maxvelocity ? sv_maxvelocity->GetFloat() : 3500.f;
+	const float flMaxVel = sv_maxvelocity->GetFloat();
 	vVelocity = { std::clamp(vVelocity.x, -flMaxVel, flMaxVel), std::clamp(vVelocity.y, -flMaxVel, flMaxVel), std::clamp(vVelocity.z, -flMaxVel, flMaxVel) };
 	obj->SetVelocity(&vVelocity, &vAngular);
 	*/

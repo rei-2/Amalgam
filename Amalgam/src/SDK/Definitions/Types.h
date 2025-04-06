@@ -5,6 +5,11 @@
 #include <string>
 #include <format>
 
+#define PI 3.14159265358979323846
+#define M_RADPI 57.295779513082
+#define DEG2RAD(x) ((float)(x) * (float)((float)(PI) / 180.f))
+#define RAD2DEG(x) ((float)(x) * (float)(180.f / (float)(PI)))
+
 #pragma warning (disable : 26495)
 
 class Vec2
@@ -593,15 +598,15 @@ public:
 
 	inline Vec3 ToAngle() const noexcept
 	{
-		return { (atan2(-z, hypot(x, y))) * (180.f / 3.14159265358979323846f),
-				 (atan2(y, x)) * (180.f / 3.14159265358979323846f),
+		return { RAD2DEG(atan2(-z, hypot(x, y))),
+				 RAD2DEG(atan2(y, x)),
 				 0.f };
 	}
 	inline Vec3 FromAngle() const noexcept
 	{
-		return { cos(x * (3.14159265358979323846f / 180.f)) * cos(y * (3.14159265358979323846f / 180.f)),
-				 cos(x * (3.14159265358979323846f / 180.f)) * sin(y * (3.14159265358979323846f / 180.f)),
-				 -sin(x * (3.14159265358979323846f / 180.f)) };
+		return { cos(DEG2RAD(x)) * cos(DEG2RAD(y)),
+				 cos(DEG2RAD(x))* sin(DEG2RAD(y)),
+				 -sin(DEG2RAD(x)) };
 	}
 };
 using Vector = Vec3;
@@ -619,12 +624,127 @@ using matrix3x4 = float[3][4];
 class VMatrix
 {
 public:
-	Vector m[4][4];
+	float m[4][4];
+
+	inline const float* operator[](int i) const
+	{
+		return m[i];
+	}
+
+private:
+	static inline void SinCos(float flRadians, float* pSin, float* pCos)
+	{
+		*pSin = std::sin(flRadians);
+		*pCos = std::cos(flRadians);
+	}
+
+	static inline void Vector3DMultiplyPosition(const VMatrix& src1, const Vector src2, Vector& dst)
+	{
+		dst[0] = src1[0][0] * src2.x + src1[0][1] * src2.y + src1[0][2] * src2.z + src1[0][3];
+		dst[1] = src1[1][0] * src2.x + src1[1][1] * src2.y + src1[1][2] * src2.z + src1[1][3];
+		dst[2] = src1[2][0] * src2.x + src1[2][1] * src2.y + src1[2][2] * src2.z + src1[2][3];
+	}
+
+	static inline void SetupMatrixAnglesInternal(float m2[4][4], const QAngle& vAngles)
+	{
+		float sr, sp, sy, cr, cp, cy;
+
+		SinCos(DEG2RAD(vAngles[1]), &sy, &cy);
+		SinCos(DEG2RAD(vAngles[0]), &sp, &cp);
+		SinCos(DEG2RAD(vAngles[2]), &sr, &cr);
+
+		// matrix = (YAW * PITCH) * ROLL
+		m2[0][0] = cp * cy;
+		m2[1][0] = cp * sy;
+		m2[2][0] = -sp;
+		m2[0][1] = sr * sp * cy + cr * -sy;
+		m2[1][1] = sr * sp * sy + cr * cy;
+		m2[2][1] = sr * cp;
+		m2[0][2] = (cr * sp * cy + -sr * -sy);
+		m2[1][2] = (cr * sp * sy + -sr * cy);
+		m2[2][2] = cr * cp;
+		m2[0][3] = 0.f;
+		m2[1][3] = 0.f;
+		m2[2][3] = 0.f;
+	}
 
 public:
 	inline const matrix3x4& As3x4() const
 	{
 		return *((const matrix3x4*)this);
+	}
+
+	inline void SetupMatrixOrgAngles(const Vector& origin, const QAngle& vAngles)
+	{
+		SetupMatrixAnglesInternal(m, vAngles);
+
+		// Add translation
+		m[0][3] = origin.x;
+		m[1][3] = origin.y;
+		m[2][3] = origin.z;
+		m[3][0] = 0.0f;
+		m[3][1] = 0.0f;
+		m[3][2] = 0.0f;
+		m[3][3] = 1.0f;
+	}
+
+	inline Vector VMul4x3(const Vector& vVec) const
+	{
+		Vector vResult;
+		Vector3DMultiplyPosition(*this, vVec, vResult);
+		return vResult;
+	}
+
+	inline Vector VMul4x3Transpose(const Vector& vVec) const
+	{
+		Vector tmp = vVec;
+		tmp.x -= m[0][3];
+		tmp.y -= m[1][3];
+		tmp.z -= m[2][3];
+
+		return Vector(
+			m[0][0] * tmp.x + m[1][0] * tmp.y + m[2][0] * tmp.z,
+			m[0][1] * tmp.x + m[1][1] * tmp.y + m[2][1] * tmp.z,
+			m[0][2] * tmp.x + m[1][2] * tmp.y + m[2][2] * tmp.z
+		);
+	}
+
+	inline Vector VMul3x3(const Vector& vVec) const
+	{
+		return Vector(
+			m[0][0] * vVec.x + m[0][1] * vVec.y + m[0][2] * vVec.z,
+			m[1][0] * vVec.x + m[1][1] * vVec.y + m[1][2] * vVec.z,
+			m[2][0] * vVec.x + m[2][1] * vVec.y + m[2][2] * vVec.z
+		);
+	}
+
+	inline Vector VMul3x3Transpose(const Vector& vVec) const
+	{
+		return Vector(
+			m[0][0] * vVec.x + m[1][0] * vVec.y + m[2][0] * vVec.z,
+			m[0][1] * vVec.x + m[1][1] * vVec.y + m[2][1] * vVec.z,
+			m[0][2] * vVec.x + m[1][2] * vVec.y + m[2][2] * vVec.z
+		);
+	}
+
+	inline Vector LocalToWorld(const Vector& vVec) const
+	{
+		return VMul4x3(vVec);
+	}
+
+	inline Vector WorldToLocal(const Vector& vVec) const
+	{
+		return VMul4x3Transpose(vVec);
+	}
+
+	inline Vector LocalToWorldRotation(const Vector& vVec) const
+	{
+		return VMul3x3(vVec);
+	}
+
+	inline Vector WorldToLocalRotation(const Vector& vVec) const
+	{
+		return VMul3x3Transpose(vVec);
 	}
 };
 

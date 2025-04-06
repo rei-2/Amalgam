@@ -83,7 +83,7 @@ MAKE_HOOK(SectionedListPanel_SetItemFgColor, S::SectionedListPanel_SetItemFgColo
 		if (tColor.a)
 		{
 			auto pResource = H::Entities.GetPR();
-			if (pResource && !pResource->IsAlive(CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex))
+			if (pResource && !pResource->m_bAlive(CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex))
 				tColor = tColor.Lerp({ 127, 127, 127, tColor.a }, 0.5f);
 
 			color = tColor;

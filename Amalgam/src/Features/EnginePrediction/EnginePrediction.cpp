@@ -2,8 +2,6 @@
 
 #include "../TickHandler/TickHandler.h"
 
-
-
 // account for origin tolerance when simulating local player
 
 void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
@@ -31,8 +29,6 @@ void CEnginePrediction::RestorePlayers()
 		pPlayer->m_vecMaxs() = tRestore.m_vecMaxs;
 	}
 }
-
-
 
 void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
@@ -115,8 +111,6 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
 
 	Simulate(pLocal, pCmd);
-
-	F::Ticks.SaveShootPos(pLocal);
 }
 
 void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)

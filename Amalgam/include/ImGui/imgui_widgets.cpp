@@ -8811,7 +8811,7 @@ static bool IsRootOfOpenMenuSet()
     return upper_popup->Window && (upper_popup->Window->Flags & ImGuiWindowFlags_ChildMenu) && ImGui::IsWindowChildOf(upper_popup->Window, window, true);
 }
 
-bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
+bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled, bool arrow)
 {
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
@@ -8895,7 +8895,8 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
         RenderText(text_pos, label);
         if (icon_w > 0.0f)
             RenderText(pos + ImVec2(offsets->OffsetIcon, 0.0f), icon);
-        RenderArrow(window->DrawList, pos + ImVec2(offsets->OffsetMark + extra_w + g.FontSize * 0.30f, 0.0f), GetColorU32(ImGuiCol_Text), ImGuiDir_Right);
+        if (arrow)
+            RenderArrow(window->DrawList, pos + ImVec2(offsets->OffsetMark + extra_w + g.FontSize * 0.30f, 0.0f), GetColorU32(ImGuiCol_Text), ImGuiDir_Right);
     }
     if (!enabled)
         EndDisabled();
@@ -9023,9 +9024,9 @@ bool ImGui::BeginMenuEx(const char* label, const char* icon, bool enabled)
     return menu_is_open;
 }
 
-bool ImGui::BeginMenu(const char* label, bool enabled)
+bool ImGui::BeginMenu(const char* label, bool enabled, bool arrow)
 {
-    return BeginMenuEx(label, NULL, enabled);
+    return BeginMenuEx(label, NULL, enabled, arrow);
 }
 
 void ImGui::EndMenu()

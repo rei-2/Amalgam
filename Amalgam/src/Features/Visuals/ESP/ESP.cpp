@@ -42,11 +42,13 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		int iIndex = pPlayer->entindex();
 
-		if ((iObserverMode == OBS_MODE_FIRSTPERSON || iObserverMode == OBS_MODE_THIRDPERSON)
-			? pObserverTarget == pPlayer
-			: iIndex == I::EngineClient->GetLocalPlayer())
+		bool bLocal = iIndex == I::EngineClient->GetLocalPlayer();
+		bool bSpectate = iObserverMode == OBS_MODE_FIRSTPERSON || iObserverMode == OBS_MODE_THIRDPERSON;
+		bool bTarget = bSpectate && pObserverTarget == pPlayer;
+
+		if (bLocal || bTarget)
 		{
-			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Local) || !I::Input->CAM_IsThirdPerson())
+			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Local) || (!bSpectate ? !I::Input->CAM_IsThirdPerson() && bLocal : iObserverMode == OBS_MODE_FIRSTPERSON && bTarget))
 				continue;
 		}
 		else
@@ -203,34 +205,34 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 				tCache.m_vText.emplace_back(ESPTextEnum::Bottom, SDK::ConvertWideToUTF8(S::CEconItemView_GetItemName.Call<const wchar_t*>(pCurItemData)), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 		}
 
-		if (Vars::Debug::Info.Value && !pPlayer->IsDormant() && pPlayer->entindex() != I::EngineClient->GetLocalPlayer())
+		if (Vars::Debug::Info.Value && !pPlayer->IsDormant() && !bLocal)
 		{
 			int iAverage = TIME_TO_TICKS(F::MoveSim.GetPredictedDelta(pPlayer));
-			int iCurrent = H::Entities.GetChoke(pPlayer->entindex());
+			int iCurrent = H::Entities.GetChoke(iIndex);
 			tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("Lag {}, {}", iAverage, iCurrent), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 		}
 
 		{
-			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::LagCompensation && !pPlayer->IsDormant() && pPlayer != pLocal)
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::LagCompensation && !pPlayer->IsDormant() && !bLocal)
 			{
-				if (H::Entities.GetLagCompensation(pPlayer->entindex()))
+				if (H::Entities.GetLagCompensation(iIndex))
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Lagcomp", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 			}
 
-			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Ping && pResource && pPlayer != pLocal)
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Ping && pResource && !bLocal)
 			{
 				auto pNetChan = I::EngineClient->GetNetChannelInfo();
 				if (pNetChan && !pNetChan->IsLoopback())
 				{
-					int iPing = pResource->GetPing(pPlayer->entindex());
+					int iPing = pResource->m_iPing(iIndex);
 					if (iPing && (iPing >= 200 || iPing <= 5))
 						tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("{}MS", iPing), Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				}
 			}
 
-			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::KDR && pResource && pPlayer != pLocal)
+			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::KDR && pResource && !bLocal)
 			{
-				int iKills = pResource->GetKills(pPlayer->entindex()), iDeaths = pResource->GetDeaths(pPlayer->entindex());
+				int iKills = pResource->m_iScore(iIndex), iDeaths = pResource->m_iDeaths(iIndex);
 				if (iKills >= 20)
 				{
 					int iKDR = iKills / std::max(iDeaths, 1);
@@ -351,11 +353,16 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			// Misc
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Misc)
 			{
-				if (Vars::Visuals::Removals::Taunts.Value && pPlayer->InCond(TF_COND_TAUNTING))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Taunt", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
-
 				if (pPlayer->m_bFeignDeathReady())
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "DR", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
+				else if (pPlayer->InCond(TF_COND_FEIGN_DEATH))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Feign", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
+
+				if (pPlayer->InCond(TF_COND_STEALTHED) || pPlayer->InCond(TF_COND_STEALTHED_BLINK) || pPlayer->InCond(TF_COND_STEALTHED_USER_BUFF) || pPlayer->InCond(TF_COND_STEALTHED_USER_BUFF_FADING))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("Invis {:.0f}%%", pPlayer->GetInvisPercentage()), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
+
+				if (pPlayer->InCond(TF_COND_DISGUISING) || pPlayer->InCond(TF_COND_DISGUISED))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Disguise", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 
 				if (pPlayer->InCond(TF_COND_AIMING) || pPlayer->InCond(TF_COND_ZOOMED))
 				{
@@ -368,7 +375,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 					case TF_WEAPON_SNIPERRIFLE_DECAP:
 					{
-						if (iIndex == I::EngineClient->GetLocalPlayer())
+						if (bLocal)
 						{
 							tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("Charging {:.0f}%%", Math::RemapVal(pWeapon->As<CTFSniperRifle>()->m_flChargedDamage(), 0.f, 150.f, 0.f, 100.f)), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 							break;
@@ -395,7 +402,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 						break;
 					}
 					case TF_WEAPON_COMPOUND_BOW:
-						if (iIndex == I::EngineClient->GetLocalPlayer())
+						if (bLocal)
 						{
 							tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("Charging {:.0f}%%", Math::RemapVal(TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick) - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime(), 0.f, 1.f, 0.f, 100.f)), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 							break;
@@ -410,11 +417,8 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 				if (pPlayer->InCond(TF_COND_SHIELD_CHARGE))
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Charge", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 
-				if (pPlayer->InCond(TF_COND_STEALTHED) || pPlayer->InCond(TF_COND_STEALTHED_BLINK) || pPlayer->InCond(TF_COND_STEALTHED_USER_BUFF) || pPlayer->InCond(TF_COND_STEALTHED_USER_BUFF_FADING))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("Invis {:.0f}%%", pPlayer->GetInvisPercentage()), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
-
-				if (pPlayer->InCond(TF_COND_DISGUISING) || pPlayer->InCond(TF_COND_DISGUISED))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Disguise", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
+				if (Vars::Visuals::Removals::Taunts.Value && pPlayer->InCond(TF_COND_TAUNTING))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Taunt", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 			}
 		}
 	}

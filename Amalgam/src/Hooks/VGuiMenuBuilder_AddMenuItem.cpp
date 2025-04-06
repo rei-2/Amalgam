@@ -93,7 +93,7 @@ MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCo
         break;
     case FNV1A::Hash32Const("spectate"):
         if (auto pResource = H::Entities.GetPR())
-            F::Spectate.SetTarget(pResource->GetUserID(PlayerIndex));
+            F::Spectate.SetTarget(pResource->m_iUserID(PlayerIndex));
         break;
     case FNV1A::Hash32Const("listtags"):
         F::Output.TagsOnJoin(PlayerName, FriendsID);

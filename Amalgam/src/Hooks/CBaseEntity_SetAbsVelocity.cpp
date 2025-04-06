@@ -17,7 +17,7 @@ public:
 		{
 			static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
 			float flDeltaTicks = float(iDeltaTicks) + 0.5f; // ?
-			flGravityCorrection = (powf(flDeltaTicks, 2.f) - flDeltaTicks) / 2.f * (sv_gravity ? sv_gravity->GetFloat() : 800.f) * powf(TICK_INTERVAL, 2);
+			flGravityCorrection = (powf(flDeltaTicks, 2.f) - flDeltaTicks) / 2.f * sv_gravity->GetFloat() * powf(TICK_INTERVAL, 2);
 		}
 		float flDeltaValue = m_flNewAxisValue - m_flOldAxisValue;
 		float flTickVelocity = flDeltaValue + (flDeltaValue ? 0.0625f * sign(m_flNewAxisValue) : 0.f) - flGravityCorrection;
@@ -84,7 +84,7 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 		return;
 
 	static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
-	float flDist = powf(sv_lagcompensation_teleport_dist ? sv_lagcompensation_teleport_dist->GetFloat() : 64.f, 2.f) * iDeltaTicks;
+	float flDist = powf(sv_lagcompensation_teleport_dist->GetFloat(), 2.f) * iDeltaTicks;
 	if ((tNewRecord.m_vecOrigin - tOldRecord.m_vecOrigin).Length2DSqr() >= flDist)
 		return pRecords->clear();
 
@@ -123,7 +123,7 @@ MAKE_HOOK(CBaseEntity_SetAbsVelocity, S::CBaseEntity_SetAbsVelocity(), void,
 			if (i == 2)
 			{
 				static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
-				float flGravityCorrection = (sv_gravity ? sv_gravity->GetFloat() : 800.f) * powf(flRewind + TICK_INTERVAL / 2, 2.f) / 2;
+				float flGravityCorrection = sv_gravity->GetFloat() * powf(flRewind + TICK_INTERVAL / 2, 2.f) / 2;
 				flPositionRange.Min -= flGravityCorrection, flPositionRange.Max -= flGravityCorrection;
 			}
 			if (flPositionRange.Min > tRecord.m_vecOrigin[i] || tRecord.m_vecOrigin[i] > flPositionRange.Max)
