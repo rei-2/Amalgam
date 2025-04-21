@@ -7,16 +7,8 @@ void CFonts::Reload(float flDPI)
 
 	for (auto& [_, fFont] : m_mFonts)
 	{
-		I::MatSystemSurface->SetFontGlyphSet
-		(
-			fFont.m_dwFont = I::MatSystemSurface->CreateFont(),
-			fFont.m_szName,		//name
-			fFont.m_nTall,		//tall
-			fFont.m_nWeight,	//weight
-			0,					//blur
-			0,					//scanlines
-			fFont.m_nFlags		//flags
-		);
+		if (fFont.m_dwFont = I::MatSystemSurface->CreateFont())
+			I::MatSystemSurface->SetFontGlyphSet(fFont.m_dwFont, fFont.m_szName, fFont.m_nTall, fFont.m_nWeight, 0, 0, fFont.m_nFlags);
 	}
 }
 

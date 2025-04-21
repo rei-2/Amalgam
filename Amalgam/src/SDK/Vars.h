@@ -21,13 +21,18 @@ public:
 
 	// getter for ConfigVar
 	template <class T>
-	ConfigVar<T>* As()
+	inline ConfigVar<T>* As()
 	{
 		if (typeid(T).hash_code() != m_iType)
 			return nullptr;
 
 		return reinterpret_cast<ConfigVar<T>*>(this);
 	}
+};
+
+namespace G
+{
+	inline std::vector<CVarBase*> Vars = {};
 };
 
 template <class T>
@@ -37,7 +42,16 @@ public:
 	T Default;
 	T Value;
 	std::unordered_map<int, T> Map;
-	ConfigVar(T value, std::string name, int iFlags = 0);
+	ConfigVar(T value, std::string name, int iFlags = 0)
+	{
+		Default = value;
+		Value = value;
+		Map[DEFAULT_BIND] = value;
+		m_iType = typeid(T).hash_code();
+		m_sName = name;
+		m_iFlags = iFlags;
+		G::Vars.push_back(this);
+	}
 
 	inline T& operator[](int i)
 	{
@@ -48,20 +62,6 @@ public:
 		return Map.contains(i);
 	}
 };
-
-inline std::vector<CVarBase*> g_Vars;
-
-template<class T>
-inline ConfigVar<T>::ConfigVar(T value, std::string name, int iFlags)
-{
-	Default = value;
-	Value = value;
-	Map[DEFAULT_BIND] = value;
-	m_iType = typeid(T).hash_code();
-	m_sName = name;
-	g_Vars.push_back(this);
-	m_iFlags = iFlags;
-}
 
 #define NAMESPACE_BEGIN(name)\
 	namespace name {\
@@ -244,13 +244,13 @@ namespace Vars
 			CVar(GroundMaxChangeTime, 0, DEBUGVAR)
 
 			CVar(AirSamples, 33, DEBUGVAR)
-			CVar(AirStraightFuzzyValue, 10.f, DEBUGVAR)
+			CVar(AirStraightFuzzyValue, 0.f, DEBUGVAR)
 			CVar(AirLowMinimumSamples, 16, DEBUGVAR)
 			CVar(AirHighMinimumSamples, 16, DEBUGVAR)
 			CVar(AirLowMinimumDistance, 100000.f, DEBUGVAR)
 			CVar(AirHighMinimumDistance, 100000.f, DEBUGVAR)
-			CVar(AirMaxChanges, 1, DEBUGVAR)
-			CVar(AirMaxChangeTime, 10, DEBUGVAR)
+			CVar(AirMaxChanges, 2, DEBUGVAR)
+			CVar(AirMaxChangeTime, 16, DEBUGVAR)
 
 			CVar(VelocityAverageCount, 5, DEBUGVAR)
 			CVar(VerticalShift, 5.f, DEBUGVAR)
@@ -274,6 +274,7 @@ namespace Vars
 			CVarEnum(RocketSplashMode, 0, DEBUGVAR, Regular, SpecialLight, SpecialHeavy)
 			CVar(DeltaCount, 5, DEBUGVAR)
 			CVarEnum(DeltaMode, 0, DEBUGVAR, Average, Max)
+			CVarEnum(MovesimFrictionFlags, 0b01, DEBUGVAR, RunReduce = 1 << 0, CalculateIncrease = 1 << 1)
 		SUBNAMESPACE_END(Projectile)
 
 		SUBNAMESPACE_BEGIN(Melee)
@@ -397,15 +398,17 @@ namespace Vars
 	NAMESPACE_END(ESP)
 
 	NAMESPACE_BEGIN(Chams)
-		SUBNAMESPACE_BEGIN(Friendly)
-			CVar(Players, false, VISUAL)
-			CVar(Buildings, false, VISUAL)
-			CVar(Ragdolls, false, VISUAL)
-			CVar(Projectiles, false, VISUAL)
-			
+		SUBNAMESPACE_BEGIN(Player)
+			CVar(Local, false, VISUAL)
+			CVar(Priority, false, VISUAL)
+			CVar(Friend, false, VISUAL)
+			CVar(Party, false, VISUAL)
+			CVar(Target, false, VISUAL)
+			CVar(Relative, true, VISUAL) // friendly and enemy become blu and red if off
+		
 			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
 			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
-		SUBNAMESPACE_END(Friendly)
+		SUBNAMESPACE_END(Player)
 
 		SUBNAMESPACE_BEGIN(Enemy)
 			CVar(Players, false, VISUAL)
@@ -417,16 +420,15 @@ namespace Vars
 			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
 		SUBNAMESPACE_END(Enemy)
 
-		SUBNAMESPACE_BEGIN(Player)
-			CVar(Local, false, VISUAL)
-			CVar(Priority, false, VISUAL)
-			CVar(Friend, false, VISUAL)
-			CVar(Party, false, VISUAL)
-			CVar(Target, false, VISUAL)
-		
+		SUBNAMESPACE_BEGIN(Team)
+			CVar(Players, false, VISUAL)
+			CVar(Buildings, false, VISUAL)
+			CVar(Ragdolls, false, VISUAL)
+			CVar(Projectiles, false, VISUAL)
+			
 			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
 			CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL)
-		SUBNAMESPACE_END(Player)
+		SUBNAMESPACE_END(Team)
 
 		SUBNAMESPACE_BEGIN(World)
 			CVar(NPCs, false, VISUAL)
@@ -443,7 +445,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Backtrack)
 			CVar(Enabled, false, VISUAL)
 			CVar(IgnoreZ, false, VISUAL)
-			CVarEnum(Draw, 0b0, VISUAL, Last, LastFirst, All)
+			CVarEnum(Draw, 0b0001, VISUAL, Last = 1 << 0, First = 1 << 1, Always = 1 << 2, IgnoreTeam = 1 << 3)
 				
 			CVar(Visible, VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL)
 			//CVar(Occluded, VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL) // unused
@@ -467,26 +469,6 @@ namespace Vars
 	NAMESPACE_END(Chams)
 
 	NAMESPACE_BEGIN(Glow)
-		SUBNAMESPACE_BEGIN(Friendly)
-			CVar(Players, false, VISUAL)
-			CVar(Buildings, false, VISUAL)
-			CVar(Ragdolls, false, VISUAL)
-			CVar(Projectiles, false, VISUAL)
-				
-			CVar(Stencil, 0, VISUAL)
-			CVar(Blur, 0, VISUAL)
-		SUBNAMESPACE_END(Friendly)
-
-		SUBNAMESPACE_BEGIN(Enemy)
-			CVar(Players, false, VISUAL)
-			CVar(Buildings, false, VISUAL)
-			CVar(Ragdolls, false, VISUAL)
-			CVar(Projectiles, false, VISUAL)
-				
-			CVar(Stencil, 0, VISUAL)
-			CVar(Blur, 0, VISUAL)
-		SUBNAMESPACE_END(Enemy)
-
 		SUBNAMESPACE_BEGIN(Player)
 			CVar(Local, false, VISUAL)
 			CVar(Priority, false, VISUAL)
@@ -494,9 +476,29 @@ namespace Vars
 			CVar(Party, false, VISUAL)
 			CVar(Target, false, VISUAL)
 				
-			CVar(Stencil, 0, VISUAL)
+			CVar(Stencil, 1, VISUAL)
 			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Player)
+
+		SUBNAMESPACE_BEGIN(Enemy)
+			CVar(Players, false, VISUAL)
+			CVar(Buildings, false, VISUAL)
+			CVar(Ragdolls, false, VISUAL)
+			CVar(Projectiles, false, VISUAL)
+				
+			CVar(Stencil, 1, VISUAL)
+			CVar(Blur, 0, VISUAL)
+		SUBNAMESPACE_END(Enemy)
+			
+		SUBNAMESPACE_BEGIN(Team)
+			CVar(Players, false, VISUAL)
+			CVar(Buildings, false, VISUAL)
+			CVar(Ragdolls, false, VISUAL)
+			CVar(Projectiles, false, VISUAL)
+				
+			CVar(Stencil, 1, VISUAL)
+			CVar(Blur, 0, VISUAL)
+		SUBNAMESPACE_END(Team)
 
 		SUBNAMESPACE_BEGIN(World)
 			CVar(NPCs, false, VISUAL)
@@ -506,22 +508,22 @@ namespace Vars
 			CVar(Bombs, false, VISUAL)
 			CVar(Halloween, false, VISUAL)
 				
-			CVar(Stencil, 0, VISUAL)
+			CVar(Stencil, 1, VISUAL)
 			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(World)
 
 		SUBNAMESPACE_BEGIN(Backtrack)
 			CVar(Enabled, false, VISUAL)
-			CVarEnum(Draw, 0b0, VISUAL, Last, LastFirst, All)
+			CVarEnum(Draw, 0b0001, VISUAL, Last = 1 << 0, First = 1 << 1, Always = 1 << 2, IgnoreTeam = 1 << 3)
 				
-			CVar(Stencil, 0, VISUAL)
+			CVar(Stencil, 1, VISUAL)
 			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Backtrack)
 
 		SUBNAMESPACE_BEGIN(FakeAngle)
 			CVar(Enabled, false, VISUAL)
 				
-			CVar(Stencil, 0, VISUAL)
+			CVar(Stencil, 1, VISUAL)
 			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(FakeAngle)
 
@@ -529,7 +531,7 @@ namespace Vars
 			CVar(Weapon, false, VISUAL)
 			CVar(Hands, false, VISUAL)
 
-			CVar(Stencil, 0, VISUAL)
+			CVar(Stencil, 1, VISUAL)
 			CVar(Blur, 0, VISUAL)
 		SUBNAMESPACE_END(Viewmodel)
 	NAMESPACE_END(GLOW)
@@ -977,6 +979,7 @@ namespace Vars
 		CVar(CTFPlayerShared_InCond, true, NOSAVE)
 		CVar(CTFPlayerShared_IsPlayerDominated, true, NOSAVE)
 		CVar(CTFRagdoll_CreateTFRagdoll, true, NOSAVE)
+		CVar(CTFScatterGun_FireBullet, true, NOSAVE)
 		CVar(CTFWeaponBase_CalcIsAttackCritical, true, NOSAVE)
 		CVar(CTFWeaponBase_GetShootSound, true, NOSAVE)
 		CVar(CThirdPersonManager_Update, true, NOSAVE)
@@ -997,6 +1000,7 @@ namespace Vars
 		CVar(IEngineTrace_TraceRay, true, NOSAVE)
 		CVar(IEngineVGui_Paint, true, NOSAVE)
 		CVar(IInput_GetUserCmd, true, NOSAVE)
+		CVar(IMatSystemSurface_OnScreenSizeChanged, true, NOSAVE)
 		CVar(IPanel_PaintTraverse, true, NOSAVE)
 		CVar(ISteamFriends_GetFriendPersonaName, true, NOSAVE)
 		CVar(ISteamNetworkingUtils_GetPingToDataCenter, true, NOSAVE)

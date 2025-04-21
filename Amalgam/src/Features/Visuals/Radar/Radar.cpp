@@ -241,13 +241,13 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			int x, y, z;
 			if (GetDrawPosition(pLocal, pBuilding, x, y, z))
 			{
-				const Color_t drawColor = H::Color.GetEntityDrawColor(pLocal, pBuilding, Vars::Colors::Relative.Value);
+				const Color_t tColor = H::Color.GetEntityDrawColor(pLocal, pBuilding, Vars::Colors::Relative.Value);
 
 				int iBounds = iSize;
 				if (Vars::Radar::Buildings::Background.Value)
 				{
 					const float flRadius = sqrtf(pow(iSize, 2) * 2) / 2;
-					H::Draw.FillCircle(x, y, flRadius, 20, drawColor);
+					H::Draw.FillCircle(x, y, flRadius, 20, tColor);
 					iBounds = flRadius * 2;
 				}
 
@@ -307,13 +307,13 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			int x, y, z;
 			if (GetDrawPosition(pLocal, pPlayer, x, y, z))
 			{
-				const Color_t drawColor = H::Color.GetEntityDrawColor(pLocal, pPlayer, Vars::Colors::Relative.Value);
+				const Color_t tColor = H::Color.GetEntityDrawColor(pLocal, pPlayer, Vars::Colors::Relative.Value);
 
 				int iBounds = iSize;
 				if (Vars::Radar::Players::Background.Value)
 				{
 					const float flRadius = sqrtf(pow(iSize, 2) * 2) / 2;
-					H::Draw.FillCircle(x, y, flRadius, 20, drawColor);
+					H::Draw.FillCircle(x, y, flRadius, 20, tColor);
 					iBounds = flRadius * 2;
 				}
 
@@ -368,7 +368,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int iOffset = z < 0 ? -5 : 5;
 					const int yPos = z < 0 ? y - iBounds / 2 - 2 : y + iBounds / 2 + 2;
 
-					H::Draw.FillPolygon({ Vec2(m, yPos), Vec2(m + iSize * 0.5f, yPos + iOffset), Vec2(m + iSize, yPos) }, drawColor);
+					H::Draw.FillPolygon({ Vec2(m, yPos), Vec2(m + iSize * 0.5f, yPos + iOffset), Vec2(m + iSize, yPos) }, tColor);
 				}
 			}
 		}

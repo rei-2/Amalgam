@@ -193,6 +193,7 @@
     <ClCompile Include="src\Hooks\Cbuf_ExecuteCommand.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\CTFScatterGun_FireBullet.cpp" />
+    <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

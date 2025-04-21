@@ -3,7 +3,7 @@
 
 #include "../AimbotGlobal/AimbotGlobal.h"
 
-Enum(PointType, None = 0, Regular = 1 << 0, Obscured = 1 << 1, Multi1 = 1 << 2, Multi2 = 1 << 3)
+Enum(PointType, None = 0, Regular = 1 << 0, Obscured = 1 << 1, ObscuredExtra = 1 << 2, ObscuredMulti = 1 << 3)
 
 struct Solution_t
 {

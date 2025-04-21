@@ -19,7 +19,7 @@ Color_t CColor::GetTeamColor(int iLocalTeam, int iTargetTeam, bool bRelative)
 	return { 255, 255, 255, 255 };
 }
 
-Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool bRelative, int* pType)
+Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool bRelative, CBaseEntity* pTarget, int* pType)
 {
 	Color_t out = GetTeamColor(pLocal->m_iTeamNum(), pEntity->m_iTeamNum(), bRelative);
 	if (pType) *pType = 1;
@@ -50,7 +50,7 @@ Color_t CColor::GetEntityDrawColor(CTFPlayer* pLocal, CBaseEntity* pEntity, bool
 		}
 	}
 
-	if (pEntity->entindex() == G::Target.first)
+	if (pTarget && pTarget->entindex() == G::AimTarget.m_iEntIndex)
 	{
 		out = Vars::Colors::Target.Value;
 		if (pType) *pType = 6;

@@ -21,12 +21,11 @@ class CGlow
 	void RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 
 	IMaterial* m_pMatGlowColor;
-	IMaterial* m_pMatBlurX;
-	IMaterial* m_pMatBlurY;
-	IMaterial* m_pMatHaloAddToScreen;
-	ITexture* m_pRtFullFrame;
 	ITexture* m_pRenderBuffer1;
 	ITexture* m_pRenderBuffer2;
+	IMaterial* m_pMatHaloAddToScreen;
+	IMaterial* m_pMatBlurX;
+	IMaterial* m_pMatBlurY;
 
 
 

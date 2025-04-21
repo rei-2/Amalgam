@@ -87,43 +87,36 @@ namespace Math
 		v.y = NormalizeAngle(v.y);
 	}
 
-	inline float AngleDiffRad(float flAngle1, float flAngle2)
-	{
-		double delta = NormalizeRad(flAngle1 - flAngle2);
-		if (flAngle1 > flAngle2)
-		{
-			if (delta >= PI) { delta -= PI * 2; }
-		}
-		else
-		{
-			if (delta <= -PI) { delta += PI * 2; }
-		}
-		return static_cast<float>(delta);
-	}
-
 	inline void VectorAngles(const Vec3& vForward, Vec3& vAngles)
 	{
-		float yaw, pitch;
+		float flYaw, flPitch;
 
 		if (vForward.y == 0 && vForward.x == 0)
 		{
-			yaw = 0;
-			pitch = vForward.z > 0 ? 270 : 90;
+			flYaw = 0;
+			flPitch = vForward.z > 0 ? 270 : 90;
 		}
 		else
 		{
-			yaw = RAD2DEG(atan2f(vForward.y, vForward.x));
-			if (yaw < 0)
-				yaw += 360;
+			flYaw = RAD2DEG(atan2f(vForward.y, vForward.x));
+			if (flYaw < 0)
+				flYaw += 360;
 
-			pitch = RAD2DEG(atan2f(-vForward.z, vForward.Length2D()));
-			if (pitch < 0)
-				pitch += 360;
+			flPitch = RAD2DEG(atan2f(-vForward.z, vForward.Length2D()));
+			if (flPitch < 0)
+				flPitch += 360;
 		}
 
-		vAngles.x = pitch;
-		vAngles.y = yaw;
+		vAngles.x = flPitch;
+		vAngles.y = flYaw;
 		vAngles.z = 0;
+	}
+
+	inline Vec3 VectorAngles(const Vec3& vForward)
+	{
+		Vec3 vResult;
+		VectorAngles(vForward, vResult);
+		return vResult;
 	}
 
 	inline void AngleVectors(const Vec3& vAngles, Vec3* pForward = nullptr, Vec3* pRight = nullptr, Vec3* pUp = nullptr)
@@ -194,62 +187,38 @@ namespace Math
 		return flResult;
 	}
 
-	inline void CreateVector(const Vec3& angle, Vec3& vector)
+	inline Vec3 RotatePoint(Vec3 vPoint, Vec3 vOrigin, Vec3 vAngles)
 	{
-		float p, y, tmp;
+		vPoint -= vOrigin;
 
-		p = float(angle[0] * PI / 180);
-		y = float(angle[1] * PI / 180);
-		tmp = float(cos(p));
+		float sp, sy, sr, cp, cy, cr;
+		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
+		SinCos(DEG2RAD(vAngles.y), &sy, &cy);
+		SinCos(DEG2RAD(vAngles.z), &sr, &cr);
 
-		vector[0] = float(-tmp * -cos(y));
-		vector[1] = float(sin(y) * tmp);
-		vector[2] = float(-sin(p));
-	}
+		Vec3 vX = {
+			cy * cp,
+			cy * sp * sr - sy * cr,
+			cy * sp * cr + sy * sr
+		};
+		Vec3 vY = {
+			sy * cp,
+			sy * sp * sr + cy * cr,
+			sy * sp * cr - cy * sr
+		};
+		Vec3 vZ = {
+			-sp,
+			cp * sr,
+			cp * cr
+		};
 
-	inline float GetFov(const Vec3& vAngle, const Vec3& vFrom, const Vec3& vTo)
-	{
-		Vec3 vAim, vAng;
-		CreateVector(vAngle, vAim);
-		CreateVector(CalcAngle(vFrom, vTo), vAng);
-
-		float mag = sqrtf(pow(vAim.x, 2) + pow(vAim.y, 2) + pow(vAim.z, 2));
-		float u_dot_v = vAim.Dot(vAng);
-
-		return RAD2DEG(acos(u_dot_v / (pow(mag, 2))));
+		return Vec3(vX.Dot(vPoint), vY.Dot(vPoint), vZ.Dot(vPoint)) + vOrigin;
 	}
 
 	inline void VectorTransform(const Vec3& vIn, const matrix3x4& mMatrix, Vec3& vOut)
 	{
 		for (auto i = 0; i < 3; i++)
 			vOut[i] = vIn.Dot(mMatrix[i]) + mMatrix[i][3];
-	}
-
-	inline Vec3 VelocityToAngles(const Vec3& vDirection)
-	{
-		auto Magnitude = [&](const Vec3& v) -> float {
-			return sqrtf(v.Dot(v));
-		};
-
-		float yaw, pitch;
-
-		if (vDirection.y == 0.f && vDirection.x == 0.f)
-		{
-			yaw = 0.f;
-			pitch = vDirection.z > 0.f ? 270.f : 90.f;
-		}
-		else
-		{
-			yaw = RAD2DEG(atan2f(vDirection.y, vDirection.x));
-			if (yaw < 0.f)
-				yaw += 360.f;
-
-			pitch = RAD2DEG(atan2f(-vDirection.z, Magnitude(vDirection)));
-			if (pitch < 0.f)
-				pitch += 360.f;
-		}
-
-		return { pitch, yaw, 0.f };
 	}
 
 	inline void MatrixSetColumn(const Vec3& vIn, int iColumn, matrix3x4& mOut)
@@ -259,7 +228,7 @@ namespace Math
 		mOut[2][iColumn] = vIn.z;
 	}
 
-	inline void AngleMatrix(const Vec3& vAngles, matrix3x4& mMatrix)
+	inline void AngleMatrix(const Vec3& vAngles, matrix3x4& mMatrix, bool bClearOrigin = true)
 	{
 		float sp, sy, sr, cp, cy, cr;
 		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
@@ -283,9 +252,12 @@ namespace Math
 		mMatrix[1][2] = (sp * crsy - srcy);
 		mMatrix[2][2] = cr * cp;
 
-		mMatrix[0][3] = 0.f;
-		mMatrix[1][3] = 0.f;
-		mMatrix[2][3] = 0.f;
+		if (bClearOrigin)
+		{
+			mMatrix[0][3] = 0.f;
+			mMatrix[1][3] = 0.f;
+			mMatrix[2][3] = 0.f;
+		}
 	}
 
 	inline void MatrixAngles(const matrix3x4& mMatrix, Vec3& vAngles)
@@ -305,25 +277,7 @@ namespace Math
 		{
 			vAngles.x = RAD2DEG(std::atan2(-vForward.z, flLen));
 			vAngles.y = RAD2DEG(std::atan2(-vLeft.x, vLeft.y));
-			vAngles.z = 0.f;
-		}
-	}
-
-	inline void RotateTriangle(std::array<Vec2, 3>& aPoints, float flRotation)
-	{
-		Vec2 vCenter = (aPoints[0] + aPoints[1] + aPoints[2]) / 3;
-
-		for (auto& vPoint : aPoints)
-		{
-			vPoint -= vCenter;
-			float flX = vPoint.x;
-			float flY = vPoint.y;
-			float flT = DEG2RAD(flRotation);
-			float c = cosf(flT);
-			float s = sinf(flT);
-			vPoint.x = flX * c - flY * s;
-			vPoint.y = flX * s + flY * c;
-			vPoint += vCenter;
+			vAngles.z = 0;
 		}
 	}
 
@@ -343,7 +297,7 @@ namespace Math
 		Vec3 f = Vec3(X.Dot(vDirection), Y.Dot(vDirection), Z.Dot(vDirection));
 		Vec3 e = Vec3(X.Dot(vDelta), Y.Dot(vDelta), Z.Dot(vDelta));
 
-		float t[6] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f };
+		float t[6] = { 0, 0, 0, 0, 0, 0 };
 
 		for (int i = 0; i < 3; ++i)
 		{
@@ -359,10 +313,10 @@ namespace Math
 			t[i * 2 + 1] = (e[i] + vMins[i]) / f[i];
 		}
 
-		float tmin = fmaxf(fmaxf(fminf(t[0], t[1]), fminf(t[2], t[3])), fminf(t[4], t[5]));
-		float tmax = fminf(fminf(fmaxf(t[0], t[1]), fmaxf(t[2], t[3])), fmaxf(t[4], t[5]));
+		float flTMin = fmaxf(fmaxf(fminf(t[0], t[1]), fminf(t[2], t[3])), fminf(t[4], t[5]));
+		float flTMax = fminf(fminf(fmaxf(t[0], t[1]), fmaxf(t[2], t[3])), fmaxf(t[4], t[5]));
 
-		if (tmax < 0.f || tmin > tmax)
+		if (flTMax < 0.f || flTMin > flTMax)
 			return false;
 
 		return true;
@@ -375,51 +329,12 @@ namespace Math
 		vOut.z = vIn.Dot(mIn[2]);
 	}
 
-	inline Vec3 GetRotatedPosition(Vec3 vStart, const float flRotation, const float flDistance)
-	{
-		const auto rad = DEG2RAD(flRotation);
-		vStart.x += cosf(rad) * flDistance;
-		vStart.y += sinf(rad) * flDistance;
-
-		return vStart;
-	}
-
-	inline Vec3 RotatePoint(Vec3 vPoint, Vec3 vOrigin, Vec3 vAngles)
-	{
-		vPoint -= vOrigin;
-
-		float sp, sy, sr, cp, cy, cr;
-		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
-		SinCos(DEG2RAD(vAngles.y), &sy, &cy);
-		SinCos(DEG2RAD(vAngles.z), &sr, &cr);
-
-		Vec3 vX = {
-			cy * cp,
-			cy * sp * sr - sy * cr,
-			cy * sp * cr + sy * sr
-		};
-		Vec3 vY = {
-			sy * cp,
-			sy * sp* sr + cy * cr,
-			sy * sp* cr - cy * sr
-		};
-		Vec3 vZ = {
-			-sp,
-			cp * sr,
-			cp * cr
-		};
-
-		return Vec3(vX.Dot(vPoint), vY.Dot(vPoint), vZ.Dot(vPoint)) + vOrigin;
-	}
-
 	inline void MatrixCopy(const matrix3x4& mIn, matrix3x4& mOut)
 	{
 		for (int i = 0; i < 3; i++)
 		{
 			for (int j = 0; j < 4; j++)
-			{
 				mOut[i][j] = mIn[i][j];
-			}
 		}
 	}
 

@@ -50,8 +50,16 @@ public:
 		return flN;
 	}
 
+	void Start(bool bBadFontCheck = false);
+	void End();
+	void StartClipping(int x, int y, int w, int h);
+	void EndClipping();
+
 	void UpdateScreenSize();
 	void UpdateW2SMatrix();
+
+	Vec2 GetTextSize(const char* text, const Font_t& tFont);
+	Vec2 GetTextSize(const wchar_t* text, const Font_t& tFont);
 
 	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str, ...);
 	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* str, ...);
@@ -81,9 +89,6 @@ public:
 	void DrawHudTextureByName(float x, float y, float s, const char* sTexture, Color_t tColor = { 255, 255, 255, 255 });
 	void Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& eAlign = ALIGN_CENTER);
 	void ClearAvatarCache();
-
-	void StartClipping(int x, int y, int w, int h);
-	void EndClipping();
 
 	int m_nScreenW = 0, m_nScreenH = 0;
 	VMatrix m_WorldToProjection = {};

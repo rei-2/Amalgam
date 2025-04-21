@@ -452,9 +452,22 @@ bool CEntities::IsProjectile(CBaseEntity* pEntity)
 	return false;
 }
 
-CTFPlayer* CEntities::GetLocal() { return m_pLocal; }
-CTFWeaponBase* CEntities::GetWeapon() { return m_pLocalWeapon; }
-CTFPlayerResource* CEntities::GetPR() { return m_pPlayerResource; }
+CTFPlayer* CEntities::GetLocal()
+{
+	//if (auto pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer()))
+	//	return pLocal->As<CTFPlayer>();
+	return m_pLocal;
+}
+CTFWeaponBase* CEntities::GetWeapon()
+{
+	//if (auto pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer()))
+	//	return pLocal->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+	return m_pLocalWeapon;
+}
+CTFPlayerResource* CEntities::GetPR()
+{
+	return m_pPlayerResource;
+}
 
 const std::vector<CBaseEntity*>& CEntities::GetGroup(const EGroupType& Group) { return m_mGroups[Group]; }
 

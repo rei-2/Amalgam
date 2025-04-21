@@ -124,8 +124,7 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 		float flForward = pCmd->forwardmove, flSide = pCmd->sidemove;
 
 		Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);
-		vForward.z = vRight.z = 0.f;
-		vForward.Normalize(), vRight.Normalize();
+		vForward.Normalize2D(), vRight.Normalize2D();
 
 		Vec3 vWishDir = {}; Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f }, vWishDir);
 		Vec3 vCurDir = {}; Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);
@@ -521,23 +520,17 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		{
 			auto TargetIsBehind = [&]()
 				{
-					Vec3 vToTarget = pLocal->m_vecOrigin() - pTargetPos.first;
-					vToTarget.z = 0.f;
-					const float flDist = vToTarget.Length();
+					Vec3 vToTarget = (pLocal->m_vecOrigin() - pTargetPos.first).To2D();
+					const float flDist = vToTarget.Normalize();
 					if (!flDist)
 						return true;
 
-					Vec3 vTargetAngles = pCmd->viewangles;
-
-					vToTarget.Normalize();
 					float flTolerance = 0.0625f;
 					float flExtra = 2.f * flTolerance / flDist; // account for origin tolerance
-
 					float flPosVsTargetViewMinDot = 0.f - 0.0031f - flExtra;
 
-					Vec3 vTargetForward; Math::AngleVectors(vTargetAngles, &vTargetForward);
-					vTargetForward.z = 0.f;
-					vTargetForward.Normalize();
+					Vec3 vTargetForward; Math::AngleVectors(pCmd->viewangles, &vTargetForward);
+					vTargetForward.Normalize2D();
 
 					return vToTarget.Dot(vTargetForward) > flPosVsTargetViewMinDot;
 				};

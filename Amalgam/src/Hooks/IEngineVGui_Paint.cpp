@@ -10,27 +10,24 @@
 #include "../Features/Visuals/SpectatorList/SpectatorList.h"
 #include "../Features/Visuals/Visuals.h"
 
-static inline void Paint()
+MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
+	void* rcx, int iMode)
 {
-	H::Draw.UpdateW2SMatrix();
-	H::Draw.UpdateScreenSize();
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::IEngineVGui_Paint[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, iMode);
+#endif
 
-	I::MatSystemSurface->StartDrawing();
+	if (G::Unload)
+		return CALL_ORIGINAL(rcx, iMode);
+
+	if (iMode & PAINT_INGAMEPANELS && (!Vars::Visuals::UI::CleanScreenshots.Value || !I::EngineClient->IsTakingScreenshot()))
 	{
-		if (Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
-			return I::MatSystemSurface->FinishDrawing();
+		H::Draw.UpdateW2SMatrix();
+		H::Draw.UpdateScreenSize();
 
-		// dumb FUCKN+IG CHeck for fonts
-		static Timer tTimer = {};
-		if (tTimer.Run(1.f))
-		{
-			int w = 0, h = 0; I::MatSystemSurface->GetTextSize(H::Fonts.GetFont(FONT_ESP).m_dwFont, L"", w, h);
-			if (!h)
-				H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
-		}
-
-		auto pLocal = H::Entities.GetLocal();
-		if (pLocal && !I::EngineVGui->IsGameUIVisible())
+		H::Draw.Start(true);
+		if (auto pLocal = H::Entities.GetLocal())
 		{
 			F::CameraWindow.Draw();
 			F::Visuals.DrawServerHitboxes(pLocal);
@@ -50,22 +47,17 @@ static inline void Paint()
 			F::Visuals.DrawTicks(pLocal);
 			F::Visuals.DrawDebugInfo(pLocal);
 		}
-
-		F::Notifications.Draw();
+		H::Draw.End();
 	}
-	I::MatSystemSurface->FinishDrawing();
-}
-
-MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
-	void* rcx, int iMode)
-{
-#ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IEngineVGui_Paint[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, iMode);
-#endif
 
 	CALL_ORIGINAL(rcx, iMode);
 
-	if (iMode & PAINT_UIPANELS)
-		Paint();
+	if (iMode & PAINT_UIPANELS && (!Vars::Visuals::UI::CleanScreenshots.Value || !I::EngineClient->IsTakingScreenshot()))
+	{
+		H::Draw.Start();
+		{
+			F::Notifications.Draw();
+		}
+		H::Draw.End();
+	}
 }

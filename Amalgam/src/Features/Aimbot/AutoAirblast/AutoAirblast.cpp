@@ -56,7 +56,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 		return;
 
 	const int iWeaponID = pWeapon->GetWeaponID();
-	if (iWeaponID != TF_WEAPON_FLAMETHROWER && iWeaponID != TF_WEAPON_FLAME_BALL || !SDK::AttribHookValue(0, "airblast_disabled", pWeapon))
+	if (iWeaponID != TF_WEAPON_FLAMETHROWER && iWeaponID != TF_WEAPON_FLAME_BALL || SDK::AttribHookValue(0, "airblast_disabled", pWeapon))
 		return;
 
 	const Vec3 vEyePos = pLocal->GetShootPos();
@@ -74,7 +74,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 		pProjectile->SetAbsOrigin(vOrigin);
 
 		if (Vars::Aimbot::Projectile::AutoAirblast.Value & Vars::Aimbot::Projectile::AutoAirblastEnum::RespectFOV
-			&& Math::GetFov(I::EngineClient->GetViewAngles(), vEyePos, vOrigin) > Vars::Aimbot::General::AimFOV.Value)
+			&& Math::CalcFov(I::EngineClient->GetViewAngles(), Math::CalcAngle(vEyePos, vOrigin)) > Vars::Aimbot::General::AimFOV.Value)
 			continue;
 
 		/*

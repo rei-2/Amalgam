@@ -3,6 +3,7 @@
 #include "../Glow/Glow.h"
 #include "../../CameraWindow/CameraWindow.h"
 #include "../../Configs/Configs.h"
+#include "../../Binds/Binds.h"
 #include <filesystem>
 #include <fstream>
 
@@ -328,19 +329,19 @@ void CMaterials::RemoveMaterial(const char* sName)
 
 		auto removeFromVar = [&](ConfigVar<std::vector<std::pair<std::string, Color_t>>>& var)
 			{
-				for (auto& [_, val] : var.Map)
+				for (auto& [iBind, vVal] : var.Map)
 				{
-					for (auto it = val.begin(); it != val.end();)
+					for (auto it = vVal.begin(); it != vVal.end();)
 					{
 						if (FNV1A::Hash32(it->first.c_str()) == uHash)
-							it = val.erase(it);
+							it = vVal.erase(it);
 						else
 							++it;
 					}
 				}
 			};
-		removeFromVar(Vars::Chams::Friendly::Visible);
-		removeFromVar(Vars::Chams::Friendly::Occluded);
+		removeFromVar(Vars::Chams::Team::Visible);
+		removeFromVar(Vars::Chams::Team::Occluded);
 		removeFromVar(Vars::Chams::Enemy::Visible);
 		removeFromVar(Vars::Chams::Enemy::Occluded);
 		removeFromVar(Vars::Chams::World::Visible);

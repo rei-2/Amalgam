@@ -432,11 +432,11 @@ void CVisuals::DrawAntiAim(CTFPlayer* pLocal)
 		Vec3 vScreen1, vScreen2;
 		if (SDK::W2S(vOrigin, vScreen1))
 		{
-			constexpr auto distance = 50.f;
-			if (SDK::W2S(Math::GetRotatedPosition(vOrigin, F::AntiAim.vRealAngles.y, distance), vScreen2))
+			constexpr float flDistance = 50.f;
+			if (SDK::W2S(Math::RotatePoint(vOrigin, {}, F::AntiAim.vRealAngles.y).Normalized() * flDistance, vScreen2))
 				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 0, 255, 0, 255 });
 
-			if (SDK::W2S(Math::GetRotatedPosition(vOrigin, F::AntiAim.vFakeAngles.y, distance), vScreen2))
+			if (SDK::W2S(Math::RotatePoint(vOrigin, {}, F::AntiAim.vFakeAngles.y).Normalized() * flDistance, vScreen2))
 				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 255, 0, 0, 255 });
 		}
 
@@ -636,9 +636,7 @@ void CVisuals::DrawPath(std::deque<Vec3>& Line, Color_t Color, int iStyle, bool 
 				Vec3& vStart = Line[i - 1];
 				Vec3& vEnd = Line[i];
 
-				Vec3 vDir = vEnd - vStart;
-				vDir.z = 0;
-				vDir.Normalize();
+				Vec3 vDir = (vEnd - vStart).To2D().Normalized();
 				vDir = Math::RotatePoint(vDir * Vars::Visuals::Simulation::SeparatorLength.Value, {}, { 0, 90, 0 });
 				RenderLine(vEnd, vEnd + vDir, Color, bZBuffer);
 			}

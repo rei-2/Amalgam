@@ -23,7 +23,6 @@ static BOOL CALLBACK TeamFortressWindow(HWND hWindow, LPARAM lParam)
 
 
 
-
 void SDK::Output(const char* cFunction, const char* cLog, Color_t tColor,
 	bool bConsole, bool bDebug, bool bToast, bool bMenu, bool bChat, bool bParty, int iMessageBox,
 	const char* sLeft, const char* sRight)
@@ -216,7 +215,7 @@ bool SDK::W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways)
 	return bOnScreen;
 }
 
-bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& transform, float* pLeft, float* pRight, float* pTop, float* pBottom)
+bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft, float* pRight, float* pTop, float* pBottom)
 {
 	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
 
@@ -233,7 +232,7 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& transform, float* pL
 	};
 	for (int n = 0; n < 6; n++)
 	{
-		Vec3 vPoint; Math::VectorTransform(vPoints[n], transform, vPoint);
+		Vec3 vPoint; Math::VectorTransform(vPoints[n], mTransform, vPoint);
 
 		Vec3 vScreenPos;
 		if (!W2S(vPoint, vScreenPos))
@@ -335,29 +334,29 @@ void SDK::TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHul
 #endif
 }
 
-bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask)
+bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
 	CTraceFilterHitscan filter = {}; filter.pSkip = pSkip;
-	Trace(from, to, nMask, &filter, &trace);
+	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
 	return true;
 }
-bool SDK::VisPosProjectile(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask)
+bool SDK::VisPosProjectile(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
 	CTraceFilterProjectile filter = {}; filter.pSkip = pSkip;
-	Trace(from, to, nMask, &filter, &trace);
+	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
 	return true;
 }
-bool SDK::VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& from, const Vec3& to, unsigned int nMask)
+bool SDK::VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {}; filter.pSkip = pSkip;
-	Trace(from, to, nMask, &filter, &trace);
+	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
 	return true;
@@ -618,8 +617,7 @@ float SDK::MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch, bool bIgnoreSpecial
 {
 	float flSpeed = pPlayer->TeamFortress_CalculateMaxSpeed(bIgnoreSpecialAbility);
 
-	if (pPlayer->InCond(TF_COND_SPEED_BOOST) ||
-		pPlayer->InCond(TF_COND_HALLOWEEN_SPEED_BOOST))
+	if (pPlayer->InCond(TF_COND_SPEED_BOOST) || pPlayer->InCond(TF_COND_HALLOWEEN_SPEED_BOOST))
 		flSpeed *= 1.35f;
 	if (bIncludeCrouch && pPlayer->IsDucking() && pPlayer->IsOnGround())
 		flSpeed /= 3;
@@ -660,7 +658,7 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	if (G::Attacking != 1)
 	{
-		float flDirection = Math::VelocityToAngles(pLocal->m_vecVelocity() * -1).y;
+		float flDirection = Math::VectorAngles(pLocal->m_vecVelocity() * -1).y;
 		pCmd->viewangles = { 90, flDirection, 0 };
 		pCmd->sidemove = 0; pCmd->forwardmove = 0;
 		return true;

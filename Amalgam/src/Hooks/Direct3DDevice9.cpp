@@ -6,30 +6,6 @@
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-/*
-MAKE_HOOK(Direct3DDevice9_EndScene, U::Memory.GetVFunc(I::DirectXDevice, 42), HRESULT,
-	LPDIRECT3DDEVICE9 pDevice)
-{
-	static void* pRegularAddr = 0, *pOverlayAddr = 0;
-	if (!pRegularAddr || !pOverlayAddr)
-	{	// this doesn't work properly with -vulkan, steam overlay not called here?
-		MEMORY_BASIC_INFORMATION info; VirtualQuery(_ReturnAddress(), &info, sizeof(MEMORY_BASIC_INFORMATION));
-		char mod[MAX_PATH]; GetModuleFileNameA((HMODULE)info.AllocationBase, mod, MAX_PATH);
-		if (strstr(mod, "\\shaderapi"))
-			pRegularAddr = _ReturnAddress();
-		else
-			pOverlayAddr = _ReturnAddress();
-	}
-
-	// anti obs proof of concept using steam overlay
-	//if (Vars::Visuals::AntiOBS.Value ? fOverlayAddr == _ReturnAddress() : fRegularAddr == _ReturnAddress())
-	if (!G::Unload && pRegularAddr == _ReturnAddress())
-		F::Render.Render(pDevice);
-
-	return CALL_ORIGINAL(pDevice);
-}
-*/
-
 MAKE_HOOK(Direct3DDevice9_Present, U::Memory.GetVFunc(I::DirectXDevice, 17), HRESULT,
 	IDirect3DDevice9* pDevice, const RECT* pSource, const RECT* pDestination, const RGNDATA* pDirtyRegion)
 {

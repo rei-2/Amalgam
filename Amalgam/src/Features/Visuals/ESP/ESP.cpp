@@ -46,6 +46,9 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		bool bSpectate = iObserverMode == OBS_MODE_FIRSTPERSON || iObserverMode == OBS_MODE_THIRDPERSON;
 		bool bTarget = bSpectate && pObserverTarget == pPlayer;
 
+		if (!pPlayer->IsAlive() || pPlayer->IsAGhost())
+			continue;
+
 		if (bLocal || bTarget)
 		{
 			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Local) || (!bSpectate ? !I::Input->CAM_IsThirdPerson() && bLocal : iObserverMode == OBS_MODE_FIRSTPERSON && bTarget))
@@ -53,9 +56,6 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		}
 		else
 		{
-			if (!pPlayer->IsAlive() || pPlayer->IsAGhost())
-				continue;
-
 			if (pPlayer->IsDormant())
 			{
 				if (!H::Entities.GetDormancy(iIndex) || !Vars::ESP::DormantAlpha.Value
@@ -79,7 +79,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		tCache.m_bBox = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Box;
 		tCache.m_bBones = Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Bones;
 
-		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Distance && pPlayer != pLocal)
+		if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Distance && !bLocal)
 		{
 			Vec3 vDelta = pPlayer->m_vecOrigin() - pLocal->m_vecOrigin();
 			tCache.m_vText.emplace_back(ESPTextEnum::Bottom, std::format("[{:.0f}M]", vDelta.Length2D() / 41), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
@@ -1139,22 +1139,20 @@ Color_t CESP::GetColor(CTFPlayer* pLocal, CBaseEntity* pEntity)
 {
 	if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
 		return Vars::Colors::Local.Value;
-	if (pEntity->entindex() == G::Target.first)
+	if (pEntity->entindex() == G::AimTarget.m_iEntIndex)
 		return Vars::Colors::Target.Value;
 	return H::Color.GetTeamColor(pLocal->m_iTeamNum(), pEntity->m_iTeamNum(), Vars::Colors::Relative.Value);
 }
 
 bool CESP::GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h)
 {
-	auto& transform = const_cast<matrix3x4&>(pEntity->RenderableToWorldTransform());
-	if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
-	{
-		Math::AngleMatrix({ 0.f, I::EngineClient->GetViewAngles().y, 0.f }, transform);
-		Math::MatrixSetColumn(pEntity->GetAbsOrigin(), 3, transform);
-	}
+	Vec3 vOrigin = pEntity->GetAbsOrigin();
+	matrix3x4 mTransform = { { 1, 0, 0, vOrigin.x }, { 0, 1, 0, vOrigin.y }, { 0, 0, 1, vOrigin.z } };
+	//if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
+		Math::AngleMatrix({ 0.f, I::EngineClient->GetViewAngles().y, 0.f }, mTransform, false);
 
 	float flLeft, flRight, flTop, flBottom;
-	if (!SDK::IsOnScreen(pEntity, transform, &flLeft, &flRight, &flTop, &flBottom))
+	if (!SDK::IsOnScreen(pEntity, mTransform, &flLeft, &flRight, &flTop, &flBottom))
 		return false;
 
 	x = flLeft;

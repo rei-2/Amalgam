@@ -84,17 +84,21 @@ void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	if (!pLocal)
 		return;
 
-	switch (Vars::CL_Move::Fakelag::Fakelag.Value)
+	if (!m_iGoal)
 	{
-	case Vars::CL_Move::Fakelag::FakelagEnum::Off: m_iGoal = 0; break;
-	case Vars::CL_Move::Fakelag::FakelagEnum::Plain: m_iGoal = Vars::CL_Move::Fakelag::PlainTicks.Value; break;
-	case Vars::CL_Move::Fakelag::FakelagEnum::Random: if (!m_iGoal) m_iGoal = SDK::StdRandomInt(Vars::CL_Move::Fakelag::RandomTicks.Value.Min, Vars::CL_Move::Fakelag::RandomTicks.Value.Max); break;
-	case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive: m_iGoal = 22; break;
+		switch (Vars::CL_Move::Fakelag::Fakelag.Value)
+		{
+		case Vars::CL_Move::Fakelag::FakelagEnum::Off: m_iGoal = 0; break;
+		case Vars::CL_Move::Fakelag::FakelagEnum::Plain: m_iGoal = Vars::CL_Move::Fakelag::PlainTicks.Value; break;
+		case Vars::CL_Move::Fakelag::FakelagEnum::Random: m_iGoal = SDK::StdRandomInt(Vars::CL_Move::Fakelag::RandomTicks.Value.Min, Vars::CL_Move::Fakelag::RandomTicks.Value.Max); break;
+		case Vars::CL_Move::Fakelag::FakelagEnum::Adaptive: m_iGoal = 22; break;
+		}
 	}
 
 	Prediction(pLocal, pCmd);
 	if (!IsAllowed(pLocal, pWeapon, pCmd))
 	{
+		m_iGoal = 0;
 		m_vLastPosition = pLocal->m_vecOrigin();
 		return;
 	}

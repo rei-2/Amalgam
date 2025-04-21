@@ -94,7 +94,6 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 	EAlign align = ALIGN_TOP;
 	if (x <= 100 + H::Draw.Scale(50, Scale_Round))
 	{
-	//	iconOffset = 36;
 		x -= H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPLEFT;
 	}
@@ -103,11 +102,6 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 		x += H::Draw.Scale(42, Scale_Round);
 		align = ALIGN_TOPRIGHT;
 	}
-	//else
-	//	iconOffset = 16;
-
-	//if (!Vars::Menu::SpectatorAvatars.Value)
-	//	iconOffset = 0;
 
 	std::string sName = pTarget != pLocal ? F::PlayerUtils.GetPlayerName(pTarget->entindex(), pi.name) : "You";
 	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, std::format("Spectating {}:", sName).c_str());
@@ -115,37 +109,15 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 	{
 		y += nTall;
 
-		/*
-		if (Vars::Visuals::SpectatorAvatars.Value)
-		{
-			int w, h;
-
-			I::MatSystemSurface->GetTextSize(fFont.m_dwFont, SDK::ConvertUtf8ToWide(std::format("{} - {} (respawn {}s)", Spectator.m_sName, Spectator.m_sMode, Spectator.m_iRespawnIn)).c_str(), w, h);
-			switch (align)
-			{
-			case ALIGN_TOPLEFT: w = 0; break;
-			case ALIGN_TOP: w /= 2; break;
-			}
-
-			PlayerInfo_t pi{};
-			if (!I::EngineClient->GetPlayerInfo(Spectator.m_iIndex, &pi))
-				continue;
-
-			H::Draw.Avatar(x - w - (36 - iconOffset), y, 24, 24, pi.friendsID);
-			// center - half the width of the string
-			y += 6;
-		}
-		*/
-
-		Color_t color = Vars::Menu::Theme::Active.Value;
+		Color_t tColor = Vars::Menu::Theme::Active.Value;
 		if (Spectator.m_bIsFriend)
-			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color;
+			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color;
 		else if (Spectator.m_bInParty)
-			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color;
+			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color;
 		else if (Spectator.m_bRespawnTimeIncreased)
-			color = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].Color;
+			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].Color;
 		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
-			color = color.Lerp({ 255, 150, 0, 255 }, 0.5f);
-		H::Draw.StringOutlined(fFont, x + iconOffset, y, color, Vars::Menu::Theme::Background.Value, align, std::format("{} ({} - respawn {}s)", Spectator.m_sName, Spectator.m_sMode, ceilf(Spectator.m_flRespawnIn)).c_str());
+			tColor = tColor.Lerp({ 255, 150, 0, 255 }, 0.5f);
+		H::Draw.StringOutlined(fFont, x + iconOffset, y, tColor, Vars::Menu::Theme::Background.Value, align, std::format("{} ({} - respawn {}s)", Spectator.m_sName, Spectator.m_sMode, ceilf(Spectator.m_flRespawnIn)).c_str());
 	}
 }

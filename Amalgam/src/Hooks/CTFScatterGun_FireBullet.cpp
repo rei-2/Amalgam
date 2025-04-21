@@ -24,6 +24,11 @@ static inline void StunPlayer(CTFPlayer* pPlayer, float flTime, float flReductio
 MAKE_HOOK(CTFScatterGun_FireBullet, S::CTFScatterGun_FireBullet(), void,
 	void* rcx, CTFPlayer* pPlayer)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFScatterGun_FireBullet[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pPlayer);
+#endif
+
 	auto pWeapon = reinterpret_cast<CTFWeaponBase*>(rcx);
 	if (HasKnockback(pWeapon))
 	{
@@ -61,6 +66,11 @@ MAKE_HOOK(CTFScatterGun_FireBullet, S::CTFScatterGun_FireBullet(), void,
 MAKE_HOOK(CTFGameMovement_SetGroundEntity, S::CTFGameMovement_SetGroundEntity(), void,
 	void* rcx, trace_t* pm)
 {
+#ifdef DEBUG_HOOKS
+	if (!Vars::Hooks::CTFScatterGun_FireBullet[DEFAULT_BIND])
+		return CALL_ORIGINAL(rcx, pm);
+#endif
+
 	CALL_ORIGINAL(rcx, pm);
 
 	if (pm && pm->m_pEnt)

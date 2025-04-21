@@ -9,6 +9,7 @@ namespace BindEnum
 	Enum(WeaponType, Hitscan, Projectile, Melee)
 	//Enum(ItemType, First, Second, Third, Fourth, Fifth, Sixth, Seventh, Eighth, Ninth)
 }
+Enum(BindVisibility, Always, WhileActive, Hidden)
 
 struct Bind_t
 {
@@ -18,11 +19,14 @@ struct Bind_t
 	int m_iKey = 0;
 
 	bool m_bEnabled = true;
-	bool m_bVisible = true;
+	int m_iVisibility = BindVisibilityEnum::Always;
 	bool m_bNot = false;
 	bool m_bActive = false;
+	KeyStorage m_tKeyStorage = {};
 
 	int m_iParent = -1;
+
+	std::vector<CVarBase*> m_vVars = {};
 };
 
 class CBinds
@@ -39,7 +43,6 @@ public:
 	bool WillBeEnabled(int iBind);
 
 	std::vector<Bind_t> m_vBinds = {};
-	std::unordered_map<int, KeyStorage> m_mKeyStorage;
 };
 
 ADD_FEATURE(CBinds, Binds)

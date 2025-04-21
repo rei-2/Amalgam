@@ -4,30 +4,137 @@
 #include "../Configs/Configs.h"
 #include <functional>
 
-#define IsType(type) var->m_iType == typeid(type).hash_code()
+#define IsType(type) pVar->m_iType == typeid(type).hash_code()
 #define SetType(type, cond)\
 {\
-	if (var->As<type>()->Map.contains(cond))\
-		var->As<type>()->Value = var->As<type>()->Map[cond];\
+	if (pVar->As<type>()->Map.contains(cond))\
+		pVar->As<type>()->Value = pVar->As<type>()->Map[cond];\
 }
 #define SetT(type, cond) if (IsType(type)) SetType(type, cond)
 
+static inline void SetVars(int iBind, std::vector<CVarBase*>& vVars = G::Vars)
+{
+	const bool bDefault = iBind == DEFAULT_BIND;
+	for (auto pVar : vVars)
+	{
+		if (pVar->m_iFlags & (NOSAVE | NOBIND) && !bDefault)
+			continue;
+
+		SetT(bool, iBind)
+		else SetT(int, iBind)
+		else SetT(float, iBind)
+		else SetT(IntRange_t, iBind)
+		else SetT(FloatRange_t, iBind)
+		else SetT(std::string, iBind)
+		else SetT(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iBind)
+		else SetT(Color_t, iBind)
+		else SetT(Gradient_t, iBind)
+		else SetT(Vec3, iBind)
+		else SetT(DragBox_t, iBind)
+		else SetT(WindowBox_t, iBind)
+	}
+}
+
+static inline void GetBinds(int iParent, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Bind_t>& vBinds)
+{
+	for (auto it = vBinds.rbegin(); it < vBinds.rend(); it++) // reverse so that higher binds have priority over vars
+	{
+		int iBind = std::distance(vBinds.begin(), it.base()) - 1;
+		auto& tBind = *it;
+		if (iParent != tBind.m_iParent || !tBind.m_bEnabled)
+			continue;
+
+		switch (tBind.m_iType)
+		{
+		case BindEnum::Key:
+		{
+			bool bKey = false;
+			switch (tBind.m_iInfo)
+			{
+			case BindEnum::KeyEnum::Hold: bKey = U::KeyHandler.Down(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
+			case BindEnum::KeyEnum::Toggle: bKey = U::KeyHandler.Pressed(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
+			case BindEnum::KeyEnum::DoubleClick: bKey = U::KeyHandler.Double(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
+			}
+			const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && (!I::MatSystemSurface->IsCursorVisible() || I::EngineClient->IsPlayingDemo())
+				|| F::Menu.m_bIsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.m_bInKeybind; // allow in menu
+			bKey = bShouldUse && bKey;
+
+			switch (tBind.m_iInfo)
+			{
+			case BindEnum::KeyEnum::Hold:
+				if (tBind.m_bNot)
+					bKey = !bKey;
+				tBind.m_bActive = bKey;
+				break;
+			case BindEnum::KeyEnum::Toggle:
+			case BindEnum::KeyEnum::DoubleClick:
+				if (bKey)
+					tBind.m_bActive = !tBind.m_bActive;
+			}
+			break;
+		}
+		case BindEnum::Class:
+		{
+			const int iClass = pLocal ? pLocal->m_iClass() : 0;
+			switch (tBind.m_iInfo)
+			{
+			case BindEnum::ClassEnum::Scout: { tBind.m_bActive = iClass == 1; break; }
+			case BindEnum::ClassEnum::Soldier: { tBind.m_bActive = iClass == 3; break; }
+			case BindEnum::ClassEnum::Pyro: { tBind.m_bActive = iClass == 7; break; }
+			case BindEnum::ClassEnum::Demoman: { tBind.m_bActive = iClass == 4; break; }
+			case BindEnum::ClassEnum::Heavy: { tBind.m_bActive = iClass == 6; break; }
+			case BindEnum::ClassEnum::Engineer: { tBind.m_bActive = iClass == 9; break; }
+			case BindEnum::ClassEnum::Medic: { tBind.m_bActive = iClass == 5; break; }
+			case BindEnum::ClassEnum::Sniper: { tBind.m_bActive = iClass == 2; break; }
+			case BindEnum::ClassEnum::Spy: { tBind.m_bActive = iClass == 8; break; }
+			}
+			if (tBind.m_bNot)
+				tBind.m_bActive = !tBind.m_bActive;
+			break;
+		}
+		case BindEnum::WeaponType:
+		{
+			tBind.m_bActive = tBind.m_iInfo + 1 == int(SDK::GetWeaponType(pWeapon));
+			if (tBind.m_bNot)
+				tBind.m_bActive = !tBind.m_bActive;
+			break;
+		}
+		case BindEnum::ItemSlot:
+		{
+			tBind.m_bActive = tBind.m_iInfo == (pWeapon ? pWeapon->GetSlot() : -1);
+			if (tBind.m_bNot)
+				tBind.m_bActive = !tBind.m_bActive;
+			break;
+		}
+		}
+
+		if (tBind.m_bActive)
+		{
+			SetVars(iBind, tBind.m_vVars);
+			GetBinds(iBind, pLocal, pWeapon, vBinds);
+		}
+	}
+}
+
 void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (G::Unload || !F::Configs.m_bConfigLoaded)
+	if (!F::Configs.m_bConfigLoaded || G::Unload)
 		return;
 
-	for (int iKey = 0; iKey < 256; iKey++)
-	{
-		// don't delay inputs for binds
-		auto& tKey = m_mKeyStorage[iKey];
+	for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
+	{	// don't delay inputs for binds
+		auto& tBind = *it;
+		if (tBind.m_iType != BindEnum::Key)
+			continue;
+
+		auto& tKey = tBind.m_tKeyStorage;
 
 		bool bOldIsDown = tKey.m_bIsDown;
 		bool bOldIsPressed = tKey.m_bIsPressed;
 		bool bOldIsDouble = tKey.m_bIsDouble;
 		bool bOldIsReleased = tKey.m_bIsReleased;
 
-		U::KeyHandler.StoreKey(iKey, &tKey);
+		U::KeyHandler.StoreKey(tBind.m_iKey, &tKey);
 
 		tKey.m_bIsDown = tKey.m_bIsDown || bOldIsDown;
 		tKey.m_bIsPressed = tKey.m_bIsPressed || bOldIsPressed;
@@ -35,115 +142,19 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		tKey.m_bIsReleased = tKey.m_bIsReleased || bOldIsReleased;
 	}
 
-	auto setVars = [](int iBind)
-		{
-			const bool bDefault = iBind == DEFAULT_BIND;
-			for (auto var : g_Vars)
-			{
-				if (var->m_iFlags & (NOSAVE | NOBIND) && !bDefault)
-					continue;
+	SetVars(DEFAULT_BIND);
+	GetBinds(DEFAULT_BIND, pLocal, pWeapon, m_vBinds);
 
-				SetT(bool, iBind)
-				else SetT(int, iBind)
-				else SetT(float, iBind)
-				else SetT(IntRange_t, iBind)
-				else SetT(FloatRange_t, iBind)
-				else SetT(std::string, iBind)
-				else SetT(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iBind)
-				else SetT(Color_t, iBind)
-				else SetT(Gradient_t, iBind)
-				else SetT(Vec3, iBind)
-				else SetT(DragBox_t, iBind)
-				else SetT(WindowBox_t, iBind)
-			}
-		};
-	setVars(DEFAULT_BIND);
+	for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
+	{	// clear inputs for binds
+		auto& tBind = *it;
+		if (tBind.m_iType != BindEnum::Key)
+			continue;
 
-	std::function<void(int)> getBinds = [&](int iParent)
-		{
-			for (auto it = m_vBinds.rbegin(); it != m_vBinds.rend(); it++) // reverse so that higher binds have priority over vars
-			{
-				int iBind = std::distance(m_vBinds.begin(), it.base()) - 1;
-				auto& tBind = *it;
-				if (iParent != tBind.m_iParent || !tBind.m_bEnabled)
-					continue;
+		auto& tKey = tBind.m_tKeyStorage;
 
-				switch (tBind.m_iType)
-				{
-				case BindEnum::Key:
-				{
-					bool bKey = false;
-					switch (tBind.m_iInfo)
-					{
-					case BindEnum::KeyEnum::Hold: bKey = U::KeyHandler.Down(tBind.m_iKey, false, &m_mKeyStorage[tBind.m_iKey]); break;
-					case BindEnum::KeyEnum::Toggle: bKey = U::KeyHandler.Pressed(tBind.m_iKey, false, &m_mKeyStorage[tBind.m_iKey]); break;
-					case BindEnum::KeyEnum::DoubleClick: bKey = U::KeyHandler.Double(tBind.m_iKey, false, &m_mKeyStorage[tBind.m_iKey]); break;
-					}
-					const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && (!I::MatSystemSurface->IsCursorVisible() || I::EngineClient->IsPlayingDemo())
-											|| F::Menu.m_bIsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.m_bInKeybind; // allow in menu
-					bKey = bShouldUse && bKey;
-
-					switch (tBind.m_iInfo)
-					{
-					case BindEnum::KeyEnum::Hold:
-						if (tBind.m_bNot)
-							bKey = !bKey;
-						tBind.m_bActive = bKey;
-						break;
-					case BindEnum::KeyEnum::Toggle:
-					case BindEnum::KeyEnum::DoubleClick:
-						if (bKey)
-							tBind.m_bActive = !tBind.m_bActive;
-					}
-					break;
-				}
-				case BindEnum::Class:
-				{
-					const int iClass = pLocal ? pLocal->m_iClass() : 0;
-					switch (tBind.m_iInfo)
-					{
-					case BindEnum::ClassEnum::Scout: { tBind.m_bActive = iClass == 1; break; }
-					case BindEnum::ClassEnum::Soldier: { tBind.m_bActive = iClass == 3; break; }
-					case BindEnum::ClassEnum::Pyro: { tBind.m_bActive = iClass == 7; break; }
-					case BindEnum::ClassEnum::Demoman: { tBind.m_bActive = iClass == 4; break; }
-					case BindEnum::ClassEnum::Heavy: { tBind.m_bActive = iClass == 6; break; }
-					case BindEnum::ClassEnum::Engineer: { tBind.m_bActive = iClass == 9; break; }
-					case BindEnum::ClassEnum::Medic: { tBind.m_bActive = iClass == 5; break; }
-					case BindEnum::ClassEnum::Sniper: { tBind.m_bActive = iClass == 2; break; }
-					case BindEnum::ClassEnum::Spy: { tBind.m_bActive = iClass == 8; break; }
-					}
-					if (tBind.m_bNot)
-						tBind.m_bActive = !tBind.m_bActive;
-					break;
-				}
-				case BindEnum::WeaponType:
-				{
-					tBind.m_bActive = tBind.m_iInfo + 1 == int(SDK::GetWeaponType(pWeapon));
-					if (tBind.m_bNot)
-						tBind.m_bActive = !tBind.m_bActive;
-					break;
-				}
-				case BindEnum::ItemSlot:
-				{
-					tBind.m_bActive = tBind.m_iInfo == (pWeapon ? pWeapon->GetSlot() : -1);
-					if (tBind.m_bNot)
-						tBind.m_bActive = !tBind.m_bActive;
-					break;
-				}
-				}
-
-				if (tBind.m_bActive)
-				{
-					setVars(iBind);
-					getBinds(iBind);
-				}
-			}
-		};
-	getBinds(DEFAULT_BIND);
-
-	// clear inputs for binds
-	for (int iKey = 0; iKey < 256; iKey++)
-		U::KeyHandler.StoreKey(iKey, &m_mKeyStorage[iKey]);
+		U::KeyHandler.StoreKey(tBind.m_iKey, &tKey);
+	}
 }
 
 
@@ -167,12 +178,12 @@ void CBinds::AddBind(int iBind, Bind_t& tBind)
 		m_vBinds[iBind] = tBind;
 }
 
-#define HasType(type, bind) IsType(type) && var->As<type>()->contains(bind)
+#define HasType(type, bind) IsType(type) && pVar->As<type>()->contains(bind)
 
 #define RemoveType(type, bind)\
 {\
 	std::unordered_map<int, type> mMap = {};\
-	for (auto it = var->As<type>()->Map.begin(); it != var->As<type>()->Map.end(); it++)\
+	for (auto it = pVar->As<type>()->Map.begin(); it != pVar->As<type>()->Map.end(); it++)\
 	{\
 		int iKey = it->first;\
 		auto tVal = it->second;\
@@ -182,7 +193,7 @@ void CBinds::AddBind(int iBind, Bind_t& tBind)
 			iKey--;\
 		mMap[iKey] = tVal;\
 	}\
-	var->As<type>()->Map = mMap;\
+	pVar->As<type>()->Map = mMap;\
 }
 #define RemoveT(type, bind) if (IsType(type)) RemoveType(type, bind)
 
@@ -190,7 +201,7 @@ void CBinds::RemoveBind(int iBind, bool bForce)
 {
 	if (!bForce)
 	{
-		for (auto var : g_Vars)
+		for (auto pVar : G::Vars)
 		{
 			if (HasType(bool, iBind)
 				|| HasType(int, iBind)
@@ -223,7 +234,7 @@ void CBinds::RemoveBind(int iBind, bool bForce)
 					tBind.m_iParent--;
 			}
 
-			for (auto var : g_Vars)
+			for (auto pVar : G::Vars)
 			{
 				RemoveT(bool, iIndex)
 				else RemoveT(int, iIndex)

@@ -258,29 +258,32 @@ CConfigs::CConfigs()
 		std::filesystem::create_directory(m_sMaterialsPath);
 }
 
-#define IsType(type) var->m_iType == typeid(type).hash_code()
+#define IsType(type) pVar->m_iType == typeid(type).hash_code()
 
 #define SaveCond(type, tree)\
 {\
 	boost::property_tree::ptree mapTree;\
-	for (auto& [iBind, tValue] : var->As<type>()->Map)\
+	for (auto& [iBind, tValue] : pVar->As<type>()->Map)\
 		SaveJson(mapTree, std::to_string(iBind), tValue);\
-	tree.put_child(var->m_sName.c_str(), mapTree);\
+	tree.put_child(pVar->m_sName.c_str(), mapTree);\
 }
 #define SaveMain(type, tree) if (IsType(type)) SaveCond(type, tree)
 #define LoadCond(type, tree)\
 {\
-	var->As<type>()->Map = { { DEFAULT_BIND, var->As<type>()->Default } };\
-	if (const auto mapTree = tree.get_child_optional(var->m_sName.c_str()))\
+	pVar->As<type>()->Map = { { DEFAULT_BIND, pVar->As<type>()->Default } };\
+	if (const auto mapTree = tree.get_child_optional(pVar->m_sName.c_str()))\
 	{\
 		for (auto& it : *mapTree)\
 		{\
 			if (!bLegacy)\
 			{\
 				int iBind = std::stoi(it.first);\
-				if ((F::Binds.m_vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
-					continue;\
-				LoadJson(*mapTree, it.first, var->As<type>()->Map[iBind]);\
+				if (iBind == DEFAULT_BIND || F::Binds.m_vBinds.size() > iBind && !(pVar->As<type>()->m_iFlags & NOBIND))\
+				{\
+					LoadJson(*mapTree, it.first, pVar->As<type>()->Map[iBind]);\
+					if (iBind != DEFAULT_BIND)\
+						std::next(F::Binds.m_vBinds.begin(), iBind)->m_vVars.push_back(pVar);\
+				}\
 			}\
 			else\
 			{\
@@ -299,9 +302,12 @@ CConfigs::CConfigs()
 						}\
 					}\
 				}\
-				if (iBind == -2 || (F::Binds.m_vBinds.size() <= iBind || var->As<type>()->m_iFlags & NOBIND) && iBind != DEFAULT_BIND)\
-					continue;\
-				LoadJson(*mapTree, it.first, var->As<type>()->Map[iBind]);\
+				if (iBind != -2 && (iBind == DEFAULT_BIND || F::Binds.m_vBinds.size() > iBind && !(pVar->As<type>()->m_iFlags & NOBIND)))\
+				{\
+					LoadJson(*mapTree, it.first, pVar->As<type>()->Map[iBind]);\
+					if (iBind != DEFAULT_BIND)\
+						std::next(F::Binds.m_vBinds.begin(), iBind)->m_vVars.push_back(pVar);\
+				}\
 			}\
 		}\
 	}\
@@ -328,7 +334,7 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 			bindTree2.put("Info", tBind.m_iInfo);
 			bindTree2.put("Key", tBind.m_iKey);
 			bindTree2.put("Enabled", tBind.m_bEnabled);
-			bindTree2.put("Visible", tBind.m_bVisible);
+			bindTree2.put("Visibility", tBind.m_iVisibility);
 			bindTree2.put("Not", tBind.m_bNot);
 			bindTree2.put("Active", tBind.m_bActive);
 			bindTree2.put("Parent", tBind.m_iParent);
@@ -338,9 +344,9 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 		writeTree.put_child("Binds", bindTree);
 
 		boost::property_tree::ptree varTree;
-		for (auto& var : g_Vars)
+		for (auto& pVar : G::Vars)
 		{
-			if (!bLoadNosave && var->m_iFlags & NOSAVE)
+			if (!bLoadNosave && pVar->m_iFlags & NOSAVE)
 				continue;
 
 			SaveMain(bool, varTree)
@@ -404,10 +410,12 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.m_iInfo = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.m_iKey = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Enabled")) { tBind.m_bEnabled = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
+				if (auto getValue = it.second.get_optional<int>("Visibility")) { tBind.m_iVisibility = *getValue; }
+				else if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_iVisibility = *getValue ? BindVisibilityEnum::Always : BindVisibilityEnum::Hidden; }
 				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Parent")) { tBind.m_iParent = *getValue; }
+
 
 				F::Binds.m_vBinds.push_back(tBind);
 			}
@@ -427,7 +435,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				if (auto getValue = it.second.get_optional<int>("Type")) { tBind.m_iType = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Info")) { tBind.m_iInfo = *getValue; }
 				if (auto getValue = it.second.get_optional<int>("Key")) { tBind.m_iKey = *getValue; }
-				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_bVisible = *getValue; }
+				if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_iVisibility = *getValue ? BindVisibilityEnum::Always : BindVisibilityEnum::Hidden; }
 				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
 				if (auto getValue = it.second.get_optional<std::string>("Parent"))
@@ -450,9 +458,9 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 		if (const auto conVars = readTree.get_child_optional("ConVars"))
 		{
 			auto& varTree = *conVars;
-			for (auto& var : g_Vars)
+			for (auto& pVar : G::Vars)
 			{
-				if (!bLoadNosave && var->m_iFlags & NOSAVE)
+				if (!bLoadNosave && pVar->m_iFlags & NOSAVE)
 					continue;
 
 				LoadMain(bool, varTree)
@@ -484,9 +492,9 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 	return true;
 }
 
-#define SaveRegular(type, tree) SaveJson(tree, var->m_sName.c_str(), var->As<type>()->Map[DEFAULT_BIND])
+#define SaveRegular(type, tree) SaveJson(tree, pVar->m_sName.c_str(), pVar->As<type>()->Map[DEFAULT_BIND])
 #define SaveMisc(type, tree) if (IsType(type)) SaveRegular(type, tree);
-#define LoadRegular(type, tree) LoadJson(tree, var->m_sName.c_str(), var->As<type>()->Map[DEFAULT_BIND])
+#define LoadRegular(type, tree) LoadJson(tree, pVar->m_sName.c_str(), pVar->As<type>()->Map[DEFAULT_BIND])
 #define LoadMisc(type, tree) if (IsType(type)) LoadRegular(type, tree);
 
 bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
@@ -497,9 +505,9 @@ bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
 
 		boost::property_tree::ptree writeTree;
 
-		for (auto& var : g_Vars)
+		for (auto& pVar : G::Vars)
 		{
-			if (!(var->m_iFlags & VISUAL) || !bLoadNosave && var->m_iFlags & NOSAVE)
+			if (!(pVar->m_iFlags & VISUAL) || !bLoadNosave && pVar->m_iFlags & NOSAVE)
 				continue;
 
 			SaveMisc(bool, writeTree)
@@ -544,9 +552,9 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 		boost::property_tree::ptree readTree;
 		read_json(m_sVisualsPath + sConfigName + m_sConfigExtension, readTree);
 
-		for (auto& var : g_Vars)
+		for (auto& pVar : G::Vars)
 		{
-			if (!(var->m_iFlags & VISUAL) || !bLoadNosave && var->m_iFlags & NOSAVE)
+			if (!(pVar->m_iFlags & VISUAL) || !bLoadNosave && pVar->m_iFlags & NOSAVE)
 				continue;
 
 			LoadMisc(bool, readTree)
@@ -574,7 +582,7 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 	return true;
 }
 
-#define ResetType(type) var->As<type>()->Map = { { DEFAULT_BIND, var->As<type>()->Default } };
+#define ResetType(type) pVar->As<type>()->Map = { { DEFAULT_BIND, pVar->As<type>()->Default } };
 #define ResetT(type) if (IsType(type)) ResetType(type)
 
 void CConfigs::RemoveConfig(const std::string& sConfigName, bool bNotify)
@@ -622,9 +630,9 @@ void CConfigs::ResetConfig(const std::string& sConfigName, bool bNotify)
 
 		F::Binds.m_vBinds.clear();
 
-		for (auto& var : g_Vars)
+		for (auto& pVar : G::Vars)
 		{
-			if (!bLoadNosave && var->m_iFlags & NOSAVE)
+			if (!bLoadNosave && pVar->m_iFlags & NOSAVE)
 				continue;
 
 			ResetT(bool)
@@ -657,9 +665,9 @@ void CConfigs::ResetVisual(const std::string& sConfigName, bool bNotify)
 	{
 		const bool bLoadNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
 
-		for (auto& var : g_Vars)
+		for (auto& pVar : G::Vars)
 		{
-			if (!(var->m_iFlags & VISUAL) || !bLoadNosave && var->m_iFlags & NOSAVE)
+			if (!(pVar->m_iFlags & VISUAL) || !bLoadNosave && pVar->m_iFlags & NOSAVE)
 				continue;
 
 			ResetT(bool)

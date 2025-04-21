@@ -43,7 +43,7 @@ MAKE_HOOK(IEngineTrace_SetTraceEntity, U::Memory.GetVFunc(I::EngineTrace, 20), v
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::IEngineTrace_SetTraceEntity[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+		return CALL_ORIGINAL(rcx, pCollideable, pTrace);
 #endif
 
 	static const auto dwDesired = S::IEngineTrace_TraceRay_SetTraceEntity_Call();
@@ -60,7 +60,7 @@ MAKE_HOOK(CM_BoxTrace, S::CM_BoxTrace(), void,
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::IEngineTrace_SetTraceEntity[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+		return CALL_ORIGINAL(ray, headnode, brushmask, computeEndpt, tr);
 #endif
 
 	CALL_ORIGINAL(ray, headnode, brushmask, computeEndpt, tr);
@@ -73,7 +73,7 @@ MAKE_HOOK(CM_TraceToLeaf_True, S::CM_TraceToLeaf_True(), void,
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::IEngineTrace_SetTraceEntity[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+		return CALL_ORIGINAL(pTraceInfo, ndxLeaf, startFrac, endFrac);
 #endif
 
 	if (pTraceInfo->m_contents & CONTENTS_NOSTARTSOLID)
@@ -93,7 +93,7 @@ MAKE_HOOK(CM_TraceToLeaf_False, S::CM_TraceToLeaf_False(), void,
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::IEngineTrace_SetTraceEntity[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+		return CALL_ORIGINAL(pTraceInfo, ndxLeaf, startFrac, endFrac);
 #endif
 
 	if (pTraceInfo->m_contents & CONTENTS_NOSTARTSOLID)
@@ -113,7 +113,7 @@ MAKE_HOOK(CM_ClipBoxToBrush_True, S::CM_ClipBoxToBrush_True(), void,
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::IEngineTrace_SetTraceEntity[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+		return CALL_ORIGINAL(pTraceInfo, brush);
 #endif
 
 	CALL_ORIGINAL(pTraceInfo, brush);
@@ -130,7 +130,7 @@ MAKE_HOOK(CM_ClipBoxToBrush_False, S::CM_ClipBoxToBrush_False(), void,
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::IEngineTrace_SetTraceEntity[DEFAULT_BIND])
-		return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+		return CALL_ORIGINAL(pTraceInfo, brush);
 #endif
 
 	CALL_ORIGINAL(pTraceInfo, brush);

@@ -362,7 +362,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			if (vEyePos.DistToSqr(tTarget.m_vPos) > flMaxRange)
 				break;
 
-			if (SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, tTarget.m_vPos))
+			if (SDK::VisPosWorld(pLocal, tTarget.m_pEntity, vEyePos, tTarget.m_vPos))
 			{
 				Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, tTarget.m_vPos), vAngles);
 				Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
@@ -473,12 +473,12 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 							goto nextTick; // if we can't hit our primary hitbox, don't bother
 					}
 
-					if (SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
-					{
-						Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, vOrigin), vAngles);
-						Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-						float flDist = vEyePos.DistTo(vOrigin);
+					Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, vOrigin), vAngles);
+					Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+					float flDist = vEyePos.DistTo(vOrigin);
 
+					if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+					{
 						// for the time being, no vischecks against other hitboxes
 						if ((!bChanged || Math::RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale) && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vEyePos + vForward * flDist))
 							&& Math::RayToOBB(vEyePos, vForward, vHullMins, vHullMaxs, mTransform))
@@ -492,9 +492,12 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 							tTarget.m_bBacktrack = true;
 							return true;
 						}
-						else if (iReturn == 2 ? vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() : true)
-							tTarget.m_vAngleTo = vAngles;
-						iReturn = 2;
+						else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+						{
+							if (iReturn != 2 || vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
+								tTarget.m_vAngleTo = vAngles;
+							iReturn = 2;
+						}
 					}
 				}
 			}
@@ -546,12 +549,12 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				if (vEyePos.DistToSqr(vOrigin) > flMaxRange)
 					continue;
 
-				if (SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
-				{
-					Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, vOrigin), vAngles);
-					Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-					float flDist = vEyePos.DistTo(vOrigin);
+				Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, vOrigin), vAngles);
+				Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+				float flDist = vEyePos.DistTo(vOrigin);
 
+				if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+				{
 					if (!bChanged || Math::RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, mTransform) && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vEyePos + vForward * flDist))
 					{
 						tTarget.m_vAngleTo = vAngles;
@@ -559,9 +562,12 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 						tTarget.m_vPos = vOrigin;
 						return true;
 					}
-					else if (iReturn == 2 ? vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() : true)
-						tTarget.m_vAngleTo = vAngles;
-					iReturn = 2;
+					else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+					{
+						if (iReturn != 2 || vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
+							tTarget.m_vAngleTo = vAngles;
+						iReturn = 2;
+					}
 				}
 			}
 		}
@@ -761,6 +767,9 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			pCmd->buttons |= IN_ATTACK;
 	}
 
+	if (!G::AimTarget.m_iEntIndex)
+		G::AimTarget = { vTargets.front().m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
+
 	for (auto& tTarget : vTargets)
 	{
 		if (nWeaponID == TF_WEAPON_MEDIGUN && pWeapon->As<CWeaponMedigun>()->m_hHealingTarget().Get() == tTarget.m_pEntity)
@@ -774,13 +783,13 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		if (!iResult) continue;
 		if (iResult == 2)
 		{
-			G::Target = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+			G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
 			Aim(pCmd, tTarget.m_vAngleTo);
 			break;
 		}
 
-		G::Target = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
-		G::AimPosition = { tTarget.m_vPos, I::GlobalVars->tickcount };
+		G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+		G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
 
 		bool bShouldFire = ShouldFire(pLocal, pWeapon, pCmd, tTarget);
 
@@ -812,18 +821,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 				F::Resolver.HitscanRan(pLocal, tTarget.m_pEntity->As<CTFPlayer>(), pWeapon, tTarget.m_nAimedHitbox);
 
 			if (tTarget.m_bBacktrack)
-			{
 				pCmd->tick_count = TIME_TO_TICKS(tTarget.m_tRecord.m_flSimTime) + TIME_TO_TICKS(F::Backtrack.GetFakeInterp());
-
-				float flCorrect = std::clamp(F::Backtrack.GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(F::Backtrack.GetFakeInterp()), 0.f, F::Backtrack.m_flMaxUnlag);
-				int iServerTick = F::Backtrack.m_iTickCount + F::Backtrack.GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(F::Backtrack.GetReal(FLOW_OUTGOING));
-				
-				int iLerpTicks = TIME_TO_TICKS(F::Backtrack.GetFakeInterp());
-				int iTargetTick = pCmd->tick_count - iLerpTicks;
-				float flDeltaTime = flCorrect - TICKS_TO_TIME(iServerTick - iTargetTick);
-				
-				SDK::Output("Delta", std::format("{}", flDeltaTime).c_str());
-			}
 
 			bool bLine = Vars::Visuals::Line::Enabled.Value;
 			bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;

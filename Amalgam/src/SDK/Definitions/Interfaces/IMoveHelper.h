@@ -27,16 +27,7 @@ public:
 	virtual void PlayerSetAnimation(PLAYER_ANIM playerAnim) = 0;
 	virtual IPhysicsSurfaceProps* GetSurfaceProps(void) = 0;
 	virtual bool IsWorldEntity(const CBaseHandle& handle) = 0;
-
-	inline CBasePlayer* GetHost()
-	{
-		return *reinterpret_cast<CBasePlayer**>(uintptr_t(this) + 40);
-	}
-
-	inline void SetHost(CBasePlayer* pHost)
-	{
-		*reinterpret_cast<CBasePlayer**>(uintptr_t(this) + 40) = pHost;
-	}
+	virtual void SetHost(CBasePlayer* host) = 0;
 
 protected:
 	virtual ~IMoveHelper() {}

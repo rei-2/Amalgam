@@ -7,6 +7,7 @@
 #include "../../Visuals/Materials/Materials.h"
 #include <ImGui/imgui_internal.h>
 #include <ImGui/imgui_stdlib.h>
+#include <numeric>
 
 enum FTabs_
 {
@@ -50,8 +51,7 @@ enum FButton_
 enum FKeybind_
 {
 	FKeybind_None = 0,
-	FKeybind_AllowNone = 1 << 6,
-	FKeybind_AllowMenu = 1 << 7
+	FKeybind_AllowNone = 1 << 5
 };
 
 enum FToggle_
@@ -98,6 +98,15 @@ enum FColorPicker_
 	FColorPicker_SameLine = 1 << 2,
 	FColorPicker_Dropdown = 1 << 3,
 	FColorPicker_Tooltip = 1 << 4
+};
+
+struct WidgetWindow_t
+{
+	std::string m_sName;
+	ImVec2 m_vPos;
+	ImVec2 m_vSize;
+	int m_iWindowFlags;
+	int m_iChildFlags;
 };
 
 //#define ALTERNATE_FULL_SLIDER
@@ -613,13 +622,16 @@ namespace ImGui
 		return FBeginMenu(sLabel, &tColor, flRounding, bEnabled);
 	}
 
-	static std::unordered_map<const char*, float> mLastHeights;
-	static std::vector<const char*> vStoredLabels;
-	inline bool Section(const char* sLabel, bool bExtraPadding = false, float flMinHeight = 28.f, bool bForceHeight = false)
+	static std::unordered_map<uint32_t, float> mLastHeights;
+	static std::vector<uint32_t> vStoredLabels;
+	inline bool Section(const char* sLabel, bool bExtraPadding = false, uint32_t uHash = 0, float flMinHeight = 28.f, bool bForceHeight = false)
 	{
-		vStoredLabels.push_back(sLabel);
-		if (!bForceHeight && mLastHeights.contains(sLabel) && mLastHeights[sLabel] > flMinHeight)
-			flMinHeight = mLastHeights[sLabel];
+		if (!uHash)
+			uHash = FNV1A::Hash32(sLabel);
+		vStoredLabels.push_back(uHash);
+
+		if (!bForceHeight && mLastHeights.contains(uHash) && mLastHeights[uHash] > flMinHeight)
+			flMinHeight = mLastHeights[uHash];
 		PushStyleVar(ImGuiStyleVar_CellPadding, { 0, 0 });
 		const bool bReturn = BeginChild(sLabel, { GetColumnWidth(), flMinHeight }, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding);
 		if (bReturn)
@@ -648,15 +660,58 @@ namespace ImGui
 	}
 	inline void EndSection()
 	{
-		const char* sLabel = vStoredLabels.back();
+		uint32_t uHash = vStoredLabels.back();
 		vStoredLabels.pop_back();
 		float flHeight = GetItemRectMax().y - GetWindowPos().y;
 		if (flHeight > 0.f)
-			mLastHeights[sLabel] = flHeight + GetStyle().WindowPadding.y;
+			mLastHeights[uHash] = flHeight + GetStyle().WindowPadding.y;
 
 		PopStyleVar();
 		EndChild();
 		PopStyleVar();
+	}
+
+	inline std::vector<WidgetWindow_t> WidgetTable(int iCount, float flHeight, std::vector<float> vWidths = {}, int iWindowFlags = ImGuiWindowFlags_None, int iChildFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding)
+	{
+		std::vector<WidgetWindow_t> vReturn = {};
+
+		if (vWidths.empty())
+		{
+			for (int i = 0; i < iCount; i++)
+				vWidths.push_back(GetWindowWidth() / iCount);
+		}
+		else if (vWidths.size() < iCount)
+		{
+			int iSize = int(vWidths.size());
+			float flTotalWidth = std::reduce(vWidths.begin(), vWidths.end());
+			int iCountLeft = iCount - iSize;
+			for (int i = iSize; i < iCount; i++)
+				vWidths.push_back((GetWindowWidth() - flTotalWidth) / iCountLeft);
+		}
+
+		float flTotalWidth = GetStyle().WindowPadding.x / 2;
+		for (int i = 0; i < iCount; i++)
+		{
+			float flWidth = vWidths[i] + GetStyle().WindowPadding.x * (iCount - 1) / iCount;
+			vReturn.emplace_back(
+				std::format("{}", i),
+				ImVec2(flTotalWidth - GetStyle().WindowPadding.x / 2, GetCursorPos().y - H::Draw.Scale(8)),
+				ImVec2(flWidth, flHeight),
+				iWindowFlags,
+				iChildFlags
+			);
+			flTotalWidth += flWidth - GetStyle().WindowPadding.x;
+		}
+
+		/*
+		SetCursorPos({ 0, vOriginalPos.y - H::Draw.Scale(8) });
+		BeginChild("Split1", { GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, H::Draw.Scale(112) });
+
+		SetCursorPos({ GetWindowWidth() / 2 - GetStyle().WindowPadding.x / 2, vOriginalPos.y - H::Draw.Scale(8) });
+		BeginChild("Split2", { GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, H::Draw.Scale(112) });
+		*/
+
+		return vReturn;
 	}
 
 	// widgets
@@ -782,7 +837,7 @@ namespace ImGui
 				{
 					*pVar = int(!j ? i : j - 1);
 					bChanged = true;
-					if (vStoredLabels.size() == 0)
+					if (vStoredLabels.empty())
 						mLastHeights.clear();
 				}
 				if (!Disabled && IsItemHovered())
@@ -1322,18 +1377,18 @@ namespace ImGui
 		std::string sReplace = fmt;
 
 		std::string sFrom = "%d", sTo = "%.0f";
-		size_t find = sReplace.find(sFrom);
-		while (find != std::string::npos)
+		auto iFind = sReplace.find(sFrom);
+		while (iFind != std::string::npos)
 		{
-			sReplace.replace(find, sFrom.length(), sTo);
-			find = sReplace.find(sFrom);
+			sReplace.replace(iFind, sFrom.length(), sTo);
+			iFind = sReplace.find(sFrom);
 		}
 		sFrom = "%i";
-		find = sReplace.find(sFrom);
-		while (find != std::string::npos)
+		iFind = sReplace.find(sFrom);
+		while (iFind != std::string::npos)
 		{
-			sReplace.replace(find, sFrom.length(), sTo);
-			find = sReplace.find(sFrom);
+			sReplace.replace(iFind, sFrom.length(), sTo);
+			iFind = sReplace.find(sFrom);
 		}
 
 		fmt = sReplace.c_str();
@@ -1354,7 +1409,7 @@ namespace ImGui
 		return FSlider(sLabel, pVar, nullptr, iMin, iMax, iStep, fmt, iFlags, pHovered);
 	}
 
-	inline bool FDropdown(const char* sLabel, int* pVar, std::vector<const char*> vEntries, std::vector<int> vValues = {}, int iFlags = FDropdown_None, int iSizeOffset = 0, bool* pHovered = nullptr, int* pModified = nullptr)
+	inline bool FDropdown(const char* sLabel, int* pVar, std::vector<const char*> vEntries, std::vector<int> vValues = {}, int iFlags = FDropdown_None, int iSizeOffset = 0, std::string sDefaultPreview = "None", bool* pHovered = nullptr, int* pModified = nullptr)
 	{
 		bool bReturn = false;
 
@@ -1395,7 +1450,7 @@ namespace ImGui
 			}
 		}
 		if (sPreview.empty())
-			sPreview = "None";
+			sPreview = sDefaultPreview;
 
 		ImVec2 vSize = { GetWindowWidth(), H::Draw.Scale(bTitle ? 40 : 24) };
 		if (iFlags & (FDropdown_Left | FDropdown_Right))
@@ -1780,7 +1835,7 @@ namespace ImGui
 
 	/*
 	// in it's current state it sees no use, so i'm commenting it out for now
-	inline bool FVDropdown(const char* sLabel, std::vector<std::string>* pVar, std::vector<std::string> vEntries, int iFlags = FDropdown_None, int iSizeOffset = 0, bool* pHovered = nullptr)
+	inline bool FVDropdown(const char* sLabel, std::vector<std::string>* pVar, std::vector<std::string> vEntries, int iFlags = FDropdown_None, int iSizeOffset = 0, std::string sDefaultPreview = "None", bool* pHovered = nullptr)
 	{
 		bool bReturn = false;
 
@@ -1795,7 +1850,7 @@ namespace ImGui
 
 		std::string sPreview = "";
 		if (pVar->empty())
-			sPreview = "None";
+			sPreview = sDefaultPreview;
 		else
 		{
 			for (size_t i = 0; i < pVar->size(); i++)
@@ -1845,15 +1900,15 @@ namespace ImGui
 					continue;
 				}
 
-				auto cFind = mIts.find(sEntry);
-				bool bFlagActive = cFind != mIts.end();
+				auto it = mIts.find(sEntry);
+				bool bFlagActive = it != mIts.end();
 				int iEntry = bFlagActive ? std::distance(pVar->begin(), mIts[sEntry]) + 1 : 0;
 
 				ImVec2 vOriginalPos2 = GetCursorPos();
 				if (FSelectable(std::format("##{}{}", sEntry, i).c_str(), nullptr, 0, bFlagActive, ImGuiSelectableFlags_DontClosePopups))
 				{
 					if (bFlagActive)
-						pVar->erase(cFind->second);
+						pVar->erase(it->second);
 					else
 						pVar->push_back(sEntry);
 					bReturn = true;
@@ -2124,7 +2179,7 @@ namespace ImGui
 
 		return str;
 	}
-	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = FKeybind_None, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
+	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = FKeybind_None, std::vector<int> vIgnore = { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], Vars::Menu::MenuSecondaryKey[DEFAULT_BIND] }, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		ImGuiID uId = GetID(sLabel);
 		PushID(sLabel);
@@ -2147,6 +2202,9 @@ namespace ImGui
 				int iKeyPressed = 0;
 				for (short iKey = 0; iKey < 255; iKey++)
 				{
+					if (!vIgnore.empty() && std::find(vIgnore.begin(), vIgnore.end(), iKey) != vIgnore.end())
+						continue;
+
 					if (U::KeyHandler.Pressed(iKey))
 					{
 						iKeyPressed = iKey;
@@ -2166,8 +2224,7 @@ namespace ImGui
 						}
 						[[fallthrough]];
 					default:
-						if (iFlags & FKeybind_AllowMenu || iKeyPressed != Vars::Menu::MenuPrimaryKey.Value && iKeyPressed != Vars::Menu::MenuSecondaryKey.Value)
-							iOutput = iKeyPressed;
+						iOutput = iKeyPressed;
 					}
 					ClearActiveID();
 				}
@@ -2271,15 +2328,15 @@ namespace ImGui
 					continue;
 				}
 
-				auto cFind = mIts.find(sEntry);
-				bool bFlagActive = cFind != mIts.end();
+				auto it = mIts.find(sEntry);
+				bool bFlagActive = it != mIts.end();
 				int iEntry = bFlagActive ? std::distance(pVar->begin(), mIts[sEntry]) + 1 : 0;
 
 				ImVec2 vOriginalPos2 = GetCursorPos();
 				if (bFlagActive) // do here so as to not sink input
 				{
 					SetCursorPos({ vOriginalPos2.x + vSize.x - H::Draw.Scale(31), vOriginalPos2.y + H::Draw.Scale(1) });
-					ColorPicker(std::format("MaterialColor{}", iEntry).c_str(), &cFind->second->second, false);
+					ColorPicker(std::format("MaterialColor{}", iEntry).c_str(), &it->second->second, false);
 					SetCursorPos(vOriginalPos2);
 				}
 				bool bHovered = bFlagActive ? IsItemHovered() : false;
@@ -2287,7 +2344,7 @@ namespace ImGui
 				if (FSelectable(std::format("##{}{}", sEntry, i).c_str(), nullptr, 0, bFlagActive, ImGuiSelectableFlags_DontClosePopups))
 				{
 					if (bFlagActive)
-						pVar->erase(cFind->second);
+						pVar->erase(it->second);
 					else
 						pVar->emplace_back(sEntry, Color_t());
 					bReturn = true;
@@ -2447,13 +2504,30 @@ namespace ImGui
 			auto tVal = GetParentValue(var, iBind);
 
 			if (tVal != val)
+			{
 				var[iBind] = val;
+				if (iBind < F::Binds.m_vBinds.size())
+				{
+					auto& tBind = *std::next(F::Binds.m_vBinds.begin(), iBind);
+					if (std::find(tBind.m_vVars.begin(), tBind.m_vVars.end(), &var) == tBind.m_vVars.end())
+						tBind.m_vVars.push_back(&var);
+				}
+			}
 			else if (iBind != DEFAULT_BIND)
 			{
 				for (auto it = var.Map.begin(); it != var.Map.end();)
 				{
 					if (it->first == iBind)
+					{
 						it = var.Map.erase(it);
+						if (iBind < F::Binds.m_vBinds.size())
+						{
+							auto& tBind = *std::next(F::Binds.m_vBinds.begin(), iBind);
+							auto it2 = std::find(tBind.m_vVars.begin(), tBind.m_vVars.end(), &var);
+							if (it2 != tBind.m_vVars.end())
+								tBind.m_vVars.erase(it2);
+						}
+					}
 					else
 						++it;
 				}
@@ -2501,7 +2575,7 @@ namespace ImGui
 		vValues.push_back(-1);
 
 		int iModified = -2;
-		if (FDropdown("Bind", &iBind, vEntries, vValues, FDropdown_Modifiable, -60, nullptr, &iModified))
+		if (FDropdown("Bind", &iBind, vEntries, vValues, FDropdown_Modifiable, -60, "None", nullptr, &iModified))
 		{
 			if (iBind != DEFAULT_BIND && iBind < F::Binds.m_vBinds.size())
 				tBind = F::Binds.m_vBinds[iBind];
@@ -2517,13 +2591,23 @@ namespace ImGui
 			{
 				iBind = int(F::Binds.m_vBinds.size());
 				tBind = { sBind };
+				tBind.m_vVars.push_back(&var);
 				F::Binds.AddBind(iBind, tBind);
 			}
 			else
 			{
-				auto cFind = var.Map.find(iModified);
-				if (cFind != var.Map.end())
-					var.Map.erase(cFind);
+				auto it = var.Map.find(iModified);
+				if (it != var.Map.end())
+				{
+					var.Map.erase(it);
+					if (iModified < F::Binds.m_vBinds.size())
+					{
+						auto& tBind = *std::next(F::Binds.m_vBinds.begin(), iModified);
+						auto it2 = std::find(tBind.m_vVars.begin(), tBind.m_vVars.end(), &var);
+						if (it2 != tBind.m_vVars.end())
+							tBind.m_vVars.erase(it2);
+					}
+				}
 
 				F::Binds.RemoveBind(iModified, false);
 				iBind = -1;
@@ -2537,8 +2621,10 @@ namespace ImGui
 			ImVec2 vOriginalPos = GetCursorPos();
 
 			SetCursorPos({ GetWindowWidth() - H::Draw.Scale(34), H::Draw.Scale(40) });
-			if (IconButton(tBind.m_bVisible ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF, { 1, 1, 1, -1 }, &bHovered))
-				tBind.m_bVisible = !tBind.m_bVisible;
+			PushTransparent(Transparent || tBind.m_iVisibility == BindVisibilityEnum::Hidden, true);
+			if (IconButton(tBind.m_iVisibility == BindVisibilityEnum::Always ? ICON_MD_VISIBILITY : ICON_MD_VISIBILITY_OFF, { 1, 1, 1, -1 }, &bHovered))
+				tBind.m_iVisibility = (tBind.m_iVisibility + 1) % 3;
+			PopTransparent(1, 1);
 			bLastHovered = bLastHovered || bHovered;
 
 			SetCursorPos({ GetWindowWidth() - H::Draw.Scale(59), H::Draw.Scale(40) });
@@ -2549,20 +2635,20 @@ namespace ImGui
 			SetCursorPos(vOriginalPos);
 		}
 
-		FDropdown("Type", &tBind.m_iType, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdown_Left, 0, &bHovered);
+		FDropdown("Type", &tBind.m_iType, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdown_Left, 0, "None", &bHovered);
 		bLastHovered = bLastHovered || bHovered;
 		switch (tBind.m_iType)
 		{
-		case BindEnum::Key: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Behavior", &tBind.m_iInfo, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case BindEnum::Class: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 8); FDropdown("Class", &tBind.m_iInfo, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case BindEnum::WeaponType: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Weapon type", &tBind.m_iInfo, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, &bHovered); break;
-		case BindEnum::ItemSlot: tBind.m_iInfo = std::max(tBind.m_iInfo, 0); FDropdown("Item slot", &tBind.m_iInfo, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdown_Right, 0, &bHovered); break;
+		case BindEnum::Key: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Behavior", &tBind.m_iInfo, { "Hold", "Toggle", "Double click" }, {}, FDropdown_Right, 0, "None", &bHovered); break;
+		case BindEnum::Class: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 8); FDropdown("Class", &tBind.m_iInfo, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdown_Right, 0, "None", &bHovered); break;
+		case BindEnum::WeaponType: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Weapon type", &tBind.m_iInfo, { "Hitscan", "Projectile", "Melee" }, {}, FDropdown_Right, 0, "None", &bHovered); break;
+		case BindEnum::ItemSlot: tBind.m_iInfo = std::max(tBind.m_iInfo, 0); FDropdown("Item slot", &tBind.m_iInfo, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdown_Right, 0, "None", &bHovered); break;
 		}
 		bLastHovered = bLastHovered || bHovered;
 
 		if (tBind.m_iType == BindEnum::Key)
 		{
-			FKeybind("Key", tBind.m_iKey, FKeybind_None, { 0, 30 }, 0, &bHovered);
+			FKeybind("Key", tBind.m_iKey, FKeybind_None, { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], Vars::Menu::MenuSecondaryKey[DEFAULT_BIND] }, { 0, 30 }, 0, &bHovered);
 			bLastHovered = bLastHovered || bHovered;
 		}
 
@@ -2575,7 +2661,7 @@ namespace ImGui
 			_tBind.m_iType = tBind.m_iType;
 			_tBind.m_iInfo = tBind.m_iInfo;
 			_tBind.m_iKey = tBind.m_iKey;
-			_tBind.m_bVisible = tBind.m_bVisible;
+			_tBind.m_iVisibility = tBind.m_iVisibility;
 			_tBind.m_bNot = tBind.m_bNot;
 		}
 
@@ -2644,9 +2730,9 @@ namespace ImGui
 	WRAPPER(FSlider, FloatRange_t, VA_LIST(float flMin, float flMax, float flStep = 1.f, const char* fmt = "%.0f", int iFlags = 0), VA_LIST(&val.Min, &val.Max, flMin, flMax, flStep, fmt, iFlags))
 	WRAPPER(FSlider, float, VA_LIST(float flMin, float flMax, float flStep = 1.f, const char* fmt = "%.0f", int iFlags = 0), VA_LIST(&val, flMin, flMax, flStep, fmt, iFlags))
 	WRAPPER(FSlider, int, VA_LIST(int iMin, int iMax, int iStep = 1, const char* fmt = "%d", int iFlags = 0), VA_LIST(&val, iMin, iMax, iStep, fmt, iFlags))
-	WRAPPER(FDropdown, int, VA_LIST(std::vector<const char*> vEntries, std::vector<int> vValues = {}, int iFlags = 0, int iSizeOffset = 0), VA_LIST(&val, vEntries, vValues, iFlags, iSizeOffset))
+	WRAPPER(FDropdown, int, VA_LIST(std::vector<const char*> vEntries, std::vector<int> vValues = {}, int iFlags = 0, int iSizeOffset = 0, std::string sDefaultPreview = "None"), VA_LIST(&val, vEntries, vValues, iFlags, iSizeOffset, sDefaultPreview))
 	WRAPPER(FSDropdown, std::string, VA_LIST(std::vector<const char*> vEntries = {}, int iFlags = 0, int iSizeOffset = 0), VA_LIST(&val, vEntries, iFlags, iSizeOffset))
-	//WRAPPER(FVDropdown, std::vector<std::string>, VA_LIST(std::vector<std::string> vEntries, int iFlags = 0, int iSizeOffset = 0), VA_LIST(&val, vEntries, iFlags, iSizeOffset))
+	//WRAPPER(FVDropdown, std::vector<std::string>, VA_LIST(std::vector<std::string> vEntries, int iFlags = 0, int iSizeOffset = 0, std::string sDefaultPreview = "None"), VA_LIST(&val, vEntries, iFlags, iSizeOffset, sDefaultPreview))
 	WRAPPER(FMDropdown, VA_LIST(std::vector<std::pair<std::string, Color_t>>), VA_LIST(int iFlags = 0, int iSizeOffset = 0), VA_LIST(&val, iFlags, iSizeOffset))
 	WRAPPER(FColorPicker, Color_t, VA_LIST(int iOffset = 0, int iFlags = 0), VA_LIST(&val, iOffset, iFlags))
 	WRAPPER(FColorPicker, Gradient_t, VA_LIST(bool bStart = true, int iOffset = 0, int iFlags = 0), VA_LIST(bStart ? &val.StartColor : &val.EndColor, iOffset, iFlags))

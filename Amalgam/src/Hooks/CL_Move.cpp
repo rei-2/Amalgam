@@ -70,7 +70,6 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void,
 	F::AutoQueue.Run();
 
 	F::Ticks.Run(accumulated_extra_samples, bFinalTick, pLocal);
-	//I::EngineClient->FireEvents();
 
 	for (auto& Line : G::PathStorage)
 	{

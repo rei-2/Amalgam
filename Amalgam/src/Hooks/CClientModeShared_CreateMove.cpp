@@ -64,7 +64,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
 	if (pLocal && pWeapon)
-	{	// Update Global Info
+	{	// update weapon info
 		{
 			static int iStaticItemDefinitionIndex = 0;
 			int iOldItemDefinitionIndex = iStaticItemDefinitionIndex;
@@ -166,7 +166,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVFunc(I::ClientModeShared, 
 		G::CanHeadshot = pWeapon->CanHeadShot() || pWeapon->AmbassadorCanHeadshot(TICKS_TO_TIME(pLocal->m_nTickBase()));
 	}
 
-	// Run Features
+	// run features
 	F::Spectate.CreateMove(pLocal, pCmd);
 	F::Misc.RunPre(pLocal, pCmd);
 	F::Backtrack.Run(pCmd);

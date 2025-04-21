@@ -79,7 +79,6 @@ struct PlayerStorage
 struct MoveData
 {
 	Vec3 m_vDirection = {};
-	Vec3 m_vAngles = {};
 	float m_flSimTime = 0.f;
 	int m_iMode = 0;
 	Vec3 m_vVelocity = {};
@@ -110,7 +109,6 @@ public:
 	void Store();
 
 	bool Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool useHitchance = true, bool cancelStrafe = false);
-	float GetPlayerGravity(CTFPlayer* pEntity);
 	bool SetDuck(PlayerStorage& tStorage, bool bDuck);
 	void RunTick(PlayerStorage& tStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
 	void RunTick(PlayerStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback);

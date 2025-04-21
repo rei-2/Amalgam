@@ -22,26 +22,19 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 		static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
 		if (cl_flipviewmodels->GetBool())
 			bFlip = !bFlip;
-		auto pWeapon = H::Entities.GetWeapon();
-		if (pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW)
+		if (G::FlipViewmodels)
 			bFlip = !bFlip;
 	}
 
 	if (Vars::Visuals::Viewmodel::ViewmodelAim.Value)
 	{
 		auto pLocal = H::Entities.GetLocal();
-		if (pLocal && pLocal->IsAlive())
+		if (pLocal && pLocal->IsAlive() && G::AimPoint.m_iTickCount)
 		{
-			static Vec3 vAng = {};
-			static int iTick = 0;
-
-			if (!G::AimPosition.first.IsZero())
-			{
-				Vec3 vDiff = I::EngineClient->GetViewAngles() - Math::CalcAngle(vEyePosition, G::AimPosition.first);
-				if (bFlip)
-					vDiff.y *= -1;
-				vEyeAngles = I::EngineClient->GetViewAngles() - vDiff;
-			}
+			Vec3 vDiff = I::EngineClient->GetViewAngles() - Math::CalcAngle(vEyePosition, G::AimPoint.m_vOrigin);
+			if (bFlip)
+				vDiff.y *= -1;
+			vEyeAngles = I::EngineClient->GetViewAngles() - vDiff;
 		}
 	}
 

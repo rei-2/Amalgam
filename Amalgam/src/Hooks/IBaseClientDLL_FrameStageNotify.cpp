@@ -96,17 +96,20 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 
 		break;
 	}
 	case FRAME_RENDER_START:
-		for (int iKey = 0; iKey < 256; iKey++)
-		{
-			// don't drop inputs for binds
-			auto& tKey = F::Binds.m_mKeyStorage[iKey];
+		for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
+		{	// don't drop inputs for binds
+			auto& tBind = *it;
+			if (tBind.m_iType != BindEnum::Key)
+				continue;
+
+			auto& tKey = tBind.m_tKeyStorage;
 
 			bool bOldIsDown = tKey.m_bIsDown;
 			bool bOldIsPressed = tKey.m_bIsPressed;
 			bool bOldIsDouble = tKey.m_bIsDouble;
 			bool bOldIsReleased = tKey.m_bIsReleased;
 
-			U::KeyHandler.StoreKey(iKey, &tKey);
+			U::KeyHandler.StoreKey(tBind.m_iKey, &tKey);
 
 			tKey.m_bIsDown = tKey.m_bIsDown || bOldIsDown;
 			tKey.m_bIsPressed = tKey.m_bIsPressed || bOldIsPressed;

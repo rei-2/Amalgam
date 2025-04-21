@@ -129,21 +129,20 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 		const auto pMsg = reinterpret_cast<CLC_Move*>(&msg);
 
 		{
-			const int nLastOutGoingCommand = I::ClientState->lastoutgoingcommand;
-			const int nChokedCommands = I::ClientState->chokedcommands;
-			const int nNextCommandNr = nLastOutGoingCommand + nChokedCommands + 1;
+			int nLastOutGoingCommand = I::ClientState->lastoutgoingcommand;
+			int nChokedCommands = I::ClientState->chokedcommands;
+			int nNextCommandNr = nLastOutGoingCommand + nChokedCommands + 1;
 
 			byte data[4000] = {};
 			pMsg->m_DataOut.StartWriting(data, sizeof(data));
-			pMsg->m_nNewCommands = std::clamp(1 + nChokedCommands, 0, MAX_NEW_COMMANDS);
-			const int nExtraCommands = nChokedCommands + 1 - pMsg->m_nNewCommands;
-			const int nCmdBackup = std::max(2, nExtraCommands);
-			pMsg->m_nBackupCommands = std::clamp(nCmdBackup, 0, MAX_BACKUP_COMMANDS);
+			int nCommands = 1 + nChokedCommands;
+			pMsg->m_nNewCommands = std::clamp(nCommands, 0, MAX_NEW_COMMANDS);
+			int nExtraCommands = nCommands - pMsg->m_nNewCommands;
+			pMsg->m_nBackupCommands = std::clamp(nExtraCommands, 2, MAX_BACKUP_COMMANDS);
 
-			const int nNumCmds = pMsg->m_nNewCommands + pMsg->m_nBackupCommands;
-			int nFrom = -1;
 			bool bOk = true;
-			for (int nTo = nNextCommandNr - nNumCmds + 1; nTo <= nNextCommandNr; nTo++)
+			int nNumCmds = pMsg->m_nNewCommands + pMsg->m_nBackupCommands;
+			for (int nFrom = -1, nTo = nNextCommandNr - nNumCmds + 1; nTo <= nNextCommandNr; nTo++)
 			{
 				const bool bIsNewCmd = nTo >= nNextCommandNr - pMsg->m_nNewCommands + 1;
 				bOk = bOk && I::BaseClientDLL->WriteUsercmdDeltaToBuffer(&pMsg->m_DataOut, nFrom, nTo, bIsNewCmd);

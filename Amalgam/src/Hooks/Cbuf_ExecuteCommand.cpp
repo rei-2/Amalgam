@@ -212,7 +212,7 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 {
 #ifdef DEBUG_HOOKS
     if (!Vars::Hooks::Cbuf_ExecuteCommand[DEFAULT_BIND])
-        return CALL_ORIGINAL(rcx, ray, fMask, pTraceFilter, pTrace);
+        return CALL_ORIGINAL(args, source);
 #endif
 
 	if (args.ArgC())

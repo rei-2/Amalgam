@@ -207,13 +207,11 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 		}
 	}
 
-	Vec3 vToTarget = pTarget->GetAbsOrigin() - pLocal->m_vecOrigin();
-	vToTarget.z = 0.f;
-	const float flDist = vToTarget.Length();
+	Vec3 vToTarget = (pTarget->GetAbsOrigin() - pLocal->m_vecOrigin()).To2D();
+	const float flDist = vToTarget.Normalize();
 	if (!flDist)
 		return false;
 
-	vToTarget.Normalize();
 	float flTolerance = 0.0625f;
 	float flExtra = 2.f * flTolerance / flDist; // account for origin tolerance
 
@@ -224,12 +222,10 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 	auto TestDots = [&](Vec3 vTargetAngles)
 		{
 			Vec3 vOwnerForward; Math::AngleVectors(vEyeAngles, &vOwnerForward);
-			vOwnerForward.z = 0.f;
-			vOwnerForward.Normalize();
+			vOwnerForward.Normalize2D();
 
 			Vec3 vTargetForward; Math::AngleVectors(vTargetAngles, &vTargetForward);
-			vTargetForward.z = 0.f;
-			vTargetForward.Normalize();
+			vTargetForward.Normalize2D();
 
 			const float flPosVsTargetViewDot = vToTarget.Dot(vTargetForward); // Behind?
 			const float flPosVsOwnerViewDot = vToTarget.Dot(vOwnerForward); // Facing?
@@ -474,19 +470,22 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	std::unordered_map<int, std::deque<Vec3>> mPaths;
 	SimulatePlayers(pLocal, pWeapon, vTargets, vEyePos, pRecordMap, mPaths);
 
+	//if (!G::AimTarget.m_iEntIndex)
+	//	G::AimTarget = { vTargets.front().m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
+
 	for (auto& tTarget : vTargets)
 	{
 		const auto iResult = CanHit(tTarget, pLocal, pWeapon, vEyePos, pRecordMap[tTarget.m_pEntity->entindex()]);
 		if (!iResult) continue;
 		if (iResult == 2)
 		{
-			G::Target = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+			G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
 			Aim(pCmd, tTarget.m_vAngleTo);
 			break;
 		}
 
-		G::Target = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
-		G::AimPosition = { tTarget.m_vPos, I::GlobalVars->tickcount };
+		G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+		G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
 
 		if (Vars::Aimbot::General::AutoShoot.Value && pWeapon->m_flSmackTime() < 0.f)
 		{
@@ -553,6 +552,11 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			{
 				auto vBoxes = F::Visuals.GetHitboxes(tTarget.m_tRecord.m_BoneMatrix.m_aBones, tTarget.m_pEntity->As<CBaseAnimating>());
 				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
+
+				//if (Vars::Colors::BoneHitboxEdge.Value.a || Vars::Colors::BoneHitboxFace.Value.a)
+				//	G::BoxStorage.emplace_back(tTarget.m_tRecord.m_vOrigin, tTarget.m_tRecord.m_vMins, tTarget.m_tRecord.m_vMaxs, Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoneHitboxEdge.Value, Vars::Colors::BoneHitboxFace.Value);
+				//if (Vars::Colors::BoneHitboxEdgeClipped.Value.a || Vars::Colors::BoneHitboxFaceClipped.Value.a)
+				//	G::BoxStorage.emplace_back(tTarget.m_tRecord.m_vOrigin, tTarget.m_tRecord.m_vMins, tTarget.m_tRecord.m_vMaxs, Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoneHitboxEdgeClipped.Value, Vars::Colors::BoneHitboxFaceClipped.Value, true);
 			}
 		}
 
@@ -602,10 +606,10 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	if (pWeapon->GetWeaponID() != TF_WEAPON_BUILDER)
 		return false;
 
-	std::vector<Target_t> vValidTargets;
-
 	const Vec3 vLocalPos = pLocal->GetShootPos();
 	const Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
+
+	std::vector<Target_t> vTargets;
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::BUILDINGS_ENEMIES))
 	{
 		auto pBuilding = pEntity->As<CBaseObject>();
@@ -623,11 +627,16 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 		if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 			continue;
 
-		vValidTargets.emplace_back(pBuilding, TargetEnum::Unknown, vPoint, vAngleTo, flFOVTo, flDistTo);
+		vTargets.emplace_back(pBuilding, TargetEnum::Unknown, vPoint, vAngleTo, flFOVTo, flDistTo);
 	}
+	F::AimbotGlobal.SortTargets(vTargets, Vars::Aimbot::General::TargetSelectionEnum::Distance);
+	if (vTargets.empty())
+		return true;
 
-	F::AimbotGlobal.SortTargets(vValidTargets, Vars::Aimbot::General::TargetSelectionEnum::Distance);
-	for (auto& tTarget : vValidTargets)
+	//if (!G::AimTarget.m_iEntIndex)
+	//	G::AimTarget = { vTargets.front().m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
+
+	for (auto& tTarget : vTargets)
 	{
 		static int iLastRun = 0;
 
@@ -636,7 +645,11 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 
 		if (bShouldAim)
 		{
+			G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+			G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
+
 			G::Attacking = true;
+
 			Aim(pCmd->viewangles, Math::CalcAngle(vLocalPos, tTarget.m_vPos), tTarget.m_vAngleTo);
 			tTarget.m_vAngleTo.x = pCmd->viewangles.x; // we don't need to care about pitch
 			Aim(pCmd, tTarget.m_vAngleTo);

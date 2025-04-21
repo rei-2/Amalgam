@@ -20,31 +20,25 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 
 	bool bSet = false;
 
-	if (Vars::Visuals::Viewmodel::CrosshairAim.Value && pLocal->IsAlive())
+	if (Vars::Visuals::Viewmodel::CrosshairAim.Value && pLocal->IsAlive() && G::AimPoint.m_iTickCount)
 	{
-		static Vec3 vPos = {};
-		static int iTick = 0;
-
-		if (!G::AimPosition.first.IsZero())
+		Vec3 vScreen;
+		if (SDK::W2S(G::AimPoint.m_vOrigin, vScreen))
 		{
-			Vec3 vScreen;
-			if (SDK::W2S(G::AimPosition.first, vScreen))
-			{
-				if (pX) *pX = vScreen.x;
-				if (pY) *pY = vScreen.y;
-				if (pbBehindCamera) *pbBehindCamera = false;
-				bSet = true;
-			}
+			if (pX) *pX = vScreen.x;
+			if (pY) *pY = vScreen.y;
+			if (pbBehindCamera) *pbBehindCamera = false;
+			bSet = true;
 		}
 	}
 
 	if (Vars::Visuals::ThirdPerson::Crosshair.Value && !bSet && I::Input->CAM_IsThirdPerson())
 	{
-		const Vec3 viewangles = I::EngineClient->GetViewAngles();
-		Vec3 vForward; Math::AngleVectors(viewangles, &vForward);
+		Vec3 vAngles = I::EngineClient->GetViewAngles();
+		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
 
-		const Vec3 vStartPos = pLocal->GetEyePosition();
-		const Vec3 vEndPos = (vStartPos + vForward * 8192);
+		Vec3 vStartPos = pLocal->GetEyePosition();
+		Vec3 vEndPos = (vStartPos + vForward * 8192);
 
 		CGameTrace trace = {};
 		CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;

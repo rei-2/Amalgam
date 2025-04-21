@@ -30,8 +30,8 @@ void CNotifications::Draw()
 	for (auto& tNotification : m_vNotifications)
 	{
 		int x = 8;
-		int w, h; I::MatSystemSurface->GetTextSize(fFont.m_dwFont, SDK::ConvertUtf8ToWide(tNotification.m_sText).c_str(), w, h);
-		w += H::Draw.Scale(23, Scale_Round); h = H::Draw.Scale(32, Scale_Round);
+		Vec2 vSize = H::Draw.GetTextSize(tNotification.m_sText.c_str(), fFont);
+		vSize.x += H::Draw.Scale(23, Scale_Round); vSize.y = H::Draw.Scale(32, Scale_Round);
 
 		float flEase = 0.f;
 		if (float flPan = tNotification.m_flPanTime)
@@ -43,15 +43,15 @@ void CNotifications::Draw()
 			{
 				float flRatio = Math::RemapVal(flLife, flPan, 0.f, 0.f, 1.f);
 				flEase = EaseInOutCubic(flRatio);
-				x -= (w + 8) * flEase;
+				x -= (vSize.x + 8) * flEase;
 			}
 		}
 
-		H::Draw.GradientRect(x + 1, y + 1, w - 2, h - 2, tNotification.m_tBackground.Alpha(255), tNotification.m_tBackground.Alpha(127), true);
-		H::Draw.FillRect(x + 1, y + 1, H::Draw.Scale(2, Scale_Round), h - 2, tNotification.m_tAccent.Alpha(255));
-		H::Draw.LineRect(x, y, w, h, tNotification.m_tBackground.Alpha(255));
+		H::Draw.GradientRect(x + 1, y + 1, vSize.x - 2, vSize.y - 2, tNotification.m_tBackground.Alpha(255), tNotification.m_tBackground.Alpha(127), true);
+		H::Draw.FillRect(x + 1, y + 1, H::Draw.Scale(2, Scale_Round), vSize.y - 2, tNotification.m_tAccent.Alpha(255));
+		H::Draw.LineRect(x, y, vSize.x, vSize.y, tNotification.m_tBackground.Alpha(255));
 		H::Draw.StringOutlined(fFont, x + H::Draw.Scale(13, Scale_Round), y + H::Draw.Scale(9, Scale_Round), tNotification.m_tActive.Alpha(255), Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, tNotification.m_sText.c_str());
 
-		y += (h + 8) * (1.f - flEase);
+		y += (vSize.y + 8) * (1.f - flEase);
 	}
 }

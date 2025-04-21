@@ -42,6 +42,20 @@ struct MoveData_t
 	int m_iButtons = 0;
 };
 
+struct AimTarget_t
+{
+	int m_iEntIndex = 0;
+	int m_iTickCount = 0;
+	int m_iDuration = 32;
+};
+
+struct AimPoint_t
+{
+	Vec3 m_vOrigin = {};
+	int m_iTickCount = 0;
+	int m_iDuration = 32;
+};
+
 namespace G
 {
 	inline bool Unload = false;
@@ -60,8 +74,8 @@ namespace G
 	inline CUserCmd* LastUserCmd = nullptr;
 	inline MoveData_t OriginalMove = {};
 
-	inline std::pair<int, int> Target = { 0, 0 };
-	inline std::pair<Vec3, int> AimPosition = {};
+	inline AimTarget_t AimTarget = {};
+	inline AimPoint_t AimPoint = {};
 
 	inline bool SilentAngles = false;
 	inline bool PSilentAngles = false;

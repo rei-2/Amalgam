@@ -90,7 +90,7 @@ void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealY
 		return;
 
 	float flFakeYaw = GetBaseYaw(pEntity, pCmd, true) + GetYawOffset(pEntity, true);
-	const float flYawDiff = RAD2DEG(Math::AngleDiffRad(DEG2RAD(flRealYaw), DEG2RAD(flFakeYaw)));
+	const float flYawDiff = Math::NormalizeAngle(flRealYaw - flFakeYaw);
 	if (fabsf(flYawDiff) < flEpsilon)
 		flRealYaw += flYawDiff > 0 ? flEpsilon : -flEpsilon;
 }

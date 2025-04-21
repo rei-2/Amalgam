@@ -1,17 +1,50 @@
 #include "Draw.h"
 
+#include "../../SDK.h"
 #include "Icons.h"
 #include "../../Definitions/Interfaces.h"
 #include "../../../Utils/Math/Math.h"
+#include "../../../Utils/Timer/Timer.h"
 #include <array>
 #include <ranges>
 
 MAKE_SIGNATURE(CHudBaseDeathNotice_GetIcon, "client.dll", "40 53 48 81 EC ? ? ? ? 48 8B DA", 0x0);
 
+void CDraw::Start(bool bBadFontCheck)
+{
+	I::MatSystemSurface->StartDrawing();
+	I::MatSystemSurface->DisableClipping(true);
+
+	if (bBadFontCheck)
+	{
+		static Timer tTimer = {};
+		if (tTimer.Run(1.f))
+		{
+			if (!GetTextSize("", H::Fonts.GetFont(FONT_ESP)).y)
+				H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+		}
+	}
+}
+
+void CDraw::End()
+{
+	I::MatSystemSurface->FinishDrawing();
+}
+
+void CDraw::StartClipping(int x, int y, int w, int h)
+{
+	I::MatSystemSurface->DisableClipping(false);
+	I::MatSystemSurface->SetClippingRect(x, y, x + w, y + h);
+}
+
+void CDraw::EndClipping()
+{
+	I::MatSystemSurface->DisableClipping(true);
+}
+
 void CDraw::UpdateScreenSize()
 {
-	m_nScreenW = I::BaseClientDLL->GetScreenWidth();
-	m_nScreenH = I::BaseClientDLL->GetScreenHeight();
+	I::MatSystemSurface->GetScreenSize(m_nScreenW, m_nScreenH);
 }
 
 void CDraw::UpdateW2SMatrix()
@@ -25,6 +58,20 @@ void CDraw::UpdateW2SMatrix()
 
 		I::RenderView->GetMatricesForView(ViewSetup, &WorldToView, &ViewToProjection, &m_WorldToProjection, &WorldToPixels);
 	}
+}
+
+Vec2 CDraw::GetTextSize(const char* text, const Font_t& tFont)
+{
+	int w = 0, h = 0;
+	I::MatSystemSurface->GetTextSize(tFont.m_dwFont, SDK::ConvertUtf8ToWide(text).c_str(), w, h);
+	return { float(w), float(h) };
+}
+
+Vec2 CDraw::GetTextSize(const wchar_t* text, const Font_t& tFont)
+{
+	int w = 0, h = 0;
+	I::MatSystemSurface->GetTextSize(tFont.m_dwFont, text, w, h);
+	return { float(w), float(h) };
 }
 
 void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str, ...)
@@ -44,18 +91,18 @@ void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, con
 
 	const auto dwFont = tFont.m_dwFont;
 
-	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
+	Vec2 vSize = GetTextSize(wstr, tFont);
 	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
-	case ALIGN_TOP: x -= w / 2; break;
-	case ALIGN_TOPRIGHT: x -= w; break;
-	case ALIGN_LEFT: y -= h / 2; break;
-	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
-	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
-	case ALIGN_BOTTOMLEFT: y -= h; break;
-	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
-	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	case ALIGN_TOP: x -= vSize.x / 2; break;
+	case ALIGN_TOPRIGHT: x -= vSize.x; break;
+	case ALIGN_LEFT: y -= vSize.y / 2; break;
+	case ALIGN_CENTER: x -= vSize.x / 2; y -= vSize.y / 2; break;
+	case ALIGN_RIGHT: x -= vSize.x; y -= vSize.y / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= vSize.y; break;
+	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
+	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
 	}
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
@@ -77,18 +124,18 @@ void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, con
 
 	const auto dwFont = tFont.m_dwFont;
 
-	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
+	Vec2 vSize = GetTextSize(wstr, tFont);
 	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
-	case ALIGN_TOP: x -= w / 2; break;
-	case ALIGN_TOPRIGHT: x -= w; break;
-	case ALIGN_LEFT: y -= h / 2; break;
-	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
-	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
-	case ALIGN_BOTTOMLEFT: y -= h; break;
-	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
-	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	case ALIGN_TOP: x -= vSize.x / 2; break;
+	case ALIGN_TOPRIGHT: x -= vSize.x; break;
+	case ALIGN_LEFT: y -= vSize.y / 2; break;
+	case ALIGN_CENTER: x -= vSize.x / 2; y -= vSize.y / 2; break;
+	case ALIGN_RIGHT: x -= vSize.x; y -= vSize.y / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= vSize.y; break;
+	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
+	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
 	}
 
 	I::MatSystemSurface->DrawSetTextPos(x, y);
@@ -114,18 +161,18 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tCo
 
 	const auto dwFont = tFont.m_dwFont;
 
-	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
+	Vec2 vSize = GetTextSize(wstr, tFont);
 	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
-	case ALIGN_TOP: x -= w / 2; break;
-	case ALIGN_TOPRIGHT: x -= w; break;
-	case ALIGN_LEFT: y -= h / 2; break;
-	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
-	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
-	case ALIGN_BOTTOMLEFT: y -= h; break;
-	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
-	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	case ALIGN_TOP: x -= vSize.x / 2; break;
+	case ALIGN_TOPRIGHT: x -= vSize.x; break;
+	case ALIGN_LEFT: y -= vSize.y / 2; break;
+	case ALIGN_CENTER: x -= vSize.x / 2; y -= vSize.y / 2; break;
+	case ALIGN_RIGHT: x -= vSize.x; y -= vSize.y / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= vSize.y; break;
+	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
+	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
 	}
 
 	auto tColorOutline = tColorOut;
@@ -165,18 +212,18 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tCo
 
 	const auto dwFont = tFont.m_dwFont;
 
-	int w = 0, h = 0; I::MatSystemSurface->GetTextSize(dwFont, wstr, w, h);
+	Vec2 vSize = GetTextSize(wstr, tFont);
 	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
-	case ALIGN_TOP: x -= w / 2; break;
-	case ALIGN_TOPRIGHT: x -= w; break;
-	case ALIGN_LEFT: y -= h / 2; break;
-	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
-	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
-	case ALIGN_BOTTOMLEFT: y -= h; break;
-	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
-	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	case ALIGN_TOP: x -= vSize.x / 2; break;
+	case ALIGN_TOPRIGHT: x -= vSize.x; break;
+	case ALIGN_LEFT: y -= vSize.y / 2; break;
+	case ALIGN_CENTER: x -= vSize.x / 2; y -= vSize.y / 2; break;
+	case ALIGN_RIGHT: x -= vSize.x; y -= vSize.y / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= vSize.y; break;
+	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
+	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
 	}
 
 	auto tColorOutline = tColorOut;
@@ -473,15 +520,4 @@ void CDraw::ClearAvatarCache()
 	}
 
 	m_mAvatars.clear();
-}
-
-void CDraw::StartClipping(int x, int y, int w, int h)
-{
-	I::MatSystemSurface->DisableClipping(false);
-	I::MatSystemSurface->SetClippingRect(x, y, x + w, y + h);
-}
-
-void CDraw::EndClipping()
-{
-	I::MatSystemSurface->DisableClipping(true);
 }

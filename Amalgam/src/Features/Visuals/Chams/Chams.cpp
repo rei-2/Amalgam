@@ -5,23 +5,44 @@
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
 
-static inline bool GetPlayerChams(CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bFriendly, bool bEnemy)
+static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bEnemy, bool bTeam)
 {
-	if (Vars::Chams::Player::Local.Value && pEntity == pLocal
-		|| Vars::Chams::Player::Priority.Value && F::PlayerUtils.IsPrioritized(pEntity->entindex())
-		|| Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pEntity->entindex())
-		|| Vars::Chams::Player::Party.Value && H::Entities.InParty(pEntity->entindex())
-		|| Vars::Chams::Player::Target.Value && pEntity->entindex() == G::Target.first)
+	if (Vars::Chams::Player::Local.Value && pPlayer == pLocal
+		|| Vars::Chams::Player::Priority.Value && F::PlayerUtils.IsPrioritized(pPlayer->entindex())
+		|| Vars::Chams::Player::Friend.Value && H::Entities.IsFriend(pPlayer->entindex())
+		|| Vars::Chams::Player::Party.Value && H::Entities.InParty(pPlayer->entindex())
+		|| Vars::Chams::Player::Target.Value && pEntity->entindex() == G::AimTarget.m_iEntIndex)
 	{
 		*pChams = Chams_t(Vars::Chams::Player::Visible.Value, Vars::Chams::Player::Occluded.Value);
 		return true;
 	}
 
-	const bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
-	*pChams = bTeam
-		? Chams_t(Vars::Chams::Friendly::Visible.Value, Vars::Chams::Friendly::Occluded.Value)
-		: Chams_t(Vars::Chams::Enemy::Visible.Value, Vars::Chams::Enemy::Occluded.Value);
-	return bTeam ? bFriendly : bEnemy;
+	if (!Vars::Chams::Player::Relative.Value)
+	{
+		switch (pEntity->m_iTeamNum())
+		{
+		case TF_TEAM_BLUE:
+			*pChams = Chams_t(Vars::Chams::Enemy::Visible.Value, Vars::Chams::Enemy::Occluded.Value);
+			return bEnemy;
+		case TF_TEAM_RED:
+			*pChams = Chams_t(Vars::Chams::Team::Visible.Value, Vars::Chams::Team::Occluded.Value);
+			return bTeam;
+		}
+		return false;
+	}
+	else
+	{
+		if (pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
+		{
+			*pChams = Chams_t(Vars::Chams::Enemy::Visible.Value, Vars::Chams::Enemy::Occluded.Value);
+			return bEnemy;
+		}
+		else
+		{
+			*pChams = Chams_t(Vars::Chams::Team::Visible.Value, Vars::Chams::Team::Occluded.Value);
+			return bTeam;
+		}
+	}
 }
 
 bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
@@ -33,7 +54,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	{
 	// player chams
 	case ETFClassID::CTFPlayer:
-		return GetPlayerChams(pEntity, pLocal, pChams, Vars::Chams::Friendly::Players.Value, Vars::Chams::Enemy::Players.Value);
+		return GetPlayerChams(pEntity, pEntity, pLocal, pChams, Vars::Chams::Enemy::Players.Value, Vars::Chams::Team::Players.Value);
 	// building chams
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
@@ -42,7 +63,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		auto pOwner = pEntity->As<CBaseObject>()->m_hBuilder().Get();
 		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Buildings.Value, Vars::Chams::Enemy::Buildings.Value);
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Buildings.Value, Vars::Chams::Team::Buildings.Value);
 	}
 	// ragdoll chams
 	case ETFClassID::CTFRagdoll:
@@ -62,7 +83,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		auto pOwner = pEntity->As<CTFRagdoll>()->m_hPlayer().Get();
 		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Ragdolls.Value, Vars::Chams::Enemy::Ragdolls.Value);
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Ragdolls.Value, Vars::Chams::Team::Ragdolls.Value);
 	}
 	// projectile chams
 	case ETFClassID::CBaseProjectile:
@@ -93,7 +114,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		auto pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
 		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Projectiles.Value, Vars::Chams::Enemy::Projectiles.Value);
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
 	}
 	case ETFClassID::CTFBaseRocket:
 	case ETFClassID::CTFFlameRocket:
@@ -114,7 +135,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Projectiles.Value, Vars::Chams::Enemy::Projectiles.Value);
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
 	}
 	case ETFClassID::CTFBaseProjectile:
 	case ETFClassID::CTFProjectile_EnergyRing: // not drawn, shoulddraw check, small anyways
@@ -124,7 +145,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
 		if (!pOwner) pOwner = pEntity;
 
-		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Projectiles.Value, Vars::Chams::Enemy::Projectiles.Value);
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
 	}
 	// objective chams
 	case ETFClassID::CCaptureFlag:
@@ -176,7 +197,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	// player chams
 	auto pOwner = pEntity->m_hOwnerEntity().Get();
 	if (pOwner && pOwner->IsPlayer())
-		return GetPlayerChams(pOwner, pLocal, pChams, Vars::Chams::Friendly::Players.Value, Vars::Chams::Enemy::Players.Value);
+		return GetPlayerChams(pOwner, pOwner, pLocal, pChams, Vars::Chams::Enemy::Players.Value, Vars::Chams::Team::Players.Value);
 
 	return false;
 }
@@ -304,15 +325,20 @@ void CChams::Store(CTFPlayer* pLocal)
 			if (Vars::Backtrack::Enabled.Value && Vars::Chams::Backtrack::Enabled.Value && pEntity != pLocal)
 			{
 				auto pWeapon = H::Entities.GetWeapon();
-				if (pWeapon && G::PrimaryWeaponType != EWeaponType::PROJECTILE)
+				if (pWeapon && (G::PrimaryWeaponType != EWeaponType::PROJECTILE || Vars::Chams::Backtrack::Draw.Value & Vars::Chams::Backtrack::DrawEnum::Always))
 				{
 					bool bShowFriendly = false, bShowEnemy = true;
-					if (G::PrimaryWeaponType == EWeaponType::MELEE && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
-						bShowFriendly = true;
-					if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
-						bShowFriendly = true, bShowEnemy = false;
+					if (!(Vars::Chams::Backtrack::Draw.Value & Vars::Chams::Backtrack::DrawEnum::IgnoreTeam))
+					{
+						if (G::PrimaryWeaponType == EWeaponType::MELEE && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
+							bShowFriendly = true;
+						else if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
+							bShowFriendly = true, bShowEnemy = false;
+					}
+					else if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
+							bShowEnemy = false;
 
-					if (bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum() || bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum())
+					if (bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum() || bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
 					{
 						tChams = Chams_t(Vars::Chams::Backtrack::Visible.Value, {});
 						vEntities.emplace_back(pEntity, tChams, true);
@@ -376,12 +402,15 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 
 	pRenderContext->DepthRange(0.f, Vars::Chams::Backtrack::IgnoreZ.Value ? 0.2f : 1.f);
 
-	auto drawModel = [&](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
+	auto drawModel = [&](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld, float flBlend)
 		{
 			if (!SDK::IsOnScreen(pEntity, vOrigin))
 				return;
 
+			float flOriginalBlend = I::RenderView->GetBlend();
+			I::RenderView->SetBlend(flBlend * flOriginalBlend);
 			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+			I::RenderView->SetBlend(flOriginalBlend);
 		};
 
 	auto pRecords = F::Backtrack.GetRecords(pEntity);
@@ -389,35 +418,31 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 	if (!vRecords.size())
 		return;
 
-	switch (Vars::Chams::Backtrack::Draw.Value)
-	{
-	case Vars::Chams::Backtrack::DrawEnum::Last: // last
-	{
-		auto vLastRec = vRecords.end() - 1;
-		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->m_vOrigin) > 0.1f)
-			drawModel(vLastRec->m_vOrigin, pState, pInfo, vLastRec->m_BoneMatrix.m_aBones);
-		break;
-	}
-	case Vars::Chams::Backtrack::DrawEnum::LastFirst: // last + first
-	{
-		auto vFirstRec = vRecords.begin();
-		if (vFirstRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vFirstRec->m_vOrigin) > 0.1f)
-			drawModel(vFirstRec->m_vOrigin, pState, pInfo, vFirstRec->m_BoneMatrix.m_aBones);
-		auto vLastRec = vRecords.end() - 1;
-		if (vLastRec != vRecords.end() && pEntity->GetAbsOrigin().DistTo(vLastRec->m_vOrigin) > 0.1f)
-			drawModel(vLastRec->m_vOrigin, pState, pInfo, vLastRec->m_BoneMatrix.m_aBones);
-		break;
-	}
-	case Vars::Chams::Backtrack::DrawEnum::All: // all
-	{
-		for (auto& record : vRecords)
-		{
-			if (pEntity->GetAbsOrigin().DistTo(record.m_vOrigin) < 0.1f)
-				continue;
+	bool bDrawLast = Vars::Chams::Backtrack::Draw.Value & Vars::Chams::Backtrack::DrawEnum::Last;
+	bool bDrawFirst = Vars::Chams::Backtrack::Draw.Value & Vars::Chams::Backtrack::DrawEnum::First;
 
-			drawModel(record.m_vOrigin, pState, pInfo, record.m_BoneMatrix.m_aBones);
+	if (!bDrawLast && !bDrawFirst)
+	{
+		for (auto& tRecord : vRecords)
+		{
+			if (float flBlend = Math::RemapVal(pEntity->GetAbsOrigin().DistTo(tRecord.m_vOrigin), 1.f, 24.f, 0.f, 1.f))
+				drawModel(tRecord.m_vOrigin, pState, pInfo, tRecord.m_BoneMatrix.m_aBones, flBlend);
 		}
 	}
+	else
+	{
+		if (bDrawLast)
+		{
+			auto& tRecord = vRecords.back();
+			if (float flBlend = Math::RemapVal(pEntity->GetAbsOrigin().DistTo(tRecord.m_vOrigin), 1.f, 24.f, 0.f, 1.f))
+				drawModel(tRecord.m_vOrigin, pState, pInfo, tRecord.m_BoneMatrix.m_aBones, flBlend);
+		}
+		if (bDrawFirst)
+		{
+			auto& tRecord = vRecords.front();
+			if (float flBlend = Math::RemapVal(pEntity->GetAbsOrigin().DistTo(tRecord.m_vOrigin), 1.f, 24.f, 0.f, 1.f))
+				drawModel(tRecord.m_vOrigin, pState, pInfo, tRecord.m_BoneMatrix.m_aBones, flBlend);
+		}
 	}
 
 	pRenderContext->DepthRange(0.f, 1.f);
