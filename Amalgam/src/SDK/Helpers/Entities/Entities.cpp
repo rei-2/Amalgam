@@ -144,17 +144,15 @@ void CEntities::Store()
 
 	static Timer tTimer = {};
 	bool bShouldUpdateInfo = tTimer.Run(1.f);
-	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
-	int iMaxShift = sv_maxusrcmdprocessticks->GetInt();
 	int iLag;
 	{
 		static int iStaticTickcout = I::GlobalVars->tickcount;
 		iLag = I::GlobalVars->tickcount - iStaticTickcout - 1;
 		iStaticTickcout = I::GlobalVars->tickcount;
 	}
-	std::unordered_map<uint32_t, bool> mParty = {};
+	std::unordered_map<uint32_t, uint64_t> mParties = {};
 	std::unordered_map<uint32_t, bool> mF2P = {};
-	std::unordered_map<int, int> mLevels = {};
+	std::unordered_map<uint32_t, int> mLevels = {};
 	if (bShouldUpdateInfo)
 	{
 		m_mIFriends.clear();
@@ -168,33 +166,29 @@ void CEntities::Store()
 		m_mIPriorities.clear();
 		m_mUPriorities.clear();
 
-		if (auto pParty = I::TFGCClientSystem->GetParty())
-		{
-			for (int i = 0; i < pParty->GetNumMembers(); i++)
-			{
-				auto cSteamID = CSteamID(); pParty->GetMember(&cSteamID, i);
-				mParty[cSteamID.GetAccountID()] = true;
-			}
-		}
 		if (auto pLobby = I::TFGCClientSystem->GetLobby())
 		{
 			for (int i = 0; i < pLobby->GetNumMembers(); i++)
 			{
 				auto cSteamID = CSteamID(); pLobby->GetMember(&cSteamID, i);
+				auto uFriendsID = cSteamID.GetAccountID();
 
 				ConstTFLobbyPlayer pDetails;
 				pLobby->GetMemberDetails(&pDetails, i);
-							
-				mF2P[cSteamID.GetAccountID()] = *reinterpret_cast<bool*>(uintptr_t(pDetails.Proto()) + 69);
+				
+				auto pProto = pDetails.Proto();
+				mF2P[uFriendsID] = pProto->chat_suspension;
+				mLevels[uFriendsID] = pProto->rank;
+				mParties[uFriendsID] = pProto->original_party_id;
 			}
 		}
-		if (auto pGameRules = I::TFGameRules())
+		if (auto pParty = I::TFGCClientSystem->GetParty())
 		{
-			auto pMatchDesc = pGameRules->GetMatchGroupDescription();
-			if (pMatchDesc && pMatchDesc->m_pProgressionDesc)
+			for (int i = 0; i < pParty->GetNumMembers(); i++)
 			{
-				for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
-					mLevels[n] = pMatchDesc->GetLevelForIndex(n);
+				auto cSteamID = CSteamID(); pParty->GetMember(&cSteamID, i);
+				auto uFriendsID = cSteamID.GetAccountID();
+				mParties[uFriendsID] = 1;
 			}
 		}
 	}
@@ -205,11 +199,14 @@ void CEntities::Store()
 			PlayerInfo_t pi{};
 			if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
 			{
+				bool bLocal = n == I::EngineClient->GetLocalPlayer();
+				m_mIPriorities[n] = m_mUPriorities[pi.friendsID] = !bLocal ? F::PlayerUtils.GetPriority(pi.friendsID, false) : 0;
 				m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
-				m_mIParty[n] = m_mUParty[pi.friendsID] = mParty.contains(pi.friendsID) && n != I::EngineClient->GetLocalPlayer();
+				m_mIParty[n] = m_mUParty[pi.friendsID] = mParties.contains(pi.friendsID) ? mParties[pi.friendsID] : 0;
 				m_mIF2P[n] = m_mUF2P[pi.friendsID] = mF2P.contains(pi.friendsID) ? mF2P[pi.friendsID] : false;
-				m_mILevels[n] = m_mULevels[pi.friendsID] = mLevels.contains(n) ? mLevels[n] : -2;
-				m_mIPriorities[n] = m_mUPriorities[pi.friendsID] = n != I::EngineClient->GetLocalPlayer() ? F::PlayerUtils.GetPriority(pi.friendsID, false) : 0;
+				m_mILevels[n] = m_mULevels[pi.friendsID] = mLevels.contains(pi.friendsID) ? mLevels[pi.friendsID] : -2;
+				if (bLocal)
+					m_uFriendsID = pi.friendsID;
 			}
 		}
 
@@ -227,7 +224,7 @@ void CEntities::Store()
 				if (m_mDormancy.contains(n))
 				{
 					auto& tDormancy = m_mDormancy[n];
-					if (I::EngineClient->Time() - tDormancy.LastUpdate < Vars::ESP::DormantTime.Value)
+					if (I::EngineClient->Time() - tDormancy.LastUpdate < Vars::ESP::DormantDuration.Value)
 						pPlayer->SetAbsOrigin(pPlayer->m_vecOrigin() = tDormancy.Location);
 					else
 						m_mDormancy.erase(n);
@@ -246,7 +243,7 @@ void CEntities::Store()
 		bool bDormant = pPlayer->IsDormant();
 		float flOldSimTime = m_mOldSimTimes[n] = m_mSimTimes.contains(n) ? m_mSimTimes[n] : pPlayer->m_flOldSimulationTime();
 		float flSimTime = m_mSimTimes[n] = (bDormant ? m_pLocal : pPlayer)->m_flSimulationTime(); // lol
-		float flDeltaTime = m_mDeltaTimes[n] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 0, iMaxShift));
+		float flDeltaTime = m_mDeltaTimes[n] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 0, 24));
 		if (flDeltaTime)
 		{
 			if (pPlayer->IsAlive() && !bDormant)
@@ -255,7 +252,7 @@ void CEntities::Store()
 
 			if (!bDormant)
 			{
-				m_mOrigins[n].emplace_front(pPlayer->m_vecOrigin() + Vec3(0, 0, pPlayer->m_vecMaxs().z - pPlayer->m_vecMins().z), pPlayer->m_flSimulationTime());
+				m_mOrigins[n].emplace_front(pPlayer->m_vecOrigin() + Vec3(0, 0, pPlayer->m_vecMaxs().z - pPlayer->m_vecMins().z), flSimTime);
 				if (m_mOrigins[n].size() > Vars::Aimbot::Projectile::VelocityAverageCount.Value)
 					m_mOrigins[n].pop_back();
 			}
@@ -276,9 +273,8 @@ void CEntities::Store()
 		m_mBones[n].first = pPlayer->SetupBones(m_mBones[n].second, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, flSimTime);
 		m_bSettingUpBones = false;
 
-		Vec3 vOldAngles = m_mEyeAngles[n], vNewAngles = pPlayer->As<CTFPlayer>()->GetEyeAngles();
-		m_mEyeAngles[n] = vNewAngles;
-		m_mPingAngles[n] = (vNewAngles - vOldAngles) / (flSimTime - flOldSimTime) * (F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke()));
+		m_mOldAngles[n] = m_mEyeAngles[n];
+		m_mEyeAngles[n] = pPlayer->As<CTFPlayer>()->GetEyeAngles();
 	}
 }
 
@@ -299,7 +295,7 @@ void CEntities::Clear(bool bShutdown)
 		m_mDormancy.clear();
 		m_mBones.clear();
 		m_mEyeAngles.clear();
-		m_mPingAngles.clear();
+		m_mOldAngles.clear();
 		m_mLagCompensation.clear();
 	}
 }
@@ -478,7 +474,7 @@ int CEntities::GetChoke(int iIndex) { return m_mChokes.contains(iIndex) ? m_mCho
 bool CEntities::GetDormancy(int iIndex) { return m_mDormancy.contains(iIndex); }
 matrix3x4* CEntities::GetBones(int iIndex) { return m_mBones[iIndex].first ? m_mBones[iIndex].second : nullptr; }
 Vec3 CEntities::GetEyeAngles(int iIndex) { return m_mEyeAngles.contains(iIndex) ? m_mEyeAngles[iIndex] : Vec3(); }
-Vec3 CEntities::GetPingAngles(int iIndex) { return m_mPingAngles.contains(iIndex) ? m_mPingAngles[iIndex] : Vec3(); }
+Vec3 CEntities::GetPingAngles(int iIndex) { return m_mOldAngles.contains(iIndex) ? (m_mEyeAngles[iIndex] - m_mOldAngles[iIndex]) / GetDeltaTime(iIndex) * (F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke())) : Vec3(); }
 bool CEntities::GetLagCompensation(int iIndex) { return m_mLagCompensation[iIndex]; }
 void CEntities::SetLagCompensation(int iIndex, bool bLagComp) { m_mLagCompensation[iIndex] = bLagComp; }
 Vec3* CEntities::GetAvgVelocity(int iIndex) { return iIndex != I::EngineClient->GetLocalPlayer() ? &m_mAvgVelocities[iIndex] : nullptr; }
@@ -486,15 +482,17 @@ void CEntities::SetAvgVelocity(int iIndex, Vec3 vAvgVelocity) { m_mAvgVelocities
 uint32_t CEntities::GetModel(int iIndex) { return m_mModels[iIndex]; }
 std::deque<VelFixRecord>* CEntities::GetOrigins(int iIndex) { return m_mOrigins.contains(iIndex) ? &m_mOrigins[iIndex] : nullptr; }
 
+int CEntities::GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
+int CEntities::GetPriority(uint32_t uFriendsID) { return m_mUPriorities[uFriendsID]; }
 bool CEntities::IsFriend(int iIndex) { return m_mIFriends[iIndex]; }
 bool CEntities::IsFriend(uint32_t uFriendsID) { return m_mUFriends[uFriendsID]; }
-bool CEntities::InParty(int iIndex) { return m_mIParty[iIndex]; }
-bool CEntities::InParty(uint32_t uFriendsID) { return m_mUParty[uFriendsID]; }
+bool CEntities::InParty(int iIndex) { return iIndex != I::EngineClient->GetLocalPlayer() && m_mIParty[iIndex] == 1; }
+bool CEntities::InParty(uint32_t uFriendsID) { return uFriendsID != m_uFriendsID && m_mUParty[uFriendsID] == 1; }
 bool CEntities::IsF2P(int iIndex) { return m_mIF2P[iIndex]; }
 bool CEntities::IsF2P(uint32_t uFriendsID) { return m_mUF2P[uFriendsID]; }
 int CEntities::GetLevel(int iIndex) { return m_mILevels.contains(iIndex) ? m_mILevels[iIndex] : -2; }
 int CEntities::GetLevel(uint32_t uFriendsID) { return m_mULevels.contains(uFriendsID) ? m_mULevels[uFriendsID] : -2; }
-int CEntities::GetPriority(int iIndex) { return m_mIPriorities[iIndex]; }
-int CEntities::GetPriority(uint32_t uFriendsID) { return m_mUPriorities[uFriendsID]; }
+uint64_t CEntities::GetParty(int iIndex) { return m_mIParty.contains(iIndex) ? m_mIParty[iIndex] : 0; }
+uint64_t CEntities::GetParty(uint32_t uFriendsID) { return m_mUParty.contains(uFriendsID) ? m_mUParty[uFriendsID] : 0; }
 
 bool CEntities::IsSettingUpBones() { return m_bSettingUpBones; }

@@ -28,15 +28,60 @@ public:
 	}
 };
 
+struct CTFLobbyPlayerProto
+{
+	enum TF_GC_TEAM
+	{
+		TF_GC_TEAM_DEFENDERS = 0,
+		TF_GC_TEAM_INVADERS = 1,
+		TF_GC_TEAM_BROADCASTER = 2,
+		TF_GC_TEAM_SPECTATOR = 3,
+		TF_GC_TEAM_PLAYER_POOL = 4,
+		TF_GC_TEAM_NOTEAM = 5
+	};
+
+	enum ConnectState
+	{
+		INVALID = 0,
+		RESERVATION_PENDING = 1,
+		RESERVED = 2,
+		CONNECTED = 3,
+		CONNECTED_AD_HOC = 4,
+		DISCONNECTED = 5
+	};
+
+	enum Type {
+		INVALID_PLAYER = 0,
+		MATCH_PLAYER = 1,
+		STANDBY_PLAYER = 2,
+		OBSERVING_PLAYER = 3
+	};
+
+	byte pad0[24];
+	uint64 id;
+	TF_GC_TEAM team;
+	ConnectState connect_state;
+	const char* name;
+	uint64 original_party_id;
+	uint32 badge_level;
+	uint32 last_connect_time;
+	Type type;
+	bool squad_surplus;
+	bool chat_suspension;
+	double normalized_rating;
+	double normalized_uncertainty;
+	uint32 rank;
+};
+
 class ConstTFLobbyPlayer
 {
 	void* pad0;
 	void* pad1;
 
 public:
-	inline void* Proto()
+	inline CTFLobbyPlayerProto* Proto()
 	{
-		auto ConstTFLobbyPlayer_Proto = reinterpret_cast<void*(*)(void*)>(U::Memory.GetVFunc(this, 0));
+		auto ConstTFLobbyPlayer_Proto = reinterpret_cast<CTFLobbyPlayerProto*(*)(void*)>(U::Memory.GetVFunc(this, 0));
 		return ConstTFLobbyPlayer_Proto(this);
 	}
 };

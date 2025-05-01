@@ -192,8 +192,8 @@
     <ClCompile Include="src\Features\Output\Output.cpp" />
     <ClCompile Include="src\Hooks\Cbuf_ExecuteCommand.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
-    <ClCompile Include="src\Hooks\CTFScatterGun_FireBullet.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
+    <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -575,6 +575,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\IMatchGroupDescription.h" />
     <ClInclude Include="src\Features\Output\Output.h" />
     <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
+    <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

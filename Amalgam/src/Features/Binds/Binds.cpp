@@ -12,7 +12,7 @@
 }
 #define SetT(type, cond) if (IsType(type)) SetType(type, cond)
 
-static inline void SetVars(int iBind, std::vector<CVarBase*>& vVars = G::Vars)
+static inline void SetVars(int iBind, std::vector<BaseVar*>& vVars = G::Vars)
 {
 	const bool bDefault = iBind == DEFAULT_BIND;
 	for (auto pVar : vVars)

@@ -7,12 +7,12 @@ using CommandCallback = std::function<void(std::deque<std::string>)>;
 class CCommands
 {
 private:
-    std::unordered_map<uint32_t, CommandCallback> CommandMap;
+    std::unordered_map<uint32_t, CommandCallback> m_mCommands;
 
 public:
     void Initialize();
-    bool Run(const std::string& cmd, std::deque<std::string>& args);
-    void Register(const std::string& name, CommandCallback callback);
+    bool Run(const std::string& sCmd, std::deque<std::string>& vArgs);
+    void Register(const std::string& sName, CommandCallback fCallback);
 };
 
 ADD_FEATURE(CCommands, Commands)

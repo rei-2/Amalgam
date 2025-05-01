@@ -10,7 +10,7 @@ struct DrawLine_t
 {
 	std::pair<Vec3, Vec3> m_vPair;
 	float m_flTime;
-	Color_t m_color;
+	Color_t m_tColor;
 	bool m_bZBuffer = false;
 };
 
@@ -18,7 +18,7 @@ struct DrawPath_t
 {
 	std::deque<Vec3> m_vPath;
 	float m_flTime;
-	Color_t m_color;
+	Color_t m_tColor;
 	int m_iStyle;
 	bool m_bZBuffer = false;
 };

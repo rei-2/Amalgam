@@ -108,7 +108,7 @@ private:
 public:
 	void Store();
 
-	bool Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool useHitchance = true, bool cancelStrafe = false);
+	bool Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool bHitchance = true, bool bStrafe = true);
 	bool SetDuck(PlayerStorage& tStorage, bool bDuck);
 	void RunTick(PlayerStorage& tStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
 	void RunTick(PlayerStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback);

@@ -10,7 +10,7 @@ class CChams
 	void StencilOccluded(IMatRenderContext* pRenderContext);
 	void StencilEnd(IMatRenderContext* pRenderContext, bool bTwoModels = false);
 
-	void DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* pRenderContext, bool bExtra = false);
+	void DrawModel(CBaseEntity* pEntity, Chams_t& tChams, IMatRenderContext* pRenderContext, bool bExtra = false);
 
 	void RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 	void RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
@@ -21,9 +21,9 @@ class CChams
 		Chams_t m_tChams;
 		bool m_bExtra = false;
 	};
-	std::vector<ChamsInfo_t> vEntities = {};
+	std::vector<ChamsInfo_t> m_vEntities = {};
 
-	bool bExtra = false;
+	bool m_bExtra = false;
 
 public:
 	void Store(CTFPlayer* pLocal);
@@ -33,9 +33,9 @@ public:
 	bool RenderViewmodel(void* ecx, int flags, int* iReturn);
 	bool RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
 
-	bool bRendering = false;
+	bool m_bRendering = false;
 
-	std::unordered_map<int, bool> mEntities = {};
+	std::unordered_map<int, bool> m_mEntities = {};
 };
 
 ADD_FEATURE(CChams, Chams)

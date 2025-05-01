@@ -19,7 +19,7 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 		const float flDist = vDelta.Length2D();
 		if (flDist > flRange)
 		{
-			if (!Vars::Radar::Main::AlwaysDraw.Value)
+			if (!Vars::Radar::Main::DrawOutOfRange.Value)
 				return false;
 
 			vPos *= flRange / flDist;
@@ -29,7 +29,7 @@ bool CRadar::GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, in
 	case Vars::Radar::Main::StyleEnum::Rectangle:
 		if (fabs(vPos.x) > flRange || fabs(vPos.y) > flRange)
 		{
-			if (!Vars::Radar::Main::AlwaysDraw.Value)
+			if (!Vars::Radar::Main::DrawOutOfRange.Value)
 				return false;
 
 			Vec2 a = { -flRange / vPos.x, -flRange / vPos.y };
@@ -52,7 +52,7 @@ void CRadar::DrawBackground()
 	auto& tWindowBox = Vars::Radar::Main::Window.Value;
 	Color_t& tThemeBack = Vars::Menu::Theme::Background.Value;
 	Color_t& tThemeAccent = Vars::Menu::Theme::Accent.Value;
-	Color_t tColorBackground = { tThemeBack.r, tThemeBack.g, tThemeBack.b, byte(Vars::Radar::Main::BackAlpha.Value) };
+	Color_t tColorBackground = { tThemeBack.r, tThemeBack.g, tThemeBack.b, byte(Vars::Radar::Main::BackgroundAlpha.Value) };
 	Color_t tColorAccent = { tThemeAccent.r, tThemeAccent.g, tThemeAccent.b, byte(Vars::Radar::Main::LineAlpha.Value) };
 
 	switch (Vars::Radar::Main::Style.Value)
@@ -78,7 +78,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 	// Ammo & Health
 	if (Vars::Radar::World::Enabled.Value)
 	{
-		const int iSize = Vars::Radar::World::IconSize.Value;
+		const int iSize = Vars::Radar::World::Size.Value;
 
 		if (Vars::Radar::World::Draw.Value & Vars::Radar::World::DrawEnum::Gargoyle)
 		{
@@ -208,9 +208,9 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 	}
 
 	// Draw buildings
-	if (Vars::Radar::Buildings::Enabled.Value)
+	if (Vars::Radar::Building::Enabled.Value)
 	{
-		const int iSize = Vars::Radar::Buildings::IconSize.Value;
+		const int iSize = Vars::Radar::Building::Size.Value;
 
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::BUILDINGS_ALL))
 		{
@@ -224,15 +224,15 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					const int nIndex = pOwner->entindex();
 					if (pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON ? pLocal->m_hObserverTarget().Get() == pOwner : nIndex == I::EngineClient->GetLocalPlayer())
 					{
-						if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Local))
+						if (!(Vars::Radar::Building::Draw.Value & Vars::Radar::Building::DrawEnum::Local))
 							continue;
 					}
 					else
 					{
-						if (!(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Prioritized && F::PlayerUtils.IsPrioritized(nIndex))
-							&& !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
-							&& !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Party && H::Entities.InParty(nIndex))
-							&& pOwner->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Team) : !(Vars::Radar::Buildings::Draw.Value & Vars::Radar::Buildings::DrawEnum::Enemy))
+						if (!(Vars::Radar::Building::Draw.Value & Vars::Radar::Building::DrawEnum::Prioritized && F::PlayerUtils.IsPrioritized(nIndex))
+							&& !(Vars::Radar::Building::Draw.Value & Vars::Radar::Building::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
+							&& !(Vars::Radar::Building::Draw.Value & Vars::Radar::Building::DrawEnum::Party && H::Entities.InParty(nIndex))
+							&& !(pOwner->As<CTFPlayer>()->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::Radar::Building::Draw.Value & Vars::Radar::Building::DrawEnum::Enemy : Vars::Radar::Building::Draw.Value & Vars::Radar::Building::DrawEnum::Team))
 							continue;
 					}
 				}
@@ -244,7 +244,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 				const Color_t tColor = H::Color.GetEntityDrawColor(pLocal, pBuilding, Vars::Colors::Relative.Value);
 
 				int iBounds = iSize;
-				if (Vars::Radar::Buildings::Background.Value)
+				if (Vars::Radar::Building::Background.Value)
 				{
 					const float flRadius = sqrtf(pow(iSize, 2) * 2) / 2;
 					H::Draw.FillCircle(x, y, flRadius, 20, tColor);
@@ -264,7 +264,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					break;
 				}
 
-				if (Vars::Radar::Buildings::Health.Value)
+				if (Vars::Radar::Building::Health.Value)
 				{
 					const int iMaxHealth = pBuilding->m_iMaxHealth(), iHealth = pBuilding->m_iHealth();
 
@@ -277,9 +277,9 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 	}
 
 	// Draw Players
-	if (Vars::Radar::Players::Enabled.Value)
+	if (Vars::Radar::Player::Enabled.Value)
 	{
-		const int iSize = Vars::Radar::Players::IconSize.Value;
+		const int iSize = Vars::Radar::Player::Size.Value;
 
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 		{
@@ -290,18 +290,18 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 			const int nIndex = pPlayer->entindex();
 			if (pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON ? pLocal->m_hObserverTarget().Get() == pPlayer : nIndex == I::EngineClient->GetLocalPlayer())
 			{
-				if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Local))
+				if (!(Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Local))
 					continue;
 			}
 			else
 			{
-				if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Prioritized && F::PlayerUtils.IsPrioritized(nIndex))
-					&& !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
-					&& !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Party && H::Entities.InParty(nIndex))
-					&& pPlayer->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Team) : !(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Enemy))
+				if (!(Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Prioritized && F::PlayerUtils.IsPrioritized(nIndex))
+					&& !(Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Friends && H::Entities.IsFriend(nIndex))
+					&& !(Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Party && H::Entities.InParty(nIndex))
+					&& !(pPlayer->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Enemy : Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Team))
 					continue;
 			}
-			if (!(Vars::Radar::Players::Draw.Value & Vars::Radar::Players::DrawEnum::Cloaked) && pPlayer->m_flInvisibility() >= 1.f)
+			if (!(Vars::Radar::Player::Draw.Value & Vars::Radar::Player::DrawEnum::Cloaked) && pPlayer->m_flInvisibility() >= 1.f)
 				continue;
 
 			int x, y, z;
@@ -310,16 +310,16 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 				const Color_t tColor = H::Color.GetEntityDrawColor(pLocal, pPlayer, Vars::Colors::Relative.Value);
 
 				int iBounds = iSize;
-				if (Vars::Radar::Players::Background.Value)
+				if (Vars::Radar::Player::Background.Value)
 				{
 					const float flRadius = sqrtf(pow(iSize, 2) * 2) / 2;
 					H::Draw.FillCircle(x, y, flRadius, 20, tColor);
 					iBounds = flRadius * 2;
 				}
 
-				switch (Vars::Radar::Players::IconType.Value)
+				switch (Vars::Radar::Player::Icon.Value)
 				{
-				case Vars::Radar::Players::IconTypeEnum::Avatars:
+				case Vars::Radar::Player::IconEnum::Avatars:
 				{
 					PlayerInfo_t pi{};
 					if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) && !pi.fakeplayer)
@@ -333,19 +333,19 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					}
 					[[fallthrough]];
 				}
-				case Vars::Radar::Players::IconTypeEnum::Portraits:
+				case Vars::Radar::Player::IconEnum::Portraits:
 					if (pPlayer->IsInValidTeam())
 					{
 						H::Draw.Texture(x, y, iSize, iSize, pPlayer->m_iClass() + (pPlayer->m_iTeamNum() == TF_TEAM_RED ? 9 : 18) - 1);
 						break;
 					}
 					[[fallthrough]];
-				case Vars::Radar::Players::IconTypeEnum::Icons:
+				case Vars::Radar::Player::IconEnum::Icons:
 					H::Draw.Texture(x, y, iSize, iSize, pPlayer->m_iClass() - 1);
 					break;
 				}
 
-				if (Vars::Radar::Players::Health.Value)
+				if (Vars::Radar::Player::Health.Value)
 				{
 					const int iMaxHealth = pPlayer->GetMaxHealth(), iHealth = pPlayer->m_iHealth();
 
@@ -362,7 +362,7 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					}
 				}
 
-				if (Vars::Radar::Players::Height.Value && std::abs(z) > 80.f)
+				if (Vars::Radar::Player::Height.Value && std::abs(z) > 80.f)
 				{
 					const int m = x - iSize / 2;
 					const int iOffset = z < 0 ? -5 : 5;

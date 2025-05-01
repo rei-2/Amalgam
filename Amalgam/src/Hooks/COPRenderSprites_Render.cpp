@@ -60,6 +60,15 @@ struct SpriteRenderInfo_t
     CParticleCollection* m_pParticles{};
 };
 
+struct ParticleRenderData_t
+{
+    float m_flSortKey;
+    int   m_nIndex;
+    float m_flRadius;
+    uint8 m_nAlpha;
+    uint8 m_nAlphaPad[3];
+};
+
 MAKE_HOOK(COPRenderSprites_Render, S::COPRenderSprites_Render(), void,
     void* rcx, IMatRenderContext* pRenderContext, CParticleCollection* pParticles, void* pContext)
 {
@@ -68,7 +77,7 @@ MAKE_HOOK(COPRenderSprites_Render, S::COPRenderSprites_Render(), void,
         return CALL_ORIGINAL(rcx, pRenderContext, pParticles, pContext);
 #endif
 
-    if (!Vars::Visuals::Particles::DrawIconsThroughWalls.Value || Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
+    if (!Vars::Visuals::Effects::DrawIconsThroughWalls.Value || Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
         return CALL_ORIGINAL(rcx, pRenderContext, pParticles, pContext);
 
     bool bValid = false;
@@ -154,7 +163,7 @@ MAKE_HOOK(COPRenderSprites_Render, S::COPRenderSprites_Render(), void,
 }
 
 MAKE_HOOK(COPRenderSprites_RenderSpriteCard, S::COPRenderSprites_RenderSpriteCard(), void,
-    void* rcx, void* meshBuilder, void* pCtx, SpriteRenderInfo_t& info, int hParticle, void* pSortList, void* pCamera)
+    void* rcx, void* meshBuilder, void* pCtx, SpriteRenderInfo_t& info, int hParticle, ParticleRenderData_t* pSortList, void* pCamera)
 {
 #ifdef DEBUG_HOOKS
     if (!Vars::Hooks::COPRenderSprites_Render[DEFAULT_BIND])
@@ -167,11 +176,13 @@ MAKE_HOOK(COPRenderSprites_RenderSpriteCard, S::COPRenderSprites_RenderSpriteCar
     info.m_pRGB[((hParticle / 4) * info.m_nRGBStride) + 0].m128_f32[hParticle & 0x3] = float(Vars::Colors::ParticleModulation.Value.r) / 255.f; // red
     info.m_pRGB[((hParticle / 4) * info.m_nRGBStride) + 1].m128_f32[hParticle & 0x3] = float(Vars::Colors::ParticleModulation.Value.g) / 255.f; // green
     info.m_pRGB[((hParticle / 4) * info.m_nRGBStride) + 2].m128_f32[hParticle & 0x3] = float(Vars::Colors::ParticleModulation.Value.b) / 255.f; // blue
+    if (Vars::Colors::ParticleModulation.Value.a != 255)
+        pSortList->m_nAlpha = Vars::Colors::ParticleModulation.Value.a;
     CALL_ORIGINAL(rcx, meshBuilder, pCtx, info, hParticle, pSortList, pCamera);
 }
 
 MAKE_HOOK(COPRenderSprites_RenderTwoSequenceSpriteCard, S::COPRenderSprites_RenderTwoSequenceSpriteCard(), void,
-    void* rcx, void* meshBuilder, void* pCtx, SpriteRenderInfo_t& info, int hParticle, void* pSortList, void* pCamera)
+    void* rcx, void* meshBuilder, void* pCtx, SpriteRenderInfo_t& info, int hParticle, ParticleRenderData_t* pSortList, void* pCamera)
 {
 #ifdef DEBUG_HOOKS
     if (!Vars::Hooks::COPRenderSprites_Render[DEFAULT_BIND])
@@ -184,5 +195,7 @@ MAKE_HOOK(COPRenderSprites_RenderTwoSequenceSpriteCard, S::COPRenderSprites_Rend
     info.m_pRGB[((hParticle / 4) * info.m_nRGBStride) + 0].m128_f32[hParticle & 0x3] = float(Vars::Colors::ParticleModulation.Value.r) / 255.f; // red
     info.m_pRGB[((hParticle / 4) * info.m_nRGBStride) + 1].m128_f32[hParticle & 0x3] = float(Vars::Colors::ParticleModulation.Value.g) / 255.f; // green
     info.m_pRGB[((hParticle / 4) * info.m_nRGBStride) + 2].m128_f32[hParticle & 0x3] = float(Vars::Colors::ParticleModulation.Value.b) / 255.f; // blue
+    if (Vars::Colors::ParticleModulation.Value.a != 255)
+        pSortList->m_nAlpha = Vars::Colors::ParticleModulation.Value.a;
     CALL_ORIGINAL(rcx, meshBuilder, pCtx, info, hParticle, pSortList, pCamera);
 }

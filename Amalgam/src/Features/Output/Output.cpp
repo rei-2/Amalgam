@@ -20,7 +20,7 @@ void COutput::OutputInfo(int flags, std::string sName, std::string sOutput, std:
 		flags & Vars::Logging::LogToEnum::Party
 	);
 	if (flags & Vars::Logging::LogToEnum::Chat)
-		SDK::Output(Vars::Menu::CheatPrefix.Value.c_str(), sChat.c_str(), Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");
+		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sChat.c_str(), Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");
 }
 
 // Event info
@@ -212,7 +212,7 @@ void COutput::TagsOnJoin(std::string sName, uint32_t uFriendsID)
 	for (auto& iID : F::PlayerUtils.m_mPlayerTags[uFriendsID])
 	{
 		if (auto pTag = F::PlayerUtils.GetTag(iID))
-			vColorsTags.emplace_back(pTag->Color.ToHexA(), pTag->Name);
+			vColorsTags.emplace_back(pTag->m_tColor.ToHexA(), pTag->m_sName);
 	}
 
 	std::string sOutputText, sChatText;

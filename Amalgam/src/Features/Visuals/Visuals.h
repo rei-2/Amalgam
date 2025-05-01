@@ -8,6 +8,7 @@ struct Sightline_t
 	Vec3 m_vStart = {};
 	Vec3 m_vEnd = {};
 	Color_t m_Color = {};
+	bool m_bZBuffer = false;
 };
 
 struct PickupData

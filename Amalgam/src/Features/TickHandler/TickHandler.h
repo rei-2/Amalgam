@@ -32,7 +32,7 @@ public:
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	int GetTicks(CTFWeaponBase* pWeapon = nullptr);
-	int GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks = Vars::CL_Move::Doubletap::TickLimit.Value);
+	int GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks = Vars::Doubletap::TickLimit.Value);
 	int GetMinimumTicksNeeded(CTFWeaponBase* pWeapon);
 	bool CanChoke();
 

@@ -26,7 +26,7 @@ struct Bind_t
 
 	int m_iParent = -1;
 
-	std::vector<CVarBase*> m_vVars = {};
+	std::vector<BaseVar*> m_vVars = {};
 };
 
 class CBinds

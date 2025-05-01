@@ -102,7 +102,7 @@ static inline bool CheckEntities(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUse
 		if (Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::IgnoreCloak && pEntity->IsPlayer())
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (pPlayer->IsInvisible() && pPlayer->GetInvisPercentage() >= Vars::Aimbot::General::IgnoreCloakPercentage.Value)
+			if (pPlayer->IsInvisible() && pPlayer->GetInvisPercentage() >= Vars::Aimbot::General::IgnoreCloak.Value)
 				continue;
 		}
 

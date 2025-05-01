@@ -40,13 +40,13 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 					sTag = "You", cColor = Vars::Colors::Local.Value.ToHexA();
 			}
 			else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Friends && H::Entities.IsFriend(clientIndex))
-				sTag = "Friend", cColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color.ToHexA();
+				sTag = "Friend", cColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].m_tColor.ToHexA();
 			else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Party && H::Entities.InParty(clientIndex))
-				sTag = "Party", cColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color.ToHexA();
+				sTag = "Party", cColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].m_tColor.ToHexA();
 			else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Assigned)
 			{
 				if (auto pTag = F::PlayerUtils.GetSignificantTag(clientIndex, 0))
-					sTag = pTag->Name, cColor = pTag->Color.ToHexA();
+					sTag = pTag->m_sName, cColor = pTag->m_tColor.ToHexA();
 			}
 
 			if (!sTag.empty())

@@ -204,9 +204,9 @@ public:
 	VIRTUAL(GetSlot, int, void*, this, 331);
 	VIRTUAL(GetWeaponID, int, void*, this, 382);
 	VIRTUAL(GetDamageType, int, void*, this, 383);
-	VIRTUAL(IsEnergyWeapon, bool, void*, this, 433);
-	VIRTUAL(AreRandomCritsEnabled, bool, void*, this, 403);
-	VIRTUAL(GetWeaponSpread, float, void*, this, 468);
+	VIRTUAL(IsEnergyWeapon, bool, void*, this, 434);
+	VIRTUAL(AreRandomCritsEnabled, bool, void*, this, 404);
+	VIRTUAL(GetWeaponSpread, float, void*, this, 469);
 
 	OFFSET(m_iWeaponMode, int, 996);
 
@@ -228,7 +228,7 @@ public:
 
 		int& iFOV = pOwner->m_iFOV(), nFovBackup = iFOV;
 		iFOV = 70;
-		bool bReturn = reinterpret_cast<bool(*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 426))(this, bIsHeadshot, nullptr);
+		bool bReturn = reinterpret_cast<bool(*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 427))(this, bIsHeadshot, nullptr);
 		iFOV = nFovBackup;
 		return bReturn;
 	}
@@ -347,7 +347,7 @@ public:
 
 	inline void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
 	{
-		reinterpret_cast<void(*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float)>(U::Memory.GetVFunc(this, 400))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
+		reinterpret_cast<void(*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float)>(U::Memory.GetVFunc(this, 401))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
 	}
 
 	inline void GetSpreadAngles(Vec3& out)
@@ -369,7 +369,7 @@ public:
 
 	inline float ApplyFireDelay(float flDelay)
 	{
-		return reinterpret_cast<float(*)(void*, float)>(U::Memory.GetVFunc(this, 408))(this, flDelay);
+		return reinterpret_cast<float(*)(void*, float)>(U::Memory.GetVFunc(this, 409))(this, flDelay);
 	}
 
 	inline bool CalcIsAttackCriticalHelperMelee()

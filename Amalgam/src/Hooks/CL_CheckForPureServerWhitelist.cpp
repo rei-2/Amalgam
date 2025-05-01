@@ -10,7 +10,7 @@ MAKE_HOOK(CL_CheckForPureServerWhitelist, S::CL_CheckForPureServerWhitelist(), v
 		return CALL_ORIGINAL(pFilesToReload);
 #endif
 
-	if (Vars::Misc::Exploits::BypassPure.Value)
+	if (Vars::Misc::Exploits::PureBypass.Value)
 		return;
 
 	CALL_ORIGINAL(pFilesToReload);

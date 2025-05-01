@@ -764,7 +764,7 @@ void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vO
 		vAngOut = vAngIn;
 	else
 	{
-		Vec3 vEndPos = vShootPos + (vForward * 2000.f);
+		Vec3 vEndPos = vShootPos + vForward * 2000.f;
 
 		CGameTrace trace = {};
 		CTraceFilterSetup filter = {};

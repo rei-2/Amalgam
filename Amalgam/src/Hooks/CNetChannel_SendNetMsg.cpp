@@ -72,11 +72,6 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 		// stop lag with voice chat
 		bVoice = true;
 		break;
-	case clc_FileCRCCheck:
-		// whitelist
-		if (Vars::Misc::Exploits::BypassPure.Value)
-			return false;
-		break;
 	case clc_RespondCvarValue:
 		if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 		{

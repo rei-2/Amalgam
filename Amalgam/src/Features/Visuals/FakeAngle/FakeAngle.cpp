@@ -6,7 +6,7 @@
 void CFakeAngle::Run(CTFPlayer* pLocal)
 {
 	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost()
-		|| !F::AntiAim.AntiAimOn() && (!Vars::CL_Move::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift)
+		|| !F::AntiAim.AntiAimOn() && (!Vars::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift)
 		|| !Vars::Chams::FakeAngle::Enabled.Value && !Vars::Glow::FakeAngle::Enabled.Value)
 	{
 		bBonesSetup = false;

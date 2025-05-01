@@ -66,7 +66,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			if (!(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Prioritized && F::PlayerUtils.IsPrioritized(iIndex))
 				&& !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Friends && H::Entities.IsFriend(iIndex))
 				&& !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Party && H::Entities.InParty(iIndex))
-				&& pPlayer->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Team) : !(Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Enemy))
+				&& !(pPlayer->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Enemy : Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Team))
 				continue;
 		}
 
@@ -94,7 +94,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Priority)
 			{
 				if (auto pTag = F::PlayerUtils.GetSignificantTag(pi.friendsID, 1)) // 50 alpha as white outline tends to be more apparent
-					tCache.m_vText.emplace_back(ESPTextEnum::Top, pTag->Name, pTag->Color, H::Draw.IsColorDark(pTag->Color) ? Color_t(255, 255, 255, 50) : Color_t(0, 0, 0));
+					tCache.m_vText.emplace_back(ESPTextEnum::Top, pTag->m_sName, pTag->m_tColor, H::Draw.IsColorDark(pTag->m_tColor) ? Color_t(255, 255, 255, 50) : Color_t(0, 0, 0));
 			}
 
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Labels)
@@ -103,25 +103,25 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 				for (auto& iID : F::PlayerUtils.m_mPlayerTags[pi.friendsID])
 				{
 					auto pTag = F::PlayerUtils.GetTag(iID);
-					if (pTag && pTag->Label)
+					if (pTag && pTag->m_bLabel)
 						vTags.push_back(pTag);
 				}
 				if (H::Entities.IsFriend(pi.friendsID))
 				{
 					auto pTag = &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)];
-					if (pTag->Label)
+					if (pTag->m_bLabel)
 						vTags.push_back(pTag);
 				}
 				if (H::Entities.InParty(pi.friendsID))
 				{
 					auto pTag = &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)];
-					if (pTag->Label)
+					if (pTag->m_bLabel)
 						vTags.push_back(pTag);
 				}
 				if (H::Entities.IsF2P(pi.friendsID))
 				{
 					auto pTag = &F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(F2P_TAG)];
-					if (pTag->Label)
+					if (pTag->m_bLabel)
 						vTags.push_back(pTag);
 				}
 
@@ -130,14 +130,14 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					std::sort(vTags.begin(), vTags.end(), [&](const auto a, const auto b) -> bool
 						{
 							// sort by priority if unequal
-							if (a->Priority != b->Priority)
-								return a->Priority > b->Priority;
+							if (a->m_iPriority != b->m_iPriority)
+								return a->m_iPriority > b->m_iPriority;
 
-							return a->Name < b->Name;
+							return a->m_sName < b->m_sName;
 						});
 
 					for (auto& pTag : vTags) // 50 alpha as white outline tends to be more apparent
-						tCache.m_vText.emplace_back(ESPTextEnum::Right, pTag->Name, pTag->Color, H::Draw.IsColorDark(pTag->Color) ? Color_t(255, 255, 255, 50) : Color_t(0, 0, 0));
+						tCache.m_vText.emplace_back(ESPTextEnum::Right, pTag->m_sName, pTag->m_tColor, H::Draw.IsColorDark(pTag->m_tColor) ? Color_t(255, 255, 255, 50) : Color_t(0, 0, 0));
 				}
 			}
 		}
@@ -244,6 +244,16 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 			// Buffs
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Buffs)
 			{
+				if (pPlayer->InCond(TF_COND_INVULNERABLE) ||
+					pPlayer->InCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED) ||
+					pPlayer->InCond(TF_COND_INVULNERABLE_USER_BUFF) ||
+					pPlayer->InCond(TF_COND_INVULNERABLE_CARD_EFFECT))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Uber", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				else if (pPlayer->InCond(TF_COND_MEGAHEAL))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Megaheal", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
+				else if (pPlayer->InCond(TF_COND_PHASE))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Bonk", Vars::Colors::IndicatorTextMid.Value, Vars::Menu::Theme::Background.Value);
+
 				bool bCrits = false, bMiniCrits = false;
 				if (pPlayer->IsCritBoosted())
 					pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_PARTICLE_CANNON ? bMiniCrits = true : bCrits = true;
@@ -256,25 +266,6 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Crits", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				else if (bMiniCrits)
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Mini-crits", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
-
-				if (pPlayer->InCond(TF_COND_RADIUSHEAL) ||
-					pPlayer->InCond(TF_COND_HEALTH_BUFF) ||
-					pPlayer->InCond(TF_COND_RADIUSHEAL_ON_DAMAGE) ||
-					pPlayer->InCond(TF_COND_MEGAHEAL) ||
-					pPlayer->InCond(TF_COND_HALLOWEEN_QUICK_HEAL) ||
-					pPlayer->InCond(TF_COND_HALLOWEEN_HELL_HEAL) ||
-					pPlayer->InCond(TF_COND_KING_BUFFED))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, "HP+", Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value);
-				else if (pPlayer->InCond(TF_COND_HEALTH_OVERHEALED))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, "HP", Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value);
-
-				if (pPlayer->InCond(TF_COND_INVULNERABLE) ||
-					pPlayer->InCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED) ||
-					pPlayer->InCond(TF_COND_INVULNERABLE_USER_BUFF) ||
-					pPlayer->InCond(TF_COND_INVULNERABLE_CARD_EFFECT))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Uber", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
-				else if (pPlayer->InCond(TF_COND_PHASE))
-					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Bonk", Vars::Colors::IndicatorTextMid.Value, Vars::Menu::Theme::Background.Value);
 
 				/* vaccinator effects */
 				if (pPlayer->InCond(TF_COND_MEDIGUN_UBER_BULLET_RESIST) || pPlayer->InCond(TF_COND_BULLET_IMMUNE))
@@ -296,9 +287,6 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Battalions", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 				if (pPlayer->InCond(TF_COND_REGENONDAMAGEBUFF))
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Conch", Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
-
-				//if (pPlayer->InCond(TF_COND_BLASTJUMPING))
-				//	tCache.m_vText.emplace_back(ESPTextEnum::Right, "Blastjump", Vars::Colors::IndicatorTextMid.Value, Vars::Menu::Theme::Background.Value);
 
 				if (pPlayer->InCond(TF_COND_RUNE_STRENGTH))
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Strength", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
@@ -326,6 +314,19 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Supernova", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
 				if (pPlayer->InCond(TF_COND_POWERUPMODE_DOMINANT))
 					tCache.m_vText.emplace_back(ESPTextEnum::Right, "Dominant", Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
+
+				if (pPlayer->InCond(TF_COND_RADIUSHEAL) ||
+					pPlayer->InCond(TF_COND_HEALTH_BUFF) ||
+					pPlayer->InCond(TF_COND_RADIUSHEAL_ON_DAMAGE) ||
+					pPlayer->InCond(TF_COND_HALLOWEEN_QUICK_HEAL) ||
+					pPlayer->InCond(TF_COND_HALLOWEEN_HELL_HEAL) ||
+					pPlayer->InCond(TF_COND_KING_BUFFED))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "HP+", Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value);
+				else if (pPlayer->InCond(TF_COND_HEALTH_OVERHEALED))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, "HP", Vars::Colors::IndicatorTextGood.Value, Vars::Menu::Theme::Background.Value);
+
+				//if (pPlayer->InCond(TF_COND_BLASTJUMPING))
+				//	tCache.m_vText.emplace_back(ESPTextEnum::Right, "Blastjump", Vars::Colors::IndicatorTextMid.Value, Vars::Menu::Theme::Background.Value);
 			}
 
 			// Debuffs
@@ -447,11 +448,11 @@ void CESP::StoreBuildings(CTFPlayer* pLocal)
 				if (!(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Prioritized && F::PlayerUtils.IsPrioritized(iIndex))
 					&& !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Friends && H::Entities.IsFriend(iIndex))
 					&& !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Party && H::Entities.InParty(iIndex))
-					&& pOwner->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Team) : !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Enemy))
+					&& !(pOwner->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Enemy : Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Team))
 					continue;
 			}
 		}
-		else if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Team) : !(Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Enemy))
+		else if (!(pEntity->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Enemy : Vars::ESP::Building.Value & Vars::ESP::BuildingEnum::Team))
 			continue;
 
 		bool bIsMini = pBuilding->m_bMiniBuilding();
@@ -601,11 +602,11 @@ void CESP::StoreProjectiles(CTFPlayer* pLocal)
 				if (!(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Prioritized && F::PlayerUtils.IsPrioritized(iIndex))
 					&& !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Friends && H::Entities.IsFriend(iIndex))
 					&& !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Party && H::Entities.InParty(iIndex))
-					&& pOwner->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Team) : !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Enemy))
+					&& !(pOwner->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Enemy : Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Team))
 					continue;
 			}
 		}
-		else if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Team) : !(Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Enemy))
+		else if (!(pEntity->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Enemy : Vars::ESP::Projectile.Value & Vars::ESP::ProjectileEnum::Team))
 			continue;
 
 		WorldCache& tCache = m_mWorldCache[pEntity];
@@ -753,7 +754,7 @@ void CESP::StoreObjective(CTFPlayer* pLocal)
 
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_OBJECTIVE))
 	{
-		if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() ? !(Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Team) : !(Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Enemy))
+		if (!(pEntity->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Enemy : Vars::ESP::Objective.Value & Vars::ESP::ObjectiveEnum::Team))
 			continue;
 
 		WorldCache& tCache = m_mWorldCache[pEntity];

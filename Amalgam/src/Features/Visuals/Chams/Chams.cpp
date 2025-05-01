@@ -17,8 +17,11 @@ static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CT
 		return true;
 	}
 
-	if (!Vars::Chams::Player::Relative.Value)
+	if (!Vars::Chams::Relative.Value)
 	{
+		if (pEntity->m_iTeamNum() != pLocal->m_iTeamNum() ? !Vars::Chams::EnemyChams.Value : !Vars::Chams::TeamChams.Value)
+			return false;
+
 		switch (pEntity->m_iTeamNum())
 		{
 		case TF_TEAM_BLUE:
@@ -28,7 +31,6 @@ static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CT
 			*pChams = Chams_t(Vars::Chams::Team::Visible.Value, Vars::Chams::Team::Occluded.Value);
 			return bTeam;
 		}
-		return false;
 	}
 	else
 	{
@@ -43,6 +45,7 @@ static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CT
 			return bTeam;
 		}
 	}
+	return false;
 }
 
 bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
@@ -64,26 +67,6 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Buildings.Value, Vars::Chams::Team::Buildings.Value);
-	}
-	// ragdoll chams
-	case ETFClassID::CTFRagdoll:
-	case ETFClassID::CRagdollProp:
-	case ETFClassID::CRagdollPropAttached:
-	{
-		/*
-		// don't interfere with ragdolls
-		if (Vars::Visuals::Ragdolls::Type.Value)
-		{
-			if (Vars::Visuals::Ragdolls::EnemyOnly.Value && pEntity && pLocal && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
-				return false;
-			else
-				return false;
-		}
-		*/
-		auto pOwner = pEntity->As<CTFRagdoll>()->m_hPlayer().Get();
-		if (!pOwner) pOwner = pEntity;
-
-		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Ragdolls.Value, Vars::Chams::Team::Ragdolls.Value);
 	}
 	// projectile chams
 	case ETFClassID::CBaseProjectile:
@@ -146,6 +129,16 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 		if (!pOwner) pOwner = pEntity;
 
 		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
+	}
+	// ragdoll chams
+	case ETFClassID::CTFRagdoll:
+	case ETFClassID::CRagdollProp:
+	case ETFClassID::CRagdollPropAttached:
+	{
+		auto pOwner = pEntity->As<CTFRagdoll>()->m_hPlayer().Get();
+		if (!pOwner) pOwner = pEntity;
+
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Ragdolls.Value, Vars::Chams::Team::Ragdolls.Value);
 	}
 	// objective chams
 	case ETFClassID::CCaptureFlag:
@@ -244,10 +237,10 @@ void CChams::StencilEnd(IMatRenderContext* pRenderContext, bool bTwoModels)
 	pRenderContext->DepthRange(0.f, 1.f);
 }
 
-void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* pRenderContext, bool bExtra)
+void CChams::DrawModel(CBaseEntity* pEntity, Chams_t& tChams, IMatRenderContext* pRenderContext, bool bExtra)
 {
-	auto vVisibleMaterials = chams.Visible.size() ? chams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
-	auto vOccludedMaterials = chams.Occluded.size() ? chams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
+	auto vVisibleMaterials = tChams.Visible.size() ? tChams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
+	auto vOccludedMaterials = tChams.Occluded.size() ? tChams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
 
 	StencilBegin(pRenderContext, !bExtra);
 
@@ -262,9 +255,9 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(MATERIAL_CULLMODE_CW);
 
-		bRendering = true;
+		m_bRendering = true;
 		pEntity->DrawModel(STUDIO_RENDER);
-		bRendering = false;
+		m_bRendering = false;
 
 		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
@@ -282,9 +275,9 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 			if (pMaterial && pMaterial->m_bInvertCull)
 				pRenderContext->CullMode(MATERIAL_CULLMODE_CW);
 
-			bRendering = true;
+			m_bRendering = true;
 			pEntity->DrawModel(STUDIO_RENDER);
-			bRendering = false;
+			m_bRendering = false;
 
 			if (pMaterial && pMaterial->m_bInvertCull)
 				pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
@@ -297,14 +290,14 @@ void CChams::DrawModel(CBaseEntity* pEntity, Chams_t chams, IMatRenderContext* p
 	I::ModelRender->ForcedMaterialOverride(nullptr);
 
 	if (!bExtra)
-		mEntities[pEntity->entindex()] = true;
+		m_mEntities[pEntity->entindex()] = true;
 }
 
 
 
 void CChams::Store(CTFPlayer* pLocal)
 {
-	vEntities.clear();
+	m_vEntities.clear();
 	if (!pLocal)
 		return;
 
@@ -317,7 +310,7 @@ void CChams::Store(CTFPlayer* pLocal)
 		Chams_t tChams = {};
 		if (GetChams(pLocal, pEntity, &tChams)
 			&& SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity) /*&& pEntity->GetClassID() != ETFClassID::CTFMedigunShield*/))
-			vEntities.emplace_back(pEntity, tChams);
+			m_vEntities.emplace_back(pEntity, tChams);
 
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
 		{
@@ -341,7 +334,7 @@ void CChams::Store(CTFPlayer* pLocal)
 					if (bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum() || bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
 					{
 						tChams = Chams_t(Vars::Chams::Backtrack::Visible.Value, {});
-						vEntities.emplace_back(pEntity, tChams, true);
+						m_vEntities.emplace_back(pEntity, tChams, true);
 					}
 				}
 			}
@@ -350,7 +343,7 @@ void CChams::Store(CTFPlayer* pLocal)
 			if (Vars::Chams::FakeAngle::Enabled.Value && pEntity == pLocal && F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup)
 			{
 				tChams = Chams_t(Vars::Chams::FakeAngle::Visible.Value, {});
-				vEntities.emplace_back(pEntity, tChams, true);
+				m_vEntities.emplace_back(pEntity, tChams, true);
 			}
 		}
 	}
@@ -362,13 +355,13 @@ void CChams::RenderMain()
 	if (!pRenderContext)
 		return;
 
-	for (auto& tInfo : vEntities)
+	for (auto& tInfo : m_vEntities)
 	{
 		if (!tInfo.m_bExtra)
 			DrawModel(tInfo.m_pEntity, tInfo.m_tChams, pRenderContext, tInfo.m_bExtra);
 		else
 		{
-			bExtra = true;
+			m_bExtra = true;
 
 			auto pPlayer = tInfo.m_pEntity->As<CTFPlayer>();
 
@@ -379,7 +372,7 @@ void CChams::RenderMain()
 
 			pPlayer->m_flInvisibility() = flOldInvisibility;
 
-			bExtra = false;
+			m_bExtra = false;
 		}
 	}
 }
@@ -467,7 +460,7 @@ void CChams::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderIn
 }
 void CChams::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
-	if (!bExtra)
+	if (!m_bExtra)
 	{
 		static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 		if (ModelRender_DrawModelExecute)
@@ -494,7 +487,7 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 
 
 
-	auto& vMaterials = Vars::Chams::Viewmodel::WeaponVisible.Value;
+	auto& vMaterials = Vars::Chams::Viewmodel::WeaponMaterial.Value;
 
 	for (auto& [sName, tColor] : vMaterials)
 	{
@@ -530,7 +523,7 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 
 
 
-	auto& vMaterials = Vars::Chams::Viewmodel::HandsVisible.Value;
+	auto& vMaterials = Vars::Chams::Viewmodel::HandsMaterial.Value;
 
 	for (auto& [sName, tColor] : vMaterials)
 	{

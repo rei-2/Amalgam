@@ -846,6 +846,41 @@ struct Color_t
 		a = byte(std::clamp(flA, 0.f, 255.f));
 	}
 
+	inline void GetHSV(float& flH, float& flS, float& flV)
+	{
+		float flR = this->r / 255.f;
+		float flG = this->g / 255.f;
+		float flB = this->b / 255.f;
+
+		float flK = 0.f;
+		if (flG < flB)
+		{
+			float flTemp = flG;
+			flG = flB;
+			flB = flTemp;
+			flK = -1.f;
+		}
+		if (flR < flG)
+		{
+			float flTemp = flR;
+			flR = flG;
+			flG = flTemp;
+			flK = -2.f / 6.f - flK;
+		}
+
+		float flChroma = flR - (flG < flB ? flG : flB);
+		flH = fabsf(flK + (flG - flB) / (6.f * flChroma + FLT_EPSILON)) * 360;
+		flS = flChroma / (flR + FLT_EPSILON) * 100;
+		flV = flR * 100;
+	}
+
+	inline Color_t HueShift(float flShift)
+	{
+		float flH, flS, flV; GetHSV(flH, flS, flV);
+		Color_t tOut; tOut.SetHSV(fmodf(flH + flShift, 360.f), flS, flV, this->a);
+		return tOut;
+	}
+
 	inline bool operator==(Color_t other) const
 	{
 		return r == other.r && g == other.g && b == other.b && a == other.a;

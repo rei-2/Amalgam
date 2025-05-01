@@ -878,6 +878,7 @@
     <ClCompile Include="src\Features\Visuals\ESP\ESP.cpp" />
     <ClCompile Include="src\Features\Visuals\FakeAngle\FakeAngle.cpp" />
     <ClCompile Include="src\Features\Visuals\Glow\Glow.cpp" />
+    <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
     <ClCompile Include="src\Features\Visuals\PlayerConditions\PlayerConditions.cpp" />
     <ClCompile Include="src\Features\Visuals\Materials\Materials.cpp" />
     <ClCompile Include="src\Features\Visuals\Notifications\Notifications.cpp" />
@@ -921,7 +922,6 @@
     <ClCompile Include="src\Hooks\CL_ReadPackets.cpp" />
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
-    <ClCompile Include="src\Hooks\CTFScatterGun_FireBullet.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendDatagram.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendNetMsg.cpp" />
@@ -1172,6 +1172,7 @@
     <ClInclude Include="src\Features\Visuals\ESP\ESP.h" />
     <ClInclude Include="src\Features\Visuals\FakeAngle\FakeAngle.h" />
     <ClInclude Include="src\Features\Visuals\Glow\Glow.h" />
+    <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\Features\Visuals\PlayerConditions\PlayerConditions.h" />
     <ClInclude Include="src\Features\Visuals\PlayerArrows\PlayerArrows.h" />
     <ClInclude Include="src\Features\Visuals\Radar\Radar.h" />

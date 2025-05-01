@@ -14,7 +14,7 @@ MAKE_HOOK(CTFPlayer_BRenderAsZombie, S::CTFPlayer_BRenderAsZombie(), bool,
 	static const auto dwDesired = S::CTFRagdoll_CreateTFRagdoll_BRenderAsZombie_Call();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
-	if (Vars::Visuals::Ragdolls::NoGib.Value && dwRetAddr == dwDesired)
+	if (Vars::Visuals::Removals::Gibs.Value && dwRetAddr == dwDesired)
 		return true;
 
 	return CALL_ORIGINAL(rcx, bWeaponsCheck);

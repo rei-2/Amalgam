@@ -4523,7 +4523,7 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
     if (is_resizable)
         IM_ASSERT(callback != NULL); // Must provide a callback if you set the ImGuiInputTextFlags_CallbackResize flag!
 
-    const bool input_requested_by_nav = (g.ActiveId != id) && ((g.NavActivateId == id) && ((g.NavActivateFlags & ImGuiActivateFlags_PreferInput) || (g.NavInputSource == ImGuiInputSource_Keyboard)));
+    const bool input_requested_by_nav = (g.ActiveId != id) && ((g.NavActivateId == id) && ((g.NavActivateFlags & ImGuiActivateFlags_PreferInput) || (g.NavInputSource == ImGuiInputSource_Keyboard))) && !(flags & ImGuiInputTextFlags_NoKeyboardNavigate);
 
     const bool user_clicked = hovered && io.MouseClicked[0];
     const bool user_scroll_finish = is_multiline && state != NULL && g.ActiveId == 0 && g.ActiveIdPreviousFrame == GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
@@ -6134,7 +6134,7 @@ bool ImGui::ColorButton(const char* desc_id, const ImVec4& col, ImGuiColorEditFl
 
     ImVec4 col_rgb_without_alpha(col_rgb.x, col_rgb.y, col_rgb.z, 1.0f);
     float grid_step = ImMin(size.x, size.y) / (flags & ImGuiColorEditFlags_LargeAlphaGrid ? 2.f : 2.99f);
-    float rounding = flags & ImGuiColorEditFlags_Round ? ImMin(size_arg.x, size_arg.y) * 0.5f : ImMin(g.Style.FrameRounding, grid_step * 0.5f);
+    float rounding = flags & ImGuiColorEditFlags_Round ? ImMin(size_arg.x, size_arg.y) * 0.5f : flags & ImGuiColorEditFlags_NoRoundRestrict ? g.Style.FrameRounding : ImMin(g.Style.FrameRounding, grid_step * 0.5f);
     ImRect bb_inner = bb;
     float off = 0.0f;
     if ((flags & ImGuiColorEditFlags_NoBorder) == 0)

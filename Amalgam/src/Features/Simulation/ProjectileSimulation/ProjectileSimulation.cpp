@@ -71,7 +71,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 	if (Vars::Visuals::Trajectory::Override.Value)
 	{
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffX.Value, Vars::Visuals::Trajectory::OffY.Value, Vars::Visuals::Trajectory::OffZ.Value }, vPos, vAngle, !bTrace ? true : Vars::Visuals::Trajectory::Pipes.Value, bQuick);
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffsetX.Value, Vars::Visuals::Trajectory::OffsetY.Value, Vars::Visuals::Trajectory::OffsetZ.Value }, vPos, vAngle, !bTrace ? true : Vars::Visuals::Trajectory::Pipes.Value, bQuick);
 		tProjInfo = { FNV1A::Hash32Const("custom"), vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::NoSpin.Value, Vars::Visuals::Trajectory::LifeTime.Value };
 		return true;
 	}
@@ -358,8 +358,8 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 		{
 		case FNV1A::Hash32Const("custom"):
 			flDrag = Vars::Visuals::Trajectory::Drag.Value;
-			vDragBasis = { Vars::Visuals::Trajectory::DragBasisX.Value, Vars::Visuals::Trajectory::DragBasisY.Value, Vars::Visuals::Trajectory::DragBasisZ.Value };
-			vAngDragBasis = { Vars::Visuals::Trajectory::AngDragBasisX.Value, Vars::Visuals::Trajectory::AngDragBasisY.Value, Vars::Visuals::Trajectory::AngDragBasisZ.Value };
+			vDragBasis = { Vars::Visuals::Trajectory::DragX.Value, Vars::Visuals::Trajectory::DragY.Value, Vars::Visuals::Trajectory::DragZ.Value };
+			vAngDragBasis = { Vars::Visuals::Trajectory::AngularDragX.Value, Vars::Visuals::Trajectory::AngularDragY.Value, Vars::Visuals::Trajectory::AngularDragZ.Value };
 			break;
 		case FNV1A::Hash32Const("models/weapons/w_models/w_grenade_grenadelauncher.mdl"):
 		case FNV1A::Hash32Const("models/workshop/weapons/c_models/c_quadball/w_quadball_grenade.mdl"):
@@ -447,7 +447,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 			{
 			case FNV1A::Hash32Const("custom"):
 				vVelocity += vUp * Vars::Visuals::Trajectory::UpVelocity.Value;
-				vAngularVelocity = { Vars::Visuals::Trajectory::AngVelocityX.Value, Vars::Visuals::Trajectory::AngVelocityY.Value, Vars::Visuals::Trajectory::AngVelocityZ.Value };
+				vAngularVelocity = { Vars::Visuals::Trajectory::AngularVelocityX.Value, Vars::Visuals::Trajectory::AngularVelocityY.Value, Vars::Visuals::Trajectory::AngularVelocityZ.Value };
 				break;
 			case FNV1A::Hash32Const("models/weapons/w_models/w_grenade_grenadelauncher.mdl"):
 			case FNV1A::Hash32Const("models/workshop/weapons/c_models/c_quadball/w_quadball_grenade.mdl"):

@@ -13,7 +13,7 @@ private:
 public:
 	void Initialize();
 	void Unload();
-	ConVar* FindVar(const char* cvarname);
+	ConVar* FindVar(const char* sCVar);
 };
 
 ADD_FEATURE_CUSTOM(CConVars, ConVars, U);

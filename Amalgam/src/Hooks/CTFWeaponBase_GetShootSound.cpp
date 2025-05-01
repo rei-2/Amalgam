@@ -21,17 +21,17 @@ MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const c
 
 			int nOldTeam = pWeapon->m_iTeamNum();
 			pWeapon->m_iTeamNum() = TF_TEAM_COUNT;
-			auto ret = CALL_ORIGINAL(rcx, iIndex);
+			auto sReturn = CALL_ORIGINAL(rcx, iIndex);
 			pWeapon->m_iTeamNum() = nOldTeam;
 
-			switch (FNV1A::Hash32(ret))
+			switch (FNV1A::Hash32(sReturn))
 			{
 			case FNV1A::Hash32Const("Weapon_FlameThrower.Fire"): return "MVM.GiantPyro_FlameStart";
 			case FNV1A::Hash32Const("Weapon_FlameThrower.FireLoop"): return "MVM.GiantPyro_FlameLoop";
 			case FNV1A::Hash32Const("Weapon_GrenadeLauncher.Single"): return "MVM.GiantDemoman_Grenadeshoot";
 			}
 
-			return ret;
+			return sReturn;
 		}
 	}
 

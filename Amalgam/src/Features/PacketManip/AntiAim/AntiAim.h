@@ -20,7 +20,7 @@ public:
 	bool YawOn();
 	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
-	int GetEdge(CTFPlayer* pEntity, float flEdgeOrigYaw, bool bUpPitch);
+	int GetEdge(CTFPlayer* pEntity, float flEdgeOrigYaw);
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket);
 
 	inline int AntiAimTicks() { return 3; }

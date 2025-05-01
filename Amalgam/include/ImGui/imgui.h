@@ -1186,7 +1186,9 @@ enum ImGuiInputTextFlags_
     ImGuiInputTextFlags_CallbackCharFilter  = 1 << 21,  // Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.
     ImGuiInputTextFlags_CallbackResize      = 1 << 22,  // Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
     ImGuiInputTextFlags_CallbackEdit        = 1 << 23,  // Callback on any edit. Note that InputText() already returns true on edit + you can always use IsItemEdited(). The callback is useful to manipulate the underlying buffer while focus is active.
-
+    
+    ImGuiInputTextFlags_NoKeyboardNavigate  = 1 << 24,   // Pressing TAB no focuss..
+    
     // Obsolete names
     //ImGuiInputTextFlags_AlwaysInsertMode  = ImGuiInputTextFlags_AlwaysOverwrite   // [renamed in 1.82] name was not matching behavior
 };
@@ -1764,8 +1766,6 @@ enum ImGuiColorEditFlags_
 
     // User Options (right-click on widget to change some of them).
     ImGuiColorEditFlags_AlphaBar        = 1 << 16,  //              // ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.
-    ImGuiColorEditFlags_Round           = 1 << 17,  //              // ColorEdit, ColorPicker: rouund.
-    ImGuiColorEditFlags_LargeAlphaGrid  = 1 << 18,  //              // ColorEdit, ColorPicker: large.
     ImGuiColorEditFlags_HDR             = 1 << 19,  //              // (WIP) ColorEdit: Currently only disable 0.0f..1.0f limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).
     ImGuiColorEditFlags_DisplayRGB      = 1 << 20,  // [Display]    // ColorEdit: override _display_ type among RGB/HSV/Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.
     ImGuiColorEditFlags_DisplayHSV      = 1 << 21,  // [Display]    // "
@@ -1776,6 +1776,10 @@ enum ImGuiColorEditFlags_
     ImGuiColorEditFlags_PickerHueWheel  = 1 << 26,  // [Picker]     // ColorPicker: wheel for Hue, triangle for Sat/Value.
     ImGuiColorEditFlags_InputRGB        = 1 << 27,  // [Input]      // ColorEdit, ColorPicker: input and output data in RGB format.
     ImGuiColorEditFlags_InputHSV        = 1 << 28,  // [Input]      // ColorEdit, ColorPicker: input and output data in HSV format.
+    
+    ImGuiColorEditFlags_LargeAlphaGrid  = 1 << 29,  //              // ColorEdit, ColorPicker: large.
+    ImGuiColorEditFlags_Round           = 1 << 30,  //              // ColorEdit, ColorPicker: rouund.
+    ImGuiColorEditFlags_NoRoundRestrict = 1 << 31,  //              // ColorEdit, ColorPicker: semi...round...
 
     // Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to
     // override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.

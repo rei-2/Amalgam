@@ -20,10 +20,10 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 
 	static float flPassiveTime = 0.f;
 	flPassiveTime = std::max(flPassiveTime - TICK_INTERVAL, -TICK_INTERVAL);
-	if (Vars::CL_Move::Doubletap::PassiveRecharge.Value && 0.f >= flPassiveTime)
+	if (Vars::Doubletap::PassiveRecharge.Value && 0.f >= flPassiveTime)
 	{
 		bPassive = true;
-		flPassiveTime += 1.f / Vars::CL_Move::Doubletap::PassiveRecharge.Value;
+		flPassiveTime += 1.f / Vars::Doubletap::PassiveRecharge.Value;
 	}
 
 	if (m_iDeficit)
@@ -32,7 +32,7 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 		m_iDeficit--, m_iShiftedTicks--;
 	}
 
-	if (!Vars::CL_Move::Doubletap::RechargeTicks.Value && !bPassive
+	if (!Vars::Doubletap::RechargeTicks.Value && !bPassive
 		|| m_bDoubletap || m_bWarp || m_iShiftedTicks == m_iMaxShift || m_bSpeedhack)
 		return;
 
@@ -46,12 +46,12 @@ void CTickshiftHandler::Warp()
 		return;
 
 	m_bWarp = false;
-	if (!Vars::CL_Move::Doubletap::Warp.Value
+	if (!Vars::Doubletap::Warp.Value
 		|| !m_iShiftedTicks || m_bDoubletap || m_bRecharge || m_bSpeedhack)
 		return;
 
 	m_bWarp = true;
-	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::CL_Move::Doubletap::WarpRate.Value + 1, 0);
+	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::Doubletap::WarpRate.Value + 1, 0);
 }
 
 void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -59,13 +59,13 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!m_bGoalReached)
 		return;
 
-	if (!Vars::CL_Move::Doubletap::Doubletap.Value
+	if (!Vars::Doubletap::Doubletap.Value
 		|| m_iWait || m_bWarp || m_bRecharge || m_bSpeedhack)
 		return;
 
 	int iTicks = std::min(m_iShiftedTicks + 1, 22);
 	auto pWeapon = H::Entities.GetWeapon();
-	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
+	if (!(iTicks >= Vars::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
 		return;
 
 	bool bAttacking = G::PrimaryWeaponType == EWeaponType::MELEE ? pCmd->buttons & IN_ATTACK : G::Attacking;
@@ -73,14 +73,14 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 
 	m_bDoubletap = true;
-	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::CL_Move::Doubletap::TickLimit.Value + 1, 0);
-	if (Vars::CL_Move::Doubletap::AntiWarp.Value)
+	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::Doubletap::TickLimit.Value + 1, 0);
+	if (Vars::Doubletap::AntiWarp.Value)
 		m_bAntiWarp = pLocal->m_hGroundEntity();
 }
 
 void CTickshiftHandler::Speedhack()
 {
-	m_bSpeedhack = Vars::CL_Move::SpeedEnabled.Value;
+	m_bSpeedhack = Vars::Speedhack::Enabled.Value;
 	if (!m_bSpeedhack)
 		return;
 
@@ -214,7 +214,7 @@ void CTickshiftHandler::CLMoveFunc(float accumulated_extra_samples, bool bFinalT
 
 	int iTicks = std::min(m_iShiftedTicks + 1, 22);
 	auto pWeapon = H::Entities.GetWeapon();
-	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
+	if (!(iTicks >= Vars::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
 		m_iWait = 1;
 
 	m_bGoalReached = bFinalTick && m_iShiftedTicks == m_iShiftedGoal;
@@ -232,13 +232,13 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 		case TF_WEAPON_PIPEBOMBLAUNCHER:
 		case TF_WEAPON_CANNON:
 			if (!G::CanSecondaryAttack)
-				m_iWait = Vars::CL_Move::Doubletap::TickLimit.Value;
+				m_iWait = Vars::Doubletap::TickLimit.Value;
 			break;
 		default:
 			if (!ValidWeapon(pWeapon))
 				m_iWait = 2;
 			else if (G::Attacking || !G::CanPrimaryAttack && !G::Reloading)
-				m_iWait = Vars::CL_Move::Doubletap::TickLimit.Value;
+				m_iWait = Vars::Doubletap::TickLimit.Value;
 		}
 	}
 	else
@@ -248,7 +248,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 	m_iMaxShift = sv_maxusrcmdprocessticks->GetInt();
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 		m_iMaxShift = std::min(m_iMaxShift, 8);
-	m_iMaxShift -= std::max(24 - std::clamp(Vars::CL_Move::Doubletap::RechargeLimit.Value, 1, 24), F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
+	m_iMaxShift -= std::max(24 - std::clamp(Vars::Doubletap::RechargeLimit.Value, 1, 24), F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
 
 	while (m_iShiftedTicks > m_iMaxShift)
 		CLMoveFunc(accumulated_extra_samples, false); // skim any excess ticks
@@ -262,7 +262,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 
 	if (m_bSpeedhack)
 	{
-		m_iShiftedTicks = Vars::CL_Move::SpeedFactor.Value;
+		m_iShiftedTicks = Vars::Speedhack::Factor.Value;
 		m_iShiftedGoal = 0;
 	}
 
@@ -348,7 +348,7 @@ void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
 
 	*pSendPacket = m_iShiftedGoal == m_iShiftedTicks;
 	if (I::ClientState->chokedcommands >= 21 // prevent overchoking
-		|| m_iShiftedTicks == m_iShiftedGoal + Vars::CL_Move::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
+		|| m_iShiftedTicks == m_iShiftedGoal + Vars::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
 		*pSendPacket = true;
 }
 
@@ -357,15 +357,15 @@ int CTickshiftHandler::GetTicks(CTFWeaponBase* pWeapon)
 	if (m_bDoubletap && m_iShiftedGoal < m_iShiftedTicks)
 		return m_iShiftedTicks - m_iShiftedGoal;
 
-	if (!Vars::CL_Move::Doubletap::Doubletap.Value
+	if (!Vars::Doubletap::Doubletap.Value
 		|| m_iWait || m_bWarp || m_bRecharge || m_bSpeedhack || F::AutoRocketJump.IsRunning())
 		return 0;
 
 	int iTicks = std::min(m_iShiftedTicks + 1, 22);
-	if (!(iTicks >= Vars::CL_Move::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
+	if (!(iTicks >= Vars::Doubletap::TickLimit.Value || pWeapon && GetShotsWithinPacket(pWeapon, iTicks) > 1))
 		return 0;
 	
-	return std::min(Vars::CL_Move::Doubletap::TickLimit.Value - 1, m_iMaxShift);
+	return std::min(Vars::Doubletap::TickLimit.Value - 1, m_iMaxShift);
 }
 
 int CTickshiftHandler::GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks)

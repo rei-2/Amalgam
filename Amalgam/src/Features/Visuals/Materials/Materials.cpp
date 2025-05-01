@@ -348,8 +348,8 @@ void CMaterials::RemoveMaterial(const char* sName)
 		removeFromVar(Vars::Chams::World::Occluded);
 		removeFromVar(Vars::Chams::Backtrack::Visible);
 		removeFromVar(Vars::Chams::FakeAngle::Visible);
-		removeFromVar(Vars::Chams::Viewmodel::WeaponVisible);
-		removeFromVar(Vars::Chams::Viewmodel::HandsVisible);
+		removeFromVar(Vars::Chams::Viewmodel::WeaponMaterial);
+		removeFromVar(Vars::Chams::Viewmodel::HandsMaterial);
 	}
 
 	m_bLoaded = true;

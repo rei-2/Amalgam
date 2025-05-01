@@ -22,9 +22,10 @@ void CConVars::Unload()
 	}
 }
 
-ConVar* CConVars::FindVar(const char* cvarname)
+ConVar* CConVars::FindVar(const char* sCVar)
 {
-	if (!mCVarMap.contains(FNV1A::Hash32Const(cvarname)))
-		mCVarMap[FNV1A::Hash32Const(cvarname)] = I::CVar->FindVar(cvarname);
-	return mCVarMap[FNV1A::Hash32Const(cvarname)];
+	auto uHash = FNV1A::Hash32(sCVar);
+	if (!mCVarMap.contains(uHash))
+		mCVarMap[uHash] = I::CVar->FindVar(sCVar);
+	return mCVarMap[uHash];
 }

@@ -14,35 +14,35 @@ MAKE_HOOK(CTFHudDeathNotice_AddAdditionalMsg, S::CTFHudDeathNotice_AddAdditional
 		return CALL_ORIGINAL(rcx, iKillerID, iVictimID, pMsgKey);
 #endif
 
-	if (iKillerID == I::EngineClient->GetLocalPlayer() && (!Vars::Visuals::Misc::LocalDominationOverride.Value.empty() || !Vars::Visuals::Misc::LocalRevengeOverride.Value.empty())
-		|| (!Vars::Visuals::Misc::DominationOverride.Value.empty() || !Vars::Visuals::Misc::RevengeOverride.Value.empty()))
+	if (iKillerID == I::EngineClient->GetLocalPlayer() && (!Vars::Visuals::Other::LocalDominationOverride.Value.empty() || !Vars::Visuals::Other::LocalRevengeOverride.Value.empty())
+		|| (!Vars::Visuals::Other::DominationOverride.Value.empty() || !Vars::Visuals::Other::RevengeOverride.Value.empty()))
 	{
 		switch (FNV1A::Hash32(pMsgKey))
 		{
 		case FNV1A::Hash32Const("#Msg_Dominating"):
 		case FNV1A::Hash32Const("#Msg_Dominating_What"):
-			if (iKillerID == I::EngineClient->GetLocalPlayer() && !Vars::Visuals::Misc::LocalDominationOverride.Value.empty())
+			if (iKillerID == I::EngineClient->GetLocalPlayer() && !Vars::Visuals::Other::LocalDominationOverride.Value.empty())
 			{
 				bShouldOverride = true;
-				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Misc::LocalDominationOverride.Value);
+				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Other::LocalDominationOverride.Value);
 			}
-			else if (!Vars::Visuals::Misc::DominationOverride.Value.empty())
+			else if (!Vars::Visuals::Other::DominationOverride.Value.empty())
 			{
 				bShouldOverride = true;
-				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Misc::DominationOverride.Value);
+				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Other::DominationOverride.Value);
 			}
 			break;
 		case FNV1A::Hash32Const("#Msg_Revenge"):
 		case FNV1A::Hash32Const("#Msg_Revenge_What"):
-			if (iKillerID == I::EngineClient->GetLocalPlayer() && !Vars::Visuals::Misc::LocalRevengeOverride.Value.empty())
+			if (iKillerID == I::EngineClient->GetLocalPlayer() && !Vars::Visuals::Other::LocalRevengeOverride.Value.empty())
 			{
 				bShouldOverride = true;
-				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Misc::LocalRevengeOverride.Value);
+				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Other::LocalRevengeOverride.Value);
 			}
-			else if (!Vars::Visuals::Misc::RevengeOverride.Value.empty())
+			else if (!Vars::Visuals::Other::RevengeOverride.Value.empty())
 			{
 				bShouldOverride = true;
-				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Misc::RevengeOverride.Value);
+				sOverride = SDK::ConvertUtf8ToWide(Vars::Visuals::Other::RevengeOverride.Value);
 			}
 		}
 		if (bShouldOverride)

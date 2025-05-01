@@ -268,6 +268,7 @@ bool CCritHack::WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly)
 	case TF_WEAPON_COMPOUND_BOW:
 	case TF_WEAPON_JAR:
 	case TF_WEAPON_KNIFE:
+	case TF_WEAPON_PASSTIME_GUN:
 		return false;
 	}
 
@@ -363,7 +364,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		{
 			if (bCanCrit && bPressed && iClosestCrit)
 				pCmd->command_number = iClosestCrit;
-			else if (Vars::CritHack::AvoidRandom.Value && iClosestSkip)
+			else if (Vars::CritHack::AvoidRandomCrits.Value && iClosestSkip)
 				pCmd->command_number = iClosestSkip;
 		}
 		else if (Vars::Misc::Game::AntiCheatCritHack.Value)
@@ -372,7 +373,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 			bool bCritCommand = IsCritCommand(iSlot, tStorage.m_iEntIndex, tStorage.m_flMultCritChance, pCmd->command_number, true, false);
 			if (bCanCrit && bPressed && !bCritCommand
-				|| Vars::CritHack::AvoidRandom.Value && !bPressed && bCritCommand)
+				|| Vars::CritHack::AvoidRandomCrits.Value && !bPressed && bCritCommand)
 				bShouldAvoid = true;
 
 			if (bShouldAvoid)
@@ -412,7 +413,7 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	const bool bPressed = Vars::CritHack::ForceCrits.Value || pWeapon->GetSlot() == SLOT_MELEE && Vars::CritHack::AlwaysMeleeCrit.Value && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::OriginalMove.m_iButtons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
 	if (bCanCrit && bPressed && closestCrit)
 		return closestCrit;
-	else if (Vars::CritHack::AvoidRandom.Value && closestSkip)
+	else if (Vars::CritHack::AvoidRandomCrits.Value && closestSkip)
 		return closestSkip;
 
 	return pCmd->command_number;
@@ -462,7 +463,16 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 				iDamage = std::min(iDamage, tHistory.m_iNewHealth);
 			else if (pVictim && (pVictim->m_bFeignDeathReady() || pVictim->InCond(TF_COND_FEIGN_DEATH))) // damage number is spoofed upon sending, correct it
 			{
-				int iOldHealth = tHistory.m_mHistory.contains(iHealth) ? tHistory.m_mHistory[iHealth].m_iOldHealth : tHistory.m_iNewHealth;
+				int iOldHealth = (tHistory.m_mHistory.contains(iHealth) ? tHistory.m_mHistory[iHealth].m_iOldHealth : tHistory.m_iNewHealth) % 32768;
+				if (iHealth > iOldHealth)
+				{
+					for (auto& [_, tOldHealth] : tHistory.m_mHistory)
+					{
+						int iOldHealth2 = tOldHealth.m_iOldHealth % 32768;
+						if (iOldHealth2 > iHealth)
+							iOldHealth = iHealth > iOldHealth ? iOldHealth2 : std::min(iOldHealth, iOldHealth2);
+					}
+				}
 				iDamage = std::clamp(iOldHealth - iHealth, 0, iDamage);
 			}
 		}
@@ -537,11 +547,11 @@ void CCritHack::StoreHealthHistory(int iIndex, int iHealth, bool bDamage)
 		tHistory = { iHealth, iHealth };
 	else if (iHealth != tHistory.m_iNewHealth)
 	{
-		tHistory.m_iOldHealth = std::max(bDamage && tHistory.m_mHistory.contains(iHealth) ? tHistory.m_mHistory[iHealth].m_iOldHealth : tHistory.m_iNewHealth, iHealth);
+		tHistory.m_iOldHealth = std::max(bDamage && tHistory.m_mHistory.contains(iHealth % 32768) ? tHistory.m_mHistory[iHealth % 32768].m_iOldHealth : tHistory.m_iNewHealth, iHealth);
 		tHistory.m_iNewHealth = iHealth;
 	}
 
-	tHistory.m_mHistory[tHistory.m_iNewHealth] = { tHistory.m_iOldHealth, float(SDK::PlatFloatTime()) };
+	tHistory.m_mHistory[iHealth % 32768] = { tHistory.m_iOldHealth, float(SDK::PlatFloatTime()) };
 	while (tHistory.m_mHistory.size() > 3)
 	{
 		int iIndex2; float flMin = std::numeric_limits<float>::max();
@@ -594,7 +604,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 	}
 
 	auto iSlot = pWeapon->GetSlot();
-	if (!m_mStorage.contains(iSlot) || !m_mStorage[iSlot].m_bActive)
+	if (!m_mStorage.contains(iSlot) || !m_mStorage[iSlot].m_bActive || pWeapon->GetWeaponID() == TF_WEAPON_PASSTIME_GUN)
 		return;
 	else if (!WeaponCanCrit(pWeapon))
 	{
@@ -603,9 +613,6 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 	}
 
 	auto& tStorage = m_mStorage[iSlot];
-	if (!tStorage.m_bActive)
-		return;
-
 	auto bRapidFire = pWeapon->IsRapidFire();
 	float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
 

@@ -4,13 +4,14 @@
 #include "../AimbotGlobal/AimbotGlobal.h"
 
 Enum(PointType, None = 0, Regular = 1 << 0, Obscured = 1 << 1, ObscuredExtra = 1 << 2, ObscuredMulti = 1 << 3)
+Enum(Calculated, Pending, Good, Time, Bad)
 
 struct Solution_t
 {
 	float m_flPitch = 0.f;
 	float m_flYaw = 0.f;
 	float m_flTime = 0.f;
-	int m_iCalculated = 0;
+	int m_iCalculated = CalculatedEnum::Pending;
 };
 struct Point_t
 {
@@ -48,8 +49,11 @@ class CAimbotProjectile
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	int GetHitboxPriority(int nHitbox, Target_t& tTarget, Info_t& tInfo);
+
 	std::unordered_map<int, Vec3> GetDirectPoints(Target_t& tTarget, Info_t& tInfo);
 	std::vector<Point_t> GetSplashPoints(Target_t& tTarget, std::vector<std::pair<Vec3, int>>& vSpherePoints, Info_t& tInfo, int iSimTime);
+	void SetupSplashPoints(Target_t& tTarget, std::vector<std::pair<Vec3, int>>& vSpherePoints, Info_t& tInfo, std::vector<std::pair<Vec3, Vec3>>& vSimplePoints);
+	std::vector<Point_t> GetSplashPointsSimple(Target_t& tTarget, std::vector<std::pair<Vec3, Vec3>>& vSpherePoints, Info_t& tInfo, int iSimTime);
 
 	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, Info_t& tInfo, int iSimTime, Solution_t& out, bool bAccuracy = true);
 	bool TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Target_t& tTarget, Vec3& vPoint, Vec3& vAngles, int iSimTime, bool bSplash, bool* pHitSolid = nullptr, std::deque<Vec3>* pProjectilePath = nullptr);

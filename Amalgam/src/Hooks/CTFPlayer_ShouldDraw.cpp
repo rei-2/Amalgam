@@ -24,7 +24,7 @@ MAKE_HOOK(CTFPlayer_ShouldDraw, S::CTFPlayer_ShouldDraw(), bool,
 		if (pLocal && pLocal->IsAlive() && rcx == pLocal->GetClientRenderable())
 			return true;
 		else if (pTarget && pTarget->IsAlive() && rcx == pTarget->GetClientRenderable())
-			return Vars::Visuals::ThirdPerson::Enabled.Value;
+			return Vars::Visuals::Thirdperson::Enabled.Value;
 	}
 
 	return CALL_ORIGINAL(rcx);
@@ -51,7 +51,7 @@ MAKE_HOOK(CBasePlayer_ShouldDrawThisPlayer, S::CBasePlayer_ShouldDrawThisPlayer(
 		if (pLocal && pLocal->IsAlive() && rcx == pLocal)
 			return true;
 		else if (pTarget && pTarget->IsAlive() && rcx == pTarget)
-			return Vars::Visuals::ThirdPerson::Enabled.Value;
+			return Vars::Visuals::Thirdperson::Enabled.Value;
 	}
 
 	return CALL_ORIGINAL(rcx);

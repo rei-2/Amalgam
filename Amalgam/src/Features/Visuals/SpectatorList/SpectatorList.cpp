@@ -111,11 +111,11 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 
 		Color_t tColor = Vars::Menu::Theme::Active.Value;
 		if (Spectator.m_bIsFriend)
-			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].Color;
+			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].m_tColor;
 		else if (Spectator.m_bInParty)
-			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].Color;
+			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].m_tColor;
 		else if (Spectator.m_bRespawnTimeIncreased)
-			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].Color;
+			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].m_tColor;
 		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
 			tColor = tColor.Lerp({ 255, 150, 0, 255 }, 0.5f);
 		H::Draw.StringOutlined(fFont, x + iconOffset, y, tColor, Vars::Menu::Theme::Background.Value, align, std::format("{} ({} - respawn {}s)", Spectator.m_sName, Spectator.m_sMode, ceilf(Spectator.m_flRespawnIn)).c_str());

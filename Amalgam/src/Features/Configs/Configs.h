@@ -36,11 +36,11 @@ public:
 
 	bool SaveConfig(const std::string& sConfigName, bool bNotify = true);
 	bool LoadConfig(const std::string& sConfigName, bool bNotify = true);
+	void DeleteConfig(const std::string& sConfigName, bool bNotify = true);
+	void ResetConfig(const std::string& sConfigName, bool bNotify = true);
 	bool SaveVisual(const std::string& sConfigName, bool bNotify = true);
 	bool LoadVisual(const std::string& sConfigName, bool bNotify = true);
-	void RemoveConfig(const std::string& sConfigName, bool bNotify = true);
-	void RemoveVisual(const std::string& sConfigName, bool bNotify = true);
-	void ResetConfig(const std::string& sConfigName, bool bNotify = true);
+	void DeleteVisual(const std::string& sConfigName, bool bNotify = true);
 	void ResetVisual(const std::string& sConfigName, bool bNotify = true);
 
 	boost::property_tree::ptree ColorToTree(const Color_t& color);

@@ -18,7 +18,7 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVFunc(I::ModelRender, 19)
 #endif
 
 	/*
-	if (!F::Chams.iRendering && !F::Glow.bRendering && !I::EngineVGui->IsGameUIVisible())
+	if (!F::Chams.iRendering && !F::Glow.m_bRendering && !I::EngineVGui->IsGameUIVisible())
 	{
 		if (const auto& pEntity = I::ClientEntityList->GetClientEntity(pInfo.m_nEntIndex))
 			Utils::ConLog("Entity", std::format("{}, {}, {}", pInfo.m_nEntIndex, int(pEntity->GetClassID()), I::ModelInfoClient->GetModelName(pInfo.m_pModel)).c_str());
@@ -31,12 +31,12 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVFunc(I::ModelRender, 19)
 		|| F::CameraWindow.m_bDrawing || !F::Materials.m_bLoaded || G::Unload)
 		return CALL_ORIGINAL(rcx, pState, pInfo, pBoneToWorld);
 
-	if (F::Chams.bRendering)
+	if (F::Chams.m_bRendering)
 		return F::Chams.RenderHandler(pState, pInfo, pBoneToWorld);
-	if (F::Glow.bRendering)
+	if (F::Glow.m_bRendering)
 		return F::Glow.RenderHandler(pState, pInfo, pBoneToWorld);
 
-	if (F::Chams.mEntities[pInfo.entity_index])
+	if (F::Chams.m_mEntities[pInfo.entity_index])
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(pInfo.entity_index);

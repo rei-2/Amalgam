@@ -204,7 +204,7 @@ void CMovementSimulation::Store()
 
 
 
-bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool useHitchance, bool cancelStrafe)
+bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool bHitchance, bool bStrafe)
 {
 	if (!pEntity || !pEntity->IsPlayer() || !pEntity->As<CTFPlayer>()->IsAlive())
 	{
@@ -264,10 +264,10 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 		: Vars::Aimbot::Projectile::AirSamples.Value;
 
 	// calculate strafe if desired
-	bool bCalculated = cancelStrafe ? false : StrafePrediction(tStorage, iStrafeSamples);
+	bool bCalculated = bStrafe ? StrafePrediction(tStorage, iStrafeSamples) : false;
 
 	// really hope this doesn't work like shit
-	if (useHitchance && bCalculated && !pPlayer->m_vecVelocity().IsZero() && Vars::Aimbot::Projectile::Hitchance.Value)
+	if (bHitchance && bCalculated && !pPlayer->m_vecVelocity().IsZero() && Vars::Aimbot::Projectile::HitChance.Value)
 	{
 		const auto& vRecords = mRecords[pPlayer->entindex()];
 		const auto iSamples = vRecords.size();
@@ -297,9 +297,9 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 			}
 		}
 
-		if (flCurrentChance < Vars::Aimbot::Projectile::Hitchance.Value / 100)
+		if (flCurrentChance < Vars::Aimbot::Projectile::HitChance.Value / 100)
 		{
-			SDK::Output("MovementSimulation", std::format("Hitchance ({}% < {}%)", flCurrentChance * 100, Vars::Aimbot::Projectile::Hitchance.Value).c_str(), { 80, 200, 120 }, Vars::Debug::Logging.Value);
+			SDK::Output("MovementSimulation", std::format("Hitchance ({}% < {}%)", flCurrentChance * 100, Vars::Aimbot::Projectile::HitChance.Value).c_str(), { 80, 200, 120 }, Vars::Debug::Logging.Value);
 
 			tStorage.m_bFailed = true;
 			return false;
@@ -377,10 +377,14 @@ static inline float GetGravity()
 	return sv_gravity->GetFloat();
 }
 
-static inline float GetFrictionScale(float flVelocityXY, float flTurn, float flVelocityZ, float flMin = 500.f, float flMax = 1500.f)
+static inline float GetFrictionScale(float flVelocityXY, float flTurn, float flVelocityZ, float flMin = 50.f, float flMax = 150.f)
 {
 	if (0.f >= flVelocityZ || flVelocityZ > 250.f)
 		return 1.f;
+
+	static auto sv_airaccelerate = U::ConVars.FindVar("sv_airaccelerate");
+	float flScale = std::max(sv_airaccelerate->GetFloat(), 1.f);
+	flMin *= flScale, flMax *= flScale;
 
 	// entity friction will be 0.25f if velocity is between 0.f and 250.f
 	return Math::RemapVal(fabsf(flVelocityXY * flTurn), flMin, flMax, 1.f, 0.25f);
@@ -411,7 +415,7 @@ static inline void VisualizeRecords(MoveData& tRecord1, MoveData& tRecord2, Colo
 		Vec3 vVelocity = tRecord1.m_vVelocity.To2D().Normalized() * 5;
 		vVelocity = Math::RotatePoint(vVelocity, {}, { 0, flYaw > 0 ? 90.f : -90.f, 0 });
 		if (Vars::Aimbot::Projectile::MovesimFrictionFlags.Value & Vars::Aimbot::Projectile::MovesimFrictionFlagsEnum::CalculateIncrease && tRecord1.m_iMode == 1)
-			vVelocity /= GetFrictionScale(tRecord1.m_vVelocity.Length2D(), flYaw, tRecord1.m_vVelocity.z + GetGravity() * TICK_INTERVAL, 0.f, 560.f);
+			vVelocity /= GetFrictionScale(tRecord1.m_vVelocity.Length2D(), flYaw, tRecord1.m_vVelocity.z + GetGravity() * TICK_INTERVAL, 0.f, 56.f);
 		G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tRecord1.m_vOrigin, tRecord1.m_vOrigin + vVelocity), I::GlobalVars->curtime + 5.f, tColor);
 	}
 }
@@ -427,7 +431,7 @@ static bool GetYawDifference(MoveData& tRecord1, MoveData& tRecord2, bool bStart
 	if (flMaxSpeed && tRecord1.m_iMode != 1)
 		*pYaw *= std::clamp(tRecord1.m_vVelocity.Length2D() / flMaxSpeed, 0.f, 1.f);
 	if (Vars::Aimbot::Projectile::MovesimFrictionFlags.Value & Vars::Aimbot::Projectile::MovesimFrictionFlagsEnum::CalculateIncrease && tRecord1.m_iMode == 1)
-		*pYaw /= GetFrictionScale(tRecord1.m_vVelocity.Length2D(), *pYaw, tRecord1.m_vVelocity.z + GetGravity() * TICK_INTERVAL, 0.f, 560.f);
+		*pYaw /= GetFrictionScale(tRecord1.m_vVelocity.Length2D(), *pYaw, tRecord1.m_vVelocity.z + GetGravity() * TICK_INTERVAL, 0.f, 56.f);
 	if (fabsf(*pYaw) > 45.f)
 		return false;
 

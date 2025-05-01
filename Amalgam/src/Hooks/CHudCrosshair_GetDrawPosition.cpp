@@ -10,7 +10,7 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 		return CALL_ORIGINAL(pX, pY, pbBehindCamera, angleCrosshairOffset);
 #endif
 
-	if (!Vars::Visuals::Viewmodel::CrosshairAim.Value && !Vars::Visuals::ThirdPerson::Crosshair.Value
+	if (!Vars::Visuals::Viewmodel::CrosshairAim.Value && !Vars::Visuals::Thirdperson::Crosshair.Value
 		|| Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
 		return CALL_ORIGINAL(pX, pY, pbBehindCamera, angleCrosshairOffset);
 
@@ -32,7 +32,7 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 		}
 	}
 
-	if (Vars::Visuals::ThirdPerson::Crosshair.Value && !bSet && I::Input->CAM_IsThirdPerson())
+	if (Vars::Visuals::Thirdperson::Crosshair.Value && !bSet && I::Input->CAM_IsThirdPerson())
 	{
 		Vec3 vAngles = I::EngineClient->GetViewAngles();
 		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);

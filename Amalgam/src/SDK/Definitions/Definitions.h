@@ -11,26 +11,25 @@
 #define ANIMATION_CYCLE_BITS 10
 #define ANIMATION_CYCLE_MINFRAC (1.0f / (1<<ANIMATION_CYCLE_BITS))
 
-//TODO: add game rules
-//#define VEC_VIEW g_pGameRules->GetViewVectors()->m_vView
-//#define VEC_HULL_MIN g_pGameRules->GetViewVectors()->m_vHullMin
-//#define VEC_HULL_MAX g_pGameRules->GetViewVectors()->m_vHullMax
-//#define VEC_DUCK_HULL_MIN g_pGameRules->GetViewVectors()->m_vDuckHullMin
-//#define VEC_DUCK_HULL_MAX g_pGameRules->GetViewVectors()->m_vDuckHullMax
-//#define VEC_DUCK_VIEW g_pGameRules->GetViewVectors()->m_vDuckView
-//#define VEC_OBS_HULL_MIN g_pGameRules->GetViewVectors()->m_vObsHullMin
-//#define VEC_OBS_HULL_MAX g_pGameRules->GetViewVectors()->m_vObsHullMax
-//#define VEC_DEAD_VIEWHEIGHT	g_pGameRules->GetViewVectors()->m_vDeadViewHeight
+#define VEC_VIEW pGameRules->GetViewVectors()->m_vView
+#define VEC_HULL_MIN pGameRules->GetViewVectors()->m_vHullMin
+#define VEC_HULL_MAX pGameRules->GetViewVectors()->m_vHullMax
+#define VEC_DUCK_HULL_MIN pGameRules->GetViewVectors()->m_vDuckHullMin
+#define VEC_DUCK_HULL_MAX pGameRules->GetViewVectors()->m_vDuckHullMax
+#define VEC_DUCK_VIEW pGameRules->GetViewVectors()->m_vDuckView
+#define VEC_OBS_HULL_MIN pGameRules->GetViewVectors()->m_vObsHullMin
+#define VEC_OBS_HULL_MAX pGameRules->GetViewVectors()->m_vObsHullMax
+#define VEC_DEAD_VIEWHEIGHT pGameRules->GetViewVectors()->m_vDeadViewHeight
 
-//#define VEC_VIEW_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vView * player->GetModelScale() )
-//#define VEC_HULL_MIN_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vHullMin * player->GetModelScale() )
-//#define VEC_HULL_MAX_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vHullMax * player->GetModelScale() )
-//#define VEC_DUCK_HULL_MIN_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vDuckHullMin * player->GetModelScale() )
-//#define VEC_DUCK_HULL_MAX_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vDuckHullMax * player->GetModelScale() )
-//#define VEC_DUCK_VIEW_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vDuckView * player->GetModelScale() )
-//#define VEC_OBS_HULL_MIN_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vObsHullMin * player->GetModelScale() )
-//#define VEC_OBS_HULL_MAX_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vObsHullMax * player->GetModelScale() )
-//#define VEC_DEAD_VIEWHEIGHT_SCALED( player ) ( g_pGameRules->GetViewVectors()->m_vDeadViewHeight * player->GetModelScale() )
+#define VEC_VIEW_SCALED(player) (pGameRules->GetViewVectors()->m_vView * player->m_flModelScale())
+#define VEC_HULL_MIN_SCALED(player) (pGameRules->GetViewVectors()->m_vHullMin * player->m_flModelScale())
+#define VEC_HULL_MAX_SCALED(player) (pGameRules->GetViewVectors()->m_vHullMax * player->m_flModelScale())
+#define VEC_DUCK_HULL_MIN_SCALED(player) (pGameRules->GetViewVectors()->m_vDuckHullMin * player->m_flModelScale())
+#define VEC_DUCK_HULL_MAX_SCALED(player) (pGameRules->GetViewVectors()->m_vDuckHullMax * player->m_flModelScale())
+#define VEC_DUCK_VIEW_SCALED(player) (pGameRules->GetViewVectors()->m_vDuckView * player->m_flModelScale())
+#define VEC_OBS_HULL_MIN_SCALED(player) (pGameRules->GetViewVectors()->m_vObsHullMin * player->m_flModelScale())
+#define VEC_OBS_HULL_MAX_SCALED(player) (pGameRules->GetViewVectors()->m_vObsHullMax * player->m_flModelScale())
+#define VEC_DEAD_VIEWHEIGHT_SCALED(player) (pGameRules->GetViewVectors()->m_vDeadViewHeight * player->m_flModelScale())
 
 #define WATERJUMP_HEIGHT			8
 
@@ -372,7 +371,7 @@
 #define	FL_CLIENT (1<<7)
 #define FL_FAKECLIENT (1<<8)
 #define	FL_INWATER (1<<9)
-#define PLAYER_FLAG_BITS 10
+#define PLAYER_FLAG_BITS 32
 
 #define	LIFE_ALIVE 0
 #define	LIFE_DYING 1

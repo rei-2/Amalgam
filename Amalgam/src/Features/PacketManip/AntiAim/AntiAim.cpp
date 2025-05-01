@@ -7,26 +7,26 @@
 
 bool CAntiAim::AntiAimOn()
 {
-	return Vars::AntiHack::AntiAim::Enabled.Value
-		&& (Vars::AntiHack::AntiAim::PitchReal.Value
-		|| Vars::AntiHack::AntiAim::PitchFake.Value
-		|| Vars::AntiHack::AntiAim::YawReal.Value
-		|| Vars::AntiHack::AntiAim::YawFake.Value
-		|| Vars::AntiHack::AntiAim::RealYawMode.Value
-		|| Vars::AntiHack::AntiAim::FakeYawMode.Value
-		|| Vars::AntiHack::AntiAim::RealYawOffset.Value
-		|| Vars::AntiHack::AntiAim::FakeYawOffset.Value);
+	return Vars::AntiAim::Enabled.Value
+		&& (Vars::AntiAim::PitchReal.Value
+		|| Vars::AntiAim::PitchFake.Value
+		|| Vars::AntiAim::YawReal.Value
+		|| Vars::AntiAim::YawFake.Value
+		|| Vars::AntiAim::RealYawMode.Value
+		|| Vars::AntiAim::FakeYawMode.Value
+		|| Vars::AntiAim::RealYawOffset.Value
+		|| Vars::AntiAim::FakeYawOffset.Value);
 }
 
 bool CAntiAim::YawOn()
 {
-	return Vars::AntiHack::AntiAim::Enabled.Value
-		&& (Vars::AntiHack::AntiAim::YawReal.Value
-		|| Vars::AntiHack::AntiAim::YawFake.Value
-		|| Vars::AntiHack::AntiAim::RealYawMode.Value
-		|| Vars::AntiHack::AntiAim::FakeYawMode.Value
-		|| Vars::AntiHack::AntiAim::RealYawOffset.Value
-		|| Vars::AntiHack::AntiAim::FakeYawOffset.Value);
+	return Vars::AntiAim::Enabled.Value
+		&& (Vars::AntiAim::YawReal.Value
+		|| Vars::AntiAim::YawFake.Value
+		|| Vars::AntiAim::RealYawMode.Value
+		|| Vars::AntiAim::FakeYawMode.Value
+		|| Vars::AntiAim::RealYawOffset.Value
+		|| Vars::AntiAim::FakeYawOffset.Value);
 }
 
 bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
@@ -46,8 +46,7 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 void CAntiAim::FakeShotAngles(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!pLocal || pLocal->m_MoveType() == MOVETYPE_WALK
-		|| !Vars::AntiHack::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN)
+	if (!Vars::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN || !pLocal || pLocal->m_MoveType() == MOVETYPE_WALK)
 		return;
 
 	G::SilentAngles = true;
@@ -68,25 +67,21 @@ float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOff
 
 	vEdgeTrace.emplace_back(vCenter, trace.endpos);
 
-	return (trace.startpos - trace.endpos).Length2D();
+	return trace.fraction;
 }
 
-int CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw, bool bUpPitch)
+int CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw)
 {
-	// we should probably make this dynamic for different head positions
-
 	float flSize = pEntity->m_vecMaxs().y - pEntity->m_vecMins().y;
 	float flEdgeLeftDist = EdgeDistance(pEntity, flEdgeOrigYaw, -flSize);
 	float flEdgeRightDist = EdgeDistance(pEntity, flEdgeOrigYaw, flSize);
 
-	if (flEdgeLeftDist > 299.f && flEdgeRightDist > 299.f)
-		return bUpPitch ? 1 : -1;
-	return (bUpPitch ? flEdgeLeftDist > flEdgeRightDist : flEdgeLeftDist < flEdgeRightDist) ? 1 : -1;
+	return flEdgeLeftDist > flEdgeRightDist ? -1 : 1;
 }
 
 void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealYaw, bool bFake, float flEpsilon)
 {
-	if (!Vars::AntiHack::AntiAim::AntiOverlap.Value || bFake)
+	if (!Vars::AntiAim::AntiOverlap.Value || bFake)
 		return;
 
 	float flFakeYaw = GetBaseYaw(pEntity, pCmd, true) + GetYawOffset(pEntity, true);
@@ -106,31 +101,30 @@ inline int GetJitter(uint32_t uHash)
 
 float CAntiAim::GetYawOffset(CTFPlayer* pEntity, bool bFake)
 {
-	const int iMode = bFake ? Vars::AntiHack::AntiAim::YawFake.Value : Vars::AntiHack::AntiAim::YawReal.Value;
-	const bool bUpPitch = (bFake ? Vars::AntiHack::AntiAim::PitchFake.Value : Vars::AntiHack::AntiAim::PitchReal.Value) == Vars::AntiHack::AntiAim::PitchRealEnum::Up;
+	const int iMode = bFake ? Vars::AntiAim::YawFake.Value : Vars::AntiAim::YawReal.Value;
 	int iJitter = GetJitter(FNV1A::Hash32Const("Yaw"));
 
 	switch (iMode)
 	{
-	case Vars::AntiHack::AntiAim::YawEnum::Forward: return 0.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Left: return 90.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Right: return -90.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Backwards: return 180.f;
-	case Vars::AntiHack::AntiAim::YawEnum::Edge: return (bFake ? Vars::AntiHack::AntiAim::FakeYawValue.Value : Vars::AntiHack::AntiAim::RealYawValue.Value) * GetEdge(pEntity, I::EngineClient->GetViewAngles().y, bUpPitch);
-	case Vars::AntiHack::AntiAim::YawEnum::Jitter: return (bFake ? Vars::AntiHack::AntiAim::FakeYawValue.Value : Vars::AntiHack::AntiAim::RealYawValue.Value) * iJitter;
-	case Vars::AntiHack::AntiAim::YawEnum::Spin: return fmod(I::GlobalVars->tickcount * Vars::AntiHack::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
+	case Vars::AntiAim::YawEnum::Forward: return 0.f;
+	case Vars::AntiAim::YawEnum::Left: return 90.f;
+	case Vars::AntiAim::YawEnum::Right: return -90.f;
+	case Vars::AntiAim::YawEnum::Backwards: return 180.f;
+	case Vars::AntiAim::YawEnum::Edge: return (bFake ? Vars::AntiAim::FakeYawValue.Value : Vars::AntiAim::RealYawValue.Value) * GetEdge(pEntity, I::EngineClient->GetViewAngles().y);
+	case Vars::AntiAim::YawEnum::Jitter: return (bFake ? Vars::AntiAim::FakeYawValue.Value : Vars::AntiAim::RealYawValue.Value) * iJitter;
+	case Vars::AntiAim::YawEnum::Spin: return fmod(I::GlobalVars->tickcount * Vars::AntiAim::SpinSpeed.Value + 180.f, 360.f) - 180.f;
 	}
 	return 0.f;
 }
 
 float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 {
-	const int iMode = bFake ? Vars::AntiHack::AntiAim::FakeYawMode.Value : Vars::AntiHack::AntiAim::RealYawMode.Value;
-	const float flOffset = bFake ? Vars::AntiHack::AntiAim::FakeYawOffset.Value : Vars::AntiHack::AntiAim::RealYawOffset.Value;
+	const int iMode = bFake ? Vars::AntiAim::FakeYawMode.Value : Vars::AntiAim::RealYawMode.Value;
+	const float flOffset = bFake ? Vars::AntiAim::FakeYawOffset.Value : Vars::AntiAim::RealYawOffset.Value;
 	switch (iMode) // 0 offset, 1 at player
 	{
-	case Vars::AntiHack::AntiAim::YawModeEnum::View: return pCmd->viewangles.y + flOffset;
-	case Vars::AntiHack::AntiAim::YawModeEnum::Target:
+	case Vars::AntiAim::YawModeEnum::View: return pCmd->viewangles.y + flOffset;
+	case Vars::AntiAim::YawModeEnum::Target:
 	{
 		float flSmallestAngleTo = 0.f; float flSmallestFovTo = 360.f;
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
@@ -166,28 +160,28 @@ float CAntiAim::GetPitch(float flCurPitch)
 	float flRealPitch = 0.f, flFakePitch = 0.f;
 	int iJitter = GetJitter(FNV1A::Hash32Const("Pitch"));
 
-	switch (Vars::AntiHack::AntiAim::PitchReal.Value)
+	switch (Vars::AntiAim::PitchReal.Value)
 	{
-	case Vars::AntiHack::AntiAim::PitchRealEnum::Up: flRealPitch = -89.f; break;
-	case Vars::AntiHack::AntiAim::PitchRealEnum::Down: flRealPitch = 89.f; break;
-	case Vars::AntiHack::AntiAim::PitchRealEnum::Zero: flRealPitch = 0.f; break;
-	case Vars::AntiHack::AntiAim::PitchRealEnum::Jitter: flRealPitch = -89.f * iJitter; break;
-	case Vars::AntiHack::AntiAim::PitchRealEnum::ReverseJitter: flRealPitch = 89.f * iJitter; break;
+	case Vars::AntiAim::PitchRealEnum::Up: flRealPitch = -89.f; break;
+	case Vars::AntiAim::PitchRealEnum::Down: flRealPitch = 89.f; break;
+	case Vars::AntiAim::PitchRealEnum::Zero: flRealPitch = 0.f; break;
+	case Vars::AntiAim::PitchRealEnum::Jitter: flRealPitch = -89.f * iJitter; break;
+	case Vars::AntiAim::PitchRealEnum::ReverseJitter: flRealPitch = 89.f * iJitter; break;
 	}
 
-	switch (Vars::AntiHack::AntiAim::PitchFake.Value)
+	switch (Vars::AntiAim::PitchFake.Value)
 	{
-	case Vars::AntiHack::AntiAim::PitchFakeEnum::Up: flFakePitch = -89.f; break;
-	case Vars::AntiHack::AntiAim::PitchFakeEnum::Down: flFakePitch = 89.f; break;
-	case Vars::AntiHack::AntiAim::PitchFakeEnum::Jitter: flFakePitch = -89.f * iJitter; break;
-	case Vars::AntiHack::AntiAim::PitchFakeEnum::ReverseJitter: flFakePitch = 89.f * iJitter; break;
+	case Vars::AntiAim::PitchFakeEnum::Up: flFakePitch = -89.f; break;
+	case Vars::AntiAim::PitchFakeEnum::Down: flFakePitch = 89.f; break;
+	case Vars::AntiAim::PitchFakeEnum::Jitter: flFakePitch = -89.f * iJitter; break;
+	case Vars::AntiAim::PitchFakeEnum::ReverseJitter: flFakePitch = 89.f * iJitter; break;
 	}
 
-	if (Vars::AntiHack::AntiAim::PitchReal.Value && Vars::AntiHack::AntiAim::PitchFake.Value)
+	if (Vars::AntiAim::PitchReal.Value && Vars::AntiAim::PitchFake.Value)
 		return flRealPitch + (flFakePitch > 0.f ? 360 : -360);
-	else if (Vars::AntiHack::AntiAim::PitchReal.Value)
+	else if (Vars::AntiAim::PitchReal.Value)
 		return flRealPitch;
-	else if (Vars::AntiHack::AntiAim::PitchFake.Value)
+	else if (Vars::AntiAim::PitchFake.Value)
 		return flFakePitch;
 	else
 		return flCurPitch;
@@ -195,7 +189,7 @@ float CAntiAim::GetPitch(float flCurPitch)
 
 void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!Vars::AntiHack::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || !pLocal->m_hGroundEntity() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
+	if (!Vars::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || !pLocal->m_hGroundEntity() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
 	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 2.f)
@@ -216,8 +210,6 @@ void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket)
 {
-	vEdgeTrace.clear();
-
 	G::AntiAim = AntiAimOn() && ShouldRun(pLocal, pWeapon, pCmd);
 
 	int iAntiBackstab = F::Misc.AntiBackstab(pLocal, pCmd, bSendPacket);
@@ -230,6 +222,8 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 		vFakeAngles = { pCmd->viewangles.x, pCmd->viewangles.y };
 		return;
 	}
+
+	vEdgeTrace.clear();
 
 	Vec2& vAngles = bSendPacket ? vFakeAngles : vRealAngles;
 	vAngles.x = iAntiBackstab != 2 ? GetPitch(pCmd->viewangles.x) : pCmd->viewangles.x;

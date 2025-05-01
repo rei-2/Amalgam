@@ -48,7 +48,7 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::Prediction->SetLocalViewAngles(pCmd->viewangles);
 
 	Vec2 vOriginalMove; int iOriginalButtons;
-	if (m_bDoubletap = m_bInPrediction && (F::Ticks.m_bAntiWarp || F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::CL_Move::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity()))
+	if (m_bDoubletap = m_bInPrediction && (F::Ticks.m_bAntiWarp || F::Ticks.GetTicks(H::Entities.GetWeapon()) && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity()))
 	{
 		m_vOriginalOrigin = pLocal->m_vecOrigin();
 		m_vOriginalVelocity = pLocal->m_vecVelocity();

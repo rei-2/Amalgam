@@ -12,7 +12,7 @@ MAKE_HOOK(IVModelRender_ForcedMaterialOverride, U::Memory.GetVFunc(I::ModelRende
 		return CALL_ORIGINAL(rcx, mat, type);
 #endif
 
-	if (F::Chams.bRendering || F::Glow.bRendering)
+	if (F::Chams.m_bRendering || F::Glow.m_bRendering)
 		return;
 
 	CALL_ORIGINAL(rcx, mat, type);

@@ -23,17 +23,18 @@ struct ListPlayer
 	bool m_bParty;
 	bool m_bF2P;
 	int m_iLevel;
+	uint64_t m_iParty;
 };
 
 struct PriorityLabel_t
 {
-	std::string Name = "";
-	Color_t Color = {};
-	int Priority = 0;
+	std::string m_sName = "";
+	Color_t m_tColor = {};
+	int m_iPriority = 0;
 
-	bool Label = false;
-	bool Assignable = true;
-	bool Locked = false; // don't allow it to be removed
+	bool m_bLabel = false;
+	bool m_bAssignable = true;
+	bool m_bLocked = false; // don't allow it to be removed
 };
 
 class CPlayerlistUtils

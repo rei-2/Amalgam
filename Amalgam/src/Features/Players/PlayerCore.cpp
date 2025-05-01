@@ -29,10 +29,10 @@ void CPlayerlistCore::SavePlayerlist()
 			auto& tTag = *it;
 
 			boost::property_tree::ptree tagEntry;
-			tagEntry.put("Name", tTag.Name);
-			tagEntry.put_child("Color", F::Configs.ColorToTree(tTag.Color));
-			tagEntry.put("Priority", tTag.Priority);
-			tagEntry.put("Label", tTag.Label);
+			tagEntry.put("Name", tTag.m_sName);
+			tagEntry.put_child("Color", F::Configs.ColorToTree(tTag.m_tColor));
+			tagEntry.put("Priority", tTag.m_iPriority);
+			tagEntry.put("Label", tTag.m_bLabel);
 
 			configTree.put_child(std::to_string(F::PlayerUtils.IndexToTag(iID)), tagEntry);
 		}
@@ -73,7 +73,7 @@ void CPlayerlistCore::SavePlayerlist()
 	}
 	catch (...)
 	{
-		SDK::Output("SavePlayerlist", "Failed", { 175, 150, 255 }, true, true);
+		SDK::Output("Amalgam", "Save playerlist failed", { 175, 150, 255, 127 }, true, true);
 	}
 }
 
@@ -108,10 +108,10 @@ void CPlayerlistCore::LoadPlayerlist()
 				for (auto& it : *configTree)
 				{
 					PriorityLabel_t tTag = {};
-					if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
-					if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.Color); }
-					if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.Priority = *getValue; }
-					if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.Label = *getValue; }
+					if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.m_sName = *getValue; }
+					if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.m_tColor); }
+					if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.m_iPriority = *getValue; }
+					if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.m_bLabel = *getValue; }
 
 					int iID = -1;
 					try
@@ -123,10 +123,10 @@ void CPlayerlistCore::LoadPlayerlist()
 
 					if (iID > -1 && iID < F::PlayerUtils.m_vTags.size())
 					{
-						F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
-						F::PlayerUtils.m_vTags[iID].Color = tTag.Color;
-						F::PlayerUtils.m_vTags[iID].Priority = tTag.Priority;
-						F::PlayerUtils.m_vTags[iID].Label = tTag.Label;
+						F::PlayerUtils.m_vTags[iID].m_sName = tTag.m_sName;
+						F::PlayerUtils.m_vTags[iID].m_tColor = tTag.m_tColor;
+						F::PlayerUtils.m_vTags[iID].m_iPriority = tTag.m_iPriority;
+						F::PlayerUtils.m_vTags[iID].m_bLabel = tTag.m_bLabel;
 					}
 					else
 						F::PlayerUtils.m_vTags.push_back(tTag);
@@ -146,10 +146,10 @@ void CPlayerlistCore::LoadPlayerlist()
 				for (auto& it : *tagTree)
 				{
 					PriorityLabel_t tTag = {};
-					if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.Name = *getValue; }
-					if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.Color); }
-					if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.Priority = *getValue; }
-					if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.Label = *getValue; }
+					if (auto getValue = it.second.get_optional<std::string>("Name")) { tTag.m_sName = *getValue; }
+					if (const auto getChild = it.second.get_child_optional("Color")) { F::Configs.TreeToColor(*getChild, tTag.m_tColor); }
+					if (auto getValue = it.second.get_optional<int>("Priority")) { tTag.m_iPriority = *getValue; }
+					if (auto getValue = it.second.get_optional<bool>("Label")) { tTag.m_bLabel = *getValue; }
 
 					int iID = -1;
 					try
@@ -162,16 +162,16 @@ void CPlayerlistCore::LoadPlayerlist()
 					}
 					catch (...)
 					{	// old string based indexing
-						tTag.Name = it.first;
+						tTag.m_sName = it.first;
 						iID = F::PlayerUtils.GetTag(it.first);
 					}
 
 					if (iID > -1 && iID < F::PlayerUtils.m_vTags.size())
 					{
-						F::PlayerUtils.m_vTags[iID].Name = tTag.Name;
-						F::PlayerUtils.m_vTags[iID].Color = tTag.Color;
-						F::PlayerUtils.m_vTags[iID].Priority = tTag.Priority;
-						F::PlayerUtils.m_vTags[iID].Label = tTag.Label;
+						F::PlayerUtils.m_vTags[iID].m_sName = tTag.m_sName;
+						F::PlayerUtils.m_vTags[iID].m_tColor = tTag.m_tColor;
+						F::PlayerUtils.m_vTags[iID].m_iPriority = tTag.m_iPriority;
+						F::PlayerUtils.m_vTags[iID].m_bLabel = tTag.m_bLabel;
 					}
 					else
 						F::PlayerUtils.m_vTags.push_back(tTag);
@@ -208,7 +208,7 @@ void CPlayerlistCore::LoadPlayerlist()
 						continue;
 
 					auto pTag = F::PlayerUtils.GetTag(iID);
-					if (!pTag || !pTag->Assignable)
+					if (!pTag || !pTag->m_bAssignable)
 						continue;
 
 					if (!F::PlayerUtils.HasTag(uFriendsID, iID))
@@ -234,6 +234,6 @@ void CPlayerlistCore::LoadPlayerlist()
 	}
 	catch (...)
 	{
-		SDK::Output("LoadPlayerlist", "Failed", { 175, 150, 255 }, true, true);
+		SDK::Output("Amalgam", "Load playerlist failed", { 175, 150, 255, 127 }, true, true);
 	}
 }

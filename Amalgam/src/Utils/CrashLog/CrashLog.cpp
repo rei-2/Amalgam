@@ -96,7 +96,8 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	static bool bException = false;
 
 	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION
-		|| !ExceptionInfo->ExceptionRecord->ExceptionAddress || mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)
+		/*|| !ExceptionInfo->ExceptionRecord->ExceptionAddress*/
+		|| mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)
 		|| !Vars::Debug::CrashLogging.Value
 		|| bException && GetAsyncKeyState(VK_SHIFT) & 0x8000 && GetAsyncKeyState(VK_RETURN) & 0x8000)
 		return EXCEPTION_EXECUTE_HANDLER;
@@ -133,20 +134,22 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 		ssErrorStream << "\n";
 	}
 
-	ssErrorStream << "Ctrl + C to copy. Logged to Amalgam\\crash_log.txt. \n";
-	ssErrorStream << "Built @ " __DATE__ ", " __TIME__;
+	ssErrorStream << "Built @ " __DATE__ ", " __TIME__ "\n";
+	ssErrorStream << "Ctrl + C to copy. \n";
 	if (bException)
-		ssErrorStream << "\nShift + Enter to skip repetitive exceptions. ";
+		ssErrorStream << "Shift + Enter to skip repetitive exceptions. \n";
 	bException = true;
+	try
+	{
+		std::ofstream file;
+		file.open(F::Configs.m_sConfigPath + "crash_log.txt", std::ios_base::app);
+		file << ssErrorStream.str() + "\n\n\n";
+		file.close();
+		ssErrorStream << "Logged to Amalgam\\crash_log.txt. ";
+	}
+	catch (...) {}
 
 	SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
-
-	ssErrorStream << "\n\n\n\n";
-	std::ofstream file;
-	file.open(F::Configs.m_sConfigPath + "crash_log.txt", std::ios_base::app);
-	file << ssErrorStream.str();
-	file.close();
-
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 

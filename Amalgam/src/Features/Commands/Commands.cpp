@@ -6,24 +6,24 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/join.hpp>
 
-bool CCommands::Run(const std::string& cmd, std::deque<std::string>& args)
+bool CCommands::Run(const std::string& sCmd, std::deque<std::string>& vArgs)
 {
-	auto uHash = FNV1A::Hash32(cmd.c_str());
-	if (!CommandMap.contains(uHash))
+	auto uHash = FNV1A::Hash32(sCmd.c_str());
+	if (!m_mCommands.contains(uHash))
 		return false;
 
-	CommandMap[uHash](args);
+	m_mCommands[uHash](vArgs);
 	return true;
 }
 
-void CCommands::Register(const std::string& name, CommandCallback callback)
+void CCommands::Register(const std::string& sName, CommandCallback fCallback)
 {
-	CommandMap[FNV1A::Hash32(name.c_str())] = std::move(callback);
+	m_mCommands[FNV1A::Hash32(sName.c_str())] = std::move(fCallback);
 }
 
 void CCommands::Initialize()
 {
-	Register("queue", [](const std::deque<std::string>& args)
+	Register("queue", [](const std::deque<std::string>& vArgs)
 		{
 			static bool bHasLoaded = false;
 			if (!bHasLoaded)
@@ -34,57 +34,71 @@ void CCommands::Initialize()
 			I::TFPartyClient->RequestQueueForMatch(k_eTFMatchGroup_Casual_Default);
 		});
 
-	Register("setcvar", [](const std::deque<std::string>& args)
+	Register("setcvar", [](const std::deque<std::string>& vArgs)
 		{
-			if (args.size() < 2)
+			if (vArgs.size() < 2)
 			{
 				SDK::Output("Usage:\n\tsetcvar <cvar> <value>");
 				return;
 			}
 
-			const auto foundCVar = I::CVar->FindVar(args[0].c_str());
-			const std::string cvarName = args[0];
-			if (!foundCVar)
+			std::string sCVar = vArgs[0];
+			auto pCVar = I::CVar->FindVar(sCVar.c_str());
+			if (!pCVar)
 			{
-				SDK::Output(std::format("Could not find {}", cvarName).c_str());
+				SDK::Output(std::format("Could not find {}", sCVar).c_str());
 				return;
 			}
 
-			auto vArgs = args; vArgs.pop_front();
-			std::string newValue = boost::algorithm::join(vArgs, " ");
-			boost::replace_all(newValue, "\"", "");
-			foundCVar->SetValue(newValue.c_str());
-			SDK::Output(std::format("Set {} to {}", cvarName, newValue).c_str());
+			auto vArgs2 = vArgs; vArgs2.pop_front();
+			std::string sValue = boost::algorithm::join(vArgs2, " ");
+			boost::replace_all(sValue, "\"", "");
+			pCVar->SetValue(sValue.c_str());
+			SDK::Output(std::format("Set {} to {}", sCVar, sValue).c_str());
 		});
 
-	Register("getcvar", [](const std::deque<std::string>& args)
+	Register("getcvar", [](const std::deque<std::string>& vArgs)
 		{
-			if (args.size() != 1)
+			if (vArgs.size() != 1)
 			{
 				SDK::Output("Usage:\n\tgetcvar <cvar>");
 				return;
 			}
 
-			const auto foundCVar = I::CVar->FindVar(args[0].c_str());
-			const std::string cvarName = args[0];
-			if (!foundCVar)
+			std::string sCVar = vArgs[0];
+			auto pCVar = I::CVar->FindVar(sCVar.c_str());
+			if (!pCVar)
 			{
-				SDK::Output(std::format("Could not find {}", cvarName).c_str());
+				SDK::Output(std::format("Could not find {}", sCVar).c_str());
 				return;
 			}
 
-			SDK::Output(std::format("Value of {} is {}", cvarName, foundCVar->GetString()).c_str());
+			SDK::Output(std::format("Value of {} is {}", sCVar, pCVar->GetString()).c_str());
 		});
 
-	Register("menu", [](const std::deque<std::string>& args)
+	Register("menu", [](const std::deque<std::string>& vArgs)
 		{
 			I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = !F::Menu.m_bIsOpen);
 		});
 
-	Register("unload", [](const std::deque<std::string>& args)
+	Register("unload", [](const std::deque<std::string>& vArgs)
 		{
 			if (F::Menu.m_bIsOpen)
 				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = false);
 			U::Core.m_bUnload = true;
+		});
+
+	Register("crash", [](const std::deque<std::string>& vArgs) // if you want to time out of a server and rejoin
+		{
+			switch (vArgs.empty() ? 0 : FNV1A::Hash32(vArgs.front().c_str()))
+			{
+			case FNV1A::Hash32Const("true"):
+			case FNV1A::Hash32Const("t"):
+			case FNV1A::Hash32Const("1"):
+				break;
+			default:
+				Vars::Debug::CrashLogging.Value = false; // we are voluntarily crashing, don't give out log if we don't want one
+			}
+			reinterpret_cast<void(*)()>(0)();
 		});
 }

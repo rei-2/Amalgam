@@ -2,7 +2,8 @@
 
 void CPlayerArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_t tColor)
 {
-	const float flMap = Math::RemapVal(vFromPos.DistTo(vToPos), Vars::Visuals::FOVArrows::MaxDist.Value, Vars::Visuals::FOVArrows::MaxDist.Value * 0.9f, 0.f, 1.f);
+	float flMaxDistance = Vars::ESP::FOVArrows::MaxDistance.Value;
+	float flMap = Math::RemapVal(vFromPos.DistTo(vToPos), flMaxDistance, flMaxDistance * 0.9f, 0.f, 1.f);
 	tColor.a = byte(flMap * 255.f);
 	if (!tColor.a)
 		return;
@@ -24,7 +25,7 @@ void CPlayerArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_
 	const float flCos = cos(flDeg);
 	const float flSin = sin(flDeg);
 
-	float flOffset = -Vars::Visuals::FOVArrows::Offset.Value;
+	float flOffset = -Vars::ESP::FOVArrows::Offset.Value;
 	float flScale = H::Draw.Scale(25);
 	Vec2 v1 = { flOffset, flScale / 2 },
 		v2 = { flOffset, -flScale / 2 },
@@ -40,7 +41,7 @@ void CPlayerArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_
 
 void CPlayerArrows::Run(CTFPlayer* pLocal)
 {
-	if (!Vars::Visuals::FOVArrows::Enabled.Value)
+	if (!Vars::ESP::FOVArrows::Enabled.Value)
 		return;
 
 	const Vec3 vLocalPos = pLocal->GetEyePosition();

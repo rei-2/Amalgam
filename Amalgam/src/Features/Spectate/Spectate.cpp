@@ -38,9 +38,9 @@ void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 	default:
 		pLocal->m_hObserverTarget().Set(pEntity);
 	}
-	pLocal->m_iObserverMode() = Vars::Visuals::ThirdPerson::Enabled.Value ? OBS_MODE_THIRDPERSON : OBS_MODE_FIRSTPERSON;
+	pLocal->m_iObserverMode() = Vars::Visuals::Thirdperson::Enabled.Value ? OBS_MODE_THIRDPERSON : OBS_MODE_FIRSTPERSON;
 	pLocal->m_vecViewOffset() = pEntity->GetViewOffset();
-	Vars::Visuals::ThirdPerson::Enabled.Value ? I::Input->CAM_ToThirdPerson() : I::Input->CAM_ToFirstPerson();
+	Vars::Visuals::Thirdperson::Enabled.Value ? I::Input->CAM_ToThirdPerson() : I::Input->CAM_ToFirstPerson();
 
 	m_pTargetTarget = pLocal->m_hObserverTarget().Get();
 	m_iTargetMode = pLocal->m_iObserverMode();

@@ -39,9 +39,9 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
         bool bBlue = pLocal->m_iTeamNum() == TF_TEAM_BLUE;
         if (bUpdateEffects)
         {
-            switch (FNV1A::Hash32(Vars::Visuals::Particles::MedigunBeam.Value.c_str()))
+            switch (FNV1A::Hash32(Vars::Visuals::Effects::MedigunBeam.Value.c_str()))
             {
-            case FNV1A::Hash32Const("Off"): break;
+            case FNV1A::Hash32Const("Default"): break;
             case FNV1A::Hash32Const("None"): return nullptr;
             case FNV1A::Hash32Const("Uber"): pszParticleName = bBlue ? "medicgun_beam_blue_invun" : "medicgun_beam_red_invun"; break;
             case FNV1A::Hash32Const("Dispenser"): pszParticleName = bBlue ? "dispenser_heal_blue" : "dispenser_heal_red"; break;
@@ -49,14 +49,14 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
             case FNV1A::Hash32Const("Bombonomicon"): pszParticleName = "bombonomicon_spell_trail"; break;
             case FNV1A::Hash32Const("White"): pszParticleName = "medicgun_beam_machinery_stage3"; break;
             case FNV1A::Hash32Const("Orange"): pszParticleName = "medicgun_beam_red_trail_stage3"; break;
-            default: pszParticleName = Vars::Visuals::Particles::MedigunBeam.Value.c_str();
+            default: pszParticleName = Vars::Visuals::Effects::MedigunBeam.Value.c_str();
             }
         }
         else if (bManageChargeEffect)
         {
-            switch (FNV1A::Hash32(Vars::Visuals::Particles::MedigunCharge.Value.c_str()))
+            switch (FNV1A::Hash32(Vars::Visuals::Effects::MedigunCharge.Value.c_str()))
             {
-            case FNV1A::Hash32Const("Off"): break;
+            case FNV1A::Hash32Const("Default"): break;
             case FNV1A::Hash32Const("None"): return nullptr;
             case FNV1A::Hash32Const("Electrocuted"): pszParticleName = bBlue ? "electrocuted_blue" : "electrocuted_red"; break;
             case FNV1A::Hash32Const("Halloween"): pszParticleName = "ghost_pumpkin"; break;
@@ -82,7 +82,7 @@ MAKE_HOOK(CParticleProperty_CreateName, S::CParticleProperty_CreateName(), void*
             case FNV1A::Hash32Const("Green souls"): pszParticleName = "unusual_souls_green_parent"; break;
             case FNV1A::Hash32Const("Bubbles"): pszParticleName = "unusual_bubbles"; break;
             case FNV1A::Hash32Const("Hearts"): pszParticleName = "unusual_hearts_bubbling"; break;
-            default: pszParticleName = Vars::Visuals::Particles::MedigunCharge.Value.c_str();
+            default: pszParticleName = Vars::Visuals::Effects::MedigunCharge.Value.c_str();
             }
         }
     }
@@ -98,7 +98,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
         return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, iAttachmentPoint, vecOriginOffset);
 #endif
 
-    if (FNV1A::Hash32(Vars::Visuals::Particles::ProjectileTrail.Value.c_str()) != FNV1A::Hash32Const("Off"))
+    if (FNV1A::Hash32(Vars::Visuals::Effects::ProjectileTrail.Value.c_str()) != FNV1A::Hash32Const("Default"))
     {
         switch (FNV1A::Hash32(pszParticleName))
         {
@@ -208,7 +208,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
                 return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, iAttachmentPoint, vecOriginOffset);
 
             bool bBlue = pLocal->m_iTeamNum() == TF_TEAM_BLUE;
-            switch (FNV1A::Hash32(Vars::Visuals::Particles::ProjectileTrail.Value.c_str()))
+            switch (FNV1A::Hash32(Vars::Visuals::Effects::ProjectileTrail.Value.c_str()))
             {
             case FNV1A::Hash32Const("None"): return nullptr;
             case FNV1A::Hash32Const("Rocket"): pszParticleName = "rockettrail"; break;
@@ -230,7 +230,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
             case FNV1A::Hash32Const("Monoculus"): pszParticleName = "eyeboss_projectile"; break;
             case FNV1A::Hash32Const("Sparkles"): pszParticleName = bBlue ? "burningplayer_rainbow_blue" : "burningplayer_rainbow_red"; break;
             case FNV1A::Hash32Const("Rainbow"): pszParticleName = "flamethrower_rainbow"; break;
-            default: pszParticleName = Vars::Visuals::Particles::ProjectileTrail.Value.c_str();
+            default: pszParticleName = Vars::Visuals::Effects::ProjectileTrail.Value.c_str();
             }
             break;
         }

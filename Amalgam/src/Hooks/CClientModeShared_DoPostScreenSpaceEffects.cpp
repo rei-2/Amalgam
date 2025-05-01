@@ -34,7 +34,7 @@ MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVFunc(I::Clie
 	F::Visuals.DrawLines();
 	F::Visuals.DrawSightlines();
 
-	F::Chams.mEntities.clear();
+	F::Chams.m_mEntities.clear();
 	if (!I::EngineVGui->IsGameUIVisible() && pLocal && F::Materials.m_bLoaded)
 	{
 		F::Chams.RenderMain();

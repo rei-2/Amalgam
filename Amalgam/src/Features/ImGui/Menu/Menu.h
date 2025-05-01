@@ -21,6 +21,7 @@ class CMenu
 	void MenuMisc(int iTab);
 	void MenuLogs(int iTab);
 	void MenuSettings(int iTab);
+	void MenuSearch(std::string sSearch);
 
 	void AddDraggable(const char* sLabel, ConfigVar<DragBox_t>& var, bool bShouldDraw = true, ImVec2 vSize = { H::Draw.Scale(100), H::Draw.Scale(40) });
 	void AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& var, bool bShouldDraw = true, ImVec2 vMinSize = { H::Draw.Scale(100), H::Draw.Scale(100) }, ImVec2 vMaxSize = { H::Draw.Scale(1000), H::Draw.Scale(1000) }, ImGuiSizeCallback fCustomCallback = nullptr);

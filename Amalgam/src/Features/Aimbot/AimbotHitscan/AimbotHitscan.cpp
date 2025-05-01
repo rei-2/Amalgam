@@ -572,7 +572,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			}
 		}
 
-	nextTick:
+		nextTick:
 		continue;
 	}
 

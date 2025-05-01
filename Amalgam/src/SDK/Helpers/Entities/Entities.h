@@ -36,23 +36,24 @@ class CEntities
 	std::unordered_map<int, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes;
 	std::unordered_map<int, int> m_mChokes, m_mSetTicks;
 	std::unordered_map<int, std::pair<bool, matrix3x4[MAXSTUDIOBONES]>> m_mBones;
-	std::unordered_map<int, Vec3> m_mEyeAngles, m_mPingAngles;
+	std::unordered_map<int, Vec3> m_mOldAngles, m_mEyeAngles;
 	std::unordered_map<int, bool> m_mLagCompensation;
 	std::unordered_map<int, DormantData> m_mDormancy;
 	std::unordered_map<int, Vec3> m_mAvgVelocities;
 	std::unordered_map<int, uint32_t> m_mModels;
 	std::unordered_map<int, std::deque<VelFixRecord>> m_mOrigins;
 
+	std::unordered_map<int, int> m_mIPriorities;
+	std::unordered_map<uint32_t, int> m_mUPriorities;
 	std::unordered_map<int, bool> m_mIFriends;
 	std::unordered_map<uint32_t, bool> m_mUFriends;
-	std::unordered_map<int, bool> m_mIParty;
-	std::unordered_map<uint32_t, bool> m_mUParty;
+	std::unordered_map<int, uint64_t> m_mIParty;
+	std::unordered_map<uint32_t, uint64_t> m_mUParty;
 	std::unordered_map<int, bool> m_mIF2P;
 	std::unordered_map<uint32_t, bool> m_mUF2P;
 	std::unordered_map<int, int> m_mILevels;
 	std::unordered_map<uint32_t, int> m_mULevels;
-	std::unordered_map<int, int> m_mIPriorities;
-	std::unordered_map<uint32_t, int> m_mUPriorities;
+	uint32_t m_uFriendsID;
 
 	bool m_bSettingUpBones = false;
 
@@ -88,6 +89,8 @@ public:
 	uint32_t GetModel(int iIndex);
 	std::deque<VelFixRecord>* GetOrigins(int iIndex);
 
+	int GetPriority(int iIndex);
+	int GetPriority(uint32_t uFriendsID);
 	bool IsFriend(int iIndex);
 	bool IsFriend(uint32_t uFriendsID);
 	bool InParty(int iIndex);
@@ -96,8 +99,8 @@ public:
 	bool IsF2P(uint32_t uFriendsID);
 	int GetLevel(int iIndex);
 	int GetLevel(uint32_t uFriendsID);
-	int GetPriority(int iIndex);
-	int GetPriority(uint32_t uFriendsID);
+	uint64_t GetParty(int iIndex);
+	uint64_t GetParty(uint32_t uFriendsID);
 
 	bool IsSettingUpBones();
 };

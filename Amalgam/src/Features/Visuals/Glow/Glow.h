@@ -47,10 +47,10 @@ class CGlow
 		Color_t m_cColor;
 		bool m_bExtra = false;
 	};
-	std::unordered_map<Glow_t, std::vector<GlowInfo_t>, GlowHasher_t> mvEntities = {};
+	std::unordered_map<Glow_t, std::vector<GlowInfo_t>, GlowHasher_t> m_mEntities = {};
 
-	float flSavedBlend = 1.f;
-	bool bExtra = false;
+	float m_flSavedBlend = 1.f;
+	bool m_bExtra = false;
 
 public:
 	void Initialize();
@@ -64,7 +64,7 @@ public:
 	void RenderViewmodel(void* ecx, int flags);
 	void RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
 
-	bool bRendering = false;
+	bool m_bRendering = false;
 };
 
 ADD_FEATURE(CGlow, Glow)
