@@ -46,12 +46,15 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 void CAntiAim::FakeShotAngles(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!Vars::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN || !pLocal || pLocal->m_MoveType() == MOVETYPE_WALK)
+	if (!Vars::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN || !pLocal || pLocal->m_MoveType() != MOVETYPE_WALK)
 		return;
 
 	G::SilentAngles = true;
-	pCmd->viewangles.x = -pCmd->viewangles.x + 180;
-	pCmd->viewangles.y += 180;
+	pCmd->viewangles.x += 360 * (vFakeAngles.x < 0 ? -1 : 1);
+
+	// messes with nospread accuracy
+	//pCmd->viewangles.x = 180 - pCmd->viewangles.x;
+	//pCmd->viewangles.y += 180;
 }
 
 float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOffset)

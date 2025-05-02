@@ -212,7 +212,7 @@ public:
 
 	inline float GetSwingRange(CBaseEntity* pLocal)
 	{
-		return reinterpret_cast<int(*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 456))(pLocal);
+		return reinterpret_cast<int(*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 457))(pLocal);
 	}
 
 	inline float GetSwingRange()
