@@ -98,51 +98,79 @@ void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)
 	pCmd->buttons |= IN_JUMP;
 }
 
-void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
-{
-	if (!Vars::Misc::Movement::AutoStrafe.Value || pLocal->m_hGroundEntity() || !(pLocal->m_afButtonLast() & IN_JUMP) && (pCmd->buttons & IN_JUMP))
-		return;
+void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)  
+{  
+if (!Vars::Misc::Movement::AutoStrafe.Value || pLocal->m_hGroundEntity() || !(pLocal->m_afButtonLast() & IN_JUMP) && (pCmd->buttons & IN_JUMP))  
+	return;  
 
-	switch (Vars::Misc::Movement::AutoStrafe.Value)
-	{
-	case Vars::Misc::Movement::AutoStrafeEnum::Legit:
-	{
-		static auto cl_sidespeed = U::ConVars.FindVar("cl_sidespeed");
-		const float flSideSpeed = cl_sidespeed->GetFloat();
+switch (Vars::Misc::Movement::AutoStrafe.Value)  
+{  
+case Vars::Misc::Movement::AutoStrafeEnum::Legit:  
+{  
+	static auto cl_sidespeed = U::ConVars.FindVar("cl_sidespeed");  
+	const float flSideSpeed = cl_sidespeed->GetFloat();  
 
-		if (pCmd->mousedx)
-		{
-			pCmd->forwardmove = 0.f;
-			pCmd->sidemove = pCmd->mousedx > 0 ? flSideSpeed : -flSideSpeed;
-		}
-		break;
-	}
-	case Vars::Misc::Movement::AutoStrafeEnum::Directional:
-	{
-		// credits: KGB
-		if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
-			break;
+	if (pCmd->mousedx)  
+	{  
+		pCmd->forwardmove = 0.f;  
+		pCmd->sidemove = pCmd->mousedx > 0 ? flSideSpeed : -flSideSpeed;  
+	}  
+	break;  
+}  
+case Vars::Misc::Movement::AutoStrafeEnum::Forward:  
+{  
+	// forward-only version, great for spy/trolldiers, less sus, pressing S stops you mid-air  
+	if (!(pCmd->buttons & (IN_FORWARD)))  
+		break;  
 
-		float flForward = pCmd->forwardmove, flSide = pCmd->sidemove;
+	float flForward = pCmd->forwardmove, flSide = pCmd->sidemove;  
 
-		Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);
-		vForward.Normalize2D(), vRight.Normalize2D();
+	// couldn't get this working without duplicating the entire code  
+	Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);  
+	vForward.Normalize2D(), vRight.Normalize2D();  
 
-		Vec3 vWishDir = {}; Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f }, vWishDir);
-		Vec3 vCurDir = {}; Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);
-		float flDirDelta = Math::NormalizeAngle(vWishDir.y - vCurDir.y);
-		if (fabsf(flDirDelta) > Vars::Misc::Movement::AutoStrafeMaxDelta.Value)
-			break;
+	Vec3 vWishDir = {}; Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f }, vWishDir);  
+	Vec3 vCurDir = {}; Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);  
+	float flDirDelta = Math::NormalizeAngle(vWishDir.y - vCurDir.y);  
+	if (fabsf(flDirDelta) > Vars::Misc::Movement::AutoStrafeMaxDelta.Value)  
+		break;  
 
-		float flTurnScale = Math::RemapVal(Vars::Misc::Movement::AutoStrafeTurnScale.Value, 0.f, 1.f, 0.9f, 1.f);
-		float flRotation = DEG2RAD((flDirDelta > 0.f ? -90.f : 90.f) + flDirDelta * flTurnScale);
-		float flCosRot = cosf(flRotation), flSinRot = sinf(flRotation);
+	float flTurnScale = Math::RemapVal(Vars::Misc::Movement::AutoStrafeTurnScale.Value, 0.f, 1.f, 0.9f, 1.f);  
+	float flRotation = DEG2RAD((flDirDelta > 0.f ? -90.f : 90.f) + flDirDelta * flTurnScale);  
+	float flCosRot = cosf(flRotation), flSinRot = sinf(flRotation);  
 
-		pCmd->forwardmove = flCosRot * flForward - flSinRot * flSide;
-		pCmd->sidemove = flSinRot * flForward + flCosRot * flSide;
-	}
-	}
+	pCmd->forwardmove = flCosRot * flForward - flSinRot * flSide;  
+	pCmd->sidemove = flSinRot * flForward + flCosRot * flSide;  
+	break;  
+}  
+case Vars::Misc::Movement::AutoStrafeEnum::Directional:  
+{  
+	// credits: KGB  
+	if (!(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))  
+		break;  
+
+	float flForward = pCmd->forwardmove, flSide = pCmd->sidemove;  
+
+	Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);  
+	vForward.Normalize2D(), vRight.Normalize2D();  
+
+	Vec3 vWishDir = {}; Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f }, vWishDir);  
+	Vec3 vCurDir = {}; Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);  
+	float flDirDelta = Math::NormalizeAngle(vWishDir.y - vCurDir.y);  
+	if (fabsf(flDirDelta) > Vars::Misc::Movement::AutoStrafeMaxDelta.Value)  
+		break;  
+
+	float flTurnScale = Math::RemapVal(Vars::Misc::Movement::AutoStrafeTurnScale.Value, 0.f, 1.f, 0.9f, 1.f);  
+	float flRotation = DEG2RAD((flDirDelta > 0.f ? -90.f : 90.f) + flDirDelta * flTurnScale);  
+	float flCosRot = cosf(flRotation), flSinRot = sinf(flRotation);  
+
+	pCmd->forwardmove = flCosRot * flForward - flSinRot * flSide;  
+	pCmd->sidemove = flSinRot * flForward + flCosRot * flSide;  
+	break;  
+}  
+}  
 }
+
 
 void CMisc::AutoDuck(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
