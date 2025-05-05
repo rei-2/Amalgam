@@ -155,7 +155,7 @@ void CRender::Initialize(IDirect3DDevice9* pDevice)
 	ImGui_ImplDX9_Init(pDevice);
 
 	auto& io = ImGui::GetIO();
-	io.IniFilename = nullptr;
+	//io.IniFilename = nullptr;
 	io.LogFilename = nullptr;
 
 	LoadFonts();

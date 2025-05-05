@@ -827,8 +827,8 @@ namespace ImGui
 				{
 					*pVar = int(!j ? i : j - 1);
 					bChanged = true;
-					//if (vStoredLabels.empty())
-					//	mLastHeights.clear();
+					if (vStoredLabels.empty())
+						mLastHeights.clear();
 				}
 				if (!Disabled && IsItemHovered())
 					SetMouseCursor(ImGuiMouseCursor_Hand);
@@ -1080,15 +1080,24 @@ namespace ImGui
 		vSize.y = H::Draw.Scale(6 + 18 * iWraps);
 
 		bool bReturn = Button(std::format("##{}", sLabel).c_str(), vSize);
+		ImColor tColor = *pVar ? (iFlags & FToggleEnum::PlainColor ? F::Render.Active : F::Render.Accent) : F::Render.Inactive;
 		if (Disabled)
 			bReturn = false;
-		else if (IsItemHovered())
+		else if (IsItemHovered() && GetMouseCursor() != ImGuiMouseCursor_Hand)
+		{
 			SetMouseCursor(ImGuiMouseCursor_Hand);
+
+			ImColor tTransparent = tColor;
+			tTransparent.Value.w *= 0.05f * GetStyle().Alpha;
+			ImDrawList* pDrawList = GetWindowDrawList();
+			ImVec2 vDrawPos = GetDrawPos() + ImVec2(vOriginalPos.x + H::Draw.Scale(12), vOriginalPos.y + H::Draw.Scale(3 + 9 * iWraps));
+			pDrawList->AddCircleFilled(vDrawPos, H::Draw.Scale(11), tTransparent);
+		}
 		if (bReturn)
 			*pVar = !*pVar;
 
 		SetCursorPos({ vOriginalPos.x + H::Draw.Scale(4), vOriginalPos.y + H::Draw.Scale(-5 + 9 * iWraps) });
-		IconImage(*pVar ? ICON_MD_CHECK_BOX : ICON_MD_CHECK_BOX_OUTLINE_BLANK, *pVar ? (iFlags & FToggleEnum::PlainColor ? F::Render.Active : F::Render.Accent) : F::Render.Inactive);
+		IconImage(*pVar ? ICON_MD_CHECK_BOX : ICON_MD_CHECK_BOX_OUTLINE_BLANK, tColor);
 
 		for (size_t i = 0; i < iWraps; i++)
 		{
@@ -1250,7 +1259,7 @@ namespace ImGui
 		ImColor tAccent = F::Render.Accent, tMuted = tAccent, tWashed = tAccent, tTransparent = tAccent;
 		{
 			float flA = GetStyle().Alpha;
-			tAccent.Value.w *= flA, tMuted.Value.w *= 0.8f * flA, tWashed.Value.w *= 0.4f * flA, tTransparent.Value.w *= 0.2f * flA;
+			tAccent.Value.w *= flA, tMuted.Value.w *= 0.8f * flA, tWashed.Value.w *= 0.4f * flA, tTransparent.Value.w *= 0.1f * flA;
 		}
 
 		bool bWithin = IsWindowHovered() && IsMouseWithin(vDrawPos.x + vMins.x - H::Draw.Scale(6), vDrawPos.y + vMins.y - H::Draw.Scale(6), (vMaxs.x - vMins.x) + H::Draw.Scale(12), (vMaxs.y - vMins.y) + H::Draw.Scale(12));
@@ -1284,7 +1293,7 @@ namespace ImGui
 					float& flVar = bVar1 ? flSVar1 : flSVar2;
 					flVar = flMin + (flMax - flMin) * flMousePerc;
 					flVar = std::clamp(flVar - fnmodf(flVar, flStep), !bVar1 ? flSVar1 + flStep : flMin, bVar1 ? flSVar2 - flStep : flMax);
-					pDrawList->AddCircleFilled({ vDrawPos.x + (bVar1 ? flLowerPos : flUpperPos), vDrawPos.y + vMins.y + H::Draw.Scale(1) }, H::Draw.Scale(11), tWashed);
+					pDrawList->AddCircleFilled({ vDrawPos.x + (bVar1 ? flLowerPos : flUpperPos), vDrawPos.y + vMins.y + H::Draw.Scale(1) }, H::Draw.Scale(15), tTransparent);
 				}
 				else
 					mActiveMap[uHash] = false;
@@ -1317,7 +1326,7 @@ namespace ImGui
 				{
 					flSVar1 = flMin + (flMax - flMin) * flMousePerc;
 					flSVar1 = std::clamp(flSVar1 - fnmodf(flSVar1, flStep), flMin, flMax);
-					pDrawList->AddCircleFilled({ vDrawPos.x + flPos, vDrawPos.y + vMins.y + H::Draw.Scale(1) }, H::Draw.Scale(11), tWashed);
+					pDrawList->AddCircleFilled({ vDrawPos.x + flPos, vDrawPos.y + vMins.y + H::Draw.Scale(1) }, H::Draw.Scale(15), tTransparent);
 				}
 				else
 					mActiveMap[uHash] = false;

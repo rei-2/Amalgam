@@ -18,8 +18,8 @@ void CMenu::DrawMenu()
 	static bool bSetPosition = false;
 	if (!bSetPosition)
 	{
-		SetNextWindowPos((GetIO().DisplaySize - ImVec2(H::Draw.Scale(750), H::Draw.Scale(500))) / 2);
-		SetNextWindowSize({ H::Draw.Scale(750), H::Draw.Scale(500) });
+		SetNextWindowPos((GetIO().DisplaySize - ImVec2(H::Draw.Scale(750), H::Draw.Scale(500))) / 2, ImGuiCond_FirstUseEver);
+		SetNextWindowSize({ H::Draw.Scale(750), H::Draw.Scale(500) }, ImGuiCond_FirstUseEver);
 		bSetPosition = true;
 	}
 
@@ -73,7 +73,7 @@ void CMenu::DrawMenu()
 		PushFont(F::Render.FontBold);
 		FTabs(
 			{
-				{ "AIMBOT", "GENERAL", "HVH" },
+				{ "AIMBOT", "GENERAL", "HVH", "DRAW" },
 				{ "VISUALS", "ESP", "CHAMS", "GLOW", "MISC##", "RADAR", "MENU" },
 				{ "MISC" },
 				{ "LOGS", "PLAYERLIST", "SETTINGS##", "OUTPUT" },
@@ -150,14 +150,14 @@ void CMenu::MenuAimbot(int iTab)
 					FDropdown(Vars::Aimbot::General::Ignore, FDropdownEnum::Right);
 					FSlider(Vars::Aimbot::General::AimFOV);
 					FSlider(Vars::Aimbot::General::MaxTargets, FSliderEnum::Left);
-					PushTransparent(FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Smooth && FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Assistive);
-					{
-						FSlider(Vars::Aimbot::General::AssistStrength, FSliderEnum::Right);
-					}
-					PopTransparent();
 					PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & Vars::Aimbot::General::IgnoreEnum::Cloaked));
 					{
-						FSlider(Vars::Aimbot::General::IgnoreCloak, FSliderEnum::Left);
+						FSlider(Vars::Aimbot::General::IgnoreCloak, FSliderEnum::Right);
+					}
+					PopTransparent();
+					PushTransparent(FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Smooth && FGet(Vars::Aimbot::General::AimType) != Vars::Aimbot::General::AimTypeEnum::Assistive);
+					{
+						FSlider(Vars::Aimbot::General::AssistStrength, FSliderEnum::Left);
 					}
 					PopTransparent();
 					PushTransparent(!(FGet(Vars::Aimbot::General::Ignore) & Vars::Aimbot::General::IgnoreEnum::Unsimulated));
@@ -481,6 +481,115 @@ void CMenu::MenuAimbot(int iTab)
 		}
 		break;
 	}
+	// Draw
+	case 2:
+	{
+		if (BeginTable("DrawTable", 2))
+		{
+			/* Column 1 */
+			TableNextColumn();
+			{
+				if (Section("Line", 8))
+				{
+					FColorPicker(Vars::Colors::LineClipped, 0);
+					FColorPicker(Vars::Colors::Line, 1);
+					FToggle(Vars::Visuals::Line::Enabled);
+					FSlider(Vars::Visuals::Line::DrawDuration);
+				} EndSection();
+				if (Section("Hitbox"))
+				{
+					FDropdown(Vars::Visuals::Hitbox::BonesEnabled, FDropdownEnum::None, -110);
+					FColorPicker(Vars::Colors::TargetHitboxEdge, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::TargetHitboxEdgeClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
+					FColorPicker(Vars::Colors::TargetHitboxFace, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::TargetHitboxFaceClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
+					FColorPicker(Vars::Colors::BoneHitboxEdge, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::BoneHitboxEdgeClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
+					FColorPicker(Vars::Colors::BoneHitboxFace, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::BoneHitboxFaceClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+
+					FDropdown(Vars::Visuals::Hitbox::BoundsEnabled, FDropdownEnum::None, -50);
+					FColorPicker(Vars::Colors::BoundHitboxEdge, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::BoundHitboxEdgeClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
+					FColorPicker(Vars::Colors::BoundHitboxFace, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::BoundHitboxFaceClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+
+					FSlider(Vars::Visuals::Hitbox::DrawDuration);
+				} EndSection();
+			}
+			/* Column 2 */
+			TableNextColumn();
+			{
+				if (Section("Simulation"))
+				{
+					FDropdown(Vars::Visuals::Simulation::PlayerPath, FDropdownEnum::Left, -20);
+					FColorPicker(Vars::Colors::PlayerPath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::PlayerPathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FDropdown(Vars::Visuals::Simulation::ProjectilePath, FDropdownEnum::Right, -20);
+					FColorPicker(Vars::Colors::ProjectilePath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::ProjectilePathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FDropdown(Vars::Visuals::Simulation::TrajectoryPath, FDropdownEnum::Left, -20);
+					FColorPicker(Vars::Colors::TrajectoryPath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::TrajectoryPathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FDropdown(Vars::Visuals::Simulation::ShotPath, FDropdownEnum::Right, -20);
+					FColorPicker(Vars::Colors::ShotPath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::ShotPathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FDropdown(Vars::Visuals::Simulation::SplashRadius, FDropdownEnum::None, -20);
+					FColorPicker(Vars::Colors::SplashRadius, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FColorPicker(Vars::Colors::SplashRadiusClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
+					FToggle(Vars::Visuals::Simulation::Timed, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Simulation::Box, FToggleEnum::Right);
+					FToggle(Vars::Visuals::Simulation::ProjectileCamera, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Simulation::SwingLines, FToggleEnum::Right);
+					PushTransparent(FGet(Vars::Visuals::Simulation::Timed));
+					{
+						FSlider(Vars::Visuals::Simulation::DrawDuration);
+					}
+					PopTransparent();
+				} EndSection();
+				if (Vars::Debug::Options.Value)
+				{
+					if (Section("##Debug Part1"))
+					{
+						FSlider(Vars::Visuals::Simulation::SeparatorSpacing, FSliderEnum::Left);
+						FSlider(Vars::Visuals::Simulation::SeparatorLength, FSliderEnum::Right);
+					} EndSection();
+					if (Section("##Debug Part2"))
+					{
+						FToggle(Vars::Visuals::Trajectory::Override);
+						FSlider(Vars::Visuals::Trajectory::OffsetX);
+						FSlider(Vars::Visuals::Trajectory::OffsetY);
+						FSlider(Vars::Visuals::Trajectory::OffsetZ);
+						FToggle(Vars::Visuals::Trajectory::Pipes);
+						FSlider(Vars::Visuals::Trajectory::Hull);
+						FSlider(Vars::Visuals::Trajectory::Speed);
+						FSlider(Vars::Visuals::Trajectory::Gravity);
+						FToggle(Vars::Visuals::Trajectory::NoSpin);
+						FSlider(Vars::Visuals::Trajectory::LifeTime);
+						FSlider(Vars::Visuals::Trajectory::UpVelocity);
+						FSlider(Vars::Visuals::Trajectory::AngularVelocityX);
+						FSlider(Vars::Visuals::Trajectory::AngularVelocityY);
+						FSlider(Vars::Visuals::Trajectory::AngularVelocityZ);
+						FSlider(Vars::Visuals::Trajectory::Drag);
+						FSlider(Vars::Visuals::Trajectory::DragX);
+						FSlider(Vars::Visuals::Trajectory::DragY);
+						FSlider(Vars::Visuals::Trajectory::DragZ);
+						FSlider(Vars::Visuals::Trajectory::AngularDragX);
+						FSlider(Vars::Visuals::Trajectory::AngularDragY);
+						FSlider(Vars::Visuals::Trajectory::AngularDragZ);
+						FSlider(Vars::Visuals::Trajectory::MaxVelocity);
+						FSlider(Vars::Visuals::Trajectory::MaxAngularVelocity);
+					} EndSection();
+				}
+			}
+			EndTable();
+		}
+		break;
+	}
 	}
 }
 
@@ -609,20 +718,22 @@ void CMenu::MenuVisuals(int iTab)
 					FDropdown("Active groups", &i, { "" }); // active groups var for binding/quick access. automatically set bits for this var when adding/removing groups
 
 					PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-					SetCursorPos({ H::Draw.Scale(13), H::Draw.Scale(128) }); FText("Groups");
+					SetCursorPos({ H::Draw.Scale(13), H::Draw.Scale(128) });
+					FText("Groups");
+					SetCursorPosY(GetCursorPosY() - H::Draw.Scale(8));
 					PopStyleColor();
 
 					for (auto it = F::Groups.m_vGroups.begin(); it < F::Groups.m_vGroups.end();)
 					{
-						int y = std::distance(F::Groups.m_vGroups.begin(), it);
+						int iIndex = std::distance(F::Groups.m_vGroups.begin(), it);
 						auto& tGroup = *it;
 
-						ImVec2 vOriginalPos = { H::Draw.Scale(8), H::Draw.Scale(144) + H::Draw.Scale(36) * y };
+						ImVec2 vOriginalPos = { H::Draw.Scale(8), GetCursorPosY() - H::Draw.Scale(8) };
 
 						float flWidth = GetWindowWidth() - GetStyle().WindowPadding.x * 2;
 						float flHeight = H::Draw.Scale(28);
 						ImVec2 vDrawPos = GetDrawPos() + vOriginalPos;
-						if (iCurrentGroup != y)
+						if (iCurrentGroup != iIndex)
 							GetWindowDrawList()->AddRectFilled(vDrawPos, { vDrawPos.x + flWidth, vDrawPos.y + flHeight }, F::Render.Background1p5, H::Draw.Scale(4));
 						else
 						{
@@ -872,7 +983,7 @@ void CMenu::MenuVisuals(int iTab)
 					FToggle(Vars::Chams::Viewmodel::Hands, FToggleEnum::Right);
 
 					FMDropdown(Vars::Chams::Viewmodel::WeaponMaterial, FDropdownEnum::Left);
-					FMDropdown(Vars::Chams::Viewmodel::WeaponMaterial, FDropdownEnum::Right);
+					FMDropdown(Vars::Chams::Viewmodel::HandsMaterial, FDropdownEnum::Right);
 				} EndSection();
 			}
 			EndTable();
@@ -1083,44 +1194,13 @@ void CMenu::MenuVisuals(int iTab)
 						FSlider(Vars::Visuals::Viewmodel::SwayInterp, FSliderEnum::Right);
 					}
 					PopTransparent();
+					/*
 					PushTransparent(!FGet(Vars::Visuals::Viewmodel::FieldOfView));
 					{
 						FSlider(Vars::Visuals::Viewmodel::FieldOfView);
 					}
 					PopTransparent();
-				} EndSection();
-				if (Section("World"))
-				{
-					FDropdown(Vars::Visuals::World::Modulations);
-					FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
-					FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
-					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
-					{
-						FColorPicker(Vars::Colors::WorldModulation, 0, FColorPickerEnum::Left);
-					}
-					PopTransparent();
-					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Sky));
-					{
-						FColorPicker(Vars::Colors::SkyModulation, 0, FColorPickerEnum::Middle);
-					}
-					PopTransparent();
-					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Prop));
-					{
-						FColorPicker(Vars::Colors::PropModulation, 0, FColorPickerEnum::Left);
-					}
-					PopTransparent();
-					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Particle));
-					{
-						FColorPicker(Vars::Colors::ParticleModulation, 0, FColorPickerEnum::Middle);
-					}
-					PopTransparent();
-					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Fog));
-					{
-						FColorPicker(Vars::Colors::FogModulation, 0, FColorPickerEnum::Left);
-					}
-					PopTransparent();
-					FToggle(Vars::Visuals::World::NearPropFade, FToggleEnum::Left);
-					FToggle(Vars::Visuals::World::NoPropFade, FToggleEnum::Right);
+					*/
 				} EndSection();
 			}
 			/* Column 2 */
@@ -1165,98 +1245,39 @@ void CMenu::MenuVisuals(int iTab)
 					FToggle(Vars::Visuals::UI::ScoreboardColors, FToggleEnum::Left);
 					FToggle(Vars::Visuals::UI::CleanScreenshots, FToggleEnum::Right);
 				} EndSection();
-				if (Section("Line", 8))
+				if (Section("World"))
 				{
-					FColorPicker(Vars::Colors::LineClipped, 0);
-					FColorPicker(Vars::Colors::Line, 1);
-					FToggle(Vars::Visuals::Line::Enabled);
-					FSlider(Vars::Visuals::Line::DrawDuration);
-				} EndSection();
-				if (Section("Hitbox"))
-				{
-					FDropdown(Vars::Visuals::Hitbox::BonesEnabled, FDropdownEnum::None, -110);
-					FColorPicker(Vars::Colors::TargetHitboxEdge, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::TargetHitboxEdgeClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
-					FColorPicker(Vars::Colors::TargetHitboxFace, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::TargetHitboxFaceClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
-					FColorPicker(Vars::Colors::BoneHitboxEdge, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::BoneHitboxEdgeClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
-					FColorPicker(Vars::Colors::BoneHitboxFace, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::BoneHitboxFaceClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-
-					FDropdown(Vars::Visuals::Hitbox::BoundsEnabled, FDropdownEnum::None, -50);
-					FColorPicker(Vars::Colors::BoundHitboxEdge, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::BoundHitboxEdgeClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					SameLine(); DebugDummy({ H::Draw.Scale(2), 0 });
-					FColorPicker(Vars::Colors::BoundHitboxFace, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::BoundHitboxFaceClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-
-					FSlider(Vars::Visuals::Hitbox::DrawDuration);
-				} EndSection();
-				if (Section("Simulation"))
-				{
-					FDropdown(Vars::Visuals::Simulation::PlayerPath, FDropdownEnum::Left, -20);
-					FColorPicker(Vars::Colors::PlayerPath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::PlayerPathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FDropdown(Vars::Visuals::Simulation::ProjectilePath, FDropdownEnum::Right, -20);
-					FColorPicker(Vars::Colors::ProjectilePath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::ProjectilePathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FDropdown(Vars::Visuals::Simulation::TrajectoryPath, FDropdownEnum::Left, -20);
-					FColorPicker(Vars::Colors::TrajectoryPath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::TrajectoryPathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FDropdown(Vars::Visuals::Simulation::ShotPath, FDropdownEnum::Right, -20);
-					FColorPicker(Vars::Colors::ShotPath, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::ShotPathClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FDropdown(Vars::Visuals::Simulation::SplashRadius, FDropdownEnum::None, -20);
-					FColorPicker(Vars::Colors::SplashRadius, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FColorPicker(Vars::Colors::SplashRadiusClipped, 0, FColorPickerEnum::Dropdown | FColorPickerEnum::Tooltip);
-					FToggle(Vars::Visuals::Simulation::Timed, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Simulation::Box, FToggleEnum::Right);
-					FToggle(Vars::Visuals::Simulation::ProjectileCamera, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Simulation::SwingLines, FToggleEnum::Right);
-					PushTransparent(FGet(Vars::Visuals::Simulation::Timed));
+					FDropdown(Vars::Visuals::World::Modulations);
+					FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
+					FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
+					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
 					{
-						FSlider(Vars::Visuals::Simulation::DrawDuration);
+						FColorPicker(Vars::Colors::WorldModulation, 0, FColorPickerEnum::Left);
 					}
 					PopTransparent();
+					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Sky));
+					{
+						FColorPicker(Vars::Colors::SkyModulation, 0, FColorPickerEnum::Middle);
+					}
+					PopTransparent();
+					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Prop));
+					{
+						FColorPicker(Vars::Colors::PropModulation, 0, FColorPickerEnum::Left);
+					}
+					PopTransparent();
+					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Particle));
+					{
+						FColorPicker(Vars::Colors::ParticleModulation, 0, FColorPickerEnum::Middle);
+					}
+					PopTransparent();
+					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::Fog));
+					{
+						FColorPicker(Vars::Colors::FogModulation, 0, FColorPickerEnum::Left);
+					}
+					PopTransparent();
+					FToggle(Vars::Visuals::World::NearPropFade, FToggleEnum::Left);
+					FToggle(Vars::Visuals::World::NoPropFade, FToggleEnum::Right);
 				} EndSection();
-				if (Vars::Debug::Options.Value)
-				{
-					if (Section("##Debug Part1"))
-					{
-						FSlider(Vars::Visuals::Simulation::SeparatorSpacing, FSliderEnum::Left);
-						FSlider(Vars::Visuals::Simulation::SeparatorLength, FSliderEnum::Right);
-					} EndSection();
-					if (Section("##Debug Part2"))
-					{
-						FToggle(Vars::Visuals::Trajectory::Override);
-						FSlider(Vars::Visuals::Trajectory::OffsetX);
-						FSlider(Vars::Visuals::Trajectory::OffsetY);
-						FSlider(Vars::Visuals::Trajectory::OffsetZ);
-						FToggle(Vars::Visuals::Trajectory::Pipes);
-						FSlider(Vars::Visuals::Trajectory::Hull);
-						FSlider(Vars::Visuals::Trajectory::Speed);
-						FSlider(Vars::Visuals::Trajectory::Gravity);
-						FToggle(Vars::Visuals::Trajectory::NoSpin);
-						FSlider(Vars::Visuals::Trajectory::LifeTime);
-						FSlider(Vars::Visuals::Trajectory::UpVelocity);
-						FSlider(Vars::Visuals::Trajectory::AngularVelocityX);
-						FSlider(Vars::Visuals::Trajectory::AngularVelocityY);
-						FSlider(Vars::Visuals::Trajectory::AngularVelocityZ);
-						FSlider(Vars::Visuals::Trajectory::Drag);
-						FSlider(Vars::Visuals::Trajectory::DragX);
-						FSlider(Vars::Visuals::Trajectory::DragY);
-						FSlider(Vars::Visuals::Trajectory::DragZ);
-						FSlider(Vars::Visuals::Trajectory::AngularDragX);
-						FSlider(Vars::Visuals::Trajectory::AngularDragY);
-						FSlider(Vars::Visuals::Trajectory::AngularDragZ);
-						FSlider(Vars::Visuals::Trajectory::MaxVelocity);
-						FSlider(Vars::Visuals::Trajectory::MaxAngularVelocity);
-					} EndSection();
-				}
 				/*
 				if (Section("Other"))
 				{
@@ -1586,7 +1607,7 @@ void CMenu::MenuLogs(int iTab)
 								std::vector<PriorityLabel_t> vLabels = {};
 								std::vector<std::pair<PriorityLabel_t*, int>> vTags = {};
 								if (vParty.size() > 1)
-									vLabels.emplace_back("Party", F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].m_tColor.HueShift(player.m_iParty % 360));
+									vLabels.emplace_back("Party", F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].m_tColor.HueShift((player.m_iParty - 1) % 360));
 								if (player.m_bF2P)
 									vTags.emplace_back(&F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(F2P_TAG)], 0);
 								for (auto& iID : F::PlayerUtils.m_mPlayerTags[player.m_uFriendsID])
@@ -2696,7 +2717,8 @@ void CMenu::MenuSettings(int iTab)
 			} EndSection();
 			SetCursorPosX(GetCursorPosX() + 8);
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			FText("Built @ " __DATE__ ", " __TIME__);
+			FText(__CONFIGURATION__ " @ " __DATE__ ", " __TIME__);
+
 			PopStyleColor();
 
 			/* Column 2 */
@@ -2898,19 +2920,22 @@ void CMenu::MenuSettings(int iTab)
 			} EndChild();
 
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			SetCursorPos({ H::Draw.Scale(13), H::Draw.Scale(128) }); FText("Binds");
+			SetCursorPos({ H::Draw.Scale(13), H::Draw.Scale(128) });
+			FText("Binds");
+			SetCursorPosY(GetCursorPosY() - H::Draw.Scale(5));
 			PopStyleColor();
 
-			std::function<int(int, int, int)> getBinds = [&](int iParent, int x, int y)
+			std::unordered_map<int, bool> mBinds = {};
+			std::function<void(int, int)> getBinds = [&](int iParent, int x)
 				{
 					for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
 					{
 						int _iBind = std::distance(F::Binds.m_vBinds.begin(), it);
 						auto& _tBind = *it;
-						if (iParent != _tBind.m_iParent)
+						if (iParent != -2 && iParent != _tBind.m_iParent || mBinds.contains(_iBind))
 							continue;
 
-						y++;
+						mBinds[_iBind] = true;
 
 						std::string sType; std::string sInfo;
 						switch (_tBind.m_iType)
@@ -2956,7 +2981,7 @@ void CMenu::MenuSettings(int iTab)
 						if (_tBind.m_bNot && (_tBind.m_iType != BindEnum::Key || _tBind.m_iInfo == BindEnum::KeyEnum::Hold))
 							sType = std::format("not {}", sType);
 
-						ImVec2 vOriginalPos = { H::Draw.Scale(8) + H::Draw.Scale(28) * std::min(x, 3), H::Draw.Scale(108) + H::Draw.Scale(36) * y };
+						ImVec2 vOriginalPos = { H::Draw.Scale(8) + H::Draw.Scale(28) * std::min(x, 3), GetCursorPosY() + H::Draw.Scale(8) };
 
 						// background
 						float flWidth = GetWindowWidth() - GetStyle().WindowPadding.x * 2 - H::Draw.Scale(28) * std::min(x, 3);
@@ -3071,12 +3096,23 @@ void CMenu::MenuSettings(int iTab)
 							EndPopup();
 						}
 
-						y = getBinds(_iBind, x + 1, y);
+						if (iParent != -2)
+							getBinds(_iBind, x + 1);
 					}
-
-					return y;
 				};
-			getBinds(DEFAULT_BIND, 0, 0);
+			getBinds(DEFAULT_BIND, 0);
+
+			// this should ideally never happen, but failsafe
+			if (F::Binds.m_vBinds.size() > mBinds.size())
+			{
+				PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
+				SetCursorPos({ H::Draw.Scale(13), GetCursorPosY() + H::Draw.Scale(5) });
+				FText("Dangling");
+				SetCursorPosY(GetCursorPosY() - H::Draw.Scale(5));
+				PopStyleColor();
+
+				getBinds(DEFAULT_BIND - 1, 0);
+			}
 
 			if (bParent == 2) // dumb
 				bParent = 1;

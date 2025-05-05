@@ -21,11 +21,10 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
 	if (G::Unload)
 		return CALL_ORIGINAL(rcx, iMode);
 
+	H::Draw.UpdateScreenSize();
 	if (iMode & PAINT_INGAMEPANELS && (!Vars::Visuals::UI::CleanScreenshots.Value || !I::EngineClient->IsTakingScreenshot()))
 	{
 		H::Draw.UpdateW2SMatrix();
-		H::Draw.UpdateScreenSize();
-
 		H::Draw.Start(true);
 		if (auto pLocal = H::Entities.GetLocal())
 		{

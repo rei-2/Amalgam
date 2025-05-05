@@ -1752,29 +1752,26 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	{
 		float flTimeTo = 0.f; std::deque<Vec3> vPlayerPath, vProjectilePath; std::vector<DrawBox_t> vBoxes = {};
 		const int iResult = CanHit(tTarget, pLocal, pWeapon, &vPlayerPath, &vProjectilePath, &vBoxes, &flTimeTo);
-		if (!iResult)
+		if (iResult != 1 && pWeapon->GetWeaponID() == TF_WEAPON_CANNON && Vars::Aimbot::Projectile::Modifiers.Value & Vars::Aimbot::Projectile::ModifiersEnum::ChargeWeapon && !(pCmd->buttons & IN_ATTACK))
 		{
-			if (pWeapon->GetWeaponID() == TF_WEAPON_CANNON && !(pCmd->buttons & IN_ATTACK))
+			float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f
+				? std::clamp(pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime, 0.f, 1.f)
+				: 1.f;
+			if (!flTimeTo)
+				flTimeTo = std::numeric_limits<float>::max();
+			if (flCharge < flTimeTo)
 			{
-				float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f
-					? std::clamp(pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime, 0.f, 1.f)
-					: 1.f;
-				if (!flTimeTo)
-					flTimeTo = std::numeric_limits<float>::max();
-				if (flCharge < flTimeTo)
-				{
-					if (pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f)
-						CancelShot(pLocal, pWeapon, pCmd, m_iLastTickCancel);
-				}
-				else
-				{
-					if (m_iLastTickCancel)
-						pCmd->weaponselect = m_iLastTickCancel = 0;
-					pCmd->buttons |= IN_ATTACK;
-				}
+				if (pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f)
+					CancelShot(pLocal, pWeapon, pCmd, m_iLastTickCancel);
 			}
-			continue;
+			else
+			{
+				if (m_iLastTickCancel)
+					pCmd->weaponselect = m_iLastTickCancel = 0;
+				pCmd->buttons |= IN_ATTACK;
+			}
 		}
+		if (!iResult) continue;
 		if (iResult == 2)
 		{
 			G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };

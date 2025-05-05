@@ -24,8 +24,8 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		if (pPlayer->IsAlive() || pObserverTarget != pTarget
 			|| bLocal && !I::EngineClient->IsPlayingDemo() && F::Spectate.m_iTarget == -1)
 		{
-			if (m_mRespawnCache.contains(pPlayer->entindex()))
-				m_mRespawnCache.erase(pPlayer->entindex());
+			if (m_mRespawnCache.contains(iIndex))
+				m_mRespawnCache.erase(iIndex);
 			continue;
 		}
 
@@ -42,21 +42,18 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		if (auto pResource = H::Entities.GetPR())
 		{
 			flRespawnTime = pResource->m_flNextRespawnTime(iIndex);
-			flRespawnIn = std::max(flRespawnTime - TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick), 0.f);
+			flRespawnIn = std::max(floorf(flRespawnTime - TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick)), 0.f);
 		}
 		if (!m_mRespawnCache.contains(iIndex))
 			m_mRespawnCache[iIndex] = flRespawnTime;
-		if (m_mRespawnCache[iIndex] + 0.9f < flRespawnTime)
-		{
+		else if (m_mRespawnCache[iIndex] + 0.5f < flRespawnTime)
 			bRespawnTimeIncreased = true;
-			m_mRespawnCache[iIndex] = -1.f;
-		}
 
 		PlayerInfo_t pi{};
 		if (I::EngineClient->GetPlayerInfo(iIndex, &pi))
 		{
 			std::string sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-			m_vSpectators.emplace_back(sName, sMode, flRespawnIn, bRespawnTimeIncreased, H::Entities.IsFriend(pPlayer->entindex()), H::Entities.InParty(pPlayer->entindex()), pPlayer->entindex());
+			m_vSpectators.emplace_back(sName, sMode, flRespawnIn, bRespawnTimeIncreased, iIndex);
 		}
 	}
 
@@ -105,19 +102,19 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 
 	std::string sName = pTarget != pLocal ? F::PlayerUtils.GetPlayerName(pTarget->entindex(), pi.name) : "You";
 	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, std::format("Spectating {}:", sName).c_str());
-	for (auto& Spectator : m_vSpectators)
+	for (auto& tSpectator : m_vSpectators)
 	{
 		y += nTall;
 
 		Color_t tColor = Vars::Menu::Theme::Active.Value;
-		if (Spectator.m_bIsFriend)
+		if (H::Entities.IsFriend(tSpectator.m_iIndex))
 			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].m_tColor;
-		else if (Spectator.m_bInParty)
+		else if (H::Entities.InParty(tSpectator.m_iIndex))
 			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(PARTY_TAG)].m_tColor;
-		else if (Spectator.m_bRespawnTimeIncreased)
+		else if (tSpectator.m_bRespawnTimeIncreased)
 			tColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].m_tColor;
-		else if (FNV1A::Hash32(Spectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
+		else if (FNV1A::Hash32(tSpectator.m_sMode.c_str()) == FNV1A::Hash32Const("1st"))
 			tColor = tColor.Lerp({ 255, 150, 0, 255 }, 0.5f);
-		H::Draw.StringOutlined(fFont, x + iconOffset, y, tColor, Vars::Menu::Theme::Background.Value, align, std::format("{} ({} - respawn {}s)", Spectator.m_sName, Spectator.m_sMode, ceilf(Spectator.m_flRespawnIn)).c_str());
+		H::Draw.StringOutlined(fFont, x + iconOffset, y, tColor, Vars::Menu::Theme::Background.Value, align, std::format("{} ({} - respawn {}s)", tSpectator.m_sName, tSpectator.m_sMode, tSpectator.m_flRespawnIn).c_str());
 	}
 }

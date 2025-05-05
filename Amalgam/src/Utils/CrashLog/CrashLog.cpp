@@ -134,7 +134,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 		ssErrorStream << "\n";
 	}
 
-	ssErrorStream << "Built @ " __DATE__ ", " __TIME__ "\n";
+	ssErrorStream << __CONFIGURATION__ " @ " __DATE__ ", " __TIME__ "\n";
 	ssErrorStream << "Ctrl + C to copy. \n";
 	if (bException)
 		ssErrorStream << "Shift + Enter to skip repetitive exceptions. \n";
