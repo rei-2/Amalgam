@@ -281,22 +281,20 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 	if (!pSet) return false;
 
 	std::vector<TickRecord*> vRecords = {};
+	if (F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords))
 	{
-		if (F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords))
-		{
-			vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal);
-			if (vRecords.empty())
-				return false;
-		}
-		else
-		{
-			matrix3x4 aBones[MAXSTUDIOBONES];
-			if (!tTarget.m_pEntity->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, tTarget.m_pEntity->m_flSimulationTime()))
-				return false;
+		vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal);
+		if (vRecords.empty())
+			return false;
+	}
+	else
+	{
+		matrix3x4 aBones[MAXSTUDIOBONES];
+		if (!tTarget.m_pEntity->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, tTarget.m_pEntity->m_flSimulationTime()))
+			return false;
 
-			F::Backtrack.m_tRecord = { tTarget.m_pEntity->m_flSimulationTime(), *reinterpret_cast<BoneMatrix*>(&aBones), tTarget.m_pEntity->m_vecOrigin() };
-			vRecords = { &F::Backtrack.m_tRecord };
-		}
+		F::Backtrack.m_tRecord = { tTarget.m_pEntity->m_flSimulationTime(), tTarget.m_pEntity->m_vecOrigin(), Vec3(), Vec3(), *reinterpret_cast<BoneMatrix*>(&aBones) };
+		vRecords = { &F::Backtrack.m_tRecord };
 	}
 
 	float flSpread = pWeapon->GetWeaponSpread();

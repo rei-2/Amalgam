@@ -24,10 +24,10 @@ struct BoneMatrix
 struct TickRecord
 {
 	float m_flSimTime = 0.f;
-	BoneMatrix m_BoneMatrix = {};
 	Vec3 m_vOrigin = {};
 	Vec3 m_vMins = {};
 	Vec3 m_vMaxs = {};
+	BoneMatrix m_BoneMatrix = {};
 	bool m_bOnShot = false;
 	Vec3 m_vBreak = {};
 	bool m_bInvalid = false;

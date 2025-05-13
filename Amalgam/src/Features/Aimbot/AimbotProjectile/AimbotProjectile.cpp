@@ -1501,30 +1501,29 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 				pPlayerPath->push_back(tStorage.m_MoveData.m_vecAbsOrigin);
 				*pProjectilePath = vProjLines;
 			}
-			else
+			else switch (Vars::Aimbot::General::AimType.Value)
 			{
-				switch (Vars::Aimbot::General::AimType.Value)
+			case Vars::Aimbot::General::AimTypeEnum::Smooth:
+			case Vars::Aimbot::General::AimTypeEnum::Assistive:
+			{
+				if (/*Vars::Aimbot::General::AssistStrength.Value != 0.f &&*/ Vars::Aimbot::General::AssistStrength.Value != 100.f)
 				{
-				case Vars::Aimbot::General::AimTypeEnum::Smooth:
-				case Vars::Aimbot::General::AimTypeEnum::Assistive:
-					if (/*Vars::Aimbot::General::AssistStrength.Value != 0.f &&*/ Vars::Aimbot::General::AssistStrength.Value != 100.f)
-					{
-						bPriority = bSplash ? iPriority <= iLowestSmoothPriority : iPriority < flLowestSmoothDist;
-						bDist = !bSplash || flDist < flLowestDist;
-						if (!bPriority || !bDist)
-							continue;
+					bPriority = bSplash ? iPriority <= iLowestSmoothPriority : iPriority < flLowestSmoothDist;
+					bDist = !bSplash || flDist < flLowestDist;
+					if (!bPriority || !bDist)
+						continue;
 
-						Vec3 vPlainAngles; Aim({}, { vPoint.m_Solution.m_flPitch, vPoint.m_Solution.m_flYaw, 0.f }, vPlainAngles, Vars::Aimbot::General::AimTypeEnum::Plain);
-						if (TestAngle(pLocal, pWeapon, tTarget, vPoint.m_vPoint, vPlainAngles, i, bSplash, &bHitSolid))
-						{
-							iLowestSmoothPriority = iPriority; flLowestSmoothDist = flDist;
-							vAngleTo = vAngles, vPredicted = tTarget.m_vPos;
-							*pPlayerPath = tStorage.m_vPath;
-							pPlayerPath->push_back(tStorage.m_MoveData.m_vecAbsOrigin);
-							iReturn = 2;
-						}
+					Vec3 vPlainAngles; Aim({}, { vPoint.m_Solution.m_flPitch, vPoint.m_Solution.m_flYaw, 0.f }, vPlainAngles, Vars::Aimbot::General::AimTypeEnum::Plain);
+					if (TestAngle(pLocal, pWeapon, tTarget, vPoint.m_vPoint, vPlainAngles, i, bSplash, &bHitSolid))
+					{
+						iLowestSmoothPriority = iPriority; flLowestSmoothDist = flDist;
+						vAngleTo = vAngles, vPredicted = tTarget.m_vPos;
+						*pPlayerPath = tStorage.m_vPath;
+						pPlayerPath->push_back(tStorage.m_MoveData.m_vecAbsOrigin);
+						iReturn = 2;
 					}
 				}
+			}
 			}
 
 			if (!j && bHitSolid)

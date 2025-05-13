@@ -137,14 +137,16 @@ std::vector<TickRecord*> CBacktrack::GetValidRecords(std::vector<TickRecord*>& v
 	float flCorrect = std::clamp(GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(GetFakeInterp()), 0.f, m_flMaxUnlag);
 	int iServerTick = m_iTickCount + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(GetReal(FLOW_OUTGOING));
 
-	for (auto pRecord : vRecords)
+	if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
 	{
-		float flDelta = fabsf(flCorrect - TICKS_TO_TIME(iServerTick - TIME_TO_TICKS(pRecord->m_flSimTime + flTimeMod)));
-		float flWindow = Vars::Misc::Game::AntiCheatCompatibility.Value ? 0 : Vars::Backtrack::Window.Value;
-		if (flDelta > flWindow / 1000)
-			continue;
+		for (auto pRecord : vRecords)
+		{
+			float flDelta = fabsf(flCorrect - TICKS_TO_TIME(iServerTick - TIME_TO_TICKS(pRecord->m_flSimTime + flTimeMod)));
+			if (flDelta > Vars::Backtrack::Window.Value / 1000.f)
+				continue;
 
-		vReturn.push_back(pRecord);
+			vReturn.push_back(pRecord);
+		}
 	}
 
 	if (vReturn.empty())
@@ -207,10 +209,10 @@ void CBacktrack::MakeRecords()
 		const TickRecord* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
 		vRecords.emplace_front(
 			pPlayer->m_flSimulationTime(),
-			*reinterpret_cast<BoneMatrix*>(pBones),
 			pPlayer->m_vecOrigin(),
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
+			*reinterpret_cast<BoneMatrix*>(pBones),
 			m_mDidShoot[pPlayer->entindex()],
 			pPlayer->m_vecOrigin()
 		);
@@ -239,10 +241,10 @@ void CBacktrack::MakeRecords()
 				if (!tRecord.m_bInvalid)
 					continue;
 
-				tRecord.m_BoneMatrix = tCurRecord.m_BoneMatrix;
 				tRecord.m_vOrigin = tCurRecord.m_vOrigin;
 				tRecord.m_vMins = tCurRecord.m_vMins;
 				tRecord.m_vMaxs = tCurRecord.m_vMaxs;
+				tRecord.m_BoneMatrix = tCurRecord.m_BoneMatrix;
 				tRecord.m_bOnShot = tCurRecord.m_bOnShot;
 			}
 		}
