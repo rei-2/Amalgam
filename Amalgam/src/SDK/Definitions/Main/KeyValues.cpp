@@ -40,6 +40,27 @@ KeyValues::KeyValues(const char* name)
 	Initialize(name);
 }
 
+void* KeyValues::operator new(size_t iAllocSize)
+{
+	return I::KeyValuesSystem->AllocKeyValuesMemory((int)iAllocSize);
+}
+
+void* KeyValues::operator new(size_t iAllocSize, int nBlockUse, const char* pFileName, int nLine)
+{
+	void* p = I::KeyValuesSystem->AllocKeyValuesMemory((int)iAllocSize);
+	return p;
+}
+
+void KeyValues::operator delete(void* pMem)
+{
+	I::KeyValuesSystem->FreeKeyValuesMemory(pMem);
+}
+
+void KeyValues::operator delete(void* pMem, int nBlockUse, const char* pFileName, int nLine)
+{
+	I::KeyValuesSystem->FreeKeyValuesMemory(pMem);
+}
+
 KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 {
 	return S::KeyValues_FindKey.Call<KeyValues*>(this, keyName, bCreate);
@@ -430,4 +451,14 @@ void KeyValues::SetColor(const char* keyName, Color_t value)
 		dat->m_Color[2] = value.b;
 		dat->m_Color[3] = value.a;
 	}
+}
+
+void KeyValues::SetBool(const char* keyName, bool value)
+{
+	SetInt(keyName, value ? 1 : 0);
+}
+
+void KeyValues::DeleteThis()
+{
+	delete this;
 }

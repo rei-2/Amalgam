@@ -40,9 +40,30 @@ private:
 	KeyValues* m_pChain;
 
 public:
+	class AutoDelete
+	{
+	public:
+		explicit inline AutoDelete(KeyValues* pKeyValues) : m_pKeyValues(pKeyValues) {}
+		explicit inline AutoDelete(const char* pchKVName) : m_pKeyValues(new KeyValues(pchKVName)) {}
+		inline ~AutoDelete(void) { if (m_pKeyValues) m_pKeyValues->DeleteThis(); }
+		inline void Assign(KeyValues* pKeyValues) { m_pKeyValues = pKeyValues; }
+		KeyValues* operator->() { return m_pKeyValues; }
+		operator KeyValues* () { return m_pKeyValues; }
+	private:
+		AutoDelete(AutoDelete const& x); // forbid
+		AutoDelete& operator= (AutoDelete const& x); // forbid
+		KeyValues* m_pKeyValues;
+	};
+
 	bool LoadFromBuffer(char const* resource_name, const char* buffer, void* file_system = 0, const char* path_id = 0);
 	void Initialize(const char* name);
 	KeyValues(const char* name);
+
+	void* operator new(size_t iAllocSize);
+	void* operator new(size_t iAllocSize, int nBlockUse, const char* pFileName, int nLine);
+	void operator delete(void* pMem);
+	void operator delete(void* pMem, int nBlockUse, const char* pFileName, int nLine);
+
 	KeyValues* FindKey(const char* keyName, bool bCreate = false);
 
 	const char* GetName() const;
@@ -66,5 +87,9 @@ public:
 	void SetFloat(const char* keyName, float value);
 	void SetPtr(const char* keyName, void* value);
 	void SetColor(const char* keyName, Color_t value);
-	void SetBool(const char* keyName, bool value) { SetInt(keyName, value ? 1 : 0); }
+	void SetBool(const char* keyName, bool value);
+
+	void DeleteThis();
 };
+
+typedef KeyValues::AutoDelete KeyValuesAD;

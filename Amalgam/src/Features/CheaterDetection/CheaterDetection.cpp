@@ -177,6 +177,7 @@ void CCheaterDetection::ReportDamage(IGameEvent* pEvent)
 		return;
 	}
 
-	if (!mData[pEntity->As<CTFPlayer>()].m_AimFlicking.m_vAngles.empty())
-		mData[pEntity->As<CTFPlayer>()].m_AimFlicking.m_vAngles.back().m_bAttacking = true;
+	auto& vAngles = mData[pEntity].m_AimFlicking.m_vAngles;
+	if (!vAngles.empty())
+		vAngles.back().m_bAttacking = true;
 }

@@ -577,6 +577,7 @@
     <ClInclude Include="src\Features\Output\Output.h" />
     <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\IKeyValuesSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

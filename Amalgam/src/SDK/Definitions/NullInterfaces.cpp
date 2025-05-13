@@ -14,6 +14,9 @@ bool CNullInterfaces::Initialize()
 	I::TFPartyClient = S::Get_TFPartyClient.Call<CTFPartyClient*>();
 	Validate(I::TFPartyClient);
 
+	I::KeyValuesSystem = U::Memory.GetModuleExport<IKeyValuesSystem*(*)()>("vstdlib.dll", "KeyValuesSystem")();
+	Validate(I::KeyValuesSystem);
+
 	const HSteamPipe hsNewPipe = I::SteamClient->CreateSteamPipe();
 	Validate(hsNewPipe);
 
