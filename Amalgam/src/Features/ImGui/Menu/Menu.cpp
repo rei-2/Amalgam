@@ -1399,7 +1399,7 @@ void CMenu::MenuMisc(int iTab)
 				if (Section("Movement"))
 				{
 					FDropdown(Vars::Misc::Movement::AutoStrafe);
-					PushTransparent(FGet(Vars::Misc::Movement::AutoStrafe) != Vars::Misc::Movement::AutoStrafeEnum::Directional);
+					PushTransparent(FGet(Vars::Misc::Movement::AutoStrafe) == Vars::Misc::Movement::AutoStrafeEnum::Legit);
 					{
 						FSlider(Vars::Misc::Movement::AutoStrafeTurnScale, FSliderEnum::Left);
 						FSlider(Vars::Misc::Movement::AutoStrafeMaxDelta, FSliderEnum::Right);
@@ -1417,6 +1417,12 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Movement::MovementLock, FToggleEnum::Right);
 					FToggle(Vars::Misc::Movement::BreakJump, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::ShieldTurnRate, FToggleEnum::Right);
+					FToggle(Vars::Misc::Movement::AutoDuck, FToggleEnum::Left);
+					PushTransparent(!FGet(Vars::Misc::Movement::AutoDuck));
+					{
+						FSlider(Vars::Misc::Movement::AutoDuckHeight, FSliderEnum::Right);
+					}
+					PopTransparent();
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
