@@ -25,7 +25,7 @@ struct ProjectileInfo
 
 	CTFPlayer* m_pOwner = nullptr;
 
-	std::deque<Vec3> m_vPath = {};
+	std::vector<Vec3> m_vPath = {};
 
 	bool m_bQuick = false;
 };

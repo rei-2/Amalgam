@@ -1,4 +1,5 @@
 #include "../SDK/SDK.h"
+
 #include "../SDK/Definitions/Misc/UtlObjectReference.h"
 
 MAKE_SIGNATURE(COPRenderSprites_Render, "client.dll", "48 89 54 24 ? 55 53 57 41 55 41 56", 0x0);

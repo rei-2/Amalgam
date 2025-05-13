@@ -15,7 +15,7 @@ struct Target_t
 	int m_nPriority = 0;
 	int m_nAimedHitbox = -1;
 
-	TickRecord m_tRecord = {};
+	TickRecord* m_pRecord = nullptr;
 	bool m_bBacktrack = false;
 };
 
@@ -31,6 +31,8 @@ public:
 	bool ShouldIgnore(CBaseEntity* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	int GetPriority(int targetIdx);
 
+	bool ShouldAim();
+	bool ShouldHoldAttack(CTFWeaponBase* pWeapon);
 	bool ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pBomb);
 };
 

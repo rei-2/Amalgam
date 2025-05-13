@@ -29,13 +29,14 @@ LONG __stdcall WndProc::Func(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	if (F::Menu.m_bIsOpen)
 	{
 		ImGui_ImplWin32_WndProcHandler(hWnd, uMsg, wParam, lParam);
-		if (ImGui::GetIO().WantTextInput || F::Menu.m_bInKeybind)
+
+		if ((ImGui::GetIO().WantTextInput || F::Menu.m_bInKeybind) && WM_KEYFIRST <= uMsg && uMsg <= WM_KEYLAST)
 		{
 			I::InputSystem->ResetInputState();
 			return 1;
 		}
 
-		if (uMsg >= WM_MOUSEFIRST && WM_MOUSELAST >= uMsg)
+		if (WM_MOUSEFIRST <= uMsg && uMsg <= WM_MOUSELAST)
 			return 1;
 	}
 

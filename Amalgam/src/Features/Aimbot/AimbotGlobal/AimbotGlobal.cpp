@@ -1,6 +1,8 @@
 #include "AimbotGlobal.h"
 
+#include "../Aimbot.h"
 #include "../../Players/PlayerUtils.h"
+#include "../../Ticks/Ticks.h"
 
 void CAimbotGlobal::SortTargets(std::vector<Target_t>& vTargets, int iMethod)
 {	// Sort by preference
@@ -26,13 +28,17 @@ void CAimbotGlobal::SortPriority(std::vector<Target_t>& vTargets)
 // this won't prevent shooting bones outside of fov
 bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes)
 {
+	matrix3x4 aBones[MAXSTUDIOBONES];
+	if (!pTarget->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
+		return false;
+
 	float flMinFOV = 180.f;
 	for (int nHitbox = 0; nHitbox < pTarget->GetNumOfHitboxes(); nHitbox++)
 	{
 		if (!IsHitboxValid(H::Entities.GetModel(pTarget->entindex()), nHitbox, iHitboxes))
 			continue;
 
-		Vec3 vCurPos = pTarget->GetHitboxCenter(nHitbox);
+		Vec3 vCurPos = pTarget->GetHitboxCenter(aBones, nHitbox);
 		Vec3 vCurAngleTo = Math::CalcAngle(vLocalPos, vCurPos);
 		float flCurFOVTo = Math::CalcFov(vLocalAngles, vCurAngleTo);
 
@@ -76,6 +82,7 @@ bool CAimbotGlobal::IsHitboxValid(uint32_t uHash, int nHitbox, int iHitboxes)
 		case HITBOX_SAXTON_RIGHT_CALF:
 		case HITBOX_SAXTON_RIGHT_FOOT: return iHitboxes & Vars::Aimbot::Hitscan::HitboxesEnum::Legs;
 		}
+		break;
 	}
 	default:
 	{
@@ -257,6 +264,36 @@ int CAimbotGlobal::GetPriority(int targetIdx)
 	return F::PlayerUtils.GetPriority(targetIdx);
 }
 
+bool CAimbotGlobal::ShouldAim()
+{
+	switch (Vars::Aimbot::General::AimType.Value)
+	{
+	case Vars::Aimbot::General::AimTypeEnum::Plain:
+	case Vars::Aimbot::General::AimTypeEnum::Silent:
+		// for performance reasons, the F::Ticks.m_bDoubletap condition is not a great fix here
+		// and actually properly predicting when shots will be fired should likely be done over this, but it's fine for now
+		if (!G::CanPrimaryAttack && !G::Reloading && !F::Ticks.m_bDoubletap && !F::Ticks.m_bSpeedhack)
+			return false;
+	}
+
+	return true;
+}
+
+bool CAimbotGlobal::ShouldHoldAttack(CTFWeaponBase* pWeapon)
+{
+	switch (Vars::Aimbot::General::AimHoldsFire.Value)
+	{
+	case Vars::Aimbot::General::AimHoldsFireEnum::MinigunOnly:
+		if (pWeapon->GetWeaponID() != TF_WEAPON_MINIGUN)
+			break;
+		[[fallthrough]];
+	case Vars::Aimbot::General::AimHoldsFireEnum::Always:
+		if (!F::Aimbot.m_bRunningSecondary && !G::CanPrimaryAttack && G::LastUserCmd->buttons & IN_ATTACK && Vars::Aimbot::General::AimType.Value && !pWeapon->IsInReload())
+			return true;
+	}
+	return false;
+}
+
 // will not predict for projectile weapons
 bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pBomb)
 {
@@ -273,7 +310,7 @@ bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEn
 		if (!pEntity || pEntity == pLocal || pEntity->IsPlayer() && (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->As<CTFPlayer>()->IsAGhost()) || pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
 			continue;
 
-		Vec3 vPos = {}; reinterpret_cast<CCollisionProperty*>(pEntity->GetCollideable())->CalcNearestPoint(vOrigin, &vPos);
+		Vec3 vPos; reinterpret_cast<CCollisionProperty*>(pEntity->GetCollideable())->CalcNearestPoint(vOrigin, &vPos);
 		if (vOrigin.DistTo(vPos) > 300.f)
 			continue;
 

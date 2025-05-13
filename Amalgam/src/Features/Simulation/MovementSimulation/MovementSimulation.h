@@ -70,7 +70,7 @@ struct PlayerStorage
 	bool m_bPredictNetworked = true;
 	Vec3 m_vPredictedOrigin = {};
 
-	std::deque<Vec3> m_vPath;
+	std::vector<Vec3> m_vPath;
 
 	bool m_bFailed = false;
 	bool m_bInitFailed = false;

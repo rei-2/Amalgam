@@ -3,10 +3,11 @@
 #include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Backtrack/Backtrack.h"
-#include "../Features/CheaterDetection/CheaterDetection.h"
+#include "../Features/Ticks/Ticks.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
+#include "../Features/CheaterDetection/CheaterDetection.h"
 #include "../Features/Resolver/Resolver.h"
-#include "../Features/TickHandler/TickHandler.h"
+#include "../Features/Spectate/Spectate.h"
 
 MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
 	void* rcx)
@@ -20,10 +21,11 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
 	F::Visuals.OverrideWorldTextures();
 
 	F::Backtrack.Reset();
-	F::Resolver.Reset();
 	F::Ticks.Reset();
 	F::NoSpreadHitscan.Reset();
 	F::CheaterDetection.Reset();
+	F::Resolver.Reset();
+	F::Spectate.m_iIntendedTarget = -1;
 
 	CALL_ORIGINAL(rcx);
 }

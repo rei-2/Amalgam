@@ -1,10 +1,11 @@
 #include "../SDK/SDK.h"
 
-#include "../Features/TickHandler/TickHandler.h"
+#include "../Features/Ticks/Ticks.h"
 #include "../Features/Binds/Binds.h"
 #include "../Features/Players/PlayerCore.h"
 #include "../Features/Misc/AutoQueue/AutoQueue.h"
 #include "../Features/Backtrack/Backtrack.h"
+#include "../Features/Misc/Misc.h"
 
 MAKE_SIGNATURE(CL_Move, "engine.dll", "40 55 53 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E8 ? ? ? ? 48 2B E0 83 3D", 0x0);
 
@@ -67,6 +68,8 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void,
 
 	F::Binds.Run(pLocal, pWeapon);
 	F::PlayerCore.Run();
+	F::Backtrack.SendLerp();
+	F::Misc.PingReducer();
 	F::AutoQueue.Run();
 
 	F::Ticks.Run(accumulated_extra_samples, bFinalTick, pLocal);

@@ -1,7 +1,7 @@
 #include "../SDK/SDK.h"
 
 #include "../Features/EnginePrediction/EnginePrediction.h"
-#include "../Features/TickHandler/TickHandler.h"
+#include "../Features/Ticks/Ticks.h"
 
 MAKE_SIGNATURE(CPrediction_RunSimulation, "client.dll", "48 83 EC 38 4C 8B 44", 0x0);
 

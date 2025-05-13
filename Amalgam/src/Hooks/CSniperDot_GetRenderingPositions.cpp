@@ -6,8 +6,8 @@ MAKE_SIGNATURE(CSniperDot_GetRenderingPositions_EyePosition_Call, "client.dll", 
 MAKE_SIGNATURE(CTFPlayer_EyeAngles, "client.dll", "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 84 C0 74 ? 83 3D", 0x0);
 MAKE_SIGNATURE(CSniperDot_GetRenderingPositions_EyeAngles_Call, "client.dll", "48 8D 54 24 ? 48 8D 4C 24 ? F2 0F 10 00 F2 0F 11 44 24 ? 8B 40 ? 89 44 24 ? E8 ? ? ? ? 49 8B 07", 0x0);
 
-static Vec3 vEyePosition = {};
-static Vec3 vEyeAngles = {};
+static Vec3 vEyePosition;
+static Vec3 vEyeAngles;
 
 MAKE_HOOK(CSniperDot_GetRenderingPositions, S::CSniperDot_GetRenderingPositions(), bool,
 	void* rcx, CTFPlayer* pPlayer, Vec3& vecAttachment, Vec3& vecEndPos, float& flSize)

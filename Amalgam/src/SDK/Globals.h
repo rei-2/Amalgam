@@ -16,7 +16,7 @@ struct DrawLine_t
 
 struct DrawPath_t
 {
-	std::deque<Vec3> m_vPath;
+	std::vector<Vec3> m_vPath;
 	float m_flTime;
 	Color_t m_tColor;
 	int m_iStyle;
@@ -93,7 +93,7 @@ namespace G
 
 	inline int* RandomSeed()
 	{
-		static auto dest = U::Memory.RelToAbs(S::RandomSeed());
-		return reinterpret_cast<int*>(dest);
+		static auto pRandomSeed = reinterpret_cast<int*>(U::Memory.RelToAbs(S::RandomSeed()));
+		return pRandomSeed;
 	}
 };

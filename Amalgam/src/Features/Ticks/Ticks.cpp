@@ -1,4 +1,4 @@
-#include "TickHandler.h"
+#include "Ticks.h"
 
 #include "../NetworkFix/NetworkFix.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
@@ -120,7 +120,7 @@ bool CTickshiftHandler::CanChoke()
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 		iMaxTicks = std::min(iMaxTicks, 8);
 
-	return I::ClientState->chokedcommands < 21 && F::Ticks.m_iShiftedTicks + I::ClientState->chokedcommands < iMaxTicks;
+	return I::ClientState->chokedcommands < 21 && m_iShiftedTicks + I::ClientState->chokedcommands < iMaxTicks;
 }
 
 void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -262,7 +262,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 
 	if (m_bSpeedhack)
 	{
-		m_iShiftedTicks = Vars::Speedhack::Factor.Value;
+		m_iShiftedTicks = Vars::Speedhack::Amount.Value;
 		m_iShiftedGoal = 0;
 	}
 
@@ -331,8 +331,8 @@ void CTickshiftHandler::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSen
 	AntiWarp(pLocal, pCmd);
 	ManagePacket(pCmd, pSendPacket);
 
-	F::Ticks.SaveShootPos(pLocal);
-	F::Ticks.SaveShootAngle(pCmd, *pSendPacket);
+	SaveShootPos(pLocal);
+	SaveShootAngle(pCmd, *pSendPacket);
 }
 
 void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
@@ -347,8 +347,7 @@ void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
 	}
 
 	*pSendPacket = m_iShiftedGoal == m_iShiftedTicks;
-	if (I::ClientState->chokedcommands >= 21 // prevent overchoking
-		|| m_iShiftedTicks == m_iShiftedGoal + Vars::Doubletap::TickLimit.Value - 1 && I::ClientState->chokedcommands) // unchoke if we are choking
+	if (I::ClientState->chokedcommands >= 21) // prevent overchoking
 		*pSendPacket = true;
 }
 
@@ -396,4 +395,38 @@ int CTickshiftHandler::GetMinimumTicksNeeded(CTFWeaponBase* pWeapon)
 	}
 
 	return (GetShotsWithinPacket(pWeapon) - 1) * std::ceilf(pWeapon->GetFireRate() / TICK_INTERVAL) + iDelay;
+}
+
+void CTickshiftHandler::Draw(CTFPlayer* pLocal)
+{
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Ticks) || !pLocal->IsAlive())
+		return;
+
+	const DragBox_t dtPos = Vars::Menu::TicksDisplay.Value;
+	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+
+	if (!m_bSpeedhack)
+	{
+		int iChoke = std::max(I::ClientState->chokedcommands - (F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0), 0);
+		int iTicks = std::clamp(m_iShiftedTicks + iChoke, 0, m_iMaxShift);
+		float flRatio = float(iTicks) / m_iMaxShift;
+		int iSizeX = H::Draw.Scale(100, Scale_Round), iSizeY = H::Draw.Scale(12, Scale_Round);
+		int iPosX = dtPos.x - iSizeX / 2, iPosY = dtPos.y + fFont.m_nTall + H::Draw.Scale(4) + 1;
+
+		H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("Ticks {} / {}", iTicks, m_iMaxShift).c_str());
+		if (m_iWait)
+			H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + fFont.m_nTall + H::Draw.Scale(18, Scale_Round) + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, "Not Ready");
+
+		H::Draw.LineRoundRect(iPosX, iPosY, iSizeX, iSizeY, H::Draw.Scale(3, Scale_Round), Vars::Menu::Theme::Accent.Value, 16);
+		if (flRatio)
+		{
+			iSizeX -= H::Draw.Scale(2, Scale_Ceil) * 2, iSizeY -= H::Draw.Scale(2, Scale_Ceil) * 2;
+			iPosX += H::Draw.Scale(2, Scale_Round), iPosY += H::Draw.Scale(2, Scale_Round);
+			H::Draw.StartClipping(iPosX, iPosY, iSizeX * flRatio, iSizeY);
+			H::Draw.FillRoundRect(iPosX, iPosY, iSizeX, iSizeY, H::Draw.Scale(3, Scale_Round), Vars::Menu::Theme::Accent.Value, 16);
+			H::Draw.EndClipping();
+		}
+	}
+	else
+		H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("Speedhack x{}", Vars::Speedhack::Amount.Value).c_str());
 }

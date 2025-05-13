@@ -1,9 +1,8 @@
 #include "EnginePrediction.h"
 
-#include "../TickHandler/TickHandler.h"
+#include "../Ticks/Ticks.h"
 
-// account for origin tolerance when simulating local player
-
+// account for origin compression when simulating local player
 void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
 {
 	m_mRestore.clear();
@@ -20,7 +19,6 @@ void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
 		pPlayer->m_vecMaxs() -= 0.125f;
 	}
 }
-
 void CEnginePrediction::RestorePlayers()
 {
 	for (auto& [pPlayer, tRestore] : m_mRestore)

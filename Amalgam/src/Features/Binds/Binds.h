@@ -24,7 +24,7 @@ struct Bind_t
 	bool m_bActive = false;
 	KeyStorage m_tKeyStorage = {};
 
-	int m_iParent = -1;
+	int m_iParent = DEFAULT_BIND;
 
 	std::vector<BaseVar*> m_vVars = {};
 };

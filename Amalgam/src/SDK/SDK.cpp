@@ -199,7 +199,7 @@ int SDK::HandleToIDX(unsigned int pHandle)
 
 bool SDK::W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways)
 {
-	const auto& worldToScreen = H::Draw.m_WorldToProjection.As3x4();
+	const auto& worldToScreen = H::Draw.m_mWorldToProjection.As3x4();
 
 	float flW = worldToScreen[3][0] * vOrigin.x + worldToScreen[3][1] * vOrigin.y + worldToScreen[3][2] * vOrigin.z + worldToScreen[3][3];
 	vScreen.z = 0;
@@ -632,7 +632,7 @@ void SDK::FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTarget
 
 	Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove * (bCurOOB ? -1 : 1), pCmd->upmove};
 	float flSpeed = vMove.Length2D();
-	Vec3 vMoveAng = {}; Math::VectorAngles(vMove, vMoveAng);
+	Vec3 vMoveAng; Math::VectorAngles(vMove, vMoveAng);
 
 	float flCurYaw = vCurAngle.y + (bCurOOB ? 180.f : 0.f);
 	float flTargetYaw = vTargetAngle.y + (bTargetOOB ? 180.f : 0.f);

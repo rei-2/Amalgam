@@ -1,14 +1,13 @@
 #include "Misc.h"
 
 #include "../Backtrack/Backtrack.h"
-#include "../TickHandler/TickHandler.h"
+#include "../Ticks/Ticks.h"
 #include "../Players/PlayerUtils.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 
 void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	CheatsBypass();
-	PingReducer();
 	WeaponSway();
 
 	if (!pLocal)
@@ -198,15 +197,10 @@ void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static Timer tTimer = {};
 
-	static auto mp_idledealmethod = U::ConVars.FindVar("mp_idledealmethod");
-	static auto mp_idlemaxtime = U::ConVars.FindVar("mp_idlemaxtime");
-	const int iIdleMethod = mp_idledealmethod->GetInt();
-	const float flMaxIdleTime = mp_idlemaxtime->GetFloat();
-
 	if (pCmd->buttons & (IN_MOVELEFT | IN_MOVERIGHT | IN_FORWARD | IN_BACK) || !pLocal->IsAlive())
 		tTimer.Update();
-	else if (Vars::Misc::Automation::AntiAFK.Value && iIdleMethod && tTimer.Check(flMaxIdleTime * 60.f - 10.f)) // trigger 10 seconds before kick
-		pCmd->buttons |= I::GlobalVars->tickcount % 2 ? IN_FORWARD : IN_BACK;
+	else if (Vars::Misc::Automation::AntiAFK.Value && tTimer.Run(25.f))
+		pCmd->buttons |= IN_FORWARD;
 }
 
 void CMisc::InstantRespawnMVM(CTFPlayer* pLocal)
@@ -232,37 +226,6 @@ void CMisc::CheatsBypass()
 	{
 		sv_cheats->m_nValue = 0;
 		bCheatSet = false;
-	}
-}
-
-void CMisc::PingReducer()
-{
-	static Timer tTimer = {};
-	if (!tTimer.Run(0.1f))
-		return;
-
-	auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
-	if (!pNetChan)
-		return;
-
-	static auto cl_cmdrate = U::ConVars.FindVar("cl_cmdrate");
-	const int iCmdRate = cl_cmdrate->GetInt();
-
-	// force highest cl_updaterate command possible
-	static auto sv_maxupdaterate = U::ConVars.FindVar("sv_maxupdaterate");
-	const int iMaxUpdateRate = sv_maxupdaterate->GetInt();
-
-	const int iTarget = Vars::Misc::Exploits::PingReducer.Value ? Vars::Misc::Exploits::PingTarget.Value : iCmdRate;
-	if (m_iWishCmdrate != iTarget)
-	{
-		NET_SetConVar cmd("cl_cmdrate", std::to_string(m_iWishCmdrate = iTarget).c_str());
-		pNetChan->SendNetMsg(cmd);
-	}
-
-	if (m_iWishUpdaterate != iMaxUpdateRate)
-	{
-		NET_SetConVar cmd("cl_updaterate", std::to_string(m_iWishUpdaterate = iMaxUpdateRate).c_str());
-		pNetChan->SendNetMsg(cmd);
 	}
 }
 
@@ -452,9 +415,6 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 	case FNV1A::Hash32Const("client_disconnect"):
 	case FNV1A::Hash32Const("client_beginconnect"):
 	case FNV1A::Hash32Const("game_newmap"):
-		m_iWishCmdrate = m_iWishUpdaterate = -1;
-		F::Backtrack.m_flWishInterp = -1.f;
-		[[fallthrough]];
 	case FNV1A::Hash32Const("teamplay_round_start"):
 		G::LineStorage.clear();
 		G::BoxStorage.clear();
@@ -530,7 +490,7 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 						return true;
 
 					float flTolerance = 0.0625f;
-					float flExtra = 2.f * flTolerance / flDist; // account for origin tolerance
+					float flExtra = 2.f * flTolerance / flDist; // account for origin compression
 					float flPosVsTargetViewMinDot = 0.f - 0.0031f - flExtra;
 
 					Vec3 vTargetForward; Math::AngleVectors(pCmd->viewangles, &vTargetForward);
@@ -559,6 +519,41 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	}
 
 	return 0;
+}
+
+void CMisc::PingReducer()
+{
+	static Timer tTimer = {};
+	if (!tTimer.Run(0.1f))
+		return;
+
+	static auto cl_cmdrate = U::ConVars.FindVar("cl_cmdrate");
+	int iTarget = Vars::Misc::Exploits::PingReducer.Value ? Vars::Misc::Exploits::PingTarget.Value : cl_cmdrate->GetInt();
+	if (m_iWishCmdrate != iTarget)
+	{
+		m_iWishCmdrate = iTarget;
+
+		auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
+		if (pNetChan && I::EngineClient->IsConnected())
+		{
+			NET_SetConVar tConvar = { "cl_cmdrate", std::to_string(m_iWishCmdrate).c_str() };
+			pNetChan->SendNetMsg(tConvar);
+		}
+	}
+
+	static auto sv_maxupdaterate = U::ConVars.FindVar("sv_maxupdaterate"); // force highest cl_updaterate command possible
+	iTarget = sv_maxupdaterate->GetInt();
+	if (m_iWishUpdaterate != iTarget)
+	{
+		m_iWishUpdaterate = iTarget;
+
+		auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
+		if (pNetChan && I::EngineClient->IsConnected())
+		{
+			NET_SetConVar tConvar = { "cl_updaterate", std::to_string(m_iWishUpdaterate).c_str() };
+			pNetChan->SendNetMsg(tConvar);
+		}
+	}
 }
 
 void CMisc::UnlockAchievements()

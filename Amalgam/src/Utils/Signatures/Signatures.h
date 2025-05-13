@@ -6,11 +6,11 @@
 class CSignature
 {
 private:
-	uintptr_t m_dwVal = 0x0;
-	const char* m_pszDLLName = {};
-	const char* m_pszSignature = {};
-	int m_nOffset = 0;
-	const char* m_pszName = {};
+	uintptr_t m_dwVal;
+	const char* m_pszDLLName;
+	const char* m_pszSignature;
+	int m_nOffset;
+	const char* m_pszName;
 
 public:
 	CSignature(const char* sDLLName, const char* sSignature, int nOffset, const char* sName);

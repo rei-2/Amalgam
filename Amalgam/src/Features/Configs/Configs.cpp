@@ -416,8 +416,12 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				else if (auto getValue = it.second.get_optional<bool>("Visible")) { tBind.m_iVisibility = *getValue ? BindVisibilityEnum::Always : BindVisibilityEnum::Hidden; }
 				if (auto getValue = it.second.get_optional<bool>("Not")) { tBind.m_bNot = *getValue; }
 				if (auto getValue = it.second.get_optional<bool>("Active")) { tBind.m_bActive = *getValue; }
-				if (auto getValue = it.second.get_optional<int>("Parent")) { tBind.m_iParent = *getValue; }
-
+				if (auto getValue = it.second.get_optional<int>("Parent"))
+				{
+					tBind.m_iParent = *getValue;
+					if (F::Binds.m_vBinds.size() == tBind.m_iParent)
+						tBind.m_iParent = DEFAULT_BIND - 1; // prevent infinite loop
+				}
 
 				F::Binds.m_vBinds.push_back(tBind);
 			}

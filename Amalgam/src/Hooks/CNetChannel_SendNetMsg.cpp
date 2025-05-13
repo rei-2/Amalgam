@@ -1,6 +1,6 @@
 #include "../SDK/SDK.h"
 
-#include "../Features/TickHandler/TickHandler.h"
+#include "../Features/Ticks/Ticks.h"
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/Misc/Misc.h"
 
@@ -128,7 +128,7 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 			int nChokedCommands = I::ClientState->chokedcommands;
 			int nNextCommandNr = nLastOutGoingCommand + nChokedCommands + 1;
 
-			byte data[4000] = {};
+			byte data[4000];
 			pMsg->m_DataOut.StartWriting(data, sizeof(data));
 			int nCommands = 1 + nChokedCommands;
 			pMsg->m_nNewCommands = std::clamp(nCommands, 0, MAX_NEW_COMMANDS);

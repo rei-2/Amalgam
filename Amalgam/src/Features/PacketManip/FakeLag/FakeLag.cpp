@@ -1,6 +1,6 @@
 #include "FakeLag.h"
 
-#include "../../TickHandler/TickHandler.h"
+#include "../../Ticks/Ticks.h"
 #include "../../Aimbot/AutoRocketJump/AutoRocketJump.h"
 
 bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)

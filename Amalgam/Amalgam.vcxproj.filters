@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="src\Core\Core.cpp" />
-    <ClCompile Include="src\Features\CameraWindow\CameraWindow.cpp" />
+    <ClCompile Include="src\Features\Visuals\CameraWindow\CameraWindow.cpp" />
     <ClCompile Include="src\Features\Binds\Binds.cpp" />
     <ClCompile Include="src\Features\Configs\Configs.cpp" />
     <ClCompile Include="src\Features\ImGui\Menu\Menu.cpp" />
@@ -67,7 +67,7 @@
     <ClCompile Include="src\Features\Resolver\Resolver.cpp" />
     <ClCompile Include="src\Features\Simulation\MovementSimulation\MovementSimulation.cpp" />
     <ClCompile Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.cpp" />
-    <ClCompile Include="src\Features\TickHandler\TickHandler.cpp" />
+    <ClCompile Include="src\Features\Ticks\Ticks.cpp" />
     <ClCompile Include="src\Features\Visuals\Chams\Chams.cpp" />
     <ClCompile Include="src\Features\Visuals\ESP\ESP.cpp" />
     <ClCompile Include="src\Features\Visuals\FakeAngle\FakeAngle.cpp" />
@@ -194,6 +194,7 @@
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
     <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
+    <ClCompile Include="src\Hooks\CViewRender_LevelShutdown.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -201,7 +202,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\TFSharedDefs.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\SharedDefs.h" />
     <ClInclude Include="src\Core\Core.h" />
-    <ClInclude Include="src\Features\CameraWindow\CameraWindow.h" />
+    <ClInclude Include="src\Features\Visuals\CameraWindow\CameraWindow.h" />
     <ClInclude Include="src\Features\Binds\Binds.h" />
     <ClInclude Include="src\Features\Configs\Configs.h" />
     <ClInclude Include="src\Features\ImGui\MaterialDesign\IconDefinitions.h" />
@@ -406,7 +407,7 @@
     <ClInclude Include="src\Features\Resolver\Resolver.h" />
     <ClInclude Include="src\Features\Simulation\MovementSimulation\MovementSimulation.h" />
     <ClInclude Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.h" />
-    <ClInclude Include="src\Features\TickHandler\TickHandler.h" />
+    <ClInclude Include="src\Features\Ticks\Ticks.h" />
     <ClInclude Include="src\Features\Visuals\Chams\Chams.h" />
     <ClInclude Include="src\Features\Visuals\ESP\ESP.h" />
     <ClInclude Include="src\Features\Visuals\FakeAngle\FakeAngle.h" />

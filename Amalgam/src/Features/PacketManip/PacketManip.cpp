@@ -1,7 +1,7 @@
 #include "PacketManip.h"
 
 #include "../Visuals/FakeAngle/FakeAngle.h"
-#include "../TickHandler/TickHandler.h"
+#include "../Ticks/Ticks.h"
 
 static inline bool AntiAimCheck(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {

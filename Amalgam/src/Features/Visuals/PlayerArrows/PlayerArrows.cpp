@@ -9,7 +9,7 @@ void CPlayerArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_
 		return;
 
 	Vec2 vCenter = { H::Draw.m_nScreenW / 2.f, H::Draw.m_nScreenH / 2.f };
-	Vec3 vScreenPos = {};
+	Vec3 vScreenPos;
 	if (SDK::W2S(vToPos, vScreenPos, true))
 	{
 		float flMin = std::min(vCenter.x, vCenter.y); float flMax = std::max(vCenter.x, vCenter.y);

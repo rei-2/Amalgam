@@ -9,6 +9,12 @@
 #include <ranges>
 
 MAKE_SIGNATURE(CHudBaseDeathNotice_GetIcon, "client.dll", "40 53 48 81 EC ? ? ? ? 48 8B DA", 0x0);
+MAKE_SIGNATURE(RenderLine, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 44 89 44 24", 0x0);
+MAKE_SIGNATURE(RenderBox, "engine.dll", "48 83 EC ? 8B 84 24 ? ? ? ? 4D 8B D8", 0x0);
+MAKE_SIGNATURE(RenderWireframeBox, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 55 41 54 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? 49 8B F9", 0x0);
+MAKE_SIGNATURE(RenderWireframeSweptBox, "engine.dll", "48 8B C4 48 89 58 ? 48 89 50 ? 48 89 48 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D A8 ? ? ? ? 48 81 EC ? ? ? ? 0F 29 70", 0x0);
+MAKE_SIGNATURE(RenderTriangle, "engine.dll", "48 83 EC ? 41 8B C1 44 88 4C 24", 0x0);
+MAKE_SIGNATURE(RenderSphere, "engine.dll", "48 8B C4 44 89 48 ? F3 0F 11 48", 0x0);
 
 void CDraw::Start(bool bBadFontCheck)
 {
@@ -49,14 +55,13 @@ void CDraw::UpdateScreenSize()
 
 void CDraw::UpdateW2SMatrix()
 {
-	CViewSetup ViewSetup = {};
-	if (I::BaseClientDLL->GetPlayerView(ViewSetup))
+	CViewSetup tViewSetup;
+	if (I::BaseClientDLL->GetPlayerView(tViewSetup))
 	{
-		static VMatrix WorldToView = {};
-		static VMatrix ViewToProjection = {};
-		static VMatrix WorldToPixels = {};
-
-		I::RenderView->GetMatricesForView(ViewSetup, &WorldToView, &ViewToProjection, &m_WorldToProjection, &WorldToPixels);
+		static VMatrix mWorldToView;
+		static VMatrix mViewToProjection;
+		static VMatrix mWorldToPixels;
+		I::RenderView->GetMatricesForView(tViewSetup, &mWorldToView, &mViewToProjection, &m_mWorldToProjection, &mWorldToPixels);
 	}
 }
 
@@ -520,4 +525,141 @@ void CDraw::ClearAvatarCache()
 	}
 
 	m_mAvatars.clear();
+}
+
+void CDraw::RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t tColor, bool bZBuffer)
+{
+	if (!tColor.a)
+		return;
+
+	S::RenderLine.Call<void>(std::ref(vStart), std::ref(vEnd), tColor, bZBuffer);
+}
+
+void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBuffer, int iStyle, float flTime, int iSeparatorSpacing, float flSeparatorLength)
+{
+	if (!tColor.a || iStyle == Vars::Visuals::Simulation::StyleEnum::Off)
+		return;
+
+	for (size_t i = 1; i < vPath.size(); i++)
+	{
+		if (flTime < 0.f && vPath.size() - i > -flTime)
+			continue;
+
+		switch (iStyle)
+		{
+		case Vars::Visuals::Simulation::StyleEnum::Line:
+		{
+			RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
+			break;
+		}
+		case Vars::Visuals::Simulation::StyleEnum::Separators:
+		{
+			RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
+			if (!(i % iSeparatorSpacing))
+			{
+				const Vec3& vStart = vPath[i - 1];
+				const Vec3& vEnd = vPath[i];
+
+				Vec3 vDir = (vEnd - vStart).Normalized2D();
+				vDir = Math::RotatePoint(vDir * flSeparatorLength, {}, { 0, 90, 0 });
+				RenderLine(vEnd, vEnd + vDir, tColor, bZBuffer);
+			}
+			break;
+		}
+		case Vars::Visuals::Simulation::StyleEnum::Spaced:
+		{
+			if (!(i % 2))
+				RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
+			break;
+		}
+		case Vars::Visuals::Simulation::StyleEnum::Arrows:
+		{
+			if (!(i % 3))
+			{
+				const Vec3& vStart = vPath[i - 1];
+				const Vec3& vEnd = vPath[i];
+
+				if (!(vStart - vEnd).IsZero())
+				{
+					Vec3 vAngles; Math::VectorAngles(vEnd - vStart, vAngles);
+					Vec3 vForward, vRight, vUp; Math::AngleVectors(vAngles, &vForward, &vRight, &vUp);
+					RenderLine(vEnd, vEnd - vForward * 5 + vRight * 5, tColor, bZBuffer);
+					RenderLine(vEnd, vEnd - vForward * 5 - vRight * 5, tColor, bZBuffer);
+				}
+			}
+			break;
+		}
+		case Vars::Visuals::Simulation::StyleEnum::Boxes:
+		{
+			RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
+			if (!(i % iSeparatorSpacing))
+				RenderWireframeBox(vPath[i], { -1, -1, -1 }, { 1, 1, 1 }, {}, tColor, bZBuffer);
+			break;
+		}
+		}
+	}
+}
+
+void CDraw::RenderBox(const Vec3& vOrigin, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vAngles, Color_t tColor, bool bZBuffer, bool bInsideOut)
+{
+	if (!tColor.a)
+		return;
+
+	S::RenderBox.Call<void>(std::ref(vOrigin), std::ref(vAngles), std::ref(vMins), std::ref(vMaxs), tColor, bZBuffer, bInsideOut);
+}
+
+void CDraw::RenderWireframeBox(const Vec3& vOrigin, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vAngles, Color_t tColor, bool bZBuffer)
+{
+	if (!tColor.a)
+		return;
+
+	S::RenderWireframeBox.Call<void>(std::ref(vOrigin), std::ref(vAngles), std::ref(vMins), std::ref(vMaxs), tColor, bZBuffer);
+}
+
+void CDraw::RenderWireframeSweptBox(const Vector& vStart, const Vector& vEnd, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vAngles, Color_t tColor, bool bZBuffer)
+{
+	if (!tColor.a)
+		return;
+
+	S::RenderWireframeSweptBox.Call<void>(std::ref(vStart), std::ref(vEnd), std::ref(vAngles), std::ref(vMins), std::ref(vMaxs), tColor, bZBuffer);
+}
+
+void CDraw::RenderTriangle(const Vector& vPoint1, const Vector& vPoint2, const Vector& vPoint3, Color_t tColor, bool bZBuffer)
+{
+	if (!tColor.a)
+		return;
+
+	S::RenderTriangle.Call<void>(std::ref(vPoint1), std::ref(vPoint2), std::ref(vPoint3), tColor, bZBuffer);
+}
+
+void CDraw::RenderSphere(const Vector& vCenter, float flRadius, int nTheta, int nPhi, Color_t tColor, IMaterial* pMaterial)
+{
+	if (!tColor.a)
+		return;
+
+	S::RenderSphere.Call<void>(std::ref(vCenter), flRadius, nTheta, nPhi, tColor, pMaterial);
+}
+
+void CDraw::RenderSphere(const Vector& vCenter, float flRadius, int nTheta, int nPhi, Color_t tColor, bool bZBuffer)
+{
+	if (!tColor.a)
+		return;
+
+	static auto pVertexColor = *reinterpret_cast<IMaterial**>(U::Memory.RelToAbs(S::VertexColor()));
+	static auto pVertexColorIgnoreZ = *reinterpret_cast<IMaterial**>(U::Memory.RelToAbs(S::VertexColorIgnoreZ()));
+	auto pMaterial = bZBuffer ? pVertexColor : pVertexColorIgnoreZ;
+
+	RenderSphere(vCenter, flRadius, nTheta, nPhi, tColor, pMaterial);
+}
+
+void CDraw::RenderWireframeSphere(const Vector& vCenter, float flRadius, int nTheta, int nPhi, Color_t tColor, bool bZBuffer)
+{
+	if (!tColor.a)
+		return;
+
+	static auto pWireframe = *reinterpret_cast<IMaterial**>(U::Memory.RelToAbs(S::Wireframe()));
+	static auto pWireframeIgnoreZ = *reinterpret_cast<IMaterial**>(U::Memory.RelToAbs(S::WireframeIgnoreZ()));
+	auto pMaterial = bZBuffer ? pWireframe : pWireframeIgnoreZ;
+
+	RenderSphere(vCenter, flRadius, nTheta, nPhi, tColor, pMaterial);
 }

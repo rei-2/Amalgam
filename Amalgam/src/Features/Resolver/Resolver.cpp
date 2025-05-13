@@ -2,7 +2,7 @@
 
 #include "../Backtrack/Backtrack.h"
 #include "../Players/PlayerUtils.h"
-#include "../TickHandler/TickHandler.h"
+#include "../Ticks/Ticks.h"
 #include "../Output/Output.h"
 
 void CResolver::Reset()

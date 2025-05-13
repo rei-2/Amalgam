@@ -46,7 +46,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 				if (!pLocal->IsOnGround() || pLocal->IsSwimming())
 					continue;
 
-				Vec3 vForward = tStorage.m_MoveData.m_vecVelocity.To2D().Normalized();
+				Vec3 vForward = tStorage.m_MoveData.m_vecVelocity.Normalized2D();
 				vPoint = tStorage.m_MoveData.m_vecAbsOrigin - vForward * flOffset; //- Vec3(0, 0, 20);
 				bShouldReturn = false;
 				break;
@@ -165,7 +165,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 							{
 								const Vec3 vOriginal = pLocal->GetAbsOrigin();
 								pLocal->SetAbsOrigin(vOrigin);
-								Vec3 vPos = {}; reinterpret_cast<CCollisionProperty*>(pLocal->GetCollideable())->CalcNearestPoint(vPoint, &vPos);
+								Vec3 vPos; reinterpret_cast<CCollisionProperty*>(pLocal->GetCollideable())->CalcNearestPoint(vPoint, &vPos);
 								pLocal->SetAbsOrigin(vOriginal);
 
 								return vPoint.DistTo(vPos) < 120.f && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);

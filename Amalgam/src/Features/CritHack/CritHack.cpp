@@ -1,6 +1,6 @@
 #include "CritHack.h"
 
-#include "../TickHandler/TickHandler.h"
+#include "../Ticks/Ticks.h"
 
 #define WEAPON_RANDOM_RANGE				10000
 #define TF_DAMAGE_CRIT_MULTIPLIER		3.0f
@@ -518,7 +518,8 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 
 		break;
 	}
-	case FNV1A::Hash32Const("teamplay_round_start"):
+	case FNV1A::Hash32Const("scorestats_accumulated_update"):
+	case FNV1A::Hash32Const("mvm_reset_stats"):
 		m_iRangedDamage = m_iCritDamage = m_iMeleeDamage = 0;
 		break;
 	case FNV1A::Hash32Const("client_beginconnect"):

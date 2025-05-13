@@ -4,12 +4,12 @@
 
 struct InterfaceInit_t
 {
-	void** m_pPtr = nullptr;
-	const char* m_pszDLLName = {};
-	const char* m_pszVersion = {};
-	int m_nOffset = -1; //if not -1 we're going to sig scan (m_sVersion is the sig)
-	int m_nDereferenceCount = 0;
-	bool m_bSearchDLL = false;
+	void** m_pPtr;
+	const char* m_pszDLLName;
+	const char* m_pszVersion;
+	int m_nOffset; //if not -1 we're going to sig scan (m_sVersion is the sig)
+	int m_nDereferenceCount;
+	bool m_bSearchDLL;
 
 	InterfaceInit_t(void** pPtr, const char* sDLLName, const char* sVersion, int nOffset, int nDereferenceCount, bool bSearchDLL = false);
 };

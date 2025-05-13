@@ -23,6 +23,7 @@ class CTickshiftHandler
 
 public:
 	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
+	void Draw(CTFPlayer* pLocal);
 	void Reset();
 
 	void CLMove(float accumulated_extra_samples, bool bFinalTick);

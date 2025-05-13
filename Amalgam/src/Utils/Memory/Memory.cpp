@@ -6,48 +6,39 @@
 #define GetBits(x) (INRANGE((x & (~0x20)),'A','F') ? ((x & (~0x20)) - 'A' + 0xA) : (INRANGE(x,'0','9') ? x - '0' : 0))
 #define GetBytes(x) (GetBits(x[0]) << 4 | GetBits(x[1]))
 
-typedef void* (*InstantiateInterfaceFn)();
-
-struct InterfaceInit_t
-{
-	InstantiateInterfaceFn m_pInterface = nullptr;
-	const char* m_pszInterfaceName = nullptr;
-	InterfaceInit_t* m_pNextInterface = nullptr;
-};
-
 std::vector<byte> CMemory::PatternToByte(const char* szPattern)
 {
-	std::vector<byte> bytes = {};
-	const auto start = const_cast<char*>(szPattern);
-	const auto end = const_cast<char*>(szPattern) + strlen(szPattern);
+	std::vector<byte> vPattern = {};
 
-	for (char* current = start; current < end; ++current)
-		bytes.push_back(byte(std::strtoul(current, &current, 16)));
+	const auto pStart = const_cast<char*>(szPattern);
+	const auto pEnd = const_cast<char*>(szPattern) + strlen(szPattern);
+	for (char* pCurrent = pStart; pCurrent < pEnd; ++pCurrent)
+		vPattern.push_back(byte(std::strtoul(pCurrent, &pCurrent, 16)));
 
-	return bytes;
+	return vPattern;
 }
 
 std::vector<int> CMemory::PatternToInt(const char* szPattern)
 {
-	std::vector<int> bytes = {};
-	const auto start = const_cast<char*>(szPattern);
-	const auto end = const_cast<char*>(szPattern) + strlen(szPattern);
+	std::vector<int> vPattern = {};
 
-	for (char* current = start; current < end; ++current)
+	const auto pStart = const_cast<char*>(szPattern);
+	const auto pEnd = const_cast<char*>(szPattern) + strlen(szPattern);
+	for (char* pCurrent = pStart; pCurrent < pEnd; ++pCurrent)
 	{
-		if (*current == '?') // Is current byte a wildcard? Simply ignore that that byte later
+		if (*pCurrent == '?') // Is current byte a wildcard? Simply ignore that that byte later
 		{
-			++current;
-			if (*current == '?') // Check if following byte is also a wildcard
-				++current;
+			++pCurrent;
+			if (*pCurrent == '?') // Check if following byte is also a wildcard
+				++pCurrent;
 
-			bytes.push_back(-1);
+			vPattern.push_back(-1);
 		}
 		else
-			bytes.push_back(std::strtoul(current, &current, 16));
+			vPattern.push_back(std::strtoul(pCurrent, &pCurrent, 16));
 	}
 
-	return bytes;
+	return vPattern;
 }
 
 uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
@@ -55,51 +46,51 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 	if (const auto hMod = GetModuleHandleA(szModule))
 	{
 		// Get module information to search in the given module
-		MODULEINFO module_info;
-		if (!GetModuleInformation(GetCurrentProcess(), hMod, &module_info, sizeof(MODULEINFO)))
+		MODULEINFO lpModuleInfo;
+		if (!GetModuleInformation(GetCurrentProcess(), hMod, &lpModuleInfo, sizeof(MODULEINFO)))
 			return {};
 
 		// The region where we will search for the byte sequence
-		const auto image_size = module_info.SizeOfImage;
+		const auto dwImageSize = lpModuleInfo.SizeOfImage;
 
 		// Check if the image is faulty
-		if (!image_size)
+		if (!dwImageSize)
 			return {};
 
 		// Convert IDA-Style signature to a byte sequence
-		const auto pattern_bytes = PatternToInt(szPattern);
-		const auto signature_size = pattern_bytes.size();
-		const int* signature_bytes = pattern_bytes.data();
+		const auto vPattern = PatternToInt(szPattern);
+		const auto iPatternSize = vPattern.size();
+		const int* iPatternBytes = vPattern.data();
 
-		const auto image_bytes = reinterpret_cast<byte*>(hMod);
+		const auto pImageBytes = reinterpret_cast<byte*>(hMod);
 
 		// Now loop through all bytes and check if the byte sequence matches
-		for (auto i = 0ul; i < image_size - signature_size; ++i)
+		for (auto i = 0ul; i < dwImageSize - iPatternSize; ++i)
 		{
-			auto byte_sequence_found = true;
+			auto bFound = true;
 
 			// Go through all bytes from the signature and check if it matches
-			for (auto j = 0ul; j < signature_size; ++j)
+			for (auto j = 0ul; j < iPatternSize; ++j)
 			{
-				if (image_bytes[i + j] != signature_bytes[j] // Bytes don't match
-					&& signature_bytes[j] != -1)             // Byte isn't a wildcard either
+				if (pImageBytes[i + j] != iPatternBytes[j] // Bytes don't match
+					&& iPatternBytes[j] != -1)             // Byte isn't a wildcard either
 				{
-					byte_sequence_found = false;
+					bFound = false;
 					break;
 				}
 			}
 
-			if (byte_sequence_found)
-				return { reinterpret_cast<uintptr_t>(&image_bytes[i]) };
+			if (bFound)
+				return uintptr_t(&pImageBytes[i]);
 		}
 
-		return {};
+		return 0x0;
 	}
 
 	return 0x0;
 }
 
-using CreateInterfaceFn = void* (*)(const char* pName, int* pReturnCode);
+using CreateInterfaceFn = void*(*)(const char* pName, int* pReturnCode);
 
 PVOID CMemory::FindInterface(const char* szModule, const char* szObject)
 {
@@ -107,9 +98,9 @@ PVOID CMemory::FindInterface(const char* szModule, const char* szObject)
 	if (!hModule)
 		return nullptr;
 
-	const auto createFn = reinterpret_cast<CreateInterfaceFn>(GetProcAddress(hModule, "CreateInterface"));
-	if (!createFn)
+	const auto fnCreateInterface = reinterpret_cast<CreateInterfaceFn>(GetProcAddress(hModule, "CreateInterface"));
+	if (!fnCreateInterface)
 		return nullptr;
 
-	return createFn(szObject, nullptr);
+	return fnCreateInterface(szObject, nullptr);
 }

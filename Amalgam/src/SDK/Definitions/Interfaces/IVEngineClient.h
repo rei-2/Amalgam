@@ -82,7 +82,7 @@ public:
 	virtual float GetSentenceLength(CAudioSource* pAudioSource) = 0;
 	virtual bool IsStreaming(CAudioSource* pAudioSource) const = 0;
 	virtual void GetViewAngles(QAngle& va) = 0;
-	inline Vec3 GetViewAngles() { QAngle out = {}; GetViewAngles(out); return out; }
+	inline Vec3 GetViewAngles() { QAngle vOut; GetViewAngles(vOut); return vOut; }
 	virtual void SetViewAngles(QAngle& va) = 0;
 	virtual int GetMaxClients(void) = 0;
 	virtual	const char* Key_LookupBinding(const char* pBinding) = 0;

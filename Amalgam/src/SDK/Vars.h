@@ -19,7 +19,7 @@ public:
 	std::string m_sName;
 	int m_iFlags = 0;
 
-	std::vector<const char*> m_vTitle = {};
+	std::vector<const char*> m_vTitle;
 	const char* m_sSection;
 	union {
 		int i = 0;
@@ -282,7 +282,7 @@ namespace Vars
 				Friends = 1 << 0, Party = 1 << 1, Invulnerable = 1 << 2, Cloaked = 1 << 3, Unsimulated = 1 << 4, DeadRinger = 1 << 5, Vaccinator = 1 << 6, Disguised = 1 << 7, Taunting = 1 << 8);
 			CVar(AimFOV, "Aim FOV", 30.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f);
 			CVar(MaxTargets, "Max targets", 2, SLIDER_MIN, 1, 6);
-			CVar(IgnoreCloak, "Ignore cloak", 100.f, SLIDER_CLAMP | SLIDER_PRECISION, 0, 100, 10, "%g%%");
+			CVar(IgnoreCloak, "Ignore cloak", 100.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
 			CVar(AssistStrength, "Assist strength", 25.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 1.f, "%g%%");
 			CVar(TickTolerance, "Tick tolerance", 7, SLIDER_CLAMP, 0, 21);
 			CVar(AutoShoot, "Auto shoot", true);
@@ -417,11 +417,10 @@ namespace Vars
 	NAMESPACE_END(CritHack);
 
 	NAMESPACE_BEGIN(Backtrack)
-		CVar(Enabled, VA_LIST("Enabled", "Backtrack enabled"), false);
-		CVar(PreferOnShot, "Prefer on shot", false);
 		CVar(Latency, "Fake latency", 0, SLIDER_CLAMP, 0, 1000, 5);
 		CVar(Interp, "Fake interp", 0, SLIDER_CLAMP | SLIDER_PRECISION, 0, 1000, 5);
 		CVar(Window, VA_LIST("Window", "Backtrack window"), 185, SLIDER_CLAMP | SLIDER_PRECISION, 1, 200, 5);
+		CVar(PreferOnShot, "Prefer on shot", false);
 
 		CVar(Offset, "Offset", 0, NOSAVE | DEBUGVAR, -1, 1);
 	NAMESPACE_END(Backtrack);
@@ -458,7 +457,7 @@ namespace Vars
 
 	NAMESPACE_BEGIN(Speedhack)
 		CVar(Enabled, VA_LIST("Enabled", "Speedhack enabled"), false);
-		CVar(Factor, VA_LIST("Factor", "SpeedHack factor"), 1, NONE, 1, 50);
+		CVar(Amount, VA_LIST("Amount", "SpeedHack amount"), 1, NONE, 1, 50);
 	NAMESPACE_END(Speedhack);
 
 	NAMESPACE_BEGIN(AntiAim, Anti-Aim)
@@ -479,8 +478,8 @@ namespace Vars
 			"View", "Target");
 		CVarValues(FakeYawMode, "Fake offset", 0, NONE, nullptr,
 			"View", "Target");
-		CVar(RealYawOffset, "Real offset", 0, SLIDER_CLAMP | SLIDER_PRECISION, -180, 180, 5, "%i");
-		CVar(FakeYawOffset, "Fake offset", 0, SLIDER_CLAMP | SLIDER_PRECISION, -180, 180, 5, "%i");
+		CVar(RealYawOffset, "Real offset", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f, "%i");
+		CVar(FakeYawOffset, "Fake offset", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f, "%i");
 		CVar(RealYawValue, "Real value", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f, "%g");
 		CVar(FakeYawValue, "Fake value", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f, "%g");
 		CVar(SpinSpeed, "Spin speed", 15.f, SLIDER_PRECISION, -30.f, 30.f);
@@ -508,8 +507,8 @@ namespace Vars
 			InvalidPitch = 1 << 0, PacketChoking = 1 << 1, AimFlicking = 1 << 2, DuckSpeed = 1 << 3);
 		CVar(DetectionsRequired, "Detections required", 10, SLIDER_MIN, 0, 50);
 		CVar(MinimumChoking, "Minimum choking", 20, SLIDER_MIN, 4, 22);
-		CVar(MinimumFlick, "Minimum flick angle", 20.f, NONE, 10.f, 30.f); // min flick size to suspect
-		CVar(MaximumNoise, "Maximum flick noise", 1.f, NONE, 1.f, 10.f); // max different between angles before and after flick
+		CVar(MinimumFlick, "Minimum flick angle", 20.f, SLIDER_PRECISION, 10.f, 30.f); // min flick size to suspect
+		CVar(MaximumNoise, "Maximum flick noise", 1.f, SLIDER_PRECISION, 1.f, 10.f); // max difference between angles before and after flick
 	NAMESPACE_END(CheaterDetection);
 
 	NAMESPACE_BEGIN(ESP)
@@ -763,12 +762,12 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Viewmodel)
 			CVar(CrosshairAim, "Crosshair aim position", false, VISUAL);
 			CVar(ViewmodelAim, "Viewmodel aim position", false, VISUAL);
-			CVar(OffsetX, VA_LIST("Offset X", "Viewmodel offset X"), 0, VISUAL | SLIDER_PRECISION, -45, 45, 5);
-			CVar(OffsetY, VA_LIST("Offset Y", "Viewmodel offset Y"), 0, VISUAL | SLIDER_PRECISION, -45, 45, 5);
-			CVar(OffsetZ, VA_LIST("Offset Z", "Viewmodel offset Z"), 0, VISUAL | SLIDER_PRECISION, -45, 45, 5);
-			CVar(Pitch, VA_LIST("Pitch", "Viewmodel pitch"), 0, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180, 180, 5);
-			CVar(Yaw, VA_LIST("Yaw", "Viewmodel yaw"), 0, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180, 180, 5);
-			CVar(Roll, VA_LIST("Roll", "Viewmodel roll"), 0, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180, 180, 5);
+			CVar(OffsetX, VA_LIST("Offset X", "Viewmodel offset X"), 0.f, VISUAL | SLIDER_PRECISION, -45.f, 45.f, 5.f);
+			CVar(OffsetY, VA_LIST("Offset Y", "Viewmodel offset Y"), 0.f, VISUAL | SLIDER_PRECISION, -45.f, 45.f, 5.f);
+			CVar(OffsetZ, VA_LIST("Offset Z", "Viewmodel offset Z"), 0.f, VISUAL | SLIDER_PRECISION, -45.f, 45.f, 5.f);
+			CVar(Pitch, VA_LIST("Pitch", "Viewmodel pitch"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
+			CVar(Yaw, VA_LIST("Yaw", "Viewmodel yaw"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
+			CVar(Roll, VA_LIST("Roll", "Viewmodel roll"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
 			CVar(SwayScale, VA_LIST("Sway scale", "Viewmodel sway scale"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f, 0.5f);
 			CVar(SwayInterp, VA_LIST("Sway interp", "Viewmodel sway interp"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
 			CVar(FieldOfView, VA_LIST("Field of view## Viewmodel FOV", "Viewmodel field of view"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f, 5.f);
@@ -785,6 +784,29 @@ namespace Vars
 			CVar(NearPropFade, "Near prop fade", false, VISUAL);
 			CVar(NoPropFade, "No prop fade", false, VISUAL);
 		SUBNAMESPACE_END(World);
+
+		SUBNAMESPACE_BEGIN(Other, Other Visuals)
+			CVar(LocalDominationOverride, "Local domination override", std::string(""), VISUAL);
+			CVar(LocalRevengeOverride, "Local revenge override", std::string(""), VISUAL);
+			CVar(DominationOverride, "Domination override", std::string(""), VISUAL);
+			CVar(RevengeOverride, "Revenge override", std::string(""), VISUAL);
+		SUBNAMESPACE_END(Other);
+
+		SUBNAMESPACE_BEGIN(Beams) // as of now, these will stay out of the menu
+			CVar(Model, "Model", std::string("sprites/physbeam.vmt"), VISUAL);
+			CVar(Life, "Life", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
+			CVar(Width, "Width", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
+			CVar(EndWidth, "End width", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
+			CVar(FadeLength, "Fade length", 10.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 30.f);
+			CVar(Amplitude, "Amplitude", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
+			CVar(Brightness, "Brightness", 255.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 255.f);
+			CVar(Speed, "Speed", 0.2f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f);
+			CVar(Segments, "Segments", 2, VISUAL | SLIDER_MIN, 1, 10);
+			CVar(Color, "Color", Color_t(255, 255, 255, 255), VISUAL);
+			CVarEnum(Flags, "Flags", 0b10000000100000000, VISUAL | DROPDOWN_MULTI, nullptr,
+				VA_LIST("Start entity", "End entity", "Fade in", "Fade out", "Sine noise", "Solid", "Shade in", "Shade out", "Only noise once", "No tile", "Use hitboxes", "Start visible", "End visible", "Is active", "Forever", "Halobeam", "Reverse"),
+				StartEntity = 1 << 0, EndEntity = 1 << 1, FadeIn = 1 << 2, FadeOut = 1 << 3, SineNoise = 1 << 4, Solid = 1 << 5, ShadeIn = 1 << 6, ShadeOut = 1 << 7, OnlyNoiseOnce = 1 << 8, NoTile = 1 << 9, UseHitboxes = 1 << 10, StartVisible = 1 << 11, EndVisible = 1 << 12, IsActive = 1 << 13, Forever = 1 << 14, Halobeam = 1 << 15, Reverse = 1 << 16);
+		SUBNAMESPACE_END(Beams);
 
 		SUBNAMESPACE_BEGIN(Line)
 			CVar(Enabled, "Line tracers", false, VISUAL);
@@ -822,7 +844,7 @@ namespace Vars
 			CVar(DrawDuration, VA_LIST("Draw duration", "Simulation draw duration"), 5.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
 
 			CVar(SeparatorSpacing, "Separator spacing", 4, NOSAVE | DEBUGVAR, 1, 16);
-			CVar(SeparatorLength, "Separator length", 12, NOSAVE | DEBUGVAR, 2, 16);
+			CVar(SeparatorLength, "Separator length", 12.f, NOSAVE | DEBUGVAR, 2.f, 16.f);
 		SUBNAMESPACE_END(Simulation);
 
 		SUBNAMESPACE_BEGIN(Trajectory)
@@ -850,29 +872,6 @@ namespace Vars
 			CVar(MaxVelocity, "Max velocity", 2000.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 4000.f, 50.f);
 			CVar(MaxAngularVelocity, "Max angular velocity", 3600.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 7200.f, 50.f);
 		SUBNAMESPACE_END(ProjectileTrajectory);
-
-		SUBNAMESPACE_BEGIN(Other, Other Visuals)
-			CVar(LocalDominationOverride, "Local domination override", std::string(""), VISUAL);
-			CVar(LocalRevengeOverride, "Local revenge override", std::string(""), VISUAL);
-			CVar(DominationOverride, "Domination override", std::string(""), VISUAL);
-			CVar(RevengeOverride, "Revenge override", std::string(""), VISUAL);
-		SUBNAMESPACE_END(Other);
-
-		SUBNAMESPACE_BEGIN(Beams) // as of now, these will stay out of the menu
-			CVar(Model, "Model", std::string("sprites/physbeam.vmt"), VISUAL);
-			CVar(Life, "Life", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
-			CVar(Width, "Width", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
-			CVar(EndWidth, "End width", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
-			CVar(FadeLength, "Fade length", 10.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 30.f);
-			CVar(Amplitude, "Amplitude", 2.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
-			CVar(Brightness, "Brightness", 255.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 255.f);
-			CVar(Speed, "Speed", 0.2f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f);
-			CVar(Segments, "Segments", 2, VISUAL | SLIDER_MIN, 1, 10);
-			CVar(Color, "Color", Color_t(255, 255, 255, 255), VISUAL);
-			CVarEnum(Flags, "Flags", 0b10000000100000000, VISUAL | DROPDOWN_MULTI, nullptr,
-				VA_LIST("Start entity", "End entity", "Fade in", "Fade out", "Sine noise", "Solid", "Shade in", "Shade out", "Only noise once", "No tile", "Use hitboxes", "Start visible", "End visible", "Is active", "Forever", "Halobeam", "Reverse"),
-				StartEntity = 1 << 0, EndEntity = 1 << 1, FadeIn = 1 << 2, FadeOut = 1 << 3, SineNoise = 1 << 4, Solid = 1 << 5, ShadeIn = 1 << 6, ShadeOut = 1 << 7, OnlyNoiseOnce = 1 << 8, NoTile = 1 << 9, UseHitboxes = 1 << 10, StartVisible = 1 << 11, EndVisible = 1 << 12, IsActive = 1 << 13, Forever = 1 << 14, Halobeam = 1 << 15, Reverse = 1 << 16);
-		SUBNAMESPACE_END(Beams);
 	NAMESPACE_END(Visuals);
 
 	NAMESPACE_BEGIN(Radar)

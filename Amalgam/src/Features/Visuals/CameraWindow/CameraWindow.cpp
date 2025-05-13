@@ -1,5 +1,6 @@
 #include "CameraWindow.h"
-#include "../Visuals/Materials/Materials.h"
+
+#include "../../Visuals/Materials/Materials.h"
 
 // Draws camera to the screen
 void CCameraWindow::Draw()

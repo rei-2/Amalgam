@@ -101,8 +101,7 @@ public:
 
 	inline Vec3 GetRenderCenter()
 	{
-		Vec3 vMin = {}, vMax = {};
-		GetRenderBounds(vMin, vMax);
+		Vec3 vMin, vMax; GetRenderBounds(vMin, vMax);
 		return GetRenderOrigin() + Vec3(0.f, 0.f, (vMin.z + vMax.z) / 2);
 	}
 

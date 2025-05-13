@@ -10,6 +10,7 @@ private:
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
+	void Draw(CTFPlayer* pLocal);
 
 	bool m_bRan = false;
 	bool m_bRunningSecondary = false;

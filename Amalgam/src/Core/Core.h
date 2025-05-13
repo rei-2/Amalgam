@@ -12,6 +12,7 @@ public:
 	void Unload();
 
 	void AppendFailText(const char* sMessage);
+	void LogFailText();
 
 	bool m_bUnload = false;
 

@@ -48,6 +48,23 @@ void CCore::AppendFailText(const char* sMessage)
 	OutputDebugStringA(std::format("{}\n", sMessage).c_str());
 }
 
+void CCore::LogFailText()
+{
+	ssFailStream << "\nBuilt @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
+	ssFailStream << "Ctrl + C to copy. \n";
+	try
+	{
+		std::ofstream file;
+		file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
+		file << ssFailStream.str() + "\n\n\n";
+		file.close();
+		ssFailStream << "Logged to Amalgam\\fail_log.txt. ";
+	}
+	catch (...) {}
+
+	SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
+}
+
 void CCore::Load()
 {
 	if (m_bUnload = m_bFailed = FNV1A::Hash32(GetProcessName(GetCurrentProcessId()).c_str()) != FNV1A::Hash32Const("tf_win64.exe"))
@@ -103,24 +120,12 @@ void CCore::Unload()
 {
 	if (m_bFailed)
 	{
-		ssFailStream << "\n" __CONFIGURATION__ " @ " __DATE__ ", " __TIME__ " (1)\n";
-		ssFailStream << "Ctrl + C to copy. \n";
-		try
-		{
-			std::ofstream file;
-			file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
-			file << ssFailStream.str() + "\n\n\n";
-			file.close();
-			ssFailStream << "Logged to Amalgam\\fail_log.txt. ";
-		}
-		catch (...) {}
-
-		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
+		LogFailText();
 		return;
 	}
 
 	G::Unload = true;
-	m_bFailed2 = !U::Hooks.Unload();
+	m_bFailed2 = !U::Hooks.Unload() || m_bFailed2;
 	U::BytePatches.Unload();
 	H::Events.Unload();
 
@@ -144,19 +149,7 @@ void CCore::Unload()
 
 	if (m_bFailed2)
 	{
-		ssFailStream << "\n" __CONFIGURATION__ " @ " __DATE__ ", " __TIME__ " (2)\n";
-		ssFailStream << "Ctrl + C to copy. \n";
-		try
-		{
-			std::ofstream file;
-			file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
-			file << ssFailStream.str() + "\n\n\n";
-			file.close();
-			ssFailStream << "Logged to Amalgam\\fail_log.txt. ";
-		}
-		catch (...) {}
-
-		SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
+		LogFailText();
 		return;
 	}
 

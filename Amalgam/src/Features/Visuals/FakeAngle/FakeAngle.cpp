@@ -1,7 +1,7 @@
 #include "FakeAngle.h"
 
 #include "../../PacketManip/AntiAim/AntiAim.h"
-#include "../../TickHandler/TickHandler.h"
+#include "../../Ticks/Ticks.h"
 
 void CFakeAngle::Run(CTFPlayer* pLocal)
 {
@@ -21,7 +21,7 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 	int nOldSequence = pLocal->m_nSequence();
 	float flOldCycle = pLocal->m_flCycle();
 	auto pOldPoseParams = pLocal->m_flPoseParameter();
-	char pOldAnimState[sizeof(CTFPlayerAnimState)] = {};
+	char pOldAnimState[sizeof(CTFPlayerAnimState)];
 	memcpy(pOldAnimState, pAnimState, sizeof(CTFPlayerAnimState));
 
 	I::GlobalVars->frametime = 0.f;

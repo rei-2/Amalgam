@@ -1,6 +1,6 @@
 #include "NoSpreadHitscan.h"
 
-#include "../../TickHandler/TickHandler.h"
+#include "../../Ticks/Ticks.h"
 #include <regex>
 #include <numeric>
 
