@@ -12,21 +12,9 @@
 
 bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (!pLocal || !pWeapon
-		|| !pLocal->IsAlive()
-		|| pLocal->IsAGhost()
-		|| pLocal->IsTaunting()
-		|| pLocal->InCond(TF_COND_STUNNED) && pLocal->m_iStunFlags() & (TF_STUN_CONTROLS | TF_STUN_LOSER_STATE)
-		|| pLocal->m_bFeignDeathReady()
-		|| pLocal->InCond(TF_COND_PHASE)
-		|| pLocal->InCond(TF_COND_STEALTHED)
-		|| pLocal->InCond(TF_COND_HALLOWEEN_KART))
-		return false;
-
-	if (SDK::AttribHookValue(1, "mult_dmg", pWeapon) == 0)
-		return false;
-
-	if (I::EngineVGui->IsGameUIVisible())
+	if (!pLocal || !pWeapon || !pLocal->CanAttack()
+		|| SDK::AttribHookValue(1, "mult_dmg", pWeapon) == 0
+		|| I::EngineVGui->IsGameUIVisible())
 		return false;
 
 	return true;
@@ -90,7 +78,7 @@ void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 void CAimbot::Draw(CTFPlayer* pLocal)
 {
-	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsTaunting() || pLocal->InCond(TF_COND_STUNNED) && pLocal->m_iStunFlags() & (TF_STUN_CONTROLS | TF_STUN_LOSER_STATE) || pLocal->InCond(TF_COND_HALLOWEEN_KART))
+	if (!Vars::Aimbot::General::FOVCircle.Value || !Vars::Colors::FOVCircle.Value.a || !pLocal->CanAttack(false))
 		return;
 
 	auto pWeapon = H::Entities.GetWeapon();

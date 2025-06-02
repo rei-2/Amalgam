@@ -5,21 +5,9 @@
 
 bool CNoSpread::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (!Vars::Aimbot::General::NoSpread.Value)
+	if (!Vars::Aimbot::General::NoSpread.Value
+		|| !pLocal || !pWeapon || !pLocal->CanAttack())
 		return false;
-
-	if (!pLocal || !pWeapon
-		|| !pLocal->IsAlive()
-		|| pLocal->IsAGhost()
-		|| pLocal->IsTaunting()
-		|| pLocal->InCond(TF_COND_STUNNED) && pLocal->m_iStunFlags() & (TF_STUN_CONTROLS | TF_STUN_LOSER_STATE)
-		|| pLocal->m_bFeignDeathReady()
-		|| pLocal->InCond(TF_COND_PHASE)
-		|| pLocal->InCond(TF_COND_STEALTHED)
-		|| pLocal->InCond(TF_COND_HALLOWEEN_KART))
-	{
-		return false;
-	}
 
 	return true;
 }

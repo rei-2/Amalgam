@@ -7,11 +7,13 @@ Enum(ProjSim,
 	InitCheck = 1 << 1,
 	Quick = 1 << 2,
 	NoRandomAngles = 1 << 3,
-	PredictCmdNum = 1 << 4
+	PredictCmdNum = 1 << 4,
+	MaxSpeed = 1 << 5
 )
 
 struct ProjectileInfo
 {
+	CTFWeaponBase* m_pWeapon = nullptr;
 	uint32_t m_uType = 0;
 
 	Vec3 m_vPos = {};
@@ -20,7 +22,6 @@ struct ProjectileInfo
 
 	float m_flVelocity = 0.f;
 	float m_flGravity = 0.f;
-	bool m_bNoSpin = false;
 	float m_flLifetime = 60.f;
 
 	CTFPlayer* m_pOwner = nullptr;
@@ -60,4 +61,4 @@ public:
 	IPhysicsObject* obj = nullptr;
 };
 
-ADD_FEATURE(CProjectileSimulation, ProjSim)
+ADD_FEATURE(CProjectileSimulation, ProjSim);

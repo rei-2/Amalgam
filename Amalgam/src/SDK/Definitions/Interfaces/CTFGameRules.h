@@ -2,7 +2,6 @@
 #include "Interface.h"
 #include "../Main/CBaseHandle.h"
 #include "../Misc/IMatchGroupDescription.h"
-#include "../../../Utils/NetVars/NetVars.h"
 
 MAKE_SIGNATURE(TFGameRules, "client.dll", "48 8B 0D ? ? ? ? 4C 8B C3 48 8B D7 48 8B 01 FF 90 ? ? ? ? 84 C0", 0x0);
 MAKE_SIGNATURE(CTFGameRules_GetCurrentMatchGroup, "client.dll", "40 53 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 33 D2 E8 ? ? ? ? 84 C0 74 ? 8B 83 ? ? ? ? 48 83 C4", 0x0);
@@ -98,10 +97,7 @@ public:
 	NETVAR(m_nForceEscortPushLogic, int, "CTFGameRulesProxy", "m_nForceEscortPushLogic");
 	NETVAR(m_bRopesHolidayLightsAllowed, bool, "CTFGameRulesProxy", "m_bRopesHolidayLightsAllowed");
 
-	inline CViewVectors* GetViewVectors()
-	{
-		return reinterpret_cast<CViewVectors * (*)()>(U::Memory.GetVFunc(this, 31))();
-	}
+	VIRTUAL(GetViewVectors, CViewVectors*, 31, this);
 
 	inline bool IsPlayerReady(int playerIndex)
 	{
@@ -116,11 +112,7 @@ public:
 		return ReadyStatus[playerIndex];
 	}
 
-	inline int GetCurrentMatchGroup()
-	{
-		return S::CTFGameRules_GetCurrentMatchGroup.Call<int>(this);
-	}
-
+	SIGNATURE(GetCurrentMatchGroup, int, CTFGameRules, this);
 	inline IMatchGroupDescription* GetMatchGroupDescription()
 	{
 		int iCurrentMatchGroup = GetCurrentMatchGroup();

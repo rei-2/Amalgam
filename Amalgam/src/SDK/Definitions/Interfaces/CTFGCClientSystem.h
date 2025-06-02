@@ -1,6 +1,6 @@
+#pragma once
 #include "Interface.h"
 #include "../Steam/SteamClientPublic.h"
-#include "../../../Utils/Memory/Memory.h"
 
 MAKE_SIGNATURE(CGCClientSharedObjectCache_FindTypeCache, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F B7 59 ? BE", 0x0);
 
@@ -22,10 +22,7 @@ public:
 class CGCClientSharedObjectCache
 {
 public:
-	inline CGCClientSharedObjectTypeCache* FindTypeCache(int nClassID)
-	{
-		return S::CGCClientSharedObjectCache_FindTypeCache.Call<CGCClientSharedObjectTypeCache*>(this, nClassID);
-	}
+	SIGNATURE_ARGS(FindTypeCache, CGCClientSharedObjectTypeCache*, CGCClientSharedObjectCache, (int nClassID), this, nClassID);
 };
 
 struct CTFLobbyPlayerProto
@@ -79,80 +76,36 @@ class ConstTFLobbyPlayer
 	void* pad1;
 
 public:
-	inline CTFLobbyPlayerProto* Proto()
-	{
-		auto ConstTFLobbyPlayer_Proto = reinterpret_cast<CTFLobbyPlayerProto*(*)(void*)>(U::Memory.GetVFunc(this, 0));
-		return ConstTFLobbyPlayer_Proto(this);
-	}
+	VIRTUAL(Proto, CTFLobbyPlayerProto*, 0, this);
 };
 
 class CTFLobbyShared
 {
 public:
-	inline int64 GetNumMembers()
-	{
-		auto CTFLobbyShared_GetNumMembers = reinterpret_cast<int(*)(void*)>(U::Memory.GetVFunc(this, 2));
-		return CTFLobbyShared_GetNumMembers(this);
-	}
-
-	inline CSteamID* GetMember(CSteamID* pSteamID, int i)
-	{
-		auto CTFLobbyShared_GetMember = reinterpret_cast<CSteamID*(*)(void*, CSteamID*, int)>(U::Memory.GetVFunc(this, 3));
-		return CTFLobbyShared_GetMember(this, pSteamID, i);
-	}
-
-	inline int64 GetMemberIndexBySteamID(CSteamID& cSteamID)
-	{
-		auto CTFLobbyShared_GetMemberIndexBySteamID = reinterpret_cast<int(*)(void*, CSteamID&)>(U::Memory.GetVFunc(this, 4));
-		return CTFLobbyShared_GetMemberIndexBySteamID(this, cSteamID);
-	}
-
-	inline ConstTFLobbyPlayer* GetMemberDetails(ConstTFLobbyPlayer* pDetails, int i)
-	{
-		auto CTFLobbyShared_GetMemberDetails = reinterpret_cast<ConstTFLobbyPlayer*(*)(void*, ConstTFLobbyPlayer*, int)>(U::Memory.GetVFunc(this, 13));
-		return CTFLobbyShared_GetMemberDetails(this, pDetails, i);
-	}
+	VIRTUAL(GetNumMembers, int, 2, this);
+	VIRTUAL_ARGS(GetMember, CSteamID*, 3, (CSteamID* pSteamID, int i), this, pSteamID, i);
+	VIRTUAL_ARGS(GetMemberIndexBySteamID, int, 4, (CSteamID& pSteamID), this, std::ref(pSteamID));
+	VIRTUAL_ARGS(GetMemberDetails, ConstTFLobbyPlayer*, 13, (ConstTFLobbyPlayer* pDetails, int i), this, pDetails, i);
 };
 
 class CTFParty
 {
 public:
-	inline int64 GetNumMembers()
-	{
-		auto pParty = reinterpret_cast<void*>(uintptr_t(this) + 184);
-		auto CTFParty_GetNumMembers = reinterpret_cast<int64(*)(void*)>(U::Memory.GetVFunc(pParty, 2));
-		return CTFParty_GetNumMembers(pParty);
-	}
+	VIRTUAL(GetNumMembers, int64, 2, uintptr_t(this) + 184);
+	VIRTUAL_ARGS(GetMember, CSteamID*, 3, (CSteamID* pSteamID, int i), uintptr_t(this) + 184, pSteamID, i);
 
-	inline CSteamID* GetMember(CSteamID* pSteamID, int i)
-	{
-		auto pParty = reinterpret_cast<void*>(uintptr_t(this) + 184);
-		auto CTFParty_GetMember = reinterpret_cast<CSteamID*(*)(void*, CSteamID*, int)>(U::Memory.GetVFunc(pParty, 3));
-		return CTFParty_GetMember(pParty, pSteamID, i);
-	}
-
-	inline void SpewDebug()
-	{
-		S::CTFParty_SpewDebug.Call<void>(this);
-	}
+	SIGNATURE(SpewDebug, void, CTFParty, this);
 };
 
 class CTFGCClientSystem
 {
 public:
+	SIGNATURE(PingThink, void, CTFGCClientSystem, this);
+	SIGNATURE(GetParty, CTFParty*, CTFGCClientSystem, this);
+
 	inline CGCClientSharedObjectCache* m_pSOCache()
 	{
 		return *reinterpret_cast<CGCClientSharedObjectCache**>(uintptr_t(this) + 1072);
-	}
-
-	inline void PingThink()
-	{
-		S::CTFGCClientSystem_PingThink.Call<void>(this);
-	}
-
-	inline CTFParty* GetParty()
-	{
-		return S::CTFGCClientSystem_GetParty.Call<CTFParty*>(this);
 	}
 
 	inline CTFLobbyShared* GetLobby()

@@ -18,4 +18,4 @@ public:
 	int m_iGoal = 0;
 };
 
-ADD_FEATURE(CFakeLag, FakeLag)
+ADD_FEATURE(CFakeLag, FakeLag);

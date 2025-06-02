@@ -1,6 +1,6 @@
 #include "../SDK/SDK.h"
 
-MAKE_HOOK(CStudioRender_SetAlphaModulation, U::Memory.GetVFunc(I::StudioRender, 28), void,
+MAKE_HOOK(CStudioRender_SetAlphaModulation, U::Memory.GetVirtual(I::StudioRender, 28), void,
 	void* rcx, float flAlpha)
 {
 #ifdef DEBUG_HOOKS

@@ -150,7 +150,7 @@ bool CGroups::ShouldTarget(Group_t& tGroup, CBaseEntity* pEntity, CTFPlayer* pLo
 	case ETFClassID::CTFBaseBoss:
 	case ETFClassID::CTFTankBoss:
 	case ETFClassID::CZombie:
-		if (pEntity->m_iTeamNum() == TF_TEAM_BLUE || pEntity->m_iTeamNum() == TF_TEAM_RED)
+		if (pEntity->IsInValidTeam())
 		{
 			if (auto pOwner = pEntity->m_hOwnerEntity().Get())
 				return ShouldTargetOwner(tGroup.m_iTargets & TargetsEnum::NPCs, tGroup, pOwner, pEntity, pLocal);

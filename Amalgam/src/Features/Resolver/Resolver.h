@@ -38,7 +38,7 @@ public:
 	void FrameStageNotify();
 	void CreateMove(CTFPlayer* pLocal);
 	void HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int iHitbox = HITBOX_MAX);
-	void OnPlayerHurt(IGameEvent* pEvent);
+	void PlayerHurt(IGameEvent* pEvent);
 	void SetYaw(int iUserID, float flValue, bool bAuto = false);
 	void SetPitch(int iUserID, float flValue, bool bInverse = false, bool bAuto = false);
 	void SetMinwalk(int iUserID, bool bValue);
@@ -47,4 +47,4 @@ public:
 	void Reset();
 };
 
-ADD_FEATURE(CResolver, Resolver)
+ADD_FEATURE(CResolver, Resolver);

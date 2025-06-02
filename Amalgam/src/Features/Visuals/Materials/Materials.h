@@ -40,4 +40,4 @@ public:
 	bool m_bLoaded = false;
 };
 
-ADD_FEATURE(CMaterials, Materials)
+ADD_FEATURE(CMaterials, Materials);

@@ -10,4 +10,4 @@ public:
 	void Run(CTFPlayer* pLocal);
 };
 
-ADD_FEATURE(CPlayerArrows, PlayerArrows)
+ADD_FEATURE(CPlayerArrows, PlayerArrows);

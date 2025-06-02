@@ -2,7 +2,7 @@
 
 #include "../Features/Spectate/Spectate.h"
 
-MAKE_HOOK(CViewRender_LevelShutdown, U::Memory.GetVFunc(I::ViewRender, 2), void,
+MAKE_HOOK(CViewRender_LevelShutdown, U::Memory.GetVirtual(I::ViewRender, 2), void,
 	void* rcx)
 {
 	F::Spectate.m_iIntendedTarget = -1;

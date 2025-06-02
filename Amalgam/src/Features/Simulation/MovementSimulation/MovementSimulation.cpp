@@ -216,7 +216,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 	tStorage.m_pPlayer = pPlayer;
 
 	I::MoveHelper->SetHost(pPlayer);
-	pPlayer->SetCurrentCmd(&DummyCmd);
+	pPlayer->m_pCurrentCommand() = &DummyCmd;
 
 	// store player restore data
 	Store(tStorage);
@@ -710,7 +710,7 @@ void CMovementSimulation::Restore(PlayerStorage& tStorage)
 		return;
 
 	I::MoveHelper->SetHost(nullptr);
-	tStorage.m_pPlayer->SetCurrentCmd(nullptr);
+	tStorage.m_pPlayer->m_pCurrentCommand() = nullptr;
 
 	Reset(tStorage);
 

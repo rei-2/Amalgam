@@ -1,7 +1,6 @@
 #pragma once
 #include "../Feature/Feature.h"
 #include "../../SDK/Definitions/Misc/dt_recv.h"
-#include <cstdint>
 
 class CNetVars
 {
@@ -37,19 +36,4 @@ ADD_FEATURE_CUSTOM(CNetVars, NetVars, U);
 { \
 	static int nOffset = U::NetVars.GetNetVar(table, name) + offset; \
 	return *reinterpret_cast<type*>(uintptr_t(this) + nOffset + iIndex * sizeof(type)); \
-}
-
-#define OFFSET(name, type, offset) inline type& name() \
-{ \
-	return *reinterpret_cast<type*>(uintptr_t(this) + offset); \
-}
-
-#define VIRTUAL(name, type, fn, base, index) inline type name() \
-{ \
-	return reinterpret_cast<type(*)(fn)>(U::Memory.GetVFunc(base, index))(base); \
-}
-
-#define CONDGET(name, conditions, cond) inline bool name() \
-{ \
-	return (conditions & cond); \
 }

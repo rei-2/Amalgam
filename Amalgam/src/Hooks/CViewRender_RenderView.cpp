@@ -2,7 +2,7 @@
 
 #include "../Features/Visuals/CameraWindow/CameraWindow.h"
 
-MAKE_HOOK(CViewRender_RenderView, U::Memory.GetVFunc(I::ViewRender, 6), void,
+MAKE_HOOK(CViewRender_RenderView, U::Memory.GetVirtual(I::ViewRender, 6), void,
 	void* rcx, const CViewSetup& view, ClearFlags_t nClearFlags, RenderViewInfo_t whatToDraw)
 {
 #ifdef DEBUG_HOOKS

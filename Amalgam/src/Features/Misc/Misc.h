@@ -40,4 +40,4 @@ public:
 	int m_iWishUpdaterate = -1;
 };
 
-ADD_FEATURE(CMisc, Misc)
+ADD_FEATURE(CMisc, Misc);

@@ -36,13 +36,6 @@ public:
 class CCollisionProperty : public ICollideable
 {
 public:
-	inline void SetCollisionBounds(const Vec3& mins, const Vec3& maxs)
-	{
-		S::CCollisionProperty_SetCollisionBounds.Call<void>(this, std::ref(mins), std::ref(maxs));
-	}
-
-	inline void CalcNearestPoint(const Vec3& vecWorldPt, Vec3* pVecNearestWorldPt)
-	{
-		S::CCollisionProperty_CalcNearestPoint.Call<void>(this, std::ref(vecWorldPt), pVecNearestWorldPt);
-	}
+	SIGNATURE_ARGS(SetCollisionBounds, void, CCollisionProperty, (const Vec3& mins, const Vec3& maxs), this, std::ref(mins), std::ref(maxs));
+	SIGNATURE_ARGS(CalcNearestPoint, void, CCollisionProperty, (const Vec3& vecWorldPt, Vec3* pVecNearestWorldPt), this, std::ref(vecWorldPt), pVecNearestWorldPt);
 };

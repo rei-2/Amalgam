@@ -5,8 +5,6 @@
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "../Features/Misc/AutoVote/AutoVote.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/predicate.hpp>
 
 //#define DEBUG_VISUALS
 #ifdef DEBUG_VISUALS
@@ -14,7 +12,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #endif
 
-MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVFunc(I::BaseClientDLL, 36), bool,
+MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClientDLL, 36), bool,
 	void* rcx, UserMessageType type, bf_read& msgData)
 {
 #ifdef DEBUG_HOOKS

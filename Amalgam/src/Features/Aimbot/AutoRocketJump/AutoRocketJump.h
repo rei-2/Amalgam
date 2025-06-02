@@ -16,4 +16,4 @@ public:
 	bool IsRunning() { return m_bRunning; }
 };
 
-ADD_FEATURE(CAutoRocketJump, AutoRocketJump)
+ADD_FEATURE(CAutoRocketJump, AutoRocketJump);

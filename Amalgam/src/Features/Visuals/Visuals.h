@@ -32,14 +32,11 @@ public:
 	void ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const bool bQuick = true);
 	void SplashRadius(CTFPlayer* pLocal);
 	void DrawAntiAim(CTFPlayer* pLocal);
-	void DrawSightlines();
 	void DrawPickupTimers();
 	void DrawDebugInfo(CTFPlayer* pLocal);
 
 	std::vector<DrawBox_t> GetHitboxes(matrix3x4* aBones, CBaseAnimating* pEntity, std::vector<int> vHitboxes = {}, int iTarget = -1);
-	void DrawLines();
-	void DrawPaths();
-	void DrawBoxes();
+	void DrawEffects();
 	void DrawServerHitboxes(CTFPlayer* pLocal);
 
 	void FOV(CTFPlayer* pLocal, CViewSetup* pView);
@@ -52,4 +49,4 @@ public:
 	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 };
 
-ADD_FEATURE(CVisuals, Visuals)
+ADD_FEATURE(CVisuals, Visuals);

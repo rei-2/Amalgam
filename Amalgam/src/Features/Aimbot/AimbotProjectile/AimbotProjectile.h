@@ -68,8 +68,9 @@ class CAimbotProjectile
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
+	float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pPlayer);
 
 	int m_iLastTickCancel = 0;
 };
 
-ADD_FEATURE(CAimbotProjectile, AimbotProjectile)
+ADD_FEATURE(CAimbotProjectile, AimbotProjectile);

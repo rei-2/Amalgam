@@ -5,9 +5,9 @@
 #include "CParticleProperty.h"
 #include "../Main/UtlVector.h"
 #include "../Definitions.h"
-#include "../../../Utils/NetVars/NetVars.h"
-#include "../../../Utils/Signatures/Signatures.h"
 #include "../../../Utils/Memory/Memory.h"
+#include "../../../Utils/Signatures/Signatures.h"
+#include "../../../Utils/NetVars/NetVars.h"
 
 MAKE_SIGNATURE(CBaseEntity_SetAbsOrigin, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B FA 48 8B D9 E8 ? ? ? ? F3 0F 10 83", 0x0);
 MAKE_SIGNATURE(CBaseEntity_SetAbsAngles, "client.dll", "48 89 5C 24 ? 57 48 81 EC ? ? ? ? 48 8B FA 48 8B D9 E8 ? ? ? ? F3 0F 10 83", 0x0);
@@ -91,92 +91,36 @@ public:
 	
 	NETVAR_OFF(m_flOldSimulationTime, float, "CBaseEntity", "m_flSimulationTime", 4);
 	NETVAR_OFF(m_Particles, CParticleProperty*, "CBaseEntity", "m_flElasticity", -56);
-
-	VIRTUAL(UpdateVisibility, void, CBaseEntity*, this, 91);
-
-	inline Vec3 GetCenter()
-	{
-		return m_vecOrigin() + (m_vecMins() + m_vecMaxs()) / 2;
-	}
-
-	inline Vec3 GetRenderCenter()
-	{
-		Vec3 vMin, vMax; GetRenderBounds(vMin, vMax);
-		return GetRenderOrigin() + Vec3(0.f, 0.f, (vMin.z + vMax.z) / 2);
-	}
-
-	inline bool IsInValidTeam(int* pTeamNumOut = nullptr)
-	{
-		int nTeamNum = m_iTeamNum();
-
-		switch (nTeamNum)
-		{
-		case TF_TEAM_RED:
-		case TF_TEAM_BLUE:
-		{
-			if (pTeamNumOut)
-				*pTeamNumOut = nTeamNum;
-
-			return true;
-		}
-
-		default: return false;
-		}
-	}
-
 	inline CBaseEntity* GetMoveParent()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 8;
 		auto m_pMoveParent = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
-		if (!m_pMoveParent)
-			return nullptr;
-
-		return m_pMoveParent->Get();
+		return m_pMoveParent ? m_pMoveParent->Get() : nullptr;
 	}
-
 	inline CBaseEntity* NextMovePeer()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 16;
 		auto m_pMovePeer = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
-		if (!m_pMovePeer)
-			return nullptr;
-
-		return m_pMovePeer->Get();
+		return m_pMovePeer ? m_pMovePeer->Get() : nullptr;
 	}
-
 	inline CBaseEntity* FirstMoveChild()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 24;
 		auto m_pMoveChild = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
-		if (!m_pMoveChild)
-			return nullptr;
-
-		return m_pMoveChild->Get();
+		return m_pMoveChild ? m_pMoveChild->Get() : nullptr;
 	}
 
-	inline void SetAbsOrigin(const Vec3& absOrigin)
-	{
-		S::CBaseEntity_SetAbsOrigin.Call<void>(this, std::ref(absOrigin));
-	}
+	VIRTUAL(UpdateVisibility, void, 91, this);
 
-	inline void SetAbsAngles(const Vec3& absAngles)
-	{
-		S::CBaseEntity_SetAbsAngles.Call<void>(this, std::ref(absAngles));
-	}
-
-	inline void SetAbsVelocity(const Vec3& vecAbsVelocity)
-	{
-		S::CBaseEntity_SetAbsVelocity.Call<void>(this, std::ref(vecAbsVelocity));
-	}
-
-	inline void EstimateAbsVelocity(Vec3& vel)
-	{
-		S::CBaseEntity_EstimateAbsVelocity.Call<void>(this, std::ref(vel));
-	}
-
+	SIGNATURE_ARGS(SetAbsOrigin, void, CBaseEntity, (const Vec3& vOrigin), this, std::ref(vOrigin));
+	SIGNATURE_ARGS(SetAbsAngles, void, CBaseEntity, (const Vec3& vAngles), this, std::ref(vAngles));
+	SIGNATURE_ARGS(SetAbsVelocity, void, CBaseEntity, (const Vec3& vVelocity), this, std::ref(vVelocity));
+	SIGNATURE_ARGS(EstimateAbsVelocity, void, CBaseEntity, (Vec3& vVelocity), this, std::ref(vVelocity));
+	SIGNATURE(InvalidateBoneCache, void, CBaseEntity, this);
+	SIGNATURE(CreateShadow, void, CBaseEntity, this);
 	inline Vec3 GetAbsVelocity()
 	{
 		Vec3 vOut;
@@ -184,27 +128,10 @@ public:
 		return vOut;
 	}
 
-	inline void CreateShadow()
-	{
-		S::CBaseEntity_CreateShadow.Call<void>(this);
-	}
-
-	inline void InvalidateBoneCache()
-	{
-		S::CBaseEntity_InvalidateBoneCache.Call<void>(this);
-	}
-
-	inline int SolidMask()
-	{
-		if (IsPlayer())
-		{
-			switch (m_iTeamNum())
-			{
-			case TF_TEAM_RED: return MASK_PLAYERSOLID | CONTENTS_BLUETEAM;
-			case TF_TEAM_BLUE: return MASK_PLAYERSOLID | CONTENTS_REDTEAM;
-			}
-			return MASK_PLAYERSOLID;
-		}
-		return MASK_SOLID;
-	}
+	Vec3 GetSize();
+	Vec3 GetOffset();
+	Vec3 GetCenter();
+	Vec3 GetRenderCenter();
+	int IsInValidTeam();
+	int SolidMask();
 };

@@ -9,25 +9,10 @@ MAKE_SIGNATURE(CTFPartyClient_RequestQueueForMatch, "client.dll", "40 55 56 48 8
 class CTFPartyClient
 {
 public:
-	void SendPartyChat(const char* sMessage)
-	{
-		return S::CTFPartyClient_SendPartyChat.Call<void>(this, sMessage);
-	}
-
-	void LoadSavedCasualCriteria()
-	{
-		return S::CTFPartyClient_LoadSavedCasualCriteria.Call<void>(this);
-	}
-
-	bool BInQueueForMatchGroup(int eMatchGroup)
-	{
-		return S::CTFPartyClient_BInQueueForMatchGroup.Call<bool>(this, eMatchGroup);
-	}
-
-	void RequestQueueForMatch(int eMatchGroup)
-	{
-		return S::CTFPartyClient_RequestQueueForMatch.Call<void>(this, eMatchGroup);
-	}
+	SIGNATURE_ARGS(SendPartyChat, void, CTFPartyClient, (const char* sMessage), this, sMessage);
+	SIGNATURE(LoadSavedCasualCriteria, void, CTFPartyClient, this);
+	SIGNATURE_ARGS(BInQueueForMatchGroup, bool, CTFPartyClient, (int eMatchGroup), this, eMatchGroup);
+	SIGNATURE_ARGS(RequestQueueForMatch, void, CTFPartyClient, (int eMatchGroup), this, eMatchGroup);
 };
 
 MAKE_INTERFACE_NULL(CTFPartyClient, TFPartyClient);

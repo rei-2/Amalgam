@@ -13,8 +13,9 @@
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/CameraWindow/CameraWindow.h"
 #include "../Features/Visuals/Notifications/Notifications.h"
+//#include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 
-MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
+MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
 {
 #ifdef DEBUG_HOOKS
@@ -42,6 +43,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVFunc(I::EngineVGui, 14), void,
 			F::Aimbot.Draw(pLocal);
 			F::Radar.Run(pLocal);
 
+			//F::AutoHeal.Draw(pLocal);
 			F::NoSpreadHitscan.Draw(pLocal);
 			F::PlayerConditions.Draw(pLocal);
 			F::Backtrack.Draw(pLocal);

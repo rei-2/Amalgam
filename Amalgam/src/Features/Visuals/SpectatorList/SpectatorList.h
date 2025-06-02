@@ -21,4 +21,4 @@ public:
 	void Draw(CTFPlayer* pLocal);
 };
 
-ADD_FEATURE(CSpectatorList, SpectatorList)
+ADD_FEATURE(CSpectatorList, SpectatorList);

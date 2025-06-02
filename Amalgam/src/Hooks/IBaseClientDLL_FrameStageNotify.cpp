@@ -13,7 +13,7 @@
 #include "../Features/Spectate/Spectate.h"
 #include "../Features/Binds/Binds.h"
 
-MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVFunc(I::BaseClientDLL, 35), void,
+MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL, 35), void,
 	void* rcx, ClientFrameStage_t curStage)
 {
 #ifdef DEBUG_HOOKS

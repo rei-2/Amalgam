@@ -4,7 +4,7 @@
 #include "../Features/Visuals/Glow/Glow.h"
 #include "../Features/Visuals/Materials/Materials.h"
 
-MAKE_HOOK(IVModelRender_ForcedMaterialOverride, U::Memory.GetVFunc(I::ModelRender, 1), void,
+MAKE_HOOK(IVModelRender_ForcedMaterialOverride, U::Memory.GetVirtual(I::ModelRender, 1), void,
 	IVModelRender* rcx, IMaterial* mat, OverrideType_t type)
 {
 #ifdef DEBUG_HOOKS

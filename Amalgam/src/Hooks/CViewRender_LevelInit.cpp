@@ -9,7 +9,7 @@
 #include "../Features/Resolver/Resolver.h"
 #include "../Features/Spectate/Spectate.h"
 
-MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVFunc(I::ViewRender, 1), void,
+MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVirtual(I::ViewRender, 1), void,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS

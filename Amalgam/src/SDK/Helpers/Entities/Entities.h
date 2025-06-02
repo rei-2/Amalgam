@@ -33,7 +33,7 @@ class CEntities
 
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
 
-	std::unordered_map<int, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes;
+	std::unordered_map<int, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes, m_mLagTimes;
 	std::unordered_map<int, int> m_mChokes, m_mSetTicks;
 	std::unordered_map<int, std::pair<bool, matrix3x4[MAXSTUDIOBONES]>> m_mBones;
 	std::unordered_map<int, Vec3> m_mOldAngles, m_mEyeAngles;
@@ -74,9 +74,10 @@ public:
 
 	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group);
 
-	float GetSimTime(CBaseEntity* pEntity);
-	float GetOldSimTime(CBaseEntity* pEntity);
+	float GetSimTime(int iIndex);
+	float GetOldSimTime(int iIndex);
 	float GetDeltaTime(int iIndex);
+	float GetLagTime(int iIndex);
 	int GetChoke(int iIndex);
 	matrix3x4* GetBones(int iIndex);
 	Vec3 GetEyeAngles(int iIndex);

@@ -41,4 +41,4 @@ public:
 	Vec3 m_vAngles = {};
 };
 
-ADD_FEATURE(CEnginePrediction, EnginePrediction)
+ADD_FEATURE(CEnginePrediction, EnginePrediction);

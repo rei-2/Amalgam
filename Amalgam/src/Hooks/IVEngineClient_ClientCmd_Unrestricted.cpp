@@ -21,7 +21,7 @@ private:
 	mutable bool in_q;
 };
 
-MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVFunc(I::EngineClient, 106), void,
+MAKE_HOOK(IVEngineClient_ClientCmd_Unrestricted, U::Memory.GetVirtual(I::EngineClient, 106), void,
 	void* rcx, const char* szCmdString)
 {
 #ifdef DEBUG_HOOKS

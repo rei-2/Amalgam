@@ -11,4 +11,4 @@ public:
 	void Run(CTFPlayer* pLocal);
 };
 
-ADD_FEATURE(CRadar, Radar)
+ADD_FEATURE(CRadar, Radar);

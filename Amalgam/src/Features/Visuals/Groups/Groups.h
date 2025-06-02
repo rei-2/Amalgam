@@ -53,4 +53,4 @@ public:
 	std::vector<Group_t> m_vGroups = {}; // loop through this in reverse so back groups have higher priority
 };
 
-ADD_FEATURE(CGroups, Groups)
+ADD_FEATURE(CGroups, Groups);

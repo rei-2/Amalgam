@@ -8,4 +8,4 @@ public:
 	void Draw(CTFPlayer* pLocal);
 };
 
-ADD_FEATURE(CPlayerConditions, PlayerConditions)
+ADD_FEATURE(CPlayerConditions, PlayerConditions);

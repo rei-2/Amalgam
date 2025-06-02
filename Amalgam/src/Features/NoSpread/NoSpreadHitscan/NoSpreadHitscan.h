@@ -31,4 +31,4 @@ public:
 	float m_flMantissaStep = 0.f;
 };
 
-ADD_FEATURE(CNoSpreadHitscan, NoSpreadHitscan)
+ADD_FEATURE(CNoSpreadHitscan, NoSpreadHitscan);

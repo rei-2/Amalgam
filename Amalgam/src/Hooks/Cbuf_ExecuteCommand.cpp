@@ -13,7 +13,7 @@ enum cmd_source_t
 
 static std::string sCmdString;
 
-#define PRE_STR "\x07\x07\x07\x07\x07\x07\x07"
+#define PRE_STR "\x7\x7\x7\x7\x7\x7\x7"
 static std::vector<std::pair<std::string, std::string>> vStatic = {
     { "\\x1", "\x1" },
     { "\\x01", "\x1" },
@@ -43,6 +43,7 @@ static std::vector<std::pair<std::string, std::string>> vStatic = {
     { "\\{orange}", PRE_STR"\x7""ff7000" },
     { "\\{purple}", PRE_STR"\x7""7f00ff" },
     { "\\{brown}", PRE_STR"\x7""583927" },
+    { "\\{gold}", PRE_STR"\x7""c8a900" },
     { "\\{gray}", PRE_STR"\x7""cccccc" },
     { "\\{black}", PRE_STR"\x7""000000" },
     { "\\{bluteam}", PRE_STR"\x7""99ccff" },

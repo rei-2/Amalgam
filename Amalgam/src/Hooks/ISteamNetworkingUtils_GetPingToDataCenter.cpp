@@ -50,7 +50,7 @@ unsigned int GetDatacenter(uint32_t uHash)
 	return 0;
 }
 
-MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVFunc(I::SteamNetworkingUtils, 8), int,
+MAKE_HOOK(ISteamNetworkingUtils_GetPingToDataCenter, U::Memory.GetVirtual(I::SteamNetworkingUtils, 8), int,
 	void* rcx, SteamNetworkingPOPID popID, SteamNetworkingPOPID* pViaRelayPoP)
 {
 #ifdef DEBUG_HOOKS

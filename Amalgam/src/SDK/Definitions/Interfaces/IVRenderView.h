@@ -1,6 +1,5 @@
 #pragma once
 #include "IMaterialSystem.h"
-#include "Interface.h"
 #include "../Misc/BaseTypes.h"
 #include "../Misc/IRefCounted.h"
 #include "../Misc/VPlane.h"

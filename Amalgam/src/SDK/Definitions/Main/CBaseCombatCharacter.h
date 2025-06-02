@@ -11,16 +11,6 @@ public:
 	//NETVAR(m_hMyWeapons, EHANDLE, "CBaseCombatCharacter", "m_hMyWeapons");
 	NETVAR(m_bGlowEnabled, bool, "CBaseCombatCharacter", "m_bGlowEnabled");
 
-	inline CHandle<CTFWeaponBase>(&m_hMyWeapons())[MAX_WEAPONS]
-	{
-		static int nOffset = U::NetVars.GetNetVar("CBaseCombatCharacter", "m_hMyWeapons");
-		return *reinterpret_cast<CHandle<CTFWeaponBase>(*)[MAX_WEAPONS]>(uintptr_t(this) + nOffset);
-	}
-
-	inline CTFWeaponBase* GetWeaponFromSlot(int nSlot)
-	{
-		if (nSlot < 0 || nSlot >= MAX_WEAPONS)
-			return nullptr;
-		return m_hMyWeapons()[nSlot].Get();
-	}
+	CHandle<CTFWeaponBase>(&m_hMyWeapons())[MAX_WEAPONS];
+	CTFWeaponBase* GetWeaponFromSlot(int nSlot);
 };

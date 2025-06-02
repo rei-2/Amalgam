@@ -10,4 +10,4 @@ public:
 	void Run();
 };
 
-ADD_FEATURE(CPlayerlistCore, PlayerCore)
+ADD_FEATURE(CPlayerlistCore, PlayerCore);

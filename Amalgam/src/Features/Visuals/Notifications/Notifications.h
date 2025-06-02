@@ -23,4 +23,4 @@ public:
 	void Draw();
 };
 
-ADD_FEATURE(CNotifications, Notifications)
+ADD_FEATURE(CNotifications, Notifications);

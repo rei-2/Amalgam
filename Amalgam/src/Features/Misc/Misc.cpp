@@ -46,6 +46,9 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!Vars::Misc::Movement::Bunnyhop.Value)
 		return;
 
+	if (auto pWeapon = H::Entities.GetWeapon(); pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK && pWeapon->As<CTFGrapplingHook>()->m_hProjectile())
+		return;
+
 	static bool bStaticJump = false, bStaticGrounded = false, bLastAttempted = false;
 	const bool bLastJump = bStaticJump, bLastGrounded = bStaticGrounded;
 	const bool bCurJump = bStaticJump = pCmd->buttons & IN_JUMP, bCurGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
@@ -412,14 +415,6 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 {
 	switch (uHash)
 	{
-	case FNV1A::Hash32Const("client_disconnect"):
-	case FNV1A::Hash32Const("client_beginconnect"):
-	case FNV1A::Hash32Const("game_newmap"):
-	case FNV1A::Hash32Const("teamplay_round_start"):
-		G::LineStorage.clear();
-		G::BoxStorage.clear();
-		G::PathStorage.clear();
-		break;
 	case FNV1A::Hash32Const("player_spawn"):
 		m_bPeekPlaced = false;
 	}
@@ -558,7 +553,7 @@ void CMisc::PingReducer()
 
 void CMisc::UnlockAchievements()
 {
-	const auto pAchievementMgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVFunc(I::EngineClient, 114))();
+	const auto pAchievementMgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVirtual(I::EngineClient, 114))();
 	if (pAchievementMgr)
 	{
 		I::SteamUserStats->RequestCurrentStats();
@@ -571,7 +566,7 @@ void CMisc::UnlockAchievements()
 
 void CMisc::LockAchievements()
 {
-	const auto pAchievementMgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVFunc(I::EngineClient, 114))();
+	const auto pAchievementMgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVirtual(I::EngineClient, 114))();
 	if (pAchievementMgr)
 	{
 		I::SteamUserStats->RequestCurrentStats();

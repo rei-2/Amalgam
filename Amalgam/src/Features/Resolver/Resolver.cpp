@@ -87,7 +87,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 	if (!pLocal)
 		return;
 
-	if (m_iWaitingForTarget != -1 && TICKS_TO_TIME(pLocal->m_nTickBase()) > m_flWaitingForDamage)
+	if (m_iWaitingForTarget != -1 && m_flWaitingForDamage < TICKS_TO_TIME(pLocal->m_nTickBase()))
 	{
 		if (auto pTarget = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget))->As<CTFPlayer>())
 		{
@@ -289,7 +289,7 @@ void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase*
 	}
 }
 
-void CResolver::OnPlayerHurt(IGameEvent* pEvent)
+void CResolver::PlayerHurt(IGameEvent* pEvent)
 {
 	if (m_iWaitingForTarget == -1
 		|| I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")) != I::EngineClient->GetLocalPlayer()

@@ -135,7 +135,7 @@ bool CGlow::GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Colo
 	case ETFClassID::CTFBaseBoss:
 	case ETFClassID::CTFTankBoss:
 	case ETFClassID::CZombie:
-		if (pEntity->m_iTeamNum() == TF_TEAM_BLUE || pEntity->m_iTeamNum() == TF_TEAM_RED)
+		if (pEntity->IsInValidTeam())
 		{
 			if (auto pOwner = pEntity->m_hOwnerEntity().Get())
 				return GetPlayerGlow(pOwner, pEntity, pLocal, pGlow, pColor, Vars::Glow::World::NPCs.Value, Vars::Glow::World::NPCs.Value);

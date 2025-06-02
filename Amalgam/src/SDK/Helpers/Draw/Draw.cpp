@@ -79,21 +79,33 @@ Vec2 CDraw::GetTextSize(const wchar_t* text, const Font_t& tFont)
 	return { float(w), float(h) };
 }
 
-void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str, ...)
+static wchar_t wstr[1024] = { '\0' };
+void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str)
 {
-	if (str == nullptr)
-		return;
+	wsprintfW(wstr, L"%hs", str);
+	const auto dwFont = tFont.m_dwFont;
 
-	va_list va_alist;
-	char cbuffer[1024] = { '\0' };
-	wchar_t wstr[1024] = { '\0' };
+	Vec2 vSize = GetTextSize(str, tFont);
+	switch (eAlign)
+	{
+	case ALIGN_TOPLEFT: break;
+	case ALIGN_TOP: x -= vSize.x / 2; break;
+	case ALIGN_TOPRIGHT: x -= vSize.x; break;
+	case ALIGN_LEFT: y -= vSize.y / 2; break;
+	case ALIGN_CENTER: x -= vSize.x / 2; y -= vSize.y / 2; break;
+	case ALIGN_RIGHT: x -= vSize.x; y -= vSize.y / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= vSize.y; break;
+	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
+	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
+	}
 
-	va_start(va_alist, str);
-	vsprintf_s(cbuffer, str, va_alist);
-	va_end(va_alist);
-
-	wsprintfW(wstr, L"%hs", cbuffer);
-
+	I::MatSystemSurface->DrawSetTextPos(x, y);
+	I::MatSystemSurface->DrawSetTextFont(dwFont);
+	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
+	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
+}
+void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* wstr)
+{
 	const auto dwFont = tFont.m_dwFont;
 
 	Vec2 vSize = GetTextSize(wstr, tFont);
@@ -115,55 +127,9 @@ void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, con
 	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
-void CDraw::String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* str, ...)
+void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const char* str)
 {
-	if (str == nullptr)
-		return;
-
-	va_list va_alist;
-	wchar_t wstr[1024] = { '\0' };
-
-	va_start(va_alist, str);
-	vswprintf_s(wstr, str, va_alist);
-	va_end(va_alist);
-
-	const auto dwFont = tFont.m_dwFont;
-
-	Vec2 vSize = GetTextSize(wstr, tFont);
-	switch (eAlign)
-	{
-	case ALIGN_TOPLEFT: break;
-	case ALIGN_TOP: x -= vSize.x / 2; break;
-	case ALIGN_TOPRIGHT: x -= vSize.x; break;
-	case ALIGN_LEFT: y -= vSize.y / 2; break;
-	case ALIGN_CENTER: x -= vSize.x / 2; y -= vSize.y / 2; break;
-	case ALIGN_RIGHT: x -= vSize.x; y -= vSize.y / 2; break;
-	case ALIGN_BOTTOMLEFT: y -= vSize.y; break;
-	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
-	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
-	}
-
-	I::MatSystemSurface->DrawSetTextPos(x, y);
-	I::MatSystemSurface->DrawSetTextFont(dwFont);
-	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
-	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
-}
-
-void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const char* str, ...)
-{
-	if (str == nullptr)
-		return;
-
-	va_list va_alist;
-	char cbuffer[1024] = { '\0' };
-	wchar_t wstr[1024] = { '\0' };
-
-	va_start(va_alist, str);
-	vsprintf_s(cbuffer, str, va_alist);
-	va_end(va_alist);
-
-	wsprintfW(wstr, L"%hs", cbuffer);
-
+	wsprintfW(wstr, L"%hs", str);
 	const auto dwFont = tFont.m_dwFont;
 
 	Vec2 vSize = GetTextSize(wstr, tFont);
@@ -203,18 +169,8 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tCo
 	I::MatSystemSurface->DrawSetTextColor(tColor.r, tColor.g, tColor.b, tColor.a);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
-void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const wchar_t* str, ...)
+void CDraw::StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const wchar_t* wstr)
 {
-	if (str == nullptr)
-		return;
-
-	va_list va_alist;
-	wchar_t wstr[1024] = { '\0' };
-
-	va_start(va_alist, str);
-	vswprintf_s(wstr, str, va_alist);
-	va_end(va_alist);
-
 	const auto dwFont = tFont.m_dwFont;
 
 	Vec2 vSize = GetTextSize(wstr, tFont);

@@ -59,4 +59,4 @@ public:
 	int m_iDeficit = 0;
 };
 
-ADD_FEATURE(CTickshiftHandler, Ticks)
+ADD_FEATURE(CTickshiftHandler, Ticks);

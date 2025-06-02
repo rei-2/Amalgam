@@ -19,4 +19,4 @@ public:
 	bool m_bDrawing = false;
 };
 
-ADD_FEATURE(CCameraWindow, CameraWindow)
+ADD_FEATURE(CCameraWindow, CameraWindow);

@@ -9,4 +9,4 @@ public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket);
 };
 
-ADD_FEATURE(CPacketManip, PacketManip)
+ADD_FEATURE(CPacketManip, PacketManip);

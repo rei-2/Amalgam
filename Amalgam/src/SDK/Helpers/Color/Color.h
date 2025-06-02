@@ -10,4 +10,4 @@ public:
 	Color_t GetScoreboardColor(int iIndex);
 };
 
-ADD_FEATURE_CUSTOM(CColor, Color, H)
+ADD_FEATURE_CUSTOM(CColor, Color, H);

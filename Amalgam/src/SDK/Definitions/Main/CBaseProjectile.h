@@ -92,8 +92,5 @@ public:
 	NETVAR_OFF(m_flCreationTime, float, "CTFGrenadePipebombProjectile", "m_iType", 4);
 	NETVAR_OFF(m_bPulsed, bool, "CTFGrenadePipebombProjectile", "m_iType", 12);
 
-	inline bool HasStickyEffects()
-	{
-		return m_iType() == TF_GL_MODE_REMOTE_DETONATE || m_iType() == TF_GL_MODE_REMOTE_DETONATE_PRACTICE;
-	}
+	bool HasStickyEffects();
 };

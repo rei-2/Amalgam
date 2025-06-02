@@ -67,4 +67,4 @@ public:
 	bool m_bRendering = false;
 };
 
-ADD_FEATURE(CGlow, Glow)
+ADD_FEATURE(CGlow, Glow);

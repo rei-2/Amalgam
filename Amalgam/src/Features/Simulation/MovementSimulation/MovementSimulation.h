@@ -117,4 +117,4 @@ public:
 	float GetPredictedDelta(CBaseEntity* pEntity);
 };
 
-ADD_FEATURE(CMovementSimulation, MoveSim)
+ADD_FEATURE(CMovementSimulation, MoveSim);

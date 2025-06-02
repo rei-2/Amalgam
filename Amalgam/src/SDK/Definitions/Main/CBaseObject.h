@@ -30,31 +30,17 @@ public:
 	NETVAR(m_bDisposableBuilding, bool, "CBaseObject", "m_bDisposableBuilding");
 	NETVAR(m_bWasMapPlaced, bool, "CBaseObject", "m_bWasMapPlaced");
 	NETVAR(m_bPlasmaDisable, bool, "CBaseObject", "m_bPlasmaDisable");
-
-	VIRTUAL(GetNumBuildPoints, int, void*, IHasBuildPoints(), 0);
-
-	inline void* IHasBuildPoints()
+	void* IHasBuildPoints()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseObject", "m_iUpgradeLevel") - 340;
 		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
-	};
-
-	inline bool GetBuildPoint(int iPoint, Vec3& vecOrigin, Vec3& vecAngles)
-	{
-		void* pPoints = IHasBuildPoints();
-		return reinterpret_cast<bool(*)(void*, int, Vec3&, Vec3&)>(U::Memory.GetVFunc(pPoints, 1))(pPoints, iPoint, vecOrigin, vecAngles);
 	}
 
-	inline int GetBuildPointAttachmentIndex(int iPoint)
-	{
-		void* pPoints = IHasBuildPoints();
-		return reinterpret_cast<int(*)(void*, int)>(U::Memory.GetVFunc(pPoints, 2))(pPoints, iPoint);
-	}
+	VIRTUAL(GetNumBuildPoints, int, 0, IHasBuildPoints());
+	VIRTUAL_ARGS(GetBuildPoint, bool, 1, (int iPoint, Vec3& vOrigin, Vec3& vAngles), IHasBuildPoints(), iPoint, std::ref(vOrigin), std::ref(vAngles));
+	VIRTUAL_ARGS(GetBuildPointAttachmentIndex, int, 2, (int iPoint), IHasBuildPoints(), iPoint);
 
-	inline bool IsDisabled()
-	{
-		return m_bDisabled() || m_bHasSapper();
-	}
+	bool IsDisabled();
 };
 
 class CObjectSentrygun : public CBaseObject
@@ -71,23 +57,8 @@ public:
 	NETVAR(m_iKills, int, "CObjectSentrygun", "m_iKills");
 	NETVAR(m_iAssists, int, "CObjectSentrygun", "m_iAssists");
 
-	inline int MaxAmmoShells()
-	{
-		if (m_iUpgradeLevel() == 1 || m_bMiniBuilding())
-			return 150;
-		else
-			return 200;
-	}
-
-	inline void GetAmmoCount(int& iShells, int& iMaxShells, int& iRockets, int& iMaxRockets)
-	{
-		const bool bIsMini = m_bMiniBuilding();
-
-		iShells = m_iAmmoShells();
-		iMaxShells = MaxAmmoShells();
-		iRockets = bIsMini ? 0 : m_iAmmoRockets();
-		iMaxRockets = (bIsMini || m_iUpgradeLevel() < 3) ? 0 : 20;
-	}
+	int MaxAmmoShells();
+	void GetAmmoCount(int& iShells, int& iMaxShells, int& iRockets, int& iMaxRockets);
 };
 
 class CObjectDispenser : public CBaseObject

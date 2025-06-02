@@ -2,7 +2,6 @@
 #include "CBaseCombatCharacter.h"
 #include "CEconWearable.h"
 #include "CUserCmd.h"
-#include "../../../Utils/Signatures/Signatures.h"
 
 MAKE_SIGNATURE(CBasePlayer_GetAmmoCount, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 63 DA 48 8B F9 83 FB", 0x0);
 
@@ -85,49 +84,17 @@ public:
 	CONDGET(IsInWater, m_fFlags(), FL_INWATER);
 	CONDGET(IsDucking, m_fFlags(), FL_DUCKING);
 
-	VIRTUAL(PreThink, void, void*, this, 262);
-	VIRTUAL(Think, void, void*, this, 122);
-	VIRTUAL(PostThink, void, void*, this, 263);
-	VIRTUAL(GetRenderedWeaponModel, CBaseAnimating*, void*, this, 252);
-	
-	inline void SelectItem(const char* ptr, int subtype)
-	{
-		reinterpret_cast<void(*)(void*, const char*, int)>(U::Memory.GetVFunc(this, 272))(this, ptr, subtype);
-	}
+	VIRTUAL(PreThink, void, 262, this);
+	VIRTUAL(Think, void, 122, this);
+	VIRTUAL(PostThink, void, 263, this);
+	VIRTUAL(GetRenderedWeaponModel, CBaseAnimating*, 252, this);
+	VIRTUAL_ARGS(SelectItem, void, 272, (const char* ptr, int subtype), this, ptr, subtype);
 
-	inline bool IsAlive()
-	{
-		return m_lifeState() == LIFE_ALIVE;
-	}
+	SIGNATURE_ARGS(GetAmmoCount, int, CBasePlayer, (int iAmmoType), this, iAmmoType);
 
-	inline Vec3 GetShootPos()
-	{
-		return m_vecOrigin() + m_vecViewOffset();
-	}
-
-	inline Vec3 GetEyePosition()
-	{
-		return GetAbsOrigin() + m_vecViewOffset();
-	}
-	
-	inline bool OnSolid()
-	{
-		return m_hGroundEntity() || IsOnGround();
-	}
-
-	inline bool IsSwimming()
-	{
-		return m_nWaterLevel() > 1;
-	}
-
-	inline void SetCurrentCmd(CUserCmd* pCmd)
-	{
-		static int nOffset = U::NetVars.GetNetVar("CBasePlayer", "m_hConstraintEntity") - 8;
-		*reinterpret_cast<CUserCmd**>(uintptr_t(this) + nOffset) = pCmd;
-	}
-
-	inline int GetAmmoCount(int iAmmoType)
-	{
-		return S::CBasePlayer_GetAmmoCount.Call<int>(this, iAmmoType);
-	}
+	bool IsAlive();
+	Vec3 GetShootPos();
+	Vec3 GetEyePosition();
+	bool OnSolid();
+	bool IsSwimming();
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include "../Misc/CPlayerResource.h"
+#include "CPlayerResource.h"
 
 enum MM_PlayerConnectionState_t
 {

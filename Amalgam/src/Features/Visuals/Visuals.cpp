@@ -222,13 +222,11 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 
 		switch (pEntity->GetClassID())
 		{
-		case ETFClassID::CBaseGrenade:
 		case ETFClassID::CTFWeaponBaseGrenadeProj:
 		case ETFClassID::CTFWeaponBaseMerasmusGrenade:
 		case ETFClassID::CTFGrenadePipebombProjectile:
 			bShouldDraw = Vars::Visuals::Simulation::SplashRadius.Value & (pEntity->As<CTFGrenadePipebombProjectile>()->HasStickyEffects() ? Vars::Visuals::Simulation::SplashRadiusEnum::Stickies : Vars::Visuals::Simulation::SplashRadiusEnum::Pipes);
 			break;
-		case ETFClassID::CTFBaseRocket:
 		case ETFClassID::CTFProjectile_Rocket:
 		case ETFClassID::CTFProjectile_SentryRocket:
 		case ETFClassID::CTFProjectile_EnergyBall:
@@ -246,13 +244,11 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 
 		switch (pEntity->GetClassID())
 		{
-		case ETFClassID::CBaseGrenade:
 		case ETFClassID::CTFWeaponBaseGrenadeProj:
 		case ETFClassID::CTFWeaponBaseMerasmusGrenade:
 		case ETFClassID::CTFGrenadePipebombProjectile:
 			pOwner = pEntity->As<CTFGrenadePipebombProjectile>()->m_hThrower().Get()->As<CTFPlayer>();
 			break;
-		case ETFClassID::CTFBaseRocket:
 		case ETFClassID::CTFProjectile_Rocket:
 		case ETFClassID::CTFProjectile_SentryRocket:
 		case ETFClassID::CTFProjectile_EnergyBall:
@@ -275,13 +271,11 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 		float flRadius = 146.f;
 		switch (pEntity->GetClassID())
 		{
-		case ETFClassID::CBaseGrenade:
 		case ETFClassID::CTFWeaponBaseGrenadeProj:
 		case ETFClassID::CTFWeaponBaseMerasmusGrenade:
 		case ETFClassID::CTFGrenadePipebombProjectile:
 			pWeapon = pEntity->As<CTFGrenadePipebombProjectile>()->m_hOriginalLauncher().Get()->As<CTFWeaponBase>();
 			break;
-		case ETFClassID::CTFBaseRocket:
 		case ETFClassID::CTFProjectile_Rocket:
 		case ETFClassID::CTFProjectile_SentryRocket:
 		case ETFClassID::CTFProjectile_EnergyBall:
@@ -335,12 +329,6 @@ void CVisuals::DrawAntiAim(CTFPlayer* pLocal)
 	}
 }
 
-void CVisuals::DrawSightlines()
-{
-	for (auto& tSightline : m_vSightLines)
-		H::Draw.RenderLine(tSightline.m_vStart, tSightline.m_vEnd, tSightline.m_Color, tSightline.m_bZBuffer);
-}
-
 void CVisuals::DrawPickupTimers()
 {
 	if (!Vars::ESP::Other::PickupTimers.Value)
@@ -359,9 +347,8 @@ void CVisuals::DrawPickupTimers()
 
 		Vec3 vScreen; if (SDK::W2S(tPickup.Location, vScreen))
 		{
-			auto sText = std::format("{:.1f}s", 10.f - flTime);
 			auto tColor = tPickup.Type ? Vars::Colors::Health.Value : Vars::Colors::Ammo.Value;
-			H::Draw.StringOutlined(H::Fonts.GetFont(FONT_ESP), vScreen.x, vScreen.y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_CENTER, sText.c_str());
+			H::Draw.StringOutlined(H::Fonts.GetFont(FONT_ESP), vScreen.x, vScreen.y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_CENTER, std::format("{:.1f}s", 10.f - flTime).c_str());
 		}
 
 		it++;
@@ -531,19 +518,15 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 	return vBoxes;
 }
 
-void CVisuals::DrawLines()
+void CVisuals::DrawEffects()
 {
 	for (auto& tLine : G::LineStorage)
 	{
 		if (tLine.m_flTime < I::GlobalVars->curtime)
 			continue;
 
-		H::Draw.RenderLine(tLine.m_vPair.first, tLine.m_vPair.second, tLine.m_tColor, tLine.m_bZBuffer);
+		H::Draw.RenderLine(tLine.m_vOrigin.first, tLine.m_vOrigin.second, tLine.m_tColor, tLine.m_bZBuffer);
 	}
-}
-
-void CVisuals::DrawPaths()
-{
 	for (auto& tPath : G::PathStorage)
 	{
 		if (tPath.m_flTime >= 0.f && tPath.m_flTime < I::GlobalVars->curtime)
@@ -551,18 +534,31 @@ void CVisuals::DrawPaths()
 
 		H::Draw.RenderPath(tPath.m_vPath, tPath.m_tColor, tPath.m_bZBuffer, tPath.m_iStyle, tPath.m_flTime);
 	}
-}
-
-void CVisuals::DrawBoxes()
-{
 	for (auto& tBox : G::BoxStorage)
 	{
 		if (tBox.m_flTime < I::GlobalVars->curtime)
 			continue;
 
-		H::Draw.RenderBox(tBox.m_vPos, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vRotation, tBox.m_tColorFace, tBox.m_bZBuffer);
-		H::Draw.RenderWireframeBox(tBox.m_vPos, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vRotation, tBox.m_tColorEdge, tBox.m_bZBuffer);
+		H::Draw.RenderBox(tBox.m_vOrigin, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vAngles, tBox.m_tColorFace, tBox.m_bZBuffer);
+		H::Draw.RenderWireframeBox(tBox.m_vOrigin, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vAngles, tBox.m_tColorEdge, tBox.m_bZBuffer);
 	}
+	for (auto& tBox : G::SphereStorage)
+	{
+		if (tBox.m_flTime < I::GlobalVars->curtime)
+			continue;
+
+		H::Draw.RenderSphere(tBox.m_vOrigin, tBox.m_flRadius, tBox.m_nTheta, tBox.m_nPhi, tBox.m_tColorFace, tBox.m_bZBuffer);
+		H::Draw.RenderWireframeSphere(tBox.m_vOrigin, tBox.m_flRadius, tBox.m_nTheta, tBox.m_nPhi, tBox.m_tColorEdge, tBox.m_bZBuffer);
+	}
+	for (auto& tBox : G::SweptStorage)
+	{
+		if (tBox.m_flTime < I::GlobalVars->curtime)
+			continue;
+
+		H::Draw.RenderWireframeSweptBox(tBox.m_vOrigin.first, tBox.m_vOrigin.second, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vAngles, tBox.m_tColor, tBox.m_bZBuffer);
+	}
+	for (auto& tSightline : m_vSightLines)
+		H::Draw.RenderLine(tSightline.m_vStart, tSightline.m_vEnd, tSightline.m_Color, tSightline.m_bZBuffer);
 }
 
 void CVisuals::DrawServerHitboxes(CTFPlayer* pLocal)
@@ -728,7 +724,18 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 			m_vPickups.emplace_back(1, I::EngineClient->Time(), pEntity->m_vecOrigin());
 		else if (std::strstr(sItemName, "ammopack"))
 			m_vPickups.emplace_back(0, I::EngineClient->Time(), pEntity->m_vecOrigin());
+		
+		break;
 	}
+	case FNV1A::Hash32Const("client_disconnect"):
+	case FNV1A::Hash32Const("client_beginconnect"):
+	case FNV1A::Hash32Const("game_newmap"):
+	case FNV1A::Hash32Const("teamplay_round_start"):
+		G::LineStorage.clear();
+		G::BoxStorage.clear();
+		G::PathStorage.clear();
+		G::SphereStorage.clear();
+		G::SweptStorage.clear();
 	}
 }
 
@@ -894,7 +901,18 @@ void CVisuals::RestoreWorldModulation()
 void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	if (Vars::Visuals::Simulation::ShotPath.Value && G::Attacking == 1 && !F::Aimbot.m_bRan)
-		F::Visuals.ProjectileTrace(pLocal, pWeapon, false);
+	{
+		switch (pWeapon->GetWeaponID())
+		{
+		case TF_WEAPON_BAT_WOOD:
+		case TF_WEAPON_BAT_GIFTWRAP:
+			if (!G::Throwing)
+				break;
+			[[fallthrough]];
+		default:
+			F::Visuals.ProjectileTrace(pLocal, pWeapon, false);
+		}
+	}
 
 	if (pLocal && Vars::Visuals::Effects::SpellFootsteps.Value && (F::Ticks.m_bDoubletap || F::Ticks.m_bWarp))
 		S::CTFPlayer_FireEvent.Call<void>(pLocal, pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);

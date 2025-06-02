@@ -111,4 +111,4 @@ public:
 	bool m_bSave = false;
 };
 
-ADD_FEATURE(CPlayerlistUtils, PlayerUtils)
+ADD_FEATURE(CPlayerlistUtils, PlayerUtils);

@@ -67,10 +67,10 @@ public:
 	Vec2 GetTextSize(const char* text, const Font_t& tFont);
 	Vec2 GetTextSize(const wchar_t* text, const Font_t& tFont);
 
-	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str, ...);
-	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* str, ...);
-	void StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const char* str, ...);
-	void StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const wchar_t* str, ...);
+	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str);
+	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* wstr);
+	void StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const char* str);
+	void StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const wchar_t* wstr);
 
 	void Line(int x1, int y1, int x2, int y2, const Color_t& tColor);
 	void FillPolygon(std::vector<Vertex_t> vVertices, const Color_t& tColor);

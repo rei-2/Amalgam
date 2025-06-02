@@ -45,7 +45,6 @@ private:
 
 	void GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	void CanFireCritical(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-	bool WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly = false);
 
 	void ResetWeapons(CTFPlayer* pLocal);
 	void Reset();
@@ -69,13 +68,15 @@ private:
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
-	bool CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
+	bool CalcIsAttackCriticalHandler();
 	void Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal);
 	void Store();
 	void Draw(CTFPlayer* pLocal);
+
+	bool WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly = false);
 	int PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	std::unordered_map<int, WeaponStorage_t> m_mStorage = {};
 };
 
-ADD_FEATURE(CCritHack, CritHack)
+ADD_FEATURE(CCritHack, CritHack);

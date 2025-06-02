@@ -38,7 +38,7 @@ struct TraceInfo_t
 static int iOriginalMask = false;
 static bool bOriginalStartSolid = false;
 
-MAKE_HOOK(IEngineTrace_SetTraceEntity, U::Memory.GetVFunc(I::EngineTrace, 20), void,
+MAKE_HOOK(IEngineTrace_SetTraceEntity, U::Memory.GetVirtual(I::EngineTrace, 20), void,
 	void* rcx, ICollideable* pCollideable, trace_t* pTrace)
 {
 #ifdef DEBUG_HOOKS

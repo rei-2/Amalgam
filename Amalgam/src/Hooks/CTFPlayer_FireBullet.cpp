@@ -2,20 +2,26 @@
 
 #include "../Features/Visuals/Visuals.h"
 
-MAKE_SIGNATURE(CBaseEntity_FireBullets, "client.dll", "48 89 74 24 ? 55 57 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? F3 41 0F 10 58", 0x0);
+MAKE_SIGNATURE(CTFPlayer_FireBullet, "client.dll", "48 89 74 24 ? 55 57 41 55 41 56 41 57 48 8D AC 24 ? ? ? ? 48 81 EC ? ? ? ? F3 41 0F 10 58", 0x0);
 
-MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
+MAKE_HOOK(CTFPlayer_FireBullet, S::CTFPlayer_FireBullet(), void,
 	void* rcx, CBaseCombatWeapon* pWeapon, const FireBulletsInfo_t& info, bool bDoEffects, int nDamageType, int nCustomDamageType)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::CBaseEntity_FireBullets[DEFAULT_BIND])
+	if (!Vars::Hooks::CTFPlayer_FireBullet[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, pWeapon, info, nDamageType, nDamageType, nCustomDamageType);
 #endif
 
-	auto pLocal = H::Entities.GetLocal();
-	auto pPlayer = reinterpret_cast<CBaseEntity*>(rcx);
-	if (!pLocal || pPlayer != pLocal)
+	auto pLocal = reinterpret_cast<CTFPlayer*>(rcx);
+	if (pLocal != H::Entities.GetLocal() || !pWeapon)
 		return CALL_ORIGINAL(rcx, pWeapon, info, bDoEffects, nDamageType, nCustomDamageType);
+
+	auto& sString = nDamageType & DMG_CRITICAL ? Vars::Visuals::Effects::CritTracer.Value : Vars::Visuals::Effects::BulletTracer.Value;
+	auto uHash = FNV1A::Hash32(sString.c_str());
+	if (uHash == FNV1A::Hash32Const("Default"))
+		return CALL_ORIGINAL(rcx, pWeapon, info, bDoEffects, nDamageType, nCustomDamageType);
+	else if (uHash == FNV1A::Hash32Const("None"))
+		return;
 
 	const Vec3 vStart = info.m_vecSrc;
 	const Vec3 vEnd = vStart + info.m_vecDirShooting * info.m_flDistance;
@@ -23,21 +29,12 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 	CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
 	SDK::Trace(vStart, vEnd, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
 
+	const int iTeam = pLocal->m_iTeamNum();
 	const int iAttachment = pWeapon->LookupAttachment("muzzle");
 	pWeapon->GetAttachment(iAttachment, trace.startpos);
 
-	const bool bCrit = nDamageType & DMG_CRITICAL || pLocal->IsCritBoosted();
-	const int iTeam = pLocal->m_iTeamNum();
-
-	auto& sString = bCrit ? Vars::Visuals::Effects::CritTracer.Value : Vars::Visuals::Effects::BulletTracer.Value;
-	auto uHash = FNV1A::Hash32(sString.c_str());
-	if (!pLocal->IsInValidTeam() || uHash == FNV1A::Hash32Const("Default"))
-		return CALL_ORIGINAL(rcx, pWeapon, info, bDoEffects, nDamageType, nCustomDamageType);
-
 	switch (uHash)
 	{
-	case FNV1A::Hash32Const("None"):
-		return;
 	case FNV1A::Hash32Const("Big nasty"):
 		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "bullet_bignasty_tracer01_blue" : "bullet_bignasty_tracer01_red", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
 		break;
@@ -89,7 +86,7 @@ MAKE_HOOK(CBaseEntity_FireBullets, S::CBaseEntity_FireBullets(), void,
 	{
 		BeamInfo_t beamInfo;
 		beamInfo.m_nType = 0;
-		beamInfo.m_pszModelName = FNV1A::Hash32(Vars::Visuals::Beams::Model.Value.c_str()) != FNV1A::Hash32Const("") ? Vars::Visuals::Beams::Model.Value.c_str() : "sprites/physbeam.vmt";
+		beamInfo.m_pszModelName = !Vars::Visuals::Beams::Model.Value.empty() ? Vars::Visuals::Beams::Model.Value.c_str() : "sprites/physbeam.vmt";
 		beamInfo.m_nModelIndex = -1; // will be set by CreateBeamPoints if its -1
 		beamInfo.m_flHaloScale = 0.0f;
 		beamInfo.m_flLife = Vars::Visuals::Beams::Life.Value;

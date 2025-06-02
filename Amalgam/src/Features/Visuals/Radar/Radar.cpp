@@ -334,9 +334,9 @@ void CRadar::DrawPoints(CTFPlayer* pLocal)
 					[[fallthrough]];
 				}
 				case Vars::Radar::Player::IconEnum::Portraits:
-					if (pPlayer->IsInValidTeam())
+					if (int iTeam = pPlayer->IsInValidTeam())
 					{
-						H::Draw.Texture(x, y, iSize, iSize, pPlayer->m_iClass() + (pPlayer->m_iTeamNum() == TF_TEAM_RED ? 9 : 18) - 1);
+						H::Draw.Texture(x, y, iSize, iSize, pPlayer->m_iClass() + (iTeam == TF_TEAM_RED ? 9 : 18) - 1);
 						break;
 					}
 					[[fallthrough]];

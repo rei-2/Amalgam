@@ -349,6 +349,22 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	}
 	else if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && !(G::LastUserCmd->buttons & IN_ATTACK))
 		bAttacking = false;
+	else if (!bAttacking)
+	{
+		switch (pWeapon->GetWeaponID())
+		{
+		case TF_WEAPON_ROCKETLAUNCHER:
+		case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
+			if (pWeapon->IsInReload() && G::CanPrimaryAttack && SDK::AttribHookValue(0, "can_overload", pWeapon))
+			{
+				int iClip1 = pWeapon->m_iClip1();
+				if (pWeapon->m_bRemoveable() && iClip1 > 0)
+					bAttacking = true;
+				else if (iClip1 >= pWeapon->GetMaxClip1() || iClip1 > 0 && pLocal->GetAmmoCount(pWeapon->m_iPrimaryAmmoType()) == 0)
+					bAttacking = true;
+			}
+		}
+	}
 
 	bool bRapidFire = pWeapon->IsRapidFire();
 	bool bStreamWait = bRapidFire && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
@@ -419,9 +435,9 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	return pCmd->command_number;
 }
 
-bool CCritHack::CalcIsAttackCriticalHandler(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+bool CCritHack::CalcIsAttackCriticalHandler()
 {
-	if (!I::Prediction->m_bFirstTimePredicted || !pLocal || !pWeapon)
+	if (!I::Prediction->m_bFirstTimePredicted)
 		return false;
 
 	if (m_iWishRandomSeed)
@@ -449,11 +465,6 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		int iHealth = pEvent->GetInt("health");
 		int iWeaponID = pEvent->GetInt("weaponid");
 
-		int iCustom = pEvent->GetInt("custom");
-		bool bShowDisguisedCrit = pEvent->GetBool("showdisguisedcrit");
-		bool bAllSeeCrit = pEvent->GetBool("allseecrit");
-		byte iBonusEffect = pEvent->GetInt("bonuseffect");
-
 		if (m_mHealthHistory.contains(iVictim))
 		{
 			auto& tHistory = m_mHealthHistory[iVictim];
@@ -479,7 +490,7 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (iHealth)
 			StoreHealthHistory(iVictim, iHealth);
 
-		if (iVictim == iAttacker || iAttacker != pLocal->entindex())
+		if (iVictim == iAttacker || iAttacker != I::EngineClient->GetLocalPlayer())
 			break;
 
 		if (auto pGameRules = I::TFGameRules())

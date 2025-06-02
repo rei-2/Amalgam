@@ -1,7 +1,6 @@
 #pragma once
 #include "CBasePlayer.h"
 #include "CMultiPlayerAnimState.h"
-#include "../../../Utils/Signatures/Signatures.h"
 
 MAKE_SIGNATURE(CTFPlayer_IsPlayerOnSteamFriendsList, "client.dll", "40 57 48 81 EC ? ? ? ? 48 8B FA E8", 0x0);
 MAKE_SIGNATURE(TeamFortress_CalculateMaxSpeed, "client.dll", "88 54 24 ? 53 55", 0x0);
@@ -190,6 +189,7 @@ public:
 	NETVAR_OFF(m_MoveCollide, byte, "CTFPlayer", "m_nWaterLevel", -3);
 	NETVAR_OFF(m_nWaterType, byte, "CTFPlayer", "m_nWaterLevel", 1);
 	NETVAR_OFF(m_flInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -8);
+	NETVAR_OFF(m_flPrevInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -4);
 	NETVAR_OFF(m_flTankPressure, float, "CTFPlayer", "m_Shared", 636);
 	NETVAR_OFF(GetAnimState, CTFPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
 	NETVAR_OFF(m_flPrevTauntYaw, float, "CTFPlayer", "m_flTauntYaw", 4);
@@ -198,229 +198,27 @@ public:
 	NETVAR_OFF(m_bStunNeedsFadeOut, bool, "CTFPlayer", "m_hItem", -188);
 	NETVAR_OFF(m_bTauntForceMoveForward, bool, "CTFPlayer", "m_bAllowMoveDuringTaunt", 1);
 
-	VIRTUAL(GetMaxHealth, int, void*, this, 107);
+	VIRTUAL(GetMaxHealth, int, 107, this);
+	VIRTUAL(ThirdPersonSwitch, void, 256, this);
 
-	inline Vec3 GetEyeAngles()
-	{
-		return { m_angEyeAnglesX(), m_angEyeAnglesY(), 0.f };
-	}
+	SIGNATURE_ARGS(CalculateMaxSpeed, float, TeamFortress, (bool bIgnoreSpecialAbility = false), this, bIgnoreSpecialAbility);
+	SIGNATURE(IsPlayerOnSteamFriendsList, bool, CTFPlayer, this, this);
+	SIGNATURE(UpdateClientSideAnimation, void, CTFPlayer, this);
+	SIGNATURE(UpdateWearables, void, CTFPlayer, this);
 
-	inline Vec3 GetViewOffset() // use on nonlocal players
-	{
-		if (!IsPlayer())
-			return (m_vecMins() + m_vecMaxs()) / 2;
-
-		auto getMainOffset = [this]() -> Vec3
-			{
-				if (IsDucking())
-					return { 0.f, 0.f, 45.f };
-
-				switch (m_iClass())
-				{
-				case TF_CLASS_SCOUT: return { 0.f, 0.f, 65.f };
-				case TF_CLASS_SOLDIER: return { 0.f, 0.f, 68.f };
-				case TF_CLASS_PYRO: return { 0.f, 0.f, 68.f };
-				case TF_CLASS_DEMOMAN: return { 0.f, 0.f, 68.f };
-				case TF_CLASS_HEAVY: return { 0.f, 0.f, 75.f };
-				case TF_CLASS_ENGINEER: return { 0.f, 0.f, 68.f };
-				case TF_CLASS_MEDIC: return { 0.f, 0.f, 75.f };
-				case TF_CLASS_SNIPER: return { 0.f, 0.f, 75.f };
-				case TF_CLASS_SPY: return { 0.f, 0.f, 75.f };
-				}
-
-				const Vec3 vOffset = m_vecViewOffset();
-				if (vOffset.z)
-					return vOffset;
-
-				return { 0.f, 0.f, 68.f };
-			};
-
-		return getMainOffset() * m_flModelScale();
-	}
-
-	inline bool IsFriend()
-	{
-		return S::CTFPlayer_IsPlayerOnSteamFriendsList.Call<bool>(this, this);
-	}
-
-	inline bool InCond(const ETFCond cond)
-	{
-		const int iCond = static_cast<int>(cond);
-		switch (iCond / 32)
-		{
-		case 0:
-		{
-			const int bit = (1 << iCond);
-			if ((m_nPlayerCond() & bit) == bit || (_condition_bits() & bit) == bit)
-				return true;
-			break;
-		}
-		case 1:
-		{
-			const int bit = 1 << (iCond - 32);
-			if ((m_nPlayerCondEx() & bit) == bit)
-				return true;
-			break;
-		}
-		case 2:
-		{
-			const int bit = 1 << (iCond - 64);
-			if ((m_nPlayerCondEx2() & bit) == bit)
-				return true;
-			break;
-		}
-		case 3:
-		{
-			const int bit = 1 << (iCond - 96);
-			if ((m_nPlayerCondEx3() & bit) == bit)
-				return true;
-			break;
-		}
-		case 4:
-		{
-			const int bit = 1 << (iCond - 128);
-			if ((m_nPlayerCondEx4() & bit) == bit)
-				return true;
-			break;
-		}
-		}
-
-		return false;
-	}
-
-	inline bool IsAGhost()
-	{
-		return InCond(TF_COND_HALLOWEEN_GHOST_MODE);
-	};
-	inline bool IsTaunting()
-	{
-		return InCond(TF_COND_TAUNTING);
-	};
-
-	inline bool IsInvisible()
-	{
-		if (InCond(TF_COND_BURNING)
-			|| InCond(TF_COND_BURNING_PYRO)
-			|| InCond(TF_COND_MAD_MILK)
-			|| InCond(TF_COND_URINE))
-			return false;
-
-		return m_flInvisibility() >= 1.f;
-	}
-
-	inline float GetInvisPercentage()
-	{
-		static auto tf_spy_invis_time = I::CVar->FindVar("tf_spy_invis_time");
-		const float flInvisTime = tf_spy_invis_time ? tf_spy_invis_time->GetFloat() : 1.f;
-		const float GetInvisPercent = Math::RemapVal(m_flInvisChangeCompleteTime() - I::GlobalVars->curtime, flInvisTime, 0.f, 0.f, 100.f);
-
-		return GetInvisPercent;
-	}
-
-	inline bool IsInvulnerable()
-	{
-		return InCond(TF_COND_INVULNERABLE)
-			|| InCond(TF_COND_INVULNERABLE_CARD_EFFECT)
-			|| InCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
-			|| InCond(TF_COND_INVULNERABLE_USER_BUFF)
-			|| InCond(TF_COND_PHASE);
-	}
-
-	inline bool IsUbered()
-	{
-		return InCond(TF_COND_INVULNERABLE)
-			|| InCond(TF_COND_INVULNERABLE_CARD_EFFECT)
-			|| InCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED)
-			|| InCond(TF_COND_INVULNERABLE_USER_BUFF);
-	}
-
-	inline bool IsCritBoosted()
-	{
-		return InCond(TF_COND_CRITBOOSTED)
-			|| InCond(TF_COND_CRITBOOSTED_BONUS_TIME)
-			|| InCond(TF_COND_CRITBOOSTED_CARD_EFFECT)
-			|| InCond(TF_COND_CRITBOOSTED_CTF_CAPTURE)
-			|| InCond(TF_COND_CRITBOOSTED_FIRST_BLOOD)
-			|| InCond(TF_COND_CRITBOOSTED_ON_KILL)
-			|| InCond(TF_COND_CRITBOOSTED_PUMPKIN)
-			|| InCond(TF_COND_CRITBOOSTED_RAGE_BUFF)
-			|| InCond(TF_COND_CRITBOOSTED_RUNE_TEMP)
-			|| InCond(TF_COND_CRITBOOSTED_USER_BUFF);
-	}
-
-	inline bool IsMiniCritBoosted()
-	{
-		return InCond(TF_COND_OFFENSEBUFF)
-			|| InCond(TF_COND_ENERGY_BUFF)
-			|| InCond(TF_COND_MINICRITBOOSTED_ON_KILL)
-			|| InCond(TF_COND_NOHEALINGDAMAGEBUFF)
-			/*|| InCond(TF_COND_CRITBOOSTED_DEMO_CHARGE)*/;
-	}
-
-	inline bool IsMarked()
-	{
-		return InCond(TF_COND_URINE)
-			|| InCond(TF_COND_MARKEDFORDEATH)
-			|| InCond(TF_COND_MARKEDFORDEATH_SILENT);
-	}
-
-	inline bool CanAttack()
-	{
-		if (!IsAlive() || IsAGhost() || IsTaunting() || InCond(TF_COND_PHASE) || InCond(TF_COND_HALLOWEEN_KART) || m_fFlags() & FL_FROZEN)
-			return false;
-
-		if (m_iClass() == TF_CLASS_SPY)
-		{
-			if (m_bFeignDeathReady() && !InCond(TF_COND_STEALTHED))
-				return false;
-
-			//Invis
-			static float flTimer = 0.f;
-			if (InCond(TF_COND_STEALTHED))
-			{
-				flTimer = 0.f;
-				return false;
-			}
-			else
-			{
-				if (!flTimer)
-					flTimer = I::GlobalVars->curtime;
-
-				if (flTimer > I::GlobalVars->curtime)
-					flTimer = 0.f;
-
-				if ((I::GlobalVars->curtime - flTimer) < 2.f)
-					return false;
-			}
-		}
-
-		return true;
-	}
-
-	inline float TeamFortress_CalculateMaxSpeed(bool bIgnoreSpecialAbility = false)
-	{
-		return S::TeamFortress_CalculateMaxSpeed.Call<float>(this, bIgnoreSpecialAbility);
-	}
-
-	inline void UpdateClientSideAnimation()
-	{
-		S::CTFPlayer_UpdateClientSideAnimation.Call<void>(this);
-	}
-
-	inline float GetCritMult()
-	{
-		return Math::RemapVal(static_cast<float>(m_iCritMult()), 0.f, 255.f, 1.f, 4.f);
-	}
-
-	inline void UpdateWearables()
-	{
-		S::CTFPlayer_UpdateWearables.Call<void>(this);
-	}
-
-	inline void ThirdPersonSwitch(/*bool bThirdperson*/)
-	{
-		return reinterpret_cast<void(*)(void*/*, bool*/)>(U::Memory.GetVFunc(this, 256))(this/*, bThirdperson*/);
-	};
+	Vec3 GetEyeAngles();
+	Vec3 GetViewOffset(); // use on nonlocal players
+	bool InCond(const ETFCond cond);
+	bool IsAGhost();
+	bool IsTaunting();
+	bool IsInvisible();
+	bool IsInvulnerable();
+	bool IsUbered();
+	bool IsCritBoosted();
+	bool IsMiniCritBoosted();
+	bool IsMarked();
+	bool CanAttack(bool bCloak = true, bool bLocal = true);
+	float GetCritMult();
 };
 
 class CTFRagdoll : public CBaseFlex

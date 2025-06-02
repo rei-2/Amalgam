@@ -592,7 +592,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::BUILDINGS_ENEMIES))
 	{
 		auto pBuilding = pEntity->As<CBaseObject>();
-		if (pBuilding->m_bHasSapper() || pBuilding->m_iTeamNum() != TF_TEAM_BLUE && pBuilding->m_iTeamNum() != TF_TEAM_RED)
+		if (pBuilding->m_bHasSapper() || !pBuilding->IsInValidTeam())
 			continue;
 
 		Vec3 vPoint;

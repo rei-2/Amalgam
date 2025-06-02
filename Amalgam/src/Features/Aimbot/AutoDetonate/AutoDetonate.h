@@ -17,4 +17,4 @@ public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 };
 
-ADD_FEATURE(CAutoDetonate, AutoDetonate)
+ADD_FEATURE(CAutoDetonate, AutoDetonate);

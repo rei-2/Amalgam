@@ -103,4 +103,4 @@ public:
 	}
 };
 
-ADD_FEATURE_CUSTOM(CParticles, Particles, H)
+ADD_FEATURE_CUSTOM(CParticles, Particles, H);

@@ -15,4 +15,4 @@ public:
     void Register(const std::string& sName, CommandCallback fCallback);
 };
 
-ADD_FEATURE(CCommands, Commands)
+ADD_FEATURE(CCommands, Commands);

@@ -12,4 +12,4 @@ public:
 	bool bDrawChams = false;
 };
 
-ADD_FEATURE(CFakeAngle, FakeAngle)
+ADD_FEATURE(CFakeAngle, FakeAngle);

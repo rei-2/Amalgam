@@ -1,7 +1,7 @@
 #pragma once
+#include "../Misc/IAppSystem.h"
 #include "../Misc/AnalogCode.h"
 #include "../Misc/ButtonCode.h"
-#include "../Misc/IAppSystem.h"
 #include "../Misc/InputEnums.h"
 #include "../Steam/ISteamController.h"
 

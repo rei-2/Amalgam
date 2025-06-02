@@ -19,4 +19,4 @@ public:
 	int m_iTargetMode = OBS_MODE_NONE;
 };
 
-ADD_FEATURE(CSpectate, Spectate)
+ADD_FEATURE(CSpectate, Spectate);

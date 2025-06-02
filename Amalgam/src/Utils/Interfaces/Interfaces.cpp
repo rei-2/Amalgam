@@ -24,6 +24,7 @@ static const char* SearchForDLL(const char* pszDLLSearch)
 		return pszDLLSearch;
 	}
 
+	//std::stringstream ssModuleStream;
 	do
 	{
 		if (pe32.szExeFile == strstr(pe32.szExeFile, "tf_win64.exe"))
@@ -49,15 +50,18 @@ static const char* SearchForDLL(const char* pszDLLSearch)
 					CloseHandle(hModuleSnap);
 					return me32.szModule;
 				}
+				//ssModuleStream << std::format("{}{}", !ssModuleStream.str().empty() ? ", " : "", me32.szModule);
 			} while (Module32Next(hModuleSnap, &me32));
 
 			CloseHandle(hModuleSnap);
 			break;
 		}
 	} while (Process32Next(hProcessSnap, &pe32));
-
 	CloseHandle(hProcessSnap);
-	return pszDLLSearch;
+
+	U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find DLL:\n  {}", pszDLLSearch).c_str());
+	//U::Core.AppendFailText(std::format("Loaded modules: {}", ssModuleStream.str()).c_str());
+	return nullptr;
 }
 
 InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLLName, const char* sVersion, int nOffset, int nDereferenceCount, bool bSearchDLL)
@@ -80,7 +84,14 @@ bool CInterfaces::Initialize()
 			continue;
 
 		if (Interface->m_bSearchDLL)
+		{
 			Interface->m_pszDLLName = SearchForDLL(Interface->m_pszDLLName);
+			if (!Interface->m_pszDLLName)
+			{
+				m_bFailed = true;
+				continue;
+			}
+		}
 
 		if (Interface->m_nOffset == -1)
 			*Interface->m_pPtr = U::Memory.FindInterface(Interface->m_pszDLLName, Interface->m_pszVersion);

@@ -1,7 +1,5 @@
 #pragma once
-#include "Interface.h"
 #include "IMaterialSystem.h"
-#include "../Misc/IAppSystem.h"
 #include "../Main/IMaterial.h"
 #include "../Misc/IMDLCache.h"
 #include "../Misc/Studio.h"

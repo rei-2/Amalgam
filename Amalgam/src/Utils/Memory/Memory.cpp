@@ -1,4 +1,5 @@
 #include "Memory.h"
+
 #include <format>
 #include <Psapi.h>
 
@@ -48,14 +49,14 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 		// Get module information to search in the given module
 		MODULEINFO lpModuleInfo;
 		if (!GetModuleInformation(GetCurrentProcess(), hMod, &lpModuleInfo, sizeof(MODULEINFO)))
-			return {};
+			return 0x0;
 
 		// The region where we will search for the byte sequence
 		const auto dwImageSize = lpModuleInfo.SizeOfImage;
 
 		// Check if the image is faulty
 		if (!dwImageSize)
-			return {};
+			return 0x0;
 
 		// Convert IDA-Style signature to a byte sequence
 		const auto vPattern = PatternToInt(szPattern);

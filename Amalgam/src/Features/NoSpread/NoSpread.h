@@ -10,4 +10,4 @@ public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 };
 
-ADD_FEATURE(CNoSpread, NoSpread)
+ADD_FEATURE(CNoSpread, NoSpread);

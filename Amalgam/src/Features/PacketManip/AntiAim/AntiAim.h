@@ -4,7 +4,7 @@
 class CAntiAim
 {
 private:
-	void FakeShotAngles(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void FakeShotAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	float EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOffset);
 	void RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealYaw, bool bFake, float flEpsilon = 45.f);
@@ -30,4 +30,4 @@ public:
 	std::vector<std::pair<Vec3, Vec3>> vEdgeTrace = {};
 };
 
-ADD_FEATURE(CAntiAim, AntiAim)
+ADD_FEATURE(CAntiAim, AntiAim);

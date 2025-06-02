@@ -69,18 +69,21 @@ std::vector<std::string> CPlayerConditions::Get(CTFPlayer* pEntity)
 
 
 		if (pEntity->InCond(TF_COND_MEDIGUN_UBER_BULLET_RESIST) ||
-			pEntity->InCond(TF_COND_MEDIGUN_SMALL_BULLET_RESIST) ||
 			pEntity->InCond(TF_COND_BULLET_IMMUNE))
+			vConditions.emplace_back("Bullet+");
+		else if (pEntity->InCond(TF_COND_MEDIGUN_SMALL_BULLET_RESIST))
 			vConditions.emplace_back("Bullet");
 
 		if (pEntity->InCond(TF_COND_MEDIGUN_UBER_BLAST_RESIST) ||
-			pEntity->InCond(TF_COND_MEDIGUN_SMALL_BLAST_RESIST) ||
 			pEntity->InCond(TF_COND_BLAST_IMMUNE))
+			vConditions.emplace_back("Blast+");
+		else if (pEntity->InCond(TF_COND_MEDIGUN_SMALL_BLAST_RESIST))
 			vConditions.emplace_back("Blast");
 
 		if (pEntity->InCond(TF_COND_MEDIGUN_UBER_FIRE_RESIST) ||
-			pEntity->InCond(TF_COND_MEDIGUN_SMALL_FIRE_RESIST) ||
 			pEntity->InCond(TF_COND_FIRE_IMMUNE))
+			vConditions.emplace_back("Fire+");
+		else if (pEntity->InCond(TF_COND_MEDIGUN_SMALL_FIRE_RESIST))
 			vConditions.emplace_back("Fire");
 
 

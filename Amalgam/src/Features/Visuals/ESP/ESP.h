@@ -65,4 +65,4 @@ public:
 	void Draw();
 };
 
-ADD_FEATURE(CESP, ESP)
+ADD_FEATURE(CESP, ESP);

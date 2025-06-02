@@ -348,7 +348,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 			const matrix3x4 mTransform = { { 1, 0, 0, tTarget.m_vPos.x }, { 0, 1, 0, tTarget.m_vPos.y }, { 0, 0, 1, tTarget.m_vPos.z } };
 
-			tTarget.m_vPos += (tTarget.m_pEntity->m_vecMins() + tTarget.m_pEntity->m_vecMaxs()) / 2;
+			tTarget.m_vPos += tTarget.m_pEntity->GetOffset() / 2;
 			if (vEyePos.DistToSqr(tTarget.m_vPos) > flMaxRange)
 				break;
 
@@ -607,23 +607,21 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
 
 			if (!pLocal->InCond(TF_COND_AIMING) || pSniperRifle->m_flChargedDamage() == 150.f)
-				return true;
+				break;
 
 			if (tTarget.m_nAimedHitbox == HITBOX_HEAD && (pWeapon->GetWeaponID() != TF_WEAPON_SNIPERRIFLE_CLASSIC ? true : pSniperRifle->m_flChargedDamage() == 150.f))
 			{
-				if (pSniperRifle->GetRifleType() == RIFLE_JARATE)
-					return true;
-
 				int iHeadDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetHeadshotMult(pPlayer));
 				if (pPlayer->m_iHealth() <= iHeadDamage && (G::CanHeadshot || pLocal->IsCritBoosted()))
-					return true;
+					break;
 			}
 			else
 			{
 				int iBodyDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
 				if (pPlayer->m_iHealth() <= iBodyDamage)
-					return true;
+					break;
 			}
+
 			return false;
 		}
 		}
@@ -786,14 +784,22 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 		if (bShouldFire)
 		{
-			if (nWeaponID != TF_WEAPON_MEDIGUN || !(G::LastUserCmd->buttons & IN_ATTACK))
+			switch (nWeaponID)
+			{
+			case TF_WEAPON_MEDIGUN:
+				if (!(G::LastUserCmd->buttons & IN_ATTACK))
+					pCmd->buttons |= IN_ATTACK;
+				break;
+			case TF_WEAPON_SNIPERRIFLE_CLASSIC:
+				if (pWeapon->As<CTFSniperRifle>()->m_flChargedDamage() && pLocal->m_hGroundEntity())
+					pCmd->buttons &= ~IN_ATTACK;
+				break;
+			case TF_WEAPON_LASER_POINTER:
+				pCmd->buttons |= IN_ATTACK | IN_ATTACK2;
+				break;
+			default:
 				pCmd->buttons |= IN_ATTACK;
-
-			if (nWeaponID == TF_WEAPON_SNIPERRIFLE_CLASSIC && pWeapon->As<CTFSniperRifle>()->m_flChargedDamage() && pLocal->m_hGroundEntity())
-				pCmd->buttons &= ~IN_ATTACK;
-
-			if (nWeaponID == TF_WEAPON_LASER_POINTER)
-				pCmd->buttons |= IN_ATTACK2;
+			}
 
 			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire && pWeapon->GetWeaponSpread() != 0.f && !pLocal->InCond(TF_COND_RUNE_PRECISION)
 				&& pLocal->GetShootPos().DistTo(tTarget.m_vPos) > Vars::Aimbot::Hitscan::TapFireDist.Value)
@@ -842,6 +848,15 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		}
 
 		Aim(pCmd, tTarget.m_vAngleTo);
+		if (G::SilentAngles)
+		{
+			switch (nWeaponID)
+			{
+			case TF_WEAPON_MEDIGUN:
+			//case TF_WEAPON_LASER_POINTER: // we can psilent with the wrangler though probably with some hacks
+				G::SilentAngles = false, G::PSilentAngles = true;
+			}
+		}
 		break;
 	}
 }

@@ -1,6 +1,6 @@
 #include "../SDK/SDK.h"
 
-MAKE_HOOK(IPanel_PaintTraverse, U::Memory.GetVFunc(I::Panel, 41), void,
+MAKE_HOOK(IPanel_PaintTraverse, U::Memory.GetVirtual(I::Panel, 41), void,
 	void* rcx, VPANEL vguiPanel, bool forceRepaint, bool allowForce)
 {
 #ifdef DEBUG_HOOKS

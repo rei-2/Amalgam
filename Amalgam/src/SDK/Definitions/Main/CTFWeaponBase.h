@@ -1,14 +1,17 @@
 #pragma once
 #include "CBaseCombatWeapon.h"
-#include "CTFPlayer.h"
-#include "CBaseProjectile.h"
 
 MAKE_SIGNATURE(CTFWeaponBase_GetSpreadAngles, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 0F 29 74 24 ? 48 8B DA 48 8B F9 E8 ? ? ? ? 48 8B C8", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_UpdateAllViewmodelAddons, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B F8", 0x0);
+MAKE_SIGNATURE(CTFWeaponBase_CalcIsAttackCritical, "client.dll", "48 89 74 24 ? 57 48 83 EC ? 48 8B F9 E8 ? ? ? ? 48 8B C8 C7 44 24 ? ? ? ? ? 4C 8D 0D ? ? ? ? 33 D2 4C 8D 05 ? ? ? ? E8 ? ? ? ? 48 8B F0 48 85 C0 0F 84 ? ? ? ? 48 8B 10", 0x0);
 MAKE_SIGNATURE(CTFWeaponBaseMelee_CalcIsAttackCriticalHelper, "client.dll", "40 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8B F9 83 78 ? ? 75", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_CalcIsAttackCriticalHelper, "client.dll", "48 89 5C 24 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 74 24", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_GetAppropriateWorldOrViewModel, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 C7 44 24 ? ? ? ? ? 4C 8D 0D ? ? ? ? 33 D2 4C 8D 05 ? ? ? ? E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B CB", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_IncrementAmmo, "client.dll", "48 89 5C 24 ? 56 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8", 0x0);
+MAKE_SIGNATURE(CTFWeaponBase_GetMaxClip1, "client.dll", "40 53 48 83 EC ? 48 8B 01 48 8B D9 FF 90 ? ? ? ? 48 8B CB 84 C0 74", 0x0);
+
+class CTFPlayer;
+class CTFGrenadePipebombProjectile;
 
 //credits: KGB (all weapon info stuff below)
 typedef unsigned short WEAPON_FILE_INFO_HANDLE;
@@ -192,6 +195,7 @@ public:
 	NETVAR_OFF(m_flCritTokenBucket, float, "CTFWeaponBase", "m_iReloadMode", -244);
 	NETVAR_OFF(m_nCritChecks, int, "CTFWeaponBase", "m_iReloadMode", -240);
 	NETVAR_OFF(m_nCritSeedRequests, int, "CTFWeaponBase", "m_iReloadMode", -236);
+	NETVAR_OFF(m_iWeaponMode, int, "CTFWeaponBase", "m_iReloadMode", -4);
 	NETVAR_OFF(m_flCritTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", -4);
 	NETVAR_OFF(m_iCurrentSeed, int, "CTFWeaponBase", "m_flLastCritCheckTime", 8);
 	NETVAR_OFF(m_flLastRapidFireCritCheckTime, float, "CTFWeaponBase", "m_flLastCritCheckTime", 12);
@@ -201,198 +205,49 @@ public:
 		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
 	};
 
-	VIRTUAL(GetSlot, int, void*, this, 331);
-	VIRTUAL(GetWeaponID, int, void*, this, 383);
-	VIRTUAL(GetDamageType, int, void*, this, 384);
-	VIRTUAL(IsEnergyWeapon, bool, void*, this, 435);
-	VIRTUAL(AreRandomCritsEnabled, bool, void*, this, 405);
-	VIRTUAL(GetWeaponSpread, float, void*, this, 470);
-
-	OFFSET(m_iWeaponMode, int, 996);
-
-	inline float GetSwingRange(CBaseEntity* pLocal)
-	{
-		return reinterpret_cast<int(*)(CBaseEntity*)>(U::Memory.GetVFunc(this, 458))(pLocal);
-	}
-
-	inline float GetSwingRange()
-	{
-		return GetWeaponID() == TF_WEAPON_SWORD ? 72.f : 48.f;
-	}
-
-	inline bool CanFireCriticalShot(bool bIsHeadshot = false)
-	{
-		auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
-		if (!pOwner)
-			return false;
-
-		int& iFOV = pOwner->m_iFOV(), nFovBackup = iFOV;
-		iFOV = 70;
-		bool bReturn = reinterpret_cast<bool(*)(void*, bool, void*)>(U::Memory.GetVFunc(this, 428))(this, bIsHeadshot, nullptr);
-		iFOV = nFovBackup;
-		return bReturn;
-	}
-
-	inline bool CanPrimaryAttack()
-	{
-		auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
-		if (!pOwner)
-			return false;
-
-		float flCurTime = TICKS_TO_TIME(pOwner->m_nTickBase());
-		return m_flNextPrimaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
-	}
-
-	inline bool CanSecondaryAttack()
-	{
-		auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
-		if (!pOwner)
-			return false;
-
-		float flCurTime = TICKS_TO_TIME(pOwner->m_nTickBase());
-		return m_flNextSecondaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
-	}
-
-	inline bool IsInReload()
-	{
-		return m_bInReload() || m_iReloadMode() != 0;
-	}
-
-	inline float GetDamage(bool bAttribHookValue = true)
-	{
-		if (auto pWeaponInfo = GetWeaponInfo())
-		{
-			if (!bAttribHookValue)
-				return pWeaponInfo->GetWeaponData(0).m_nDamage;
-			return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nDamage, "mult_dmg", this);
-		}
-		return 0.f;
-	}
-
-	inline float GetFireRate(bool bAttribHookValue = true)
-	{
-		if (auto pWeaponInfo = GetWeaponInfo())
-		{
-			if (!bAttribHookValue)
-				return pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
-			return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay, "mult_postfiredelay", this);
-		}
-		return 0.315f;
-	}
-
-	inline int GetBulletsPerShot(bool bAttribHookValue = true)
-	{
-		if (auto pWeaponInfo = GetWeaponInfo())
-		{
-			if (!bAttribHookValue)
-				return pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot;
-			return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot, "mult_bullets_per_shot", this);
-		}
-		return 1;
-	}
-
-	inline int GetAmmoPerShot(bool bAttribHookValue = true)
-	{
-		if (auto pWeaponInfo = GetWeaponInfo())
-		{
-			if (!bAttribHookValue)
-				return pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
-			int iAmmoPerShot = SDK::AttribHookValue(0, "mod_ammo_per_shot", this);
-			return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
-		}
-		return 1;
-	}
-
-	inline bool IsRapidFire()
-	{
-		if (auto pWeaponInfo = GetWeaponInfo())
-			return pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
-		return false;
-	}
-
-	inline float GetRange()
-	{
-		switch (GetWeaponID())
-		{
-		case TF_WEAPON_MEDIGUN: return 450.f;
-		case TF_WEAPON_MECHANICAL_ARM: return 256.f;
-		}
-
-		if (auto pWeaponInfo = GetWeaponInfo())
-			return pWeaponInfo->GetWeaponData(0).m_flRange;
-		return 8192.f;
-	}
-
-	inline bool CanHeadShot()
-	{
-		return GetDamageType() & DMG_USE_HITLOCATIONS && CanFireCriticalShot(true);
-	}
-
-	inline bool AmbassadorCanHeadshot(float flCurTime = I::GlobalVars->curtime)
-	{
-		if (GetClassID() == ETFClassID::CTFRevolver && SDK::AttribHookValue(0, "set_weapon_mode", this) == 1)
-			return flCurTime - m_flLastFireTime() > 1.f;
-		return false;
-	}
-
-	inline bool HasPrimaryAmmoForShot()
-	{
-		if (IsEnergyWeapon())
-			return m_flEnergy() > 0.f;
-
-		int iClip = m_iClip1();
-		auto pOwner = m_hOwnerEntity().Get();
-		return (iClip == -1 && pOwner ? pOwner->As<CTFPlayer>()->GetAmmoCount(m_iPrimaryAmmoType()) : iClip) >= GetAmmoPerShot();
-	}
-
-	inline void GetProjectileFireSetup(void* pPlayer, Vector vecOffset, Vector* vecSrc, QAngle* angForward, bool bHitTeammates = true, float flEndDist = 2000.f)
-	{
-		reinterpret_cast<void(*)(CTFWeaponBase*, void*, Vector, Vector*, QAngle*, bool, float)>(U::Memory.GetVFunc(this, 402))(this, pPlayer, vecOffset, vecSrc, angForward, bHitTeammates, flEndDist);
-	}
-
-	inline void GetSpreadAngles(Vec3& out)
-	{
-		S::CTFWeaponBase_GetSpreadAngles.Call<void>(this, std::ref(out));
-	}
-
-	inline Vec3 GetSpreadAngles()
+	VIRTUAL(GetSlot, int, 331, this);
+	VIRTUAL(GetWeaponID, int, 383, this);
+	VIRTUAL(GetDamageType, int, 384, this);
+	VIRTUAL(IsEnergyWeapon, bool, 435, this);
+	VIRTUAL(AreRandomCritsEnabled, bool, 405, this);
+	VIRTUAL(GetWeaponSpread, float, 470, this);
+	VIRTUAL_ARGS(ApplyFireDelay, float, 410, (float flDelay), this, flDelay);
+	VIRTUAL_ARGS(GetSwingRange, int, 458, (CBaseEntity* pLocal), this, pLocal);
+	
+	SIGNATURE(GetMaxClip1, float, CTFWeaponBase, this);
+	SIGNATURE(IncrementAmmo, void, CTFWeaponBase, this);
+	SIGNATURE(CalcIsAttackCritical, bool, CTFWeaponBase, this);
+	SIGNATURE(CalcIsAttackCriticalHelper, bool, CTFWeaponBase, this);
+	SIGNATURE(UpdateAllViewmodelAddons, bool, CTFWeaponBase, this);
+	SIGNATURE(GetAppropriateWorldOrViewModel, CBaseAnimating*, CTFWeaponBase, this);
+	SIGNATURE_ARGS(GetSpreadAngles, void, CTFWeaponBase, (Vec3& out), this, std::ref(out));
+	Vec3 GetSpreadAngles()
 	{
 		Vec3 vOut;
 		GetSpreadAngles(vOut);
 		return vOut;
 	}
 
-	inline void UpdateAllViewmodelAddons()
-	{
-		return S::CTFWeaponBase_UpdateAllViewmodelAddons.Call<void>(this);
-	}
-
-	inline float ApplyFireDelay(float flDelay)
-	{
-		return reinterpret_cast<float(*)(void*, float)>(U::Memory.GetVFunc(this, 410))(this, flDelay);
-	}
-
-	inline bool CalcIsAttackCriticalHelperMelee()
-	{
-		return S::CTFWeaponBaseMelee_CalcIsAttackCriticalHelper.Call<bool>(this);
-	}
-
-	inline bool CalcIsAttackCriticalHelper()
-	{
-		return S::CTFWeaponBase_CalcIsAttackCriticalHelper.Call<bool>(this);
-	}
-
-	inline CBaseAnimating* GetAppropriateWorldOrViewModel()
-	{
-		return S::CTFWeaponBase_GetAppropriateWorldOrViewModel.Call<CBaseAnimating*>(this);
-	}
-
-	inline void IncrementAmmo()
-	{
-		return S::CTFWeaponBase_IncrementAmmo.Call<void>(this);
-	}
-
+	bool HasPrimaryAmmoForShot();
+	bool CanPrimaryAttack();
+	bool CanSecondaryAttack();
+	bool CanFireCriticalShot(bool bIsHeadshot = false);
+	bool IsInReload();
+	bool CanHeadShot();
+	bool AmbassadorCanHeadshot(float flCurTime = I::GlobalVars->curtime);
+	float GetDamage(bool bAttribHookValue = true);
+	float GetFireRate(bool bAttribHookValue = true);
+	int GetBulletsPerShot(bool bAttribHookValue = true);
+	int GetAmmoPerShot(bool bAttribHookValue = true);
+	bool IsRapidFire();
+	float GetRange();
 	CHudTexture* GetWeaponIcon();
+};
+
+class CTFWeaponBaseMelee : public CTFWeaponBase
+{
+public:
+	SIGNATURE(CalcIsAttackCriticalHelper, bool, CTFWeaponBaseMelee, this);
 };
 
 class CTFKnife : public CTFWeaponBase
@@ -423,26 +278,9 @@ public:
 	NETVAR(m_hLastHealingTarget, EHANDLE, "CWeaponMedigun", "m_hLastHealingTarget");
 	NETVAR(m_flChargeLevel, float, "CWeaponMedigun", "m_flChargeLevel");
 
-	inline int GetMedigunType()
-	{
-		return SDK::AttribHookValue(0, "set_weapon_mode", this);
-	}
-
-	inline MedigunChargeTypes GetChargeType()
-	{
-		int iTmp = SDK::AttribHookValue(MEDIGUN_CHARGE_INVULN, "set_charge_type", this);
-		if (GetMedigunType() == MEDIGUN_RESIST)
-			iTmp += m_nChargeResistType();
-
-		return MedigunChargeTypes(iTmp);
-	}
-
-	inline medigun_resist_types_t GetResistType()
-	{
-		int nCurrentActiveResist = (GetChargeType() - MEDIGUN_CHARGE_BULLET_RESIST);
-		nCurrentActiveResist = nCurrentActiveResist % MEDIGUN_NUM_RESISTS;
-		return medigun_resist_types_t(nCurrentActiveResist);
-	}
+	int GetMedigunType();
+	MedigunChargeTypes GetChargeType();
+	medigun_resist_types_t GetResistType();
 };
 
 class CTFPipebombLauncher : public CTFWeaponBase
@@ -453,10 +291,7 @@ public:
 
 	NETVAR_OFF(m_Pipebombs, CUtlVector<CHandle<CTFGrenadePipebombProjectile>>, "CTFPipebombLauncher", "m_flChargeBeginTime", -28);
 
-	inline int GetDetonateType()
-	{
-		return SDK::AttribHookValue(0, "set_detonate_mode", this);
-	}
+	int GetDetonateType();
 };
 
 class CTFSniperRifle : public CTFWeaponBase
@@ -464,61 +299,9 @@ class CTFSniperRifle : public CTFWeaponBase
 public:
 	NETVAR(m_flChargedDamage, float, "CTFSniperRifle", "m_flChargedDamage");
 
-	inline int GetRifleType()
-	{
-		return SDK::AttribHookValue(0, "set_weapon_mode", this);
-	}
-
-	inline float GetHeadshotMult(CTFPlayer* pTarget = nullptr)
-	{
-		auto GetMainMult = [&]()
-			{
-				auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
-				if (pOwner && pOwner->IsCritBoosted())
-					return 3.f;
-
-				if (GetRifleType() == RIFLE_JARATE)
-				{
-					if (SDK::AttribHookValue(0, "jarate_duration", this) > 0)
-						return 1.36f;
-
-					if (pOwner && pOwner->IsMiniCritBoosted()
-						|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
-						return 1.36f;
-
-					return 1.f;
-				}
-
-				return 3.f;
-			};
-		
-		float flMult = SDK::AttribHookValue(GetMainMult(), "mult_dmg", this);
-		if (m_flChargedDamage() == 150.f)
-			flMult = SDK::AttribHookValue(flMult, "sniper_full_charge_damage_bonus", this);
-		return flMult;
-	}
-
-	inline float GetBodyshotMult(CTFPlayer* pTarget = nullptr)
-	{
-		auto GetMainMult = [&]()
-			{
-				auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
-				if (pOwner && pOwner->IsCritBoosted())
-					return 3.f;
-
-				if (pOwner && pOwner->IsMiniCritBoosted()
-					|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
-					return 1.36f;
-
-				return 1.f;
-			};
-
-		float flMult = SDK::AttribHookValue(GetMainMult(), "mult_dmg", this);
-		flMult = SDK::AttribHookValue(flMult, "bodyshot_damage_modify", this);
-		if (m_flChargedDamage() == 150.f)
-			flMult = SDK::AttribHookValue(flMult, "sniper_full_charge_damage_bonus", this);
-		return flMult;
-	}
+	int GetRifleType();
+	float GetHeadshotMult(CTFPlayer* pTarget = nullptr);
+	float GetBodyshotMult(CTFPlayer* pTarget = nullptr);
 };
 
 class CTFGrenadeLauncher : public CTFWeaponBase
@@ -528,10 +311,7 @@ public:
 	NETVAR(m_iCurrentTube, int, "CTFGrenadeLauncher", "m_iCurrentTube");
 	NETVAR(m_iGoalTube, int, "CTFGrenadeLauncher", "m_iGoalTube");
 
-	inline int GetDetonateType()
-	{
-		return SDK::AttribHookValue(0, "set_detonate_mode", this);
-	}
+	int GetDetonateType();
 };
 
 class CTFSniperRifleClassic : public CTFSniperRifle
@@ -550,8 +330,26 @@ public:
 class CTFFlareGun : public CTFWeaponBase
 {
 public:
-	inline int GetFlareGunType()
-	{
-		return SDK::AttribHookValue(0, "set_weapon_mode", this);
-	}
+	int GetFlareGunType();
+};
+
+class CTFThrowable : public CTFWeaponBase
+{
+public:
+	NETVAR(m_flChargeBeginTime, float, "CTFThrowable", "m_flChargeBeginTime");
+};
+
+class CTFGrapplingHook : public CTFWeaponBase
+{
+public:
+	NETVAR(m_hProjectile, EHANDLE, "CTFGrapplingHook", "m_hProjectile");
+};
+
+class CTFSpellBook : public CTFThrowable
+{
+public:
+	NETVAR(m_flTimeNextSpell, float, "CTFSpellBook", "m_flTimeNextSpell");
+	NETVAR(m_iSelectedSpellIndex, int, "CTFSpellBook", "m_iSelectedSpellIndex");
+	NETVAR(m_iSpellCharges, int, "CTFSpellBook", "m_iSpellCharges");
+	NETVAR(m_bFiredAttack, bool, "CTFSpellBook", "m_bFiredAttack");
 };

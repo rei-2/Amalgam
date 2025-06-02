@@ -63,13 +63,25 @@ namespace MAKE_INTERFACE_SCOPE \
 { \
 	return *reinterpret_cast<type*>(uintptr_t(this) + offset); \
 }
-#define VIRTUAL(name, type, fn, base, index) inline type name() \
-{ \
-	return reinterpret_cast<type(*)(fn)>(U::Memory.GetVFunc(base, index))(base); \
-}
 #define CONDGET(name, conditions, cond) inline bool name() \
 { \
-	return (conditions & cond); \
+	return conditions & cond; \
+}
+#define VIRTUAL(name, type, index, ...) inline type name() \
+{ \
+	return U::Memory.CallVirtual<index, type>(##__VA_ARGS__); \
+}
+#define VIRTUAL_ARGS(name, type, index, args, ...) inline type name##args \
+{ \
+	return U::Memory.CallVirtual<index, type>(##__VA_ARGS__); \
+}
+#define SIGNATURE(name, type, sig, ...) inline type name() \
+{ \
+	return S::sig##_##name.Call<type>(##__VA_ARGS__); \
+}
+#define SIGNATURE_ARGS(name, type, sig, args, ...) inline type name##args \
+{ \
+	return S::sig##_##name.Call<type>(##__VA_ARGS__); \
 }
 
 #define VA_LIST(...) __VA_ARGS__

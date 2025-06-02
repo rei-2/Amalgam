@@ -52,4 +52,4 @@ public:
 	void Reset();
 };
 
-ADD_FEATURE(CCheaterDetection, CheaterDetection)
+ADD_FEATURE(CCheaterDetection, CheaterDetection);

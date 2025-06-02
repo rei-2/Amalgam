@@ -16,4 +16,4 @@ public:
 	bool m_bRunningSecondary = false;
 };
 
-ADD_FEATURE(CAimbot, Aimbot)
+ADD_FEATURE(CAimbot, Aimbot);

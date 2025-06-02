@@ -73,11 +73,11 @@ void CCore::Load()
 		return;
 	}
 
-	float flStart = SDK::PlatFloatTime();
+	float flTime = 0.f;
 	while (!U::Memory.FindSignature("client.dll", "48 8B 0D ? ? ? ? 48 8B 10 48 8B 19 48 8B C8 FF 92") || !SDK::GetTeamFortressWindow())
 	{
-		Sleep(500);
-		if (m_bUnload = m_bFailed = SDK::PlatFloatTime() - flStart > 60.f)
+		Sleep(500), flTime += 0.5f;
+		if (m_bUnload = m_bFailed = flTime >= 60.f)
 		{
 			AppendFailText("Failed to load");
 			return;

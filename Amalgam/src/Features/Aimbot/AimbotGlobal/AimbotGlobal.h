@@ -36,4 +36,4 @@ public:
 	bool ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pBomb);
 };
 
-ADD_FEATURE(CAimbotGlobal, AimbotGlobal)
+ADD_FEATURE(CAimbotGlobal, AimbotGlobal);

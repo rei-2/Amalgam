@@ -1,8 +1,237 @@
 #include "CTFWeaponBase.h"
-#include "../../Helpers/Draw/Draw.h"
+
+#include "../../SDK.h"
+
+bool CTFWeaponBase::HasPrimaryAmmoForShot()
+{
+	if (IsEnergyWeapon())
+		return m_flEnergy() > 0.f;
+
+	int iClip = m_iClip1();
+	auto pOwner = m_hOwnerEntity().Get();
+	return (iClip == -1 && pOwner ? pOwner->As<CTFPlayer>()->GetAmmoCount(m_iPrimaryAmmoType()) : iClip) >= GetAmmoPerShot();
+}
+
+bool CTFWeaponBase::CanPrimaryAttack()
+{
+	auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+	if (!pOwner)
+		return false;
+
+	float flCurTime = TICKS_TO_TIME(pOwner->m_nTickBase());
+	return m_flNextPrimaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
+}
+
+bool CTFWeaponBase::CanSecondaryAttack()
+{
+	auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+	if (!pOwner)
+		return false;
+
+	float flCurTime = TICKS_TO_TIME(pOwner->m_nTickBase());
+	return m_flNextSecondaryAttack() <= flCurTime && pOwner->m_flNextAttack() <= flCurTime;
+}
+
+bool CTFWeaponBase::CanFireCriticalShot(bool bIsHeadshot)
+{
+	auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+	if (!pOwner)
+		return false;
+
+	int& iFOV = pOwner->m_iFOV(), nFovBackup = iFOV;
+	iFOV = 70;
+	bool bReturn = U::Memory.CallVirtual<428, bool>(this, bIsHeadshot, nullptr);
+	iFOV = nFovBackup;
+	return bReturn;
+}
+
+bool CTFWeaponBase::CanHeadShot()
+{
+	return GetDamageType() & DMG_USE_HITLOCATIONS && CanFireCriticalShot(true);
+}
+
+bool CTFWeaponBase::AmbassadorCanHeadshot(float flCurTime)
+{
+	if (GetClassID() == ETFClassID::CTFRevolver && SDK::AttribHookValue(0, "set_weapon_mode", this) == 1)
+		return flCurTime - m_flLastFireTime() > 1.f;
+	return false;
+}
+
+bool CTFWeaponBase::IsInReload()
+{
+	return m_bInReload() || m_iReloadMode() != 0;
+}
+
+float CTFWeaponBase::GetDamage(bool bAttribHookValue)
+{
+	if (auto pWeaponInfo = GetWeaponInfo())
+	{
+		if (!bAttribHookValue)
+			return pWeaponInfo->GetWeaponData(0).m_nDamage;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nDamage, "mult_dmg", this);
+	}
+	return 0.f;
+}
+
+float CTFWeaponBase::GetFireRate(bool bAttribHookValue)
+{
+	if (auto pWeaponInfo = GetWeaponInfo())
+	{
+		if (!bAttribHookValue)
+			return pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay, "mult_postfiredelay", this);
+	}
+	return 0.315f;
+}
+
+int CTFWeaponBase::GetBulletsPerShot(bool bAttribHookValue)
+{
+	if (auto pWeaponInfo = GetWeaponInfo())
+	{
+		if (!bAttribHookValue)
+			return pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot, "mult_bullets_per_shot", this);
+	}
+	return 1;
+}
+
+int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
+{
+	if (auto pWeaponInfo = GetWeaponInfo())
+	{
+		if (!bAttribHookValue)
+			return pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
+		int iAmmoPerShot = SDK::AttribHookValue(0, "mod_ammo_per_shot", this);
+		return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
+	}
+	return 1;
+}
+
+bool CTFWeaponBase::IsRapidFire()
+{
+	if (auto pWeaponInfo = GetWeaponInfo())
+		return pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
+	return false;
+}
+
+float CTFWeaponBase::GetRange()
+{
+	switch (GetWeaponID())
+	{
+	case TF_WEAPON_MEDIGUN: return 450.f;
+	case TF_WEAPON_MECHANICAL_ARM: return 256.f;
+	}
+
+	if (auto pWeaponInfo = GetWeaponInfo())
+		return pWeaponInfo->GetWeaponData(0).m_flRange;
+	return 8192.f;
+}
+
+
+
+int CWeaponMedigun::GetMedigunType()
+{
+	return SDK::AttribHookValue(0, "set_weapon_mode", this);
+}
+
+MedigunChargeTypes CWeaponMedigun::GetChargeType()
+{
+	int iTmp = SDK::AttribHookValue(MEDIGUN_CHARGE_INVULN, "set_charge_type", this);
+	if (GetMedigunType() == MEDIGUN_RESIST)
+		iTmp += m_nChargeResistType();
+
+	return MedigunChargeTypes(iTmp);
+}
+
+medigun_resist_types_t CWeaponMedigun::GetResistType()
+{
+	int nCurrentActiveResist = (GetChargeType() - MEDIGUN_CHARGE_BULLET_RESIST);
+	nCurrentActiveResist = nCurrentActiveResist % MEDIGUN_NUM_RESISTS;
+	return medigun_resist_types_t(nCurrentActiveResist);
+}
+
+
+
+int CTFPipebombLauncher::GetDetonateType()
+{
+	return SDK::AttribHookValue(0, "set_detonate_mode", this);
+}
+
+
+
+int CTFSniperRifle::GetRifleType()
+{
+	return SDK::AttribHookValue(0, "set_weapon_mode", this);
+}
+
+float CTFSniperRifle::GetHeadshotMult(CTFPlayer* pTarget)
+{
+	auto GetMainMult = [&]()
+		{
+			auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+			if (pOwner && pOwner->IsCritBoosted())
+				return 3.f;
+
+			if (GetRifleType() == RIFLE_JARATE)
+			{
+				if (SDK::AttribHookValue(0, "jarate_duration", this) > 0)
+					return 1.36f;
+
+				if (pOwner && pOwner->IsMiniCritBoosted()
+					|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
+					return 1.36f;
+
+				return 1.f;
+			}
+
+			return 3.f;
+		};
+
+	float flMult = SDK::AttribHookValue(GetMainMult(), "mult_dmg", this);
+	if (m_flChargedDamage() == 150.f)
+		flMult = SDK::AttribHookValue(flMult, "sniper_full_charge_damage_bonus", this);
+	return flMult;
+}
+
+float CTFSniperRifle::GetBodyshotMult(CTFPlayer* pTarget)
+{
+	auto GetMainMult = [&]()
+		{
+			auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+			if (pOwner && pOwner->IsCritBoosted())
+				return 3.f;
+
+			if (pOwner && pOwner->IsMiniCritBoosted()
+				|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
+				return 1.36f;
+
+			return 1.f;
+		};
+
+	float flMult = SDK::AttribHookValue(GetMainMult(), "mult_dmg", this);
+	flMult = SDK::AttribHookValue(flMult, "bodyshot_damage_modify", this);
+	if (m_flChargedDamage() == 150.f)
+		flMult = SDK::AttribHookValue(flMult, "sniper_full_charge_damage_bonus", this);
+	return flMult;
+}
+
+
+
+int CTFGrenadeLauncher::GetDetonateType()
+{
+	return SDK::AttribHookValue(0, "set_detonate_mode", this);
+}
+
+
+
+int CTFFlareGun::GetFlareGunType()
+{
+	return SDK::AttribHookValue(0, "set_weapon_mode", this);
+}
+
+
 
 #define ReturnTexture(string) { static CHudTexture* pTexture = H::Draw.GetIcon(string); return pTexture; }
-
 CHudTexture* CTFWeaponBase::GetWeaponIcon() // wow this is stupid
 {
 	switch (m_iItemDefinitionIndex())

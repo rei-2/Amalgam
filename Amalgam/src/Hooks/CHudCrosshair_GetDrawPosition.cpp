@@ -38,7 +38,7 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
 
 		Vec3 vStartPos = pLocal->GetEyePosition();
-		Vec3 vEndPos = (vStartPos + vForward * 8192);
+		Vec3 vEndPos = vStartPos + vForward * 8192;
 
 		CGameTrace trace = {};
 		CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;

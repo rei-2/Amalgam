@@ -10,6 +10,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 	bool bTrace = iFlags & ProjSimEnum::Trace;
 	bool bQuick = iFlags & ProjSimEnum::Quick;
+	bool bMaxSpeed = iFlags & ProjSimEnum::MaxSpeed;
 
 	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
 
@@ -72,7 +73,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	if (Vars::Visuals::Trajectory::Override.Value)
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffsetX.Value, Vars::Visuals::Trajectory::OffsetY.Value, Vars::Visuals::Trajectory::OffsetZ.Value }, vPos, vAngle, !bTrace ? true : Vars::Visuals::Trajectory::Pipes.Value, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("custom"), vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::NoSpin.Value, Vars::Visuals::Trajectory::LifeTime.Value };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("custom"), vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::LifeTime.Value };
 		return true;
 	}
 
@@ -83,7 +84,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, int(SDK::AttribHookValue(0, "centerfire_projectile", pWeapon)) == 1 ? 0.f : 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		float flSpeed = pPlayer->InCond(TF_COND_RUNE_PRECISION) ? 3000.f : SDK::AttribHookValue(1100.f, "mult_projectile_speed", pWeapon);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_rocket.mdl"), vPos, vAngle, { 0.f, 0.f, 0.f }, flSpeed, 0.f, true };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_rocket.mdl"), vPos, vAngle, { 0.f, 0.f, 0.f }, flSpeed, 0.f };
 		return true;
 	}
 	case TF_WEAPON_PARTICLE_CANNON:
@@ -96,7 +97,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		if (pWeapon->GetWeaponID() == TF_WEAPON_DRG_POMSON)
 			vPos.z -= 13.f;
 		float flSpeed = bCowMangler ? 1100.f : 1200.f;
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_drg_ball.mdl"), vPos, vAngle, bCowMangler ? Vec3() : Vec3(1.f, 1.f, 1.f), flSpeed, 0.f, true };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_drg_ball.mdl"), vPos, vAngle, bCowMangler ? Vec3() : Vec3(1.f, 1.f, 1.f), flSpeed, 0.f };
 		return true;
 	}
 	case TF_WEAPON_GRENADELAUNCHER: // vphysics projectiles affected by server start gravity
@@ -111,7 +112,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime : flMortar
 			: SDK::AttribHookValue(2.2f, "fuse_mult", pWeapon);
 		auto uType = bCannon ? FNV1A::Hash32Const("models/weapons/w_models/w_cannonball.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_grenade_grenadelauncher.mdl");
-		tProjInfo = { uType, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, SDK::AttribHookValue(0, "grenade_no_spin", pWeapon) != 0, flLifetime };
+		tProjInfo = { pWeapon, uType, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, flLifetime };
 		return true;
 	}
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
@@ -120,29 +121,29 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		float flCharge = flAutoCharge > 0.f && SDK::AttribHookValue(1, "mult_dmg", pWeapon)
 			? SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon) * flAutoCharge
 			: (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f);
-		float flSpeed = Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 900.f, 2400.f);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_stickybomb.mdl"), vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, false };
+		float flSpeed = bMaxSpeed ? 2400.f : Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 900.f, 2400.f);
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_stickybomb.mdl"), vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f };
 		return true;
 	}
 	case TF_WEAPON_FLAREGUN:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, SDK::AttribHookValue(2000.f, "mult_projectile_speed", pWeapon), 0.3f * flGravity, true};
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, SDK::AttribHookValue(2000.f, "mult_projectile_speed", pWeapon), 0.3f * flGravity };
 		return true;
 	}
 	case TF_WEAPON_FLAREGUN_REVENGE:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, 3000.f, 0.45f * flGravity, true };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, 3000.f, 0.45f * flGravity };
 		return true;
 	}
 	case TF_WEAPON_COMPOUND_BOW:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		float flCharge = pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f;
-		float flSpeed = Math::RemapVal(flCharge, 0.f, 1.f, 1800.f, 2600.f);
+		float flSpeed = bMaxSpeed ? 2600.f : Math::RemapVal(flCharge, 0.f, 1.f, 1800.f, 2600.f);
 		flGravity = Math::RemapVal(flCharge, 0.f, 1.f, 0.5f, 0.1f) * flGravity;
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_arrow.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_arrow.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, flSpeed, flGravity, 10.f /*arrows have some lifetime check for whatever reason*/ };
 		return true;
 	}
 	case TF_WEAPON_CROSSBOW:
@@ -152,13 +153,13 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 8.f, -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
 		auto uType = bCrossbow ? FNV1A::Hash32Const("models/weapons/w_models/w_syringe_proj.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_repair_claw.mdl");
-		tProjInfo = { uType, vPos, vAngle, pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW ? Vec3(3.f, 3.f, 3.f) : Vec3(1.f, 1.f, 1.f), 2400.f, 0.2f * flGravity, true, 10.f /*arrows have some lifetime check for whatever reason*/ };
+		tProjInfo = { pWeapon, uType, vPos, vAngle, pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW ? Vec3(3.f, 3.f, 3.f) : Vec3(1.f, 1.f, 1.f), 2400.f, 0.2f * flGravity, 10.f /*arrows have some lifetime check for whatever reason*/ };
 		return true;
 	}
 	case TF_WEAPON_SYRINGEGUN_MEDIC:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 6.f, -8.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/w_models/w_syringe_proj.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, 1000.f, 0.3f * flGravity, true };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_syringe_proj.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, 1000.f, 0.3f * flGravity };
 		return true;
 	}
 	case TF_WEAPON_FLAMETHROWER:
@@ -167,19 +168,19 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		const float flHull = tf_flamethrower_boxsize->GetFloat();
 
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 40.f, 5.f, 0.f }, vPos, vAngle, true, bQuick, false);
-		tProjInfo = { FNV1A::Hash32Const("particles/flamethrower.pcf"), vPos, vAngle, { flHull, flHull, flHull }, 1000.f, 0.f, true, 0.285f };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("particles/flamethrower.pcf"), vPos, vAngle, { flHull, flHull, flHull }, 1000.f, 0.f, 0.285f };
 		return true;
 	}
 	case TF_WEAPON_FLAME_BALL:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 3.f, 7.f, -9.f }, vPos, vAngle, true, bQuick, false);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_flameball/c_flameball.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f /*damaging hull much bigger, shouldn't matter here*/ }, 3000.f, 0.f, true, 0.18f };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/c_models/c_flameball/c_flameball.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f /*damaging hull much bigger, shouldn't matter here*/ }, 3000.f, 0.f, 0.18f };
 		return true;
 	}
 	case TF_WEAPON_CLEAVER:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, true, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"), vPos, vAngle, { 1.f, 1.f, 10.f /*weird, probably still inaccurate*/ }, 3000.f, 1.f, !bTrace ? true : false, 2.2f };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"), vPos, vAngle, { 1.f, 1.f, 10.f /*weird, probably still inaccurate*/ }, 3000.f, 1.f, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_BAT_WOOD:
@@ -192,7 +193,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 		vPos = (bQuick ? pPlayer->GetAbsOrigin() : pPlayer->m_vecOrigin()) + (Vec3(0, 0, 50) + vForward * 32.f) * pPlayer->m_flModelScale(); // why?
 		auto uHash = bWrapAssassin ? FNV1A::Hash32Const("models/weapons/c_models/c_xms_festive_ornament.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_baseball.mdl");
-		tProjInfo = { uHash, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed->GetFloat(), 1.f, false, bWrapAssassin ? 2.3f : 100.f };
+		tProjInfo = { pWeapon, uHash, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed->GetFloat(), 1.f, bWrapAssassin ? 2.3f : 100.f };
 		return true;
 	}
 	case TF_WEAPON_JAR:
@@ -206,13 +207,13 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		case Sniper_s_TheSelfAwareBeautyMark: uType = FNV1A::Hash32Const("models/weapons/c_models/c_breadmonster/c_breadmonster.mdl"); break;
 		case Scout_s_MutatedMilk: uType = FNV1A::Hash32Const("models/weapons/c_models/c_breadmonster/c_breadmonster_milk.mdl"); break;
 		}
-		tProjInfo = { uType, vPos, vAngle, { 3.f, 3.f, 3.f }, 1000.f, 1.f, false, 2.2f };
+		tProjInfo = { pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, 1000.f, 1.f, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_JAR_GAS:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, true, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_gascan/c_gascan.mdl"), vPos, vAngle, { 3.f, 3.f, 3.f }, 2000.f, 1.f, false, 2.2f };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/c_models/c_gascan/c_gascan.mdl"), vPos, vAngle, { 3.f, 3.f, 3.f }, 2000.f, 1.f, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_GRAPPLINGHOOK:
@@ -232,7 +233,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			}
 		}
 		float flLifetime = tf_grapplinghook_max_distance->GetFloat() / flSpeed;
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl"), vPos, vAngle, { 1.2f, 1.2f, 1.2f }, flSpeed, 0.f, false, flLifetime };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/c_models/c_grapple_proj/c_grapple_proj.mdl"), vPos, vAngle, { 1.2f, 1.2f, 1.2f }, flSpeed, 0.f, flLifetime };
 		return true;
 	}
 	}
@@ -246,7 +247,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case Heavy_s_TheDalokohsBar:
 	case Heavy_s_SecondBanana:
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 0.f, 0.f, -8.f }, vPos, vAngle, true, bQuick);
-		tProjInfo = { FNV1A::Hash32Const("models/weapons/c_models/c_sandwich/c_sandwich.mdl"), vPos, vAngle, { 17.f, 17.f, 7.f }, 500.f, 1.f * flGravity, false };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/c_models/c_sandwich/c_sandwich.mdl"), vPos, vAngle, { 17.f, 17.f, 7.f }, 500.f, 1.f * flGravity };
 		return true;
 	}
 
@@ -457,7 +458,8 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 				if (!tProjInfo.m_bQuick && G::CurrentUserCmd)
 				{
 					vVelocity += vUp * 200.f + vUp * SDK::RandomFloat(-10.f, 10.f) + vRight * SDK::RandomFloat(-10.f, 10.f);
-					vAngularVelocity = { 600.f, float(SDK::RandomInt(-1200, 1200)), 0.f };
+					if (!tProjInfo.m_pWeapon || !SDK::AttribHookValue(0, "grenade_no_spin", tProjInfo.m_pWeapon))
+						vAngularVelocity = { 600.f, float(SDK::RandomInt(-1200, 1200)), 0.f };
 					break;
 				}
 				vVelocity += vUp * 200.f;
@@ -527,9 +529,6 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 				break;
 			}
 		}
-
-		if (tProjInfo.m_bNoSpin)
-			vAngularVelocity.Zero();
 
 		if (bSimulate && !F::ProjSim.obj->IsDragEnabled() && obj->m_dragBasis.IsZero()) // don't include vphysics projectiles
 			vVelocity.z += 400.f * tProjInfo.m_flGravity * TICK_INTERVAL; // i don't know why this makes it more accurate but it does

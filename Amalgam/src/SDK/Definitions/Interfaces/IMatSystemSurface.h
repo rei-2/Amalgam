@@ -1,4 +1,5 @@
 #pragma once
+#include "Interface.h"
 #include "../Misc/ISurface.h"
 
 MAKE_SIGNATURE(CMatSystemSurface_StartDrawing, "vguimatsurface.dll", "40 53 56 57 48 83 EC ? 48 8B F9 80 3D", 0x0);
@@ -43,15 +44,8 @@ public:
 	virtual void BeginSkinCompositionPainting() = 0;
 	virtual void EndSkinCompositionPainting() = 0;
 
-	void StartDrawing()
-	{
-		S::CMatSystemSurface_StartDrawing.Call<void>(this);
-	}
-
-	void FinishDrawing()
-	{
-		S::CMatSystemSurface_FinishDrawing.Call<void>(this);
-	}
+	SIGNATURE(StartDrawing, void, CMatSystemSurface, this);
+	SIGNATURE(FinishDrawing, void, CMatSystemSurface, this);
 };
 
 MAKE_INTERFACE_VERSION(IMatSystemSurface, MatSystemSurface, "vguimatsurface.dll", "VGUI_Surface030");

@@ -9,4 +9,4 @@ public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 };
 
-ADD_FEATURE(CAutoAirblast, AutoAirblast)
+ADD_FEATURE(CAutoAirblast, AutoAirblast);

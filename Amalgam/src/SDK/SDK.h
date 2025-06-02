@@ -17,6 +17,7 @@
 #include "../Utils/ConVars/ConVars.h"
 #include "../Utils/KeyHandler/KeyHandler.h"
 #include "../Utils/Hash/FNV1A.h"
+#include "../Utils/Math/Math.h"
 #include "../Utils/Timer/Timer.h"
 #include "../Utils/Feature/Feature.h"
 #include <intrin.h>
@@ -79,17 +80,15 @@ namespace SDK
 	std::string ConvertWideToUTF8(const std::wstring& source);
 
 	double PlatFloatTime();
-	int StdRandomInt(int min, int max);
-	float StdRandomFloat(float min, float max);
+	int StdRandomInt(int iMin, int iMax);
+	float StdRandomFloat(float flMin, float flMax);
 
-	int SeedFileLineHash(int seedvalue, const char* sharedname, int additionalSeed);
-	int SharedRandomInt(unsigned iseed, const char* sharedname, int iMinVal, int iMaxVal, int additionalSeed);
+	int SeedFileLineHash(int iSeed, const char* sName, int iAdditionalSeed);
+	int SharedRandomInt(unsigned iSeed, const char* sName, int iMinVal, int iMaxVal, int iAdditionalSeed);
 	void RandomSeed(int iSeed);
 	int RandomInt(int iMinVal = 0, int iMaxVal = 0x7FFF);
 	float RandomFloat(float flMinVal = 0.f, float flMaxVal = 1.f);
 	
-	int HandleToIDX(unsigned int pHandle);
-
 	bool W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways = false);
 	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr);
 	bool IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin);
@@ -109,6 +108,7 @@ namespace SDK
 
 	int IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase = false);
 	float MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch = false, bool bIgnoreSpecialAbility = false);
+	float AttribHookValue(float value, const char* name, void* econent, void* buffer = nullptr, bool isGlobalConstString = true);
 
 	void FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTargetAngle);
 	void FixMovement(CUserCmd* pCmd, const Vec3& vTargetAngle);

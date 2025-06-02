@@ -38,4 +38,4 @@ public:
 	std::unordered_map<int, bool> m_mEntities = {};
 };
 
-ADD_FEATURE(CChams, Chams)
+ADD_FEATURE(CChams, Chams);

@@ -14,7 +14,6 @@
 #include "Main/CEconEntity.h"
 #include "Main/CEconWearable.h"
 #include "Main/CEntitySphereQuery.h"
-#include "Main/CHalloweenPickup.h"
 #include "Main/CMultiPlayerAnimState.h"
 #include "Main/CSniperDot.h"
 #include "Main/CTFPlayer.h"

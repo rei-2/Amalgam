@@ -102,10 +102,9 @@ class IProgressionDesc
 public:
 	inline const LevelInfo_t& GetLevelForRating(unsigned nExperience) const
 	{
-		auto pProgressionDesc = const_cast<IProgressionDesc*>(this);
-		auto IProgressionDesc_GetLevelForRating = reinterpret_cast<const LevelInfo_t&(*)(void*, unsigned)>(U::Memory.GetVFunc(pProgressionDesc, 2));
-		return IProgressionDesc_GetLevelForRating(pProgressionDesc, nExperience);
+		return U::Memory.CallVirtual<2, const LevelInfo_t&>(const_cast<IProgressionDesc*>(this), nExperience);
 	}
+
 	inline const LevelInfo_t& GetLevelByNumber(unsigned nNumber) const
 	{
 		return S::IProgressionDesc_GetLevelByNumber.Call<LevelInfo_t&>(this, nNumber);

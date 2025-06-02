@@ -21,10 +21,8 @@ void CNoSpreadHitscan::Reset()
 
 bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bCreateMove)
 {
-	if (G::PrimaryWeaponType != EWeaponType::HITSCAN)
-		return false;
-
-	if ((bCreateMove ? pWeapon->GetWeaponSpread() : S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(pWeapon)) <= 0.f)
+	if (G::PrimaryWeaponType != EWeaponType::HITSCAN
+		|| (bCreateMove ? pWeapon->GetWeaponSpread() : S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(pWeapon)) <= 0.f)
 		return false;
 
 	return bCreateMove ? G::Attacking == 1 : true;

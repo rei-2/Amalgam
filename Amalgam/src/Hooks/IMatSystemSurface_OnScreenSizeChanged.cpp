@@ -2,7 +2,7 @@
 
 #include "../Features/Visuals/Materials/Materials.h"
 
-MAKE_HOOK(IMatSystemSurface_OnScreenSizeChanged, U::Memory.GetVFunc(I::MatSystemSurface, 111), void,
+MAKE_HOOK(IMatSystemSurface_OnScreenSizeChanged, U::Memory.GetVirtual(I::MatSystemSurface, 111), void,
 	void* rcx, int nOldWidth, int nOldHeight)
 {
 #ifdef DEBUG_HOOKS

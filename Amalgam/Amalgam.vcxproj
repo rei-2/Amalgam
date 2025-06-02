@@ -964,7 +964,8 @@
     <ClCompile Include="src\Hooks\CBaseAnimating_UpdateClientSideAnimation.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_BaseInterpolatePart1.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_EstimateAbsVelocity.cpp" />
-    <ClCompile Include="src\Hooks\CBaseEntity_FireBullets.cpp" />
+    <ClCompile Include="src\Hooks\CTFRocketLauncher_CheckReloadMisfire.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayer_FireBullet.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_ResetLatched.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_SetAbsVelocity.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_WorldSpaceCenter.cpp" />
@@ -1058,6 +1059,13 @@
     <ClCompile Include="src\Hooks\R_DrawSkyBox.cpp" />
     <ClCompile Include="src\Hooks\TF_IsHolidayActive.cpp" />
     <ClCompile Include="src\Hooks\VGuiMenuBuilder_AddMenuItem.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CBaseAnimating.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CBaseCombatCharacter.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CBaseEntity.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CBaseObject.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CBasePlayer.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CBaseProjectile.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Main\CTFPlayer.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CTFWeaponBase.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\INetMessage.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\KeyValues.cpp" />
@@ -1369,7 +1377,6 @@
     <ClInclude Include="src\SDK\Definitions\Main\CBasePlayer.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CBaseProjectile.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CEconDefinition.h" />
-    <ClInclude Include="src\SDK\Definitions\Main\CHalloweenPickup.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CMultiPlayerAnimState.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CTFPlayer.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CTFPlayerResource.h" />
@@ -1402,7 +1409,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\ClientClass.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CommonMacros.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\ConVar.h" />
-    <ClInclude Include="src\SDK\Definitions\Misc\CPlayerResource.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\CPlayerResource.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\Cursor.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CViewSetup.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\Datamap.h" />

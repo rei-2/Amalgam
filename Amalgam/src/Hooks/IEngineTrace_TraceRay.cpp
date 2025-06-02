@@ -1,7 +1,7 @@
 #include "../SDK/SDK.h"
 
 #ifdef DEBUG_TRACES
-MAKE_HOOK(IEngineTrace_TraceRay, U::Memory.GetVFunc(I::EngineTrace, 4), void,
+MAKE_HOOK(IEngineTrace_TraceRay, U::Memory.GetVirtual(I::EngineTrace, 4), void,
 	void* rcx, const Ray_t& ray, unsigned int fMask, ITraceFilter* pTraceFilter, trace_t* pTrace)
 {
 #ifdef DEBUG_HOOKS
