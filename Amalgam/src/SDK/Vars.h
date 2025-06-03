@@ -713,18 +713,19 @@ namespace Vars
 		SUBNAMESPACE_END(ThirdPerson);
 
 		SUBNAMESPACE_BEGIN(Removals)
-			CVar(Scope, VA_LIST("Scope", "Scope removal"), false, VISUAL);
 			CVar(Interpolation, VA_LIST("Interpolation", "Interpolation removal"), false);
+			CVar(NoLerp, VA_LIST("0 lerp", "0 lerp removal"), false);
 			CVar(Disguises, VA_LIST("Disguises", "Disguises removal"), false, VISUAL);
-			CVar(ScreenOverlays, VA_LIST("Screen overlays", "Screen overlays removal"), false, VISUAL);
 			CVar(Taunts, VA_LIST("Taunts", "Taunts removal"), false, VISUAL);
+			CVar(Scope, VA_LIST("Scope", "Scope removal"), false, VISUAL);
+			CVar(PostProcessing, VA_LIST("Post processing", "Post processing removal"), false, VISUAL);
+			CVar(ScreenOverlays, VA_LIST("Screen overlays", "Screen overlays removal"), false, VISUAL);
 			CVar(ScreenEffects, VA_LIST("Screen effects", "Screen effects removal"), false, VISUAL);
 			CVar(ViewPunch, VA_LIST("View punch", "View punch removal"), false, VISUAL);
 			CVar(AngleForcing, VA_LIST("Angle forcing", "Angle forcing removal"), false, VISUAL);
-			CVar(PostProcessing, VA_LIST("Post processing", "Post processing removal"), false, VISUAL);
-			CVar(MOTD, VA_LIST("MOTD", "MOTD removal"), false, VISUAL);
 			CVar(Ragdolls, VA_LIST("Ragdolls", "Ragdoll removal"), false, VISUAL);
 			CVar(Gibs, VA_LIST("Gibs", "Gib removal"), false, VISUAL);
+			CVar(MOTD, VA_LIST("MOTD", "MOTD removal"), false, VISUAL);
 		SUBNAMESPACE_END(Removals);
 
 		SUBNAMESPACE_BEGIN(Effects)

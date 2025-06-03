@@ -12,6 +12,9 @@ MAKE_HOOK(GetClientInterpAmount, S::GetClientInterpAmount(), float,
 		return CALL_ORIGINAL();
 #endif
 
+	if (Vars::Visuals::Removals::NoLerp.Value)
+		return CALL_ORIGINAL();
+
 	static const auto dwDesired1 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call1();
 	static const auto dwDesired2 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call2();
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());

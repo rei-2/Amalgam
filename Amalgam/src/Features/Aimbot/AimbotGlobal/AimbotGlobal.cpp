@@ -259,9 +259,9 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 	return true;
 }
 
-int CAimbotGlobal::GetPriority(int targetIdx)
+int CAimbotGlobal::GetPriority(int iIndex)
 {
-	return F::PlayerUtils.GetPriority(targetIdx);
+	return F::PlayerUtils.GetPriority(iIndex);
 }
 
 bool CAimbotGlobal::ShouldAim()

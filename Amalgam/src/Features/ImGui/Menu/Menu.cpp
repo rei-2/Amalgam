@@ -1205,18 +1205,19 @@ void CMenu::MenuVisuals(int iTab)
 			{
 				if (Section("Removals", 8))
 				{
-					FToggle(Vars::Visuals::Removals::Scope, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Removals::Interpolation, FToggleEnum::Right);
+					FToggle(Vars::Visuals::Removals::Interpolation, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Removals::NoLerp, FToggleEnum::Right);
 					FToggle(Vars::Visuals::Removals::Disguises, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Removals::ScreenOverlays, FToggleEnum::Right);
-					FToggle(Vars::Visuals::Removals::Taunts, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Removals::Taunts, FToggleEnum::Right);
+					FToggle(Vars::Visuals::Removals::Scope, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Removals::PostProcessing, FToggleEnum::Right);
+					FToggle(Vars::Visuals::Removals::ScreenOverlays, FToggleEnum::Left);
 					FToggle(Vars::Visuals::Removals::ScreenEffects, FToggleEnum::Right);
 					FToggle(Vars::Visuals::Removals::ViewPunch, FToggleEnum::Left);
 					FToggle(Vars::Visuals::Removals::AngleForcing, FToggleEnum::Right);
-					FToggle(Vars::Visuals::Removals::PostProcessing, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Removals::MOTD, FToggleEnum::Right);
 					FToggle(Vars::Visuals::Removals::Ragdolls, FToggleEnum::Left);
 					FToggle(Vars::Visuals::Removals::Gibs, FToggleEnum::Right);
+					FToggle(Vars::Visuals::Removals::MOTD, FToggleEnum::Left);
 				} EndSection();
 				if (Section("UI"))
 				{

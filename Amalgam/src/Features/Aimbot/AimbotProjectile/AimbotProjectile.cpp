@@ -1883,6 +1883,14 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			}
 		}
 
+		switch (nWeaponID)
+		{
+		case TF_WEAPON_BAT_WOOD:
+		case TF_WEAPON_BAT_GIFTWRAP:
+		case TF_WEAPON_LUNCHBOX:
+			if (iRealAimType && G::Throwing == 1)
+				G::Attacking = 1;
+		}
 		Aim(pCmd, tTarget.m_vAngleTo);
 		if (G::PSilentAngles)
 		{

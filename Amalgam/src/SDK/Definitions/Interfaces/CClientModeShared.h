@@ -14,6 +14,12 @@ class CBaseHudChat
 public:
 	VIRTUAL_ARGS(ChatPrintf, void, 19, (int pIndex, const char* fmt, ...), this, pIndex, 0, fmt);
 	VIRTUAL_ARGS(StartMessageMode, void, 20, (int iMessageModeType), this, iMessageModeType);
+
+	inline void SetText(const char* text)
+	{
+		if (auto pChatHistory = *reinterpret_cast<void**>(uintptr_t(this) + 688))
+			U::Memory.CallVirtual<239, void>(pChatHistory, text);
+	}
 };
 
 class CClientModeShared : public IClientMode, public CGameEventListener

@@ -32,7 +32,9 @@ static inline Vec3 PredictOrigin(Vec3& vOrigin, Vec3 vVelocity, float flLatency,
 	CTraceFilterWorldAndPropsOnly filter = {};
 
 	SDK::TraceHull(vOrigin, vTo, vMins, vMaxs, nMask, &filter, &trace);
-	//G::SweptStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), vMins, vMaxs, Vec3(), I::GlobalVars->curtime + 60.f, Color_t(255, 255, 255, 10), true);
+#ifdef DEBUG_VACCINATOR
+	G::SweptStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), vMins, vMaxs, Vec3(), I::GlobalVars->curtime + 60.f, Color_t(255, 255, 255, 10), true);
+#endif
 	Vec3 vOrigin2 = vOrigin + (vTo - vOrigin) * trace.fraction;
 	if (trace.DidHit() && flNormal)
 		vOrigin2 += trace.plane.normal * flNormal;
@@ -65,8 +67,10 @@ static inline bool TraceToEntity(CTFPlayer* pPlayer, CBaseEntity* pEntity, Vec3&
 		for (auto& vPoint : vPoints)
 		{
 			SDK::Trace(vPlayerOrigin + vPoint, vEntityOrigin, nMask, &filter, &trace);
-			//if (trace.fraction == 1.f)
-			//	G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Color_t(0, 255, 0, 25), true);
+#ifdef DEBUG_VACCINATOR
+			if (trace.fraction == 1.f)
+				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Color_t(0, 255, 0, 25), true);
+#endif
 			if (trace.fraction == 1.f)
 				return true;
 		}
@@ -74,8 +78,10 @@ static inline bool TraceToEntity(CTFPlayer* pPlayer, CBaseEntity* pEntity, Vec3&
 	else
 	{
 		SDK::Trace(vPlayerOrigin, vEntityOrigin, nMask, &filter, &trace);
-		//if (trace.fraction == 1.f)
-		//	G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Color_t(0, 255, 0, 25), true);
+#ifdef DEBUG_VACCINATOR
+		if (trace.fraction == 1.f)
+			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Color_t(0, 255, 0, 25), true);
+#endif
 		return trace.fraction == 1.f;
 	}
 
@@ -207,7 +213,9 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 			if (bCheater) // may use seed pred +/ crits
 				flDistanceDanger = std::max(flDistanceDanger, bCrits ? 1.f : 0.34f);
 
+#ifdef DEBUG_VACCINATOR
 			//SDK::Output("Hitscan", std::format("{}, {}, {}, {}, {}", flDamage, flSpread, flDamageInLatency, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#endif
 			flBulletDanger += flDamageDanger * flDistanceDanger;
 			break;
 		}
@@ -242,7 +250,9 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 			float flDamageDanger = flDamageInLatency / iPlayerHealth;
 			float flDistanceDanger = Math::RemapVal(flDistance, flRadius, flRadius, 1.f, 0.001f);
 
-			//SDK::Output("Projectile", std::format("{}, {}, {}, {}", flDamage, flDamageInLatency, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#ifdef DEBUG_VACCINATOR
+			SDK::Output("Projectile", std::format("{}, {}, {}, {}", flDamage, flDamageInLatency, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#endif
 			switch (iType)
 			{
 			case MEDIGUN_BULLET_RESIST: flBulletDanger += flDamageDanger * flDistanceDanger; break;
@@ -285,7 +295,9 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 		float flDamageDanger = flDamageInLatency / iPlayerHealth;
 		float flDistanceDanger = Math::RemapVal(flDistance, 1100.f, 3200.f, 1.f, 0.001f);
 
-		//SDK::Output("Sentry", std::format("{}, {}, {}, {}", flDamage, flDamageInLatency, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#ifdef DEBUG_VACCINATOR
+		SDK::Output("Sentry", std::format("{}, {}, {}, {}", flDamage, flDamageInLatency, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#endif
 		flBulletDanger += flDamageDanger * flDistanceDanger;
 	}
 
@@ -462,8 +474,10 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 		float flDamageDanger = flDamage / iPlayerHealth;
 		float flDistanceDanger = Math::RemapVal(pTarget->m_vecOrigin().DistTo(vProjectileOrigin), flRadius, flRadius, 1.f, 0.001f);
 
-		//G::SphereStorage.emplace_back(vProjectileOrigin, flRadius, 36, 36, I::GlobalVars->curtime + 60.f, Color_t(255, 255, 255, 1), Color_t(0, 0, 0, 0), true);
-		//SDK::Output(std::format("Projectile {}", iType).c_str(), std::format("{}, {}, {}", flDamage, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#ifdef DEBUG_VACCINATOR
+		G::SphereStorage.emplace_back(vProjectileOrigin, flRadius, 36, 36, I::GlobalVars->curtime + 60.f, Color_t(255, 255, 255, 1), Color_t(0, 0, 0, 0), true);
+		SDK::Output(std::format("Projectile {}", iType).c_str(), std::format("{}, {}, {}", flDamage, flDamageDanger, flDistanceDanger).c_str(), { 255, 200, 200 }, Vars::Debug::Logging.Value);
+#endif
 		switch (iType)
 		{
 		case MEDIGUN_BULLET_RESIST:
@@ -537,13 +551,18 @@ void CAutoHeal::AutoVaccinator(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUser
 	if (!Vars::Aimbot::Healing::AutoVaccinator.Value || pWeapon->GetMedigunType() != MEDIGUN_RESIST)
 		return;
 
-	//G::LineStorage.clear();
-	//G::SweptStorage.clear();
-	//G::SphereStorage.clear();
+#ifdef DEBUG_VACCINATOR
+	G::LineStorage.clear();
+	G::SweptStorage.clear();
+	G::SphereStorage.clear();
+#endif
 	if (m_iResistType == -1)
 		m_iResistType = pWeapon->GetResistType();
-
+#ifdef DEBUG_VACCINATOR
+	vResistDangers = {
+#else
 	std::vector<std::pair<float, int>> vResistDangers = {
+#endif
 		{ 0.f, MEDIGUN_BULLET_RESIST },
 		{ 0.f, MEDIGUN_BLAST_RESIST },
 		{ 0.f, MEDIGUN_FIRE_RESIST }
@@ -676,7 +695,9 @@ void CAutoHeal::Event(IGameEvent* pEvent, uint32_t uHash)
 		}
 		m_flDamagedTime = 1.f;
 
-		//SDK::Output("Hurt", std::format("{}, {}", m_iDamagedType, m_flDamagedDPS).c_str(), { 255, 100, 100 });
+#ifdef DEBUG_VACCINATOR
+		SDK::Output("Hurt", std::format("{}, {}", m_iDamagedType, m_flDamagedDPS).c_str(), { 255, 100, 100 });
+#endif
 		break;
 	}
 	case FNV1A::Hash32Const("player_spawn"):
@@ -684,7 +705,7 @@ void CAutoHeal::Event(IGameEvent* pEvent, uint32_t uHash)
 	}
 }
 
-/*
+#ifdef DEBUG_VACCINATOR
 void CAutoHeal::Draw(CTFPlayer* pLocal)
 {
 	auto pWeapon = H::Entities.GetWeapon()->As<CWeaponMedigun>();
@@ -700,4 +721,4 @@ void CAutoHeal::Draw(CTFPlayer* pLocal)
 	for (auto& [flDanger, iResist] : vResistDangers)
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("{}: {:.3f}", iResist == MEDIGUN_BULLET_RESIST ? "Bullet" : iResist == MEDIGUN_BLAST_RESIST ? "Blast" : "Fire", flDanger).c_str());
 }
-*/
+#endif

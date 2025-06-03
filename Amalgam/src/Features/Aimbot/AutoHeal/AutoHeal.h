@@ -1,6 +1,8 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
+#define DEBUG_VACCINATOR
+
 class CAutoHeal
 {
 	void ActivateOnVoice(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUserCmd* pCmd);
@@ -19,12 +21,16 @@ class CAutoHeal
 	float m_flDamagedDPS = -1;
 	float m_flDamagedTime = 0.f;
 
-	//std::vector<std::pair<float, int>> vResistDangers = {};
+#ifdef DEBUG_VACCINATOR
+	std::vector<std::pair<float, int>> vResistDangers = {};
+#endif
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void Event(IGameEvent* pEvent, uint32_t uHash);
-	//void Draw(CTFPlayer* pLocal);
+#ifdef DEBUG_VACCINATOR
+	void Draw(CTFPlayer* pLocal);
+#endif
 
 	std::unordered_map<int, bool> m_mMedicCallers = {};
 };

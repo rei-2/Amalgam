@@ -36,8 +36,9 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		return I::ClientState->chokedcommands < m_iGoal;
 	case Vars::Fakelag::FakelagEnum::Adaptive:
 	{
-		const Vec3 vDelta = m_vLastPosition - pLocal->m_vecOrigin();
-		return vDelta.Length2DSqr() < 4096.f;
+		static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
+		const float flDist = powf(sv_lagcompensation_teleport_dist->GetFloat(), 2.f);
+		return (m_vLastPosition - pLocal->m_vecOrigin()).Length2DSqr() < flDist;
 	}
 	}
 

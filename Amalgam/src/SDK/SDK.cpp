@@ -474,14 +474,21 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		case TF_WEAPON_BAT_WOOD:
 		case TF_WEAPON_BAT_GIFTWRAP:
 		{
-			static int iThrowTick = 0;
-			if (iThrowTick + 5 < iTickBase)
-				iThrowTick = 0;
-			if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & IN_ATTACK2 && !iThrowTick)
-				iThrowTick = iTickBase + 11;
-			if (iThrowTick >= iTickBase)
-				G::CanSecondaryAttack = G::Throwing = true;
-			if (iThrowTick && iThrowTick <= iTickBase)
+			static int iThrowTick = -5;
+			{
+				static int iLastTickBase = iTickBase;
+				if (iTickBase != iLastTickBase)
+					iThrowTick = std::max(iThrowTick - 1, -5);
+				iLastTickBase = iTickBase;
+			}
+
+			if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & IN_ATTACK2 && iThrowTick == -5)
+				iThrowTick = 12;
+			if (iThrowTick > -5)
+				G::Throwing = G::CanSecondaryAttack = true;
+			if (iThrowTick > 1)
+				G::Throwing = 2;
+			if (iThrowTick == 1)
 				return true;
 		}
 		}
@@ -529,15 +536,22 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	case TF_WEAPON_JAR_MILK:
 	case TF_WEAPON_JAR_GAS:
 	{
+		static int iThrowTick = -5;
+		{
+			static int iLastTickBase = iTickBase;
+			if (iTickBase != iLastTickBase)
+				iThrowTick = std::max(iThrowTick - 1, -5);
+			iLastTickBase = iTickBase;
+		}
+
 		const int iAttack = pWeapon->GetWeaponID() == TF_WEAPON_CLEAVER ? IN_ATTACK | IN_ATTACK2 : IN_ATTACK;
-		static int iThrowTick = 0;
-		if (iThrowTick < iTickBase)
-			iThrowTick = 0;
-		if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & iAttack && !iThrowTick)
-			iThrowTick = iTickBase + 11;
-		if (iThrowTick >= iTickBase)
-			G::CanPrimaryAttack = G::Throwing = true;
-		return iThrowTick && iThrowTick <= iTickBase;
+		if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & iAttack && iThrowTick == -5)
+			iThrowTick = 12;
+		if (iThrowTick > -5)
+			G::Throwing = G::CanSecondaryAttack = true;
+		if (iThrowTick > 1)
+			G::Throwing = 2;
+		return iThrowTick == 1;
 	}
 	case TF_WEAPON_GRAPPLINGHOOK:
 	{

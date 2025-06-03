@@ -103,7 +103,7 @@ void CTickshiftHandler::SaveShootAngle(CUserCmd* pCmd, bool bSendPacket)
 
 	if (bSendPacket)
 		m_bShootAngle = false;
-	if (!m_bShootAngle && G::Attacking == 1 && sv_maxusrcmdprocessticks_holdaim->GetBool())
+	else if (!m_bShootAngle && G::Attacking == 1 && sv_maxusrcmdprocessticks_holdaim->GetBool())
 		m_vShootAngle = pCmd->viewangles, m_bShootAngle = true;
 }
 Vec3* CTickshiftHandler::GetShootAngle()

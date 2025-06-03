@@ -105,3 +105,17 @@ PVOID CMemory::FindInterface(const char* szModule, const char* szObject)
 
 	return fnCreateInterface(szObject, nullptr);
 }
+
+std::string CMemory::GetModuleOffset(uintptr_t uAddress)
+{
+	HMODULE hModule;
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, LPCSTR(uAddress), &hModule))
+		return std::format("{:#x}", uAddress);
+
+	uintptr_t uBase = uintptr_t(hModule);
+	char buffer[MAX_PATH];
+	if (!GetModuleBaseName(GetCurrentProcess(), hModule, buffer, sizeof(buffer) / sizeof(char)))
+		return std::format("{:#x}+{:#x}", uBase, uAddress - uBase);
+
+	return std::format("{}+{:#x}", buffer, uAddress - uBase);
+}

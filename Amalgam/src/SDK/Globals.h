@@ -88,7 +88,7 @@ namespace G
 	inline bool CanPrimaryAttack = false;
 	inline bool CanSecondaryAttack = false;
 	inline bool CanHeadshot = false;
-	inline bool Throwing = false;
+	inline int Throwing = false;
 	inline float Lerp = 0.015f;
 
 	inline EWeaponType PrimaryWeaponType = {}, SecondaryWeaponType = {};

@@ -13,8 +13,8 @@
 struct Frame
 {
 	std::string m_sModule = "";
-	uintptr_t m_pBase = 0;
-	uintptr_t m_pAddress = 0;
+	uintptr_t m_uBase = 0;
+	uintptr_t m_uAddress = 0;
 	std::string m_sFile = "";
 	unsigned int m_uLine = 0;
 	std::string m_sName = "";
@@ -43,17 +43,17 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 	{
 		Frame tFrame = {};
 
-		tFrame.m_pAddress = frame.AddrPC.Offset;
+		tFrame.m_uAddress = frame.AddrPC.Offset;
 
 		if (auto hBase = HINSTANCE(SymGetModuleBase64(hProcess, frame.AddrPC.Offset)))
 		{
-			tFrame.m_pBase = uintptr_t(hBase);
+			tFrame.m_uBase = uintptr_t(hBase);
 
 			char buffer[MAX_PATH];
 			if (GetModuleBaseName(hProcess, hBase, buffer, sizeof(buffer) / sizeof(char)))
 				tFrame.m_sModule = buffer;
 			else
-				tFrame.m_sModule = std::format("{:#x}", tFrame.m_pBase);
+				tFrame.m_sModule = std::format("{:#x}", tFrame.m_uBase);
 		}
 
 		{
@@ -121,10 +121,10 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	{
 		for (auto& tFrame : vTrace)
 		{
-			if (tFrame.m_pBase)
-				ssErrorStream << std::format("{}+{:#x}", tFrame.m_sModule, tFrame.m_pAddress - tFrame.m_pBase);
+			if (tFrame.m_uBase)
+				ssErrorStream << std::format("{}+{:#x}", tFrame.m_sModule, tFrame.m_uAddress - tFrame.m_uBase);
 			else
-				ssErrorStream << std::format("{:#x}", tFrame.m_pAddress);
+				ssErrorStream << std::format("{:#x}", tFrame.m_uAddress);
 			if (!tFrame.m_sFile.empty())
 				ssErrorStream << std::format(" ({} L{})", tFrame.m_sFile, tFrame.m_uLine);
 			if (!tFrame.m_sName.empty())

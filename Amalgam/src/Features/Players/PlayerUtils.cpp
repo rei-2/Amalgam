@@ -185,13 +185,11 @@ int CPlayerlistUtils::GetPriority(uint32_t uFriendsID, bool bCache)
 		if (!tTag.m_bLabel)
 			vPriorities.push_back(tTag.m_iPriority);
 	}
+	if (vPriorities.empty())
+		return iDefault;
 
-	if (vPriorities.size())
-	{
-		std::sort(vPriorities.begin(), vPriorities.end(), std::greater<int>());
-		return *vPriorities.begin();
-	}
-	return iDefault;
+	std::sort(vPriorities.begin(), vPriorities.end(), std::greater<int>());
+	return vPriorities.front();
 }
 int CPlayerlistUtils::GetPriority(int iIndex, bool bCache)
 {
@@ -266,10 +264,10 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t uFriendsID, int iM
 				vTags.push_back(_pTag);
 		}
 	}
-	if (!vTags.size())
+	if (vTags.empty())
 		return nullptr;
 
-	std::sort(vTags.begin(), vTags.end(), [&](const auto a, const auto b) -> bool
+	std::sort(vTags.begin(), vTags.end(), [&](const PriorityLabel_t* a, const PriorityLabel_t* b) -> bool
 		{
 			// sort by priority if unequal
 			if (a->m_iPriority != b->m_iPriority)
