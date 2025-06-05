@@ -492,8 +492,8 @@ const std::vector<CBaseEntity*>& CEntities::GetGroup(const EGroupType& Group) { 
 
 float CEntities::GetSimTime(int iIndex) { if (m_mSimTimes.contains(iIndex)) return m_mSimTimes[iIndex]; auto pEntity = I::ClientEntityList->GetClientEntity(iIndex)->As<CTFPlayer>(); if (pEntity) return pEntity->m_flSimulationTime(); return 0.f; }
 float CEntities::GetOldSimTime(int iIndex) { if (m_mOldSimTimes.contains(iIndex)) return m_mOldSimTimes[iIndex]; auto pEntity = I::ClientEntityList->GetClientEntity(iIndex)->As<CTFPlayer>(); if (pEntity) return pEntity->m_flOldSimulationTime(); return 0.f; }
-float CEntities::GetDeltaTime(int iIndex) { return m_mDeltaTimes.contains(iIndex) ? m_mDeltaTimes[iIndex] : 0.f; }
-float CEntities::GetLagTime(int iIndex) { return m_mLagTimes.contains(iIndex) ? m_mLagTimes[iIndex] : 0.f; }
+float CEntities::GetDeltaTime(int iIndex) { return m_mDeltaTimes.contains(iIndex) ? m_mDeltaTimes[iIndex] : TICK_INTERVAL; }
+float CEntities::GetLagTime(int iIndex) { return m_mLagTimes.contains(iIndex) ? m_mLagTimes[iIndex] : TICK_INTERVAL; }
 int CEntities::GetChoke(int iIndex) { return m_mChokes.contains(iIndex) ? m_mChokes[iIndex] : 0; }
 bool CEntities::GetDormancy(int iIndex) { return m_mDormancy.contains(iIndex); }
 matrix3x4* CEntities::GetBones(int iIndex) { return m_mBones[iIndex].first ? m_mBones[iIndex].second : nullptr; }

@@ -22,6 +22,7 @@ class CMisc
 
 	bool m_bPeekPlaced = false;
 	Vec3 m_vPeekReturnPos = {};
+
 	//bool bSteamCleared = false;
 
 public:

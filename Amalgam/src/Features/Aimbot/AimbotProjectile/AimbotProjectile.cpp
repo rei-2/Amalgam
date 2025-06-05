@@ -1689,23 +1689,17 @@ static inline void CancelShot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		break;
 	}
 	case TF_WEAPON_CANNON:
-	{
-		if (auto pSwap = pLocal->GetWeaponFromSlot(SLOT_SECONDARY))
-		{
-			pCmd->weaponselect = pSwap->entindex();
-			iLastTickCancel = pWeapon->entindex();
-		}
-		break;
-	}
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 	{
-		auto pSwap = pLocal->GetWeaponFromSlot(SLOT_PRIMARY);
-		if (pSwap == pWeapon)
-			pSwap = pLocal->GetWeaponFromSlot(SLOT_SECONDARY);
-		if (pSwap)
+		for (int i = 0; i < MAX_WEAPONS; i++)
 		{
+			auto pSwap = pLocal->GetWeaponFromSlot(i);
+			if (!pSwap || pSwap == pWeapon || !pSwap->CanBeSelected())
+				continue;
+
 			pCmd->weaponselect = pSwap->entindex();
 			iLastTickCancel = pWeapon->entindex();
+			break;
 		}
 	}
 	}

@@ -102,8 +102,8 @@ private:
 	bool m_bOldFirstTimePredicted = false;
 	float m_flOldFrametime = 0.f;
 
-	std::unordered_map<int, std::deque<MoveData>> mRecords;
-	std::unordered_map<int, std::deque<float>> mSimTimes;
+	std::unordered_map<int, std::deque<MoveData>> m_mRecords;
+	std::unordered_map<int, std::deque<float>> m_mSimTimes;
 
 public:
 	void Store();

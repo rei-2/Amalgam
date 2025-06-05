@@ -22,5 +22,6 @@ public:
 	NETVAR_OFF(m_bInReload, bool, "CBaseCombatWeapon", "m_flTimeWeaponIdle", 4);
 	NETVAR_OFF(m_bRemoveable, bool, "CBaseCombatWeapon", "m_iState", -12);
 
+	VIRTUAL(CanBeSelected, bool, 233, this);
 	VIRTUAL(GetName, const char*, 333, this);
 };
