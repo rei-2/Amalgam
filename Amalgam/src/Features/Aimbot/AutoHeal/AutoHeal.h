@@ -1,7 +1,7 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
-#define DEBUG_VACCINATOR
+//#define DEBUG_VACCINATOR
 
 class CAutoHeal
 {
