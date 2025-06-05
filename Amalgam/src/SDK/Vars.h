@@ -928,11 +928,14 @@ namespace Vars
 
 	NAMESPACE_BEGIN(Misc)
 		SUBNAMESPACE_BEGIN(Movement)
-			CVarEnum(AutoStrafe, "Auto strafe", 0, NONE, nullptr,
-				VA_LIST("Off", "Legit", "Directional"),
-				Off, Legit, Directional);
+		    CVarEnum(AutoStrafe, "Auto strafe", 0, NONE, nullptr,  
+				VA_LIST("Off", "Legit", "Forward", "Directional"),  
+				Off, Legit, Forward, Directional);
+
 			CVar(AutoStrafeTurnScale, "Auto strafe turn scale", 0.5f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
 			CVar(AutoStrafeMaxDelta, "Auto strafe max delta", 180.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f, 5.f);
+			CVar(AutoDuck, "Auto duck", false);
+			CVar(AutoDuckHeight, "Auto duck height", 4.f, SLIDER_CLAMP | SLIDER_PRECISION, 1.0f, 10.0f, 1.0f);
 			CVar(Bunnyhop, "Bunnyhop", false);
 			CVar(EdgeJump, "Edge jump", false);
 			CVar(AutoJumpbug, "Auto jumpbug", false);
