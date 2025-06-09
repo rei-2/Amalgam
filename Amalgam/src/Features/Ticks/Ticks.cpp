@@ -5,6 +5,16 @@
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 #include "../Backtrack/Backtrack.h"
 
+static Color_t BlendColors(const Color_t& a, const Color_t& b, float ratio) // Manually blend colors for Draw
+{
+    Color_t result;
+    result.r = static_cast<byte>(a.r * (1.0f - ratio) + b.r * ratio);
+    result.g = static_cast<byte>(a.g * (1.0f - ratio) + b.g * ratio);
+    result.b = static_cast<byte>(a.b * (1.0f - ratio) + b.b * ratio);
+    result.a = static_cast<byte>(a.a * (1.0f - ratio) + b.a * ratio);
+    return result;
+}
+
 void CTickshiftHandler::Reset()
 {
 	m_bSpeedhack = m_bDoubletap = m_bRecharge = m_bWarp = false;
@@ -404,29 +414,66 @@ void CTickshiftHandler::Draw(CTFPlayer* pLocal)
 
 	const DragBox_t dtPos = Vars::Menu::TicksDisplay.Value;
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
+	const int iRounding = H::Draw.Scale(3);
+	const int iBottomPadding = H::Draw.Scale(4, Scale_Round);
+	const int iBarRounding = std::max(1, iRounding / 2);
 
-	if (!m_bSpeedhack)
-	{
-		int iChoke = std::max(I::ClientState->chokedcommands - (F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0), 0);
-		int iTicks = std::clamp(m_iShiftedTicks + iChoke, 0, m_iMaxShift);
-		float flRatio = float(iTicks) / m_iMaxShift;
-		int iSizeX = H::Draw.Scale(100, Scale_Round), iSizeY = H::Draw.Scale(12, Scale_Round);
-		int iPosX = dtPos.x - iSizeX / 2, iPosY = dtPos.y + fFont.m_nTall + H::Draw.Scale(4) + 1;
+	int w = H::Draw.Scale(150, Scale_Round);
+	int h = H::Draw.Scale(24, Scale_Round) + iBottomPadding;
+	int x = dtPos.x - w / 2;
+	int y = dtPos.y;
+	int barHeight = H::Draw.Scale(3, Scale_Round); 
+	int barY = y + h - barHeight - iBottomPadding;
+	int totalBarWidth = w - 2 * iRounding;
 
-		H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("Ticks {} / {}", iTicks, m_iMaxShift).c_str());
-		if (m_iWait)
-			H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + fFont.m_nTall + H::Draw.Scale(18, Scale_Round) + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, "Not Ready");
+	H::Draw.FillRoundRect(x, y, w, h, iRounding, Vars::Menu::Theme::Background.Value);
 
-		H::Draw.LineRoundRect(iPosX, iPosY, iSizeX, iSizeY, H::Draw.Scale(3, Scale_Round), Vars::Menu::Theme::Accent.Value, 16);
-		if (flRatio)
-		{
-			iSizeX -= H::Draw.Scale(2, Scale_Ceil) * 2, iSizeY -= H::Draw.Scale(2, Scale_Ceil) * 2;
-			iPosX += H::Draw.Scale(2, Scale_Round), iPosY += H::Draw.Scale(2, Scale_Round);
-			H::Draw.StartClipping(iPosX, iPosY, iSizeX * flRatio, iSizeY);
-			H::Draw.FillRoundRect(iPosX, iPosY, iSizeX, iSizeY, H::Draw.Scale(3, Scale_Round), Vars::Menu::Theme::Accent.Value, 16);
-			H::Draw.EndClipping();
+	std::string statusText;
+	Color_t textColor;
+	Color_t barColor = Vars::Menu::Theme::Accent.Value;
+	Color_t dimmedAccent = BlendColors(Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, 0.5f);
+	Color_t barBackgroundColor = dimmedAccent;
+
+	int iChoke = std::max(I::ClientState->chokedcommands - (F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0), 0);
+	int iTicks = std::clamp(F::Ticks.m_iShiftedTicks + iChoke, 0, F::Ticks.m_iMaxShift);
+
+	H::Draw.FillRoundRect(x + iRounding, barY, totalBarWidth, barHeight, iBarRounding, barBackgroundColor);
+
+	static float flAnimatedRatio = 0.0f;
+	float flTargetRatio = F::Ticks.m_iMaxShift > 0 ? float(iTicks) / F::Ticks.m_iMaxShift : 0.0f;
+	flAnimatedRatio = flAnimatedRatio + (flTargetRatio - flAnimatedRatio) * std::min(I::GlobalVars->frametime * 11.3f, 1.0f);
+	int barWidth = static_cast<int>(totalBarWidth * flAnimatedRatio);
+
+	if (barWidth > 0)
+		H::Draw.FillRoundRect(x + iRounding, barY, barWidth, barHeight, iBarRounding, barColor); 
+
+
+	if (iTicks >= F::Ticks.m_iMaxShift) { // Use m_iMaxShift for comparison
+		if (F::Ticks.m_iWait) {
+			statusText = "Wait";
+			textColor = Vars::Colors::IndicatorTextMid.Value;
+		} else {
+			statusText = "Ready";
+			textColor = Vars::Colors::IndicatorTextGood.Value;
 		}
+	} else {
+		statusText = "Not ready";
+		textColor = Vars::Colors::IndicatorTextBad.Value;
 	}
-	else
-		H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("Speedhack x{}", Vars::Speedhack::Amount.Value).c_str());
+
+	statusText = std::format("{} ({}/{})", statusText, iTicks, F::Ticks.m_iMaxShift);
+
+
+	Color_t borderColor = BlendColors(Vars::Menu::Theme::Background.Value, Color_t(255, 255, 255, 50), 0.1f);
+	H::Draw.LineRoundRect(x, y, w, h, iRounding, borderColor);
+
+	H::Draw.StringOutlined(
+		fFont,
+		x + H::Draw.Scale(4, Scale_Round),
+		y + (h - barHeight - iBottomPadding) / 2,
+		textColor,
+		Vars::Menu::Theme::Background.Value.Alpha(150),
+		ALIGN_LEFT,
+		statusText.c_str()
+	);
 }
