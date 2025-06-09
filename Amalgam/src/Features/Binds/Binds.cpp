@@ -94,7 +94,10 @@ static inline void GetBinds(int iParent, CTFPlayer* pLocal, CTFWeaponBase* pWeap
 		}
 		case BindEnum::WeaponType:
 		{
-			tBind.m_bActive = tBind.m_iInfo + 1 == int(SDK::GetWeaponType(pWeapon));
+			if (tBind.m_iInfo != BindEnum::WeaponTypeEnum::Throwable)
+				tBind.m_bActive = tBind.m_iInfo + 1 == int(SDK::GetWeaponType(pWeapon));
+			else
+				tBind.m_bActive = G::Throwing;
 			if (tBind.m_bNot)
 				tBind.m_bActive = !tBind.m_bActive;
 			break;

@@ -548,7 +548,7 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		if (G::CanPrimaryAttack && pWeapon->HasPrimaryAmmoForShot() && pCmd->buttons & iAttack && iThrowTick == -5)
 			iThrowTick = 12;
 		if (iThrowTick > -5)
-			G::Throwing = G::CanSecondaryAttack = true;
+			G::Throwing = G::CanPrimaryAttack = true;
 		if (iThrowTick > 1)
 			G::Throwing = 2;
 		return iThrowTick == 1;

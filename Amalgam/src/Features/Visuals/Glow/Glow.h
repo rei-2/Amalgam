@@ -15,7 +15,7 @@ class CGlow
 	void SetupMid(IMatRenderContext* pRenderContext, int w, int h);
 	void SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* m_pMatBlurX, IMaterial* m_pMatBlurY, IMaterial* m_pMatHaloAddToScreen, int w, int h);
 
-	void DrawModel(CBaseEntity* pEntity, bool bModel = false);
+	void DrawModel(CBaseEntity* pEntity);
 
 	void RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 	void RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);

@@ -604,6 +604,7 @@ void CAutoHeal::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	{
 		m_mMedicCallers.clear();
 		m_iResistType = -1;
+		m_flDamagedTime = 0.f;
 		return;
 	}
 

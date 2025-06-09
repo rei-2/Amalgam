@@ -299,7 +299,7 @@ void CGlow::SetupEnd(Glow_t glow, IMatRenderContext* pRenderContext, IMaterial* 
 	I::ModelRender->ForcedMaterialOverride(nullptr);
 }
 
-void CGlow::DrawModel(CBaseEntity* pEntity, bool bModel)
+void CGlow::DrawModel(CBaseEntity* pEntity)
 {
 	m_bRendering = true;
 
@@ -393,7 +393,7 @@ void CGlow::RenderMain()
 		for (auto& tInfo : vInfo)
 		{
 			m_bExtra = tInfo.m_bExtra;
-			DrawModel(tInfo.m_pEntity, true);
+			DrawModel(tInfo.m_pEntity);
 			m_bExtra = false;
 		}
 
@@ -403,7 +403,7 @@ void CGlow::RenderMain()
 			I::RenderView->SetColorModulation(tInfo.m_cColor.r / 255.f, tInfo.m_cColor.g / 255.f, tInfo.m_cColor.b / 255.f);
 			I::RenderView->SetBlend(tInfo.m_cColor.a / 255.f);
 			m_bExtra = tInfo.m_bExtra;
-			DrawModel(tInfo.m_pEntity, false);
+			DrawModel(tInfo.m_pEntity);
 			m_bExtra = false;
 		}
 
