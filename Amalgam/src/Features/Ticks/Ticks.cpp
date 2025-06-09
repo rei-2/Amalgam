@@ -5,7 +5,8 @@
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 #include "../Backtrack/Backtrack.h"
 
-static Color_t BlendColors(const Color_t& a, const Color_t& b, float ratio) // Manually blend colors for Draw
+// this is different from crithack for some reason, im not changing this since it works anyways
+static Color_t BlendColors(const Color_t& a, const Color_t& b, float ratio) 
 {
     Color_t result;
     result.r = static_cast<byte>(a.r * (1.0f - ratio) + b.r * ratio);
