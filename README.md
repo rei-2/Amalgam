@@ -30,6 +30,8 @@
 ###### If nightly.link is down, you can still download through [github](https://github.com/rei-2/Amalgam/actions) with an account.
 
 # Amalgam
+![A screenshot of the Indicators](https://github.com/user-attachments/assets/aee217fb-aa79-42e7-8fb4-b534a1570880)
+
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/rei-2/Amalgam)](/../../stargazers)
 [![Discord](https://img.shields.io/discord/1227898008373297223?logo=Discord&label=discord)](https://discord.gg/RbP9DfkUhe)
