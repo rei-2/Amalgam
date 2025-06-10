@@ -2889,7 +2889,7 @@ void CMenu::MenuSettings(int iTab)
 				{
 				case BindEnum::Key: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Behavior", &tBind.m_iInfo, { "Hold", "Toggle", "Double click" }, {}, FDropdownEnum::Right); break;
 				case BindEnum::Class: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 8); FDropdown("Class", &tBind.m_iInfo, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdownEnum::Right); break;
-				case BindEnum::WeaponType: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 2); FDropdown("Weapon type", &tBind.m_iInfo, { "Hitscan", "Projectile", "Melee" }, {}, FDropdownEnum::Right); break;
+				case BindEnum::WeaponType: tBind.m_iInfo = std::clamp(tBind.m_iInfo, 0, 3); FDropdown("Weapon type", &tBind.m_iInfo, { "Hitscan", "Projectile", "Melee", "Throwable" }, {}, FDropdownEnum::Right); break;
 				case BindEnum::ItemSlot: tBind.m_iInfo = std::max(tBind.m_iInfo, 0); FDropdown("Item slot", &tBind.m_iInfo, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdownEnum::Right); break;
 				}
 			} EndChild();
@@ -2982,6 +2982,7 @@ void CMenu::MenuSettings(int iTab)
 							case BindEnum::WeaponTypeEnum::Hitscan: { sInfo = "hitscan"; break; }
 							case BindEnum::WeaponTypeEnum::Projectile: { sInfo = "projectile"; break; }
 							case BindEnum::WeaponTypeEnum::Melee: { sInfo = "melee"; break; }
+							case BindEnum::WeaponTypeEnum::Throwable: { sInfo = "throwable"; break; }
 							}
 							break;
 						case BindEnum::ItemSlot:
@@ -3880,6 +3881,7 @@ void CMenu::DrawBinds()
 						case BindEnum::WeaponTypeEnum::Hitscan: { sInfo = "hitscan"; break; }
 						case BindEnum::WeaponTypeEnum::Projectile: { sInfo = "projectile"; break; }
 						case BindEnum::WeaponTypeEnum::Melee: { sInfo = "melee"; break; }
+						case BindEnum::WeaponTypeEnum::Throwable: { sInfo = "throwable"; break; }
 						}
 						break;
 					case BindEnum::ItemSlot:

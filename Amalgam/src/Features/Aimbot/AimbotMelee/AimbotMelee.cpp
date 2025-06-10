@@ -422,11 +422,13 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 
 void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	static int iAimType = 0;
-	if (pWeapon->m_flSmackTime() < 0.f)
-		iAimType = Vars::Aimbot::General::AimType.Value;
-	else if (iAimType)
-		Vars::Aimbot::General::AimType.Value = iAimType;
+	static int iStaticAimType = Vars::Aimbot::General::AimType.Value;
+	const int iLastAimType = iStaticAimType;
+	const int iRealAimType = Vars::Aimbot::General::AimType.Value;
+
+	if (pWeapon->m_flSmackTime() > 0.f && !iRealAimType && iLastAimType)
+		Vars::Aimbot::General::AimType.Value = iLastAimType;
+	iStaticAimType = Vars::Aimbot::General::AimType.Value;
 
 	if (F::AimbotGlobal.ShouldHoldAttack(pWeapon))
 		pCmd->buttons |= IN_ATTACK;

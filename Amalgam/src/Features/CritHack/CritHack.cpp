@@ -672,7 +672,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		textColor = Vars::Colors::IndicatorTextMisc.Value;
 	}
 	else if (m_bCritBanned && iSlot != SLOT_MELEE) {
-		statusText = "Crit Banned";
+		statusText = std::format("Crit Banned ({:.0f})", m_flDamageTilFlip);
 		textColor = Vars::Colors::IndicatorTextBad.Value;
 		bDimBar = true;
 	}
@@ -739,7 +739,6 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		ALIGN_LEFT,
 		statusText.c_str()
 	);
-	// Removed damage desync, i should put it in debug info, whatever it'll do
 	if (Vars::Debug::Info.Value)
 	{
 		H::Draw.StringOutlined(fFont, x, y + h + H::Draw.Scale(4, Scale_Round), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, 

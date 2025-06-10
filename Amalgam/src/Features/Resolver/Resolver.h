@@ -15,6 +15,13 @@ struct ResolveData
 	bool m_bAutoSetPitch = true;
 	bool m_bFirstOOBPitch = false;
 	bool m_bInversePitch = false;
+	
+	int m_iHitCount = 0;
+	int m_iMissCount = 0;
+	float m_flLastYawAttempt = 0.f;
+	float m_flLastSuccessfulYaw = 0.f;
+	float m_flLastPitchAttempt = 0.f;
+	float m_flLastSuccessfulPitch = 0.f;
 };
 
 class CResolver

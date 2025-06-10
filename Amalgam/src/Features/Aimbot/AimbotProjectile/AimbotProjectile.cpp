@@ -898,9 +898,14 @@ static inline void SolveProjectileSpeed(CTFWeaponBase* pWeapon, const Vec3& vLoc
 		case Demoman_s_TheQuickiebombLauncher:
 		case Demoman_s_TheScottishResistance: flDrag = Math::RemapVal(flVelocity, 922.f, k_flMaxVelocity, 0.085f, 0.190f); break; // 0.085 low, 0.190 capped, 0.230 v2400
 		case Scout_s_TheFlyingGuillotine:
-		case Scout_s_TheFlyingGuillotineG: flDrag = 0.31f; break;
+		case Scout_s_TheFlyingGuillotineG: flDrag = 0.310f; break;
 		case Scout_t_TheSandman: flDrag = 0.180f; break;
 		case Scout_t_TheWrapAssassin: flDrag = 0.285f; break;
+		case Scout_s_MadMilk:
+		case Scout_s_MutatedMilk:
+		case Sniper_s_Jarate:
+		case Sniper_s_FestiveJarate:
+		case Sniper_s_TheSelfAwareBeautyMark: flDrag = 0.057f; break;
 		}
 	}
 
@@ -1684,23 +1689,17 @@ static inline void CancelShot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		break;
 	}
 	case TF_WEAPON_CANNON:
-	{
-		if (auto pSwap = pLocal->GetWeaponFromSlot(SLOT_SECONDARY))
-		{
-			pCmd->weaponselect = pSwap->entindex();
-			iLastTickCancel = pWeapon->entindex();
-		}
-		break;
-	}
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 	{
-		auto pSwap = pLocal->GetWeaponFromSlot(SLOT_PRIMARY);
-		if (pSwap == pWeapon)
-			pSwap = pLocal->GetWeaponFromSlot(SLOT_SECONDARY);
-		if (pSwap)
+		for (int i = 0; i < MAX_WEAPONS; i++)
 		{
+			auto pSwap = pLocal->GetWeaponFromSlot(i);
+			if (!pSwap || pSwap == pWeapon || !pSwap->CanBeSelected())
+				continue;
+
 			pCmd->weaponselect = pSwap->entindex();
 			iLastTickCancel = pWeapon->entindex();
+			break;
 		}
 	}
 	}
@@ -1712,22 +1711,21 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 
 	static int iStaticAimType = Vars::Aimbot::General::AimType.Value;
 	const int iLastAimType = iStaticAimType;
-	const int iRealAimType = iStaticAimType = Vars::Aimbot::General::AimType.Value;
+	const int iRealAimType = Vars::Aimbot::General::AimType.Value;
 
 	switch (nWeaponID)
 	{
 	case TF_WEAPON_COMPOUND_BOW:
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 	case TF_WEAPON_CANNON:
-		if (!Vars::Aimbot::General::AutoShoot.Value && !iRealAimType && iLastAimType && G::Attacking)
+		if (!Vars::Aimbot::General::AutoShoot.Value && G::Attacking && !iRealAimType && iLastAimType)
+			Vars::Aimbot::General::AimType.Value = iLastAimType;
+		break;
+	default:
+		if (G::Throwing && !iRealAimType && iLastAimType)
 			Vars::Aimbot::General::AimType.Value = iLastAimType;
 	}
-
-	static int iAimType = 0;
-	if (!G::Throwing)
-		iAimType = Vars::Aimbot::General::AimType.Value;
-	else if (iAimType)
-		Vars::Aimbot::General::AimType.Value = iAimType;
+	iStaticAimType = Vars::Aimbot::General::AimType.Value;
 
 	if (F::AimbotGlobal.ShouldHoldAttack(pWeapon))
 		pCmd->buttons |= IN_ATTACK;
@@ -1883,14 +1881,6 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			}
 		}
 
-		switch (nWeaponID)
-		{
-		case TF_WEAPON_BAT_WOOD:
-		case TF_WEAPON_BAT_GIFTWRAP:
-		case TF_WEAPON_LUNCHBOX:
-			if (iRealAimType && G::Throwing == 1)
-				G::Attacking = 1;
-		}
 		Aim(pCmd, tTarget.m_vAngleTo);
 		if (G::PSilentAngles)
 		{

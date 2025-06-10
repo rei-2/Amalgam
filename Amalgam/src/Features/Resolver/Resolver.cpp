@@ -93,6 +93,8 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 		{
 			auto& tData = m_mResolverData[m_iWaitingForTarget];
 
+			tData.m_iMissCount++;
+
 			float& flYaw = tData.m_flYaw;
 			float& flPitch = tData.m_flPitch;
 			bool bAutoYaw = tData.m_bAutoSetYaw && Vars::Resolver::AutoResolveYawAmount.Value;
@@ -100,20 +102,44 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 
 			if (bAutoYaw)
 			{
-				flYaw = Math::NormalizeAngle(flYaw + Vars::Resolver::AutoResolveYawAmount.Value);
+				if (tData.m_iHitCount > 0 && tData.m_iHitCount > tData.m_iMissCount / 3)
+				{
+					float flTargetYaw = tData.m_flLastSuccessfulYaw;
+					float flDiff = Math::NormalizeAngle(flTargetYaw - flYaw);
+					
+					flYaw = Math::NormalizeAngle(flYaw + (flDiff * 0.5f) + 
+						(Vars::Resolver::AutoResolveYawAmount.Value * 0.25f * (SDK::RandomInt(0, 1) ? 1 : -1)));
+				}
+				else
+				{
+					flYaw = Math::NormalizeAngle(flYaw + Vars::Resolver::AutoResolveYawAmount.Value);
+				}
 
+				tData.m_flLastYawAttempt = flYaw;
 				F::Backtrack.ResolverUpdate(pTarget);
-				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Cycling", "yaw", flYaw);
+				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Adaptive", "yaw", flYaw);
 			}
 
 			if (bAutoPitch
 				&& (!bAutoYaw || fabsf(flYaw) < fabsf(Vars::Resolver::AutoResolveYawAmount.Value / 2))
 				&& fabsf(pTarget->m_angEyeAnglesX()) == 90.f && !m_mSniperDots.contains(m_iWaitingForTarget))
 			{
-				flPitch = Math::NormalizeAngle(flPitch + Vars::Resolver::AutoResolvePitchAmount.Value, 180.f);
+				if (tData.m_iHitCount > 0 && tData.m_iHitCount > tData.m_iMissCount / 3)
+				{
+					float flTargetPitch = tData.m_flLastSuccessfulPitch;
+					float flDiff = Math::NormalizeAngle(flTargetPitch - flPitch, 180.f);
+					
+					flPitch = Math::NormalizeAngle(flPitch + (flDiff * 0.5f) + 
+						(Vars::Resolver::AutoResolvePitchAmount.Value * 0.25f * (SDK::RandomInt(0, 1) ? 1 : -1)), 180.f);
+				}
+				else
+				{
+					flPitch = Math::NormalizeAngle(flPitch + Vars::Resolver::AutoResolvePitchAmount.Value, 180.f);
+				}
 
+				tData.m_flLastPitchAttempt = flPitch;
 				F::Backtrack.ResolverUpdate(pTarget);
-				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Cycling", "pitch", flPitch);
+				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Adaptive", "pitch", flPitch);
 			}
 
 			m_iWaitingForTarget = -1;
@@ -298,6 +324,15 @@ void CResolver::PlayerHurt(IGameEvent* pEvent)
 
 	if (m_bWaitingForHeadshot && !pEvent->GetBool("crit"))
 		return;
+
+	auto& tData = m_mResolverData[m_iWaitingForTarget];
+	tData.m_iHitCount++;
+	
+	if (tData.m_bYaw)
+		tData.m_flLastSuccessfulYaw = tData.m_flYaw;
+		
+	if (tData.m_bPitch)
+		tData.m_flLastSuccessfulPitch = tData.m_flPitch;
 
 	m_iWaitingForTarget = -1;
 	m_flWaitingForDamage = 0.f;

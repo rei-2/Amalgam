@@ -699,16 +699,16 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 	const int nWeaponID = pWeapon->GetWeaponID();
 
 	static int iStaticAimType = Vars::Aimbot::General::AimType.Value;
-	const int iRealAimType = Vars::Aimbot::General::AimType.Value;
 	const int iLastAimType = iStaticAimType;
-	iStaticAimType = iRealAimType;
+	const int iRealAimType = Vars::Aimbot::General::AimType.Value;
 
 	switch (nWeaponID)
 	{
 	case TF_WEAPON_SNIPERRIFLE_CLASSIC:
-		if (!iRealAimType && iLastAimType && G::Attacking)
+		if (G::Attacking && !iRealAimType && iLastAimType)
 			Vars::Aimbot::General::AimType.Value = iLastAimType;
 	}
+	iStaticAimType = Vars::Aimbot::General::AimType.Value;
 
 	if (F::AimbotGlobal.ShouldHoldAttack(pWeapon))
 		pCmd->buttons |= IN_ATTACK;
