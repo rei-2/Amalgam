@@ -739,7 +739,8 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		ALIGN_LEFT,
 		statusText.c_str()
 	);
-	if (Vars::Debug::Info.Value)
+	// ill reimplement this in some sort of way that
+	/*if (Vars::Debug::Info.Value)
 	{
 		H::Draw.StringOutlined(fFont, x, y + h + H::Draw.Scale(4, Scale_Round), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, 
 			std::format("RangedDamage: {}, CritDamage: {}", m_iRangedDamage, m_iCritDamage).c_str());
@@ -751,5 +752,5 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		y += fFont.m_nTall + H::Draw.Scale(1);
 		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, 
 			std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
-	}
+	}*/
 }
