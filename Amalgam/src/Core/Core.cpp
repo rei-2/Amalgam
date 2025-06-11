@@ -50,7 +50,7 @@ void CCore::AppendFailText(const char* sMessage)
 
 void CCore::LogFailText()
 {
-	ssFailStream << "\nBuilt @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
+	ssFailStream << "\nBuilt with love @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
 	ssFailStream << "Ctrl + C to copy. \n";
 	try
 	{

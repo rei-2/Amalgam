@@ -221,10 +221,10 @@ namespace Vars
 		CVar(Backtrack, VA_LIST("Color", "Backtrack color"), Color_t(255, 0, 0, 0), VISUAL);
 		CVar(FakeAngle, VA_LIST("Color", "Fake angle color"), Color_t(255, 255, 255, 0), VISUAL);
 
-		CVar(IndicatorGood, "Indicator good", Color_t(0, 255, 100, 255), NOSAVE | DEBUGVAR);
-		CVar(IndicatorMid, "Indicator mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
-		CVar(IndicatorBad, "Indicator bad", Color_t(255, 0, 0, 255), NOSAVE | DEBUGVAR);
-		CVar(IndicatorMisc, "Indicator misc", Color_t(75, 175, 255, 255), NOSAVE | DEBUGVAR);
+		CVar(IndicatorGood, "Healthbar good", Color_t(0, 255, 100, 255), NOSAVE | DEBUGVAR);
+		CVar(IndicatorMid, "Healthbar mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
+		CVar(IndicatorBad, "Healthbar bad", Color_t(255, 0, 0, 255), NOSAVE | DEBUGVAR);
+		CVar(IndicatorMisc, "Ubered HP", Color_t(75, 175, 255, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextGood, "Indicator text good", Color_t(150, 255, 150, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextMid, "Indicator text mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextBad, "Indicator text bad", Color_t(255, 150, 150, 255), NOSAVE | DEBUGVAR);
@@ -749,6 +749,15 @@ namespace Vars
 			CVar(DrawDamageNumbersThroughWalls, "Draw damage numbers through walls", false, VISUAL);
 		SUBNAMESPACE_END(Tracers);
 
+		/* SUBNAMESPACE_BEGIN(Indicators) // concept
+			CVarEnum(DTStyles, "DT styles", 0, VISUAL, nullptr,
+				VA_LIST("Default", "RijiN", "Ateris"),
+				Default, Rijin, Ateris);
+			CVarEnum(CritStyles, "Crit styles", 0, VISUAL, nullptr,
+				VA_LIST("Default", "RijiN", "Ateris"),
+				Default, Rijin, Ateris);
+		SUBNAMESPACE_END(Indicators); */
+
 		SUBNAMESPACE_BEGIN(UI)
 			CVarEnum(StreamerMode, "Streamer mode", 0, VISUAL, nullptr,
 				VA_LIST("Off", "Local", "Friends", "Party", "All"),
@@ -789,7 +798,7 @@ namespace Vars
 				"Default", "Dev", "Camo", "Black", "White", "Flat");
 			CVarEnum(PrecipitationType, "Precipitation", 0, VISUAL, nullptr,
 				VA_LIST("Off", "Rain", "Snow"),
-				Off, Rain = 1, Snow = 2, Ash = 3, Snowfall = 4);
+				Off, Rain = 1, Snow = 2);
 			CVar(NearPropFade, "Near prop fade", false, VISUAL);
 			CVar(NoPropFade, "No prop fade", false, VISUAL);
 		SUBNAMESPACE_END(World);

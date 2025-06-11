@@ -1152,6 +1152,11 @@ void CMenu::MenuVisuals(int iTab)
 					FSlider(Vars::Visuals::Thirdperson::Right);
 					FSlider(Vars::Visuals::Thirdperson::Up);
 				} EndSection();
+				/*	if (Section("Indicator styles")) // a concept, im too lazy to finish this. 
+				{
+					FDropdown(Vars::Visuals::Indicators::DTStyles, FDropdownEnum::Left);
+					FDropdown(Vars::Visuals::Indicators::CritStyles, FDropdownEnum::Right);
+				} EndSection(); */
 				if (Vars::Debug::Options.Value)
 				{
 					if (Section("##Debug"))
@@ -1249,7 +1254,6 @@ void CMenu::MenuVisuals(int iTab)
 						FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
 						FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
 						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left);
- 
 						PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
 					{
 						FColorPicker(Vars::Colors::WorldModulation, 0, FColorPickerEnum::Left);
@@ -2730,7 +2734,7 @@ void CMenu::MenuSettings(int iTab)
 			} EndSection();
 			SetCursorPosX(GetCursorPosX() + 8);
 			PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-			FText("Built @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__);
+			FText("Built with love @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__);
 
 			PopStyleColor();
 

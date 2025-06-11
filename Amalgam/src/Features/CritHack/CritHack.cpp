@@ -683,7 +683,8 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 				textColor = Vars::Colors::IndicatorTextGood.Value;
 			}
 			else {
-				statusText = "Wait";
+				float flRemainingTime = pWeapon->m_flLastRapidFireCritCheckTime() + 1.f - flTickBase;
+				statusText = std::format("Wait ({:.1f}s)", flRemainingTime);
 				textColor = Vars::Menu::Theme::Active.Value;
 				bDimBar = true;
 			}
@@ -721,7 +722,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 	int barWidth = static_cast<int>((w - 2 * iRounding) * flAnimatedRatio);
 	int totalBarWidth = w - 2 * iRounding;
 
-	Color_t dimmedAccent = BlendColors(Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, bDimBar ? 0.7f : 0.5f);
+	Color_t dimmedAccent = BlendColors(Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, 0.5f); 
 	H::Draw.FillRoundRect(x + iRounding, barY, totalBarWidth, barHeight, iBarRounding, dimmedAccent);
 
 	if (barWidth > 0 && !bDimBar)
