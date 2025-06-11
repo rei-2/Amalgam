@@ -1248,7 +1248,7 @@ void CMenu::MenuVisuals(int iTab)
 						FDropdown(Vars::Visuals::World::Modulations);
 						FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
 						FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
-						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left); // all i needed to do was add this to fix the entire code.. RETARD
+						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left);
  
 						PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
 					{

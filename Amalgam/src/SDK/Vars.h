@@ -788,7 +788,7 @@ namespace Vars
 			CVarValues(WorldTexture, "World texture", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,
 				"Default", "Dev", "Camo", "Black", "White", "Flat");
 			CVarEnum(PrecipitationType, "Precipitation", 0, VISUAL, nullptr,
-				VA_LIST("Off", "Rain", "Snow", "Ash", "Snowfall"),
+				VA_LIST("Off", "Rain", "Snow"),
 				Off, Rain = 1, Snow = 2, Ash = 3, Snowfall = 4);
 			CVar(NearPropFade, "Near prop fade", false, VISUAL);
 			CVar(NoPropFade, "No prop fade", false, VISUAL);
