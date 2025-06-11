@@ -30,7 +30,8 @@
 ###### If nightly.link is down, you can still download through [github](https://github.com/rei-2/Amalgam/actions) with an account.
 
 # Amalgam
-![A screenshot of the Indicators](https://github.com/user-attachments/assets/aee217fb-aa79-42e7-8fb4-b534a1570880)
+![Team Fortress 2 - Direct3D 9 - 64 Bit 6_11_2025 5_07_07 PM](https://github.com/user-attachments/assets/a288ff7d-ce37-47b8-b22f-ed51aa8a408a)
+
 
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/seanntf/Amalgam)](/../../stargazers)
