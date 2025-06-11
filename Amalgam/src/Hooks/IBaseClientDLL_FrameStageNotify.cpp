@@ -93,6 +93,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		F::Spectate.NetUpdateEnd(pLocal);
 
 		F::Visuals.Modulate();
+		F::Visuals.UpdatePrecipitation(); 
 		break;
 	}
 	case FRAME_RENDER_START:

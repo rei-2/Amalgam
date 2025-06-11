@@ -1243,12 +1243,14 @@ void CMenu::MenuVisuals(int iTab)
 					FToggle(Vars::Visuals::UI::ScoreboardColors, FToggleEnum::Left);
 					FToggle(Vars::Visuals::UI::CleanScreenshots, FToggleEnum::Right);
 				} EndSection();
-				if (Section("World"))
-				{
-					FDropdown(Vars::Visuals::World::Modulations);
-					FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
-					FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
-					PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
+					if (Section("World"))
+					{
+						FDropdown(Vars::Visuals::World::Modulations);
+						FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
+						FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
+						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left); // all i needed to do was add this to fix the entire code.. RETARD
+ 
+						PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
 					{
 						FColorPicker(Vars::Colors::WorldModulation, 0, FColorPickerEnum::Left);
 					}

@@ -787,6 +787,9 @@ namespace Vars
 				VA_LIST("Off", "sky_tf2_04", "sky_upward", "sky_dustbowl_01", "sky_goldrush_01", "sky_granary_01", "sky_well_01", "sky_gravel_01", "sky_badlands_01", "sky_hydro_01", "sky_night_01", "sky_nightfall_01", "sky_trainyard_01", "sky_stormfront_01", "sky_morningsnow_01", "sky_alpinestorm_01", "sky_harvest_01", "sky_harvest_night_01", "sky_halloween", "sky_halloween_night_01", "sky_halloween_night2014_01", "sky_island_01", "sky_rainbow_01"));
 			CVarValues(WorldTexture, "World texture", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,
 				"Default", "Dev", "Camo", "Black", "White", "Flat");
+			CVarEnum(PrecipitationType, "Precipitation", 0, VISUAL, nullptr,
+				VA_LIST("Off", "Rain", "Snow", "Ash", "Snowfall"),
+				Off, Rain = 1, Snow = 2, Ash = 3, Snowfall = 4);
 			CVar(NearPropFade, "Near prop fade", false, VISUAL);
 			CVar(NoPropFade, "No prop fade", false, VISUAL);
 		SUBNAMESPACE_END(World);

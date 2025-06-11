@@ -25,6 +25,21 @@ private:
 	std::vector<Sightline_t> m_vSightLines;
 	std::vector<PickupData> m_vPickups;
 
+	class CPrecipitation // thanks .pointone_ for the robux
+    {
+    private:
+        int m_iRainEntityIndex = -1;
+        ClientClass* GetPrecipitationClass();
+
+    public:
+        void Run();
+        void Cleanup();
+        bool IsRaining() const { return m_iRainEntityIndex != -1; }
+        friend class CVisuals; 
+    };
+
+    CPrecipitation m_Precipitation;
+
 public:
 	void Event(IGameEvent* pEvent, uint32_t uHash);
 	void Store(CTFPlayer* pLocal);
@@ -45,6 +60,7 @@ public:
 	void OverrideWorldTextures();
 	void Modulate();
 	void RestoreWorldModulation();
+	void UpdatePrecipitation();
 
 	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 };
