@@ -518,6 +518,13 @@ void CMenu::MenuAimbot(int iTab)
 
 					FSlider(Vars::Visuals::Hitbox::DrawDuration);
 				} EndSection();
+				if (Section("Hitmarker", 8))
+				{
+					FToggle(Vars::Visuals::Hitmarker::HitMarker, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Hitmarker::HitMarkerDrawOnTarget, FToggleEnum::Right);
+					// FToggle(Vars::Visuals::Hitmarker::HitMarkerDamageText); // shit was breaking + we have damage logs
+					FSlider(Vars::Visuals::Hitmarker::HitMarkerDuration);
+				} EndSection();		
 			}
 			/* Column 2 */
 			TableNextColumn();
@@ -1180,13 +1187,6 @@ void CMenu::MenuVisuals(int iTab)
 					FToggle(Vars::Visuals::Effects::DrawIconsThroughWalls);
 					FToggle(Vars::Visuals::Effects::DrawDamageNumbersThroughWalls);
 				} EndSection();
-				if (Section("Hitmarker", 8))
-				{
-					FToggle(Vars::Visuals::Hitmarker::HitMarker, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Hitmarker::HitMarkerDrawOnTarget, FToggleEnum::Right);
-					FSlider(Vars::Visuals::Hitmarker::HitMarkerDuration);
-					FToggle(Vars::Visuals::Hitmarker::HitMarkerDamageText);
-				} EndSection();
 				if (Section("Viewmodel", 8))
 				{
 					FToggle(Vars::Visuals::Viewmodel::CrosshairAim, FToggleEnum::Left);
@@ -1258,7 +1258,7 @@ void CMenu::MenuVisuals(int iTab)
 					if (Section("World"))
 					{
 						FDropdown(Vars::Visuals::World::Modulations);
-						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left);
+						FDropdown(Vars::Visuals::World::PrecipitationType);
 						FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
 						FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
 						PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));

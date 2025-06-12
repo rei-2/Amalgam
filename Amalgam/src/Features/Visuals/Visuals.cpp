@@ -77,7 +77,7 @@ void CVisuals::OnPlayerHurt(int iAttacker, int iVictim, int iDamage, Vec3 vPosit
         m_HitMarker.DrawTime = currentTime + 1.5f;
         m_HitMarker.Damage = iDamage;
         m_HitMarker.AccumulatedDamage += iDamage;
-        m_HitMarker.Col = Color_t(255, 255, 255, 255); // is this gonna be the last fix i make
+        m_HitMarker.Col = Color_t(255, 255, 255, 255); // is this gonna be the last fix i
         m_HitMarker.Position = vPosition;
         m_HitMarker.LastHitTime = currentTime;
     }
