@@ -663,8 +663,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		bDimBar = true;
 	}
 	else if (pLocal->IsCritBoosted()) {
-		float flCritDuration = pLocal->m_flCritMult() - I::GlobalVars->curtime;
-		statusText = std::format("Crit Boosted ({:.1f}s)", flCritDuration);
+		statusText = "Crit Boosted";
 		textColor = Vars::Colors::IndicatorTextMisc.Value;
 	}
 	else if (pWeapon->m_flCritTime() > flTickBase) {

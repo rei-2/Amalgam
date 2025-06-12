@@ -18,19 +18,19 @@ MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 4
 
 void CVisuals::HitMarker()
 {
-    if (!Vars::Visuals::Misc::HitMarker.Value || I::EngineVGui->IsGameUIVisible())
+    if (!Vars::Visuals::Hitmarker::HitMarker.Value || I::EngineVGui->IsGameUIVisible())
         return;
 
     float TimeDelta = m_HitMarker.DrawTime - I::EngineClient->Time();
     if (TimeDelta > 0.f && m_HitMarker.AccumulatedDamage > 0)
     {
-        m_HitMarker.Alpha = Math::RemapVal(TimeDelta, 0.f, Vars::Visuals::Misc::HitMarkerDuration.Value, 0.f, 255.f);
+        m_HitMarker.Alpha = Math::RemapVal(TimeDelta, 0.f, Vars::Visuals::Hitmarker::HitMarkerDuration.Value, 0.f, 255.f);
 
         int alpha = static_cast<int>(m_HitMarker.Alpha);
         Color_t Col = { 255, 255, 255, alpha };
 
         Vec3 drawPos;
-        if (Vars::Visuals::Misc::HitMarkerDrawOnTarget.Value && SDK::W2S(m_HitMarker.Position, drawPos))
+        if (Vars::Visuals::Hitmarker::HitMarkerDrawOnTarget.Value && SDK::W2S(m_HitMarker.Position, drawPos))
         {
             H::Draw.Line(drawPos.x - 10, drawPos.y - 10, drawPos.x - 5, drawPos.y - 5, Col);
             H::Draw.Line(drawPos.x + 6, drawPos.y - 6, drawPos.x + 11, drawPos.y - 11, Col);
@@ -48,7 +48,7 @@ void CVisuals::HitMarker()
             H::Draw.Line(CenterX + 6, CenterY + 6, CenterX + 11, CenterY + 11, Col);
         }
 
-        if (Vars::Visuals::Misc::HitMarkerDamageText.Value)
+        if (Vars::Visuals::Hitmarker::HitMarkerDamageText.Value)
         {
             std::string damageText = std::format("-{}", m_HitMarker.AccumulatedDamage);
             H::Draw.String(
@@ -887,11 +887,11 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 				m_HitMarker.AccumulatedDamage = 0;
 			}
 			
-			m_HitMarker.DrawTime = currentTime + Vars::Visuals::Misc::HitMarkerDuration.Value;
+			m_HitMarker.DrawTime = currentTime + Vars::Visuals::Hitmarker::HitMarkerDuration.Value;
 			m_HitMarker.Damage = iDamage;
 			m_HitMarker.AccumulatedDamage += iDamage;
 			
-			if (Vars::Visuals::Misc::HitMarkerDrawOnTarget.Value)
+			if (Vars::Visuals::Hitmarker::HitMarkerDrawOnTarget.Value)
 			{
 				auto pVictim = I::ClientEntityList->GetClientEntity(iVictim);
 				if (pVictim)

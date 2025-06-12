@@ -1182,10 +1182,10 @@ void CMenu::MenuVisuals(int iTab)
 				} EndSection();
 				if (Section("Hitmarker", 8))
 				{
-					FToggle(Vars::Visuals::Misc::HitMarker, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Misc::HitMarkerDrawOnTarget, FToggleEnum::Right);
-					FSlider(Vars::Visuals::Misc::HitMarkerDuration);
-					FToggle(Vars::Visuals::Misc::HitMarkerDamageText);
+					FToggle(Vars::Visuals::Hitmarker::HitMarker, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Hitmarker::HitMarkerDrawOnTarget, FToggleEnum::Right);
+					FSlider(Vars::Visuals::Hitmarker::HitMarkerDuration);
+					FToggle(Vars::Visuals::Hitmarker::HitMarkerDamageText);
 				} EndSection();
 				if (Section("Viewmodel", 8))
 				{
