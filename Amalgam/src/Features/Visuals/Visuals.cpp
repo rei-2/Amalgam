@@ -16,6 +16,73 @@ MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects, "client.dll", "40 57 48 81 EC ? ? ?
 MAKE_SIGNATURE(CWeaponMedigun_StopChargeEffect, "client.dll", "40 53 48 83 EC ? 44 0F B6 C2", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 81 EC ? ? ? ? 48 8B F1 E8 ? ? ? ? 48 8B D8", 0x0);
 
+void CVisuals::HitMarker()
+{
+    if (!Vars::Visuals::Misc::HitMarker.Value || I::EngineVGui->IsGameUIVisible())
+        return;
+
+    float TimeDelta = m_HitMarker.DrawTime - I::EngineClient->Time();
+    if (TimeDelta > 0.f && m_HitMarker.AccumulatedDamage > 0)
+    {
+        m_HitMarker.Alpha = Math::RemapVal(TimeDelta, 0.f, Vars::Visuals::Misc::HitMarkerDuration.Value, 0.f, 255.f);
+
+        int alpha = static_cast<int>(m_HitMarker.Alpha);
+        Color_t Col = { 255, 255, 255, alpha };
+
+        Vec3 drawPos;
+        if (Vars::Visuals::Misc::HitMarkerDrawOnTarget.Value && SDK::W2S(m_HitMarker.Position, drawPos))
+        {
+            H::Draw.Line(drawPos.x - 10, drawPos.y - 10, drawPos.x - 5, drawPos.y - 5, Col);
+            H::Draw.Line(drawPos.x + 6, drawPos.y - 6, drawPos.x + 11, drawPos.y - 11, Col);
+            H::Draw.Line(drawPos.x - 10, drawPos.y + 10, drawPos.x - 5, drawPos.y + 5, Col);
+            H::Draw.Line(drawPos.x + 6, drawPos.y + 6, drawPos.x + 11, drawPos.y + 11, Col);
+        }
+        else
+        {
+            int CenterX = H::Draw.m_nScreenW / 2;
+            int CenterY = H::Draw.m_nScreenH / 2;
+
+            H::Draw.Line(CenterX - 10, CenterY - 10, CenterX - 5, CenterY - 5, Col);
+            H::Draw.Line(CenterX + 6, CenterY - 6, CenterX + 11, CenterY - 11, Col);
+            H::Draw.Line(CenterX - 10, CenterY + 10, CenterX - 5, CenterY + 5, Col);
+            H::Draw.Line(CenterX + 6, CenterY + 6, CenterX + 11, CenterY + 11, Col);
+        }
+
+        if (Vars::Visuals::Misc::HitMarkerDamageText.Value)
+        {
+            std::string damageText = std::format("-{}", m_HitMarker.AccumulatedDamage);
+            H::Draw.String(
+                H::Fonts.GetFont(FONT_ESP),
+                drawPos.x,
+                drawPos.y + 15,
+                Col,
+                ALIGN_CENTER,
+                damageText.c_str()
+            );
+        }
+    }
+}
+
+// lil helpa
+void CVisuals::OnPlayerHurt(int iAttacker, int iVictim, int iDamage, Vec3 vPosition)
+{
+    if (iAttacker == I::EngineClient->GetLocalPlayer() && iVictim != iAttacker)
+    {
+        float currentTime = I::EngineClient->Time();
+        
+        if (currentTime - m_HitMarker.LastHitTime > 2.0f) {
+            m_HitMarker.AccumulatedDamage = 0;
+        }
+        
+        m_HitMarker.DrawTime = currentTime + 1.5f;
+        m_HitMarker.Damage = iDamage;
+        m_HitMarker.AccumulatedDamage += iDamage;
+        m_HitMarker.Col = Vars::Colors::HitMarker.Value;
+        m_HitMarker.Position = vPosition;
+        m_HitMarker.LastHitTime = currentTime;
+    }
+}
+
 ClientClass* CVisuals::CPrecipitation::GetPrecipitationClass()
 {
     static ClientClass* pReturn = nullptr;
@@ -808,15 +875,40 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 	{
 	case FNV1A::Hash32Const("player_hurt"):
 	{
+		int iAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
+		int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+		int iDamage = pEvent->GetInt("damageamount");
+
+		if (iAttacker == I::EngineClient->GetLocalPlayer() && iVictim != iAttacker)
+		{
+			float currentTime = I::EngineClient->Time();
+			
+			if (currentTime - m_HitMarker.LastHitTime > 2.0f) {
+				m_HitMarker.AccumulatedDamage = 0;
+			}
+			
+			m_HitMarker.DrawTime = currentTime + Vars::Visuals::Misc::HitMarkerDuration.Value;
+			m_HitMarker.Damage = iDamage;
+			m_HitMarker.AccumulatedDamage += iDamage;
+			
+			if (Vars::Visuals::Misc::HitMarkerDrawOnTarget.Value)
+			{
+				auto pVictim = I::ClientEntityList->GetClientEntity(iVictim);
+				if (pVictim)
+					m_HitMarker.Position = pVictim->GetCenter();
+			}
+			
+			m_HitMarker.LastHitTime = currentTime;
+		}
+
 		bool bBones = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnHit;
 		bool bBounds = Vars::Visuals::Hitbox::BoundsEnabled.Value & Vars::Visuals::Hitbox::BoundsEnabledEnum::OnHit;
 		if (!bBones && !bBounds)
 			return;
 
-		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")) != I::EngineClient->GetLocalPlayer())
+		if (iAttacker != I::EngineClient->GetLocalPlayer())
 			return;
 
-		int iVictim = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
 		auto pEntity = I::ClientEntityList->GetClientEntity(iVictim)->As<CBaseAnimating>();
 		if (!pEntity || iVictim == I::EngineClient->GetLocalPlayer())
 			return;

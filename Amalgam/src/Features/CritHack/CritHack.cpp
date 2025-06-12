@@ -627,7 +627,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 
 		int barHeight = H::Draw.Scale(3, Scale_Round);
 		int barY = y + h - barHeight - iBottomPadding;
-		Color_t dimmedAccent = BlendColors(Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, 0.7f);
+		Color_t dimmedAccent = BlendColors(Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, 0.5f);
 		H::Draw.FillRoundRect(x + iRounding, barY, w - 2 * iRounding, barHeight, iBarRounding, dimmedAccent);
 
 		Color_t borderColor = BlendColors(Vars::Menu::Theme::Background.Value, Color_t(255, 255, 255, 50), 0.1f);
@@ -663,7 +663,8 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		bDimBar = true;
 	}
 	else if (pLocal->IsCritBoosted()) {
-		statusText = "Crit Boosted";
+		float flCritDuration = pLocal->m_flCritMult() - I::GlobalVars->curtime;
+		statusText = std::format("Crit Boosted ({:.1f}s)", flCritDuration);
 		textColor = Vars::Colors::IndicatorTextMisc.Value;
 	}
 	else if (pWeapon->m_flCritTime() > flTickBase) {
@@ -740,18 +741,4 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		ALIGN_LEFT,
 		statusText.c_str()
 	);
-	// ill reimplement this in some sort of way that
-	/*if (Vars::Debug::Info.Value)
-	{
-		H::Draw.StringOutlined(fFont, x, y + h + H::Draw.Scale(4, Scale_Round), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, 
-			std::format("RangedDamage: {}, CritDamage: {}", m_iRangedDamage, m_iCritDamage).c_str());
-		
-		y += fFont.m_nTall + H::Draw.Scale(1);
-		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, 
-			std::format("Bucket: {}, Shots: {}, Crits: {}", pWeapon->m_flCritTokenBucket(), pWeapon->m_nCritChecks(), pWeapon->m_nCritSeedRequests()).c_str());
-		
-		y += fFont.m_nTall + H::Draw.Scale(1);
-		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, 
-			std::format("Damage: {}, Cost: {}", tStorage.m_flDamage, tStorage.m_flCost).c_str());
-	}*/
 }

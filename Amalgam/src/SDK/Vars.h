@@ -224,7 +224,7 @@ namespace Vars
 		CVar(IndicatorGood, "Healthbar good", Color_t(0, 255, 100, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorMid, "Healthbar mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorBad, "Healthbar bad", Color_t(255, 0, 0, 255), NOSAVE | DEBUGVAR);
-		CVar(IndicatorMisc, "Ubered HP", Color_t(75, 175, 255, 255), NOSAVE | DEBUGVAR);
+		CVar(IndicatorMisc, "Overhealed hp", Color_t(75, 175, 255, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextGood, "Indicator text good", Color_t(150, 255, 150, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextMid, "Indicator text mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextBad, "Indicator text bad", Color_t(255, 150, 150, 255), NOSAVE | DEBUGVAR);
@@ -701,6 +701,13 @@ namespace Vars
 	NAMESPACE_END(Glow);
 
 	NAMESPACE_BEGIN(Visuals)
+		SUBNAMESPACE_BEGIN(Hitmarker)
+			CVar(HitMarker, "Toggle Hitmarker", true, VISUAL);
+			CVar(HitMarkerDuration, "Hitmarker duration", 1.5f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.1f, 5.0f);
+			CVar(HitMarkerDrawOnTarget, "Draw on target", false, VISUAL);
+			CVar(HitMarkerDamageText, "Show damage text", true, VISUAL);
+		SUBNAMESPACE_END(Hitmarker);
+
 		SUBNAMESPACE_BEGIN(Thirdperson)
 			CVar(Enabled, "Thirdperson", false, VISUAL);
 			CVar(Crosshair, VA_LIST("Crosshair", "Thirdperson crosshair"), false, VISUAL);

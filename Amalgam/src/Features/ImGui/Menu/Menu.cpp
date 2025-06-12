@@ -1180,6 +1180,13 @@ void CMenu::MenuVisuals(int iTab)
 					FToggle(Vars::Visuals::Effects::DrawIconsThroughWalls);
 					FToggle(Vars::Visuals::Effects::DrawDamageNumbersThroughWalls);
 				} EndSection();
+				if (Section("Hitmarker", 8))
+				{
+					FToggle(Vars::Visuals::Misc::HitMarker, FToggleEnum::Left);
+					FToggle(Vars::Visuals::Misc::HitMarkerDrawOnTarget, FToggleEnum::Right);
+					FSlider(Vars::Visuals::Misc::HitMarkerDuration);
+					FToggle(Vars::Visuals::Misc::HitMarkerDamageText);
+				} EndSection();
 				if (Section("Viewmodel", 8))
 				{
 					FToggle(Vars::Visuals::Viewmodel::CrosshairAim, FToggleEnum::Left);
@@ -1251,9 +1258,9 @@ void CMenu::MenuVisuals(int iTab)
 					if (Section("World"))
 					{
 						FDropdown(Vars::Visuals::World::Modulations);
+						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left);
 						FSDropdown(Vars::Visuals::World::WorldTexture, FDropdownEnum::Left);
 						FSDropdown(Vars::Visuals::World::SkyboxChanger, FDropdownEnum::Right);
-						FDropdown(Vars::Visuals::World::PrecipitationType, FDropdownEnum::Left);
 						PushTransparent(!(FGet(Vars::Visuals::World::Modulations) & Vars::Visuals::World::ModulationsEnum::World));
 					{
 						FColorPicker(Vars::Colors::WorldModulation, 0, FColorPickerEnum::Left);
