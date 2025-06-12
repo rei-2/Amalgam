@@ -895,7 +895,7 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 			{
 				auto pVictim = I::ClientEntityList->GetClientEntity(iVictim);
 				if (pVictim)
-					m_HitMarker.Position = pVictim->GetCenter();
+					m_HitMarker.Position = pVictim->As<CBaseEntity>()->GetCenter();
 			}
 			
 			m_HitMarker.LastHitTime = currentTime;

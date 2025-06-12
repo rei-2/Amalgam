@@ -25,7 +25,7 @@ private:
 	std::vector<Sightline_t> m_vSightLines;
 	std::vector<PickupData> m_vPickups;
 
-	class CPrecipitation // thanks .pointone_ for the robux
+	class CPrecipitation
     {
     private:
         int m_iRainEntityIndex = -1;
@@ -39,6 +39,19 @@ private:
     };
 
     CPrecipitation m_Precipitation;
+
+	struct HitMarker_t
+	{
+		float DrawTime = 0.f;
+		int Damage = 0;
+		int AccumulatedDamage = 0;
+		float Alpha = 0.f;
+		Vec3 Position = {};
+		float LastHitTime = 0.f;
+		Color_t Col = {};
+	};
+
+	HitMarker_t m_HitMarker;
 
 public:
 	void Event(IGameEvent* pEvent, uint32_t uHash);
@@ -63,6 +76,8 @@ public:
 	void UpdatePrecipitation();
 
 	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
+	void HitMarker();
+	void OnPlayerHurt(int iAttacker, int iVictim, int iDamage, Vec3 vPosition);
 };
 
 ADD_FEATURE(CVisuals, Visuals);
