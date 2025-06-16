@@ -398,7 +398,8 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 		case ETFClassID::CTFProjectile_SpellLightningOrb:
 			if (pEntity->As<CTFProjectile_Rocket>()->m_bCritical())
 				flMult = 3.f;
-			else if (pEntity->As<CTFBaseRocket>()->m_iDeflected())
+			else if (pEntity->As<CTFBaseRocket>()->m_iDeflected()
+				|| pTarget->InCond(TF_COND_BLASTJUMPING) && pWeapon && SDK::AttribHookValue(0, "mini_crit_airborne", pWeapon) == 1)
 				flMult = 1.36f;
 			break;
 		case ETFClassID::CTFProjectile_EnergyBall:
@@ -568,9 +569,12 @@ void CAutoHeal::AutoVaccinator(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUser
 		{ 0.f, MEDIGUN_FIRE_RESIST }
 	};
 
-	GetDangers(pLocal, true, vResistDangers[MEDIGUN_BULLET_RESIST].first, vResistDangers[MEDIGUN_BLAST_RESIST].first, vResistDangers[MEDIGUN_FIRE_RESIST].first);
-	auto pTarget = pWeapon->m_hHealingTarget().Get()->As<CTFPlayer>();
-	if (pTarget && (!Vars::Aimbot::Healing::FriendsOnly.Value || H::Entities.IsFriend(pTarget->entindex()) || H::Entities.InParty(pTarget->entindex())))
+	std::vector<CTFPlayer*> vTargets = { pLocal };
+	if (auto pTarget = pWeapon->m_hHealingTarget().Get()->As<CTFPlayer>(); pTarget &&
+		(!Vars::Aimbot::Healing::FriendsOnly.Value || H::Entities.IsFriend(pTarget->entindex()) || H::Entities.InParty(pTarget->entindex())))
+		vTargets.push_back(pTarget);
+
+	for (auto pTarget : vTargets)
 		GetDangers(pTarget, true, vResistDangers[MEDIGUN_BULLET_RESIST].first, vResistDangers[MEDIGUN_BLAST_RESIST].first, vResistDangers[MEDIGUN_FIRE_RESIST].first);
 	std::sort(vResistDangers.begin(), vResistDangers.end(), [&](const std::pair<float, int>& a, const std::pair<float, int>& b) -> bool
 		{

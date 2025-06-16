@@ -14,11 +14,11 @@ BytePatch::BytePatch(const char* sModule, const char* sSignature, int iOffset, c
 	m_vOriginal.resize(m_iSize);
 }
 
-void BytePatch::Write(std::vector<byte>& bytes)
+void BytePatch::Write(std::vector<byte>& vBytes)
 {
 	DWORD flNewProtect, flOldProtect;
 	VirtualProtect(m_pAddress, m_iSize, PAGE_EXECUTE_READWRITE, &flNewProtect);
-	memcpy(m_pAddress, bytes.data(), m_iSize);
+	memcpy(m_pAddress, vBytes.data(), m_iSize);
 	VirtualProtect(m_pAddress, m_iSize, flNewProtect, &flOldProtect);
 }
 

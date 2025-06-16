@@ -587,9 +587,19 @@ public:
 		return (*this - v).Length();
 	}
 
+	inline float DistTo2D(const Vec3& v) const
+	{
+		return (*this - v).Length2D();
+	}
+
 	inline float DistToSqr(const Vec3& v) const
 	{
 		return (*this - v).LengthSqr();
+	}
+
+	inline float DistTo2DSqr(const Vec3& v) const
+	{
+		return (*this - v).Length2DSqr();
 	}
 
 	inline float Dot(const Vec3& v) const

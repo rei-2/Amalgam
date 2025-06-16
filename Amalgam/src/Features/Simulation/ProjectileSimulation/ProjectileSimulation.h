@@ -56,6 +56,7 @@ public:
 	void RunTick(ProjectileInfo& tProjInfo, bool bPath = true);
 	Vec3 GetOrigin();
 	Vec3 GetVelocity();
+	void SetupTrace(CTraceFilterCollideable& filter, int& nMask, CTFWeaponBase* pWeapon, int nTick = 0, bool bQuick = false);
 
 	IPhysicsEnvironment* env = nullptr;
 	IPhysicsObject* obj = nullptr;

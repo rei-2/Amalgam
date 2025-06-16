@@ -22,8 +22,8 @@ class CVisuals
 {
 private:
 	int m_nHudZoom = 0;
-	std::vector<Sightline_t> m_vSightLines;
-	std::vector<PickupData> m_vPickups;
+	std::vector<Sightline_t> m_vSightLines = {};
+	std::vector<PickupData> m_vPickups = {};
 
 public:
 	void Event(IGameEvent* pEvent, uint32_t uHash);
@@ -37,7 +37,7 @@ public:
 
 	std::vector<DrawBox_t> GetHitboxes(matrix3x4* aBones, CBaseAnimating* pEntity, std::vector<int> vHitboxes = {}, int iTarget = -1);
 	void DrawEffects();
-	void DrawServerHitboxes(CTFPlayer* pLocal);
+	void DrawHitboxes(int iStore = 0);
 
 	void FOV(CTFPlayer* pLocal, CViewSetup* pView);
 	void ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView);

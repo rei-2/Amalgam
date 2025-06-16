@@ -22,8 +22,8 @@ class CResolver
 	void StoreSniperDots(CTFPlayerResource* pResource);
 	std::optional<float> GetPitchForSniperDot(CTFPlayer* pEntity, CTFPlayerResource* pResource);
 	
-	std::unordered_map<int, ResolveData> m_mResolverData;
-	std::unordered_map<int, Vec3> m_mSniperDots;
+	std::unordered_map<int, ResolveData> m_mResolverData = {};
+	std::unordered_map<int, Vec3> m_mSniperDots = {};
 
 	int m_iWaitingForTarget = -1;
 	float m_flWaitingForDamage = 0.f;

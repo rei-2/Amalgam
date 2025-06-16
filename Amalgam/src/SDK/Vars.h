@@ -58,7 +58,7 @@ class ConfigVar : public BaseVar
 public:
 	T Default;
 	T Value;
-	std::unordered_map<int, T> Map;
+	std::unordered_map<int, T> Map = {};
 	ConfigVar(T tValue, std::string sName, const char* sSection, std::vector<const char*> vTitle, int iFlags = 0, std::vector<const char*> vValues = {}, const char* sNone = nullptr)
 	{
 		Default = tValue;
@@ -249,6 +249,8 @@ namespace Vars
 		CVar(ShotPathClipped, "Shot path clipped color", Color_t(255, 255, 255, 0), VISUAL);
 		CVar(SplashRadius, "Splash radius color", Color_t(255, 255, 255, 255), VISUAL);
 		CVar(SplashRadiusClipped, "Splash radius clipped color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(RealPath, "Real path color", Color_t(255, 255, 255, 255), NOSAVE | DEBUGVAR);
+		CVar(RealPathClipped, "Real path clipped color", Color_t(255, 255, 255, 0), NOSAVE | DEBUGVAR);
 
 		CVar(BoneHitboxEdge, "Bone hitbox edge color", Color_t(255, 255, 255, 0), VISUAL);
 		CVar(BoneHitboxEdgeClipped, "Bone hitbox edge clipped color", Color_t(255, 255, 255, 255), VISUAL);
@@ -437,8 +439,8 @@ namespace Vars
 		CVar(AntiWarp, "Anti-warp", true);
 		CVar(TickLimit, "Tick limit", 22, SLIDER_CLAMP, 2, 22);
 		CVar(WarpRate, "Warp rate", 22, SLIDER_CLAMP, 2, 22);
-		CVar(PassiveRecharge, "Passive recharge", 0, SLIDER_CLAMP, 0, 67);
 		CVar(RechargeLimit, "Recharge limit", 24, SLIDER_CLAMP, 1, 24);
+		CVar(PassiveRecharge, "Passive recharge", 0, SLIDER_CLAMP, 0, 67);
 	NAMESPACE_END(DoubleTap)
 
 	NAMESPACE_BEGIN(Fakelag)
@@ -485,8 +487,8 @@ namespace Vars
 			"View", "Target");
 		CVar(RealYawOffset, "Real offset", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
 		CVar(FakeYawOffset, "Fake offset", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
-		CVar(RealYawValue, "Real value", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
-		CVar(FakeYawValue, "Fake value", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
+		CVar(RealYawValue, "Real value", 90.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
+		CVar(FakeYawValue, "Fake value", -90.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
 		CVar(SpinSpeed, "Spin speed", 15.f, SLIDER_PRECISION, -30.f, 30.f);
 		CVar(MinWalk, "Minwalk", true);
 		CVar(AntiOverlap, "Anti-overlap", false);
@@ -839,7 +841,7 @@ namespace Vars
 				"Off", "Line", "Separators", "Spaced", "Arrows", "Boxes");
 			CVarValues(ShotPath, "Shot path", 0, VISUAL, nullptr,
 				"Off", "Line", "Separators", "Spaced", "Arrows", "Boxes");
-			CVarEnum(SplashRadius, "Splash path", 0b0, VISUAL | DROPDOWN_MULTI, "Off",
+			CVarEnum(SplashRadius, "Splash radius", 0b0, VISUAL | DROPDOWN_MULTI, "Off",
 				VA_LIST("Simulation", "##Divider", "Priority", "Enemy", "Team", "Local", "Friends", "Party", "##Divider", "Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace"),
 				Simulation = 1 << 0, Priority = 1 << 1, Enemy = 1 << 2, Team = 1 << 3, Local = 1 << 4, Friends = 1 << 5, Party = 1 << 6, Rockets = 1 << 7, Stickies = 1 << 8, Pipes = 1 << 9, ScorchShot = 1 << 10, Trace = 1 << 11);
 			CVar(Timed, VA_LIST("Timed", "Timed path"), false, VISUAL);
@@ -849,6 +851,8 @@ namespace Vars
 			CVar(SwingLines, "Swing lines", false, VISUAL);
 			CVar(DrawDuration, VA_LIST("Draw duration", "Simulation draw duration"), 5.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
 
+			CVarValues(RealPath, "Real path", 0, NOSAVE | DEBUGVAR, nullptr,
+				"Off", "Line", "Separators", "Spaced", "Arrows", "Boxes");
 			CVar(SeparatorSpacing, "Separator spacing", 4, NOSAVE | DEBUGVAR, 1, 16);
 			CVar(SeparatorLength, "Separator length", 12.f, NOSAVE | DEBUGVAR, 2.f, 16.f);
 		SUBNAMESPACE_END(Simulation);
@@ -1109,7 +1113,7 @@ namespace Vars
 		CVar(Info, "Debug info", false, NOSAVE);
 		CVar(Logging, "Debug logging", false, NOSAVE);
 		CVar(Options, "Debug options", false, NOSAVE);
-		CVar(DrawServerHitboxes, "Show server hitboxes", false, NOSAVE);
+		CVar(DrawHitboxes, "Show hitboxes", false, NOSAVE);
 		CVar(AntiAimLines, "Anti-aim lines", false);
 		CVar(CrashLogging, "Crash logging", true);
 #ifdef DEBUG_TRACES

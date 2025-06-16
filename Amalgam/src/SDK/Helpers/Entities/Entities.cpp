@@ -479,7 +479,7 @@ CTFPlayer* CEntities::GetLocal()
 }
 CTFWeaponBase* CEntities::GetWeapon()
 {
-	auto pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer())->As<CTFPlayer>();
+	auto pLocal = GetLocal();
 	return pLocal ? pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr;
 	//return m_pLocalWeapon;
 }

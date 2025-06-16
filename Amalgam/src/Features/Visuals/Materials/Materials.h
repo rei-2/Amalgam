@@ -34,8 +34,8 @@ public:
 	void EditMaterial(const char* sName, const char* sVMT);
 	void RemoveMaterial(const char* sName);
 
-	std::unordered_map<uint32_t, Material_t> m_mMaterials;
-	std::unordered_map<IMaterial*, bool> m_mMatList;
+	std::unordered_map<uint32_t, Material_t> m_mMaterials = {};
+	std::unordered_map<IMaterial*, bool> m_mMatList = {};
 
 	bool m_bLoaded = false;
 };

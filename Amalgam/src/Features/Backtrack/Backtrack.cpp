@@ -200,8 +200,8 @@ void CBacktrack::MakeRecords()
 			|| !H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
-		auto pBones = H::Entities.GetBones(pPlayer->entindex());
-		if (!pBones)
+		auto aBones = H::Entities.GetBones(pPlayer->entindex());
+		if (!aBones)
 			continue;
 
 		auto& vRecords = m_mRecords[pPlayer];
@@ -212,7 +212,7 @@ void CBacktrack::MakeRecords()
 			pPlayer->m_vecOrigin(),
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
-			*reinterpret_cast<BoneMatrix*>(pBones),
+			*reinterpret_cast<BoneMatrix*>(aBones),
 			m_mDidShoot[pPlayer->entindex()],
 			pPlayer->m_vecOrigin()
 		);
@@ -396,8 +396,8 @@ void CBacktrack::Draw(CTFPlayer* pLocal)
 	}
 	float flFakeLerp = GetFakeInterp() > G::Lerp ? GetFakeInterp() : 0.f;
 
-	float flFake = std::min(flFakeLatency + flFakeLerp, m_flMaxUnlag) * 1000.f;
-	float flLatency = std::max(pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - flFakeLatency, 0.f) * 1000.f;
+	float flFake = std::min(flFakeLatency + flFakeLerp, m_flMaxUnlag) * 1000;
+	float flLatency = std::max(pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - flFakeLatency, 0.f) * 1000;
 	int iLatencyScoreboard = pResource->m_iPing(pLocal->entindex());
 
 	int x = Vars::Menu::PingDisplay.Value.x;
@@ -417,7 +417,7 @@ void CBacktrack::Draw(CTFPlayer* pLocal)
 		align = ALIGN_TOPRIGHT;
 	}
 
-	if (flFake || Vars::Backtrack::Interp.Value)
+	if (flFake || Vars::Backtrack::Interp.Value > G::Lerp * 1000)
 		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Ping {:.0f} (+ {:.0f}) ms", flLatency, flFake).c_str());
 	else
 		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Ping {:.0f} ms", flLatency).c_str());

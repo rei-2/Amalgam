@@ -10,11 +10,9 @@ class CAimbotMelee
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	int GetSwingTime(CTFWeaponBase* pWeapon);
-	void SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> vTargets, Vec3& vEyePos,
-						 std::unordered_map<int, std::deque<TickRecord>>& mRecordMap,
-						 std::unordered_map<int, std::vector<Vec3>>& mPaths);
+	void SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> vTargets, Vec3& vEyePos);
 	bool CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEyeAngles);
-	int CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord>& vSimRecords);
+	int CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos);
 	
 	bool Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod = Vars::Aimbot::General::AimType.Value);
 	void Aim(CUserCmd* pCmd, Vec3& vAngle);
@@ -22,8 +20,10 @@ class CAimbotMelee
 	bool FindNearestBuildPoint(CBaseObject* pBuilding, CTFPlayer* pLocal, Vec3& vPoint);
 	bool RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
-	int iDoubletapTicks = 0;
-	int iDoubletapMax = 0;
+	int m_iDoubletapTicks = 0;
+
+	std::unordered_map<int, std::deque<TickRecord>> m_mRecordMap;
+	std::unordered_map<int, std::vector<Vec3>> m_mPaths;
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);

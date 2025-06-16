@@ -154,7 +154,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 					Vec3 New = F::ProjSim.GetOrigin();
 
 					CGameTrace trace = {};
-					CTraceFilterProjectile filter = {}; filter.pSkip = pLocal;
+					CTraceFilterCollideable filter = {}; filter.pSkip = pLocal;
 					SDK::Trace(Old, New, MASK_SOLID, &filter, &trace);
 					if (trace.DidHit())
 					{

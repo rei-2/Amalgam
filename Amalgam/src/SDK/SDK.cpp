@@ -336,10 +336,10 @@ bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFr
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
 	return true;
 }
-bool SDK::VisPosProjectile(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
+bool SDK::VisPosCollideable(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
-	CTraceFilterProjectile filter = {}; filter.pSkip = pSkip;
+	CTraceFilterCollideable filter = {}; filter.pSkip = pSkip; filter.iType = SKIP_CHECK;
 	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
@@ -717,46 +717,6 @@ void SDK::WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vTo, float flScale)
 
 
 
-class CTraceFilterSetup : public ITraceFilter // trace filter solely for GetProjectileFireSetup
-{
-public:
-	bool ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask) override;
-	TraceType_t GetTraceType() const override;
-	CBaseEntity* pSkip = nullptr;
-};
-bool CTraceFilterSetup::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
-{
-	if (!pServerEntity || pServerEntity == pSkip)
-		return false;
-
-	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
-
-	switch (pEntity->GetClassID())
-	{
-	case ETFClassID::CTFAmmoPack:
-	case ETFClassID::CFuncAreaPortalWindow:
-	case ETFClassID::CFuncRespawnRoomVisualizer:
-	case ETFClassID::CTFReviveMarker: return false;
-	case ETFClassID::CTFMedigunShield:
-	case ETFClassID::CObjectSentrygun:
-	case ETFClassID::CObjectDispenser:
-	case ETFClassID::CObjectTeleporter: return true;
-	case ETFClassID::CTFPlayer:
-	{
-		auto pLocal = H::Entities.GetLocal();
-
-		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
-		return iTargetTeam != iLocalTeam;
-	}
-	}
-
-	return true;
-}
-TraceType_t CTraceFilterSetup::GetTraceType() const
-{
-	return TRACE_EVERYTHING;
-}
-
 void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, bool bPipes, bool bInterp, bool bAllowFlip)
 {
 	static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
@@ -775,7 +735,7 @@ void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vO
 		Vec3 vEndPos = vShootPos + vForward * 2000.f;
 
 		CGameTrace trace = {};
-		CTraceFilterSetup filter = {};
+		CTraceFilterCollideable filter = {}; filter.pSkip = pPlayer; filter.iType = SKIP_CHECK;
 		Trace(vShootPos, vEndPos, MASK_SOLID, &filter, &trace);
 		if (trace.DidHit() && trace.fraction > 0.1f)
 			vEndPos = trace.endpos;

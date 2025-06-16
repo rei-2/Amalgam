@@ -6,10 +6,18 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 {
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
-	//if (pServerEntity->GetRefEHandle().GetSerialNumber() == (1 << 15))
-	//	return I::ClientEntityList->GetClientEntity(0) != pSkip;
 
 	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
+	if (iType != SKIP_CHECK && !vWeapons.empty())
+	{
+		if (auto pWeapon = pSkip && pSkip->IsPlayer() ? pSkip->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr)
+		{
+			int iWeaponID = pWeapon->GetWeaponID();
+			bWeapon = std::find(vWeapons.begin(), vWeapons.end(), iWeaponID) != vWeapons.end();
+		}
+		vWeapons.clear();
+	}
 
 	switch (pEntity->GetClassID())
 	{
@@ -17,40 +25,16 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 	case ETFClassID::CFuncAreaPortalWindow:
 	case ETFClassID::CFuncRespawnRoomVisualizer:
 	case ETFClassID::CTFReviveMarker: return false;
-	case ETFClassID::CTFMedigunShield:
-	{
-		auto pLocal = H::Entities.GetLocal();
-		auto pWeapon = H::Entities.GetWeapon();
-
-		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
-		return iTargetTeam != iLocalTeam;
-	}
+	case ETFClassID::CTFMedigunShield: return pEntity->m_iTeamNum() != iTeam;
 	case ETFClassID::CTFPlayer:
 	case ETFClassID::CBaseObject:
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
 	case ETFClassID::CObjectTeleporter: 
 	{
-		auto pLocal = H::Entities.GetLocal();
-		auto pWeapon = H::Entities.GetWeapon();
-
-		bool bSniperRifle = false;
-		if (pLocal && pLocal == pSkip && pWeapon)
-		{
-			switch (pWeapon->GetWeaponID())
-			{
-			case TF_WEAPON_SNIPERRIFLE:
-			case TF_WEAPON_SNIPERRIFLE_CLASSIC:
-			case TF_WEAPON_SNIPERRIFLE_DECAP:
-				bSniperRifle = true;
-			}
-		}
-
-		if (!bSniperRifle)
-			return true;
-
-		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
-		return iTargetTeam != iLocalTeam;
+		if (iType != SKIP_CHECK && (iWeapon == WEAPON_INCLUDE ? bWeapon : !bWeapon))
+			return iType == FORCE_HIT ? true : false;
+		return pEntity->m_iTeamNum() != iTeam;
 	}
 	}
 
@@ -61,14 +45,22 @@ TraceType_t CTraceFilterHitscan::GetTraceType() const
 	return TRACE_EVERYTHING;
 }
 
-bool CTraceFilterProjectile::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
+bool CTraceFilterCollideable::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
 {
 	if (!pServerEntity || pServerEntity == pSkip)
 		return false;
-	//if (pServerEntity->GetRefEHandle().GetSerialNumber() == (1 << 15))
-	//	return I::ClientEntityList->GetClientEntity(0) != pSkip;
 
 	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
+	if (iType != SKIP_CHECK && !vWeapons.empty())
+	{
+		if (auto pWeapon = pSkip && pSkip->IsPlayer() ? pSkip->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr)
+		{
+			int iWeaponID = pWeapon->GetWeaponID();
+			bWeapon = std::find(vWeapons.begin(), vWeapons.end(), iWeaponID) != vWeapons.end();
+		}
+		vWeapons.clear();
+	}
 
 	switch (pEntity->GetClassID())
 	{
@@ -79,36 +71,33 @@ bool CTraceFilterProjectile::ShouldHitEntity(IHandleEntity* pServerEntity, int n
 	case ETFClassID::CPhysicsPropMultiplayer:
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
-	case ETFClassID::CFuncConveyor:
-	case ETFClassID::CBaseObject:
-	case ETFClassID::CObjectSentrygun:
-	case ETFClassID::CObjectDispenser:
-	case ETFClassID::CObjectTeleporter: return true;
-	case ETFClassID::CTFMedigunShield:
-	{
-		auto pLocal = H::Entities.GetLocal();
-		auto pWeapon = H::Entities.GetWeapon();
-
-		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
-		return iTargetTeam != iLocalTeam;
-	}
+	case ETFClassID::CFuncConveyor: return true;
 	case ETFClassID::CTFPlayer:
 	{
-		auto pLocal = H::Entities.GetLocal();
-		auto pWeapon = H::Entities.GetWeapon();
-
-		const bool bHeal = (pLocal && pLocal == pSkip && pWeapon) ? pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW || pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX : false;
-		if (bHeal)
+		if (iPlayer == PLAYER_ALL)
 			return true;
-
-		const int iTargetTeam = pEntity->m_iTeamNum(), iLocalTeam = pLocal ? pLocal->m_iTeamNum() : iTargetTeam;
-		return iTargetTeam != iLocalTeam;
+		if (iPlayer == PLAYER_NONE)
+			return false;
+		if (iType != SKIP_CHECK && (iWeapon == WEAPON_INCLUDE ? bWeapon : !bWeapon))
+			return iType == FORCE_HIT ? true : false;
+		return pEntity->m_iTeamNum() != iTeam;
 	}
+	case ETFClassID::CBaseObject:
+	case ETFClassID::CObjectSentrygun:
+	case ETFClassID::CObjectDispenser: return iObject == OBJECT_ALL ? true : iObject == OBJECT_NONE ? false : pEntity->m_iTeamNum() != iTeam;
+	case ETFClassID::CObjectTeleporter: return true;
+	case ETFClassID::CTFMedigunShield:
+		if (!(nContentsMask & CONTENTS_PLAYERCLIP))
+			return pEntity->m_iTeamNum() != iTeam;
+		break;
+	case ETFClassID::CFuncRespawnRoomVisualizer:
+		if (nContentsMask & CONTENTS_PLAYERCLIP)
+			return pEntity->m_iTeamNum() != iTeam;
 	}
 
 	return false;
 }
-TraceType_t CTraceFilterProjectile::GetTraceType() const
+TraceType_t CTraceFilterCollideable::GetTraceType() const
 {
 	return TRACE_EVERYTHING;
 }
@@ -121,6 +110,7 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 		return I::ClientEntityList->GetClientEntity(0) != pSkip;
 
 	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
 
 	switch (pEntity->GetClassID())
 	{
@@ -133,14 +123,8 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 	case ETFClassID::CFuncTrackTrain:
 	case ETFClassID::CFuncConveyor: return true;
 	case ETFClassID::CFuncRespawnRoomVisualizer:
-		if (nContentsMask & MASK_PLAYERSOLID)
-		{
-			switch (pEntity->m_iTeamNum())
-			{
-			case TF_TEAM_RED: return nContentsMask & CONTENTS_REDTEAM;
-			case TF_TEAM_BLUE: return nContentsMask & CONTENTS_BLUETEAM;
-			}
-		}
+		if (nContentsMask & CONTENTS_PLAYERCLIP)
+			return pEntity->m_iTeamNum() != iTeam;
 	}
 
 	return false;

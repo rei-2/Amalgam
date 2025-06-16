@@ -109,22 +109,20 @@ int CAimbotMelee::GetSwingTime(CTFWeaponBase* pWeapon)
 	return Vars::Aimbot::Melee::SwingTicks.Value;
 }
 
-void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> vTargets,
-								   Vec3& vEyePos, std::unordered_map<int, std::deque<TickRecord>>& mRecordMap,
-								   std::unordered_map<int, std::vector<Vec3>>& mPaths)
+void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Target_t> vTargets, Vec3& vEyePos)
 {
 	// swing prediction / auto warp
 	const int iSwingTicks = GetSwingTime(pWeapon);
-	int iMax = (iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
+	int iMax = (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
 		? std::max(iSwingTicks - Vars::Doubletap::TickLimit.Value - 1, 0)
-		: std::max(iSwingTicks, iDoubletapTicks);
+		: std::max(iSwingTicks, m_iDoubletapTicks);
 
-	if ((Vars::Aimbot::Melee::SwingPrediction.Value || iDoubletapTicks) && pWeapon->m_flSmackTime() < 0.f && iMax)
+	if ((Vars::Aimbot::Melee::SwingPrediction.Value || m_iDoubletapTicks) && pWeapon->m_flSmackTime() < 0.f && iMax)
 	{
 		PlayerStorage tStorage;
 		std::unordered_map<int, PlayerStorage> mStorage;
 
-		F::MoveSim.Initialize(pLocal, tStorage, false, !iDoubletapTicks);
+		F::MoveSim.Initialize(pLocal, tStorage, false, !m_iDoubletapTicks);
 		for (auto& tTarget : vTargets)
 			F::MoveSim.Initialize(tTarget.m_pEntity, mStorage[tTarget.m_pEntity->entindex()], false);
 
@@ -136,7 +134,7 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 					tStorage.m_MoveData.m_flMaxSpeed = tStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal, false, true);
 				F::MoveSim.RunTick(tStorage);
 			}
-			if (i < iSwingTicks - iDoubletapTicks)
+			if (i < iSwingTicks - m_iDoubletapTicks)
 			{
 				for (auto& tTarget : vTargets)
 				{
@@ -144,7 +142,7 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 
 					F::MoveSim.RunTick(tStorage);
 					if (!tStorage.m_bFailed)
-						mRecordMap[tTarget.m_pEntity->entindex()].emplace_front(
+						m_mRecordMap[tTarget.m_pEntity->entindex()].emplace_front(
 							!Vars::Aimbot::Melee::SwingPredictLag.Value || tStorage.m_bPredictNetworked ? tTarget.m_pEntity->m_flSimulationTime() + TICKS_TO_TIME(i + 1) : 0.f,
 							Vars::Aimbot::Melee::SwingPredictLag.Value ? tStorage.m_vPredictedOrigin : tStorage.m_MoveData.m_vecAbsOrigin,
 							tTarget.m_pEntity->m_vecMins(), tTarget.m_pEntity->m_vecMaxs()
@@ -159,9 +157,9 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
 			if (!bAlwaysDraw)
 			{
-				mPaths[pLocal->entindex()] = tStorage.m_vPath;
+				m_mPaths[pLocal->entindex()] = tStorage.m_vPath;
 				for (auto& tTarget : vTargets)
-					mPaths[tTarget.m_pEntity->entindex()] = mStorage[tTarget.m_pEntity->entindex()].m_vPath;
+					m_mPaths[tTarget.m_pEntity->entindex()] = mStorage[tTarget.m_pEntity->entindex()].m_vPath;
 			}
 			else
 			{
@@ -253,7 +251,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 	return true;
 }
 
-int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos, std::deque<TickRecord>& vSimRecords)
+int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Vec3 vEyePos)
 {
 	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(tTarget.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
@@ -267,6 +265,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 	}
 	Vec3 vSwingMins = { -flHull, -flHull, -flHull };
 	Vec3 vSwingMaxs = { flHull, flHull, flHull };
+	auto& vSimRecords = m_mRecordMap[tTarget.m_pEntity->entindex()];
 
 	std::vector<TickRecord*> vRecords = {};
 	if (F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords))
@@ -420,6 +419,57 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 	}
 }
 
+static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, Target_t& tTarget, std::unordered_map<int, std::vector<Vec3>>& mPaths)
+{
+	bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && Vars::Aimbot::General::AutoShoot.Value && !Vars::Debug::Info.Value;
+	bool bLine = Vars::Visuals::Line::Enabled.Value;
+	bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
+	if (pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f)
+	{
+		G::LineStorage.clear();
+		G::BoxStorage.clear();
+		G::PathStorage.clear();
+
+		if (bPath)
+		{
+			if (Vars::Colors::PlayerPath.Value.a)
+			{
+				G::PathStorage.emplace_back(mPaths[pLocal->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
+				G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
+			}
+			if (Vars::Colors::PlayerPathClipped.Value.a)
+			{
+				G::PathStorage.emplace_back(mPaths[pLocal->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
+				G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
+			}
+		}
+	}
+	else if (G::Attacking == 1)
+	{
+		if (bLine)
+		{
+			Vec3 vEyePos = pLocal->GetShootPos();
+			float flDist = vEyePos.DistTo(tTarget.m_vPos);
+			Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
+
+			if (Vars::Colors::Line.Value.a)
+				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::Line.Value);
+			if (Vars::Colors::LineClipped.Value.a)
+				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::LineClipped.Value, true);
+		}
+		if (bBoxes)
+		{
+			auto vBoxes = F::Visuals.GetHitboxes(tTarget.m_pRecord->m_BoneMatrix.m_aBones, tTarget.m_pEntity->As<CBaseAnimating>());
+			G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
+
+			//if (Vars::Colors::BoneHitboxEdge.Value.a || Vars::Colors::BoneHitboxFace.Value.a)
+			//	G::BoxStorage.emplace_back(tTarget.m_pRecord->m_vOrigin, tTarget.m_pRecord->m_vMins, tTarget.m_pRecord->m_vMaxs, Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoneHitboxEdge.Value, Vars::Colors::BoneHitboxFace.Value);
+			//if (Vars::Colors::BoneHitboxEdgeClipped.Value.a || Vars::Colors::BoneHitboxFaceClipped.Value.a)
+			//	G::BoxStorage.emplace_back(tTarget.m_pRecord->m_vOrigin, tTarget.m_pRecord->m_vMins, tTarget.m_pRecord->m_vMaxs, Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoneHitboxEdgeClipped.Value, Vars::Colors::BoneHitboxFaceClipped.Value, true);
+		}
+	}
+}
+
 void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	static int iStaticAimType = Vars::Aimbot::General::AimType.Value;
@@ -443,20 +493,19 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	if (vTargets.empty())
 		return;
 
-	iDoubletapTicks = F::Ticks.GetTicks(pWeapon);
-	const bool bShouldSwing = iDoubletapTicks <= (GetSwingTime(pWeapon) ? 14 : 0) || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
-
+	m_mRecordMap.clear(); m_mPaths.clear();
+	m_iDoubletapTicks = F::Ticks.GetTicks(pWeapon);
+	const bool bShouldSwing = m_iDoubletapTicks <= (GetSwingTime(pWeapon) ? 14 : 0) || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
 	Vec3 vEyePos = pLocal->GetShootPos();
-	std::unordered_map<int, std::deque<TickRecord>> mRecordMap;
-	std::unordered_map<int, std::vector<Vec3>> mPaths;
-	SimulatePlayers(pLocal, pWeapon, vTargets, vEyePos, mRecordMap, mPaths);
+
+	SimulatePlayers(pLocal, pWeapon, vTargets, vEyePos);
 
 	//if (!G::AimTarget.m_iEntIndex)
 	//	G::AimTarget = { vTargets.front().m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
 
 	for (auto& tTarget : vTargets)
 	{
-		const auto iResult = CanHit(tTarget, pLocal, pWeapon, vEyePos, mRecordMap[tTarget.m_pEntity->entindex()]);
+		const auto iResult = CanHit(tTarget, pLocal, pWeapon, vEyePos);
 		if (!iResult) continue;
 		if (iResult == 2)
 		{
@@ -472,12 +521,11 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 		{
 			if (bShouldSwing)
 				pCmd->buttons |= IN_ATTACK;
-			if (iDoubletapTicks)
+			if (m_iDoubletapTicks)
 				F::Ticks.m_bDoubletap = true;
 		}
 
 		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
-
 		if (G::Attacking == 1)
 		{
 			if (tTarget.m_bBacktrack)
@@ -486,60 +534,10 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 		}
 		else
 		{
-			Vec3 vEyePos = pLocal->GetShootPos();
+			vEyePos = pLocal->GetShootPos();
 			Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, tTarget.m_vPos), tTarget.m_vAngleTo);
 		}
-
-		bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && Vars::Aimbot::General::AutoShoot.Value && !Vars::Debug::Info.Value;
-		bool bLine = Vars::Visuals::Line::Enabled.Value;
-		bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
-		if (pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f && bPath)
-		{
-			G::LineStorage.clear();
-			G::BoxStorage.clear();
-			G::PathStorage.clear();
-
-			if (bPath)
-			{
-				if (Vars::Colors::PlayerPath.Value.a)
-				{
-					G::PathStorage.emplace_back(mPaths[pLocal->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
-					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value);
-				}
-				if (Vars::Colors::PlayerPathClipped.Value.a)
-				{
-					G::PathStorage.emplace_back(mPaths[pLocal->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
-					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathClipped.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
-				}
-			}
-		}
-		if (G::Attacking == 1 && (bLine || bBoxes))
-		{
-			G::LineStorage.clear();
-			G::BoxStorage.clear();
-
-			if (bLine)
-			{
-				Vec3 vEyePos = pLocal->GetShootPos();
-				float flDist = vEyePos.DistTo(tTarget.m_vPos);
-				Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
-
-				if (Vars::Colors::Line.Value.a)
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::Line.Value);
-				if (Vars::Colors::LineClipped.Value.a)
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::LineClipped.Value, true);
-			}
-			if (bBoxes)
-			{
-				auto vBoxes = F::Visuals.GetHitboxes(tTarget.m_pRecord->m_BoneMatrix.m_aBones, tTarget.m_pEntity->As<CBaseAnimating>());
-				G::BoxStorage.insert(G::BoxStorage.end(), vBoxes.begin(), vBoxes.end());
-
-				//if (Vars::Colors::BoneHitboxEdge.Value.a || Vars::Colors::BoneHitboxFace.Value.a)
-				//	G::BoxStorage.emplace_back(tTarget.m_pRecord->m_vOrigin, tTarget.m_pRecord->m_vMins, tTarget.m_pRecord->m_vMaxs, Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoneHitboxEdge.Value, Vars::Colors::BoneHitboxFace.Value);
-				//if (Vars::Colors::BoneHitboxEdgeClipped.Value.a || Vars::Colors::BoneHitboxFaceClipped.Value.a)
-				//	G::BoxStorage.emplace_back(tTarget.m_pRecord->m_vOrigin, tTarget.m_pRecord->m_vMins, tTarget.m_pRecord->m_vMaxs, Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoneHitboxEdgeClipped.Value, Vars::Colors::BoneHitboxFaceClipped.Value, true);
-			}
-		}
+		DrawVisuals(pLocal, pWeapon, pCmd, tTarget, m_mPaths);
 
 		Aim(pCmd, tTarget.m_vAngleTo);
 		break;
@@ -557,8 +555,10 @@ bool CAimbotMelee::FindNearestBuildPoint(CBaseObject* pBuilding, CTFPlayer* pLoc
 {
 	bool bFoundPoint = false;
 
+	Vec3 vEyePos = pLocal->GetShootPos();
 	static auto tf_obj_max_attach_dist = U::ConVars.FindVar("tf_obj_max_attach_dist");
 	float flNearestPoint = tf_obj_max_attach_dist->GetFloat();
+
 	for (int i = 0; i < pBuilding->GetNumBuildPoints(); i++)
 	{
 		int v = GetAttachment(pBuilding, i);
@@ -566,10 +566,10 @@ bool CAimbotMelee::FindNearestBuildPoint(CBaseObject* pBuilding, CTFPlayer* pLoc
 		Vec3 vOrigin;
 		if (pBuilding->GetAttachment(v, vOrigin)) // issues using pBuilding->GetBuildPoint i on sentries above level 1 for some reason
 		{
-			if (!SDK::VisPos(pLocal, pBuilding, pLocal->GetShootPos(), vOrigin))
+			if (!SDK::VisPos(pLocal, pBuilding, vEyePos, vOrigin))
 				continue;
 
-			float flDist = (vOrigin - pLocal->GetAbsOrigin()).Length();
+			float flDist = (vOrigin - pLocal->m_vecOrigin()).Length();
 			if (flDist < flNearestPoint)
 			{
 				flNearestPoint = flDist;

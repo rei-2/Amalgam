@@ -7,8 +7,8 @@
 class CConVars
 {
 private:
-	std::unordered_map<uint32_t, ConVar*> mCVarMap;
-	std::unordered_map<ConCommandBase*, int> mFlagMap;
+	std::unordered_map<uint32_t, ConVar*> mCVarMap = {};
+	std::unordered_map<ConCommandBase*, int> mFlagMap = {};
 
 public:
 	void Initialize();

@@ -248,7 +248,8 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 	m_iMaxShift = sv_maxusrcmdprocessticks->GetInt();
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 		m_iMaxShift = std::min(m_iMaxShift, 8);
-	m_iMaxShift -= std::max(24 - std::clamp(Vars::Doubletap::RechargeLimit.Value, 1, 24), F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
+	m_iMaxShift -= std::max(m_iMaxShift - Vars::Doubletap::RechargeLimit.Value, 0) + (F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
+	m_iMaxShift = std::max(m_iMaxShift, 1);
 
 	while (m_iShiftedTicks > m_iMaxShift)
 		CLMoveFunc(accumulated_extra_samples, false); // skim any excess ticks

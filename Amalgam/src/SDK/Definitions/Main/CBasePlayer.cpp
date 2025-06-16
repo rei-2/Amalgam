@@ -26,3 +26,8 @@ bool CBasePlayer::IsSwimming()
 {
 	return m_nWaterLevel() > 1;
 }
+
+bool CBasePlayer::IsUnderwater()
+{
+	return m_nWaterLevel() > 2;
+}

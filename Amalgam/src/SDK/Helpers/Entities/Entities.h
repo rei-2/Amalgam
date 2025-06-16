@@ -33,26 +33,26 @@ class CEntities
 
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
 
-	std::unordered_map<int, float> m_mSimTimes, m_mOldSimTimes, m_mDeltaTimes, m_mLagTimes;
-	std::unordered_map<int, int> m_mChokes, m_mSetTicks;
-	std::unordered_map<int, std::pair<bool, matrix3x4[MAXSTUDIOBONES]>> m_mBones;
-	std::unordered_map<int, Vec3> m_mOldAngles, m_mEyeAngles;
-	std::unordered_map<int, bool> m_mLagCompensation;
-	std::unordered_map<int, DormantData> m_mDormancy;
-	std::unordered_map<int, Vec3> m_mAvgVelocities;
-	std::unordered_map<int, uint32_t> m_mModels;
-	std::unordered_map<int, std::deque<VelFixRecord>> m_mOrigins;
+	std::unordered_map<int, float> m_mSimTimes = {}, m_mOldSimTimes = {}, m_mDeltaTimes = {}, m_mLagTimes = {};
+	std::unordered_map<int, int> m_mChokes = {}, m_mSetTicks = {};
+	std::unordered_map<int, std::pair<bool, matrix3x4[MAXSTUDIOBONES]>> m_mBones = {};
+	std::unordered_map<int, Vec3> m_mOldAngles = {}, m_mEyeAngles = {};
+	std::unordered_map<int, bool> m_mLagCompensation = {};
+	std::unordered_map<int, DormantData> m_mDormancy = {};
+	std::unordered_map<int, Vec3> m_mAvgVelocities = {};
+	std::unordered_map<int, uint32_t> m_mModels = {};
+	std::unordered_map<int, std::deque<VelFixRecord>> m_mOrigins = {};
 
-	std::unordered_map<int, int> m_mIPriorities;
-	std::unordered_map<uint32_t, int> m_mUPriorities;
-	std::unordered_map<int, bool> m_mIFriends;
-	std::unordered_map<uint32_t, bool> m_mUFriends;
-	std::unordered_map<int, uint64_t> m_mIParty;
-	std::unordered_map<uint32_t, uint64_t> m_mUParty;
-	std::unordered_map<int, bool> m_mIF2P;
-	std::unordered_map<uint32_t, bool> m_mUF2P;
-	std::unordered_map<int, int> m_mILevels;
-	std::unordered_map<uint32_t, int> m_mULevels;
+	std::unordered_map<int, int> m_mIPriorities = {};
+	std::unordered_map<uint32_t, int> m_mUPriorities = {};
+	std::unordered_map<int, bool> m_mIFriends = {};
+	std::unordered_map<uint32_t, bool> m_mUFriends = {};
+	std::unordered_map<int, uint64_t> m_mIParty = {};
+	std::unordered_map<uint32_t, uint64_t> m_mUParty = {};
+	std::unordered_map<int, bool> m_mIF2P = {};
+	std::unordered_map<uint32_t, bool> m_mUF2P = {};
+	std::unordered_map<int, int> m_mILevels = {};
+	std::unordered_map<uint32_t, int> m_mULevels = {};
 	uint32_t m_uFriendsID;
 
 	bool m_bSettingUpBones = false;

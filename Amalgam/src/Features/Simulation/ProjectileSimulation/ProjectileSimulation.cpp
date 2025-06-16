@@ -128,13 +128,13 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	case TF_WEAPON_FLAREGUN:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, SDK::AttribHookValue(2000.f, "mult_projectile_speed", pWeapon), 0.3f * flGravity };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 0.f, 0.f, 0.f }, SDK::AttribHookValue(2000.f, "mult_projectile_speed", pWeapon), 0.3f * flGravity };
 		return true;
 	}
 	case TF_WEAPON_FLAREGUN_REVENGE:
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 23.5f, 12.f, bDucking ? 8.f : -3.f }, vPos, vAngle, !bTrace ? true : false, bQuick);
-		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 1.f, 1.f, 1.f }, 3000.f, 0.45f * flGravity };
+		tProjInfo = { pWeapon, FNV1A::Hash32Const("models/weapons/w_models/w_flaregun_shell.mdl"), vPos, vAngle, { 0.f, 0.f, 0.f }, 3000.f, 0.45f * flGravity };
 		return true;
 	}
 	case TF_WEAPON_COMPOUND_BOW:
@@ -254,51 +254,6 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	return false;
 }
 
-class CTraceFilterWorldPropsObjects : public ITraceFilter
-{
-public:
-	bool ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask) override;
-	TraceType_t GetTraceType() const override;
-	CBaseEntity* pSkip = nullptr;
-};
-bool CTraceFilterWorldPropsObjects::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
-{
-	if (!pServerEntity || pServerEntity == pSkip)
-		return false;
-
-	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
-
-	switch (pEntity->GetClassID())
-	{
-	case ETFClassID::CBaseEntity:
-	case ETFClassID::CBaseDoor:
-	case ETFClassID::CDynamicProp:
-	case ETFClassID::CPhysicsProp:
-	case ETFClassID::CObjectCartDispenser:
-	case ETFClassID::CFuncTrackTrain:
-	case ETFClassID::CFuncConveyor:
-	case ETFClassID::CBaseObject:
-	case ETFClassID::CObjectSentrygun:
-	case ETFClassID::CObjectDispenser:
-	case ETFClassID::CObjectTeleporter: return true;
-	case ETFClassID::CFuncRespawnRoomVisualizer:
-		if (nContentsMask & MASK_PLAYERSOLID)
-		{
-			switch (pEntity->m_iTeamNum())
-			{
-			case TF_TEAM_RED: return nContentsMask & CONTENTS_REDTEAM;
-			case TF_TEAM_BLUE: return nContentsMask & CONTENTS_BLUETEAM;
-			}
-		}
-	}
-
-	return false;
-}
-TraceType_t CTraceFilterWorldPropsObjects::GetTraceType() const
-{
-	return TRACE_EVERYTHING;
-}
-
 bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags, float flAutoCharge)
 {
 	bool InitCheck = iFlags & ProjSimEnum::InitCheck;
@@ -314,11 +269,14 @@ bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, 
 	if (!bReturn || !InitCheck)
 		return bReturn;
 
-	const Vec3 vStart = bQuick ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
-	const Vec3 vEnd = tProjInfo.m_vPos;
-
 	CGameTrace trace = {};
-	CTraceFilterWorldPropsObjects filter = {};
+	CTraceFilterCollideable filter = {}; filter.pSkip = pPlayer;
+	if (pWeapon->GetWeaponID() == TF_WEAPON_RAYGUN)
+		filter.iObject = OBJECT_DEFAULT;
+
+	Vec3 vStart = bQuick ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
+	Vec3 vEnd = tProjInfo.m_vPos;
+
 	SDK::TraceHull(vStart, vEnd, tProjInfo.m_vHull * -1.f, tProjInfo.m_vHull, MASK_SOLID, &filter, &trace);
 	return !trace.DidHit();
 }
@@ -617,4 +575,40 @@ Vec3 CProjectileSimulation::GetVelocity()
 	Vec3 vOut;
 	obj->GetVelocity(&vOut, nullptr);
 	return vOut;
+}
+
+void CProjectileSimulation::SetupTrace(CTraceFilterCollideable& filter, int& nMask, CTFWeaponBase* pWeapon, int nTick, bool bQuick)
+{
+	switch (nTick)
+	{
+	case 0:
+		switch (pWeapon->GetWeaponID())
+		{
+		case TF_WEAPON_RAYGUN:
+			filter.iObject = OBJECT_DEFAULT;
+			break;
+		case TF_WEAPON_FLAMETHROWER:
+		case TF_WEAPON_FLAME_BALL:
+			nMask |= CONTENTS_WATER;
+			break;
+		case TF_WEAPON_DRG_POMSON:
+		case TF_WEAPON_SYRINGEGUN_MEDIC:
+		case TF_WEAPON_BAT_GIFTWRAP:
+			if (bQuick)
+				filter.iPlayer = PLAYER_ALL;
+		}
+		break;
+	case 16:
+		if (bQuick)
+		{
+			switch (pWeapon->GetWeaponID())
+			{
+			case TF_WEAPON_RAYGUN:
+			case TF_WEAPON_GRAPPLINGHOOK:
+				break;
+			default:
+				filter.iPlayer = PLAYER_ALL;
+			}
+		}
+	}
 }

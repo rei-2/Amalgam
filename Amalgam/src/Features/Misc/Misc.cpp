@@ -366,7 +366,7 @@ void CMisc::AutoPeek(CTFPlayer* pLocal, CUserCmd* pCmd, bool bPost)
 
 			if (bReturning)
 			{
-				if (vLocalPos.DistTo(m_vPeekReturnPos) < 8.f)
+				if (vLocalPos.DistTo2D(m_vPeekReturnPos) < 8.f)
 				{
 					bReturning = false;
 					return;

@@ -143,6 +143,18 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 						G::Reloading = true;
 				}
 			}
+			if (G::CanPrimaryAttack)
+			{
+				switch (pWeapon->GetWeaponID())
+				{
+				case TF_WEAPON_FLAMETHROWER:
+				case TF_WEAPON_FLAME_BALL:
+				case TF_WEAPON_FLAREGUN:
+				case TF_WEAPON_FLAREGUN_REVENGE:
+					if (pLocal->IsUnderwater())
+						G::CanPrimaryAttack = G::CanSecondaryAttack = false;
+				}
+			}
 		}
 
 		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);

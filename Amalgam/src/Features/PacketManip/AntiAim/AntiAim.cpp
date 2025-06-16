@@ -57,50 +57,40 @@ void CAntiAim::FakeShotAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	}
 
 	G::SilentAngles = true;
-	pCmd->viewangles.x += 360 * (vFakeAngles.x < 0 ? -1 : 1);
-
-	// messes with nospread accuracy
-	//pCmd->viewangles.x = 180 - pCmd->viewangles.x;
-	//pCmd->viewangles.y += 180;
+	if (!Vars::Aimbot::General::NoSpread.Value)
+	{	// messes with nospread accuracy
+		pCmd->viewangles.x = 180 - pCmd->viewangles.x;
+		pCmd->viewangles.y += 180;
+	}
+	else
+		pCmd->viewangles.x += 360 * (vFakeAngles.x < 0 ? -1 : 1);
 }
 
-float CAntiAim::EdgeDistance(CTFPlayer* pEntity, float flEdgeRayYaw, float flOffset)
+static inline float EdgeDistance(CTFPlayer* pEntity, float flYaw, float flOffset)
 {
-	Vec3 vForward, vRight; Math::AngleVectors({ 0, flEdgeRayYaw, 0 }, &vForward, &vRight, nullptr);
-
-	Vec3 vCenter = pEntity->GetCenter() + vRight * flOffset;
-	Vec3 vEndPos = vCenter + vForward * 300.f;
+	Vec3 vForward, vRight; Math::AngleVectors({ 0, flYaw, 0 }, &vForward, &vRight, nullptr);
+	Vec3 vCenter = pEntity->GetCenter();
 
 	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {};
-	SDK::Trace(vCenter, vEndPos, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
-
-	vEdgeTrace.emplace_back(vCenter, trace.endpos);
+	SDK::Trace(vCenter, vCenter + vRight * flOffset, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
+	F::AntiAim.vEdgeTrace.emplace_back(trace.startpos, trace.endpos);
+	SDK::Trace(trace.endpos, trace.endpos + vForward * 300.f, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
+	F::AntiAim.vEdgeTrace.emplace_back(trace.startpos, trace.endpos);
 
 	return trace.fraction;
 }
 
-int CAntiAim::GetEdge(CTFPlayer* pEntity, const float flEdgeOrigYaw)
+static inline int GetEdge(CTFPlayer* pEntity, const float flYaw)
 {
 	float flSize = pEntity->GetSize().y;
-	float flEdgeLeftDist = EdgeDistance(pEntity, flEdgeOrigYaw, -flSize);
-	float flEdgeRightDist = EdgeDistance(pEntity, flEdgeOrigYaw, flSize);
+	float flEdgeLeftDist = EdgeDistance(pEntity, flYaw, -flSize);
+	float flEdgeRightDist = EdgeDistance(pEntity, flYaw, flSize);
 
 	return flEdgeLeftDist > flEdgeRightDist ? -1 : 1;
 }
 
-void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flRealYaw, bool bFake, float flEpsilon)
-{
-	if (!Vars::AntiAim::AntiOverlap.Value || bFake)
-		return;
-
-	float flFakeYaw = GetBaseYaw(pEntity, pCmd, true) + GetYawOffset(pEntity, true);
-	const float flYawDiff = Math::NormalizeAngle(flRealYaw - flFakeYaw);
-	if (fabsf(flYawDiff) < flEpsilon)
-		flRealYaw += flYawDiff > 0 ? flEpsilon : -flEpsilon;
-}
-
-inline int GetJitter(uint32_t uHash)
+static inline int GetJitter(uint32_t uHash)
 {
 	static std::unordered_map<uint32_t, bool> mJitter = {};
 
@@ -158,6 +148,17 @@ float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 	return pCmd->viewangles.y;
 }
 
+void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flYaw, bool bFake, float flEpsilon)
+{
+	if (!Vars::AntiAim::AntiOverlap.Value || bFake)
+		return;
+
+	float flFakeYaw = GetBaseYaw(pEntity, pCmd, true) + GetYawOffset(pEntity, true);
+	const float flYawDiff = Math::NormalizeAngle(flYaw - flFakeYaw);
+	if (fabsf(flYawDiff) < flEpsilon)
+		flYaw += flYawDiff > 0 ? flEpsilon : -flEpsilon;
+}
+
 float CAntiAim::GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 {
 	float flYaw = GetBaseYaw(pLocal, pCmd, bFake) + GetYawOffset(pLocal, bFake);
@@ -199,7 +200,7 @@ float CAntiAim::GetPitch(float flCurPitch)
 
 void CAntiAim::MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	if (!Vars::AntiAim::MinWalk.Value || !F::AntiAim.YawOn() || !pLocal->m_hGroundEntity() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
+	if (!Vars::AntiAim::MinWalk.Value || !YawOn() || !pLocal->m_hGroundEntity() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
 
 	if (!pCmd->forwardmove && !pCmd->sidemove && pLocal->m_vecVelocity().Length2D() < 2.f)

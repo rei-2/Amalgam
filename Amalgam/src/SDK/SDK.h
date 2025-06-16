@@ -98,7 +98,7 @@ namespace SDK
 	void TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHullMin, const Vec3& vecHullMax, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace);
 
 	bool VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
-	bool VisPosProjectile(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
+	bool VisPosCollideable(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
 	bool VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
 
 	int GetRoundState();

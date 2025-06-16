@@ -28,7 +28,7 @@ public:
 	// Was the button just released? This will only be true once.
 	bool Released(int iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
 
-	std::unordered_map<int, KeyStorage> m_mKeyStorage;
+	std::unordered_map<int, KeyStorage> m_mKeyStorage = {};
 };
 
 ADD_FEATURE_CUSTOM(CKeyHandler, KeyHandler, U);

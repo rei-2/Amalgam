@@ -34,7 +34,6 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 		if (auto pLocal = H::Entities.GetLocal())
 		{
 			F::CameraWindow.Draw();
-			F::Visuals.DrawServerHitboxes(pLocal);
 			F::Visuals.DrawAntiAim(pLocal);
 
 			F::Visuals.DrawPickupTimers();

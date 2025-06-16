@@ -1,5 +1,6 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/Commands/Commands.h"
 #include <functional>
 #include <regex>
 
@@ -223,6 +224,9 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 		std::deque<std::string> vArgs;
 		for (int i = 1; i < args.ArgC(); i++)
 			vArgs.push_back(args[i]);
+
+        if (F::Commands.Run(sCommand, vArgs))
+            return;
 
 		switch (FNV1A::Hash32(sCommand.c_str()))
 		{

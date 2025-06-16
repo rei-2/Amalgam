@@ -180,7 +180,6 @@
     <ClCompile Include="src\Hooks\IPanel_PaintTraverse.cpp" />
     <ClCompile Include="src\Hooks\ISteamFriends_GetFriendPersonaName.cpp" />
     <ClCompile Include="src\Hooks\ISteamNetworkingUtils_GetPingToDataCenter.cpp" />
-    <ClCompile Include="src\Hooks\IVEngineClient_ClientCmd_Unrestricted.cpp" />
     <ClCompile Include="src\Hooks\IVModelRender_DrawModelExecute.cpp" />
     <ClCompile Include="src\Hooks\IVModelRender_ForcedMaterialOverride.cpp" />
     <ClCompile Include="src\Hooks\KeyValues_SetInt.cpp" />
