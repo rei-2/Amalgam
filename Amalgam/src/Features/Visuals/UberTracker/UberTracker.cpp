@@ -1,5 +1,6 @@
 #include "UberTracker.h"
 #include "../../../SDK/SDK.h"
+#include "../../Players/PlayerUtils.h"
 
 std::string CUberTracker::GetMedicID(CBaseEntity* pEntity)
 {
@@ -23,15 +24,15 @@ std::string CUberTracker::GetWeaponType(int iItemDefinitionIndex, bool* bIsKritz
 	
 	switch (iItemDefinitionIndex)
 	{
-		case 29:
-		case 211:
-		case 663:
+		case 29:   // Standard Medigun
+		case 211:  // Festive Medigun
+		case 663:  // Silver Botkiller Medigun
 			return "UBER";
-		case 35:
+		case 35:   // Kritzkrieg
 			return "KRITZ";
-		case 411:
+		case 411:  // Quick-Fix
 			return "QUICKFIX";
-		case 998:
+		case 998:  // Vaccinator
 			return "VACCINATOR";
 		default:
 			return "UBER";
@@ -280,24 +281,34 @@ void CUberTracker::Draw()
 			continue;
 		
 		float flChargeLevel = pMedigunWeapon->m_flChargeLevel();
-		int iItemDefIndex = pMedigun->GetWeaponID();
+		int iItemDefIndex = pMedigun->m_iItemDefinitionIndex();
 		
 		bool bIsKritzOverride = false;
 		std::string sWeaponName = GetWeaponType(iItemDefIndex, &bIsKritzOverride);
-		std::string sRealWeaponName = sWeaponName;
+		std::string sRealWeaponName = sWeaponName; // Start with same value
 		
 		float flPercentageValue = flChargeLevel * 100.0f;
 		
+		// If this is a Kritzkrieg but we're showing it as Uber (when IGNORE_KRITZ=true)
 		if (bIsKritzOverride)
 		{
 			std::string sMedicID = GetMedicID(pPlayer);
 			float flActualKritzPercentage = flPercentageValue;
+			
+			// Translate Kritz percentage to Uber percentage
 			flPercentageValue = TranslateKritzToUber(pPlayer, sMedicID, flActualKritzPercentage, flCurrentTime);
+			
+			// Store real weapon name for kritz warning
 			sRealWeaponName = "KRITZ";
 		}
 		
 		MedicInfo medicInfo;
-		medicInfo.Name = "Medic " + std::to_string(pPlayer->entindex());
+		// Get player name properly
+		PlayerInfo_t pi{};
+		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
+			medicInfo.Name = F::PlayerUtils.GetPlayerName(pPlayer->entindex(), pi.name);
+		else
+			medicInfo.Name = "Medic " + std::to_string(pPlayer->entindex());
 		medicInfo.WeaponName = sWeaponName;
 		medicInfo.RealWeaponName = sRealWeaponName;
 		medicInfo.UberPercentage = flPercentageValue;
