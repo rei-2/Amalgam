@@ -161,7 +161,7 @@ void CYourFeature::DrawElements()
 | Lua Concept | C++ Equivalent | Example |
 |-------------|----------------|---------|
 | `entity:GetWeaponFromSlot(1)` | `pPlayer->GetWeaponFromSlot(SLOT_SECONDARY)` | Get secondary weapon |
-| `weapon:GetItemDefIndex()` | `pWeapon->GetWeaponID()` | Get weapon ID |
+| `weapon:GetItemDefIndex()` | `pWeapon->m_iItemDefinitionIndex()` | Get item definition index |
 | `medigun.m_flChargeLevel` | `pMedigun->As<CWeaponMedigun>()->m_flChargeLevel()` | Get uber charge |
 
 ### Lua → C++ Constants
@@ -334,22 +334,36 @@ The `ADD_FEATURE` macro automatically registers your feature. The naming convent
 #include <string>
 ```
 
-### 2. Entity Method Not Found
-**Problem:** `GetName()`, `GetItemDefIndex()` don't exist
-**Solution:** Check ESP.cpp for correct methods
+### 2. Weapon ID vs Item Definition Index
+**Problem:** `GetWeaponID()` returns weapon class ID, not item definition index
+**Solution:** Use netvar for item definition index to distinguish weapon types
 ```cpp
-// Wrong
-pWeapon->GetItemDefIndex()
-// Correct
-pWeapon->GetWeaponID()
+// Wrong - All mediguns return same ID (50)
+int weaponID = pWeapon->GetWeaponID();
 
-// Wrong
-pEntity->GetName()
-// Correct
-"Entity " + std::to_string(pEntity->entindex())
+// Correct - Distinguishes between weapon types (35=KRITZ, 411=QUICKFIX, etc.)
+int itemDefIndex = pWeapon->m_iItemDefinitionIndex();
 ```
 
-### 3. Drawing Function Issues
+### 3. Player Name Access
+**Problem:** `GetName()` method doesn't exist on entities
+**Solution:** Use PlayerInfo and PlayerUtils for proper name access
+```cpp
+// Wrong
+std::string name = pPlayer->GetName();
+
+// Correct
+PlayerInfo_t pi{};
+if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
+    std::string name = F::PlayerUtils.GetPlayerName(pPlayer->entindex(), pi.name);
+else
+    std::string name = "Player " + std::to_string(pPlayer->entindex());
+
+// Don't forget to include PlayerUtils
+#include "../../Players/PlayerUtils.h"
+```
+
+### 4. Drawing Function Issues
 **Problem:** `FillRectangle()`, `FONT_MENU` not found
 **Solution:** Use correct Amalgam drawing API
 ```cpp
@@ -364,7 +378,7 @@ FONT_MENU
 H::Fonts.GetFont(FONT_ESP)
 ```
 
-### 4. Team/Class Constants
+### 5. Team/Class Constants
 **Problem:** `CLASS_MEDIC`, team numbers as raw integers
 **Solution:** Use TF2 constants
 ```cpp
@@ -379,7 +393,7 @@ if (team == 2)
 if (pEntity->m_iTeamNum() == TF_TEAM_RED)
 ```
 
-### 5. Netvar Access
+### 6. Netvar Access
 **Problem:** Direct member access failing
 **Solution:** Use netvar accessor methods
 ```cpp
@@ -389,13 +403,25 @@ pMedigun->m_flChargeLevel
 pMedigun->m_flChargeLevel()
 ```
 
-### 6. Entity Casting
+### 7. Entity Casting
 **Problem:** Method not available on base entity
 **Solution:** Cast to specific type
 ```cpp
 // Get entity as specific type
 auto pPlayer = pEntity->As<CTFPlayer>();
 auto pMedigun = pWeapon->As<CWeaponMedigun>();
+```
+
+### 8. Debugging Unknown Values
+**Problem:** Need to identify what values are actually being returned
+**Solution:** Use console output for debugging
+```cpp
+// Add temporary debug output to see actual values
+I::CVar->ConsolePrintf("DEBUG: Weapon ID = %d\n", pWeapon->GetWeaponID());
+I::CVar->ConsolePrintf("DEBUG: Item Def Index = %d\n", pWeapon->m_iItemDefinitionIndex());
+
+// View results in game console (~ key)
+// Remove debug output once you identify the correct values
 ```
 
 ## Advanced Patterns
@@ -536,10 +562,10 @@ Here's how the uber2.lua was successfully ported following this guide:
 4. **Drawing Integration**: Used `H::Draw.FillRect()` and `H::Draw.String()`
 5. **Project Integration**: Added to `.vcxproj` and `IEngineVGui_Paint.cpp`
 6. **Fixes Applied**: 
-   - Added `#include <map>`
-   - Changed `GetItemDefIndex()` → `GetWeaponID()`
-   - Simplified name access
-   - Used correct constants
+   - Added `#include <map>` for STL containers
+   - Changed `GetWeaponID()` → `m_iItemDefinitionIndex()` for proper weapon type detection
+   - Added PlayerUtils include for proper name access
+   - Used correct TF2 constants
 
 The result was a perfectly integrated feature that provided all the original Lua functionality natively in C++.
 
