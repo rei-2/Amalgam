@@ -4,6 +4,7 @@
 #include "../FakeAngle/FakeAngle.h"
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
+#include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 
 static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bEnemy, bool bTeam)
 {
@@ -65,11 +66,9 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	{
 		auto pOwner = pEntity->As<CBaseObject>()->m_hBuilder().Get();
 		if (!pOwner) pOwner = pEntity;
-
 		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Buildings.Value, Vars::Chams::Team::Buildings.Value);
 	}
 	// projectile chams
-	case ETFClassID::CBaseProjectile:
 	case ETFClassID::CBaseGrenade:
 	case ETFClassID::CTFWeaponBaseGrenadeProj:
 	case ETFClassID::CTFWeaponBaseMerasmusGrenade:
@@ -93,19 +92,13 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFProjectile_ThrowableBreadMonster:
 	case ETFClassID::CTFProjectile_ThrowableBrick:
 	case ETFClassID::CTFProjectile_ThrowableRepel:
-	{
-		auto pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
-		if (!pOwner) pOwner = pEntity;
-
-		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
-	}
 	case ETFClassID::CTFBaseRocket:
 	case ETFClassID::CTFFlameRocket:
 	case ETFClassID::CTFProjectile_Arrow:
 	case ETFClassID::CTFProjectile_GrapplingHook:
 	case ETFClassID::CTFProjectile_HealingBolt:
 	case ETFClassID::CTFProjectile_Rocket:
-	//case ETFClassID::CTFProjectile_BallOfFire: // lifetime too short
+	case ETFClassID::CTFProjectile_BallOfFire:
 	case ETFClassID::CTFProjectile_MechanicalArmOrb:
 	case ETFClassID::CTFProjectile_SentryRocket:
 	case ETFClassID::CTFProjectile_SpellFireball:
@@ -113,21 +106,12 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFProjectile_SpellKartOrb:
 	case ETFClassID::CTFProjectile_EnergyBall:
 	case ETFClassID::CTFProjectile_Flare:
-	{
-		auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
-		if (!pOwner) pOwner = pEntity;
-
-		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
-	}
 	case ETFClassID::CTFBaseProjectile:
-	case ETFClassID::CTFProjectile_EnergyRing: // not drawn, shoulddraw check, small anyways
-	//case ETFClassID::CTFProjectile_Syringe: // not drawn
+	case ETFClassID::CTFProjectile_EnergyRing:
+	//case ETFClassID::CTFProjectile_Syringe:
 	{
-		auto pWeapon = pEntity->As<CTFBaseProjectile>()->m_hLauncher().Get();
-		auto pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : pEntity;
+		auto pOwner = F::ProjSim.GetEntities(pEntity).second->As<CBaseEntity>();
 		if (!pOwner) pOwner = pEntity;
-
 		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
 	}
 	// ragdoll chams
@@ -137,7 +121,6 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	{
 		auto pOwner = pEntity->As<CTFRagdoll>()->m_hPlayer().Get();
 		if (!pOwner) pOwner = pEntity;
-
 		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Ragdolls.Value, Vars::Chams::Team::Ragdolls.Value);
 	}
 	// objective chams
@@ -309,7 +292,7 @@ void CChams::Store(CTFPlayer* pLocal)
 
 		Chams_t tChams = {};
 		if (GetChams(pLocal, pEntity, &tChams)
-			&& SDK::IsOnScreen(pEntity, !H::Entities.IsProjectile(pEntity) /*&& pEntity->GetClassID() != ETFClassID::CTFMedigunShield*/))
+			&& SDK::IsOnScreen(pEntity, !pEntity->IsProjectile() /*&& pEntity->GetClassID() != ETFClassID::CTFMedigunShield*/))
 			m_vEntities.emplace_back(pEntity, tChams);
 
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
@@ -363,14 +346,11 @@ void CChams::RenderMain()
 		{
 			m_bExtra = true;
 
-			auto pPlayer = tInfo.m_pEntity->As<CTFPlayer>();
-
-			const float flOldInvisibility = pPlayer->m_flInvisibility();
-			pPlayer->m_flInvisibility() = 0.f;
-
+			//auto pPlayer = tInfo.m_pEntity->As<CTFPlayer>();
+			//const float flOldInvisibility = pPlayer->m_flInvisibility();
+			//pPlayer->m_flInvisibility() = 0.f;
 			DrawModel(tInfo.m_pEntity, tInfo.m_tChams, pRenderContext, true);
-
-			pPlayer->m_flInvisibility() = flOldInvisibility;
+			//pPlayer->m_flInvisibility() = flOldInvisibility;
 
 			m_bExtra = false;
 		}

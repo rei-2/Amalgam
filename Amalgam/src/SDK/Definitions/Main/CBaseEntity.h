@@ -90,6 +90,10 @@ public:
 	NETVAR(movetype, int, "CBaseEntity", "movetype");
 	
 	NETVAR_OFF(m_flOldSimulationTime, float, "CBaseEntity", "m_flSimulationTime", 4);
+	NETVAR_OFF(m_flGravity, float, "CTFPlayer", "m_nWaterLevel", -24);
+	NETVAR_OFF(m_MoveType, byte, "CTFPlayer", "m_nWaterLevel", -4);
+	NETVAR_OFF(m_MoveCollide, byte, "CTFPlayer", "m_nWaterLevel", -3);
+	NETVAR_OFF(m_nWaterType, byte, "CTFPlayer", "m_nWaterLevel", 1);
 	NETVAR_OFF(m_Particles, CParticleProperty*, "CBaseEntity", "m_flElasticity", -56);
 	inline CBaseEntity* GetMoveParent()
 	{
@@ -113,6 +117,8 @@ public:
 		return m_pMoveChild ? m_pMoveChild->Get() : nullptr;
 	}
 
+	VIRTUAL(EyePosition, Vec3, 142, this);
+	VIRTUAL(EyeAngles, Vec3&, 143, this);
 	VIRTUAL(UpdateVisibility, void, 91, this);
 
 	SIGNATURE_ARGS(SetAbsOrigin, void, CBaseEntity, (const Vec3& vOrigin), this, std::ref(vOrigin));

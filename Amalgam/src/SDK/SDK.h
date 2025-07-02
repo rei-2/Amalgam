@@ -101,10 +101,13 @@ namespace SDK
 	bool VisPosCollideable(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
 	bool VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask = MASK_SHOT | CONTENTS_GRATE);
 
+	Vec3 PredictOrigin(Vec3& vOrigin, Vec3 vVelocity, float flLatency, bool bTrace = true, Vec3 vMins = {}, Vec3 vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
+	bool PredictOrigin(Vec3& vOut, Vec3& vOrigin, Vec3 vVelocity, float flLatency, bool bTrace = true, Vec3 vMins = {}, Vec3 vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
+
 	int GetRoundState();
 	int GetWinningTeam();
 	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType = nullptr);
-	const char* GetClassByIndex(const int nClass);
+	const char* GetClassByIndex(const int nClass, bool bLower = true);
 
 	int IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase = false);
 	float MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch = false, bool bIgnoreSpecialAbility = false);
@@ -119,5 +122,4 @@ namespace SDK
 	void WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vTo, float flScale = 1.f);
 
 	void GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, bool bPipes = false, bool bInterp = false, bool bAllowFlip = true);
-	void GetProjectileFireSetupAirblast(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vPosIn, Vec3& vAngOut, bool bInterp = false);
 }

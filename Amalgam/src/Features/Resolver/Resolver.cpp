@@ -37,7 +37,7 @@ std::optional<float> CResolver::GetPitchForSniperDot(CTFPlayer* pEntity, CTFPlay
 		const Vec3 vOrigin = m_mSniperDots[iUserID];
 		const Vec3 vEyeOrigin = pEntity->m_vecOrigin() + pEntity->GetViewOffset();
 		const Vec3 vDelta = vOrigin - vEyeOrigin;
-		Vec3 vAngles; Math::VectorAngles(vDelta, vAngles);
+		Vec3 vAngles = Math::VectorAngles(vDelta);
 		return vAngles.x;
 	}
 

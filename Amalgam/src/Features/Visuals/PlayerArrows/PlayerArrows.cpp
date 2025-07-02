@@ -20,7 +20,7 @@ void CPlayerArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Color_
 			return;
 	}
 
-	Vec3 vAngle; Math::VectorAngles({ vCenter.x - vScreenPos.x, vCenter.y - vScreenPos.y, 0 }, vAngle);
+	Vec3 vAngle = Math::VectorAngles({ vCenter.x - vScreenPos.x, vCenter.y - vScreenPos.y, 0 });
 	const float flDeg = DEG2RAD(vAngle.y);
 	const float flCos = cos(flDeg);
 	const float flSin = sin(flDeg);

@@ -8,7 +8,7 @@ MAKE_SIGNATURE(RandomSeed, "client.dll", "0F B6 1D ? ? ? ? 89 9D", 0x0);
 
 struct DrawLine_t
 {
-	std::pair<Vec3, Vec3> m_vOrigin;
+	std::pair<Vec3, Vec3> m_paOrigin;
 	float m_flTime;
 	Color_t m_tColor;
 	bool m_bZBuffer = false;
@@ -49,7 +49,7 @@ struct DrawSphere_t
 
 struct DrawSwept_t
 {
-	std::pair<Vec3, Vec3> m_vOrigin;
+	std::pair<Vec3, Vec3> m_paOrigin;
 	Vec3 m_vMins;
 	Vec3 m_vMaxs;
 	Vec3 m_vAngles;

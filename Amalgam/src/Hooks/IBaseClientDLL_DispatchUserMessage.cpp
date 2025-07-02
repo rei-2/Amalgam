@@ -54,11 +54,11 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 				return true;
 
 #ifdef DEBUG_VISUALS
-			if (sMsg.find("[BoxAngles] ") == 0)
+			if (sMsg.find("[Box] ") == 0)
 			{
 				try
 				{
-					sMsg.replace(0, strlen("[BoxAngles] "), "");
+					sMsg.replace(0, strlen("[Box] "), "");
 					std::vector<std::string> vValues = {};
 					boost::split(vValues, sMsg, boost::is_any_of(" "));
 					if (vValues.size() != 17)
@@ -71,7 +71,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 					Color_t tColor = { byte(std::stoi(vValues[12])), byte(std::stoi(vValues[13])), byte(std::stoi(vValues[14])), byte(255 - std::stoi(vValues[15])) };
 					float flDuration = std::stof(vValues[16]);
 
-					G::BoxStorage.emplace_back(vOrigin, vMins, vMaxs, vAngles, I::GlobalVars->curtime + flDuration, tColor, Color_t(0, 0, 0, 0));
+					G::BoxStorage.emplace_back(vOrigin, vMins, vMaxs, vAngles, I::GlobalVars->curtime + flDuration, tColor, Color_t(0, 0, 0, 0), true);
 				}
 				catch (...) {}
 
@@ -92,7 +92,7 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 					Color_t tColor = { byte(std::stoi(vValues[6])), byte(std::stoi(vValues[7])), byte(std::stoi(vValues[8])), byte(255 - std::stoi(vValues[9])) };
 					float flDuration = std::stof(vValues[10]);
 
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vStart, vEnd), I::GlobalVars->curtime + flDuration, tColor);
+					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vStart, vEnd), I::GlobalVars->curtime + flDuration, tColor, true);
 				}
 				catch (...) {}
 

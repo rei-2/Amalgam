@@ -194,7 +194,7 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 				{
 					float flDistTo = pTarget->m_vecOrigin().DistTo(pLocal->m_vecOrigin());
 
-					float flMult = SDK::AttribHookValue(1.f, "mult_dmg", pWeapon);
+					float flMult = SDK::AttribHookValue(1, "mult_dmg", pWeapon);
 					int iDamage = std::ceil(Math::RemapVal(flDistTo, 90.f, 900.f, 60.f, 21.f) * flMult);
 					if (pPlayer->m_iHealth() <= iDamage)
 						bHeadshot = false;
@@ -665,19 +665,21 @@ bool CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 }
 
 // assume angle calculated outside with other overload
-void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle)
+void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 {
-	switch (Vars::Aimbot::General::AimType.Value)
+	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
+	switch (iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
+		if (G::Attacking != 1 && !bDoubleTap)
+			break;
+		[[fallthrough]];
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
 		pCmd->viewangles = vAngle;
 		I::EngineClient->SetViewAngles(vAngle);
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
-	{
-		bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
 		if (G::Attacking == 1 || bDoubleTap)
 		{
 			SDK::FixMovement(pCmd, vAngle);
@@ -685,12 +687,9 @@ void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle)
 			G::SilentAngles = true;
 		}
 		break;
-	}
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
-	{
 		SDK::FixMovement(pCmd, vAngle);
 		pCmd->viewangles = vAngle;
-	}
 	}
 }
 

@@ -45,7 +45,7 @@ bool CTFWeaponBase::CanFireCriticalShot(bool bIsHeadshot)
 	return bReturn;
 }
 
-bool CTFWeaponBase::CanHeadShot()
+bool CTFWeaponBase::CanHeadshot()
 {
 	return GetDamageType() & DMG_USE_HITLOCATIONS && CanFireCriticalShot(true);
 }

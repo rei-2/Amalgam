@@ -5,6 +5,7 @@
 #include "../../../Features/Players/PlayerUtils.h"
 #include "../../../Features/Backtrack/Backtrack.h"
 #include "../../../Features/CheaterDetection/CheaterDetection.h"
+#include "../../../Features/Resolver/Resolver.h"
 
 void CEntities::Store()
 {
@@ -93,7 +94,7 @@ void CEntities::Store()
 		//case ETFClassID::CTFProjectile_Syringe:
 		{
 			if ((nClassID == ETFClassID::CTFProjectile_Cleaver || nClassID == ETFClassID::CTFStunBall) && pEntity->As<CTFGrenadePipebombProjectile>()->m_bTouched()
-				|| (nClassID == ETFClassID::CTFProjectile_Arrow || nClassID == ETFClassID::CTFProjectile_GrapplingHook) && pEntity->GetAbsVelocity().IsZero())
+				|| (nClassID == ETFClassID::CTFProjectile_Arrow || nClassID == ETFClassID::CTFProjectile_GrapplingHook) && !pEntity->m_MoveType())
 				break;
 
 			m_mGroups[EGroupType::WORLD_PROJECTILES].push_back(pEntity);
@@ -155,11 +156,6 @@ void CEntities::Store()
 	std::unordered_map<uint32_t, int> mLevels = {};
 	if (bUpdateInfo)
 	{
-		/*
-		if (!I::EngineVGui->IsGameUIVisible())
-			SDK::Output("Update info", std::format("{}", I::GlobalVars->curtime).c_str(), { 255, 255, 0 }, false, false, false, true);
-		*/
-
 		m_mIFriends.clear();
 		m_mUFriends.clear();
 		m_mIParty.clear();
@@ -213,24 +209,6 @@ void CEntities::Store()
 				m_mIParty[n] = m_mUParty[pi.friendsID] = mParties.contains(pi.friendsID) ? mParties[pi.friendsID] : 0;
 				m_mIF2P[n] = m_mUF2P[pi.friendsID] = mF2P.contains(pi.friendsID) ? mF2P[pi.friendsID] : false;
 				m_mILevels[n] = m_mULevels[pi.friendsID] = mLevels.contains(pi.friendsID) ? mLevels[pi.friendsID] : -2;
-
-				/*
-				if (!I::EngineVGui->IsGameUIVisible())
-				{
-					SDK::Output(
-						std::format("Info, {}, {}", n, pi.friendsID).c_str(),
-						std::format("{}; {}; {}, {}; {}, {}; {}, {}",
-							m_mIPriorities[n],
-							m_mIFriends[n],
-							mParties.contains(pi.friendsID), mParties.contains(pi.friendsID) ? mParties[pi.friendsID] : 0,
-							mF2P.contains(pi.friendsID), mF2P.contains(pi.friendsID) ? mF2P[pi.friendsID] : false,
-							mLevels.contains(pi.friendsID), mLevels.contains(pi.friendsID) ? mLevels[pi.friendsID] : -2
-						).c_str(),
-						Color_t(255, pi.friendsID == 1112583225 || pi.friendsID == 1898481472 ? 0 : 255, 255),
-						false, false, false, true
-					);
-				}
-				*/
 			}
 		}
 
@@ -293,12 +271,52 @@ void CEntities::Store()
 			continue;
 		}
 
-		m_bSettingUpBones = true;
-		m_mBones[n].first = pPlayer->SetupBones(m_mBones[n].second, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, flSimTime);
-		m_bSettingUpBones = false;
-
 		m_mOldAngles[n] = m_mEyeAngles[n];
 		m_mEyeAngles[n] = pPlayer->As<CTFPlayer>()->GetEyeAngles();
+	}
+	F::Resolver.FrameStageNotify();
+	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
+	{
+		auto pPlayer = I::ClientEntityList->GetClientEntity(n)->As<CTFPlayer>();
+		if (!pPlayer || !pPlayer->IsPlayer()
+			|| n == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() // local player managed in CreateMove
+			|| pPlayer->IsDormant() || !pPlayer->IsAlive())
+			continue;
+
+		int iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(n));
+		if (!iDeltaTicks)
+			continue;
+
+		bool bResolver = F::Resolver.GetAngles(pPlayer);
+		if (Vars::Visuals::Removals::Interpolation.Value || bResolver)
+		{
+			float flOldFrameTime = I::GlobalVars->frametime;
+			I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
+			for (int i = 0; i < iDeltaTicks; i++)
+			{
+				G::UpdatingAnims = true;
+
+				if (bResolver)
+				{
+					float flYaw, flPitch;
+					F::Resolver.GetAngles(pPlayer, &flYaw, &flPitch, nullptr, i + 1 == iDeltaTicks);
+
+					float flOriginalYaw = pPlayer->m_angEyeAnglesY(), flOriginalPitch = pPlayer->m_angEyeAnglesX();
+					pPlayer->m_angEyeAnglesY() = flYaw, pPlayer->m_angEyeAnglesX() = flPitch;
+					pPlayer->UpdateClientSideAnimation();
+					pPlayer->m_angEyeAnglesY() = flOriginalYaw, pPlayer->m_angEyeAnglesX() = flOriginalPitch;
+				}
+				else
+					pPlayer->UpdateClientSideAnimation();
+
+				G::UpdatingAnims = false;
+			}
+			I::GlobalVars->frametime = flOldFrameTime;
+		}
+
+		m_bSettingUpBones = true;
+		m_mBones[n].first = pPlayer->SetupBones(m_mBones[n].second, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, m_mSimTimes[n]);
+		m_bSettingUpBones = false;
 	}
 }
 
@@ -414,59 +432,6 @@ bool CEntities::IsSpellbook(uint32_t uHash)
 	case FNV1A::Hash32Const("models/items/crystal_ball_pickup_major.mdl"):
 	case FNV1A::Hash32Const("models/props_monster_mash/flask_vial_green.mdl"):
 	case FNV1A::Hash32Const("models/props_monster_mash/flask_vial_purple.mdl"): // prop_dynamic in the map, probably won't work
-		return true;
-	}
-	return false;
-}
-
-bool CEntities::IsProjectile(CBaseEntity* pEntity)
-{
-	if (!pEntity)
-		return false;
-
-	switch (pEntity->GetClassID())
-	{
-	case ETFClassID::CBaseProjectile:
-	case ETFClassID::CBaseGrenade:
-	case ETFClassID::CTFWeaponBaseGrenadeProj:
-	case ETFClassID::CTFWeaponBaseMerasmusGrenade:
-	case ETFClassID::CTFGrenadePipebombProjectile:
-	case ETFClassID::CTFStunBall:
-	case ETFClassID::CTFBall_Ornament:
-	case ETFClassID::CTFProjectile_Jar:
-	case ETFClassID::CTFProjectile_Cleaver:
-	case ETFClassID::CTFProjectile_JarGas:
-	case ETFClassID::CTFProjectile_JarMilk:
-	case ETFClassID::CTFProjectile_SpellBats:
-	case ETFClassID::CTFProjectile_SpellKartBats:
-	case ETFClassID::CTFProjectile_SpellMeteorShower:
-	case ETFClassID::CTFProjectile_SpellMirv:
-	case ETFClassID::CTFProjectile_SpellPumpkin:
-	case ETFClassID::CTFProjectile_SpellSpawnBoss:
-	case ETFClassID::CTFProjectile_SpellSpawnHorde:
-	case ETFClassID::CTFProjectile_SpellSpawnZombie:
-	case ETFClassID::CTFProjectile_SpellTransposeTeleport:
-	case ETFClassID::CTFProjectile_Throwable:
-	case ETFClassID::CTFProjectile_ThrowableBreadMonster:
-	case ETFClassID::CTFProjectile_ThrowableBrick:
-	case ETFClassID::CTFProjectile_ThrowableRepel:
-	case ETFClassID::CTFBaseRocket:
-	case ETFClassID::CTFFlameRocket:
-	case ETFClassID::CTFProjectile_Arrow:
-	case ETFClassID::CTFProjectile_GrapplingHook:
-	case ETFClassID::CTFProjectile_HealingBolt:
-	case ETFClassID::CTFProjectile_Rocket:
-	case ETFClassID::CTFProjectile_BallOfFire:
-	case ETFClassID::CTFProjectile_MechanicalArmOrb:
-	case ETFClassID::CTFProjectile_SentryRocket:
-	case ETFClassID::CTFProjectile_SpellFireball:
-	case ETFClassID::CTFProjectile_SpellLightningOrb:
-	case ETFClassID::CTFProjectile_SpellKartOrb:
-	case ETFClassID::CTFProjectile_EnergyBall:
-	case ETFClassID::CTFProjectile_Flare:
-	case ETFClassID::CTFBaseProjectile:
-	case ETFClassID::CTFProjectile_EnergyRing:
-	//case ETFClassID::CTFProjectile_Syringe:
 		return true;
 	}
 	return false;

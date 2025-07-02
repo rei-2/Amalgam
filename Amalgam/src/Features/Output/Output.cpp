@@ -96,6 +96,7 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		int nHealth = pEvent->GetInt("health");
 		int nDamage = pEvent->GetInt("damageamount");
 		bool bCrit = pEvent->GetBool("crit");
+		bool bMinicrit = pEvent->GetBool("minicrit");
 		int iMaxHealth = pEntity->As<CTFPlayer>()->GetMaxHealth();
 
 		PlayerInfo_t pi{};
@@ -104,8 +105,8 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			return;
 
 		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-		std::string sOutput = std::format("You hit {} for {} damage{}({} / {})", (sName), (nDamage), (bCrit ? " (crit) " : " "), (nHealth), (iMaxHealth));
-		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{}{}({} / {})", (sYellow), (sName), (sRed), (nDamage), (bCrit ? " (crit) " : " "), (sYellow), (nHealth), (iMaxHealth));
+		std::string sOutput = std::format("You hit {} for {} damage ({} / {}{})", (sName), (nDamage), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : ""));
+		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{} ({} / {}{})", (sYellow), (sName), (sRed), (nDamage), (sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : ""));
 		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage", sOutput, sChat);
 
 		return;

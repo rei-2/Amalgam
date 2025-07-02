@@ -1,5 +1,7 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/Simulation/ProjectileSimulation/ProjectileSimulation.h"
+
 MAKE_SIGNATURE(CParticleProperty_CreateName, "client.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 48 8B 59 ? 49 8B F1", 0x0);
 MAKE_SIGNATURE(CParticleProperty_CreatePoint, "client.dll", "44 89 4C 24 ? 44 89 44 24 ? 53", 0x0);
 MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects_CreateName_Call1, "client.dll", "E8 ? ? ? ? 49 8B CC F3 0F 11 74 24", 0x5);
@@ -142,65 +144,7 @@ MAKE_HOOK(CParticleProperty_CreatePoint, S::CParticleProperty_CreatePoint(), voi
             bool bValid = false;
             for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
             {
-                CBaseEntity* pOwner = nullptr;
-                switch (pEntity->GetClassID())
-                {
-                case ETFClassID::CBaseProjectile:
-                case ETFClassID::CBaseGrenade:
-                case ETFClassID::CTFWeaponBaseGrenadeProj:
-                case ETFClassID::CTFWeaponBaseMerasmusGrenade:
-                case ETFClassID::CTFGrenadePipebombProjectile:
-                case ETFClassID::CTFStunBall:
-                case ETFClassID::CTFBall_Ornament:
-                case ETFClassID::CTFProjectile_Jar:
-                case ETFClassID::CTFProjectile_Cleaver:
-                case ETFClassID::CTFProjectile_JarGas:
-                case ETFClassID::CTFProjectile_JarMilk:
-                case ETFClassID::CTFProjectile_SpellBats:
-                case ETFClassID::CTFProjectile_SpellKartBats:
-                case ETFClassID::CTFProjectile_SpellMeteorShower:
-                case ETFClassID::CTFProjectile_SpellMirv:
-                case ETFClassID::CTFProjectile_SpellPumpkin:
-                case ETFClassID::CTFProjectile_SpellSpawnBoss:
-                case ETFClassID::CTFProjectile_SpellSpawnHorde:
-                case ETFClassID::CTFProjectile_SpellSpawnZombie:
-                case ETFClassID::CTFProjectile_SpellTransposeTeleport:
-                case ETFClassID::CTFProjectile_Throwable:
-                case ETFClassID::CTFProjectile_ThrowableBreadMonster:
-                case ETFClassID::CTFProjectile_ThrowableBrick:
-                case ETFClassID::CTFProjectile_ThrowableRepel:
-                {
-                    pOwner = pEntity->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get();
-                    break;
-                }
-                case ETFClassID::CTFBaseRocket:
-                case ETFClassID::CTFFlameRocket:
-                case ETFClassID::CTFProjectile_Arrow:
-                case ETFClassID::CTFProjectile_GrapplingHook:
-                case ETFClassID::CTFProjectile_HealingBolt:
-                case ETFClassID::CTFProjectile_Rocket:
-                case ETFClassID::CTFProjectile_BallOfFire:
-                case ETFClassID::CTFProjectile_MechanicalArmOrb:
-                case ETFClassID::CTFProjectile_SentryRocket:
-                case ETFClassID::CTFProjectile_SpellFireball:
-                case ETFClassID::CTFProjectile_SpellLightningOrb:
-                case ETFClassID::CTFProjectile_SpellKartOrb:
-                case ETFClassID::CTFProjectile_EnergyBall:
-                case ETFClassID::CTFProjectile_Flare:
-                {
-                    auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-                    pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
-                    break;
-                }
-                case ETFClassID::CTFBaseProjectile:
-                case ETFClassID::CTFProjectile_EnergyRing:
-                //case ETFClassID::CTFProjectile_Syringe:
-                {
-                    auto pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get();
-                    pOwner = pWeapon ? pWeapon->As<CTFWeaponBase>()->m_hOwner().Get() : nullptr;
-                    break;
-                }
-                }
+                auto pOwner = F::ProjSim.GetEntities(pEntity).second;
                 if (bValid = pLocal == pOwner && rcx == &pEntity->m_Particles())
                     break;
             }

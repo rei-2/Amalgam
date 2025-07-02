@@ -537,7 +537,7 @@ void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBu
 
 				if (!(vStart - vEnd).IsZero())
 				{
-					Vec3 vAngles; Math::VectorAngles(vEnd - vStart, vAngles);
+					Vec3 vAngles = Math::VectorAngles(vEnd - vStart);
 					Vec3 vForward, vRight, vUp; Math::AngleVectors(vAngles, &vForward, &vRight, &vUp);
 					RenderLine(vEnd, vEnd - vForward * 5 + vRight * 5, tColor, bZBuffer);
 					RenderLine(vEnd, vEnd - vForward * 5 - vRight * 5, tColor, bZBuffer);

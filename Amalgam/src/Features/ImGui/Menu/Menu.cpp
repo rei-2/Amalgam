@@ -210,6 +210,7 @@ void CMenu::MenuAimbot(int iTab)
 						FSlider(Vars::Aimbot::Healing::AutoVaccinatorBulletScale);
 						FSlider(Vars::Aimbot::Healing::AutoVaccinatorBlastScale);
 						FSlider(Vars::Aimbot::Healing::AutoVaccinatorFireScale);
+						FToggle(Vars::Aimbot::Healing::AutoVaccinatorFlamethrowerDamageOnly);
 					} EndSection();
 				}
 			}
@@ -545,8 +546,8 @@ void CMenu::MenuAimbot(int iTab)
 					if (Section("##Debug Part1", -8))
 					{
 						FDropdown(Vars::Visuals::Simulation::RealPath, FDropdownEnum::None, -20);
-						FColorPicker(Vars::Colors::RealPath);
-						FColorPicker(Vars::Colors::RealPathClipped);
+						FColorPicker(Vars::Colors::RealPath, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+						FColorPicker(Vars::Colors::RealPathClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 
 						FSlider(Vars::Visuals::Simulation::SeparatorSpacing, FSliderEnum::Left);
 						FSlider(Vars::Visuals::Simulation::SeparatorLength, FSliderEnum::Right);
@@ -1228,11 +1229,13 @@ void CMenu::MenuVisuals(int iTab)
 						FSlider(Vars::Visuals::UI::ZoomFieldOfView);
 					}
 					PopTransparent();
+					/*
 					PushTransparent(!Vars::Visuals::UI::AspectRatio.Value);
 					{
 						FSlider(Vars::Visuals::UI::AspectRatio);
 					}
 					PopTransparent();
+					*/
 					FToggle(Vars::Visuals::UI::RevealScoreboard, FToggleEnum::Left);
 					FToggle(Vars::Visuals::UI::ScoreboardUtility, FToggleEnum::Right);
 					FToggle(Vars::Visuals::UI::ScoreboardColors, FToggleEnum::Left);
@@ -1435,8 +1438,8 @@ void CMenu::MenuMisc(int iTab)
 				}
 				if (Section("Exploits", 8))
 				{
-					FToggle(Vars::Misc::Exploits::CheatsBypass, FToggleEnum::Left);
-					FToggle(Vars::Misc::Exploits::PureBypass, FToggleEnum::Right);
+					FToggle(Vars::Misc::Exploits::PureBypass, FToggleEnum::Left);
+					FToggle(Vars::Misc::Exploits::CheatsBypass, FToggleEnum::Right);
 					FToggle(Vars::Misc::Exploits::EquipRegionUnlock, FToggleEnum::Left);
 					FToggle(Vars::Misc::Exploits::BackpackExpander, FToggleEnum::Right);
 					FToggle(Vars::Misc::Exploits::PingReducer);
@@ -1453,9 +1456,9 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Automation::AntiAutobalance, FToggleEnum::Right);
 					FToggle(Vars::Misc::Automation::TauntControl, FToggleEnum::Left);
 					FToggle(Vars::Misc::Automation::KartControl, FToggleEnum::Right);
-					FToggle(Vars::Misc::Automation::AcceptItemDrops);
 					FToggle(Vars::Misc::Automation::AutoF2Ignored, FToggleEnum::Left);
 					FToggle(Vars::Misc::Automation::AutoF1Priority, FToggleEnum::Right);
+					FToggle(Vars::Misc::Automation::AcceptItemDrops);
 				} EndSection();
 			}
 			/* Column 2 */
@@ -1470,11 +1473,10 @@ void CMenu::MenuMisc(int iTab)
 				} EndSection();
 				if (Section("Game", 8))
 				{
-					FToggle(Vars::Misc::Game::NetworkFix, FToggleEnum::Left);
-					FToggle(Vars::Misc::Game::PredictionErrorJitterFix, FToggleEnum::Right);
-					FToggle(Vars::Misc::Game::SetupBonesOptimization, FToggleEnum::Left);
+					FToggle(Vars::Misc::Game::AntiCheatCompatibility, FToggleEnum::Left);
 					FToggle(Vars::Misc::Game::F2PChatBypass, FToggleEnum::Right);
-					FToggle(Vars::Misc::Game::AntiCheatCompatibility);
+					FToggle(Vars::Misc::Game::NetworkFix, FToggleEnum::Left);
+					FToggle(Vars::Misc::Game::SetupBonesOptimization, FToggleEnum::Right);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{

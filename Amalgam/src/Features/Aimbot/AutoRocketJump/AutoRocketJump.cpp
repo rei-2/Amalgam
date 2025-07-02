@@ -10,8 +10,10 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		return true;
 
 	ProjectileInfo tProjInfo = {};
-	if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, tProjInfo, ProjSimEnum::NoRandomAngles) || !F::ProjSim.Initialize(tProjInfo, false))
+	if (!F::ProjSim.GetInfo(pLocal, pWeapon, {}, tProjInfo, ProjSimEnum::NoRandomAngles)
+		|| !F::ProjSim.Initialize(tProjInfo, false))
 		return false;
+
 	Vec3 vOrigin = pLocal->m_vecOrigin();
 	Vec3 vLocalPos = pLocal->GetShootPos();
 	Vec3 vOffset = tProjInfo.m_vPos - vLocalPos; vOffset.x = 0; //vOffset.y *= -1;
@@ -26,7 +28,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			vDir = { 0.f, m_vAngles.y, 0.f };
 		else
 		{
-			Vec3 vWishAng; Math::VectorAngles(vWishVel, vWishAng);
+			Vec3 vWishAng = Math::VectorAngles(vWishVel);
 			vDir = { 0.f, m_vAngles.y - vWishAng.y, 0.f };
 		}
 		Vec3 vForward; Math::AngleVectors(vDir, &vForward);
@@ -180,8 +182,8 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 							if (Vars::Debug::Info.Value)
 							{
 								//G::LineStorage.clear(); G::BoxStorage.clear();
-								Vec3 angles; Math::VectorAngles(trace.plane.normal, angles);
-								G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3(-1.f, -1.f, -1.f), Vec3(1.f, 1.f, 1.f), angles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
+								Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
+								G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3(-1.f, -1.f, -1.f), Vec3(1.f, 1.f, 1.f), vAngles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
 								G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal), I::GlobalVars->curtime + 5.f, Color_t(), true);
 							}
 						}

@@ -5,7 +5,6 @@
 #include "../Features/CheaterDetection/CheaterDetection.h"
 #include "../Features/CritHack/CritHack.h"
 #include "../Features/Players/PlayerUtils.h"
-#include "../Features/Resolver/Resolver.h"
 #include "../Features/Simulation/MovementSimulation/MovementSimulation.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Visuals/ESP/ESP.h"
@@ -41,44 +40,6 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 	{
 		H::Entities.Store();
 		F::PlayerUtils.UpdatePlayers();
-		F::Resolver.FrameStageNotify();
-
-		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
-		{
-			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() || pPlayer->IsDormant() || !pPlayer->IsAlive())
-				continue; // local player managed in CreateMove
-
-			bool bResolver = F::Resolver.GetAngles(pPlayer);
-			if (!(Vars::Visuals::Removals::Interpolation.Value || bResolver))
-				continue;
-
-			if (int iDeltaTicks = TIME_TO_TICKS(H::Entities.GetDeltaTime(pPlayer->entindex())))
-			{
-				float flOldFrameTime = I::GlobalVars->frametime;
-				I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
-				for (int i = 0; i < iDeltaTicks; i++)
-				{
-					G::UpdatingAnims = true;
-
-					if (bResolver)
-					{
-						float flYaw, flPitch;
-						F::Resolver.GetAngles(pPlayer, &flYaw, &flPitch, nullptr, i + 1 == iDeltaTicks);
-
-						float flOriginalYaw = pPlayer->m_angEyeAnglesY(), flOriginalPitch = pPlayer->m_angEyeAnglesX();
-						pPlayer->m_angEyeAnglesY() = flYaw, pPlayer->m_angEyeAnglesX() = flPitch;
-						pPlayer->UpdateClientSideAnimation();
-						pPlayer->m_angEyeAnglesY() = flOriginalYaw, pPlayer->m_angEyeAnglesX() = flOriginalPitch;
-					}
-					else
-						pPlayer->UpdateClientSideAnimation();
-
-					G::UpdatingAnims = false;
-				}
-				I::GlobalVars->frametime = flOldFrameTime;
-			}
-		}
 
 		F::Backtrack.Store();
 		F::MoveSim.Store();

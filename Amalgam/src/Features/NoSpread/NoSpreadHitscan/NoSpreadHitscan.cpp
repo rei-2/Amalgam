@@ -37,12 +37,12 @@ int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
 
 float CNoSpreadHitscan::CalcMantissaStep(float flV)
 {
-	// Calculate the delta to the next representable value
-	float nextValue = std::nextafter(flV, std::numeric_limits<float>::infinity());
-	float mantissaStep = (nextValue - flV) * 1000;
+	// calculate the delta to the next representable value
+	float flNextValue = std::nextafter(flV, std::numeric_limits<float>::infinity());
+	float flMantissaStep = (flNextValue - flV) * 1000;
 
-	// Get the closest mantissa (next power of 2)
-	return powf(2, ceilf(logf(mantissaStep) / logf(2)));
+	// get the closest mantissa (next power of 2)
+	return powf(2, ceilf(logf(flMantissaStep) / logf(2)));
 }
 
 std::string CNoSpreadHitscan::GetFormat(int iServerTime)
@@ -182,8 +182,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 	if (cFixedSpread == vBulletCorrections.end())
 		return;
 
-	Vec3 vFixedAngles{};
-	Math::VectorAngles(*cFixedSpread, vFixedAngles);
+	Vec3 vFixedAngles = Math::VectorAngles(*cFixedSpread);
 
 	pCmd->viewangles += pCmd->viewangles - vFixedAngles;
 	Math::ClampAngles(pCmd->viewangles);

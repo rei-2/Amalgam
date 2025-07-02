@@ -159,7 +159,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 
 		G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);
 		G::PrimaryWeaponType = SDK::GetWeaponType(pWeapon, &G::SecondaryWeaponType);
-		G::CanHeadshot = pWeapon->CanHeadShot() || pWeapon->AmbassadorCanHeadshot(TICKS_TO_TIME(pLocal->m_nTickBase()));
+		G::CanHeadshot = pWeapon->CanHeadshot() || pWeapon->AmbassadorCanHeadshot(TICKS_TO_TIME(pLocal->m_nTickBase()));
 	}
 
 	// run features
@@ -190,9 +190,9 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 
 	if (pLocal)
 	{
-		static std::vector<Vec3> vAngles;
+		static std::vector<Vec3> vAngles = {};
 		vAngles.push_back(pCmd->viewangles);
-		auto pAnimState = pLocal->GetAnimState();
+		auto pAnimState = pLocal->m_PlayerAnimState();
 		if (*pSendPacket && pAnimState)
 		{
 			float flOldFrametime = I::GlobalVars->frametime;
@@ -203,8 +203,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 			{
 				if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
 					pLocal->m_flTauntYaw() = vAngle.y;
-				pAnimState->m_flEyeYaw = vAngle.y;
-				pAnimState->Update(vAngle.y, vAngle.x);
+				pAnimState->Update(pAnimState->m_flEyeYaw = vAngle.y, vAngle.x);
 				pLocal->FrameAdvance(TICK_INTERVAL);
 			}
 			I::GlobalVars->frametime = flOldFrametime;

@@ -1,6 +1,7 @@
 #include "Visuals.h"
 
 #include "../Aimbot/Aimbot.h"
+#include "../Aimbot/AimbotProjectile/AimbotProjectile.h"
 #include "../Ticks/Ticks.h"
 #include "../Backtrack/Backtrack.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
@@ -23,7 +24,7 @@ static std::vector<Vec3> SplashTrace(Vec3 vOrigin, float flRadius, Vec3 vNormal 
 	if (!flRadius)
 		return {};
 
-	Vec3 vAngles; Math::VectorAngles(vNormal, vAngles);
+	Vec3 vAngles = Math::VectorAngles(vNormal);
 	Vec3 vRight, vUp; Math::AngleVectors(vAngles, nullptr, &vRight, &vUp);
 
 	std::vector<Vec3> vPoints = {};
@@ -169,7 +170,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			{
 				const float flSize = std::max(tProjInfo.m_vHull.Min(), 1.f);
 				const Vec3 vSize = { 1.f, flSize, flSize };
-				Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
+				Vec3 vAngles = Math::VectorAngles(*pNormal);
 
 				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPath.Value);
 				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPathClipped.Value, true);
@@ -196,7 +197,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		{
 			const float flSize = std::max(tProjInfo.m_vHull.x, 1.f);
 			const Vec3 vSize = { 1.f, flSize, flSize };
-			Vec3 vAngles; Math::VectorAngles(*pNormal, vAngles);
+			Vec3 vAngles = Math::VectorAngles(*pNormal);
 
 			if (Vars::Colors::ShotPath.Value.a)
 				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, Color_t(0, 0, 0, 0));
@@ -273,35 +274,7 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 		else if (!(Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Local))
 			continue;
 
-		float flRadius = 146.f;
-		switch (pEntity->GetClassID())
-		{
-		case ETFClassID::CTFWeaponBaseGrenadeProj:
-		case ETFClassID::CTFWeaponBaseMerasmusGrenade:
-		case ETFClassID::CTFGrenadePipebombProjectile:
-			pWeapon = pEntity->As<CTFGrenadePipebombProjectile>()->m_hOriginalLauncher().Get()->As<CTFWeaponBase>();
-			break;
-		case ETFClassID::CTFProjectile_Rocket:
-		case ETFClassID::CTFProjectile_SentryRocket:
-		case ETFClassID::CTFProjectile_EnergyBall:
-			pWeapon = pEntity->As<CTFBaseRocket>()->m_hLauncher().Get()->As<CTFWeaponBase>();
-			break;
-		case ETFClassID::CTFProjectile_Flare:
-			flRadius = 110.f;
-		}
-		if (pWeapon)
-		{
-			flRadius = SDK::AttribHookValue(flRadius, "mult_explosion_radius", pWeapon);
-			switch (pWeapon->GetWeaponID())
-			{
-			case TF_WEAPON_ROCKETLAUNCHER:
-			case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
-			case TF_WEAPON_PARTICLE_CANNON:
-				if (pOwner->InCond(TF_COND_BLASTJUMPING) && SDK::AttribHookValue(1.f, "rocketjump_attackrate_bonus", pWeapon) != 1.f)
-					flRadius *= 0.8f;
-			}
-		}
-
+		float flRadius = F::AimbotProjectile.GetSplashRadius(pEntity, pWeapon, pOwner);
 		auto vPoints = SplashTrace(pEntity->GetAbsOrigin(), flRadius, { 0, 0, 1 }, Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Trace);
 		H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, false, Vars::Visuals::Simulation::StyleEnum::Line);
 		H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusClipped.Value, true, Vars::Visuals::Simulation::StyleEnum::Line);
@@ -536,7 +509,7 @@ void CVisuals::DrawEffects()
 		if (tLine.m_flTime < I::GlobalVars->curtime)
 			continue;
 
-		H::Draw.RenderLine(tLine.m_vOrigin.first, tLine.m_vOrigin.second, tLine.m_tColor, tLine.m_bZBuffer);
+		H::Draw.RenderLine(tLine.m_paOrigin.first, tLine.m_paOrigin.second, tLine.m_tColor, tLine.m_bZBuffer);
 	}
 	for (auto& tPath : G::PathStorage)
 	{
@@ -566,7 +539,7 @@ void CVisuals::DrawEffects()
 		if (tBox.m_flTime < I::GlobalVars->curtime)
 			continue;
 
-		H::Draw.RenderWireframeSweptBox(tBox.m_vOrigin.first, tBox.m_vOrigin.second, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vAngles, tBox.m_tColor, tBox.m_bZBuffer);
+		H::Draw.RenderWireframeSweptBox(tBox.m_paOrigin.first, tBox.m_paOrigin.second, tBox.m_vMins, tBox.m_vMaxs, tBox.m_vAngles, tBox.m_tColor, tBox.m_bZBuffer);
 	}
 	for (auto& tSightline : m_vSightLines)
 		H::Draw.RenderLine(tSightline.m_vStart, tSightline.m_vEnd, tSightline.m_Color, tSightline.m_bZBuffer);
@@ -708,12 +681,11 @@ void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
 	if (!pLocal->IsAlive() || F::Spectate.m_iTarget != -1)
 		return I::Input->CAM_ToFirstPerson();
 
-	const bool bZoom = pLocal->InCond(TF_COND_ZOOMED) && (!Vars::Visuals::Removals::Scope.Value || Vars::Visuals::UI::ZoomFieldOfView.Value < 20);
 	const bool bForce = pLocal->IsTaunting() || pLocal->IsAGhost() || pLocal->InCond(TF_COND_HALLOWEEN_KART) || pLocal->InCond(TF_COND_HALLOWEEN_THRILLER);
 	//if (bForce)
 	//	return;
 
-	if (Vars::Visuals::Thirdperson::Enabled.Value && !bZoom || bForce)
+	if (Vars::Visuals::Thirdperson::Enabled.Value || bForce)
 		I::Input->CAM_ToThirdPerson();
 	else
 		I::Input->CAM_ToFirstPerson();

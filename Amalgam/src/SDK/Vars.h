@@ -330,8 +330,8 @@ namespace Vars
 				VA_LIST("Enabled", "##Divider", "Redirect", "Ignore FOV"),
 				Enabled = 1 << 0, Redirect = 1 << 1, IgnoreFOV = 1 << 2);
 			CVarEnum(Hitboxes, VA_LIST("Hitboxes", "Projectile hitboxes"), 0b001111, DROPDOWN_MULTI, nullptr,
-				VA_LIST("Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Aim blast at feet"),
-				Auto = 1 << 0, Head = 1 << 1, Body = 1 << 2, Feet = 1 << 3, BodyaimIfLethal = 1 << 4, AimBlastAtFeet = 1 << 5);
+				VA_LIST("Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Prioritize feet"),
+				Auto = 1 << 0, Head = 1 << 1, Body = 1 << 2, Feet = 1 << 3, BodyaimIfLethal = 1 << 4, PrioritizeFeet = 1 << 5);
 			CVarEnum(Modifiers, VA_LIST("Modifiers", "Projectile modifiers"), 0b1010, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Charge shot", "Cancel charge", "Use prime time"),
 				ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, UsePrimeTime = 1 << 2);
@@ -414,6 +414,7 @@ namespace Vars
 			CVar(AutoVaccinatorBulletScale, "Auto vaccinator bullet scale", 100.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 200.f, 10.f, "%g%%");
 			CVar(AutoVaccinatorBlastScale, "Auto vaccinator blast scale", 100.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 200.f, 10.f, "%g%%");
 			CVar(AutoVaccinatorFireScale, "Auto vaccinator fire scale", 100.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 200.f, 10.f, "%g%%");
+			CVar(AutoVaccinatorFlamethrowerDamageOnly, "Auto vaccinator flamethrower damage only", false, NOSAVE | DEBUGVAR);
 		SUBNAMESPACE_END(Healing);
 	NAMESPACE_END(AIMBOT);
 	
@@ -439,7 +440,7 @@ namespace Vars
 		CVar(AntiWarp, "Anti-warp", true);
 		CVar(TickLimit, "Tick limit", 22, SLIDER_CLAMP, 2, 22);
 		CVar(WarpRate, "Warp rate", 22, SLIDER_CLAMP, 2, 22);
-		CVar(RechargeLimit, "Recharge limit", 24, SLIDER_CLAMP, 1, 24);
+		CVar(RechargeLimit, "Recharge limit", 24, SLIDER_MIN, 1, 24);
 		CVar(PassiveRecharge, "Passive recharge", 0, SLIDER_CLAMP, 0, 67);
 	NAMESPACE_END(DoubleTap)
 
@@ -715,19 +716,19 @@ namespace Vars
 		SUBNAMESPACE_END(ThirdPerson);
 
 		SUBNAMESPACE_BEGIN(Removals)
-			CVar(Interpolation, VA_LIST("Interpolation", "Interpolation removal"), false);
-			CVar(NoLerp, VA_LIST("0 lerp", "0 lerp removal"), false);
-			CVar(Disguises, VA_LIST("Disguises", "Disguises removal"), false, VISUAL);
-			CVar(Taunts, VA_LIST("Taunts", "Taunts removal"), false, VISUAL);
-			CVar(Scope, VA_LIST("Scope", "Scope removal"), false, VISUAL);
-			CVar(PostProcessing, VA_LIST("Post processing", "Post processing removal"), false, VISUAL);
-			CVar(ScreenOverlays, VA_LIST("Screen overlays", "Screen overlays removal"), false, VISUAL);
-			CVar(ScreenEffects, VA_LIST("Screen effects", "Screen effects removal"), false, VISUAL);
-			CVar(ViewPunch, VA_LIST("View punch", "View punch removal"), false, VISUAL);
-			CVar(AngleForcing, VA_LIST("Angle forcing", "Angle forcing removal"), false, VISUAL);
-			CVar(Ragdolls, VA_LIST("Ragdolls", "Ragdoll removal"), false, VISUAL);
-			CVar(Gibs, VA_LIST("Gibs", "Gib removal"), false, VISUAL);
-			CVar(MOTD, VA_LIST("MOTD", "MOTD removal"), false, VISUAL);
+			CVar(Interpolation, VA_LIST("Interpolation", "Remove interpolation"), false);
+			CVar(NoLerp, VA_LIST("0 lerp", "Remove 0 lerp"), false);
+			CVar(Disguises, VA_LIST("Disguises", "Remove disguises"), false, VISUAL);
+			CVar(Taunts, VA_LIST("Taunts", "Remove taunts"), false, VISUAL);
+			CVar(Scope, VA_LIST("Scope", "Remove scope"), false, VISUAL);
+			CVar(PostProcessing, VA_LIST("Post processing", "Remove post processing"), false, VISUAL);
+			CVar(ScreenOverlays, VA_LIST("Screen overlays", "Remove screen overlays"), false, VISUAL);
+			CVar(ScreenEffects, VA_LIST("Screen effects", "Remove screen effects"), false, VISUAL);
+			CVar(ViewPunch, VA_LIST("View punch", "Remove view punch"), false, VISUAL);
+			CVar(AngleForcing, VA_LIST("Angle forcing", "Remove angle forcing"), false, VISUAL);
+			CVar(Ragdolls, VA_LIST("Ragdolls", "Remove ragdoll"), false, VISUAL);
+			CVar(Gibs, VA_LIST("Gibs", "Remove gibs"), false, VISUAL);
+			CVar(MOTD, VA_LIST("MOTD", "Remove MOTD"), false, VISUAL);
 		SUBNAMESPACE_END(Removals);
 
 		SUBNAMESPACE_BEGIN(Effects)
@@ -956,10 +957,10 @@ namespace Vars
 		SUBNAMESPACE_END(Movement);
 
 		SUBNAMESPACE_BEGIN(Exploits)
-			CVar(CheatsBypass, "Cheats bypass", false);
 			CVar(PureBypass, "Pure bypass", false);
+			CVar(CheatsBypass, "Cheats bypass", false);
 			CVar(EquipRegionUnlock, "Equip region unlock", false);
-			CVar(BackpackExpander, "Backpack expander", true);
+			CVar(BackpackExpander, "Backpack expander", false);
 			CVar(PingReducer, "Ping reducer", false);
 			CVar(PingTarget, "cl_cmdrate", 1, SLIDER_CLAMP, 1, 66);
 		SUBNAMESPACE_END(Exploits);
@@ -972,9 +973,9 @@ namespace Vars
 			CVar(AntiAutobalance, "Anti-autobalance", false);
 			CVar(TauntControl, "Taunt control", false);
 			CVar(KartControl, "Kart control", false);
-			CVar(AcceptItemDrops, "Auto accept item drops", false);
 			CVar(AutoF2Ignored, "Auto F2 ignored", false);
 			CVar(AutoF1Priority, "Auto F1 priority", false);
+			CVar(AcceptItemDrops, "Auto accept item drops", false);
 		SUBNAMESPACE_END(Automation);
 
 		SUBNAMESPACE_BEGIN(Sound)
@@ -987,11 +988,11 @@ namespace Vars
 		SUBNAMESPACE_END(Sound);
 
 		SUBNAMESPACE_BEGIN(Game)
-			CVar(NetworkFix, "Network fix", false);
-			CVar(PredictionErrorJitterFix, "Prediction error jitter fix", false);
-			CVar(SetupBonesOptimization, "Bones optimization", false);
-			CVar(F2PChatBypass, "F2P chat bypass", false);
 			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", false);
+			CVar(F2PChatBypass, "F2P chat bypass", false);
+			CVar(NetworkFix, "Network fix", false);
+			CVar(SetupBonesOptimization, "Bones optimization", false);
+
 			CVar(AntiCheatCritHack, "Anti-cheat crit hack", false, NOSAVE | DEBUGVAR);
 		SUBNAMESPACE_END(Game);
 

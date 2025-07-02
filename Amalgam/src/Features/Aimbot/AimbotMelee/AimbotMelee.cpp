@@ -256,8 +256,8 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(tTarget.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
 
+	float flRange = SDK::AttribHookValue(pWeapon->GetSwingRange(), "melee_range_multiplier", pWeapon);
 	float flHull = SDK::AttribHookValue(18, "melee_bounds_multiplier", pWeapon);
-	float flRange = SDK::AttribHookValue(pWeapon->GetSwingRange(pLocal), "melee_range_multiplier", pWeapon);
 	if (pLocal->m_flModelScale() > 1.0f)
 	{
 		flRange *= pLocal->m_flModelScale();
@@ -390,19 +390,21 @@ bool CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 }
 
 // assume angle calculated outside with other overload
-void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
+void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 {
-	switch (Vars::Aimbot::General::AimType.Value)
+	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
+	switch (iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
+		if (G::Attacking != 1 && !bDoubleTap)
+			break;
+		[[fallthrough]];
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
 		pCmd->viewangles = vAngle;
 		I::EngineClient->SetViewAngles(vAngle);
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
-	{
-		bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
 		if (G::Attacking == 1 || bDoubleTap)
 		{
 			SDK::FixMovement(pCmd, vAngle);
@@ -410,12 +412,9 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle)
 			G::PSilentAngles = true;
 		}
 		break;
-	}
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
-	{
 		SDK::FixMovement(pCmd, vAngle);
 		pCmd->viewangles = vAngle;
-	}
 	}
 }
 
@@ -424,7 +423,7 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 	bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value && Vars::Aimbot::General::AutoShoot.Value && !Vars::Debug::Info.Value;
 	bool bLine = Vars::Visuals::Line::Enabled.Value;
 	bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
-	if (pCmd->buttons & IN_ATTACK && pWeapon->m_flSmackTime() < 0.f)
+	if (pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack && pWeapon->m_flSmackTime() < 0.f)
 	{
 		G::LineStorage.clear();
 		G::BoxStorage.clear();
@@ -444,18 +443,18 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 			}
 		}
 	}
-	else if (G::Attacking == 1)
+	if (G::Attacking == 1)
 	{
 		if (bLine)
 		{
 			Vec3 vEyePos = pLocal->GetShootPos();
 			float flDist = vEyePos.DistTo(tTarget.m_vPos);
-			Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
+			Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo, &vForward);
 
 			if (Vars::Colors::Line.Value.a)
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::Line.Value);
+				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::Line.Value);
 			if (Vars::Colors::LineClipped.Value.a)
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::LineClipped.Value, true);
+				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::LineClipped.Value, true);
 		}
 		if (bBoxes)
 		{

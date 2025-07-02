@@ -22,7 +22,7 @@ MAKE_HOOK(CSniperDot_GetRenderingPositions, S::CSniperDot_GetRenderingPositions(
 		auto pDot = reinterpret_cast<CSniperDot*>(rcx);
 
 		vEyePosition = pPlayer->m_vecOrigin() + pPlayer->GetViewOffset();
-		Math::VectorAngles(pDot->GetAbsOrigin() - vEyePosition, vEyeAngles);
+		vEyeAngles = Math::VectorAngles(pDot->GetAbsOrigin() - vEyePosition);
 	}
 
 	return CALL_ORIGINAL(rcx, pPlayer, vecAttachment, vecEndPos, flSize);

@@ -145,7 +145,6 @@ public:
 
 	T* Get() const;
 	void Set(const T* pVal);
-	int GetIndex() const;
 
 	operator T* ();
 	operator T* () const;
@@ -193,12 +192,6 @@ template <class T>
 T* CHandle<T>::Get() const
 {
 	return reinterpret_cast<T*>(CBaseHandle::Get());
-}
-
-template <class T>
-int CHandle<T>::GetIndex() const
-{
-	return m_Index != -1 ? m_Index & 0xFFF : 0;
 }
 
 template <class T>

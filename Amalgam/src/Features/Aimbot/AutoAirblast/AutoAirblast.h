@@ -3,10 +3,9 @@
 
 class CAutoAirblast
 {
-	bool CanAirblastEntity(CTFPlayer* pLocal, CBaseEntity* pEntity, Vec3& vAngle, Vec3& vPos);
-
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
+	bool CanAirblastEntity(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pEntity, Vec3& vAngle);
 };
 
 ADD_FEATURE(CAutoAirblast, AutoAirblast);

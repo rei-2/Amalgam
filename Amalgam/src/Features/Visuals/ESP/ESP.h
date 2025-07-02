@@ -53,7 +53,6 @@ private:
 
 	Color_t GetColor(CTFPlayer* pLocal, CBaseEntity* pEntity);
 	bool GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h);
-	const char* GetPlayerClass(int nClassNum);
 	void DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vecBones, Color_t clr);
 
 	std::unordered_map<CBaseEntity*, PlayerCache> m_mPlayerCache = {};

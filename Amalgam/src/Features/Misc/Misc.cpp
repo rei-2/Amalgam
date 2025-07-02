@@ -129,8 +129,8 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 		Vec3 vForward, vRight; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, nullptr);
 		vForward.Normalize2D(), vRight.Normalize2D();
 
-		Vec3 vWishDir = {}; Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f }, vWishDir);
-		Vec3 vCurDir = {}; Math::VectorAngles(pLocal->m_vecVelocity(), vCurDir);
+		Vec3 vWishDir = Math::VectorAngles({ vForward.x * flForward + vRight.x * flSide, vForward.y * flForward + vRight.y * flSide, 0.f });
+		Vec3 vCurDir = Math::VectorAngles(pLocal->m_vecVelocity());
 		float flDirDelta = Math::NormalizeAngle(vWishDir.y - vCurDir.y);
 		if (fabsf(flDirDelta) > Vars::Misc::Movement::AutoStrafeMaxDelta.Value)
 			break;
@@ -288,13 +288,11 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 		{
 			if (flipVar || !F::Ticks.CanChoke())
 			{	// you could just do this if you didn't care about viewangles
-				const Vec3 vecMove(pCmd->forwardmove, pCmd->sidemove, 0.f);
-				const float flLength = vecMove.Length();
-				Vec3 angMoveReverse;
-				Math::VectorAngles(vecMove * -1.f, angMoveReverse);
-				pCmd->forwardmove = -flLength;
+				Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove, 0.f };
+				Vec3 vAngMoveReverse = Math::VectorAngles(vMove * -1.f);
+				pCmd->forwardmove = -vMove.Length();
 				pCmd->sidemove = 0.f;
-				pCmd->viewangles.y = fmodf(pCmd->viewangles.y - angMoveReverse.y, 360.f);
+				pCmd->viewangles.y = fmodf(pCmd->viewangles.y - vAngMoveReverse.y, 360.f);
 				pCmd->viewangles.z = 270.f;
 				G::PSilentAngles = true;
 			}
@@ -341,9 +339,8 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 			return;
 
 		Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove, 0.f };
-		float flLength = vMove.Length();
-		Vec3 vAngMoveReverse; Math::VectorAngles(vMove * -1.f, vAngMoveReverse);
-		pCmd->forwardmove = -flLength;
+		Vec3 vAngMoveReverse = Math::VectorAngles(vMove * -1.f);
+		pCmd->forwardmove = -vMove.Length();
 		pCmd->sidemove = 0.f;
 		pCmd->viewangles.y = fmodf(pCmd->viewangles.y - vAngMoveReverse.y, 360.f);
 		pCmd->viewangles.z = 270.f;

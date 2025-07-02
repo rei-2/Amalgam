@@ -1,21 +1,5 @@
 #include "AutoDetonate.h"
 
-static inline Vec3 PredictOrigin(Vec3& vOrigin, Vec3 vVelocity, float flLatency, bool bTrace = true, Vec3 vMins = {}, Vec3 vMaxs = {}, unsigned int nMask = MASK_SOLID)
-{
-	if (vVelocity.IsZero() || !flLatency)
-		return vOrigin;
-
-	Vec3 vTo = vOrigin + vVelocity * flLatency;
-	if (!bTrace)
-		return vTo;
-
-	CGameTrace trace = {};
-	CTraceFilterWorldAndPropsOnly filter = {};
-
-	SDK::TraceHull(vOrigin, vTo, vMins, vMaxs, nMask, &filter, &trace);
-	return vOrigin + (vTo - vOrigin) * trace.fraction;
-}
-
 void CAutoDetonate::PredictPlayers(CTFPlayer* pLocal, float flLatency, bool bLocal)
 {
 	if (!m_mRestore.empty())
@@ -31,7 +15,7 @@ void CAutoDetonate::PredictPlayers(CTFPlayer* pLocal, float flLatency, bool bLoc
 
 		m_mRestore[pPlayer] = pPlayer->GetAbsOrigin();
 
-		pPlayer->SetAbsOrigin(PredictOrigin(pPlayer->m_vecOrigin(), pPlayer->m_vecVelocity(), flLatency, true, pPlayer->m_vecMins() + 0.125f, pPlayer->m_vecMaxs() - 0.125f, pPlayer->SolidMask()));
+		pPlayer->SetAbsOrigin(SDK::PredictOrigin(pPlayer->m_vecOrigin(), pPlayer->m_vecVelocity(), flLatency, true, pPlayer->m_vecMins() + 0.125f, pPlayer->m_vecMaxs() - 0.125f, pPlayer->SolidMask()));
 	}
 }
 
@@ -129,7 +113,7 @@ bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, f
 	if (vProjectiles.empty())
 		return false;
 
-	float flLatency = F::Backtrack.GetReal(); //std::max(F::Backtrack.GetReal() - 0.05f, 0.f);
+	float flLatency = F::Backtrack.GetReal();
 
 	for (auto pProjectile : vProjectiles)
 	{
@@ -138,7 +122,7 @@ bool CAutoDetonate::CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, f
 		if (!GetRadius(entityGroup, pProjectile, flRadius, pWeapon))
 			continue;
 
-		Vec3 vOrigin = PredictOrigin(pProjectile->m_vecOrigin(), pProjectile->GetAbsVelocity(), flLatency);
+		Vec3 vOrigin = SDK::PredictOrigin(pProjectile->m_vecOrigin(), pProjectile->GetAbsVelocity(), flLatency);
 
 		PredictPlayers(pLocal, flLatency);
 		bool bCheck = CheckEntities(pLocal, pWeapon, nullptr, pProjectile, flRadius, vOrigin);
@@ -175,7 +159,7 @@ bool CAutoDetonate::CheckSelf(CTFPlayer* pLocal, EGroupType entityGroup)
 	if (vProjectiles.empty())
 		return false;
 
-	float flLatency = std::max(F::Backtrack.GetReal() - 0.05f, 0.f);
+	float flLatency = F::Backtrack.GetReal();
 
 	for (auto pProjectile : vProjectiles)
 	{
@@ -184,7 +168,7 @@ bool CAutoDetonate::CheckSelf(CTFPlayer* pLocal, EGroupType entityGroup)
 		if (!GetRadius(entityGroup, pProjectile, flRadius, pWeapon))
 			continue;
 
-		Vec3 vOrigin = PredictOrigin(pProjectile->m_vecOrigin(), pProjectile->GetAbsVelocity(), flLatency);
+		Vec3 vOrigin = SDK::PredictOrigin(pProjectile->m_vecOrigin(), pProjectile->GetAbsVelocity(), flLatency);
 
 		PredictPlayers(pLocal, 0.f, true);
 		bool bCheck = CheckLocal(pLocal, pWeapon, pProjectile, flRadius, vOrigin)

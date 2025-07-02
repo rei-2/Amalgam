@@ -788,11 +788,11 @@ namespace ImGui
 
 		ImDrawList* pDrawList = GetWindowDrawList();
 		bool bChanged = false;
-		std::pair<int, int> pOriginal;
+		std::pair<int, int> paOriginal;
 		{
 			auto pVar1 = !vVars.empty() ? vVars[0] : nullptr;
 			auto pVar2 = pVar1 && vEntries[*pVar1].size() > 1 && *pVar1 + 1 < vVars.size() ? vVars[*pVar1 + 1] : nullptr;
-			pOriginal = { pVar1 ? *pVar1 : -1, pVar2 ? *pVar2 : -1 };
+			paOriginal = { pVar1 ? *pVar1 : -1, pVar2 ? *pVar2 : -1 };
 		}
 
 		bool bIcons = !vIcons.empty();
@@ -808,23 +808,23 @@ namespace ImGui
 		{
 			for (size_t j = bReverse ? vEntries[i].size() - 1 : 0; j < vEntries[i].size(); (bReverse ? j-- : j++))
 			{
-				if (j && i != pOriginal.first)
+				if (j && i != paOriginal.first)
 					continue;
 
 				int iTabState = 0;
 				if (vEntries[i].size() <= 1)
 				{
-					if (i == pOriginal.first)
+					if (i == paOriginal.first)
 						iTabState = 2;
 				}
 				else if (!j)
 				{
-					if (i == pOriginal.first)
+					if (i == paOriginal.first)
 						iTabState = 1;
 				}
 				else
 				{
-					if (i == pOriginal.first && j - 1 == pOriginal.second)
+					if (i == paOriginal.first && j - 1 == paOriginal.second)
 						iTabState = 2;
 				}
 

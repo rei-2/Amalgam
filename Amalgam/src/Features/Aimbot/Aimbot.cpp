@@ -13,7 +13,7 @@
 bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	if (!pLocal || !pWeapon || !pLocal->CanAttack()
-		|| SDK::AttribHookValue(1, "mult_dmg", pWeapon) == 0
+		|| !SDK::AttribHookValue(1, "mult_dmg", pWeapon)
 		|| I::EngineVGui->IsGameUIVisible())
 		return false;
 
@@ -82,7 +82,7 @@ void CAimbot::Draw(CTFPlayer* pLocal)
 		return;
 
 	auto pWeapon = H::Entities.GetWeapon();
-	if (pWeapon && SDK::AttribHookValue(1, "mult_dmg", pWeapon) == 0)
+	if (pWeapon && !SDK::AttribHookValue(1, "mult_dmg", pWeapon))
 		return;
 
 	if (Vars::Aimbot::General::AimFOV.Value >= 90.f)

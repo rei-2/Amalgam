@@ -13,7 +13,7 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 		return;
 	}
 
-	auto pAnimState = pLocal->GetAnimState();
+	auto pAnimState = pLocal->m_PlayerAnimState();
 	if (!pAnimState)
 		return;
 

@@ -184,14 +184,10 @@ public:
 		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
 	};
 
-	NETVAR_OFF(m_flGravity, float, "CTFPlayer", "m_nWaterLevel", -24);
-	NETVAR_OFF(m_MoveType, byte, "CTFPlayer", "m_nWaterLevel", -4);
-	NETVAR_OFF(m_MoveCollide, byte, "CTFPlayer", "m_nWaterLevel", -3);
-	NETVAR_OFF(m_nWaterType, byte, "CTFPlayer", "m_nWaterLevel", 1);
 	NETVAR_OFF(m_flInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -8);
 	NETVAR_OFF(m_flPrevInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -4);
 	NETVAR_OFF(m_flTankPressure, float, "CTFPlayer", "m_Shared", 636);
-	NETVAR_OFF(GetAnimState, CTFPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
+	NETVAR_OFF(m_PlayerAnimState, CTFPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
 	NETVAR_OFF(m_flPrevTauntYaw, float, "CTFPlayer", "m_flTauntYaw", 4);
 	NETVAR_OFF(m_flLastMovementStunChange, float, "CTFPlayer", "m_hItem", -180);
 	NETVAR_OFF(m_flStunLerpTarget, float, "CTFPlayer", "m_hItem", -184);

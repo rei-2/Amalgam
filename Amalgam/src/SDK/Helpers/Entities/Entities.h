@@ -66,7 +66,6 @@ public:
 	bool IsAmmo(uint32_t uHash);
 	bool IsPowerup(uint32_t uHash);
 	bool IsSpellbook(uint32_t uHash);
-	bool IsProjectile(CBaseEntity* pEntity);
 
 	CTFPlayer* GetLocal();
 	CTFWeaponBase* GetWeapon();

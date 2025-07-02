@@ -10,7 +10,7 @@ MAKE_HOOK(CBaseEntity_ResetLatched, S::CBaseEntity_ResetLatched(), void,
 		return CALL_ORIGINAL(rcx);
 #endif
 
-	if (Vars::Misc::Game::PredictionErrorJitterFix.Value && rcx == H::Entities.GetLocal())
+	if (rcx == H::Entities.GetLocal())
 		return;
 
 	CALL_ORIGINAL(rcx);

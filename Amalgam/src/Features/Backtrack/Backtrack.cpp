@@ -12,7 +12,6 @@ void CBacktrack::Reset()
 
 
 
-// Returns the wish cl_interp
 float CBacktrack::GetLerp()
 {
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
@@ -21,13 +20,11 @@ float CBacktrack::GetLerp()
 	return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, m_flMaxUnlag);
 }
 
-// Returns the wish backtrack latency
 float CBacktrack::GetFake()
 {
 	return std::clamp(Vars::Backtrack::Latency.Value / 1000.f, 0.f, m_flMaxUnlag);
 }
 
-// Returns the current real latency
 float CBacktrack::GetReal(int iFlow, bool bNoFake)
 {
 	auto pNetChan = I::EngineClient->GetNetChannelInfo();
@@ -39,7 +36,6 @@ float CBacktrack::GetReal(int iFlow, bool bNoFake)
 	return pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - (bNoFake ? m_flFakeLatency : 0.f);
 }
 
-// Returns the current fake interp
 float CBacktrack::GetFakeInterp()
 {
 	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
@@ -48,7 +44,6 @@ float CBacktrack::GetFakeInterp()
 	return m_flFakeInterp;
 }
 
-// Returns the current anticipated choke
 int CBacktrack::GetAnticipatedChoke(int iMethod)
 {
 	int iAnticipatedChoke = 0;
@@ -85,7 +80,6 @@ void CBacktrack::SendLerp()
 	}
 }
 
-// Manages cl_interp client value
 void CBacktrack::SetLerp(IGameEvent* pEvent)
 {
 	if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) == I::EngineClient->GetLocalPlayer())
@@ -356,6 +350,8 @@ void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 				if (flLatency > flFake || m_nLastInSequenceNr >= cSequence.m_nSequenceNr || flLatency > m_flMaxUnlag - flStaticReal)
 					break;
 			}
+			if (flLatency > 1.f) // hacky failsafe
+				return 0.f;
 
 			pNetChan->m_nInReliableState = nInReliableState;
 			pNetChan->m_nInSequenceNr = nInSequenceNr;

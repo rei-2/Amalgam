@@ -38,7 +38,7 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		for (int i = 0; i < 6; ++i)
 			SDK::RandomFloat();
 
-		Vec3 vAngAdd = pWeapon->GetSpreadAngles() - I::EngineClient->GetViewAngles();
+		Vec3 vAngAdd = pWeapon->GetSpreadAngles() - pLocal->EyeAngles();
 		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_COMPOUND_BOW:
