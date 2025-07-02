@@ -45,4 +45,4 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 
 ## 📋 Installation
 
-[VAC bypass](https://github.com/danielkrupinski/VAC-Bypass-Loader) and [Xenos](https://github.com/DarthTon/Xenos/releases) recommended for injection.
+[Xenos](https://github.com/DarthTon/Xenos/releases) recommended for injection.
