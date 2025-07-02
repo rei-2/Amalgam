@@ -15,6 +15,7 @@
 #include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 #include "../Features/Visuals/UberTracker/UberTracker.h"
+#include "../Features/Visuals/HealthBarESP/HealthBarESP.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
@@ -53,6 +54,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::CritHack.Draw(pLocal);
 			F::Ticks.Draw(pLocal);
 			F::UberTracker.Draw();
+			F::HealthBarESP.Draw();
 			F::Visuals.DrawDebugInfo(pLocal);
 		}
 		H::Draw.End();

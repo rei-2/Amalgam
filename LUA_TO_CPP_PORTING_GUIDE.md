@@ -569,8 +569,61 @@ Here's how the uber2.lua was successfully ported following this guide:
 
 The result was a perfectly integrated feature that provided all the original Lua functionality natively in C++.
 
+## Example: Complete HealthBarESP Port
+
+Following this guide, the esp.lua health bar system was successfully ported as a standalone always-on feature:
+
+### Analysis Phase
+- **Purpose**: Health bar ESP with overheal support for TF2 players
+- **Key Features**: Medic mode, visibility checking, distance filtering, health-based alpha
+- **Category**: Visuals feature (always-on like UberTracker)
+
+### Implementation Structure
+```cpp
+// Header: src/Features/Visuals/HealthBarESP/HealthBarESP.h
+class CHealthBarESP
+{
+private:
+    static constexpr int ALPHA = 70;
+    static constexpr int BAR_HEIGHT = 10;
+    static constexpr int BAR_WIDTH = 90;
+    static constexpr float MAX_DISTANCE_SQR = 3500.0f * 3500.0f;
+    static constexpr bool MEDIC_MODE = true;
+    static constexpr Color_t OVERHEAL_COLOR = {71, 166, 255, 255};
+    
+public:
+    void Draw();
+};
+ADD_FEATURE(CHealthBarESP, HealthBarESP);
+```
+
+### Key API Mappings Applied
+- `entities.FindByClass("CTFPlayer")` → `H::Entities.GetGroup(EGroupType::PLAYERS_ALL)`
+- `entity:GetClassNum() == CLASS_MEDIC` → `pPlayer->m_iClass() == TF_CLASS_MEDIC`
+- `entity:InCond(CLOAK_COND)` → `pPlayer->InCond(TF_COND_STEALTHED)`
+- `client.WorldToScreen()` → `SDK::W2S()`
+- `draw.FilledRect()` → `H::Draw.FillRect()`
+
+### Fixes Applied During Port
+1. **Trace Structure**: Fixed `trace.flFraction` → `trace.fraction`
+2. **Visibility Improvements**: Changed `MASK_SHOT` → `MASK_VISIBLE` to reduce flickering
+3. **Alpha Logic**: Corrected health-based visibility formula for proper brightening on damage
+4. **No Wobble Mode**: Removed dynamic bounding box calculations, kept fixed positioning only
+
+### Integration Steps
+1. **Project Files**: Added to `Amalgam.vcxproj` (both .h and .cpp)
+2. **Hook Integration**: Added include and `F::HealthBarESP.Draw()` to `IEngineVGui_Paint.cpp`
+3. **Always-On Design**: No Vars checks, follows UberTracker pattern
+
+### Final Result
+- Always-enabled health bars with no menu toggles
+- Medic mode: shows teammates when playing medic, enemies otherwise  
+- Health-responsive visibility: dimmer when healthy, brighter when wounded
+- Fixed 90px width bars positioned 30px below player center
+- No flickering during combat, stable visibility checking
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.
 
-Remember: when in doubt, look at existing similar features in the codebase. The ESP system is particularly good reference for entity access and drawing patterns.
+Remember: when in doubt, look at existing similar features in the codebase. The ESP system is particularly good reference for entity access and drawing patterns. For always-on features, use the UberTracker as a reference implementation.
