@@ -3,34 +3,34 @@ name: MSBuild
 on: [push, pull_request]
 
 jobs:
-  msbuild:
-    runs-on: windows-latest
+ msbuild:
+  runs-on: windows-latest
 
-    strategy:
-      matrix:
-        configuration: [Release, ReleaseAVX2, ReleaseFreetype, ReleaseFreetypeAVX2]
-        platform: [x64]
+  strategy:
+   matrix:
+    configuration: [Release, ReleaseAVX2, ReleaseFreetype, ReleaseFreetypeAVX2]
+    platform: [x64]
 
-    steps:
-    - uses: actions/checkout@v4
+  steps:
+  - uses: actions/checkout@v4
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v2
+  - name: Add MSBuild to PATH
+    uses: microsoft/setup-msbuild@v2
 
-    - name: Restore NuGet packages
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: nuget restore
+  - name: Restore NuGet packages
+    working-directory: ${{ env.GITHUB_WORKSPACE }}
+    run: nuget restore
 
-    - name: Build
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
-    
-    - uses: actions/upload-artifact@v4
-      with:
-        name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}
-        path: output/${{ matrix.platform }}/${{ matrix.configuration }}/*.dll
-    
-    - uses: actions/upload-artifact@v4
-      with:
-        name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}PDB
-        path: output/${{ matrix.platform }}/${{ matrix.configuration }}/*.pdb
+  - name: Build
+    working-directory: ${{ env.GITHUB_WORKSPACE }}
+    run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
+
+  - uses: actions/upload-artifact@v4
+    with:
+     name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}
+     path: output/${{ matrix.platform }}/${{ matrix.configuration }}/*.dll
+
+  - uses: actions/upload-artifact@v4
+    with:
+     name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}PDB
+     path: output/${{ matrix.platform }}/${{ matrix.configuration }}/*.pdb
