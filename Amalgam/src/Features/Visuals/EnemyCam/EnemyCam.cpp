@@ -401,6 +401,9 @@ void CEnemyCam::DrawOverlay()
     H::Draw.LineRect(x, y + 20, CAMERA_WIDTH, CAMERA_HEIGHT, {235, 64, 52, 255});
     
     // Draw player info
+    if (!m_pTargetPlayer || !I::EngineClient)
+        return;
+        
     PlayerInfo_t pi{};
     if (I::EngineClient->GetPlayerInfo(m_pTargetPlayer->entindex(), &pi))
     {
@@ -422,6 +425,9 @@ void CEnemyCam::DrawOverlay()
     }
     
     // Draw health info
+    if (!m_pTargetPlayer)
+        return;
+        
     int health = m_pTargetPlayer->m_iHealth();
     int maxHealth = m_pTargetPlayer->GetMaxHealth();
     float healthPercent = static_cast<float>(health) / static_cast<float>(maxHealth);
