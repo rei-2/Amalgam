@@ -78,7 +78,7 @@ void CEnemyCam::Draw()
     // Update target
     UpdateTargetPlayer();
     
-    if (!m_pTargetPlayer)
+    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
         return;
     
     // Get screen size for positioning
@@ -109,9 +109,17 @@ void CEnemyCam::RenderView(void* ecx, const CViewSetup& view)
     if (!m_bEnabled || !m_bInitialized || !m_pTargetPlayer || !m_pCameraTexture)
         return;
     
+    // Additional validation to prevent crashes
+    if (!m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
+        return;
+    
     // Get camera view
     Vec3 origin, angles;
     GetCameraView(origin, angles);
+    
+    // Don't render if we got invalid coordinates
+    if (origin.IsZero() && angles.IsZero())
+        return;
     
     // Setup view
     CViewSetup enemyView = view;
@@ -334,6 +342,13 @@ CTFPlayer* CEnemyCam::FindTopScorePlayer()
 
 void CEnemyCam::UpdateTargetPlayer()
 {
+    // Always check for invalid target first
+    if (m_pTargetPlayer && (!m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant() || m_pTargetPlayer->InCond(TF_COND_STEALTHED)))
+    {
+        m_pTargetPlayer = nullptr;
+        m_pTargetMedic = nullptr;
+    }
+    
     float currentTime = I::GlobalVars->curtime;
     
     // Only search periodically
@@ -345,8 +360,7 @@ void CEnemyCam::UpdateTargetPlayer()
     // Check if we need a new target
     bool needNewTarget = false;
     
-    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || 
-        m_pTargetPlayer->IsDormant() || m_pTargetPlayer->InCond(TF_COND_STEALTHED))
+    if (!m_pTargetPlayer)
     {
         needNewTarget = true;
     }
@@ -367,8 +381,12 @@ void CEnemyCam::UpdateTargetPlayer()
 
 void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
 {
-    if (!m_pTargetPlayer)
+    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
+    {
+        origin = Vec3(0, 0, 0);
+        angles = Vec3(0, 0, 0);
         return;
+    }
     
     // Get player eye position and angles
     origin = m_pTargetPlayer->GetEyePosition();
@@ -392,7 +410,7 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
 
 void CEnemyCam::DrawOverlay()
 {
-    if (!m_pTargetPlayer)
+    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
         return;
     
     // Get screen size
