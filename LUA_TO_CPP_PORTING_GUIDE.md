@@ -759,14 +759,29 @@ public:
 - Always-enabled ESP for enemy stickybombs only (2800 unit range)
 - 2D box ESP (20px boxes) with visibility-based green/red coloring
 - Optional 3D bounding box ESP using entity bounds calculation
-- Performance-optimized with cached visibility checks and cleanup routines
+- Direct processing every frame (no caching) for stable, flicker-free rendering
 - Seamless integration with existing projectile chams system (user-controllable)
 - Exact mirror of Lua functionality using native drawing and entity systems
+- Clean, minimal implementation focused purely on Lua script behavior
 
-This example demonstrates perfect integration with existing native systems, avoiding code duplication while maintaining all original functionality.
+### Key Lessons Learned
+1. **Avoid over-optimization**: Initial implementation had complex caching systems that caused flickering
+2. **Mirror Lua exactly**: Best results came from direct 1:1 translation of Lua logic
+3. **Follow existing patterns**: HealthBarESP's direct processing approach worked perfectly
+4. **Keep it simple**: Removed all caching, timers, and performance optimizations for stable rendering
+5. **Native drawing**: Using `H::Draw.Line()` directly matches Lua `draw.Line()` behavior
+
+This example demonstrates that the best ports often prioritize exact behavior over performance optimization.
 
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.
+
+**Best Practices Learned from All Examples:**
+1. **Start simple**: Direct 1:1 Lua translation without optimization
+2. **Follow existing patterns**: HealthBarESP, UberTracker, PlayerTrails approaches
+3. **Avoid premature optimization**: Caching and performance optimizations can cause flickering
+4. **Use native systems**: Leverage existing ESP, chams, and drawing systems when possible
+5. **Test iteratively**: Build, test, fix issues, repeat until behavior matches exactly
 
 Remember: when in doubt, look at existing similar features in the codebase. The ESP system is particularly good reference for entity access and drawing patterns. For always-on features, use the UberTracker as a reference implementation.
