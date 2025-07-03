@@ -428,8 +428,25 @@ void CEnemyCam::DrawOverlay()
     if (!m_pTargetPlayer)
         return;
         
-    int health = m_pTargetPlayer->m_iHealth();
-    int maxHealth = m_pTargetPlayer->GetMaxHealth();
+    int health = 100;
+    int maxHealth = 100;
+    
+    try
+    {
+        health = m_pTargetPlayer->m_iHealth();
+        maxHealth = m_pTargetPlayer->GetMaxHealth();
+        
+        // Prevent division by zero
+        if (maxHealth <= 0)
+            maxHealth = 1;
+    }
+    catch (...)
+    {
+        // If health access fails, use defaults
+        health = 100;
+        maxHealth = 100;
+    }
+        
     float healthPercent = static_cast<float>(health) / static_cast<float>(maxHealth);
     
     Color_t healthColor = {
