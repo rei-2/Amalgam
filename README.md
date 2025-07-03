@@ -34,6 +34,7 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 - **PlayerTrails** - Colored movement trails for enemy players showing their recent paths with visibility-based display and fade-out effects
 - **StickyESP** - Always-on stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), and distance filtering
 - **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes (2+ attackers within 4.5 seconds)
+- **PylonESP** - Vertical pylon indicators above enemy medics behind walls with segmented alpha fade and visibility-based rendering (800+ unit range)
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 
 ## Installation

@@ -833,6 +833,73 @@ public:
 
 This example demonstrates successful event-driven feature integration with real-time tactical applications.
 
+## Example: PylonESP Wall-Penetrating Indicators
+
+The most recent integration was the pylon.lua medic tracking system:
+
+### Analysis Phase
+- **Purpose**: Vertical pylon indicators above enemy medics behind walls for enhanced situational awareness
+- **Key Features**: Segmented alpha-fade rendering, visibility caching, performance optimization, distance filtering
+- **Category**: Always-on tactical ESP feature for medic tracking
+
+### Implementation Highlights
+```cpp
+// Medic pylon system with visibility caching
+class CPylonESP
+{
+private:
+    static constexpr float PYLON_HEIGHT = 350.0f;
+    static constexpr int SEGMENTS = 10;
+    static constexpr float MIN_DISTANCE = 800.0f;
+    static constexpr float VISIBILITY_PERSISTENCE = 0.2f;
+    std::unordered_map<int, MedicPosition> m_MedicPositions;
+    std::unordered_map<std::string, VisibilityCache> m_VisibilityCache;
+    
+public:
+    void Draw();  // Main pylon rendering with segment-based visibility
+};
+```
+
+### Key Integration Points
+- **Performance caching**: Visibility persistence system prevents flashing during rapid visibility changes
+- **Segmented rendering**: 10-segment pylons with alpha fade from bottom (200) to top (25)
+- **Distance filtering**: Only shows pylons for medics 800+ units away to avoid close-range clutter
+- **Wall-penetration detection**: Only renders when medic is behind walls/obstacles
+
+### API Mappings Applied
+- **Visibility tracing**: `TraceLine(fromPos, targetPos, MASK_VISIBLE)` → `SDK::Trace()` with `MASK_VISIBLE`
+- **Segmented drawing**: Multi-segment line rendering → `H::Draw.Line()` with alpha variations
+- **Position caching**: Update interval system → time-based position storage with cleanup
+- **Class filtering**: `player:GetPropInt("m_iClass") == TF2_Medic` → `pPlayer->m_iClass() == TF_CLASS_MEDIC`
+
+### Performance Optimizations
+1. **Visibility caching**: 0.2-second persistence prevents rapid visibility recalculation
+2. **Position updates**: 0.5-second intervals reduce unnecessary position calculations
+3. **Two-pass rendering**: First check if any segments visible, then render only visible ones
+4. **Memory management**: Automatic cleanup of stale entries and visibility cache
+
+### Integration Steps
+1. **Structured approach**: Created `PylonESP` class with clear separation of concerns
+2. **Drawing integration**: Added to main drawing loop after other ESP systems
+3. **Performance consideration**: Positioned after essential systems, before debug info
+4. **Always-on design**: No configuration UI, automatic medic detection and filtering
+
+### Final Result
+- Always-enabled vertical pylons above enemy medics behind walls (800+ unit range)
+- Red segmented pylons with smooth alpha fade (200 to 25) for depth perception
+- Visibility-cached rendering prevents flickering during combat
+- Automatic position updates with performance-optimized cleanup routines
+- Enhanced medic tracking for tactical awareness without performance impact
+
+### Key Lessons Learned
+1. **Visibility caching**: Short-term persistence (0.2s) dramatically improves visual stability
+2. **Segmented rendering**: Breaking complex visuals into segments allows selective visibility
+3. **Distance thresholds**: Minimum distance filters prevent close-range visual clutter
+4. **Two-pass algorithms**: Check visibility first, then render only necessary elements
+5. **Memory lifecycle**: Proactive cleanup prevents memory leaks during extended gameplay
+
+This example demonstrates advanced ESP techniques with performance-conscious visibility management.
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.

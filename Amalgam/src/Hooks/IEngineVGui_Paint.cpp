@@ -20,6 +20,7 @@
 #include "../Features/Visuals/StickyESP/StickyESP.h"
 #include "../Features/Visuals/CritHeals/CritHeals.h"
 #include "../Features/Visuals/FocusFire/FocusFire.h"
+#include "../Features/Visuals/PylonESP/PylonESP.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
@@ -63,6 +64,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::StickyESP.Draw();
 			F::CritHeals.Draw();
 			F::FocusFire.Draw();
+			F::PylonESP.Draw();
 			F::Visuals.DrawDebugInfo(pLocal);
 		}
 		H::Draw.End();
