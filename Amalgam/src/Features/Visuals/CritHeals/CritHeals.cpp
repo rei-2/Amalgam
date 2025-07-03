@@ -2,6 +2,9 @@
 
 void CCritHeals::Draw()
 {
+    if (!Vars::Competitive::Features::CritHeals.Value)
+        return;
+    
     // Early exits
     if (I::EngineVGui->IsGameUIVisible())
         return;

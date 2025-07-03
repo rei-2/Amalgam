@@ -245,6 +245,9 @@ void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, c
 
 void CUberTracker::Draw()
 {
+	if (!Vars::Competitive::Features::UberTracker.Value)
+		return;
+	
 	if (I::EngineVGui->IsGameUIVisible())
 		return;
 	

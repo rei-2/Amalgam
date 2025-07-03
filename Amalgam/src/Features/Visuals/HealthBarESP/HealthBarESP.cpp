@@ -2,6 +2,9 @@
 
 void CHealthBarESP::Draw()
 {
+    if (!Vars::Competitive::Features::HealthBarESP.Value)
+        return;
+    
     // Early exits (match native ESP pattern)
     if (I::EngineVGui->IsGameUIVisible())
         return;

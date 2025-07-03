@@ -1390,6 +1390,7 @@ void CMenu::MenuVisuals(int iTab)
 			}
 			EndTable();
 		}
+		break;
 	}
 	}
 }
@@ -1536,7 +1537,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Right);
-				}
+				} EndSection();
 			}
 
 			/* Column 2 */
@@ -1546,7 +1547,7 @@ void CMenu::MenuComp(int iTab)
 				{
 					FToggle(Vars::Competitive::Features::HealthBarESP, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::UberTracker, FToggleEnum::Right);
-				}
+				} EndSection();
 				
 				SameLine(); FText("Competitive features are enabled by default.", 1, F::Render.FontSmall);
 			}

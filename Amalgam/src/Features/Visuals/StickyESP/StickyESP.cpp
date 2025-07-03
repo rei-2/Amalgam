@@ -2,6 +2,9 @@
 
 void CStickyESP::Draw()
 {
+    if (!Vars::Competitive::Features::StickyESP.Value)
+        return;
+    
     // Early exits (like HealthBarESP)
     if (I::EngineVGui->IsGameUIVisible())
         return;

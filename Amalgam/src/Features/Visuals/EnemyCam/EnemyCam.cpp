@@ -360,9 +360,21 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
     if (!m_pTargetPlayer)
         return;
     
+    // Additional validation to ensure player is still valid
+    if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
+        return;
+    
     // Get player eye position and angles
-    origin = m_pTargetPlayer->GetEyePosition();
-    angles = m_pTargetPlayer->GetEyeAngles();
+    try
+    {
+        origin = m_pTargetPlayer->GetEyePosition();
+        angles = m_pTargetPlayer->GetEyeAngles();
+    }
+    catch (...)
+    {
+        // If position/angle access fails, use defaults or return
+        return;
+    }
     
     // Apply offset if configured
     if (m_eViewMode == EViewMode::OFFSET)
@@ -428,11 +440,19 @@ void CEnemyCam::DrawOverlay()
     if (!m_pTargetPlayer)
         return;
         
+    // Additional validation to ensure player is still valid
+    if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
+        return;
+        
     int health = 100;
     int maxHealth = 100;
     
     try
     {
+        // Double-check pointer validity before dereferencing
+        if (!m_pTargetPlayer)
+            return;
+            
         health = m_pTargetPlayer->m_iHealth();
         maxHealth = m_pTargetPlayer->GetMaxHealth();
         

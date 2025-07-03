@@ -3,6 +3,9 @@
 
 void CFocusFire::Draw()
 {
+    if (!Vars::Competitive::Features::FocusFire.Value)
+        return;
+    
     // Early exit if game UI is visible
     if (I::EngineVGui->IsGameUIVisible())
         return;

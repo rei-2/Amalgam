@@ -11,6 +11,9 @@ CPlayerTrails::CPlayerTrails()
 
 void CPlayerTrails::Draw()
 {
+    if (!Vars::Competitive::Features::PlayerTrails.Value)
+        return;
+    
     // Early exits
     if (I::EngineVGui->IsGameUIVisible())
         return;

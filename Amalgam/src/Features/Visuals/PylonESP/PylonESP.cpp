@@ -19,6 +19,9 @@ void CPylonESP::InitializeAlphaSteps()
 
 void CPylonESP::Draw()
 {
+    if (!Vars::Competitive::Features::PylonESP.Value)
+        return;
+    
     // Early exits
     if (I::EngineVGui->IsGameUIVisible())
         return;
