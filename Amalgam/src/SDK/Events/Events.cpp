@@ -11,6 +11,7 @@
 #include "../../Features/Resolver/Resolver.h"
 #include "../../Features/Visuals/Visuals.h"
 #include "../../Features/Visuals/CritHeals/CritHeals.h"
+#include "../../Features/Visuals/FocusFire/FocusFire.h"
 
 bool CEventListener::Initialize()
 {
@@ -59,6 +60,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 		F::Resolver.PlayerHurt(pEvent);
 		F::CheaterDetection.ReportDamage(pEvent);
 		F::CritHeals.OnPlayerHurt(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")));
+		F::FocusFire.OnPlayerHurt(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")), I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker")));
 		break;
 	case FNV1A::Hash32Const("player_spawn"):
 		F::Backtrack.SetLerp(pEvent);

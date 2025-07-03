@@ -19,6 +19,7 @@
 #include "../Features/Visuals/PlayerTrails/PlayerTrails.h"
 #include "../Features/Visuals/StickyESP/StickyESP.h"
 #include "../Features/Visuals/CritHeals/CritHeals.h"
+#include "../Features/Visuals/FocusFire/FocusFire.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
@@ -61,6 +62,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::PlayerTrails.Draw();
 			F::StickyESP.Draw();
 			F::CritHeals.Draw();
+			F::FocusFire.Draw();
 			F::Visuals.DrawDebugInfo(pLocal);
 		}
 		H::Draw.End();

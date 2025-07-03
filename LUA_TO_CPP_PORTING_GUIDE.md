@@ -773,6 +773,66 @@ public:
 
 This example demonstrates that the best ports often prioritize exact behavior over performance optimization.
 
+## Example: FocusFire Focus Target Tracking
+
+The latest successful integration was the focusfire.lua multi-targeting detection system:
+
+### Analysis Phase
+- **Purpose**: Visual tracking system for enemies being targeted by multiple teammates
+- **Key Features**: Event-driven damage tracking, visual box ESP, automatic cleanup, team coordination assistance
+- **Category**: Always-on tactical visuals feature for team coordination
+
+### Implementation Highlights
+```cpp
+// Multi-targeting tracker with event integration
+class CFocusFire
+{
+private:
+    static constexpr int MIN_ATTACKERS = 2;
+    static constexpr float TRACKER_TIME_WINDOW = 4.5f;
+    static constexpr Color_t BOX_COLOR = {255, 0, 0, 190}; // Red corners
+    std::unordered_map<int, TargetInfo> m_TargetData;
+    
+public:
+    void Draw();  // Box ESP drawing
+    void OnPlayerHurt(int victimIndex, int attackerIndex);  // Event tracking
+};
+```
+
+### Key Integration Points
+- **Event-driven tracking**: Connected to `player_hurt` events in `Events.cpp` for real-time damage tracking
+- **Visual coordination**: Red corner boxes highlight enemies being focused by 2+ teammates
+- **Performance optimization**: Time-windowed tracking (4.5s) with automatic cleanup routines
+- **Team filtering**: Only highlights enemy players, ignores friendly fire
+
+### API Mappings Applied
+- **Event handling**: `callbacks.Register("FireGameEvent")` → `Events.cpp` integration
+- **Multi-targeting logic**: `targetData[entIndex].attackers` → `std::unordered_map<int, TargetInfo>`
+- **Box drawing**: `draw.Line()` corner system → `H::Draw.Line()` with thickness
+- **Entity filtering**: `entity:GetTeamNumber()` → `pPlayer->m_iTeamNum()`
+
+### Integration Steps
+1. **Project structure**: Added to `Features/Visuals/FocusFire/` following established patterns
+2. **Event integration**: Added `OnPlayerHurt` call to existing `player_hurt` event handler
+3. **Drawing integration**: Added `F::FocusFire.Draw()` to main drawing loop in `IEngineVGui_Paint.cpp`
+4. **Always-on design**: No configuration options, automatic activation like UberTracker
+
+### Final Result
+- Always-enabled focus fire detection for tactical team coordination
+- Red corner boxes appear around enemies being shot by 2+ teammates within 4.5 seconds
+- Event-driven performance with automatic target cleanup and memory management
+- Seamless integration with existing visual systems and drawing pipeline
+- Real-time tactical awareness for coordinated team pushes
+
+### Key Lessons Learned
+1. **Event integration**: Player damage events provide reliable real-time tracking data
+2. **Time-windowed tracking**: 4.5-second windows effectively capture coordinated attacks
+3. **Visual clarity**: Red corner boxes provide clear focus target indication without screen clutter
+4. **Memory management**: Automatic cleanup prevents memory leaks during long gameplay sessions
+5. **Team coordination**: Visual feedback enhances team tactics without being distracting
+
+This example demonstrates successful event-driven feature integration with real-time tactical applications.
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.

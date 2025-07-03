@@ -946,6 +946,7 @@
     <ClCompile Include="src\Features\Visuals\CritHeals\CritHeals.cpp" />
     <ClCompile Include="src\Features\Visuals\ESP\ESP.cpp" />
     <ClCompile Include="src\Features\Visuals\FakeAngle\FakeAngle.cpp" />
+    <ClCompile Include="src\Features\Visuals\FocusFire\FocusFire.cpp" />
     <ClCompile Include="src\Features\Visuals\Glow\Glow.cpp" />
     <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
     <ClCompile Include="src\Features\Visuals\HealthBarESP\HealthBarESP.cpp" />
@@ -1253,6 +1254,7 @@
     <ClInclude Include="src\Features\Visuals\CritHeals\CritHeals.h" />
     <ClInclude Include="src\Features\Visuals\ESP\ESP.h" />
     <ClInclude Include="src\Features\Visuals\FakeAngle\FakeAngle.h" />
+    <ClInclude Include="src\Features\Visuals\FocusFire\FocusFire.h" />
     <ClInclude Include="src\Features\Visuals\Glow\Glow.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\Features\Visuals\HealthBarESP\HealthBarESP.h" />
