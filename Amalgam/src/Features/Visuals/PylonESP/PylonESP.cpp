@@ -32,10 +32,7 @@ void CPylonESP::Draw()
     Vec3 eyePos = pLocal->GetEyePosition();
     int localTeam = pLocal->m_iTeamNum();
     
-    // Clean up stale entries periodically
-    CleanupStaleEntries();
-    
-    // Process all players
+    // Process all players in real-time
     for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
     {
         auto pPlayer = pEntity->As<CTFPlayer>();
@@ -46,7 +43,6 @@ void CPylonESP::Draw()
         if (pPlayer->m_iTeamNum() == localTeam || pPlayer->m_iClass() != TF_CLASS_MEDIC)
             continue;
         
-        int playerIndex = pPlayer->entindex();
         Vec3 playerPos = pPlayer->GetAbsOrigin();
         
         // Skip if we can see the medic directly
@@ -58,48 +54,23 @@ void CPylonESP::Draw()
         if (distanceSqr < MIN_DISTANCE_SQR)
             continue;
         
-        // Calculate pylon base position
+        // Calculate pylon base position (real-time)
         Vec3 playerMaxs = pPlayer->m_vecMaxs();
-        Vec3 currentPos = Vec3(playerPos.x, playerPos.y, playerPos.z + playerMaxs.z + PYLON_OFFSET);
+        Vec3 pylonBase = Vec3(playerPos.x, playerPos.y, playerPos.z + playerMaxs.z + PYLON_OFFSET);
         
-        // Update or create position data
-        if (ShouldUpdatePosition(playerIndex))
-        {
-            m_MedicPositions[playerIndex] = {currentPos, I::GlobalVars->curtime};
-        }
-        
-        // If we don't have a position yet, create one
-        if (m_MedicPositions.find(playerIndex) == m_MedicPositions.end())
-        {
-            m_MedicPositions[playerIndex] = {currentPos, I::GlobalVars->curtime};
-        }
-        
-        // Draw pylon
-        DrawPylon(playerIndex, m_MedicPositions[playerIndex].Position, eyePos);
+        // Draw pylon immediately
+        DrawPylon(pylonBase, eyePos);
     }
 }
 
-bool CPylonESP::IsVisibleCached(const Vec3& fromPos, const Vec3& targetPos, const std::string& identifier)
+bool CPylonESP::IsVisible(const Vec3& fromPos, const Vec3& targetPos)
 {
-    float currentTime = I::GlobalVars->curtime;
+    CGameTrace trace;
+    CTraceFilterHitscan filter;
+    filter.pSkip = H::Entities.GetLocal();
+    SDK::Trace(fromPos, targetPos, MASK_VISIBLE, &filter, &trace);
     
-    // Check if we need to update the cache
-    auto it = m_VisibilityCache.find(identifier);
-    if (it == m_VisibilityCache.end() || (currentTime - it->second.LastCheck > VISIBILITY_PERSISTENCE))
-    {
-        // Update the cache
-        CGameTrace trace;
-        CTraceFilterHitscan filter;
-        filter.pSkip = H::Entities.GetLocal();
-        SDK::Trace(fromPos, targetPos, MASK_VISIBLE, &filter, &trace);
-        
-        bool isVisible = trace.fraction >= 0.99f;
-        m_VisibilityCache[identifier] = {isVisible, currentTime};
-        return isVisible;
-    }
-    
-    // Return cached value
-    return it->second.IsVisible;
+    return trace.fraction >= 0.99f;
 }
 
 float CPylonESP::GetDistanceSqr(const Vec3& pos1, const Vec3& pos2)
@@ -108,76 +79,21 @@ float CPylonESP::GetDistanceSqr(const Vec3& pos1, const Vec3& pos2)
     return delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
 }
 
-bool CPylonESP::ShouldUpdatePosition(int medicIndex)
-{
-    if (UPDATE_INTERVAL == 0.0f)
-        return true;
-    
-    auto it = m_MedicPositions.find(medicIndex);
-    if (it == m_MedicPositions.end())
-        return true;
-    
-    float lastUpdate = it->second.LastUpdate;
-    return (I::GlobalVars->curtime - lastUpdate) >= UPDATE_INTERVAL;
-}
-
-void CPylonESP::CleanupStaleEntries()
-{
-    float currentTime = I::GlobalVars->curtime;
-    
-    // Only clean up periodically
-    if (currentTime - m_LastCleanup < CLEANUP_INTERVAL)
-        return;
-    
-    m_LastCleanup = currentTime;
-    
-    // Remove stale medic positions
-    auto it = m_MedicPositions.begin();
-    while (it != m_MedicPositions.end())
-    {
-        if (currentTime - it->second.LastUpdate > UPDATE_INTERVAL * 3.0f)
-        {
-            int medicIdx = it->first;
-            it = m_MedicPositions.erase(it);
-            
-            // Clean up associated visibility cache entries
-            auto cacheIt = m_VisibilityCache.begin();
-            while (cacheIt != m_VisibilityCache.end())
-            {
-                if (cacheIt->first.find(std::to_string(medicIdx) + "_") == 0)
-                {
-                    cacheIt = m_VisibilityCache.erase(cacheIt);
-                }
-                else
-                {
-                    ++cacheIt;
-                }
-            }
-        }
-        else
-        {
-            ++it;
-        }
-    }
-}
-
 bool CPylonESP::IsPlayerDirectlyVisible(CTFPlayer* pPlayer, const Vec3& eyePos)
 {
     Vec3 playerPos = pPlayer->GetAbsOrigin();
-    std::string identifier = std::to_string(pPlayer->entindex()) + "_base";
-    return IsVisibleCached(eyePos, playerPos, identifier);
+    return IsVisible(eyePos, playerPos);
 }
 
-void CPylonESP::DrawPylon(int medicIndex, const Vec3& basePosition, const Vec3& eyePos)
+void CPylonESP::DrawPylon(const Vec3& basePosition, const Vec3& eyePos)
 {
     // First pass: check if any segment is visible
     bool anySegmentVisible = false;
     for (int i = 0; i <= SEGMENTS; i++)
     {
         Vec3 segmentPos = Vec3(basePosition.x, basePosition.y, basePosition.z + (i * SEGMENT_HEIGHT));
-        std::string segmentKey = std::to_string(medicIndex) + "_segment_" + std::to_string(i);
         
-        if (IsVisibleCached(eyePos, segmentPos, segmentKey))
+        if (IsVisible(eyePos, segmentPos))
         {
             anySegmentVisible = true;
             break;
@@ -195,9 +111,8 @@ void CPylonESP::DrawPylon(int medicIndex, const Vec3& basePosition, const Vec3& 
     for (int i = 0; i <= SEGMENTS; i++)
     {
         Vec3 segmentPos = Vec3(basePosition.x, basePosition.y, basePosition.z + (i * SEGMENT_HEIGHT));
-        std::string segmentKey = std::to_string(medicIndex) + "_segment_" + std::to_string(i);
         
-        bool visible = IsVisibleCached(eyePos, segmentPos, segmentKey);
+        bool visible = IsVisible(eyePos, segmentPos);
         
         if (!visible)
         {
@@ -228,11 +143,4 @@ void CPylonESP::DrawPylon(int medicIndex, const Vec3& basePosition, const Vec3& 
         lastScreenPos = screenPos;
         hasLastScreenPos = true;
     }
-}
-
-void CPylonESP::Reset()
-{
-    m_MedicPositions.clear();
-    m_VisibilityCache.clear();
-    m_LastCleanup = 0.0f;
 }
