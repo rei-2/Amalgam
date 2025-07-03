@@ -225,9 +225,28 @@ CTFPlayer* CEnemyCam::FindHealedPlayer(CTFPlayer*& outMedic)
     
     for (auto pPlayer : enemies)
     {
-        if (pPlayer->InCond(TF_COND_HEALING))
+        // Check if player is being healed (use medigun target detection instead)
+        bool isBeingHealed = false;
+        for (auto pMedic : enemies)
         {
-            // Try to find the medic healing this player
+            if (pMedic->m_iClass() == TF_CLASS_MEDIC)
+            {
+                auto pMedigun = pMedic->GetWeaponFromSlot(SLOT_SECONDARY);
+                if (pMedigun)
+                {
+                    auto pHealTarget = pMedigun->As<CWeaponMedigun>()->m_hHealingTarget().Get();
+                    if (pHealTarget == pPlayer)
+                    {
+                        isBeingHealed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (isBeingHealed)
+        {
+            // Find the medic healing this player
             for (auto pMedic : enemies)
             {
                 if (pMedic->m_iClass() == TF_CLASS_MEDIC)
@@ -302,7 +321,7 @@ CTFPlayer* CEnemyCam::FindTopScorePlayer()
     
     for (auto pEnemy : enemies)
     {
-        int score = pResource->GetScore(pEnemy->entindex());
+        int score = pResource->m_iTotalScore(pEnemy->entindex());
         if (score > maxScore)
         {
             maxScore = score;
@@ -439,7 +458,7 @@ const char* CEnemyCam::GetClassName(int classId)
         case TF_CLASS_SOLDIER: return "Soldier";
         case TF_CLASS_DEMOMAN: return "Demoman";
         case TF_CLASS_MEDIC: return "Medic";
-        case TF_CLASS_HEAVYWEAPONS: return "Heavy";
+        case TF_CLASS_HEAVY: return "Heavy";
         case TF_CLASS_PYRO: return "Pyro";
         case TF_CLASS_SPY: return "Spy";
         case TF_CLASS_ENGINEER: return "Engineer";
