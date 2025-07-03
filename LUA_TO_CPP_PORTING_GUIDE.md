@@ -900,6 +900,75 @@ public:
 
 This example demonstrates advanced ESP techniques with performance-conscious visibility management.
 
+## Example: EnemyCam Advanced Rendering System
+
+The most complex integration was the enemycam.lua picture-in-picture camera system:
+
+### Analysis Phase
+- **Purpose**: Real-time enemy perspective camera window with multiple targeting modes
+- **Key Features**: Render-to-texture system, multiple view modes, target selection algorithms, overlay UI
+- **Category**: Advanced visual feature leveraging existing CameraWindow infrastructure
+
+### Implementation Highlights
+```cpp
+// Enemy camera system with render-to-texture capability
+class CEnemyCam
+{
+private:
+    static constexpr int CAMERA_WIDTH = 320;
+    static constexpr int CAMERA_HEIGHT = 240;
+    ECameraMode m_eMode = ECameraMode::CLOSEST;
+    CTFPlayer* m_pTargetPlayer = nullptr;
+    IMaterial* m_pCameraMaterial = nullptr;
+    ITexture* m_pCameraTexture = nullptr;
+    
+public:
+    void RenderView(void* ecx, const CViewSetup& view);  // Render-to-texture
+    void Draw();  // Screen display and overlay
+};
+```
+
+### Key Integration Points
+- **Existing infrastructure leverage**: Built on CameraWindow's render-to-texture system
+- **Multiple targeting modes**: Closest enemy, healed players, medics, top score, random selection
+- **Advanced rendering**: Custom viewsetup with offset camera modes for better visibility
+- **Real-time overlay**: Player information, health bars, medic relationships
+
+### API Mappings Applied
+- **Render system**: `render.Push3DView()` → `CViewRender_RenderView` hook integration
+- **Material system**: `materials.Create()` → `F::Materials.Create()` with KeyValues
+- **Target selection**: Complex enemy filtering → `H::Entities.GetGroup(EGroupType::PLAYERS_ALL)`
+- **Health detection**: Direct medigun target checking → `pMedigun->m_hHealingTarget().Get()`
+
+### Complex Challenges Solved
+1. **Healing detection**: Replaced non-existent `TF_COND_HEALING` with direct medigun target analysis
+2. **Class constants**: Fixed `TF_CLASS_HEAVYWEAPONS` → `TF_CLASS_HEAVY` SDK compatibility
+3. **Score access**: Corrected `GetScore()` → `m_iTotalScore()` netvar method usage
+4. **Render integration**: Proper hook placement in both render and draw pipelines
+
+### Integration Steps
+1. **Infrastructure reuse**: Leveraged existing CameraWindow render-to-texture framework
+2. **Dual hook integration**: Added to both `CViewRender_RenderView` and `IEngineVGui_Paint`
+3. **Material lifecycle**: Proper initialization in `Materials.cpp` with cleanup handling
+4. **Target algorithms**: Implemented sophisticated enemy selection with auto-switching
+
+### Final Result
+- Real-time 320x240 enemy perspective camera in upper-right corner
+- Five targeting modes: closest, healed players, medics, top score, random
+- Raw and offset view modes with intelligent pitch-based camera positioning
+- Live overlay with player names, classes, health bars, and medic relationships
+- Automatic target switching every 3 seconds with performance-optimized search intervals
+- Full integration with existing material and rendering systems
+
+### Key Lessons Learned
+1. **Infrastructure leverage**: Reusing existing systems dramatically reduces implementation complexity
+2. **SDK compatibility**: Always verify constants and method names against actual SDK definitions
+3. **Dual hook integration**: Complex features often require multiple integration points
+4. **Performance considerations**: Even with C++ performance, smart algorithms matter for user experience
+5. **Error handling**: Graceful fallbacks when ideal targets aren't available improve reliability
+
+This example demonstrates the most advanced visual feature integration, showcasing render-to-texture capabilities and complex target selection algorithms.
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.
