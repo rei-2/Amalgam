@@ -10,6 +10,7 @@
 #include "../../Features/Output/Output.h"
 #include "../../Features/Resolver/Resolver.h"
 #include "../../Features/Visuals/Visuals.h"
+#include "../../Features/Visuals/CritHeals/CritHeals.h"
 
 bool CEventListener::Initialize()
 {
@@ -57,6 +58,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	case FNV1A::Hash32Const("player_hurt"):
 		F::Resolver.PlayerHurt(pEvent);
 		F::CheaterDetection.ReportDamage(pEvent);
+		F::CritHeals.OnPlayerHurt(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")));
 		break;
 	case FNV1A::Hash32Const("player_spawn"):
 		F::Backtrack.SetLerp(pEvent);

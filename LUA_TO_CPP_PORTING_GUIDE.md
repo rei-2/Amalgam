@@ -622,6 +622,53 @@ ADD_FEATURE(CHealthBarESP, HealthBarESP);
 - Fixed 90px width bars positioned 30px below player center
 - No flickering during combat, stable visibility checking
 
+## Example: CritHeals Medic Assistance Port
+
+Another successful port following this guide was the critheals.lua medic assistance system:
+
+### Analysis Phase
+- **Purpose**: Visual indicators for crit heal eligibility and uber build rate warnings
+- **Key Features**: Triangle indicators, damage tracking, uber build penalty warnings
+- **Category**: Medic-specific visuals feature (always-on when playing medic)
+
+### Implementation Highlights
+```cpp
+// Always-on medic assistance with event integration
+class CCritHeals
+{
+private:
+    static constexpr float CRIT_HEAL_TIME = 10.0f;
+    static constexpr float UBER_PENALTY_THRESHOLD = 1.425f;
+    std::unordered_map<int, float> m_LastDamageTimes;
+    
+public:
+    void Draw();
+    void OnPlayerHurt(int victimIndex);  // Event-driven damage tracking
+};
+```
+
+### Key Integration Points
+- **Event system integration**: Added `player_hurt` event handling to track damage times
+- **Class-specific activation**: Only runs when playing medic (`pLocal->m_iClass() == TF_CLASS_MEDIC`)
+- **Visual positioning**: Aligned uber warnings with UberTracker display area
+- **Entity casting**: Proper `CBaseEntity` → `CTFPlayer`/`CTFWeaponBase` casting
+
+### Fixes Applied During Port
+1. **Entity type safety**: Fixed `CBaseEntity->IsAlive()` → `CTFPlayer->IsAlive()` casting
+2. **Event integration**: Added to existing `player_hurt` event dispatcher in `Events.cpp`
+3. **Visual consistency**: Positioned warnings to align with UberTracker layout
+4. **Visibility improvements**: Changed `MASK_SHOT_HULL` → `MASK_VISIBLE` to reduce flickering
+5. **Performance optimization**: Used damage event tracking instead of continuous health monitoring
+
+### Final Result
+- Triangle indicators above players eligible for crit heals (10+ seconds since damage)
+- "Reduced Uber Build Rate!" warning when healing overhealed players (142.5%+ health)
+- Integrated with existing event system for efficient damage tracking
+- Seamless visual integration with UberTracker positioning
+- No flickering during combat, stable triangle indicators
+
+This example demonstrates event-driven features and proper medic-specific functionality integration.
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.

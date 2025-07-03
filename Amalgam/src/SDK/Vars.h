@@ -288,7 +288,7 @@ namespace Vars
 			CVar(AssistStrength, "Assist strength", 25.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 1.f, "%g%%");
 			CVar(TickTolerance, "Tick tolerance", 7, SLIDER_CLAMP, 0, 21);
 			CVar(AutoShoot, "Auto shoot", true);
-			CVar(FOVCircle, "FOV Circle", true);
+			CVar(FOVCircle, "FOV Circle", false);
 			CVar(NoSpread, "No spread", false);
 
 			CVar(HitscanPeek, "Hitscan peek", 1, NOSAVE | DEBUGVAR, 0, 5);
