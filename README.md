@@ -42,6 +42,7 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 ### Always-On Information Systems
 - **UberTracker** - Comprehensive uber advantage tracking with detailed medic information, weapon types, and advantage calculations
 - **HealthBarESP** - Always-visible health bars with medic mode (teammates when playing medic), health-responsive visibility, and overheal support
+- **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 
 ## 📋 Installation
 

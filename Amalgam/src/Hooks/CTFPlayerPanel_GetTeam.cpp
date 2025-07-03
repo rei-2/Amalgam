@@ -25,6 +25,29 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 			return pLocal->m_iTeamNum();
 	}
 
+	// Always-on enemy health/class display on match HUD (credits to Pixy)
+	if (dwRetAddr == dwDesired)
+	{
+		if (auto pLocal = H::Entities.GetLocal())
+		{
+			void* HealthPanel = *reinterpret_cast<void**>(uintptr_t(rcx) + 688);
+			if (HealthPanel)
+			{
+				void* IsVisible = *reinterpret_cast<void**>(*reinterpret_cast<uintptr_t*>(HealthPanel) + 272);
+				if (IsVisible)
+				{
+					auto Result = reinterpret_cast<bool(*)(void*)>(IsVisible)(HealthPanel);
+					if (!Result)
+					{
+						// Force healthbar to update
+						*reinterpret_cast<int*>(uintptr_t(rcx) + 0x270) = -1;
+					}
+				}
+			}
+			return pLocal->m_iTeamNum();
+		}
+	}
+
 	return CALL_ORIGINAL(rcx);
 }
 
