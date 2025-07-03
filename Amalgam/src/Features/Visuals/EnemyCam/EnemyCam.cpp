@@ -66,51 +66,45 @@ void CEnemyCam::CleanupMaterials()
 
 void CEnemyCam::Draw()
 {
-    try
-    {
-        if (!m_bEnabled || !m_bInitialized || !I::EngineClient->IsInGame())
-            return;
+    if (!m_bEnabled || !m_bInitialized || !I::EngineClient->IsInGame())
+        return;
+    
+    if (I::EngineVGui->IsGameUIVisible())
+        return;
+    
+    if (!m_pCameraMaterial || !m_pCameraTexture)
+        return;
+    
+    // Update target
+    UpdateTargetPlayer();
+    
+    if (!m_pTargetPlayer)
+        return;
+    
+    // Get screen size for positioning
+    int screenW, screenH;
+    I::MatSystemSurface->GetScreenSize(screenW, screenH);
+    
+    // Position camera in upper right corner
+    int x = screenW - CAMERA_WIDTH - BORDER_OFFSET;
+    int y = BORDER_OFFSET + 20; // Leave space for title
+    
+    // Draw camera to screen
+    auto renderCtx = I::MaterialSystem->GetRenderContext();
+    if (!renderCtx)
+        return;
         
-        if (I::EngineVGui->IsGameUIVisible())
-            return;
-        
-        if (!m_pCameraMaterial || !m_pCameraTexture)
-            return;
-        
-        // Update target
-        UpdateTargetPlayer();
-        
-        if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
-            return;
-        
-        // Get screen size for positioning
-        int screenW, screenH;
-        I::MatSystemSurface->GetScreenSize(screenW, screenH);
-        
-        // Position camera in upper right corner
-        int x = screenW - CAMERA_WIDTH - BORDER_OFFSET;
-        int y = BORDER_OFFSET + 20; // Leave space for title
-        
-        // Draw camera to screen
-        auto renderCtx = I::MaterialSystem->GetRenderContext();
-        renderCtx->DrawScreenSpaceRectangle(
-            m_pCameraMaterial,
-            x, y, CAMERA_WIDTH, CAMERA_HEIGHT,
-            0, 0, CAMERA_WIDTH, CAMERA_HEIGHT,
-            m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
-            nullptr, 1, 1
-        );
-        renderCtx->Release();
-        
-        // Draw overlay
-        DrawOverlay();
-    }
-    catch (...)
-    {
-        // If anything crashes in drawing, silently continue
-        m_pTargetPlayer = nullptr;
-        m_pTargetMedic = nullptr;
-    }
+    renderCtx->DrawScreenSpaceRectangle(
+        m_pCameraMaterial,
+        x, y, CAMERA_WIDTH, CAMERA_HEIGHT,
+        0, 0, CAMERA_WIDTH, CAMERA_HEIGHT,
+        m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
+        nullptr, 1, 1
+    );
+    renderCtx->Release();
+    
+    // Draw overlay
+    DrawOverlay();
 }
 
 void CEnemyCam::RenderView(void* ecx, const CViewSetup& view)
@@ -118,17 +112,9 @@ void CEnemyCam::RenderView(void* ecx, const CViewSetup& view)
     if (!m_bEnabled || !m_bInitialized || !m_pTargetPlayer || !m_pCameraTexture)
         return;
     
-    // Additional validation to prevent crashes
-    if (!m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
-        return;
-    
     // Get camera view
     Vec3 origin, angles;
     GetCameraView(origin, angles);
-    
-    // Don't render if we got invalid coordinates
-    if (origin.IsZero() && angles.IsZero())
-        return;
     
     // Setup view
     CViewSetup enemyView = view;
@@ -143,6 +129,9 @@ void CEnemyCam::RenderView(void* ecx, const CViewSetup& view)
     
     // Render to texture
     auto renderCtx = I::MaterialSystem->GetRenderContext();
+    if (!renderCtx)
+        return;
+        
     renderCtx->PushRenderTargetAndViewport();
     renderCtx->SetRenderTarget(m_pCameraTexture);
     
@@ -164,36 +153,20 @@ std::vector<CTFPlayer*> CEnemyCam::GetEnemyPlayers()
     
     int localTeam = pLocal->m_iTeamNum();
     
-    try
+    for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
     {
-        for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
-        {
-            if (!pEntity)
-                continue;
-                
-            auto pPlayer = pEntity->As<CTFPlayer>();
-            if (!pPlayer)
-                continue;
-                
-            // Additional validation before accessing methods
-            if (!pPlayer->IsAlive() || pPlayer->IsDormant())
-                continue;
-            
-            // Safe team check
-            if (pPlayer->m_iTeamNum() == localTeam)
-                continue;
-            
-            // Skip cloaked spies with safe condition check
-            if (pPlayer->InCond(TF_COND_STEALTHED))
-                continue;
-            
-            enemies.push_back(pPlayer);
-        }
-    }
-    catch (...)
-    {
-        // If anything goes wrong, return empty list
-        enemies.clear();
+        auto pPlayer = pEntity->As<CTFPlayer>();
+        if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsDormant())
+            continue;
+        
+        if (pPlayer->m_iTeamNum() == localTeam)
+            continue;
+        
+        // Skip cloaked spies
+        if (pPlayer->InCond(TF_COND_STEALTHED))
+            continue;
+        
+        enemies.push_back(pPlayer);
     }
     
     return enemies;
@@ -258,28 +231,9 @@ CTFPlayer* CEnemyCam::FindHealedPlayer(CTFPlayer*& outMedic)
     
     for (auto pPlayer : enemies)
     {
-        // Check if player is being healed (use medigun target detection instead)
-        bool isBeingHealed = false;
-        for (auto pMedic : enemies)
+        if (pPlayer->InCond(TF_COND_HEALTH_OVERHEALED))
         {
-            if (pMedic->m_iClass() == TF_CLASS_MEDIC)
-            {
-                auto pMedigun = pMedic->GetWeaponFromSlot(SLOT_SECONDARY);
-                if (pMedigun)
-                {
-                    auto pHealTarget = pMedigun->As<CWeaponMedigun>()->m_hHealingTarget().Get();
-                    if (pHealTarget == pPlayer)
-                    {
-                        isBeingHealed = true;
-                        break;
-                    }
-                }
-            }
-        }
-        
-        if (isBeingHealed)
-        {
-            // Find the medic healing this player
+            // Try to find the medic healing this player
             for (auto pMedic : enemies)
             {
                 if (pMedic->m_iClass() == TF_CLASS_MEDIC)
@@ -367,68 +321,44 @@ CTFPlayer* CEnemyCam::FindTopScorePlayer()
 
 void CEnemyCam::UpdateTargetPlayer()
 {
-    try
+    if (!I::GlobalVars)
+        return;
+        
+    float currentTime = I::GlobalVars->curtime;
+    
+    // Only search periodically
+    if (currentTime - m_flLastSearchTime < SEARCH_INTERVAL)
+        return;
+    
+    m_flLastSearchTime = currentTime;
+    
+    // Check if we need a new target
+    bool needNewTarget = false;
+    
+    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || 
+        m_pTargetPlayer->IsDormant() || m_pTargetPlayer->InCond(TF_COND_STEALTHED))
     {
-        // Early exit if not in game
-        if (!I::EngineClient->IsInGame())
-        {
-            m_pTargetPlayer = nullptr;
-            m_pTargetMedic = nullptr;
-            return;
-        }
-        
-        // Always check for invalid target first
-        if (m_pTargetPlayer && (!m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant() || m_pTargetPlayer->InCond(TF_COND_STEALTHED)))
-        {
-            m_pTargetPlayer = nullptr;
-            m_pTargetMedic = nullptr;
-        }
-        
-        float currentTime = I::GlobalVars->curtime;
-        
-        // Only search periodically
-        if (currentTime - m_flLastSearchTime < SEARCH_INTERVAL)
-            return;
-        
-        m_flLastSearchTime = currentTime;
-        
-        // Check if we need a new target
-        bool needNewTarget = false;
-        
-        if (!m_pTargetPlayer)
-        {
-            needNewTarget = true;
-        }
-        
-        // Auto-switch after track time
-        if (m_pTargetPlayer && TRACK_TIME > 0 && 
-            currentTime - m_flTargetSwitchTime >= TRACK_TIME)
-        {
-            needNewTarget = true;
-        }
-        
-        if (needNewTarget)
-        {
-            m_pTargetPlayer = FindTargetPlayer();
-            m_flTargetSwitchTime = currentTime;
-        }
+        needNewTarget = true;
     }
-    catch (...)
+    
+    // Auto-switch after track time
+    if (m_pTargetPlayer && TRACK_TIME > 0 && 
+        currentTime - m_flTargetSwitchTime >= TRACK_TIME)
     {
-        // If anything crashes, clear targets and continue
-        m_pTargetPlayer = nullptr;
-        m_pTargetMedic = nullptr;
+        needNewTarget = true;
+    }
+    
+    if (needNewTarget)
+    {
+        m_pTargetPlayer = FindTargetPlayer();
+        m_flTargetSwitchTime = currentTime;
     }
 }
 
 void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
 {
-    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
-    {
-        origin = Vec3(0, 0, 0);
-        angles = Vec3(0, 0, 0);
+    if (!m_pTargetPlayer)
         return;
-    }
     
     // Get player eye position and angles
     origin = m_pTargetPlayer->GetEyePosition();
@@ -452,7 +382,7 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
 
 void CEnemyCam::DrawOverlay()
 {
-    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || m_pTargetPlayer->IsDormant())
+    if (!m_pTargetPlayer)
         return;
     
     // Get screen size
