@@ -717,6 +717,54 @@ public:
 
 This example demonstrates comprehensive entity tracking, performance optimization patterns, and proper visual effect integration.
 
+## Example: StickyESP Integration
+
+The final integration following this guide was the sticky.lua stickybomb ESP system:
+
+### Analysis Phase
+- **Purpose**: Always-on ESP for enemy stickybombs with visibility-based coloring and performance optimization
+- **Key Features**: 2D/3D box ESP, enemy-only filtering, distance filtering, visibility checks, caching systems
+- **Category**: Always-on visual ESP feature that leverages existing native systems
+
+### Implementation Highlights
+```cpp
+// Stickybomb ESP with native system integration
+class CStickyESP
+{
+private:
+    static constexpr bool ENEMY_ONLY = true;
+    static constexpr float MAX_DISTANCE = 2800.0f;
+    static constexpr Color_t BOX_COLOR_VISIBLE = {0, 255, 0, 255};   // Green
+    static constexpr Color_t BOX_COLOR_INVISIBLE = {255, 0, 0, 255}; // Red
+    
+public:
+    void Draw();  // Mirrors Lua stickybomb_esp() function exactly
+};
+```
+
+### Key Integration Points
+- **Native entity groups**: Used `H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES)` instead of `entities.FindByClass()`
+- **Existing chams system**: Leveraged native projectile chams (no custom implementation needed)
+- **Native drawing API**: Used `H::Draw.Line()` instead of `draw.Line()` for box rendering
+- **SDK trace system**: Integrated with existing `SDK::Trace()` and `MASK_SHOT` constants
+
+### Fixes Applied During Port
+1. **Entity filtering**: Used `pSticky->m_iType() == 1` netvar instead of `GetPropInt("m_iType")`
+2. **Class identification**: Used `ETFClassID::CTFGrenadePipebombProjectile` instead of string class names
+3. **Distance calculation**: Used squared distance comparison for performance (avoiding sqrt)
+4. **API consistency**: Used `pEntity->m_iTeamNum()` instead of `GetTeamNumber()`
+5. **Native integration**: No custom chams - existing projectile chams system handles stickybombs automatically
+
+### Final Result
+- Always-enabled ESP for enemy stickybombs only (2800 unit range)
+- 2D box ESP (20px boxes) with visibility-based green/red coloring
+- Optional 3D bounding box ESP using entity bounds calculation
+- Performance-optimized with cached visibility checks and cleanup routines
+- Seamless integration with existing projectile chams system (user-controllable)
+- Exact mirror of Lua functionality using native drawing and entity systems
+
+This example demonstrates perfect integration with existing native systems, avoiding code duplication while maintaining all original functionality.
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.

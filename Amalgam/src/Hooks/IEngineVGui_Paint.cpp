@@ -17,6 +17,7 @@
 #include "../Features/Visuals/UberTracker/UberTracker.h"
 #include "../Features/Visuals/HealthBarESP/HealthBarESP.h"
 #include "../Features/Visuals/PlayerTrails/PlayerTrails.h"
+#include "../Features/Visuals/StickyESP/StickyESP.h"
 #include "../Features/Visuals/CritHeals/CritHeals.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
@@ -58,6 +59,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::UberTracker.Draw();
 			F::HealthBarESP.Draw();
 			F::PlayerTrails.Draw();
+			F::StickyESP.Draw();
 			F::CritHeals.Draw();
 			F::Visuals.DrawDebugInfo(pLocal);
 		}

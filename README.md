@@ -32,6 +32,7 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 - **HealthBarESP** - Health bars for visible-only players. Includes a medic mode (health bars for teammates when playing medic), health-responsive visibility, and overheal display
 - **CritHeals Indicator** - Triangle indicators above players eligible for crit heals (medic-only feature) with uber build rate warnings
 - **PlayerTrails** - Colored movement trails for enemy players showing their recent paths with visibility-based display and fade-out effects
+- **StickyESP** - Always-on stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), and distance filtering
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 
 ## Installation
