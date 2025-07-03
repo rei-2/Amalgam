@@ -896,6 +896,70 @@ namespace Vars
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 		SUBNAMESPACE_END(Features);
+
+		SUBNAMESPACE_BEGIN(EnemyCam, Enemy Camera)
+			CVarEnum(Mode, "Camera mode", 0, VISUAL, nullptr,
+				VA_LIST("Closest", "Healed", "Medic", "Top Score", "Random"));
+			CVarEnum(ViewMode, "View mode", 1, VISUAL, nullptr,
+				VA_LIST("Raw", "Offset"));
+			CVar(TrackTime, "Track time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 10.0f, 0.5f);
+		SUBNAMESPACE_END(EnemyCam);
+
+		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)
+			CVar(ShowTopBox, "Show info box", true, VISUAL);
+			CVar(ShowAdvantage, "Show advantage text", true, VISUAL);
+			CVar(ShowKritz, "Show kritzkrieg", true, VISUAL);
+			CVar(IgnoreKritz, "Treat kritz as uber", false, VISUAL);
+		SUBNAMESPACE_END(UberTracker);
+
+		SUBNAMESPACE_BEGIN(HealthBarESP, Health Bar ESP)
+			CVar(Alpha, "Transparency", 70, VISUAL | SLIDER_CLAMP, 0, 255, 5);
+			CVar(BarHeight, "Bar height", 10, VISUAL | SLIDER_CLAMP, 5, 25, 1);
+			CVar(BarWidth, "Bar width", 90, VISUAL | SLIDER_CLAMP, 50, 150, 5);
+			CVar(MaxDistance, "Max distance", 3500.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 500.0f, 8000.0f, 100.0f);
+			CVar(MedicMode, "Medic mode (teammates)", true, VISUAL);
+		SUBNAMESPACE_END(HealthBarESP);
+
+		SUBNAMESPACE_BEGIN(PylonESP, Pylon ESP)
+			CVar(PylonWidth, "Pylon width", 6, VISUAL | SLIDER_CLAMP, 2, 15, 1);
+			CVar(PylonHeight, "Pylon height", 350.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 800.0f, 25.0f);
+			CVar(MinDistance, "Min distance", 800.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 200.0f, 2000.0f, 50.0f);
+			CVar(PylonColor, "Pylon color", Color_t(255, 0, 0, 255), VISUAL);
+		SUBNAMESPACE_END(PylonESP);
+
+		SUBNAMESPACE_BEGIN(PlayerTrails, Player Trails)
+			CVar(MaxTrailLength, "Max trail length", 50, VISUAL | SLIDER_CLAMP, 10, 200, 5);
+			CVar(TrailLifetime, "Trail lifetime", 5.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 20.0f, 0.5f);
+			CVar(MinDistance, "Min distance", 100.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 50.0f, 500.0f, 25.0f);
+			CVar(MaxDistance, "Max distance", 3000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1000.0f, 8000.0f, 100.0f);
+			CVar(EnemyColor, "Enemy trail color", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(TeamColor, "Team trail color", Color_t(0, 255, 0, 255), VISUAL);
+		SUBNAMESPACE_END(PlayerTrails);
+
+		SUBNAMESPACE_BEGIN(StickyESP, Sticky ESP)
+			CVar(MaxDistance, "Max distance", 2000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 500.0f, 5000.0f, 100.0f);
+			CVar(BoxSize, "Box size", 20, VISUAL | SLIDER_CLAMP, 10, 50, 2);
+			CVar(EnemyColor, "Enemy sticky color", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(TeamColor, "Team sticky color", Color_t(0, 255, 0, 255), VISUAL);
+			CVar(ShowTimer, "Show detonation timer", true, VISUAL);
+			CVar(ShowDamage, "Show damage radius", true, VISUAL);
+		SUBNAMESPACE_END(StickyESP);
+
+		SUBNAMESPACE_BEGIN(CritHeals, Crit Heals)
+			CVar(Range, "Detection range", 500.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 200.0f, 1500.0f, 50.0f);
+			CVar(FontSize, "Font size", 16, VISUAL | SLIDER_CLAMP, 10, 30, 1);
+			CVar(CritColor, "Critical heal color", Color_t(0, 255, 0, 255), VISUAL);
+			CVar(TextColor, "Text color", Color_t(255, 255, 255, 255), VISUAL);
+			CVar(ShowPercentage, "Show heal percentage", true, VISUAL);
+		SUBNAMESPACE_END(CritHeals);
+
+		SUBNAMESPACE_BEGIN(FocusFire, Focus Fire)
+			CVar(DisplayTime, "Display time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 10.0f, 0.5f);
+			CVar(MaxTargets, "Max targets shown", 5, VISUAL | SLIDER_CLAMP, 1, 15, 1);
+			CVar(TargetColor, "Target highlight color", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(AttackerColor, "Attacker highlight color", Color_t(255, 165, 0, 255), VISUAL);
+			CVar(ShowHealthDrop, "Show health drop", true, VISUAL);
+		SUBNAMESPACE_END(FocusFire);
 	NAMESPACE_END(Competitive);
 
 	NAMESPACE_BEGIN(Radar)

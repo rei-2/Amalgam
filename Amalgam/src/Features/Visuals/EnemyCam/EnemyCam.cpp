@@ -335,14 +335,43 @@ void CEnemyCam::UpdateTargetPlayer()
     // Check if we need a new target
     bool needNewTarget = false;
     
-    if (!m_pTargetPlayer || !m_pTargetPlayer->IsAlive() || 
-        m_pTargetPlayer->IsDormant() || m_pTargetPlayer->InCond(TF_COND_STEALTHED))
+    // Validate current target with comprehensive checks
+    if (!m_pTargetPlayer)
     {
         needNewTarget = true;
     }
+    else
+    {
+        try
+        {
+            // Validate entity is still in the entity list
+            bool bValidEntity = false;
+            for (int i = 1; i <= 64; i++)
+            {
+                auto pEntity = I::ClientEntityList->GetClientEntity(i);
+                if (pEntity == m_pTargetPlayer)
+                {
+                    bValidEntity = true;
+                    break;
+                }
+            }
+            
+            if (!bValidEntity || !m_pTargetPlayer->IsAlive() || 
+                m_pTargetPlayer->IsDormant() || m_pTargetPlayer->InCond(TF_COND_STEALTHED))
+            {
+                needNewTarget = true;
+            }
+        }
+        catch (...)
+        {
+            // If any validation fails, need new target and clear current one
+            m_pTargetPlayer = nullptr;
+            needNewTarget = true;
+        }
+    }
     
-    // Auto-switch after track time
-    if (m_pTargetPlayer && TRACK_TIME > 0 && 
+    // Auto-switch after track time (only if we still have a valid target)
+    if (m_pTargetPlayer && !needNewTarget && TRACK_TIME > 0 && 
         currentTime - m_flTargetSwitchTime >= TRACK_TIME)
     {
         needNewTarget = true;
@@ -410,6 +439,24 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
         // Double-check pointer before each method call
         if (!m_pTargetPlayer)
             return;
+            
+        // Validate entity is still in the entity list
+        bool bValidEntity = false;
+        for (int i = 1; i <= 64; i++)
+        {
+            auto pEntity = I::ClientEntityList->GetClientEntity(i);
+            if (pEntity == m_pTargetPlayer)
+            {
+                bValidEntity = true;
+                break;
+            }
+        }
+        
+        if (!bValidEntity)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
             
         origin = m_pTargetPlayer->GetEyePosition();
         
@@ -500,6 +547,24 @@ void CEnemyCam::DrawOverlay()
         // Double-check pointer validity before dereferencing
         if (!m_pTargetPlayer)
             return;
+            
+        // Validate entity is still in the entity list
+        bool bValidEntity = false;
+        for (int i = 1; i <= 64; i++)
+        {
+            auto pEntity = I::ClientEntityList->GetClientEntity(i);
+            if (pEntity == m_pTargetPlayer)
+            {
+                bValidEntity = true;
+                break;
+            }
+        }
+        
+        if (!bValidEntity)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
             
         health = m_pTargetPlayer->m_iHealth();
         maxHealth = m_pTargetPlayer->GetMaxHealth();
