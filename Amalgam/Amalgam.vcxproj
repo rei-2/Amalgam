@@ -949,6 +949,7 @@
     <ClCompile Include="src\Features\Visuals\Glow\Glow.cpp" />
     <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
     <ClCompile Include="src\Features\Visuals\HealthBarESP\HealthBarESP.cpp" />
+    <ClCompile Include="src\Features\Visuals\PlayerTrails\PlayerTrails.cpp" />
     <ClCompile Include="src\Features\Visuals\PlayerConditions\PlayerConditions.cpp" />
     <ClCompile Include="src\Features\Visuals\Materials\Materials.cpp" />
     <ClCompile Include="src\Features\Visuals\Notifications\Notifications.cpp" />
@@ -1254,6 +1255,7 @@
     <ClInclude Include="src\Features\Visuals\Glow\Glow.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\Features\Visuals\HealthBarESP\HealthBarESP.h" />
+    <ClInclude Include="src\Features\Visuals\PlayerTrails\PlayerTrails.h" />
     <ClInclude Include="src\Features\Visuals\PlayerConditions\PlayerConditions.h" />
     <ClInclude Include="src\Features\Visuals\PlayerArrows\PlayerArrows.h" />
     <ClInclude Include="src\Features\Visuals\Radar\Radar.h" />

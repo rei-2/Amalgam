@@ -669,6 +669,54 @@ public:
 
 This example demonstrates event-driven features and proper medic-specific functionality integration.
 
+## Example: PlayerTrails System Port
+
+Another successful integration following this guide was the trails.lua movement tracking system:
+
+### Analysis Phase
+- **Purpose**: Visual movement trails for enemy players showing their recent paths
+- **Key Features**: Colored trails, visibility-based display, fade-out effects, distance filtering
+- **Category**: Always-on visuals feature for enemy tracking
+
+### Implementation Highlights
+```cpp
+// Always-on enemy trail tracking with performance optimizations
+class CPlayerTrails
+{
+private:
+    static constexpr int TRAIL_LENGTH = 19;
+    static constexpr float FADE_TIME = 7.0f;
+    static constexpr float MAX_TRAIL_DISTANCE = 1850.0f;
+    std::unordered_map<std::string, PlayerTrailData> m_PlayerData;
+    
+public:
+    void Draw();  // Main drawing loop with visibility and distance checks
+};
+```
+
+### Key Integration Points
+- **Entity iteration**: Used `H::Entities.GetGroup(EGroupType::PLAYERS_ALL)` for efficient player access
+- **Visibility system**: Integrated with existing trace filtering using `MASK_VISIBLE`
+- **Color generation**: Unique trail colors per player using SteamID-based hashing
+- **Performance optimization**: Cached visibility checks, distance filtering, cleanup routines
+
+### Fixes Applied During Port
+1. **API corrections**: Fixed `trace.entity` → `trace.m_pEnt` for proper entity access
+2. **Type safety**: Corrected `W2S` function calls from `Vec2` → `Vec3` parameters
+3. **Lifestate tracking**: Simplified respawn detection using `IsAlive()` instead of raw lifestate values
+4. **ViewOffset access**: Fixed player view offset access using proper casting `pLocal->As<CTFPlayer>()`
+5. **Color narrowing**: Used `byte()` cast for proper RGBA color component conversion
+
+### Final Result
+- Always-enabled colored trails behind enemy players only
+- 19-position trails with 7-second fade time and 1850-unit distance limit
+- Visibility-responsive display: trails show during and briefly after losing sight
+- Performance-optimized with cached checks and periodic cleanup
+- Unique colors per player for easy identification during combat
+- Seamless integration with existing visual systems
+
+This example demonstrates comprehensive entity tracking, performance optimization patterns, and proper visual effect integration.
+
 ## Conclusion
 
 This guide provides the foundation for porting any Lua script to Amalgam's C++ codebase. The key is understanding the API mappings, following the established patterns, and methodically fixing compilation issues. Each successful port makes future ports easier as you build familiarity with the SDK and common patterns.

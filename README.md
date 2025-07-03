@@ -31,6 +31,7 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 - **UberTracker** - Comprehensive uber advantage tracking with detailed medic information, weapon types, and advantage calculations
 - **HealthBarESP** - Health bars for visible-only players. Includes a medic mode (health bars for teammates when playing medic), health-responsive visibility, and overheal display
 - **CritHeals Indicator** - Triangle indicators above players eligible for crit heals (medic-only feature) with uber build rate warnings
+- **PlayerTrails** - Colored movement trails for enemy players showing their recent paths with visibility-based display and fade-out effects
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 
 ## Installation
