@@ -350,8 +350,34 @@ void CEnemyCam::UpdateTargetPlayer()
     
     if (needNewTarget)
     {
-        m_pTargetPlayer = FindTargetPlayer();
-        m_flTargetSwitchTime = currentTime;
+        CTFPlayer* pNewTarget = FindTargetPlayer();
+        
+        // Validate the new target before assigning it
+        if (pNewTarget)
+        {
+            try
+            {
+                // Test if the entity is valid by calling basic methods
+                if (!pNewTarget->IsDormant() && pNewTarget->IsAlive())
+                {
+                    int testIndex = pNewTarget->entindex();
+                    if (testIndex > 0 && testIndex <= 64)
+                    {
+                        m_pTargetPlayer = pNewTarget;
+                        m_flTargetSwitchTime = currentTime;
+                    }
+                }
+            }
+            catch (...)
+            {
+                // If validation fails, don't set the target
+                m_pTargetPlayer = nullptr;
+            }
+        }
+        else
+        {
+            m_pTargetPlayer = nullptr;
+        }
     }
 }
 
@@ -361,13 +387,35 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
         return;
     
     // Additional validation to ensure player is still valid
-    if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
-        return;
-    
-    // Get player eye position and angles
     try
     {
+        // Check if entity is dormant or not alive
+        if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
+            return;
+        
+        // Validate entindex
+        int entIndex = m_pTargetPlayer->entindex();
+        if (entIndex <= 0 || entIndex > 64)
+            return;
+    }
+    catch (...)
+    {
+        // If any validation fails, the entity is invalid
+        return;
+    }
+    
+    // Get player eye position and angles with additional safety
+    try
+    {
+        // Double-check pointer before each method call
+        if (!m_pTargetPlayer)
+            return;
+            
         origin = m_pTargetPlayer->GetEyePosition();
+        
+        if (!m_pTargetPlayer)
+            return;
+            
         angles = m_pTargetPlayer->GetEyeAngles();
     }
     catch (...)

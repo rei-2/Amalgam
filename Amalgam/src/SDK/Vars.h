@@ -894,6 +894,7 @@ namespace Vars
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
+			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 		SUBNAMESPACE_END(Features);
 	NAMESPACE_END(Competitive);
 

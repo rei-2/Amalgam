@@ -1547,9 +1547,10 @@ void CMenu::MenuComp(int iTab)
 				{
 					FToggle(Vars::Competitive::Features::HealthBarESP, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::UberTracker, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Left);
 				} EndSection();
 				
-				SameLine(); FText("Competitive features are enabled by default.", 1, F::Render.FontSmall);
+				FText("Competitive features are enabled by default.", 1, F::Render.FontSmall);
 			}
 
 			EndTable();

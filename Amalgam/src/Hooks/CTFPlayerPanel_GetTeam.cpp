@@ -25,8 +25,8 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 			return pLocal->m_iTeamNum();
 	}
 
-	// Always-on enemy health/class display on match HUD (credits to Pixy)
-	if (dwRetAddr == dwDesired)
+	// Match HUD Enhancement - enemy health/class display (credits to Pixy)
+	if (Vars::Competitive::Features::MatchHUD.Value && dwRetAddr == dwDesired)
 	{
 		if (auto pLocal = H::Entities.GetLocal())
 		{
