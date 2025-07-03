@@ -66,7 +66,7 @@ void CEnemyCam::CleanupMaterials()
 
 void CEnemyCam::Draw()
 {
-    if (!m_bEnabled || !m_bInitialized || !I::EngineClient->IsInGame())
+    if (!Vars::Competitive::Features::EnemyCam.Value || !m_bEnabled || !m_bInitialized || !I::EngineClient->IsInGame())
         return;
     
     if (I::EngineVGui->IsGameUIVisible())

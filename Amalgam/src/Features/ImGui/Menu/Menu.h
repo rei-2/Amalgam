@@ -19,6 +19,7 @@ class CMenu
 	void MenuAimbot(int iTab);
 	void MenuVisuals(int iTab);
 	void MenuMisc(int iTab);
+	void MenuComp(int iTab);
 	void MenuLogs(int iTab);
 	void MenuSettings(int iTab);
 	void MenuSearch(std::string sSearch);

@@ -69,21 +69,22 @@ void CMenu::DrawMenu()
 			PopStyleColor();
 		}
 
-		static int iTab = 0, iAimbotTab = 0, iVisualsTab = 0, iMiscTab = 0, iLogsTab = 0, iSettingsTab = 0;
+		static int iTab = 0, iAimbotTab = 0, iVisualsTab = 0, iMiscTab = 0, iCompTab = 0, iLogsTab = 0, iSettingsTab = 0;
 		PushFont(F::Render.FontBold);
 		FTabs(
 			{
 				{ "AIMBOT", "GENERAL", "HVH", "DRAW" },
 				{ "VISUALS", "ESP", "CHAMS", "GLOW", "MISC##", "RADAR", "MENU" },
 				{ "MISC" },
+				{ "COMP" },
 				{ "LOGS", "PLAYERLIST", "SETTINGS##", "OUTPUT" },
 				{ "SETTINGS", "CONFIG", "BINDS", "MATERIALS", "EXTRA" }
 			},
-			{ &iTab, &iAimbotTab, &iVisualsTab, nullptr, &iLogsTab, &iSettingsTab },
+			{ &iTab, &iAimbotTab, &iVisualsTab, nullptr, &iCompTab, &iLogsTab, &iSettingsTab },
 			{ H::Draw.Scale(flSideSize - 16), H::Draw.Scale(36) },
 			{ H::Draw.Scale(8), H::Draw.Scale(8) + flOffset },
 			FTabsEnum::Vertical | FTabsEnum::HorizontalIcons | FTabsEnum::AlignLeft | FTabsEnum::BarLeft,
-			{ { ICON_MD_PERSON }, { ICON_MD_VISIBILITY }, { ICON_MD_ARTICLE }, { ICON_MD_IMPORT_CONTACTS }, { ICON_MD_SETTINGS } },
+			{ { ICON_MD_PERSON }, { ICON_MD_VISIBILITY }, { ICON_MD_ARTICLE }, { ICON_MD_SPORTS_ESPORTS }, { ICON_MD_IMPORT_CONTACTS }, { ICON_MD_SETTINGS } },
 			{ H::Draw.Scale(10), 0 }, {},
 			{}, { H::Draw.Scale(22), 0 }
 		);
@@ -113,8 +114,9 @@ void CMenu::DrawMenu()
 				case 0: MenuAimbot(iAimbotTab); break;
 				case 1: MenuVisuals(iVisualsTab); break;
 				case 2: MenuMisc(iMiscTab); break;
-				case 3: MenuLogs(iLogsTab); break;
-				case 4: MenuSettings(iSettingsTab); break;
+				case 3: MenuComp(iCompTab); break;
+				case 4: MenuLogs(iLogsTab); break;
+				case 5: MenuSettings(iSettingsTab); break;
 				}
 			}
 			else
@@ -1508,6 +1510,50 @@ void CMenu::MenuMisc(int iTab)
 			}
 			EndTable();
 		}
+	}
+	}
+}
+
+void CMenu::MenuComp(int iTab)
+{
+	using namespace ImGui;
+
+	switch (iTab)
+	{
+	// Competitive Features
+	default:
+	{
+		if (BeginTable("CompTable", 2))
+		{
+			/* Column 1 */
+			TableNextColumn();
+			{
+				if (Section("Visual Features"))
+				{
+					FToggle(Vars::Competitive::Features::EnemyCam, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::PylonESP, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::FocusFire, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Right);
+				}
+			}
+
+			/* Column 2 */
+			TableNextColumn();
+			{
+				if (Section("Information Features"))
+				{
+					FToggle(Vars::Competitive::Features::HealthBarESP, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::UberTracker, FToggleEnum::Right);
+				}
+				
+				SameLine(); FText("Competitive features are enabled by default.", 1, F::Render.FontSmall);
+			}
+
+			EndTable();
+		}
+		break;
 	}
 	}
 }

@@ -884,6 +884,19 @@ namespace Vars
 		SUBNAMESPACE_END(ProjectileTrajectory);
 	NAMESPACE_END(Visuals);
 
+	NAMESPACE_BEGIN(Competitive)
+		SUBNAMESPACE_BEGIN(Features, Competitive Features)
+			CVar(EnemyCam, "Enemy Camera", true, VISUAL);
+			CVar(PylonESP, "Medic Pylon ESP", true, VISUAL);
+			CVar(FocusFire, "Focus Fire Detection", true, VISUAL);
+			CVar(StickyESP, "Sticky Bomb ESP", true, VISUAL);
+			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
+			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
+			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
+			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
+		SUBNAMESPACE_END(Features);
+	NAMESPACE_END(Competitive);
+
 	NAMESPACE_BEGIN(Radar)
 		SUBNAMESPACE_BEGIN(Main, Radar)
 			CVar(Enabled, VA_LIST("Enabled", "Radar enabled"), false, VISUAL);
