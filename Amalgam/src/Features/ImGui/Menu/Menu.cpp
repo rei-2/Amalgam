@@ -3678,14 +3678,14 @@ void CMenu::MenuSearch(std::string sSearch)
 			}
 			if (iOverride == -2)
 				break;
-			FColorPicker(*pVar, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, {}, nullptr, iOverride, iOverride);
+			FColorPicker(*pVar, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, {}, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, nullptr, iOverride, iOverride);
 			break;
 		}
 		case WidgetEnum::FGColorPicker:
 		{
 			auto pVar = pBase->As<Gradient_t>();
-			FColorPicker(*pVar, true, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, {}, nullptr, iOverride/*, iOverride*/);
-			FColorPicker(*pVar, false, !(++i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, {}, nullptr, iOverride/*, iOverride*/);
+			FColorPicker(*pVar, true, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, {}, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, nullptr, iOverride/*, iOverride*/);
+			FColorPicker(*pVar, false, !(++i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, {}, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, nullptr, iOverride/*, iOverride*/);
 			break;
 		}
 		case WidgetEnum::FKeybind:
