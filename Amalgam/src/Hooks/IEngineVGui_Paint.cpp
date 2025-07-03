@@ -21,6 +21,7 @@
 #include "../Features/Visuals/CritHeals/CritHeals.h"
 #include "../Features/Visuals/FocusFire/FocusFire.h"
 #include "../Features/Visuals/PylonESP/PylonESP.h"
+#include "../Features/Visuals/EnemyCam/EnemyCam.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
@@ -41,6 +42,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 		if (auto pLocal = H::Entities.GetLocal())
 		{
 			F::CameraWindow.Draw();
+			F::EnemyCam.Draw();
 			F::Visuals.DrawAntiAim(pLocal);
 
 			F::Visuals.DrawPickupTimers();
