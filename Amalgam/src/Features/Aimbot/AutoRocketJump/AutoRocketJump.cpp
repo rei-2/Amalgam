@@ -113,9 +113,12 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 	static bool bStaticGrounded = false;
 	bool bLastGrounded = bStaticGrounded;
 	bool bCurrGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
-	bool bDuck = pLocal->IsDucking();
-	if (m_iFrame == -1 && (bCurrGrounded ? bDuck : !bDuck))
-		return;
+	if (m_iFrame == -1)
+	{
+		bool bDuck = pLocal->IsDucking();
+		if ((bCurrGrounded ? bDuck || I::GlobalVars->curtime < pLocal->m_flDuckTimer() : !bDuck))
+			return;
+	}
 
 	bool bValidWeapon = false;
 	{
@@ -235,6 +238,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 	if (m_iFrame != -1)
 	{
 		m_iFrame++;
+		pCmd->buttons &= ~IN_JUMP;
 
 		if (m_iFrame == 1)
 		{

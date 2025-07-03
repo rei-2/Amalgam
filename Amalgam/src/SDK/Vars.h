@@ -236,34 +236,34 @@ namespace Vars
 		CVar(ParticleModulation, VA_LIST("Particle modulation", "Particle modulation color"), Color_t(255, 255, 255, 255), VISUAL);
 		CVar(FogModulation, VA_LIST("Fog modulation", "Fog modulation color"), Color_t(255, 255, 255, 255), VISUAL);
 
-		CVar(Line, "Line color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(LineClipped, "Line clipped color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(Line, "Line color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(LineIgnoreZ, "Line ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
 
-		CVar(PlayerPath, "Player path color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(PlayerPathClipped, "Player path clipped color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(ProjectilePath, "Projectile path color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(ProjectilePathClipped, "Projectile path clipped color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(TrajectoryPath, "Trajectory path color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(TrajectoryPathClipped, "Trajectory path clipped color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(ShotPath, "Shot path color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(ShotPathClipped, "Shot path clipped color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(SplashRadius, "Splash radius color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(SplashRadiusClipped, "Splash radius clipped color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(RealPath, "Real path color", Color_t(255, 255, 255, 255), NOSAVE | DEBUGVAR);
-		CVar(RealPathClipped, "Real path clipped color", Color_t(255, 255, 255, 0), NOSAVE | DEBUGVAR);
+		CVar(PlayerPath, "Player path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(PlayerPathIgnoreZ, "Player path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(ProjectilePath, "Projectile path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(ProjectilePathIgnoreZ, "Projectile path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(TrajectoryPath, "Trajectory path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(TrajectoryPathIgnoreZ, "Trajectory path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(ShotPath, "Shot path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(ShotPathIgnoreZ, "Shot path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(SplashRadius, "Splash radius color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(SplashRadiusIgnoreZ, "Splash radius ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(RealPath, "Real path color", Color_t(255, 255, 255, 0), NOSAVE | DEBUGVAR);
+		CVar(RealPathIgnoreZ, "Real path ignore Z color", Color_t(255, 255, 255, 255), NOSAVE | DEBUGVAR);
 
-		CVar(BoneHitboxEdge, "Bone hitbox edge color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(BoneHitboxEdgeClipped, "Bone hitbox edge clipped color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(BoneHitboxEdge, "Bone hitbox edge color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(BoneHitboxEdgeIgnoreZ, "Bone hitbox edge ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
 		CVar(BoneHitboxFace, "Bone hitbox face color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(BoneHitboxFaceClipped, "Bone hitbox face clipped color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(TargetHitboxEdge, "Target hitbox edge color", Color_t(255, 150, 150, 0), VISUAL);
-		CVar(TargetHitboxEdgeClipped, "Target hitbox edge clipped color", Color_t(255, 150, 150, 255), VISUAL);
+		CVar(BoneHitboxFaceIgnoreZ, "Bone hitbox face ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(TargetHitboxEdge, "Target hitbox edge color", Color_t(255, 150, 150, 255), VISUAL);
+		CVar(TargetHitboxEdgeIgnoreZ, "Target hitbox edge ignore Z color", Color_t(255, 150, 150, 0), VISUAL);
 		CVar(TargetHitboxFace, "Target hitbox face color", Color_t(255, 150, 150, 0), VISUAL);
-		CVar(TargetHitboxFaceClipped, "Target hitbox face clipped color", Color_t(255, 150, 150, 0), VISUAL);
-		CVar(BoundHitboxEdge, "Bound hitbox edge color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(BoundHitboxEdgeClipped, "Bound hitbox edge clipped color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(TargetHitboxFaceIgnoreZ, "Target hitbox face ignore Z color", Color_t(255, 150, 150, 0), VISUAL);
+		CVar(BoundHitboxEdge, "Bound hitbox edge color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(BoundHitboxEdgeIgnoreZ, "Bound hitbox edge ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
 		CVar(BoundHitboxFace, "Bound hitbox face color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(BoundHitboxFaceClipped, "Bound hitbox face clipped color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(BoundHitboxFaceIgnoreZ, "Bound hitbox face ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
 
 		CVar(SpellFootstep, "Spell footstep color", Color_t(255, 255, 255, 255), VISUAL);
 	NAMESPACE_END(Colors);
@@ -733,9 +733,9 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Effects)
 			CVarValues(BulletTracer, "Bullet tracer", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,
-				"Default", "None", "Big nasty", "Distortion trail", "Machina", "Sniper rail", "Short circuit", "C.A.P.P.E.R", "Merasmus ZAP", "Merasmus ZAP 2", "Black ink", "Line", "Clipped line", "Beam");
+				"Default", "None", "Big nasty", "Distortion trail", "Machina", "Sniper rail", "Short circuit", "C.A.P.P.E.R", "Merasmus ZAP", "Merasmus ZAP 2", "Black ink", "Line", "Line ignore Z", "Beam");
 			CVarValues(CritTracer, "Crit tracer", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,
-				"Default", "None", "Big nasty", "Distortion trail", "Machina", "Sniper rail", "Short circuit", "C.A.P.P.E.R", "Merasmus ZAP", "Merasmus ZAP 2", "Black ink", "Line", "Clipped line", "Beam");
+				"Default", "None", "Big nasty", "Distortion trail", "Machina", "Sniper rail", "Short circuit", "C.A.P.P.E.R", "Merasmus ZAP", "Merasmus ZAP 2", "Black ink", "Line", "Line ignore Z", "Beam");
 			CVarValues(MedigunBeam, "Medigun beam", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,
 				"Default", "None", "Uber", "Dispenser", "Passtime", "Bombonomicon", "White", "Orange");
 			CVarValues(MedigunCharge, "Medigun charge", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,

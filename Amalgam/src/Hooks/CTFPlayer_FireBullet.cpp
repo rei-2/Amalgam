@@ -63,7 +63,7 @@ MAKE_HOOK(CTFPlayer_FireBullet, S::CTFPlayer_FireBullet(), void,
 		H::Particles.ParticleTracer("merasmus_zap_beam01", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Line"):
-	case FNV1A::Hash32Const("Clipped line"):
+	case FNV1A::Hash32Const("Line ignore Z"):
 	{
 		float flTime = I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value;
 		for (auto& tLine : G::LineStorage)
@@ -76,9 +76,9 @@ MAKE_HOOK(CTFPlayer_FireBullet, S::CTFPlayer_FireBullet(), void,
 		}
 
 		if (uHash == FNV1A::Hash32Const("Line"))
-			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), flTime, Vars::Colors::Line.Value);
+			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), flTime, Vars::Colors::Line.Value, true);
 		else
-			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), flTime, Vars::Colors::LineClipped.Value, true);
+			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), flTime, Vars::Colors::LineIgnoreZ.Value);
 			
 		break;
 	}

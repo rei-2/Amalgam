@@ -163,8 +163,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 
 		if (Vars::Visuals::Simulation::TrajectoryPath.Value)
 		{
-			H::Draw.RenderPath(tProjInfo.m_vPath, Vars::Colors::TrajectoryPath.Value, false, Vars::Visuals::Simulation::TrajectoryPath.Value);
-			H::Draw.RenderPath(tProjInfo.m_vPath, Vars::Colors::TrajectoryPathClipped.Value, true, Vars::Visuals::Simulation::TrajectoryPath.Value);
+			H::Draw.RenderPath(tProjInfo.m_vPath, Vars::Colors::TrajectoryPathIgnoreZ.Value, false, Vars::Visuals::Simulation::TrajectoryPath.Value);
+			H::Draw.RenderPath(tProjInfo.m_vPath, Vars::Colors::TrajectoryPath.Value, true, Vars::Visuals::Simulation::TrajectoryPath.Value);
 
 			if (Vars::Visuals::Simulation::Box.Value && pNormal)
 			{
@@ -172,14 +172,14 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 				const Vec3 vSize = { 1.f, flSize, flSize };
 				Vec3 vAngles = Math::VectorAngles(*pNormal);
 
-				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPath.Value);
-				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPathClipped.Value, true);
+				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPathIgnoreZ.Value);
+				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPath.Value, true);
 			}
 
 			if (!vPoints.empty())
 			{
-				H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, false, Vars::Visuals::Simulation::StyleEnum::Line);
-				H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusClipped.Value, true, Vars::Visuals::Simulation::StyleEnum::Line);
+				H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusIgnoreZ.Value, false, Vars::Visuals::Simulation::StyleEnum::Line);
+				H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, true, Vars::Visuals::Simulation::StyleEnum::Line);
 			}
 		}
 	}
@@ -188,10 +188,10 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		G::BoxStorage.clear();
 		G::PathStorage.clear();
 
+		if (Vars::Colors::ShotPathIgnoreZ.Value.a)
+			G::PathStorage.emplace_back(tProjInfo.m_vPath, -float(tProjInfo.m_vPath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ShotPathIgnoreZ.Value, Vars::Visuals::Simulation::ShotPath.Value);
 		if (Vars::Colors::ShotPath.Value.a)
-			G::PathStorage.emplace_back(tProjInfo.m_vPath, -float(tProjInfo.m_vPath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ShotPath.Value, Vars::Visuals::Simulation::ShotPath.Value);
-		if (Vars::Colors::ShotPathClipped.Value.a)
-			G::PathStorage.emplace_back(tProjInfo.m_vPath, -float(tProjInfo.m_vPath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ShotPathClipped.Value, Vars::Visuals::Simulation::ShotPath.Value, true);
+			G::PathStorage.emplace_back(tProjInfo.m_vPath, -float(tProjInfo.m_vPath.size()) - TIME_TO_TICKS(F::Backtrack.GetReal()), Vars::Colors::ShotPath.Value, Vars::Visuals::Simulation::ShotPath.Value, true);
 
 		if (Vars::Visuals::Simulation::Box.Value && pNormal)
 		{
@@ -199,18 +199,18 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			const Vec3 vSize = { 1.f, flSize, flSize };
 			Vec3 vAngles = Math::VectorAngles(*pNormal);
 
+			if (Vars::Colors::ShotPathIgnoreZ.Value.a)
+				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPathIgnoreZ.Value, Color_t(0, 0, 0, 0));
 			if (Vars::Colors::ShotPath.Value.a)
-				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, Color_t(0, 0, 0, 0));
-			if (Vars::Colors::ShotPathClipped.Value.a)
-				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPathClipped.Value, Color_t(0, 0, 0, 0), true);
+				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, Color_t(0, 0, 0, 0), true);
 		}
 
 		if (!vPoints.empty())
 		{
+			if (Vars::Colors::SplashRadiusIgnoreZ.Value.a)
+				G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadiusIgnoreZ.Value, Vars::Visuals::Simulation::StyleEnum::Line);
 			if (Vars::Colors::SplashRadius.Value.a)
-				G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadius.Value, Vars::Visuals::Simulation::StyleEnum::Line);
-			if (Vars::Colors::SplashRadiusClipped.Value.a)
-				G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadiusClipped.Value, Vars::Visuals::Simulation::StyleEnum::Line, true);
+				G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadius.Value, Vars::Visuals::Simulation::StyleEnum::Line, true);
 		}
 	}
 }
@@ -276,8 +276,8 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 
 		float flRadius = F::AimbotProjectile.GetSplashRadius(pEntity, pWeapon, pOwner);
 		auto vPoints = SplashTrace(pEntity->GetAbsOrigin(), flRadius, { 0, 0, 1 }, Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Trace);
-		H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, false, Vars::Visuals::Simulation::StyleEnum::Line);
-		H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusClipped.Value, true, Vars::Visuals::Simulation::StyleEnum::Line);
+		H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusIgnoreZ.Value, false, Vars::Visuals::Simulation::StyleEnum::Line);
+		H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, true, Vars::Visuals::Simulation::StyleEnum::Line);
 	}
 }
 
@@ -439,8 +439,8 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 
 std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* pEntity, std::vector<int> vHitboxes, int iTarget)
 {
-	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a && !Vars::Colors::BoneHitboxEdgeClipped.Value.a && !Vars::Colors::BoneHitboxFaceClipped.Value.a
-		&& !Vars::Colors::TargetHitboxEdge.Value.a && !Vars::Colors::TargetHitboxFace.Value.a && !Vars::Colors::TargetHitboxEdgeClipped.Value.a && !Vars::Colors::TargetHitboxFaceClipped.Value.a)
+	if (!Vars::Colors::BoneHitboxEdge.Value.a && !Vars::Colors::BoneHitboxFace.Value.a && !Vars::Colors::BoneHitboxEdgeIgnoreZ.Value.a && !Vars::Colors::BoneHitboxFaceIgnoreZ.Value.a
+		&& !Vars::Colors::TargetHitboxEdge.Value.a && !Vars::Colors::TargetHitboxFace.Value.a && !Vars::Colors::TargetHitboxEdgeIgnoreZ.Value.a && !Vars::Colors::TargetHitboxFaceIgnoreZ.Value.a)
 		return {};
 
 	std::vector<DrawBox_t> vBoxes = {};
@@ -469,13 +469,13 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 		Vec3 vMins = pBox->bbmin * pEntity->m_flModelScale();
 		Vec3 vMaxs = pBox->bbmax * pEntity->m_flModelScale();
 
-		Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
-		Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
+		Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeIgnoreZ.Value : Vars::Colors::BoneHitboxEdgeIgnoreZ.Value;
+		Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFaceIgnoreZ.Value : Vars::Colors::BoneHitboxFaceIgnoreZ.Value;
 		if (tEdge.a || tFace.a)
 			vBoxes.emplace_back(vOrigin, vMins, vMaxs, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace);
 
-		tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeClipped.Value : Vars::Colors::BoneHitboxEdgeClipped.Value;
-		tFace = bTargeted ? Vars::Colors::TargetHitboxFaceClipped.Value : Vars::Colors::BoneHitboxFaceClipped.Value;
+		tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
+		tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
 		if (tEdge.a || tFace.a)
 			vBoxes.emplace_back(vOrigin, vMins, vMaxs, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace, true);
 
@@ -487,13 +487,13 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 			Vec3 vCheckMins = (pBox->bbmin + flBoneSubtract / pEntity->m_flModelScale()) * flBoneScale * pEntity->m_flModelScale();
 			Vec3 vCheckMaxs = (pBox->bbmax - flBoneSubtract / pEntity->m_flModelScale()) * flBoneScale * pEntity->m_flModelScale();
 
-			Color_t tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
-			Color_t tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
+			tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeIgnoreZ.Value : Vars::Colors::BoneHitboxEdgeIgnoreZ.Value;
+			tFace = bTargeted ? Vars::Colors::TargetHitboxFaceIgnoreZ.Value : Vars::Colors::BoneHitboxFaceIgnoreZ.Value;
 			if (tEdge.a || tFace.a)
 				vBoxes.emplace_back(vOrigin, vCheckMins, vCheckMaxs, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace);
 
-			tEdge = bTargeted ? Vars::Colors::TargetHitboxEdgeClipped.Value : Vars::Colors::BoneHitboxEdgeClipped.Value;
-			tFace = bTargeted ? Vars::Colors::TargetHitboxFaceClipped.Value : Vars::Colors::BoneHitboxFaceClipped.Value;
+			tEdge = bTargeted ? Vars::Colors::TargetHitboxEdge.Value : Vars::Colors::BoneHitboxEdge.Value;
+			tFace = bTargeted ? Vars::Colors::TargetHitboxFace.Value : Vars::Colors::BoneHitboxFace.Value;
 			if (tEdge.a || tFace.a)
 				vBoxes.emplace_back(vOrigin, vCheckMins, vCheckMaxs, vAngle, I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, tEdge, tFace, true);
 		}
@@ -764,10 +764,10 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 			if (!bBounds)
 				break;
 
+			if (Vars::Colors::BoundHitboxEdgeIgnoreZ.Value.a || Vars::Colors::BoundHitboxFaceIgnoreZ.Value.a)
+				G::BoxStorage.emplace_back(pEntity->m_vecOrigin(), pEntity->m_vecMins(), pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoundHitboxEdgeIgnoreZ.Value, Vars::Colors::BoundHitboxFaceIgnoreZ.Value);
 			if (Vars::Colors::BoundHitboxEdge.Value.a || Vars::Colors::BoundHitboxFace.Value.a)
 				G::BoxStorage.emplace_back(pEntity->m_vecOrigin(), pEntity->m_vecMins(), pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoundHitboxEdge.Value, Vars::Colors::BoundHitboxFace.Value, true);
-			if (Vars::Colors::BoundHitboxEdgeClipped.Value.a || Vars::Colors::BoundHitboxFaceClipped.Value.a)
-				G::BoxStorage.emplace_back(pEntity->m_vecOrigin(), pEntity->m_vecMins(), pEntity->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + Vars::Visuals::Hitbox::DrawDuration.Value, Vars::Colors::BoundHitboxEdgeClipped.Value, Vars::Colors::BoundHitboxFaceClipped.Value, true);
 		}
 		}
 
