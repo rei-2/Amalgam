@@ -13,28 +13,17 @@ struct TargetInfo
 class CFocusFire
 {
 private:
-    // Configuration constants
-    static constexpr int MIN_ATTACKERS = 2;
-    static constexpr float TRACKER_TIME_WINDOW = 4.5f;
+    // Configuration values are now read from Vars::Competitive::FocusFire::* variables
     static constexpr float CLEANUP_INTERVAL = 0.5f;
-    
-    // Visualization settings
-    static constexpr bool ENABLE_CHAMS = true;
-    static constexpr bool ENABLE_BOX = true;
-    static constexpr bool VISIBLE_ONLY = false;
-    
-    // Box settings
-    static constexpr Color_t BOX_COLOR = {255, 0, 0, 190};
-    static constexpr int BOX_THICKNESS = 2;
-    static constexpr int BOX_PADDING = 3;
-    static constexpr bool USE_CORNERS = true;
-    static constexpr int CORNER_LENGTH = 10;
     
     // State tracking
     std::unordered_map<int, TargetInfo> m_TargetData;
     float m_NextCleanupTime = 0.0f;
     std::unordered_map<int, float> m_NextVisCheck;
     std::unordered_map<int, bool> m_VisibilityCache;
+    
+    // Chams tracking for focused players
+    std::unordered_map<int, bool> m_mEntities;
     
     // Helper functions
     bool IsPlayerVisible(CTFPlayer* pPlayer);

@@ -1552,7 +1552,8 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::HealthBarESP::BarHeight, FSliderEnum::Right);
 					FSlider(Vars::Competitive::HealthBarESP::BarWidth, FSliderEnum::Left);
 					FSlider(Vars::Competitive::HealthBarESP::MaxDistance, FSliderEnum::Right);
-					FToggle(Vars::Competitive::HealthBarESP::MedicMode);
+					FToggle(Vars::Competitive::HealthBarESP::MedicMode, FToggleEnum::Left);
+					FColorPicker(Vars::Competitive::HealthBarESP::OverhealColor, FColorPickerEnum::Right);
 				} EndSection();
 
 				if (Section("Player Trails"))
@@ -1561,8 +1562,12 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::PlayerTrails::TrailLifetime, FSliderEnum::Right);
 					FSlider(Vars::Competitive::PlayerTrails::MinDistance, FSliderEnum::Left);
 					FSlider(Vars::Competitive::PlayerTrails::MaxDistance, FSliderEnum::Right);
-					FColorPicker(Vars::Competitive::PlayerTrails::EnemyColor, FColorPickerEnum::Left);
-					FColorPicker(Vars::Competitive::PlayerTrails::TeamColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::PlayerTrails::TrailColor);
+					FSlider(Vars::Competitive::PlayerTrails::UpdateInterval, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PlayerTrails::VisibilityTimeout, FSliderEnum::Right);
+					FSlider(Vars::Competitive::PlayerTrails::MaxVisibleDuration, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PlayerTrails::TrailHeight, FSliderEnum::Right);
+					FSlider(Vars::Competitive::PlayerTrails::MinMovementDistance);
 				} EndSection();
 			}
 
@@ -1582,42 +1587,84 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::UberTracker::ShowAdvantage, FToggleEnum::Right);
 					FToggle(Vars::Competitive::UberTracker::ShowKritz, FToggleEnum::Left);
 					FToggle(Vars::Competitive::UberTracker::IgnoreKritz, FToggleEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::MedDeathDuration, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::EvenThresholdRange, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::MidUberThreshold, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::HighUberThreshold, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::UberRate, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::KritzRate, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::KritzDropThreshold);
 				} EndSection();
 
 				if (Section("Pylon ESP"))
 				{
 					FSlider(Vars::Competitive::PylonESP::PylonWidth, FSliderEnum::Left);
 					FSlider(Vars::Competitive::PylonESP::PylonHeight, FSliderEnum::Right);
-					FSlider(Vars::Competitive::PylonESP::MinDistance);
-					FColorPicker(Vars::Competitive::PylonESP::PylonColor);
+					FSlider(Vars::Competitive::PylonESP::MinDistance, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PylonESP::PylonOffset, FSliderEnum::Right);
+					FColorPicker(Vars::Competitive::PylonESP::PylonColor, FColorPickerEnum::Left);
+					FSlider(Vars::Competitive::PylonESP::StartAlpha, FSliderEnum::Right);
+					FSlider(Vars::Competitive::PylonESP::EndAlpha, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PylonESP::Segments, FSliderEnum::Right);
 				} EndSection();
 
 				if (Section("Sticky ESP"))
 				{
 					FSlider(Vars::Competitive::StickyESP::MaxDistance, FSliderEnum::Left);
 					FSlider(Vars::Competitive::StickyESP::BoxSize, FSliderEnum::Right);
+					FToggle(Vars::Competitive::StickyESP::EnemyOnly, FToggleEnum::Left);
+					FToggle(Vars::Competitive::StickyESP::BoxOnlyWhenVisible, FToggleEnum::Right);
+					FToggle(Vars::Competitive::StickyESP::Box3D, FToggleEnum::Left);
+					FToggle(Vars::Competitive::StickyESP::Box2D, FToggleEnum::Right);
 					FColorPicker(Vars::Competitive::StickyESP::EnemyColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::StickyESP::TeamColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::StickyESP::VisibleColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::StickyESP::InvisibleColor, FColorPickerEnum::Right);
 					FToggle(Vars::Competitive::StickyESP::ShowTimer, FToggleEnum::Left);
 					FToggle(Vars::Competitive::StickyESP::ShowDamage, FToggleEnum::Right);
+					FToggle(Vars::Competitive::StickyESP::EnableChams);
 				} EndSection();
 
 				if (Section("Crit Heals"))
 				{
 					FSlider(Vars::Competitive::CritHeals::Range, FSliderEnum::Left);
 					FSlider(Vars::Competitive::CritHeals::FontSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::CritHeals::CritHealTime, FSliderEnum::Left);
+					FSlider(Vars::Competitive::CritHeals::MaxOverhealMultiplier, FSliderEnum::Right);
+					FSlider(Vars::Competitive::CritHeals::UberPenaltyThreshold, FSliderEnum::Left);
+					FSlider(Vars::Competitive::CritHeals::BuffThreshold, FSliderEnum::Right);
+					FSlider(Vars::Competitive::CritHeals::BuffFadeThreshold, FSliderEnum::Left);
+					FSlider(Vars::Competitive::CritHeals::TriangleSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::CritHeals::TriangleVerticalOffset, FSliderEnum::Left);
+					FSlider(Vars::Competitive::CritHeals::OutlineThickness, FSliderEnum::Right);
 					FColorPicker(Vars::Competitive::CritHeals::CritColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::CritHeals::TextColor, FColorPickerEnum::Right);
-					FToggle(Vars::Competitive::CritHeals::ShowPercentage);
+					FColorPicker(Vars::Competitive::CritHeals::FriendColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::CritHeals::EnemyColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::CritHeals::OutlineColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::CritHeals::WarningColor, FColorPickerEnum::Right);
+					FToggle(Vars::Competitive::CritHeals::ShowPercentage, FToggleEnum::Left);
+					FToggle(Vars::Competitive::CritHeals::UberBuildWarning, FToggleEnum::Right);
+					FToggle(Vars::Competitive::CritHeals::ShowOnEnemies);
 				} EndSection();
 
 				if (Section("Focus Fire"))
 				{
 					FSlider(Vars::Competitive::FocusFire::DisplayTime, FSliderEnum::Left);
 					FSlider(Vars::Competitive::FocusFire::MaxTargets, FSliderEnum::Right);
+					FSlider(Vars::Competitive::FocusFire::MinAttackers, FSliderEnum::Left);
+					FSlider(Vars::Competitive::FocusFire::TrackerTimeWindow, FSliderEnum::Right);
+					FSlider(Vars::Competitive::FocusFire::BoxThickness, FSliderEnum::Left);
+					FSlider(Vars::Competitive::FocusFire::BoxPadding, FSliderEnum::Right);
+					FSlider(Vars::Competitive::FocusFire::CornerLength, FSliderEnum::Left);
+					FToggle(Vars::Competitive::FocusFire::EnableChams, FToggleEnum::Right);
+					FToggle(Vars::Competitive::FocusFire::EnableBox, FToggleEnum::Left);
+					FToggle(Vars::Competitive::FocusFire::VisibleOnly, FToggleEnum::Right);
+					FToggle(Vars::Competitive::FocusFire::UseCorners, FToggleEnum::Left);
+					FToggle(Vars::Competitive::FocusFire::ShowHealthDrop, FToggleEnum::Right);
 					FColorPicker(Vars::Competitive::FocusFire::TargetColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::FocusFire::AttackerColor, FColorPickerEnum::Right);
-					FToggle(Vars::Competitive::FocusFire::ShowHealthDrop);
+					FColorPicker(Vars::Competitive::FocusFire::BoxColor);
 				} EndSection();
 			}
 

@@ -174,7 +174,7 @@ std::vector<CTFPlayer*> CEnemyCam::GetEnemyPlayers()
 
 CTFPlayer* CEnemyCam::FindTargetPlayer()
 {
-    switch (m_eMode)
+    switch (static_cast<ECameraMode>(Vars::Competitive::EnemyCam::Mode.Value))
     {
         case ECameraMode::CLOSEST:
             return FindClosestEnemy();
@@ -371,8 +371,8 @@ void CEnemyCam::UpdateTargetPlayer()
     }
     
     // Auto-switch after track time (only if we still have a valid target)
-    if (m_pTargetPlayer && !needNewTarget && TRACK_TIME > 0 && 
-        currentTime - m_flTargetSwitchTime >= TRACK_TIME)
+    if (m_pTargetPlayer && !needNewTarget && Vars::Competitive::EnemyCam::TrackTime.Value > 0 && 
+        currentTime - m_flTargetSwitchTime >= Vars::Competitive::EnemyCam::TrackTime.Value)
     {
         needNewTarget = true;
     }
@@ -472,7 +472,7 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
     }
     
     // Apply offset if configured
-    if (m_eViewMode == EViewMode::OFFSET)
+    if (static_cast<EViewMode>(Vars::Competitive::EnemyCam::ViewMode.Value) == EViewMode::OFFSET)
     {
         Vec3 forward, up;
         Math::AngleVectors(angles, &forward, nullptr, &up);

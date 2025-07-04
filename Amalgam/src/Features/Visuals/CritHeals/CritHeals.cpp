@@ -18,7 +18,7 @@ void CCritHeals::Draw()
         return;
     
     // Handle uber build warning
-    if (UBER_BUILD_WARNING)
+    if (Vars::Competitive::CritHeals::UberBuildWarning.Value)
         DrawUberBuildWarning();
     
     Vec3 localPos = pLocal->GetAbsOrigin();
@@ -34,7 +34,7 @@ void CCritHeals::Draw()
         bool isEnemy = (pPlayer->m_iTeamNum() != pLocal->m_iTeamNum());
         
         // Skip enemies if feature is disabled
-        if (isEnemy && !SHOW_ON_ENEMIES)
+        if (isEnemy && !Vars::Competitive::CritHeals::ShowOnEnemies.Value)
             continue;
         
         Vec3 playerPos = pPlayer->GetAbsOrigin();
@@ -44,7 +44,7 @@ void CCritHeals::Draw()
         {
             Vec3 delta = playerPos - localPos;
             float dist = delta.Length();
-            if (dist > MAX_DISTANCE)
+            if (dist > Vars::Competitive::CritHeals::Range.Value)
                 continue;
         }
         
@@ -59,13 +59,13 @@ void CCritHeals::Draw()
         if (health <= 0 || baseMaxHealth <= 0)
             continue;
         
-        int maxBuffedHealth = (int)(baseMaxHealth * MAX_OVERHEAL_MULTIPLIER);
+        int maxBuffedHealth = (int)(baseMaxHealth * Vars::Competitive::CritHeals::MaxOverhealMultiplier.Value);
         int bufferAmount = maxBuffedHealth - baseMaxHealth;
         int currentBuffAmount = health - baseMaxHealth;
         
         // Track when player was last well-buffed
         int playerIndex = pPlayer->entindex();
-        if (currentBuffAmount > (bufferAmount * BUFF_THRESHOLD))
+        if (currentBuffAmount > (bufferAmount * Vars::Competitive::CritHeals::BuffThreshold.Value))
             m_LastBuffTimes[playerIndex] = currentTime;
         
         // Determine if player should be considered still buffed
@@ -73,7 +73,7 @@ void CCritHeals::Draw()
         if (m_LastBuffTimes.find(playerIndex) != m_LastBuffTimes.end())
         {
             float lastBuffTime = m_LastBuffTimes[playerIndex];
-            if (lastBuffTime > 0 && currentBuffAmount > (bufferAmount * BUFF_FADE_THRESHOLD))
+            if (lastBuffTime > 0 && currentBuffAmount > (bufferAmount * Vars::Competitive::CritHeals::BuffFadeThreshold.Value))
                 wasRecentlyBuffed = true;
         }
         
@@ -84,13 +84,13 @@ void CCritHeals::Draw()
         
         float timeSinceLastDamage = currentTime - lastDamageTime;
         
-        if (timeSinceLastDamage >= CRIT_HEAL_TIME && 
+        if (timeSinceLastDamage >= Vars::Competitive::CritHeals::CritHealTime.Value && 
             health < maxBuffedHealth && 
             !wasRecentlyBuffed)
         {
             // Convert player position to screen coordinates and add vertical offset
             Vec3 headPos = playerPos;
-            headPos.z += TRIANGLE_VERTICAL_OFFSET;
+            headPos.z += Vars::Competitive::CritHeals::TriangleVerticalOffset.Value;
             
             Vec3 screenPos;
             if (SDK::W2S(headPos, screenPos))
@@ -107,8 +107,8 @@ void CCritHeals::DrawTriangle(int x, int y, bool isEnemy)
     int centerY = y;
     
     // Calculate sizes for outer and inner triangles
-    int outerSize = TRIANGLE_SIZE;
-    int innerSize = TRIANGLE_SIZE - OUTLINE_THICKNESS;
+    int outerSize = Vars::Competitive::CritHeals::TriangleSize.Value;
+    int innerSize = Vars::Competitive::CritHeals::TriangleSize.Value - Vars::Competitive::CritHeals::OutlineThickness.Value;
     
     // Draw the black outline triangle first
     for (int i = 0; i <= outerSize; i++)
@@ -116,11 +116,11 @@ void CCritHeals::DrawTriangle(int x, int y, bool isEnemy)
         int width = (outerSize - i) * 2;
         int xPos = centerX - width / 2;
         int yPos = centerY - outerSize + i;
-        H::Draw.FillRect(xPos, yPos, width, 1, OUTLINE_COLOR);
+        H::Draw.FillRect(xPos, yPos, width, 1, Vars::Competitive::CritHeals::OutlineColor.Value);
     }
     
     // Draw the colored inner triangle
-    Color_t color = isEnemy ? ENEMY_COLOR : FRIEND_COLOR;
+    Color_t color = isEnemy ? Vars::Competitive::CritHeals::EnemyColor.Value : Vars::Competitive::CritHeals::FriendColor.Value;
     
     // Calculate offset to center the inner triangle
     int offsetY = (outerSize - innerSize) / 2;
@@ -168,7 +168,7 @@ void CCritHeals::DrawUberBuildWarning()
     
     float healthRatio = (float)health / (float)baseMaxHealth;
     
-    if (healthRatio >= UBER_PENALTY_THRESHOLD)
+    if (healthRatio >= Vars::Competitive::CritHeals::UberPenaltyThreshold.Value)
     {
         // Position on same line as KRITZ text but centered (matching UberTracker positioning)
         int screenW, screenH;
@@ -180,7 +180,7 @@ void CCritHeals::DrawUberBuildWarning()
         const char* message = "Reduced Uber Build Rate!";
         auto font = H::Fonts.GetFont(FONT_ESP);
         
-        H::Draw.String(font, x, y, WARNING_COLOR, ALIGN_CENTER, message);
+        H::Draw.String(font, x, y, Vars::Competitive::CritHeals::WarningColor.Value, ALIGN_CENTER, message);
     }
 }
 

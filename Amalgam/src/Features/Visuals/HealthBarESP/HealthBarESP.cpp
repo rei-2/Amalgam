@@ -15,7 +15,7 @@ void CHealthBarESP::Draw()
     
     Vec3 localPos = pLocal->GetAbsOrigin();
     bool isLocalPlayerMedic = (pLocal->m_iClass() == TF_CLASS_MEDIC);
-    bool showTeammates = MEDIC_MODE && isLocalPlayerMedic;
+    bool showTeammates = Vars::Competitive::HealthBarESP::MedicMode.Value && isLocalPlayerMedic;
     
     // Process all players (follow native ESP pattern)
     for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
@@ -39,7 +39,7 @@ void CHealthBarESP::Draw()
         // Distance check (from lua script)
         Vec3 delta = playerPos - localPos;
         float distSqr = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
-        if (distSqr > MAX_DISTANCE_SQR)
+        if (distSqr > (Vars::Competitive::HealthBarESP::MaxDistance.Value * Vars::Competitive::HealthBarESP::MaxDistance.Value))
             continue;
         
         // Visibility check - more lenient to reduce flickering
@@ -69,9 +69,9 @@ void CHealthBarESP::Draw()
         Vec3 screenPos;
         if (SDK::W2S(playerPos, screenPos))
         {
-            int x = (int)(screenPos.x - BAR_WIDTH / 2);
+            int x = (int)(screenPos.x - Vars::Competitive::HealthBarESP::BarWidth.Value / 2);
             int y = (int)(screenPos.y + 30);
-            DrawHealthBar(x, y, BAR_WIDTH, health, maxHealth);
+            DrawHealthBar(x, y, Vars::Competitive::HealthBarESP::BarWidth.Value, health, maxHealth);
         }
     }
 }
@@ -81,7 +81,7 @@ Color_t CHealthBarESP::GetHealthBarColor(int health, int maxHealth)
     if (health > maxHealth)
     {
         // Overheal color (blue) - always full brightness
-        Color_t result = OVERHEAL_COLOR;
+        Color_t result = Vars::Competitive::HealthBarESP::OverhealColor.Value;
         result.a = 255;
         return result;
     }
@@ -111,18 +111,18 @@ void CHealthBarESP::DrawHealthBar(int x, int y, int width, int health, int maxHe
     int overhealSize = (health > maxHealth) ? (int)(width * ((float)(health - maxHealth) / (float)maxHealth)) : 0;
     
     // Background (black with alpha)
-    H::Draw.FillRect(x, y, width, BAR_HEIGHT, {0, 0, 0, ALPHA});
+    H::Draw.FillRect(x, y, width, Vars::Competitive::HealthBarESP::BarHeight.Value, {0, 0, 0, static_cast<byte>(Vars::Competitive::HealthBarESP::Alpha.Value)});
     
     // Main health bar
     Color_t healthColor = GetHealthBarColor(std::min(health, maxHealth), maxHealth);
     if (healthBarSize > 2)
-        H::Draw.FillRect(x + 1, y + 1, healthBarSize - 2, BAR_HEIGHT - 2, healthColor);
+        H::Draw.FillRect(x + 1, y + 1, healthBarSize - 2, Vars::Competitive::HealthBarESP::BarHeight.Value - 2, healthColor);
     
     // Overheal bar
     if (overhealSize > 0)
     {
-        Color_t overhealColor = OVERHEAL_COLOR;
-        overhealColor.a = ALPHA;
-        H::Draw.FillRect(x + healthBarSize, y + 1, overhealSize - 1, BAR_HEIGHT - 2, overhealColor);
+        Color_t overhealColor = Vars::Competitive::HealthBarESP::OverhealColor.Value;
+        overhealColor.a = static_cast<byte>(Vars::Competitive::HealthBarESP::Alpha.Value);
+        H::Draw.FillRect(x + healthBarSize, y + 1, overhealSize - 1, Vars::Competitive::HealthBarESP::BarHeight.Value - 2, overhealColor);
     }
 }

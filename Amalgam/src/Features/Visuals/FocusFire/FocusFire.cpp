@@ -23,7 +23,7 @@ void CFocusFire::Draw()
 
 bool CFocusFire::IsPlayerVisible(CTFPlayer* pPlayer)
 {
-    if (!VISIBLE_ONLY)
+    if (!Vars::Competitive::FocusFire::VisibleOnly.Value)
         return true;
     
     auto pLocal = H::Entities.GetLocal();
@@ -59,23 +59,23 @@ bool CFocusFire::IsPlayerVisible(CTFPlayer* pPlayer)
 
 void CFocusFire::DrawCorners(int x1, int y1, int x2, int y2)
 {
-    int length = CORNER_LENGTH;
+    int length = Vars::Competitive::FocusFire::CornerLength.Value;
     
     // Top left corner
-    H::Draw.Line(x1, y1, x1 + length, y1, BOX_COLOR);
-    H::Draw.Line(x1, y1, x1, y1 + length, BOX_COLOR);
+    H::Draw.Line(x1, y1, x1 + length, y1, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x1, y1, x1, y1 + length, Vars::Competitive::FocusFire::BoxColor.Value);
     
     // Top right corner
-    H::Draw.Line(x2, y1, x2 - length, y1, BOX_COLOR);
-    H::Draw.Line(x2, y1, x2, y1 + length, BOX_COLOR);
+    H::Draw.Line(x2, y1, x2 - length, y1, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x2, y1, x2, y1 + length, Vars::Competitive::FocusFire::BoxColor.Value);
     
     // Bottom left corner
-    H::Draw.Line(x1, y2, x1 + length, y2, BOX_COLOR);
-    H::Draw.Line(x1, y2, x1, y2 - length, BOX_COLOR);
+    H::Draw.Line(x1, y2, x1 + length, y2, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x1, y2, x1, y2 - length, Vars::Competitive::FocusFire::BoxColor.Value);
     
     // Bottom right corner
-    H::Draw.Line(x2, y2, x2 - length, y2, BOX_COLOR);
-    H::Draw.Line(x2, y2, x2, y2 - length, BOX_COLOR);
+    H::Draw.Line(x2, y2, x2 - length, y2, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x2, y2, x2, y2 - length, Vars::Competitive::FocusFire::BoxColor.Value);
 }
 
 void CFocusFire::CleanExpiredAttackers(float currentTime, TargetInfo& targetInfo)
@@ -85,7 +85,7 @@ void CFocusFire::CleanExpiredAttackers(float currentTime, TargetInfo& targetInfo
     
     for (auto& [attackerIndex, timestamp] : targetInfo.Attackers)
     {
-        if (currentTime - timestamp <= TRACKER_TIME_WINDOW)
+        if (currentTime - timestamp <= Vars::Competitive::FocusFire::TrackerTimeWindow.Value)
         {
             newAttackers[attackerIndex] = timestamp;
             count++;
@@ -94,7 +94,7 @@ void CFocusFire::CleanExpiredAttackers(float currentTime, TargetInfo& targetInfo
     
     targetInfo.Attackers = newAttackers;
     targetInfo.AttackerCount = count;
-    targetInfo.IsMultiTargeted = (count >= MIN_ATTACKERS);
+    targetInfo.IsMultiTargeted = (count >= Vars::Competitive::FocusFire::MinAttackers.Value);
 }
 
 void CFocusFire::CleanInvalidTargets()
@@ -132,7 +132,7 @@ void CFocusFire::CleanInvalidTargets()
         
         // Update target status and clean if no longer multi-targeted
         CleanExpiredAttackers(currentTime, targetInfo);
-        if (targetInfo.AttackerCount < MIN_ATTACKERS)
+        if (targetInfo.AttackerCount < Vars::Competitive::FocusFire::MinAttackers.Value)
         {
             m_NextVisCheck.erase(entIndex);
             m_VisibilityCache.erase(entIndex);
@@ -161,7 +161,10 @@ bool CFocusFire::ShouldVisualizePlayer(CTFPlayer* pPlayer)
 
 void CFocusFire::DrawBox()
 {
-    if (!ENABLE_BOX)
+    // Clear previous chams entries
+    m_mEntities.clear();
+    
+    if (!Vars::Competitive::FocusFire::EnableBox.Value && !Vars::Competitive::FocusFire::EnableChams.Value)
         return;
     
     
@@ -173,6 +176,15 @@ void CFocusFire::DrawBox()
         
         if (pPlayer && ShouldVisualizePlayer(pPlayer))
         {
+            // Add to chams if enabled
+            if (Vars::Competitive::FocusFire::EnableChams.Value)
+            {
+                m_mEntities[pPlayer->entindex()] = true;
+            }
+            
+            // Skip box drawing if disabled
+            if (!Vars::Competitive::FocusFire::EnableBox.Value)
+                continue;
             // Get player bounds in world space
             Vec3 origin = pPlayer->GetAbsOrigin();
             Vec3 mins = pPlayer->m_vecMins();
@@ -180,14 +192,14 @@ void CFocusFire::DrawBox()
             
             // Calculate corners in world space
             Vec3 corners[8] = {
-                Vec3(origin.x + mins.x - BOX_PADDING, origin.y + mins.y - BOX_PADDING, origin.z + mins.z),
-                Vec3(origin.x + maxs.x + BOX_PADDING, origin.y + mins.y - BOX_PADDING, origin.z + mins.z),
-                Vec3(origin.x + maxs.x + BOX_PADDING, origin.y + maxs.y + BOX_PADDING, origin.z + mins.z),
-                Vec3(origin.x + mins.x - BOX_PADDING, origin.y + maxs.y + BOX_PADDING, origin.z + mins.z),
-                Vec3(origin.x + mins.x - BOX_PADDING, origin.y + mins.y - BOX_PADDING, origin.z + maxs.z + BOX_PADDING),
-                Vec3(origin.x + maxs.x + BOX_PADDING, origin.y + mins.y - BOX_PADDING, origin.z + maxs.z + BOX_PADDING),
-                Vec3(origin.x + maxs.x + BOX_PADDING, origin.y + maxs.y + BOX_PADDING, origin.z + maxs.z + BOX_PADDING),
-                Vec3(origin.x + mins.x - BOX_PADDING, origin.y + maxs.y + BOX_PADDING, origin.z + maxs.z + BOX_PADDING)
+                Vec3(origin.x + mins.x - Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + mins.y - Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + mins.z),
+                Vec3(origin.x + maxs.x + Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + mins.y - Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + mins.z),
+                Vec3(origin.x + maxs.x + Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + maxs.y + Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + mins.z),
+                Vec3(origin.x + mins.x - Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + maxs.y + Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + mins.z),
+                Vec3(origin.x + mins.x - Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + mins.y - Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + maxs.z + Vars::Competitive::FocusFire::BoxPadding.Value),
+                Vec3(origin.x + maxs.x + Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + mins.y - Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + maxs.z + Vars::Competitive::FocusFire::BoxPadding.Value),
+                Vec3(origin.x + maxs.x + Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + maxs.y + Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + maxs.z + Vars::Competitive::FocusFire::BoxPadding.Value),
+                Vec3(origin.x + mins.x - Vars::Competitive::FocusFire::BoxPadding.Value, origin.y + maxs.y + Vars::Competitive::FocusFire::BoxPadding.Value, origin.z + maxs.z + Vars::Competitive::FocusFire::BoxPadding.Value)
             };
             
             // Convert to screen coordinates
@@ -215,10 +227,10 @@ void CFocusFire::DrawBox()
                 }
                 
                 // Draw either corners or full box based on config
-                if (USE_CORNERS)
+                if (Vars::Competitive::FocusFire::UseCorners.Value)
                 {
                     // Draw corners with thickness
-                    for (int i = 0; i < BOX_THICKNESS; i++)
+                    for (int i = 0; i < Vars::Competitive::FocusFire::BoxThickness.Value; i++)
                     {
                         DrawCorners(static_cast<int>(minX - i), static_cast<int>(minY - i), 
                                    static_cast<int>(maxX + i), static_cast<int>(maxY + i));
@@ -227,11 +239,11 @@ void CFocusFire::DrawBox()
                 else
                 {
                     // Draw full box with thickness
-                    for (int i = 0; i < BOX_THICKNESS; i++)
+                    for (int i = 0; i < Vars::Competitive::FocusFire::BoxThickness.Value; i++)
                     {
                         H::Draw.LineRect(static_cast<int>(minX - i), static_cast<int>(minY - i), 
                                         static_cast<int>(maxX + i - minX + 2*i), static_cast<int>(maxY + i - minY + 2*i), 
-                                        BOX_COLOR);
+                                        Vars::Competitive::FocusFire::BoxColor.Value);
                     }
                 }
             }

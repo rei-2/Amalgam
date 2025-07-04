@@ -4,8 +4,8 @@ CPlayerTrails::CPlayerTrails()
     : m_LastUpdateTick(0)
     , m_NextCleanupTime(0.0f)
     , m_LastLifeState(false) // Dead state
-    , m_TrailHeightUnits(std::min(5.0f, std::max(0.0f, TRAIL_HEIGHT)) * 20.0f)
-    , m_MaxDistanceSqr(MAX_TRAIL_DISTANCE * MAX_TRAIL_DISTANCE)
+    , m_TrailHeightUnits(std::min(5.0f, std::max(0.0f, Vars::Competitive::PlayerTrails::TrailHeight.Value)) * 20.0f)
+    , m_MaxDistanceSqr(Vars::Competitive::PlayerTrails::MaxDistance.Value * Vars::Competitive::PlayerTrails::MaxDistance.Value)
 {
 }
 
@@ -47,7 +47,7 @@ void CPlayerTrails::Draw()
     float currentTime = I::GlobalVars->realtime;
     
     // Update player positions
-    if (currentTick - m_LastUpdateTick >= UPDATE_INTERVAL)
+    if (currentTick - m_LastUpdateTick >= Vars::Competitive::PlayerTrails::UpdateInterval.Value)
     {
         for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
         {
@@ -96,7 +96,7 @@ void CPlayerTrails::Draw()
                     Vec3 lastPos = data.Positions[0].Position;
                     Vec3 posDelta = playerPos - lastPos;
                     float movementSqr = posDelta.x * posDelta.x + posDelta.y * posDelta.y + posDelta.z * posDelta.z;
-                    shouldAddPosition = movementSqr > MIN_MOVEMENT_DISTANCE_SQR;
+                    shouldAddPosition = movementSqr > (Vars::Competitive::PlayerTrails::MinMovementDistance.Value * Vars::Competitive::PlayerTrails::MinMovementDistance.Value);
                 }
                 
                 if (shouldAddPosition)
@@ -107,7 +107,7 @@ void CPlayerTrails::Draw()
                     
                     data.Positions.insert(data.Positions.begin(), newPos);
                     
-                    if (data.Positions.size() > TRAIL_LENGTH)
+                    if (data.Positions.size() > static_cast<size_t>(Vars::Competitive::PlayerTrails::MaxTrailLength.Value))
                         data.Positions.pop_back();
                 }
             }
@@ -132,7 +132,7 @@ void CPlayerTrails::Draw()
             for (size_t i = 0; i < data.Positions.size() - 1; i += step)
             {
                 float timeDiff = currentTime - data.Positions[i].Time;
-                int alpha = static_cast<int>(std::max(0.0f, 255.0f * (1.0f - timeDiff / FADE_TIME)));
+                int alpha = static_cast<int>(std::max(0.0f, 255.0f * (1.0f - timeDiff / Vars::Competitive::PlayerTrails::TrailLifetime.Value)));
                 
                 if (alpha <= 0)
                     break;
@@ -224,8 +224,8 @@ void CPlayerTrails::CleanInvalidTargets()
         // Clean if player not found, invalid, or data is too old
         bool shouldClean = !playerFound || 
                           !playerValid ||
-                          (!data.Positions.empty() && currentTime - data.Positions[0].Time > FADE_TIME) ||
-                          (data.LastSeenTime > 0.0f && currentTime - data.LastSeenTime > VISIBILITY_TIMEOUT);
+                          (!data.Positions.empty() && currentTime - data.Positions[0].Time > Vars::Competitive::PlayerTrails::TrailLifetime.Value) ||
+                          (data.LastSeenTime > 0.0f && currentTime - data.LastSeenTime > Vars::Competitive::PlayerTrails::VisibilityTimeout.Value);
         
         if (shouldClean)
         {
@@ -288,7 +288,7 @@ void CPlayerTrails::UpdatePlayerState(PlayerTrailData& data, bool isVisible, flo
             data.LastInvisibleTime = currentTime;
         }
         else if (data.VisibilityState == static_cast<int>(EVisibilityState::RECENTLY_INVISIBLE) &&
-                 currentTime - data.LastInvisibleTime > VISIBILITY_TIMEOUT)
+                 currentTime - data.LastInvisibleTime > Vars::Competitive::PlayerTrails::VisibilityTimeout.Value)
         {
             data.VisibilityState = static_cast<int>(EVisibilityState::UNSEEN);
             data.VisibleStartTime = 0.0f;
@@ -300,11 +300,11 @@ bool CPlayerTrails::ShouldShowTrail(const PlayerTrailData& data, float currentTi
 {
     if (data.VisibilityState == static_cast<int>(EVisibilityState::VISIBLE))
     {
-        return data.VisibleStartTime > 0.0f && (currentTime - data.VisibleStartTime <= MAX_VISIBLE_DURATION);
+        return data.VisibleStartTime > 0.0f && (currentTime - data.VisibleStartTime <= Vars::Competitive::PlayerTrails::MaxVisibleDuration.Value);
     }
     else if (data.VisibilityState == static_cast<int>(EVisibilityState::RECENTLY_INVISIBLE))
     {
-        return currentTime - data.LastInvisibleTime <= VISIBILITY_TIMEOUT;
+        return currentTime - data.LastInvisibleTime <= Vars::Competitive::PlayerTrails::VisibilityTimeout.Value;
     }
     return false;
 }

@@ -15,7 +15,7 @@ std::string CUberTracker::GetWeaponType(int iItemDefinitionIndex, bool* bIsKritz
 	if (bIsKritzOverride)
 		*bIsKritzOverride = false;
 	
-	if (IGNORE_KRITZ && iItemDefinitionIndex == 35)
+	if (Vars::Competitive::UberTracker::IgnoreKritz.Value && iItemDefinitionIndex == 35)
 	{
 		if (bIsKritzOverride)
 			*bIsKritzOverride = true;
@@ -44,10 +44,10 @@ Color_t CUberTracker::GetColorForUber(float flPercentage, bool bIsAlive)
 	if (!bIsAlive || flPercentage == 0.0f)
 		return { 170, 170, 170, 255 };
 	
-	if (flPercentage > HIGH_UBER_THRESHOLD)
+	if (flPercentage > Vars::Competitive::UberTracker::HighUberThreshold.Value)
 		return { 0, 255, 0, 255 };
 	
-	if (flPercentage > MID_UBER_THRESHOLD)
+	if (flPercentage > Vars::Competitive::UberTracker::MidUberThreshold.Value)
 		return { 255, 255, 0, 255 };
 	
 	return { 255, 0, 0, 255 };
@@ -55,7 +55,7 @@ Color_t CUberTracker::GetColorForUber(float flPercentage, bool bIsAlive)
 
 bool CUberTracker::DetectKritzUsage(KritzTracker& tracker, float flActualKritzPercentage, float flCurrentTime)
 {
-	if (tracker.LastKritzValue > 0 && flActualKritzPercentage < tracker.LastKritzValue - KRITZ_DROP_THRESHOLD)
+	if (tracker.LastKritzValue > 0 && flActualKritzPercentage < tracker.LastKritzValue - Vars::Competitive::UberTracker::KritzDropThreshold.Value)
 		return true;
 	
 	tracker.WasBuilding = flActualKritzPercentage > tracker.LastKritzValue;
@@ -68,7 +68,7 @@ float CUberTracker::TranslateKritzToUber(CBaseEntity* pEntity, const std::string
 	{
 		KritzTracker& tracker = m_KritzTrackers[sMedicID];
 		tracker.LastKritzValue = flActualKritzPercentage;
-		tracker.LastUberValue = flActualKritzPercentage * (UBER_RATE / KRITZ_RATE);
+		tracker.LastUberValue = flActualKritzPercentage * (Vars::Competitive::UberTracker::UberRate.Value / Vars::Competitive::UberTracker::KritzRate.Value);
 		tracker.LastUpdateTime = flCurrentTime;
 		return static_cast<float>(static_cast<int>(tracker.LastUberValue));
 	}
@@ -97,7 +97,7 @@ float CUberTracker::TranslateKritzToUber(CBaseEntity* pEntity, const std::string
 	if (flActualKritzPercentage > tracker.LastKritzValue)
 	{
 		float flKritzIncrease = flActualKritzPercentage - tracker.LastKritzValue;
-		float flUberIncrease = flKritzIncrease * (UBER_RATE / KRITZ_RATE);
+		float flUberIncrease = flKritzIncrease * (Vars::Competitive::UberTracker::UberRate.Value / Vars::Competitive::UberTracker::KritzRate.Value);
 		tracker.LastUberValue = std::min(100.0f, tracker.LastUberValue + flUberIncrease);
 	}
 	else if (flActualKritzPercentage < tracker.LastKritzValue)
@@ -114,7 +114,7 @@ float CUberTracker::TranslateKritzToUber(CBaseEntity* pEntity, const std::string
 
 void CUberTracker::DrawMedicInfo(const std::vector<MedicInfo>& vMedics, int iStartY)
 {
-	if (!SHOW_TOP_LEFT_BOX || vMedics.empty())
+	if (!Vars::Competitive::UberTracker::ShowTopBox.Value || vMedics.empty())
 		return;
 	
 	int iBoxHeight = std::max(30, 25 + static_cast<int>(vMedics.size() * 15));
@@ -136,7 +136,7 @@ void CUberTracker::DrawMedicInfo(const std::vector<MedicInfo>& vMedics, int iSta
 
 void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, const std::vector<MedicInfo>& vBluMedics, int iLocalTeam)
 {
-	if (!SHOW_ADV_TEXT || vRedMedics.empty() || vBluMedics.empty())
+	if (!Vars::Competitive::UberTracker::ShowAdvantage.Value || vRedMedics.empty() || vBluMedics.empty())
 		return;
 	
 	const auto& redMedic = vRedMedics[0];
@@ -168,7 +168,7 @@ void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, c
 	
 	if (sFriendlyStatus == "MED DIED")
 	{
-		if (flCurrentTime - flFriendlyDeathTime <= MED_DEATH_DURATION)
+		if (flCurrentTime - flFriendlyDeathTime <= Vars::Competitive::UberTracker::MedDeathDuration.Value)
 		{
 			sDisplayText = "OUR MED DIED";
 			textColor = { 255, 0, 0, 255 };
@@ -179,7 +179,7 @@ void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, c
 			textColor = { 255, 0, 0, 255 };
 		}
 	}
-	else if (sEnemyStatus == "MED DIED" && flCurrentTime - flEnemyDeathTime <= MED_DEATH_DURATION)
+	else if (sEnemyStatus == "MED DIED" && flCurrentTime - flEnemyDeathTime <= Vars::Competitive::UberTracker::MedDeathDuration.Value)
 	{
 		sDisplayText = "THEIR MED DIED";
 		textColor = { 0, 255, 0, 255 };
@@ -214,7 +214,7 @@ void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, c
 		sDisplayText = "WE USED";
 		textColor = { 0, 191, 255, 255 };
 	}
-	else if (std::abs(flDifference) <= EVEN_THRESHOLD_RANGE)
+	else if (std::abs(flDifference) <= Vars::Competitive::UberTracker::EvenThresholdRange.Value)
 	{
 		sDisplayText = "EVEN";
 		textColor = { 128, 128, 128, 255 };
@@ -235,7 +235,7 @@ void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, c
 	int iX = (iScreenW / 2) - 250;
 	int iY = (iScreenH / 2) + 250;
 	
-	if (SHOW_KRITZ && enemyMedic.IsAlive && enemyMedic.RealWeaponName == "KRITZ" && !IGNORE_KRITZ)
+	if (Vars::Competitive::UberTracker::ShowKritz.Value && enemyMedic.IsAlive && enemyMedic.RealWeaponName == "KRITZ" && !Vars::Competitive::UberTracker::IgnoreKritz.Value)
 	{
 		H::Draw.String(H::Fonts.GetFont(FONT_ESP), iX, iY - 25, { 128, 0, 128, 255 }, ALIGN_CENTER, "KRITZ");
 	}
@@ -354,6 +354,9 @@ void CUberTracker::Draw()
 	vAllMedics.insert(vAllMedics.end(), vRedMedics.begin(), vRedMedics.end());
 	vAllMedics.insert(vAllMedics.end(), vBluMedics.begin(), vBluMedics.end());
 	
-	DrawMedicInfo(vAllMedics, 115);
-	DrawAdvantageText(vRedMedics, vBluMedics, iLocalTeam);
+	if (Vars::Competitive::UberTracker::ShowTopBox.Value)
+		DrawMedicInfo(vAllMedics, 115);
+	
+	if (Vars::Competitive::UberTracker::ShowAdvantage.Value)
+		DrawAdvantageText(vRedMedics, vBluMedics, iLocalTeam);
 }

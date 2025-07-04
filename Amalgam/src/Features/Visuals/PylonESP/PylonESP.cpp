@@ -8,11 +8,12 @@ CPylonESP::CPylonESP()
 
 void CPylonESP::InitializeAlphaSteps()
 {
-    m_AlphaSteps.reserve(SEGMENTS + 1);
-    for (int i = 0; i <= SEGMENTS; i++)
+    int segments = Vars::Competitive::PylonESP::Segments.Value;
+    m_AlphaSteps.reserve(segments + 1);
+    for (int i = 0; i <= segments; i++)
     {
-        float progress = static_cast<float>(i) / SEGMENTS;
-        int alpha = static_cast<int>(PYLON_START_ALPHA - (progress * (PYLON_START_ALPHA - PYLON_END_ALPHA)));
+        float progress = static_cast<float>(i) / segments;
+        int alpha = static_cast<int>(Vars::Competitive::PylonESP::StartAlpha.Value - (progress * (Vars::Competitive::PylonESP::StartAlpha.Value - Vars::Competitive::PylonESP::EndAlpha.Value)));
         m_AlphaSteps.push_back(alpha);
     }
 }
@@ -54,12 +55,12 @@ void CPylonESP::Draw()
         
         // Skip if we're too close to the medic
         float distanceSqr = GetDistanceSqr(localPos, playerPos);
-        if (distanceSqr < MIN_DISTANCE_SQR)
+        if (distanceSqr < (Vars::Competitive::PylonESP::MinDistance.Value * Vars::Competitive::PylonESP::MinDistance.Value))
             continue;
         
         // Calculate pylon base position (real-time)
         Vec3 playerMaxs = pPlayer->m_vecMaxs();
-        Vec3 pylonBase = Vec3(playerPos.x, playerPos.y, playerPos.z + playerMaxs.z + PYLON_OFFSET);
+        Vec3 pylonBase = Vec3(playerPos.x, playerPos.y, playerPos.z + playerMaxs.z + Vars::Competitive::PylonESP::PylonOffset.Value);
         
         // Draw pylon immediately
         DrawPylon(pylonBase, eyePos);
@@ -92,9 +93,9 @@ void CPylonESP::DrawPylon(const Vec3& basePosition, const Vec3& eyePos)
 {
     // First pass: check if any segment is visible
     bool anySegmentVisible = false;
-    for (int i = 0; i <= SEGMENTS; i++)
+    for (int i = 0; i <= Vars::Competitive::PylonESP::Segments.Value; i++)
     {
-        Vec3 segmentPos = Vec3(basePosition.x, basePosition.y, basePosition.z + (i * SEGMENT_HEIGHT));
+        Vec3 segmentPos = Vec3(basePosition.x, basePosition.y, basePosition.z + (i * (Vars::Competitive::PylonESP::PylonHeight.Value / Vars::Competitive::PylonESP::Segments.Value)));
         
         if (IsVisible(eyePos, segmentPos))
         {
@@ -111,9 +112,9 @@ void CPylonESP::DrawPylon(const Vec3& basePosition, const Vec3& eyePos)
     Vec3 lastScreenPos;
     bool hasLastScreenPos = false;
     
-    for (int i = 0; i <= SEGMENTS; i++)
+    for (int i = 0; i <= Vars::Competitive::PylonESP::Segments.Value; i++)
     {
-        Vec3 segmentPos = Vec3(basePosition.x, basePosition.y, basePosition.z + (i * SEGMENT_HEIGHT));
+        Vec3 segmentPos = Vec3(basePosition.x, basePosition.y, basePosition.z + (i * (Vars::Competitive::PylonESP::PylonHeight.Value / Vars::Competitive::PylonESP::Segments.Value)));
         
         bool visible = IsVisible(eyePos, segmentPos);
         
@@ -133,10 +134,10 @@ void CPylonESP::DrawPylon(const Vec3& basePosition, const Vec3& eyePos)
         if (hasLastScreenPos)
         {
             // Draw lines with fading alpha
-            Color_t segmentColor = PYLON_COLOR;
+            Color_t segmentColor = Vars::Competitive::PylonESP::PylonColor.Value;
             segmentColor.a = static_cast<byte>(m_AlphaSteps[i]);
             
-            for (int w = 0; w < PYLON_WIDTH; w++)
+            for (int w = 0; w < Vars::Competitive::PylonESP::PylonWidth.Value; w++)
             {
                 H::Draw.Line(static_cast<int>(lastScreenPos.x + w), static_cast<int>(lastScreenPos.y),
                            static_cast<int>(screenPos.x + w), static_cast<int>(screenPos.y), segmentColor);

@@ -40,9 +40,7 @@ private:
     bool m_bInitialized = false;
     bool m_bEnabled = true;
     
-    // Camera settings
-    ECameraMode m_eMode = ECameraMode::CLOSEST;
-    EViewMode m_eViewMode = EViewMode::OFFSET;
+    // Camera settings are now read from Vars::Competitive::EnemyCam::* variables
     
     // Helper functions
     bool InitializeMaterials();
@@ -66,8 +64,7 @@ public:
     
     bool IsEnabled() const { return m_bEnabled; }
     void SetEnabled(bool enabled) { m_bEnabled = enabled; }
-    void SetMode(ECameraMode mode) { m_eMode = mode; }
-    void SetViewMode(EViewMode mode) { m_eViewMode = mode; }
+    // Mode and ViewMode are now controlled via Vars::Competitive::EnemyCam::* variables
 };
 
 ADD_FEATURE(CEnemyCam, EnemyCam)

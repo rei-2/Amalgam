@@ -24,19 +24,7 @@ struct KritzTracker
 class CUberTracker
 {
 private:
-	static constexpr bool SHOW_TOP_LEFT_BOX = true;
-	static constexpr bool SHOW_ADV_TEXT = true;
-	static constexpr bool SHOW_KRITZ = true;
-	static constexpr bool IGNORE_KRITZ = false;
-	
-	static constexpr float MED_DEATH_DURATION = 3.0f;
-	static constexpr int EVEN_THRESHOLD_RANGE = 5;
-	static constexpr int MID_UBER_THRESHOLD = 40;
-	static constexpr int HIGH_UBER_THRESHOLD = 70;
-	
-	static constexpr float UBER_RATE = 2.5f;
-	static constexpr float KRITZ_RATE = 3.125f;
-	static constexpr float KRITZ_DROP_THRESHOLD = 10.0f;
+	// Configuration values are now read from Vars::Competitive::UberTracker::* variables
 	
 	std::map<int, float> m_PrevUber;
 	std::map<int, std::string> m_Status;

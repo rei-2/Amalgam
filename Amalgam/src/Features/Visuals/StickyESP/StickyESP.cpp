@@ -5,6 +5,9 @@ void CStickyESP::Draw()
     if (!Vars::Competitive::Features::StickyESP.Value)
         return;
     
+    // Clear previous chams entries
+    m_mEntities.clear();
+    
     // Early exits (like HealthBarESP)
     if (I::EngineVGui->IsGameUIVisible())
         return;
@@ -14,7 +17,7 @@ void CStickyESP::Draw()
         return;
     
     Vec3 localPos = pLocal->GetAbsOrigin();
-    float maxDistSqr = MAX_DISTANCE * MAX_DISTANCE;
+    float maxDistSqr = Vars::Competitive::StickyESP::MaxDistance.Value * Vars::Competitive::StickyESP::MaxDistance.Value;
     
     // Process all projectiles directly (no caching, like HealthBarESP)
     for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
@@ -39,7 +42,7 @@ void CStickyESP::Draw()
             continue;
         
         // Enemy filter (exactly like Lua script)
-        if (ENEMY_ONLY && pSticky->m_iTeamNum() == pLocal->m_iTeamNum())
+        if (Vars::Competitive::StickyESP::EnemyOnly.Value && pSticky->m_iTeamNum() == pLocal->m_iTeamNum())
             continue;
         
         // Convert to screen coordinates (exactly like Lua script)
@@ -51,20 +54,26 @@ void CStickyESP::Draw()
         bool isVisible = IsVisible(pSticky, pLocal);
         
         // Skip if only showing when visible and not visible (exactly like Lua script)
-        if (BOX_ONLY_WHEN_VISIBLE && !isVisible)
+        if (Vars::Competitive::StickyESP::BoxOnlyWhenVisible.Value && !isVisible)
             continue;
         
+        // Add to chams if enabled
+        if (Vars::Competitive::StickyESP::EnableChams.Value)
+        {
+            m_mEntities[pSticky->entindex()] = true;
+        }
+        
         // Choose color based on visibility (exactly like Lua script)
-        Color_t color = isVisible ? BOX_COLOR_VISIBLE : BOX_COLOR_INVISIBLE;
+        Color_t color = isVisible ? Vars::Competitive::StickyESP::VisibleColor.Value : Vars::Competitive::StickyESP::InvisibleColor.Value;
         
         // Draw 2D box (exactly like Lua script)
-        if (BOX_2D)
+        if (Vars::Competitive::StickyESP::Box2D.Value)
         {
-            Draw2DBox(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y), BOX_2D_SIZE, color);
+            Draw2DBox(static_cast<int>(screenPos.x), static_cast<int>(screenPos.y), Vars::Competitive::StickyESP::BoxSize.Value, color);
         }
         
         // Draw 3D box (exactly like Lua script)
-        if (BOX_3D)
+        if (Vars::Competitive::StickyESP::Box3D.Value)
         {
             auto hitbox = GetHitbox(pSticky);
             if (hitbox.first != Vec3() && hitbox.second != Vec3())
