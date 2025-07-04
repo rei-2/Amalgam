@@ -1535,8 +1535,9 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::PylonESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::FocusFire, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Right);
-					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::SplashRadius, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Movement Features"))
@@ -1544,12 +1545,19 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::SafeBhop, FToggleEnum::Left);
 				} EndSection();
 
+				if (Section("Safe Bunnyhop"))
+				{
+					FSlider(Vars::Competitive::SafeBhop::SuccessRate, FSliderEnum::Left);
+					FToggle(Vars::Competitive::SafeBhop::SafetyEnabled, FToggleEnum::Right);
+				} EndSection();
+
 				if (Section("Enemy Camera"))
 				{
 					FDropdown(Vars::Competitive::EnemyCam::Mode, FDropdownEnum::Left);
 					FDropdown(Vars::Competitive::EnemyCam::ViewMode, FDropdownEnum::Right);
 					FSlider(Vars::Competitive::EnemyCam::TrackTime, FSliderEnum::Left);
-					FSlider(Vars::Competitive::EnemyCam::CameraOffset, FSliderEnum::Right);
+					FSlider(Vars::Competitive::EnemyCam::OffsetX, FSliderEnum::Right);
+					FSlider(Vars::Competitive::EnemyCam::OffsetY, FSliderEnum::Left);
 				} EndSection();
 
 				if (Section("Health Bar ESP"))
@@ -1575,6 +1583,27 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::PlayerTrails::TrailHeight, FSliderEnum::Right);
 					FSlider(Vars::Competitive::PlayerTrails::MinMovementDistance);
 				} EndSection();
+
+				if (Section("Pylon ESP"))
+				{
+					FSlider(Vars::Competitive::PylonESP::PylonWidth, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PylonESP::PylonHeight, FSliderEnum::Right);
+					FSlider(Vars::Competitive::PylonESP::MinDistance, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PylonESP::PylonOffset, FSliderEnum::Right);
+					FSlider(Vars::Competitive::PylonESP::StartAlpha, FSliderEnum::Left);
+					FSlider(Vars::Competitive::PylonESP::EndAlpha, FSliderEnum::Right);
+					FSlider(Vars::Competitive::PylonESP::Segments);
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
+					FColorPicker(Vars::Competitive::PylonESP::PylonColor, FColorPickerEnum::Left);
+				} EndSection();
+
+				if (Section("Splash Radius"))
+				{
+					FSlider(Vars::Competitive::SplashRadius::CircleSegments, FSliderEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::EnemyOnly, FToggleEnum::Right);
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
+					FColorPicker(Vars::Competitive::SplashRadius::CircleColor, FColorPickerEnum::Left);
+				} EndSection();
 			}
 
 			/* Column 2 */
@@ -1594,25 +1623,19 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::UberTracker::ShowKritz, FToggleEnum::Left);
 					FToggle(Vars::Competitive::UberTracker::IgnoreKritz, FToggleEnum::Right);
 					FSlider(Vars::Competitive::UberTracker::MedDeathDuration, FSliderEnum::Left);
-					FSlider(Vars::Competitive::UberTracker::EvenThresholdRange, FSliderEnum::Right);
-					FSlider(Vars::Competitive::UberTracker::MidUberThreshold, FSliderEnum::Left);
-					FSlider(Vars::Competitive::UberTracker::HighUberThreshold, FSliderEnum::Right);
-					FSlider(Vars::Competitive::UberTracker::UberRate, FSliderEnum::Left);
-					FSlider(Vars::Competitive::UberTracker::KritzRate, FSliderEnum::Right);
-					FSlider(Vars::Competitive::UberTracker::KritzDropThreshold);
-				} EndSection();
-
-				if (Section("Pylon ESP"))
-				{
-					FSlider(Vars::Competitive::PylonESP::PylonWidth, FSliderEnum::Left);
-					FSlider(Vars::Competitive::PylonESP::PylonHeight, FSliderEnum::Right);
-					FSlider(Vars::Competitive::PylonESP::MinDistance, FSliderEnum::Left);
-					FSlider(Vars::Competitive::PylonESP::PylonOffset, FSliderEnum::Right);
-					FSlider(Vars::Competitive::PylonESP::StartAlpha, FSliderEnum::Left);
-					FSlider(Vars::Competitive::PylonESP::EndAlpha, FSliderEnum::Right);
-					FSlider(Vars::Competitive::PylonESP::Segments);
-					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
-					FColorPicker(Vars::Competitive::PylonESP::PylonColor, FColorPickerEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::BoxFontSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::BoxX, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::BoxY, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::BoxWidth, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::AdvantageFontSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::AdvantageX, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::AdvantageY, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::EvenThresholdRange, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::MidUberThreshold, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::HighUberThreshold, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::UberRate, FSliderEnum::Right);
+					FSlider(Vars::Competitive::UberTracker::KritzRate, FSliderEnum::Left);
+					FSlider(Vars::Competitive::UberTracker::KritzDropThreshold, FSliderEnum::Right);
 				} EndSection();
 
 				if (Section("Sticky ESP"))
@@ -1631,12 +1654,6 @@ void CMenu::MenuComp(int iTab)
 					FColorPicker(Vars::Competitive::StickyESP::EnemyInvisibleColor, FColorPickerEnum::Right);
 					FColorPicker(Vars::Competitive::StickyESP::TeamVisibleColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::StickyESP::TeamInvisibleColor, FColorPickerEnum::Right);
-				} EndSection();
-
-				if (Section("Safe Bunnyhop"))
-				{
-					FSlider(Vars::Competitive::SafeBhop::SuccessRate, FSliderEnum::Left);
-					FToggle(Vars::Competitive::SafeBhop::SafetyEnabled, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Crit Heals"))
@@ -1677,10 +1694,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::FocusFire::VisibleOnly, FToggleEnum::Right);
 					FToggle(Vars::Competitive::FocusFire::UseCorners, FToggleEnum::Left);
 					FToggle(Vars::Competitive::FocusFire::ShowHealthDrop, FToggleEnum::Right);
-					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
-					FColorPicker(Vars::Competitive::FocusFire::TargetColor, FColorPickerEnum::Left);
-					FColorPicker(Vars::Competitive::FocusFire::AttackerColor, FColorPickerEnum::Right);
-					FColorPicker(Vars::Competitive::FocusFire::BoxColor, FColorPickerEnum::Left);
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
+					FColorPicker(Vars::Competitive::FocusFire::Color, FColorPickerEnum::Left);
 				} EndSection();
 			}
 

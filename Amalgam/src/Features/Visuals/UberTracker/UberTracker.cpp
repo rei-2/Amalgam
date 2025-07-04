@@ -117,20 +117,29 @@ void CUberTracker::DrawMedicInfo(const std::vector<MedicInfo>& vMedics, int iSta
 	if (!Vars::Competitive::UberTracker::ShowTopBox.Value || vMedics.empty())
 		return;
 	
-	int iBoxHeight = std::max(30, 25 + static_cast<int>(vMedics.size() * 15));
-	H::Draw.FillRect(5, iStartY - 5, 24 * 15, iBoxHeight, { 0, 0, 0, 100 });
+	int boxX = Vars::Competitive::UberTracker::BoxX.Value;
+	int boxY = Vars::Competitive::UberTracker::BoxY.Value;
+	int boxWidth = Vars::Competitive::UberTracker::BoxWidth.Value;
+	int boxFontSize = Vars::Competitive::UberTracker::BoxFontSize.Value;
+	
+	int lineHeight = boxFontSize + 2;
+	int iBoxHeight = std::max(30, 25 + static_cast<int>(vMedics.size() * lineHeight));
+	H::Draw.FillRect(boxX, boxY - 5, boxWidth, iBoxHeight, { 0, 0, 0, 100 });
 	
 	for (size_t i = 0; i < vMedics.size(); ++i)
 	{
 		const auto& medic = vMedics[i];
-		int iYPos = iStartY + 15 + static_cast<int>(i * 15);
+		int iYPos = boxY + 15 + static_cast<int>(i * lineHeight);
 		Color_t color = GetColorForUber(medic.UberPercentage, medic.IsAlive);
 		
 		std::string sNameWeapon = medic.Name + " -> " + medic.WeaponName;
 		std::string sUberText = medic.IsAlive ? (std::to_string(static_cast<int>(medic.UberPercentage)) + "%") : "DEAD";
 		
-		H::Draw.String(H::Fonts.GetFont(FONT_ESP), 20, iYPos, color, ALIGN_TOPLEFT, sNameWeapon.c_str());
-		H::Draw.String(H::Fonts.GetFont(FONT_ESP), 22 * 15, iYPos, color, ALIGN_TOPLEFT, sUberText.c_str());
+		// Get appropriate font based on info box font size
+		auto font = (boxFontSize <= 12) ? H::Fonts.GetFont(FONT_INDICATORS) : H::Fonts.GetFont(FONT_ESP);
+		
+		H::Draw.String(font, boxX + 15, iYPos, color, ALIGN_TOPLEFT, sNameWeapon.c_str());
+		H::Draw.String(font, boxX + boxWidth - 80, iYPos, color, ALIGN_TOPLEFT, sUberText.c_str());
 	}
 }
 
@@ -232,15 +241,19 @@ void CUberTracker::DrawAdvantageText(const std::vector<MedicInfo>& vRedMedics, c
 	
 	int iScreenW, iScreenH;
 	I::MatSystemSurface->GetScreenSize(iScreenW, iScreenH);
-	int iX = (iScreenW / 2) - 250;
-	int iY = (iScreenH / 2) + 250;
+	int iX = (iScreenW / 2) - 250 + Vars::Competitive::UberTracker::AdvantageX.Value;
+	int iY = (iScreenH / 2) + 250 + Vars::Competitive::UberTracker::AdvantageY.Value;
+	int advantageFontSize = Vars::Competitive::UberTracker::AdvantageFontSize.Value;
+	
+	// Get appropriate font based on advantage font size
+	auto font = (advantageFontSize <= 12) ? H::Fonts.GetFont(FONT_INDICATORS) : H::Fonts.GetFont(FONT_ESP);
 	
 	if (Vars::Competitive::UberTracker::ShowKritz.Value && enemyMedic.IsAlive && enemyMedic.RealWeaponName == "KRITZ" && !Vars::Competitive::UberTracker::IgnoreKritz.Value)
 	{
-		H::Draw.String(H::Fonts.GetFont(FONT_ESP), iX, iY - 25, { 128, 0, 128, 255 }, ALIGN_CENTER, "KRITZ");
+		H::Draw.String(font, iX, iY - 25, { 128, 0, 128, 255 }, ALIGN_CENTER, "KRITZ");
 	}
 	
-	H::Draw.String(H::Fonts.GetFont(FONT_ESP), iX, iY, textColor, ALIGN_CENTER, sDisplayText.c_str());
+	H::Draw.String(font, iX, iY, textColor, ALIGN_CENTER, sDisplayText.c_str());
 }
 
 void CUberTracker::Draw()
@@ -355,7 +368,7 @@ void CUberTracker::Draw()
 	vAllMedics.insert(vAllMedics.end(), vBluMedics.begin(), vBluMedics.end());
 	
 	if (Vars::Competitive::UberTracker::ShowTopBox.Value)
-		DrawMedicInfo(vAllMedics, 115);
+		DrawMedicInfo(vAllMedics, 0); // Y position is now handled inside DrawMedicInfo
 	
 	if (Vars::Competitive::UberTracker::ShowAdvantage.Value)
 		DrawAdvantageText(vRedMedics, vBluMedics, iLocalTeam);

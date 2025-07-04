@@ -62,20 +62,20 @@ void CFocusFire::DrawCorners(int x1, int y1, int x2, int y2)
     int length = Vars::Competitive::FocusFire::CornerLength.Value;
     
     // Top left corner
-    H::Draw.Line(x1, y1, x1 + length, y1, Vars::Competitive::FocusFire::BoxColor.Value);
-    H::Draw.Line(x1, y1, x1, y1 + length, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x1, y1, x1 + length, y1, Vars::Competitive::FocusFire::Color.Value);
+    H::Draw.Line(x1, y1, x1, y1 + length, Vars::Competitive::FocusFire::Color.Value);
     
     // Top right corner
-    H::Draw.Line(x2, y1, x2 - length, y1, Vars::Competitive::FocusFire::BoxColor.Value);
-    H::Draw.Line(x2, y1, x2, y1 + length, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x2, y1, x2 - length, y1, Vars::Competitive::FocusFire::Color.Value);
+    H::Draw.Line(x2, y1, x2, y1 + length, Vars::Competitive::FocusFire::Color.Value);
     
     // Bottom left corner
-    H::Draw.Line(x1, y2, x1 + length, y2, Vars::Competitive::FocusFire::BoxColor.Value);
-    H::Draw.Line(x1, y2, x1, y2 - length, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x1, y2, x1 + length, y2, Vars::Competitive::FocusFire::Color.Value);
+    H::Draw.Line(x1, y2, x1, y2 - length, Vars::Competitive::FocusFire::Color.Value);
     
     // Bottom right corner
-    H::Draw.Line(x2, y2, x2 - length, y2, Vars::Competitive::FocusFire::BoxColor.Value);
-    H::Draw.Line(x2, y2, x2, y2 - length, Vars::Competitive::FocusFire::BoxColor.Value);
+    H::Draw.Line(x2, y2, x2 - length, y2, Vars::Competitive::FocusFire::Color.Value);
+    H::Draw.Line(x2, y2, x2, y2 - length, Vars::Competitive::FocusFire::Color.Value);
 }
 
 void CFocusFire::CleanExpiredAttackers(float currentTime, TargetInfo& targetInfo)
@@ -236,7 +236,7 @@ void CFocusFire::DrawBox()
                     {
                         H::Draw.LineRect(static_cast<int>(minX - i), static_cast<int>(minY - i), 
                                         static_cast<int>(maxX + i - minX + 2*i), static_cast<int>(maxY + i - minY + 2*i), 
-                                        Vars::Competitive::FocusFire::BoxColor.Value);
+                                        Vars::Competitive::FocusFire::Color.Value);
                     }
                 }
             }

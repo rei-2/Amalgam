@@ -455,14 +455,16 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
         Vec3 forward, up;
         Math::AngleVectors(angles, &forward, nullptr, &up);
         
-        // Apply forward offset with pitch adjustment
+        // Apply configurable X offset (forward/back) with pitch adjustment
         float pitchFactor = 1.0f;
         if (angles.x > 60.0f)
             pitchFactor = 1.0f + ((angles.x - 60.0f) / 30.0f) * 7.5f;
         
-        float offsetDistance = Vars::Competitive::EnemyCam::CameraOffset.Value;
-        origin += forward * (offsetDistance * pitchFactor);
-        origin += up * (offsetDistance * 0.75f); // Upward offset is 75% of forward offset
+        float offsetX = Vars::Competitive::EnemyCam::OffsetX.Value;
+        float offsetY = Vars::Competitive::EnemyCam::OffsetY.Value;
+        
+        origin += forward * (offsetX * pitchFactor);
+        origin += up * offsetY;
     }
 }
 
@@ -490,17 +492,44 @@ void CEnemyCam::DrawOverlay()
     if (!m_pTargetPlayer || !I::EngineClient)
         return;
         
-    // Basic crash protection - only check for critical failures
+    // Basic crash protection - validate through entity list first
     try
     {
-        // Test if we can safely access entindex without crashing
+        // Instead of calling methods on potentially invalid pointer,
+        // check if this entity still exists in the entity list
+        bool entityFound = false;
+        for (int i = 1; i <= 64; ++i)
+        {
+            auto pEntity = I::ClientEntityList->GetClientEntity(i);
+            if (pEntity == m_pTargetPlayer)
+            {
+                // Entity still exists at this index
+                if (!pEntity->IsDormant())
+                {
+                    entityFound = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!entityFound)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+        
+        // Now safe to access methods since we confirmed entity exists
         int entIndex = m_pTargetPlayer->entindex();
         if (entIndex <= 0 || entIndex > 64)
+        {
+            m_pTargetPlayer = nullptr;
             return;
+        }
     }
     catch (...)
     {
-        // If we can't safely access the entity, skip drawing
+        // If any access fails, clear it and skip drawing
+        m_pTargetPlayer = nullptr;
         return;
     }
         
@@ -541,6 +570,27 @@ void CEnemyCam::DrawOverlay()
     
     try
     {
+        // Additional validation before accessing methods
+        if (m_pTargetPlayer->IsDormant())
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+        
+        // Verify entity is still in entity list at same index
+        int targetIndex = m_pTargetPlayer->entindex();
+        if (targetIndex <= 0 || targetIndex > 64)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+        
+        auto pEntityFromList = I::ClientEntityList->GetClientEntity(targetIndex);
+        if (pEntityFromList != m_pTargetPlayer)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
             
         health = m_pTargetPlayer->m_iHealth();
         maxHealth = m_pTargetPlayer->GetMaxHealth();

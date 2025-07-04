@@ -890,6 +890,7 @@ namespace Vars
 			CVar(PylonESP, "Medic Pylon ESP", true, VISUAL);
 			CVar(FocusFire, "Focus Fire Detection", true, VISUAL);
 			CVar(StickyESP, "Sticky Bomb ESP", true, VISUAL);
+			CVar(SplashRadius, "Splash Radius Circles", false, VISUAL);
 			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
@@ -906,7 +907,8 @@ namespace Vars
 				VA_LIST("Raw", "Offset"),
 				Raw, Offset);
 			CVar(TrackTime, "Track time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 10.0f, 0.5f);
-			CVar(CameraOffset, "Camera offset", 50.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 200.0f, 5.0f);
+			CVar(OffsetX, "Offset X (forward/back)", 50.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, -200.0f, 200.0f, 5.0f);
+			CVar(OffsetY, "Offset Y (up/down)", 37.5f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, -200.0f, 200.0f, 5.0f);
 		SUBNAMESPACE_END(EnemyCam);
 
 		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)
@@ -921,6 +923,13 @@ namespace Vars
 			CVar(UberRate, "Uber build rate", 2.5f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 5.0f, 0.1f);
 			CVar(KritzRate, "Kritz build rate", 3.125f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 5.0f, 0.1f);
 			CVar(KritzDropThreshold, "Kritz drop threshold", 10.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 5.0f, 50.0f, 1.0f);
+			CVar(BoxX, "Info box X position", 5, VISUAL | SLIDER_CLAMP, 0, 1920, 5);
+			CVar(BoxY, "Info box Y position", 115, VISUAL | SLIDER_CLAMP, 0, 1080, 5);
+			CVar(BoxWidth, "Info box width", 360, VISUAL | SLIDER_CLAMP, 200, 800, 10);
+			CVar(BoxFontSize, "Info box font size", 14, VISUAL | SLIDER_CLAMP, 10, 24, 1);
+			CVar(AdvantageX, "Advantage text X offset", 0, VISUAL | SLIDER_CLAMP, -500, 500, 5);
+			CVar(AdvantageY, "Advantage text Y offset", 0, VISUAL | SLIDER_CLAMP, -500, 500, 5);
+			CVar(AdvantageFontSize, "Advantage font size", 16, VISUAL | SLIDER_CLAMP, 10, 24, 1);
 		SUBNAMESPACE_END(UberTracker);
 
 		SUBNAMESPACE_BEGIN(HealthBarESP, Health Bar ESP)
@@ -971,6 +980,12 @@ namespace Vars
 			CVar(EnableChams, "Enable chams", false, VISUAL);
 		SUBNAMESPACE_END(StickyESP);
 
+		SUBNAMESPACE_BEGIN(SplashRadius, Splash Radius)
+			CVar(CircleColor, "Circle color", Color_t(255, 255, 255, 255), VISUAL);
+			CVar(CircleSegments, "Circle segments", 63, VISUAL | SLIDER_CLAMP, 12, 128, 1);
+			CVar(EnemyOnly, "Enemy stickies only", true, VISUAL);
+		SUBNAMESPACE_END(SplashRadius);
+
 		SUBNAMESPACE_BEGIN(CritHeals, Crit Heals)
 			CVar(Range, "Detection range", 800.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 200.0f, 1500.0f, 50.0f);
 			CVar(FontSize, "Font size", 16, VISUAL | SLIDER_CLAMP, 10, 30, 1);
@@ -996,15 +1011,13 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(FocusFire, Focus Fire)
 			CVar(DisplayTime, "Display time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 10.0f, 0.5f);
 			CVar(MaxTargets, "Max targets shown", 5, VISUAL | SLIDER_CLAMP, 1, 15, 1);
-			CVar(TargetColor, "Target highlight color", Color_t(255, 0, 0, 255), VISUAL);
-			CVar(AttackerColor, "Attacker highlight color", Color_t(255, 165, 0, 255), VISUAL);
 			CVar(ShowHealthDrop, "Show health drop", true, VISUAL);
 			CVar(MinAttackers, "Min attackers required", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
 			CVar(TrackerTimeWindow, "Tracker time window", 4.5f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 10.0f, 0.5f);
 			CVar(EnableChams, "Enable chams", true, VISUAL);
 			CVar(EnableBox, "Enable box", true, VISUAL);
 			CVar(VisibleOnly, "Visible only", false, VISUAL);
-			CVar(BoxColor, "Box color", Color_t(255, 0, 0, 190), VISUAL);
+			CVar(Color, "Focus color", Color_t(255, 0, 0, 190), VISUAL);
 			CVar(BoxThickness, "Box thickness", 2, VISUAL | SLIDER_CLAMP, 1, 5, 1);
 			CVar(BoxPadding, "Box padding", 3, VISUAL | SLIDER_CLAMP, 0, 10, 1);
 			CVar(UseCorners, "Use corners", true, VISUAL);
@@ -1121,7 +1134,7 @@ namespace Vars
 		SUBNAMESPACE_END(Sound);
 
 		SUBNAMESPACE_BEGIN(Game)
-			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", false);
+			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", true);
 			CVar(F2PChatBypass, "F2P chat bypass", false);
 			CVar(NetworkFix, "Network fix", false);
 			CVar(SetupBonesOptimization, "Bones optimization", false);

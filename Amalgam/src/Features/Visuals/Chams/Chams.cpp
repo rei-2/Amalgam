@@ -67,8 +67,8 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 			F::FocusFire.m_mEntities.count(pEntity->entindex()))
 		{
 			// Use proper visible and occluded materials for through-wall visibility
-			auto visibleMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::BoxColor.Value } };
-			auto occludedMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::BoxColor.Value } };
+			auto visibleMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::Color.Value } };
+			auto occludedMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::Color.Value } };
 			*pChams = Chams_t(visibleMaterial, occludedMaterial);
 			return true;
 		}
