@@ -895,6 +895,7 @@ namespace Vars
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
+			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
 		SUBNAMESPACE_END(Features);
 
 		SUBNAMESPACE_BEGIN(EnemyCam, Enemy Camera)
@@ -905,6 +906,7 @@ namespace Vars
 				VA_LIST("Raw", "Offset"),
 				Raw, Offset);
 			CVar(TrackTime, "Track time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 10.0f, 0.5f);
+			CVar(CameraOffset, "Camera offset", 50.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 200.0f, 5.0f);
 		SUBNAMESPACE_END(EnemyCam);
 
 		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)
@@ -1009,6 +1011,11 @@ namespace Vars
 			CVar(UseCorners, "Use corners", true, VISUAL);
 			CVar(CornerLength, "Corner length", 10, VISUAL | SLIDER_CLAMP, 5, 20, 1);
 		SUBNAMESPACE_END(FocusFire);
+
+		SUBNAMESPACE_BEGIN(SafeBhop, Safe Bunnyhop)
+			CVar(SuccessRate, "Success rate", 95, VISUAL | SLIDER_CLAMP, 0, 100, 5);
+			CVar(SafetyEnabled, "Safety enabled", true, VISUAL);
+		SUBNAMESPACE_END(SafeBhop);
 	NAMESPACE_END(Competitive);
 
 	NAMESPACE_BEGIN(Radar)

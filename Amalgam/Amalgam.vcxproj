@@ -928,6 +928,7 @@
     <ClCompile Include="src\Features\ImGui\Menu\Menu.cpp" />
     <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />
     <ClCompile Include="src\Features\Misc\Misc.cpp" />
+    <ClCompile Include="src\Features\Misc\SafeBhop\SafeBhop.cpp" />
     <ClCompile Include="src\Features\NetworkFix\NetworkFix.cpp" />
     <ClCompile Include="src\Features\NoSpread\NoSpread.cpp" />
     <ClCompile Include="src\Features\NoSpread\NoSpreadHitscan\NoSpreadHitscan.cpp" />
@@ -1240,6 +1241,7 @@
     <ClInclude Include="src\Features\ImGui\Fonts\Roboto\RobotoMedium.h" />
     <ClInclude Include="src\Features\Misc\AutoVote\AutoVote.h" />
     <ClInclude Include="src\Features\Misc\Misc.h" />
+    <ClInclude Include="src\Features\Misc\SafeBhop\SafeBhop.h" />
     <ClInclude Include="src\Features\NetworkFix\NetworkFix.h" />
     <ClInclude Include="src\Features\NoSpread\NoSpread.h" />
     <ClInclude Include="src\Features\NoSpread\NoSpreadHitscan\NoSpreadHitscan.h" />

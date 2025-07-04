@@ -4,6 +4,7 @@
 #include "../Ticks/Ticks.h"
 #include "../Players/PlayerUtils.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
+#include "SafeBhop/SafeBhop.h"
 
 void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
@@ -20,6 +21,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 
 	AutoJump(pLocal, pCmd);
+	F::SafeBhop.Run(pLocal, pCmd);
 	EdgeJump(pLocal, pCmd);
 	AutoJumpbug(pLocal, pCmd);
 	AutoStrafe(pLocal, pCmd);

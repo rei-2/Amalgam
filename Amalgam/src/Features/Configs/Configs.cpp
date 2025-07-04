@@ -312,7 +312,12 @@ CConfigs::CConfigs()
 		}\
 	}\
 	else if (!(pVar->m_iFlags & NOSAVE))\
-		SDK::Output("Amalgam", std::format("{} not found", pVar->m_sName).c_str(), { 175, 150, 255, 127 }, true, true);\
+	{\
+		/* Suppress warnings for new Competitive variables to reduce console spam */\
+		bool bSuppressWarning = pVar->m_sName.find("Competitive::") == 0;\
+		if (!bSuppressWarning)\
+			SDK::Output("Amalgam", std::format("{} not found", pVar->m_sName).c_str(), { 175, 150, 255, 127 }, true, true);\
+	}\
 }
 #define LoadMain(type, tree) if (IsType(type)) LoadCond(type, tree)
 

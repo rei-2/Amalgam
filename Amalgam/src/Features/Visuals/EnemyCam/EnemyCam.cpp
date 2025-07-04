@@ -482,8 +482,9 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
         if (angles.x > 60.0f)
             pitchFactor = 1.0f + ((angles.x - 60.0f) / 30.0f) * 7.5f;
         
-        origin += forward * (FORWARD_OFFSET * pitchFactor);
-        origin += up * UPWARD_OFFSET;
+        float offsetDistance = Vars::Competitive::EnemyCam::CameraOffset.Value;
+        origin += forward * (offsetDistance * pitchFactor);
+        origin += up * (offsetDistance * 0.75f); // Upward offset is 75% of forward offset
     }
 }
 
@@ -511,6 +512,28 @@ void CEnemyCam::DrawOverlay()
     if (!m_pTargetPlayer || !I::EngineClient)
         return;
         
+    // Validate entity is still in the entity list before using it
+    bool bValidEntity = false;
+    for (int i = 1; i <= 64; i++)
+    {
+        auto pEntity = I::ClientEntityList->GetClientEntity(i);
+        if (pEntity == m_pTargetPlayer)
+        {
+            bValidEntity = true;
+            break;
+        }
+    }
+    
+    if (!bValidEntity)
+    {
+        m_pTargetPlayer = nullptr;
+        return;
+    }
+    
+    // Additional safety checks
+    if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
+        return;
+        
     PlayerInfo_t pi{};
     if (I::EngineClient->GetPlayerInfo(m_pTargetPlayer->entindex(), &pi))
     {
@@ -520,10 +543,29 @@ void CEnemyCam::DrawOverlay()
         
         if (m_pTargetMedic)
         {
-            PlayerInfo_t medicPi{};
-            if (I::EngineClient->GetPlayerInfo(m_pTargetMedic->entindex(), &medicPi))
+            // Validate medic entity is still in the entity list
+            bool bValidMedic = false;
+            for (int i = 1; i <= 64; i++)
             {
-                title += " + Medic: " + std::string(medicPi.name);
+                auto pEntity = I::ClientEntityList->GetClientEntity(i);
+                if (pEntity == m_pTargetMedic)
+                {
+                    bValidMedic = true;
+                    break;
+                }
+            }
+            
+            if (bValidMedic && !m_pTargetMedic->IsDormant() && m_pTargetMedic->IsAlive())
+            {
+                PlayerInfo_t medicPi{};
+                if (I::EngineClient->GetPlayerInfo(m_pTargetMedic->entindex(), &medicPi))
+                {
+                    title += " + Medic: " + std::string(medicPi.name);
+                }
+            }
+            else
+            {
+                m_pTargetMedic = nullptr;
             }
         }
         
@@ -531,12 +573,8 @@ void CEnemyCam::DrawOverlay()
                       {255, 255, 255, 255}, ALIGN_CENTER, title.c_str());
     }
     
-    // Draw health info
+    // Draw health info - player already validated above
     if (!m_pTargetPlayer)
-        return;
-        
-    // Additional validation to ensure player is still valid
-    if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
         return;
         
     int health = 100;
@@ -544,27 +582,6 @@ void CEnemyCam::DrawOverlay()
     
     try
     {
-        // Double-check pointer validity before dereferencing
-        if (!m_pTargetPlayer)
-            return;
-            
-        // Validate entity is still in the entity list
-        bool bValidEntity = false;
-        for (int i = 1; i <= 64; i++)
-        {
-            auto pEntity = I::ClientEntityList->GetClientEntity(i);
-            if (pEntity == m_pTargetPlayer)
-            {
-                bValidEntity = true;
-                break;
-            }
-        }
-        
-        if (!bValidEntity)
-        {
-            m_pTargetPlayer = nullptr;
-            return;
-        }
             
         health = m_pTargetPlayer->m_iHealth();
         maxHealth = m_pTargetPlayer->GetMaxHealth();

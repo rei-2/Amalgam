@@ -27,16 +27,19 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 
 ## Added Features
 
-### Always-On Information Systems
+### Competitive Information Systems
+All features are fully configurable through the COMP tab menu with individual toggles and customization options.
+
 - **UberTracker** - Comprehensive uber advantage tracking with detailed medic information, weapon types, and advantage calculations
 - **HealthBarESP** - Health bars for visible-only players. Includes a medic mode (health bars for teammates when playing medic), health-responsive visibility, and overheal display
 - **CritHeals Indicator** - Triangle indicators above players eligible for crit heals (medic-only feature) with uber build rate warnings
 - **PlayerTrails** - Colored movement trails for enemy players showing their recent paths with visibility-based display and fade-out effects
-- **StickyESP** - Always-on stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), and distance filtering
-- **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes (2+ attackers within 4.5 seconds)
+- **StickyESP** - Stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), distance filtering, and chams support
+- **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes and chams (2+ attackers within 4.5 seconds)
 - **PylonESP** - Vertical pylon indicators above enemy medics behind walls with segmented alpha fade and visibility-based rendering (800+ unit range)
 - **EnemyCam** - Picture-in-picture camera window showing enemy player perspectives with multiple targeting modes (closest, healed players, medics, top score)
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
+- **Safe Bunnyhop** - Advanced movement assistance with configurable success rate (0-100%), safety mechanisms to prevent detection, and perfect jump limiting
 
 ## Installation
 

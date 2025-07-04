@@ -10,6 +10,8 @@
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/Chams/Chams.h"
 #include "../Features/Visuals/Glow/Glow.h"
+#include "../Features/Visuals/StickyESP/StickyESP.h"
+#include "../Features/Visuals/FocusFire/FocusFire.h"
 #include "../Features/Spectate/Spectate.h"
 #include "../Features/Binds/Binds.h"
 
@@ -47,6 +49,11 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		F::Aimbot.Store();
 
 		auto pLocal = H::Entities.GetLocal();
+		
+		// Update competitive feature chams entities before chams system runs
+		F::StickyESP.UpdateChamsEntities();
+		F::FocusFire.UpdateChamsEntities();
+		
 		F::ESP.Store(pLocal);
 		F::Chams.Store(pLocal);
 		F::Glow.Store(pLocal);

@@ -161,10 +161,7 @@ bool CFocusFire::ShouldVisualizePlayer(CTFPlayer* pPlayer)
 
 void CFocusFire::DrawBox()
 {
-    // Clear previous chams entries
-    m_mEntities.clear();
-    
-    if (!Vars::Competitive::FocusFire::EnableBox.Value && !Vars::Competitive::FocusFire::EnableChams.Value)
+    if (!Vars::Competitive::FocusFire::EnableBox.Value)
         return;
     
     
@@ -176,11 +173,7 @@ void CFocusFire::DrawBox()
         
         if (pPlayer && ShouldVisualizePlayer(pPlayer))
         {
-            // Add to chams if enabled
-            if (Vars::Competitive::FocusFire::EnableChams.Value)
-            {
-                m_mEntities[pPlayer->entindex()] = true;
-            }
+            // Chams are now handled in UpdateChamsEntities()
             
             // Skip box drawing if disabled
             if (!Vars::Competitive::FocusFire::EnableBox.Value)
@@ -294,4 +287,29 @@ void CFocusFire::Reset()
     m_NextVisCheck.clear();
     m_VisibilityCache.clear();
     m_NextCleanupTime = 0.0f;
+}
+
+void CFocusFire::UpdateChamsEntities()
+{
+    // Clear previous chams entries
+    m_mEntities.clear();
+    
+    if (!Vars::Competitive::Features::FocusFire.Value || !Vars::Competitive::FocusFire::EnableChams.Value)
+        return;
+    
+    // Clean up invalid targets first
+    CleanInvalidTargets();
+    
+    // Find players being targeted by multiple teammates
+    for (auto& [index, targetInfo] : m_TargetData)
+    {
+        auto pEntity = I::ClientEntityList->GetClientEntity(index);
+        auto pPlayer = pEntity ? pEntity->As<CTFPlayer>() : nullptr;
+        
+        if (pPlayer && ShouldVisualizePlayer(pPlayer))
+        {
+            // Add to chams tracking
+            m_mEntities[pPlayer->entindex()] = true;
+        }
+    }
 }

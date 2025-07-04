@@ -7,9 +7,6 @@ class CStickyESP
 private:
     // Configuration values are now read from Vars::Competitive::StickyESP::* variables
     
-    // Chams tracking for stickies
-    std::unordered_map<int, bool> m_mEntities;
-    
     // Helper functions (no caching, direct like HealthBarESP)
     bool IsVisible(CBaseEntity* pEntity, CBaseEntity* pLocal);
     void Draw3DBox(const std::vector<Vec3>& vertices, const Color_t& color);
@@ -17,7 +14,11 @@ private:
     std::pair<Vec3, Vec3> GetHitbox(CBaseEntity* pEntity);
     
 public:
+    // Chams tracking for stickies
+    std::unordered_map<int, bool> m_mEntities;
+    
     void Draw();
+    void UpdateChamsEntities(); // Separate function to populate chams entities
 };
 
 ADD_FEATURE(CStickyESP, StickyESP)

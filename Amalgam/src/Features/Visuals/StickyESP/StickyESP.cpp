@@ -5,9 +5,6 @@ void CStickyESP::Draw()
     if (!Vars::Competitive::Features::StickyESP.Value)
         return;
     
-    // Clear previous chams entries
-    m_mEntities.clear();
-    
     // Early exits (like HealthBarESP)
     if (I::EngineVGui->IsGameUIVisible())
         return;
@@ -57,11 +54,7 @@ void CStickyESP::Draw()
         if (Vars::Competitive::StickyESP::BoxOnlyWhenVisible.Value && !isVisible)
             continue;
         
-        // Add to chams if enabled
-        if (Vars::Competitive::StickyESP::EnableChams.Value)
-        {
-            m_mEntities[pSticky->entindex()] = true;
-        }
+        // Chams are now handled in UpdateChamsEntities()
         
         // Choose color based on visibility (exactly like Lua script)
         Color_t color = isVisible ? Vars::Competitive::StickyESP::VisibleColor.Value : Vars::Competitive::StickyESP::InvisibleColor.Value;
@@ -178,4 +171,54 @@ void CStickyESP::Draw2DBox(int x, int y, int size, const Color_t& color)
     H::Draw.Line(x1, y2, x2, y2, color); // Bottom
     H::Draw.Line(x1, y1, x1, y2, color); // Left
     H::Draw.Line(x2, y1, x2, y2, color); // Right
+}
+
+void CStickyESP::UpdateChamsEntities()
+{
+    // Clear previous chams entries
+    m_mEntities.clear();
+    
+    if (!Vars::Competitive::Features::StickyESP.Value || !Vars::Competitive::StickyESP::EnableChams.Value)
+        return;
+    
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return;
+    
+    Vec3 localPos = pLocal->GetAbsOrigin();
+    float maxDistSqr = Vars::Competitive::StickyESP::MaxDistance.Value * Vars::Competitive::StickyESP::MaxDistance.Value;
+    
+    // Process all projectiles to find chams-eligible stickies
+    for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
+    {
+        // Check if it's a stickybomb
+        if (!pEntity || pEntity->GetClassID() != ETFClassID::CTFGrenadePipebombProjectile)
+            continue;
+        
+        if (pEntity->IsDormant())
+            continue;
+        
+        auto pSticky = pEntity->As<CTFGrenadePipebombProjectile>();
+        if (!pSticky || pSticky->m_iType() != 1) // Only actual stickybombs (not pipes)
+            continue;
+        
+        Vec3 stickyPos = pSticky->GetAbsOrigin();
+        
+        // Distance check
+        Vec3 delta = stickyPos - localPos;
+        float distanceSqr = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
+        if (distanceSqr > maxDistSqr)
+            continue;
+        
+        // Enemy filter
+        if (Vars::Competitive::StickyESP::EnemyOnly.Value && pSticky->m_iTeamNum() == pLocal->m_iTeamNum())
+            continue;
+        
+        // Check visibility if required
+        if (Vars::Competitive::StickyESP::BoxOnlyWhenVisible.Value && !IsVisible(pSticky, pLocal))
+            continue;
+        
+        // Add to chams tracking
+        m_mEntities[pSticky->entindex()] = true;
+    }
 }

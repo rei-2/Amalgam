@@ -5,6 +5,8 @@
 #include "../../Backtrack/Backtrack.h"
 #include "../../Players/PlayerUtils.h"
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
+#include "../StickyESP/StickyESP.h"
+#include "../FocusFire/FocusFire.h"
 
 static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bEnemy, bool bTeam)
 {
@@ -58,7 +60,20 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	{
 	// player chams
 	case ETFClassID::CTFPlayer:
+	{
+		// Check for FocusFire chams first
+		if (Vars::Competitive::FocusFire::EnableChams.Value && 
+			!F::FocusFire.m_mEntities.empty() &&
+			F::FocusFire.m_mEntities.count(pEntity->entindex()))
+		{
+			// Use a simple flat material with the focus fire color
+			auto focusFireMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::BoxColor.Value } };
+			*pChams = Chams_t(focusFireMaterial, {});
+			return true;
+		}
+		
 		return GetPlayerChams(pEntity, pEntity, pLocal, pChams, Vars::Chams::Enemy::Players.Value, Vars::Chams::Team::Players.Value);
+	}
 	// building chams
 	case ETFClassID::CObjectSentrygun:
 	case ETFClassID::CObjectDispenser:
@@ -110,6 +125,18 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFProjectile_EnergyRing:
 	//case ETFClassID::CTFProjectile_Syringe:
 	{
+		// Check for StickyESP chams first for stickybombs
+		if (pEntity->GetClassID() == ETFClassID::CTFGrenadePipebombProjectile &&
+			Vars::Competitive::StickyESP::EnableChams.Value && 
+			!F::StickyESP.m_mEntities.empty() &&
+			F::StickyESP.m_mEntities.count(pEntity->entindex()))
+		{
+			// Use a simple flat material with the sticky visible color
+			auto stickyMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::StickyESP::VisibleColor.Value } };
+			*pChams = Chams_t(stickyMaterial, {});
+			return true;
+		}
+		
 		auto pOwner = F::ProjSim.GetEntities(pEntity).second->As<CBaseEntity>();
 		if (!pOwner) pOwner = pEntity;
 		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Projectiles.Value, Vars::Chams::Team::Projectiles.Value);
@@ -169,6 +196,7 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	case ETFClassID::CTFMedigunShield:
 		return false;
 	}
+
 
 	// player chams
 	auto pOwner = pEntity->m_hOwnerEntity().Get();

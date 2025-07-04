@@ -1922,7 +1922,7 @@ namespace ImGui
 		}
 		else
 		{
-			SetCursorPosX(GetContentRegionMax().x - H::Draw.Scale(18));
+			SetCursorPosX(GetContentRegionMax().x - H::Draw.Scale(18) - GetStyle().ScrollbarSize);
 			iFlags |= FColorPickerEnum::RetainPosition;
 			vIconOffset.y += H::Draw.Scale(6);
 		}

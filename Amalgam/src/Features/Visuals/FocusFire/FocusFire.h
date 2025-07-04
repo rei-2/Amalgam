@@ -22,9 +22,6 @@ private:
     std::unordered_map<int, float> m_NextVisCheck;
     std::unordered_map<int, bool> m_VisibilityCache;
     
-    // Chams tracking for focused players
-    std::unordered_map<int, bool> m_mEntities;
-    
     // Helper functions
     bool IsPlayerVisible(CTFPlayer* pPlayer);
     void DrawCorners(int x1, int y1, int x2, int y2);
@@ -34,9 +31,13 @@ private:
     void DrawBox();
     
 public:
+    // Chams tracking for focused players
+    std::unordered_map<int, bool> m_mEntities;
+    
     void Draw();
     void OnPlayerHurt(int victimIndex, int attackerIndex);
     void Reset();
+    void UpdateChamsEntities(); // Separate function to populate chams entities
 };
 
 ADD_FEATURE(CFocusFire, FocusFire)
