@@ -56,8 +56,18 @@ void CStickyESP::Draw()
         
         // Chams are now handled in UpdateChamsEntities()
         
-        // Choose color based on visibility (exactly like Lua script)
-        Color_t color = isVisible ? Vars::Competitive::StickyESP::VisibleColor.Value : Vars::Competitive::StickyESP::InvisibleColor.Value;
+        // Choose color based on team and visibility
+        Color_t color;
+        bool isEnemy = pSticky->m_iTeamNum() != pLocal->m_iTeamNum();
+        
+        if (isEnemy)
+        {
+            color = isVisible ? Vars::Competitive::StickyESP::EnemyVisibleColor.Value : Vars::Competitive::StickyESP::EnemyInvisibleColor.Value;
+        }
+        else
+        {
+            color = isVisible ? Vars::Competitive::StickyESP::TeamVisibleColor.Value : Vars::Competitive::StickyESP::TeamInvisibleColor.Value;
+        }
         
         // Draw 2D box (exactly like Lua script)
         if (Vars::Competitive::StickyESP::Box2D.Value)

@@ -66,9 +66,10 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 			!F::FocusFire.m_mEntities.empty() &&
 			F::FocusFire.m_mEntities.count(pEntity->entindex()))
 		{
-			// Use a simple flat material with the focus fire color
-			auto focusFireMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::BoxColor.Value } };
-			*pChams = Chams_t(focusFireMaterial, {});
+			// Use proper visible and occluded materials for through-wall visibility
+			auto visibleMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::BoxColor.Value } };
+			auto occludedMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::FocusFire::BoxColor.Value } };
+			*pChams = Chams_t(visibleMaterial, occludedMaterial);
 			return true;
 		}
 		
@@ -131,9 +132,14 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 			!F::StickyESP.m_mEntities.empty() &&
 			F::StickyESP.m_mEntities.count(pEntity->entindex()))
 		{
-			// Use a simple flat material with the sticky visible color
-			auto stickyMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Vars::Competitive::StickyESP::VisibleColor.Value } };
-			*pChams = Chams_t(stickyMaterial, {});
+			// Determine team and use appropriate colors
+			bool isEnemy = pEntity->m_iTeamNum() != pLocal->m_iTeamNum();
+			Color_t visibleColor = isEnemy ? Vars::Competitive::StickyESP::EnemyVisibleColor.Value : Vars::Competitive::StickyESP::TeamVisibleColor.Value;
+			Color_t invisibleColor = isEnemy ? Vars::Competitive::StickyESP::EnemyInvisibleColor.Value : Vars::Competitive::StickyESP::TeamInvisibleColor.Value;
+			
+			auto visibleMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", visibleColor } };
+			auto occludedMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", invisibleColor } };
+			*pChams = Chams_t(visibleMaterial, occludedMaterial);
 			return true;
 		}
 		

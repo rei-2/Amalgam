@@ -1574,8 +1574,6 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::PlayerTrails::MaxVisibleDuration, FSliderEnum::Left);
 					FSlider(Vars::Competitive::PlayerTrails::TrailHeight, FSliderEnum::Right);
 					FSlider(Vars::Competitive::PlayerTrails::MinMovementDistance);
-					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
-					FColorPicker(Vars::Competitive::PlayerTrails::TrailColor, FColorPickerEnum::Left);
 				} EndSection();
 			}
 
@@ -1629,10 +1627,10 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::StickyESP::ShowDamage, FToggleEnum::Right);
 					FToggle(Vars::Competitive::StickyESP::EnableChams);
 					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
-					FColorPicker(Vars::Competitive::StickyESP::EnemyColor, FColorPickerEnum::Left);
-					FColorPicker(Vars::Competitive::StickyESP::TeamColor, FColorPickerEnum::Right);
-					FColorPicker(Vars::Competitive::StickyESP::VisibleColor, FColorPickerEnum::Left);
-					FColorPicker(Vars::Competitive::StickyESP::InvisibleColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::StickyESP::EnemyVisibleColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::StickyESP::EnemyInvisibleColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::StickyESP::TeamVisibleColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::StickyESP::TeamInvisibleColor, FColorPickerEnum::Right);
 				} EndSection();
 
 				if (Section("Safe Bunnyhop"))

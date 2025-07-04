@@ -948,7 +948,6 @@ namespace Vars
 			CVar(TrailLifetime, "Trail lifetime", 7.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 20.0f, 0.5f);
 			CVar(MinDistance, "Min distance", 100.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 50.0f, 500.0f, 25.0f);
 			CVar(MaxDistance, "Max distance", 1850.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1000.0f, 8000.0f, 100.0f);
-			CVar(TrailColor, "Trail color", Color_t(255, 0, 0, 255), VISUAL);
 			CVar(UpdateInterval, "Update interval", 6, VISUAL | SLIDER_CLAMP, 1, 20, 1);
 			CVar(VisibilityTimeout, "Visibility timeout", 4.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 10.0f, 0.5f);
 			CVar(MaxVisibleDuration, "Max visible duration", 2.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.5f, 10.0f, 0.5f);
@@ -959,16 +958,16 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(StickyESP, Sticky ESP)
 			CVar(MaxDistance, "Max distance", 2800.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 500.0f, 5000.0f, 100.0f);
 			CVar(BoxSize, "Box size", 20, VISUAL | SLIDER_CLAMP, 10, 50, 2);
-			CVar(EnemyColor, "Enemy sticky color", Color_t(255, 0, 0, 255), VISUAL);
-			CVar(TeamColor, "Team sticky color", Color_t(0, 255, 0, 255), VISUAL);
 			CVar(ShowTimer, "Show detonation timer", true, VISUAL);
 			CVar(ShowDamage, "Show damage radius", true, VISUAL);
 			CVar(EnemyOnly, "Enemy stickies only", true, VISUAL);
 			CVar(Box3D, "3D boxes", false, VISUAL);
 			CVar(Box2D, "2D boxes", true, VISUAL);
 			CVar(BoxOnlyWhenVisible, "Only show when visible", true, VISUAL);
-			CVar(VisibleColor, "Visible sticky color", Color_t(0, 255, 0, 255), VISUAL);
-			CVar(InvisibleColor, "Invisible sticky color", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(EnemyVisibleColor, "Enemy visible color", Color_t(255, 100, 100, 255), VISUAL);
+			CVar(EnemyInvisibleColor, "Enemy invisible color", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(TeamVisibleColor, "Team visible color", Color_t(100, 100, 255, 255), VISUAL);
+			CVar(TeamInvisibleColor, "Team invisible color", Color_t(0, 0, 255, 255), VISUAL);
 			CVar(EnableChams, "Enable chams", false, VISUAL);
 		SUBNAMESPACE_END(StickyESP);
 

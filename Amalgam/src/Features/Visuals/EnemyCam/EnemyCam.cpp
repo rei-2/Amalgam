@@ -415,59 +415,37 @@ void CEnemyCam::GetCameraView(Vec3& origin, Vec3& angles)
     if (!m_pTargetPlayer)
         return;
     
-    // Additional validation to ensure player is still valid
+    // Robust entity validation before accessing any methods
     try
     {
-        // Check if entity is dormant or not alive
-        if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
-            return;
-        
-        // Validate entindex
-        int entIndex = m_pTargetPlayer->entindex();
-        if (entIndex <= 0 || entIndex > 64)
-            return;
-    }
-    catch (...)
-    {
-        // If any validation fails, the entity is invalid
-        return;
-    }
-    
-    // Get player eye position and angles with additional safety
-    try
-    {
-        // Double-check pointer before each method call
-        if (!m_pTargetPlayer)
-            return;
-            
-        // Validate entity is still in the entity list
+        // First validate that the entity is still in the entity list
         bool bValidEntity = false;
-        for (int i = 1; i <= 64; i++)
-        {
-            auto pEntity = I::ClientEntityList->GetClientEntity(i);
-            if (pEntity == m_pTargetPlayer)
-            {
-                bValidEntity = true;
-                break;
-            }
-        }
+        int targetIndex = 0;
         
-        if (!bValidEntity)
+        // Try to get entindex safely
+        targetIndex = m_pTargetPlayer->entindex();
+        if (targetIndex <= 0 || targetIndex > 64)
         {
             m_pTargetPlayer = nullptr;
             return;
         }
-            
-        origin = m_pTargetPlayer->GetEyePosition();
         
-        if (!m_pTargetPlayer)
+        // Check if entity is still in the entity list
+        auto pEntityFromList = I::ClientEntityList->GetClientEntity(targetIndex);
+        if (pEntityFromList != m_pTargetPlayer)
+        {
+            m_pTargetPlayer = nullptr;
             return;
-            
+        }
+        
+        // Entity is valid, proceed with getting camera data
+        origin = m_pTargetPlayer->GetEyePosition();
         angles = m_pTargetPlayer->GetEyeAngles();
     }
     catch (...)
     {
-        // If position/angle access fails, use defaults or return
+        // If any access fails, clear target and return
+        m_pTargetPlayer = nullptr;
         return;
     }
     
@@ -512,27 +490,19 @@ void CEnemyCam::DrawOverlay()
     if (!m_pTargetPlayer || !I::EngineClient)
         return;
         
-    // Validate entity is still in the entity list before using it
-    bool bValidEntity = false;
-    for (int i = 1; i <= 64; i++)
+    // Basic crash protection - only check for critical failures
+    try
     {
-        auto pEntity = I::ClientEntityList->GetClientEntity(i);
-        if (pEntity == m_pTargetPlayer)
-        {
-            bValidEntity = true;
-            break;
-        }
+        // Test if we can safely access entindex without crashing
+        int entIndex = m_pTargetPlayer->entindex();
+        if (entIndex <= 0 || entIndex > 64)
+            return;
     }
-    
-    if (!bValidEntity)
+    catch (...)
     {
-        m_pTargetPlayer = nullptr;
+        // If we can't safely access the entity, skip drawing
         return;
     }
-    
-    // Additional safety checks
-    if (m_pTargetPlayer->IsDormant() || !m_pTargetPlayer->IsAlive())
-        return;
         
     PlayerInfo_t pi{};
     if (I::EngineClient->GetPlayerInfo(m_pTargetPlayer->entindex(), &pi))
@@ -543,19 +513,8 @@ void CEnemyCam::DrawOverlay()
         
         if (m_pTargetMedic)
         {
-            // Validate medic entity is still in the entity list
-            bool bValidMedic = false;
-            for (int i = 1; i <= 64; i++)
-            {
-                auto pEntity = I::ClientEntityList->GetClientEntity(i);
-                if (pEntity == m_pTargetMedic)
-                {
-                    bValidMedic = true;
-                    break;
-                }
-            }
-            
-            if (bValidMedic && !m_pTargetMedic->IsDormant() && m_pTargetMedic->IsAlive())
+            // Basic crash protection for medic info
+            try
             {
                 PlayerInfo_t medicPi{};
                 if (I::EngineClient->GetPlayerInfo(m_pTargetMedic->entindex(), &medicPi))
@@ -563,9 +522,9 @@ void CEnemyCam::DrawOverlay()
                     title += " + Medic: " + std::string(medicPi.name);
                 }
             }
-            else
+            catch (...)
             {
-                m_pTargetMedic = nullptr;
+                // If medic info fails, just skip it (don't clear the pointer)
             }
         }
         
