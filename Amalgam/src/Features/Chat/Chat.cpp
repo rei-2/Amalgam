@@ -378,34 +378,18 @@ void CChat::DisplayInGameMessage(const std::string& sender, const std::string& c
     // Print regular Matrix messages to TF2's console with color
     if (I::CVar)
     {
-        ImColor tColor = { 0, 255, 255, 255 }; // Cyan color for Matrix messages
+        Color_t tColor = { 0, 255, 255, 255 }; // Cyan color for Matrix messages
         I::CVar->ConsoleColorPrintf(tColor, "[Matrix] %s: %s\n", sender.c_str(), content.c_str());
     }
     
-    // EXPERIMENTAL: Try in-game chat display with minimal checks
-    // If this crashes, we'll disable it entirely and rely on console
-    static bool chatDisplayEnabled = true;
-    if (chatDisplayEnabled)
-    {
-        try
-        {
-            // Minimal safety checks
-            if (I::EngineClient && I::EngineClient->IsInGame() &&
-                I::ClientModeShared && I::ClientModeShared->m_pChatElement &&
-                !sender.empty() && !content.empty())
-            {
-                // Simple message without fancy formatting to reduce crash risk
-                I::ClientModeShared->m_pChatElement->ChatPrintf(0, "[Matrix] %s: %s", 
-                    sender.c_str(), content.c_str());
-            }
-        }
-        catch (...)
-        {
-            // If chat display crashes, disable it permanently
-            chatDisplayEnabled = false;
-            printf("[Matrix] Disabling in-game chat display due to crash - using console only\n");
-        }
-    }
+    // DISABLED: In-game chat display for Matrix messages due to crashes
+    // Matrix messages will only appear in console to prevent game crashes
+    // This is safer and more reliable than trying to use TF2's chat system
+    // which can be unstable when accessed from external code
+    
+    // Note: Users can still see Matrix messages in the console (cyan color)
+    // If in-game display is needed in the future, it should be implemented
+    // with more robust error handling and interface validation
 }
 
 void CChat::HandleMatrixEvents()
@@ -1002,6 +986,29 @@ bool CChat::HttpSendMessage(const std::string& message)
         if (IsEncryptionEnabled()) {
             QueueMessage("Matrix Debug", "Encrypting message with Megolm");
             
+            // Share session key with other users in the room
+            // TODO: Get actual user list from room members - for now sharing with common test users
+            std::vector<std::string> user_ids = {
+                Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value,  // ourselves
+                "@async_123:" + Vars::Chat::Server.Value,   // other test users
+                "@i56i56ii56yu45:" + Vars::Chat::Server.Value,
+                "@y345y453yy:" + Vars::Chat::Server.Value,
+                "@y4u57yhh:" + Vars::Chat::Server.Value
+            };
+            
+            // Claim one-time keys for proper Olm session establishment
+            HttpClaimKeys(user_ids);
+            
+            // Share the session key with the users
+            m_pCrypto->ShareSessionKey(m_sRoomId, user_ids);
+            
+            // Send any pending room keys via to-device messages
+            auto pendingKeys = m_pCrypto->GetPendingRoomKeys();
+            for (const auto& key : pendingKeys) {
+                HttpSendToDevice("m.room.encrypted", key.user_id, key.device_id, key.encrypted_content);
+            }
+            m_pCrypto->ClearPendingRoomKeys();
+            
             // Encrypt the message content
             std::string encryptedContent = m_pCrypto->EncryptMessage(m_sRoomId, eventType, msgData.dump());
             if (!encryptedContent.empty()) {
@@ -1012,8 +1019,6 @@ bool CChat::HttpSendMessage(const std::string& message)
                 QueueMessage("Matrix Debug", "Encryption failed, sending unencrypted");
                 content = msgData.dump();
             }
-        } else {
-            content = msgData.dump();
         }
         
         std::string txnId = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1032,6 +1037,11 @@ bool CChat::HttpSendMessage(const std::string& message)
         if (response.status_code == 200)
         {
             QueueMessage("Matrix Debug", "Message sent successfully!");
+            
+            // Show our own message in console immediately
+            std::string ourUserId = Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value;
+            ProcessIncomingMessage(ourUserId, message);
+            
             return true;
         }
         else
@@ -1115,10 +1125,16 @@ void CChat::HttpSync()
                             if (event.contains("type") && event["type"] == "m.room.encrypted" && IsEncryptionEnabled())
                             {
                                 QueueMessage("Matrix Debug", "Encrypted message received from " + sender);
-                                content = m_pCrypto->DecryptMessage(roomId, event.dump());
-                                if (!content.empty()) {
-                                    QueueMessage("Matrix Debug", "Decrypted message: " + content);
-                                    processed = true;
+                                if (event.contains("content")) {
+                                    content = m_pCrypto->DecryptMessage(roomId, event["content"].dump());
+                                    if (!content.empty() && !content.starts_with("[")) {
+                                        QueueMessage("Matrix Debug", "Decrypted message: " + content);
+                                        processed = true;
+                                    } else {
+                                        QueueMessage("Matrix Debug", "Decryption failed: " + content);
+                                    }
+                                } else {
+                                    QueueMessage("Matrix Debug", "Encrypted event missing content");
                                 }
                             }
                             // Handle unencrypted text messages
@@ -1135,6 +1151,26 @@ void CChat::HttpSync()
                                 ProcessIncomingMessage(sender, content);
                             }
                         }
+                    }
+                }
+            }
+            
+            // Process to-device events for encryption
+            if (json.contains("to_device") && json["to_device"].contains("events") && m_pCrypto)
+            {
+                for (const auto& event : json["to_device"]["events"])
+                {
+                    if (event.contains("type") && event["type"] == "m.room_key")
+                    {
+                        // Process room key events
+                        m_pCrypto->ProcessKeyShareEvent(event.dump());
+                        QueueMessage("Matrix Debug", "Processed room key event");
+                    }
+                    else if (event.contains("type") && event["type"] == "m.room.encrypted")
+                    {
+                        // Decrypt and process encrypted to-device messages
+                        // This would contain room keys encrypted with Olm
+                        QueueMessage("Matrix Debug", "Received encrypted to-device message");
                     }
                 }
             }
@@ -1167,6 +1203,273 @@ void CChat::HttpSync()
     }
 }
 
+bool CChat::HttpUploadDeviceKeys()
+{
+    if (!m_pCrypto) {
+        QueueMessage("Matrix Debug", "Cannot upload device keys - encryption not initialized");
+        return false;
+    }
+    
+    try {
+        std::string deviceKeysJson = m_pCrypto->GetDeviceKeys();
+        if (deviceKeysJson.empty()) {
+            QueueMessage("Matrix Debug", "Failed to get device keys");
+            return false;
+        }
+        
+        nlohmann::json uploadData = {
+            {"device_keys", nlohmann::json::parse(deviceKeysJson)}
+        };
+        
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken},
+            {"Content-Type", "application/json"}
+        };
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/keys/upload";
+        auto response = HttpClient::Post(url, uploadData.dump(), headers);
+        
+        if (response.status_code == 200) {
+            QueueMessage("Matrix Debug", "Device keys uploaded successfully");
+            return true;
+        } else {
+            QueueMessage("Matrix Debug", "Failed to upload device keys: " + std::to_string(response.status_code) + " - " + response.text);
+            return false;
+        }
+    } catch (const std::exception& e) {
+        QueueMessage("Matrix Debug", "Device key upload error: " + std::string(e.what()));
+        return false;
+    }
+}
+
+bool CChat::HttpDownloadDeviceKeys(const std::string& user_id)
+{
+    if (!m_pCrypto) {
+        return false;
+    }
+    
+    try {
+        nlohmann::json queryData = {
+            {"device_keys", {}}
+        };
+        
+        // If user_id is specified, query just that user, otherwise query all users in the room
+        if (!user_id.empty()) {
+            queryData["device_keys"][user_id] = nlohmann::json::array();
+        } else {
+            // Get users in the current room from last sync
+            // For now, we'll just query our own user_id as a fallback
+            if (m_pCrypto) {
+                std::string our_user_id = m_pCrypto->GetDeviceId(); // This should be user_id, need to fix
+                // TODO: Store user_id properly in crypto class
+            }
+        }
+        
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken},
+            {"Content-Type", "application/json"}
+        };
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/keys/query";
+        auto response = HttpClient::Post(url, queryData.dump(), headers);
+        
+        if (response.status_code == 200) {
+            auto responseJson = nlohmann::json::parse(response.text);
+            if (responseJson.contains("device_keys")) {
+                // Process the device keys
+                for (auto& [userId, devices] : responseJson["device_keys"].items()) {
+                    std::map<std::string, MatrixDevice> userDevices;
+                    for (auto& [deviceId, deviceInfo] : devices.items()) {
+                        MatrixDevice device;
+                        device.device_id = deviceId;
+                        device.user_id = userId;
+                        
+                        if (deviceInfo.contains("keys")) {
+                            for (auto& [keyId, keyValue] : deviceInfo["keys"].items()) {
+                                if (keyId.find("curve25519:") == 0) {
+                                    device.curve25519_key = keyValue;
+                                } else if (keyId.find("ed25519:") == 0) {
+                                    device.ed25519_key = keyValue;
+                                }
+                            }
+                        }
+                        
+                        userDevices[deviceId] = device;
+                    }
+                    
+                    m_pCrypto->UpdateUserDevices(userId, userDevices);
+                }
+                QueueMessage("Matrix Debug", "Downloaded device keys for " + std::to_string(responseJson["device_keys"].size()) + " users");
+                return true;
+            }
+        } else {
+            QueueMessage("Matrix Debug", "Failed to download device keys: " + std::to_string(response.status_code));
+        }
+        
+        return false;
+    } catch (const std::exception& e) {
+        QueueMessage("Matrix Debug", "Device key download error: " + std::string(e.what()));
+        return false;
+    }
+}
+
+bool CChat::HttpSendToDevice(const std::string& event_type, const std::string& target_user, const std::string& target_device, const std::string& content)
+{
+    try {
+        nlohmann::json messages = {
+            {target_user, {
+                {target_device, nlohmann::json::parse(content)}
+            }}
+        };
+        
+        nlohmann::json sendData = {
+            {"messages", messages}
+        };
+        
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken},
+            {"Content-Type", "application/json"}
+        };
+        
+        // Generate transaction ID
+        static int txnCounter = 0;
+        std::string txnId = "txn" + std::to_string(++txnCounter);
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/sendToDevice/" + event_type + "/" + txnId;
+        auto response = HttpClient::Put(url, sendData.dump(), headers);
+        
+        if (response.status_code == 200) {
+            QueueMessage("Matrix Debug", "To-device message sent: " + event_type);
+            return true;
+        } else {
+            QueueMessage("Matrix Debug", "Failed to send to-device message: " + std::to_string(response.status_code));
+            return false;
+        }
+    } catch (const std::exception& e) {
+        QueueMessage("Matrix Debug", "To-device send error: " + std::string(e.what()));
+        return false;
+    }
+}
+
+bool CChat::HttpUploadOneTimeKeys()
+{
+    if (!m_pCrypto) {
+        return false;
+    }
+    
+    try {
+        std::string oneTimeKeysJson = m_pCrypto->GetOneTimeKeys();
+        if (oneTimeKeysJson.empty()) {
+            QueueMessage("Matrix Debug", "No one-time keys to upload");
+            return true;
+        }
+        
+        nlohmann::json uploadData = {
+            {"one_time_keys", nlohmann::json::parse(oneTimeKeysJson)}
+        };
+        
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken},
+            {"Content-Type", "application/json"}
+        };
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/keys/upload";
+        auto response = HttpClient::Post(url, uploadData.dump(), headers);
+        
+        if (response.status_code == 200) {
+            m_pCrypto->MarkOneTimeKeysAsPublished();
+            QueueMessage("Matrix Debug", "One-time keys uploaded successfully");
+            return true;
+        } else {
+            QueueMessage("Matrix Debug", "Failed to upload one-time keys: " + std::to_string(response.status_code));
+            return false;
+        }
+    } catch (const std::exception& e) {
+        QueueMessage("Matrix Debug", "One-time key upload error: " + std::string(e.what()));
+        return false;
+    }
+}
+
+bool CChat::HttpGetRoomMembers()
+{
+    try {
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken}
+        };
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/rooms/" + m_sRoomId + "/members";
+        auto response = HttpClient::Get(url, headers);
+        
+        if (response.status_code == 200) {
+            auto responseJson = nlohmann::json::parse(response.text);
+            if (responseJson.contains("chunk")) {
+                QueueMessage("Matrix Debug", "Found " + std::to_string(responseJson["chunk"].size()) + " room members");
+                // TODO: Store room members for key sharing
+                return true;
+            }
+        } else {
+            QueueMessage("Matrix Debug", "Failed to get room members: " + std::to_string(response.status_code));
+        }
+        
+        return false;
+    } catch (const std::exception& e) {
+        QueueMessage("Matrix Debug", "Room members error: " + std::string(e.what()));
+        return false;
+    }
+}
+
+bool CChat::HttpClaimKeys(const std::vector<std::string>& user_ids)
+{
+    try {
+        nlohmann::json claimData = {
+            {"one_time_keys", {}}
+        };
+        
+        // Claim one-time keys for each user's devices
+        for (const auto& user_id : user_ids) {
+            claimData["one_time_keys"][user_id] = {
+                {"*", "curve25519"}  // Claim curve25519 keys from any device
+            };
+        }
+        
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken},
+            {"Content-Type", "application/json"}
+        };
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/keys/claim";
+        auto response = HttpClient::Post(url, claimData.dump(), headers);
+        
+        if (response.status_code == 200) {
+            auto responseJson = nlohmann::json::parse(response.text);
+            if (responseJson.contains("one_time_keys")) {
+                QueueMessage("Matrix Debug", "Claimed one-time keys for " + std::to_string(responseJson["one_time_keys"].size()) + " users");
+                
+                // Process claimed keys and store them for session creation
+                for (auto& [userId, devices] : responseJson["one_time_keys"].items()) {
+                    for (auto& [deviceId, keys] : devices.items()) {
+                        for (auto& [keyId, keyValue] : keys.items()) {
+                            // Find the device's curve25519 key to map to this one-time key
+                            // For now, we'll use a simplified mapping
+                            std::string device_curve_key = "device_" + userId + "_" + deviceId;
+                            m_pCrypto->StoreClaimedKey(device_curve_key, keyValue);
+                            QueueMessage("Matrix Debug", "Stored claimed key " + keyId + " from " + userId + ":" + deviceId);
+                        }
+                    }
+                }
+                return true;
+            }
+        } else {
+            QueueMessage("Matrix Debug", "Failed to claim keys: " + std::to_string(response.status_code));
+        }
+        
+        return false;
+    } catch (const std::exception& e) {
+        QueueMessage("Matrix Debug", "Key claim error: " + std::string(e.what()));
+        return false;
+    }
+}
+
 bool CChat::InitializeEncryption()
 {
     if (!m_pCrypto) {
@@ -1178,6 +1481,27 @@ bool CChat::InitializeEncryption()
     if (success) {
         m_bEncryptionEnabled = true;
         QueueMessage("Matrix", "Encryption initialized for device: " + m_pCrypto->GetDeviceId());
+        
+        // Upload our device keys to the server
+        if (HttpUploadDeviceKeys()) {
+            QueueMessage("Matrix Debug", "Device keys uploaded successfully");
+        } else {
+            QueueMessage("Matrix Debug", "Failed to upload device keys");
+        }
+        
+        // Upload one-time keys for session establishment
+        if (HttpUploadOneTimeKeys()) {
+            QueueMessage("Matrix Debug", "One-time keys uploaded successfully");
+        } else {
+            QueueMessage("Matrix Debug", "Failed to upload one-time keys");
+        }
+        
+        // Download device keys for other users in the room
+        HttpDownloadDeviceKeys();
+        
+        // Get room members for key sharing
+        HttpGetRoomMembers();
+        
     } else {
         QueueMessage("Matrix", "Failed to initialize encryption - using unencrypted mode");
     }

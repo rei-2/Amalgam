@@ -38,6 +38,14 @@ struct MegolmSession
     ~MegolmSession();
 };
 
+// Pending room key for to-device sending
+struct PendingRoomKey
+{
+    std::string user_id;
+    std::string device_id;
+    std::string encrypted_content;
+};
+
 class MatrixCrypto
 {
 private:
@@ -58,11 +66,21 @@ private:
     std::map<std::string, OlmSession*> m_OlmSessions; // device_key -> session
     std::mutex m_OlmSessionsMutex;
     
+    // Pending room keys to be sent via to-device messages
+    std::vector<PendingRoomKey> m_PendingRoomKeys;
+    std::mutex m_PendingKeysMutex;
+    
+    // Claimed one-time keys for session creation
+    std::map<std::string, std::string> m_ClaimedOneTimeKeys; // device_key -> one_time_key
+    std::mutex m_ClaimedKeysMutex;
+    
     // Helper functions
     bool InitializeOlmAccount();
     std::string GenerateDeviceId();
     bool CreateMegolmSession(const std::string& room_id);
     bool ShareRoomKey(const std::string& room_id, const std::vector<MatrixDevice>& devices);
+    bool CreateOlmSessionIfNeeded(const MatrixDevice& device);
+    std::string EncryptForDevice(const MatrixDevice& device, const std::string& content);
     
 public:
     MatrixCrypto();
@@ -75,7 +93,9 @@ public:
     // Device management
     std::string GetDeviceId() const { return m_sDeviceId; }
     std::string GetDeviceKeys(); // Returns JSON with our device keys
+    std::string GetOneTimeKeys(); // Returns JSON with one-time keys
     bool UpdateUserDevices(const std::string& user_id, const std::map<std::string, MatrixDevice>& devices);
+    void MarkOneTimeKeysAsPublished();
     
     // Encryption/Decryption
     std::string EncryptMessage(const std::string& room_id, const std::string& event_type, const std::string& content);
@@ -92,4 +112,11 @@ public:
     // Utilities
     bool ShouldRotateSession(const std::string& room_id);
     void CleanupOldSessions();
+    
+    // Pending room key management
+    std::vector<PendingRoomKey> GetPendingRoomKeys();
+    void ClearPendingRoomKeys();
+    
+    // One-time key management
+    void StoreClaimedKey(const std::string& device_key, const std::string& one_time_key);
 };

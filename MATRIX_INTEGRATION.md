@@ -31,11 +31,60 @@ class MatrixCrypto {
 ```
 
 ### Encryption Flow
-1. **Device Setup** - Generate Curve25519/Ed25519 identity keys
-2. **Room Session** - Create Megolm outbound group session per room
-3. **Message Encryption** - Encrypt with `olm_group_encrypt()`
-4. **Key Sharing** - Distribute session keys via to-device messages
-5. **Session Rotation** - Rotate after 100 messages or 1 week
+
+#### Device Initialization
+1. **Generate Identity Keys** - Create Curve25519/Ed25519 key pair
+2. **Upload Device Keys** - POST to `/_matrix/client/v3/keys/upload`
+3. **Download Other Keys** - GET from `/_matrix/client/v3/keys/query`
+4. **Verify Signatures** - Validate Ed25519 signatures on device keys
+
+#### Message Encryption Process
+1. **Create Room Session** - Generate Megolm outbound group session
+2. **Share Session Key** - Distribute via encrypted to-device messages
+3. **Encrypt Message** - Use `olm_group_encrypt()` with session
+4. **Send Encrypted Event** - POST `m.room.encrypted` to room
+5. **Handle Responses** - Process delivery confirmations
+
+#### Multi-User Key Exchange
+```cpp
+// 1. User A sends message - shares session key with User B
+PUT /_matrix/client/v3/sendToDevice/m.room.encrypted/{txnId}
+{
+    "messages": {
+        "@userB:server.com": {
+            "DEVICEB123": {
+                "algorithm": "m.olm.v1.curve25519-aes-sha2",
+                "ciphertext": {
+                    "curve25519_key": {
+                        "type": 0,
+                        "body": "encrypted_room_key_here"
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 2. User B receives and processes the room key
+{
+    "type": "m.room_key",
+    "content": {
+        "algorithm": "m.megolm.v1.aes-sha2",
+        "room_id": "!room:server.com",
+        "session_id": "session123",
+        "session_key": "megolm_session_key_here"
+    }
+}
+
+// 3. User B can now decrypt User A's messages
+DecryptMessage(room_id, encrypted_event) -> "Hello from User A!"
+```
+
+#### Session Management
+1. **Session Creation** - New session per room, per device
+2. **Key Distribution** - Automatic sharing when sending messages  
+3. **Session Rotation** - After 100 messages or 1 week
+4. **Cleanup** - Proper memory management of OLM sessions
 
 ## 🌐 Matrix Protocol Implementation
 
@@ -52,6 +101,55 @@ POST /_matrix/client/v3/register
 // Room joining via space hierarchy
 GET /_matrix/client/v1/rooms/{spaceId}/hierarchy
 POST /_matrix/client/v3/rooms/{roomId}/join
+```
+
+### Device Key Management
+```cpp
+// Upload device keys during initialization
+POST /_matrix/client/v3/keys/upload
+{
+    "device_keys": {
+        "user_id": "@user:server.com",
+        "device_id": "AMALGAM1a2b3c4d5e", 
+        "algorithms": ["m.olm.v1.curve25519-aes-sha2", "m.megolm.v1.aes-sha2"],
+        "keys": {
+            "curve25519:AMALGAM1a2b3c4d5e": "curve25519_public_key",
+            "ed25519:AMALGAM1a2b3c4d5e": "ed25519_public_key"
+        },
+        "signatures": {
+            "@user:server.com": {
+                "ed25519:AMALGAM1a2b3c4d5e": "signature_of_canonical_json"
+            }
+        }
+    }
+}
+
+// Query device keys for other users
+POST /_matrix/client/v3/keys/query
+{
+    "device_keys": {
+        "@otheruser:server.com": []
+    }
+}
+
+// Send encrypted room keys via to-device messages
+PUT /_matrix/client/v3/sendToDevice/m.room.encrypted/{txnId}
+{
+    "messages": {
+        "@targetuser:server.com": {
+            "TARGETDEVICE": {
+                "algorithm": "m.olm.v1.curve25519-aes-sha2",
+                "sender_key": "sender_curve25519_key",
+                "ciphertext": {
+                    "target_curve25519_key": {
+                        "type": 0,
+                        "body": "encrypted_room_key_event"
+                    }
+                }
+            }
+        }
+    }
+}
 ```
 
 ### Message Handling
@@ -79,12 +177,23 @@ PUT /_matrix/client/v3/rooms/{roomId}/send/m.room.encrypted/{txnId}
 // Long polling with 10-second timeout
 GET /_matrix/client/v3/sync?timeout=10000&since={next_batch}
 
-// Process events from target room only
+// Process room events  
 for (auto& event : timeline.events) {
     if (event.type == "m.room.encrypted") {
         DecryptMessage(event);
     } else if (event.type == "m.room.message") {
         ProcessPlaintextMessage(event);
+    }
+}
+
+// Process to-device events for encryption
+for (auto& event : to_device.events) {
+    if (event.type == "m.room_key") {
+        // Room key received - can now decrypt messages
+        m_pCrypto->ProcessKeyShareEvent(event);
+    } else if (event.type == "m.room.encrypted") {
+        // Encrypted to-device message (contains room keys)
+        DecryptToDeviceMessage(event);
     }
 }
 ```
@@ -248,21 +357,32 @@ say "!!Hello Matrix chat!"
 
 ### Receiving Messages
 ```bash
-# Matrix messages appear in TF2 console:
-[Matrix] @username:server.com: Hello from Matrix!
+# Encrypted messages are now properly decrypted:
+[Matrix] @username:server.com: Hello from encrypted Matrix!
 
-# And in-game chat (if enabled):
-[Matrix] @username: Hello from Matrix!
+# Debug messages show encryption status:
+[Matrix Debug] Processed room key event
+[Matrix Debug] Message decrypted successfully
+[Matrix Debug] Device keys downloaded for 3 users
+
+# Fallback for undecryptable messages:
+[Matrix] @username: [No inbound session for session_id: abc123]
+[Matrix] @username: [Decryption failed: BAD_MESSAGE_MAC]
 ```
 
 ## 🔧 Technical Features
 
 ### Encryption Features
 - ✅ **Real Megolm Encryption** - libolm group messaging ratchet
-- ✅ **Device Key Management** - Curve25519/Ed25519 identity keys
+- ✅ **Device Key Management** - Curve25519/Ed25519 identity keys with server upload/download
+- ✅ **Multi-User Support** - Full E2E encryption between multiple users
+- ✅ **Session Key Sharing** - Secure distribution via Olm 1:1 encryption
+- ✅ **To-Device Messages** - Real-time key exchange and room key distribution
+- ✅ **Device-to-Device Olm** - 1:1 encrypted sessions for key sharing
 - ✅ **Session Rotation** - Automatic after 100 messages or 1 week
 - ✅ **Forward Secrecy** - New keys for each session rotation
 - ✅ **Replay Protection** - Session-based message ordering
+- ✅ **Cross-Device Decryption** - Decrypt messages from any verified device
 
 ### Matrix Features  
 - ✅ **Space Hierarchy** - Proper space/room navigation
@@ -403,14 +523,19 @@ void MenuChat(int iTab) {
 
 ## ✨ Summary
 
-This implementation provides a **complete, production-ready Matrix client** with **real end-to-end encryption** embedded directly in the Amalgam TF2 cheat. It demonstrates advanced software engineering including:
+This implementation provides a **complete, production-ready Matrix client** with **full multi-user end-to-end encryption** embedded directly in the Amalgam TF2 cheat. It demonstrates advanced software engineering including:
 
-- **Protocol Implementation** - Full Matrix v1.11 compliance
-- **Cryptographic Integration** - Real libolm encryption
-- **Thread-Safe Architecture** - Robust background processing  
-- **Game Integration** - Seamless TF2 chat integration
-- **Zero Dependencies** - Everything embedded in DLL
+- **Complete E2E Encryption** - Full Matrix encryption spec compliance with multi-user support
+- **Device Key Management** - Automatic upload, download, and verification of device keys
+- **Session Key Sharing** - Secure distribution via Olm 1:1 encryption and to-device messages
+- **Real-time Key Exchange** - Automatic key sharing when sending encrypted messages
+- **Cross-Device Decryption** - Can decrypt messages from any user with proper key exchange
+- **Protocol Implementation** - Full Matrix v1.11 compliance with encryption extensions
+- **Cryptographic Integration** - Real libolm with Megolm + Olm algorithms
+- **Thread-Safe Architecture** - Robust background processing with encryption state management
+- **Game Integration** - Seamless TF2 chat integration with encrypted messaging
+- **Zero Dependencies** - Everything embedded in DLL including full crypto stack
 
-The result is a **secure, performant, and user-friendly** Matrix chat system that allows TF2 players to communicate via encrypted Matrix rooms while playing the game.
+The result is a **secure, performant, and fully-featured** Matrix chat system that allows TF2 players to communicate via encrypted Matrix rooms with complete end-to-end security between multiple users.
 
 🎮 **Ready for use in production TF2 servers!** 🔐

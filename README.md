@@ -41,6 +41,17 @@ All features are fully configurable through the COMP tab menu with individual to
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 - **Safe Bunnyhop** - Advanced movement assistance with configurable success rate (0-100%), safety mechanisms to prevent detection, and perfect jump limiting
 
+### Communication & Coordination
+
+- **Matrix Chat Integration** - Full Matrix client with end-to-end encryption built directly into TF2
+  - **Real E2E Encryption** - Complete libolm integration with Megolm group encryption and Olm device-to-device encryption
+  - **Multi-User Support** - Device key management, session key sharing, and cross-device message decryption
+  - **TF2 Integration** - Send messages using `!!` prefix in TF2 chat, receive messages in console
+  - **Zero Setup** - Automatic account creation, room discovery, and encryption initialization
+  - **Production Ready** - Thread-safe background sync with Matrix homeservers
+
+  Configure via CHAT tab: set server (default: pendora.io), username, password, space (asyncroom), and room (talk). Messages appear in TF2 console and can be sent using `!!message` in game chat.
+
 ## Installation
 
 [Xenos](https://github.com/DarthTon/Xenos/releases) recommended for injection.

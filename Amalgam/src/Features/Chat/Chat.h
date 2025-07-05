@@ -65,6 +65,14 @@ private:
     bool HttpSendMessage(const std::string& message);
     void HttpSync();
     
+    // Device and key management
+    bool HttpUploadDeviceKeys();
+    bool HttpDownloadDeviceKeys(const std::string& user_id = "");
+    bool HttpSendToDevice(const std::string& event_type, const std::string& target_user, const std::string& target_device, const std::string& content);
+    bool HttpUploadOneTimeKeys();
+    bool HttpClaimKeys(const std::vector<std::string>& user_ids);
+    bool HttpGetRoomMembers();
+    
 public:
     CChat();
     ~CChat();
