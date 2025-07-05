@@ -17,6 +17,17 @@ jobs:
   - name: Add MSBuild to PATH
     uses: microsoft/setup-msbuild@v2
 
+  - name: Setup vcpkg
+    uses: microsoft/setup-vcpkg@v1
+    with:
+      vcpkg-root: vcpkg
+
+  - name: Install vcpkg dependencies
+    working-directory: ${{ env.GITHUB_WORKSPACE }}
+    run: |
+      vcpkg\vcpkg.exe install cpr:x64-windows-static-md
+      vcpkg\vcpkg.exe install nlohmann-json:x64-windows-static-md
+
   - name: Restore NuGet packages
     working-directory: ${{ env.GITHUB_WORKSPACE }}
     run: nuget restore

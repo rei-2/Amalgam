@@ -649,7 +649,7 @@
       </SupportJustMyCode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -683,7 +683,7 @@
       </SupportJustMyCode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -717,7 +717,7 @@
       </SupportJustMyCode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -751,7 +751,7 @@
       </SupportJustMyCode>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -782,7 +782,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -813,7 +813,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -844,7 +844,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -875,7 +875,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -922,6 +922,31 @@
     <ClCompile Include="src\Features\Commands\Commands.cpp" />
     <ClCompile Include="src\Features\Chat\Chat.cpp" />
     <ClCompile Include="src\Features\Chat\HttpClient.cpp" />
+    <ClCompile Include="src\Features\Chat\MatrixCrypto.cpp" />
+    <!-- libolm source files -->
+    <ClCompile Include="src\External\libolm\libolm\src\account.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\base64.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\cipher.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\crypto.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\ed25519.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\error.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\inbound_group_session.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\megolm.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\memory.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\message.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\olm.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\outbound_group_session.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\pickle.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\pickle_encoding.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\pk.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\ratchet.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\sas.c" />
+    <ClCompile Include="src\External\libolm\libolm\src\session.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\utility.cpp" />
+    <!-- libolm crypto dependencies -->
+    <ClCompile Include="src\External\libolm\libolm\lib\crypto-algorithms\aes.c" />
+    <ClCompile Include="src\External\libolm\libolm\lib\crypto-algorithms\sha256.c" />
+    <ClCompile Include="src\External\libolm\libolm\lib\curve25519-donna\curve25519-donna.c" />
     <ClCompile Include="src\Features\Binds\Binds.cpp" />
     <ClCompile Include="src\Features\Configs\Configs.cpp" />
     <ClCompile Include="src\Features\CritHack\CritHack.cpp" />
@@ -1237,6 +1262,7 @@
     <ClInclude Include="src\Features\CheaterDetection\CheaterDetection.h" />
     <ClInclude Include="src\Features\Chat\Chat.h" />
     <ClInclude Include="src\Features\Chat\HttpClient.h" />
+    <ClInclude Include="src\Features\Chat\MatrixCrypto.h" />
     <ClInclude Include="src\Features\CritHack\CritHack.h" />
     <ClInclude Include="src\Features\EnginePrediction\EnginePrediction.h" />
     <ClInclude Include="src\Features\ImGui\Fonts\CascadiaMono\CascadiaMono.h" />

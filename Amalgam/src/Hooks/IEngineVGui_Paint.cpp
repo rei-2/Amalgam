@@ -23,6 +23,7 @@
 #include "../Features/Visuals/FocusFire/FocusFire.h"
 #include "../Features/Visuals/PylonESP/PylonESP.h"
 #include "../Features/Visuals/EnemyCam/EnemyCam.h"
+#include "../Features/Chat/Chat.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
@@ -84,5 +85,8 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::Notifications.Draw();
 		}
 		H::Draw.End();
+		
+		// Process queued Matrix chat messages safely from main thread
+		F::Chat.ProcessQueuedMessages();
 	}
 }
