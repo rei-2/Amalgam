@@ -1,6 +1,7 @@
 #include "../SDK/SDK.h"
 
 #include "../Features/Commands/Commands.h"
+#include "../Features/Chat/Chat.h"
 #include <functional>
 #include <regex>
 
@@ -235,6 +236,13 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 		{
 			sCmdString = args.m_pArgSBuffer;
 			sCmdString = sCmdString.replace(0, args.m_nArgv0Size, "");
+
+			// Check for Matrix chat prefix (!!) and handle it
+			if (F::Chat.ProcessGameChatMessage(sCmdString))
+			{
+				// Message was processed by Matrix chat, block it from game chat
+				return;
+			}
 
 			for (auto& [sFind, sReplace] : vStatic)
 			{

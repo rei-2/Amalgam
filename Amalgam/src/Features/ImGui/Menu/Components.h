@@ -18,6 +18,7 @@ Enum(FSlider, None = 0, Left = 1 << 0, Right = 1 << 1, Clamp = 1 << 2, Min = 1 <
 Enum(FDropdown, None = 0, Left = 1 << 0, Right = 1 << 1, Multi = 1 << 2, Modifiable = 1 << 3);
 Enum(FSDropdown, None = 0, Custom = 1 << 2, AutoUpdate = 1 << 3);
 Enum(FColorPicker, None = 0, Left = 1 << 0, Right = 1 << 1, Full = 1 << 2, SameLine = 1 << 3, Tooltip = 1 << 4, NoTooltip = 1 << 5, RetainPosition = 1 << 6, HoverContents = 1 << 7, RemoveVisuals = 1 << 8);
+Enum(FInputText, None = 0, Left = 1 << 0, Right = 1 << 1);
 
 Enum(Widget, Invalid, FToggle, FSlider, FISlider = FSlider, FFSlider, FIRSlider, FFRSlider, FDropdown, FSDropdown, FMDropdown, FColorPicker, FGColorPicker, FKeybind);
 
@@ -542,6 +543,23 @@ namespace ImGui
 		PopStyleVar();
 
 		return bReturn;
+	}
+	
+	inline bool FInputText(const char* sLabel, std::string& sText, int iFTextFlags = FInputTextEnum::None, int iFlags = ImGuiInputTextFlags_None, ImGuiInputTextCallback fCallback = nullptr)
+	{
+		float flWidth = H::Draw.Scale(150);
+		
+		// Handle alignment
+		if (iFTextFlags & FInputTextEnum::Right)
+		{
+			SameLine(GetContentRegionAvail().x - flWidth);
+		}
+		else if (iFTextFlags & FInputTextEnum::Left)
+		{
+			// Default left alignment, no special handling needed
+		}
+		
+		return FInputText(sLabel, sText, flWidth, iFlags, fCallback);
 	}
 
 	inline void IconImage(const char* sIcon, ImVec4 tColor = { 1, 1, 1, -1 })

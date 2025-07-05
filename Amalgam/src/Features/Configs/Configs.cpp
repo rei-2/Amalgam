@@ -270,7 +270,8 @@ CConfigs::CConfigs()
 #define SaveMain(type, tree) if (IsType(type)) SaveCond(type, tree)
 #define LoadCond(type, tree)\
 {\
-	pVar->As<type>()->Map = { { DEFAULT_BIND, pVar->As<type>()->Default } };\
+	auto currentValue = pVar->As<type>()->Map.find(DEFAULT_BIND) != pVar->As<type>()->Map.end() ? pVar->As<type>()->Map[DEFAULT_BIND] : pVar->As<type>()->Default;\
+	pVar->As<type>()->Map = { { DEFAULT_BIND, currentValue } };\
 	if (const auto mapTree = tree.get_child_optional(pVar->m_sName))\
 	{\
 		for (auto& it : *mapTree)\

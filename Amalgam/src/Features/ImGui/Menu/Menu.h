@@ -20,6 +20,7 @@ class CMenu
 	void MenuVisuals(int iTab);
 	void MenuMisc(int iTab);
 	void MenuComp(int iTab);
+	void MenuChat(int iTab);
 	void MenuLogs(int iTab);
 	void MenuSettings(int iTab);
 	void MenuSearch(std::string sSearch);

@@ -1374,4 +1374,14 @@ namespace Vars
 		CVar(VGuiMenuBuilder_AddMenuItem, "VGuiMenuBuilder_AddMenuItem", true, NOSAVE | DEBUGVAR);
 	NAMESPACE_END(Hooks);
 #endif
+
+	NAMESPACE_BEGIN(Chat)
+		CVar(Server, "Matrix server", std::string("pendora.io"), NOSAVE);
+		CVar(Username, "Username", std::string(""), NOSAVE);
+		CVar(Password, "Password", std::string(""), NOSAVE);
+		CVar(Space, "Space/Community", std::string("asyncroom"), NOSAVE);
+		CVar(Room, "Room", std::string("talk"), NOSAVE);
+		CVar(AutoConnect, "Auto connect on startup", false);
+		CVar(ShowTimestamps, "Show timestamps", true);
+	NAMESPACE_END(Chat);
 }

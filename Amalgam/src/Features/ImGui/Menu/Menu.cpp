@@ -10,6 +10,7 @@
 #include "../../Visuals/Visuals.h"
 #include "../../Misc/Misc.h"
 #include "../../Output/Output.h"
+#include "../../Chat/Chat.h"
 
 void CMenu::DrawMenu()
 {
@@ -69,7 +70,7 @@ void CMenu::DrawMenu()
 			PopStyleColor();
 		}
 
-		static int iTab = 0, iAimbotTab = 0, iVisualsTab = 0, iMiscTab = 0, iCompTab = 0, iLogsTab = 0, iSettingsTab = 0;
+		static int iTab = 0, iAimbotTab = 0, iVisualsTab = 0, iMiscTab = 0, iCompTab = 0, iChatTab = 0, iLogsTab = 0, iSettingsTab = 0;
 		PushFont(F::Render.FontBold);
 		FTabs(
 			{
@@ -77,14 +78,15 @@ void CMenu::DrawMenu()
 				{ "VISUALS", "ESP", "CHAMS", "GLOW", "MISC##", "RADAR", "MENU" },
 				{ "MISC" },
 				{ "COMP" },
+				{ "CHAT" },
 				{ "LOGS", "PLAYERLIST", "SETTINGS##", "OUTPUT" },
 				{ "SETTINGS", "CONFIG", "BINDS", "MATERIALS", "EXTRA" }
 			},
-			{ &iTab, &iAimbotTab, &iVisualsTab, nullptr, &iCompTab, &iLogsTab, &iSettingsTab },
+			{ &iTab, &iAimbotTab, &iVisualsTab, nullptr, &iCompTab, &iChatTab, &iLogsTab, &iSettingsTab },
 			{ H::Draw.Scale(flSideSize - 16), H::Draw.Scale(36) },
 			{ H::Draw.Scale(8), H::Draw.Scale(8) + flOffset },
 			FTabsEnum::Vertical | FTabsEnum::HorizontalIcons | FTabsEnum::AlignLeft | FTabsEnum::BarLeft,
-			{ { ICON_MD_PERSON }, { ICON_MD_VISIBILITY }, { ICON_MD_ARTICLE }, { ICON_MD_SPORTS_ESPORTS }, { ICON_MD_IMPORT_CONTACTS }, { ICON_MD_SETTINGS } },
+			{ { ICON_MD_PERSON }, { ICON_MD_VISIBILITY }, { ICON_MD_ARTICLE }, { ICON_MD_SPORTS_ESPORTS }, { ICON_MD_CHAT }, { ICON_MD_IMPORT_CONTACTS }, { ICON_MD_SETTINGS } },
 			{ H::Draw.Scale(10), 0 }, {},
 			{}, { H::Draw.Scale(22), 0 }
 		);
@@ -115,8 +117,9 @@ void CMenu::DrawMenu()
 				case 1: MenuVisuals(iVisualsTab); break;
 				case 2: MenuMisc(iMiscTab); break;
 				case 3: MenuComp(iCompTab); break;
-				case 4: MenuLogs(iLogsTab); break;
-				case 5: MenuSettings(iSettingsTab); break;
+				case 4: MenuChat(iChatTab); break;
+				case 5: MenuLogs(iLogsTab); break;
+				case 6: MenuSettings(iSettingsTab); break;
 				}
 			}
 			else
@@ -3629,6 +3632,189 @@ void CMenu::MenuSettings(int iTab)
 			}
 		} EndSection();
 #endif
+	}
+	}
+}
+
+void CMenu::MenuChat(int iTab)
+{
+	using namespace ImGui;
+
+	switch (iTab)
+	{
+	// Main Chat Tab
+	case 0:
+	{
+		if (BeginTable("ChatTable", 2))
+		{
+			/* Column 1 */
+			TableNextColumn();
+			{
+				if (Section("Matrix Connection"))
+				{
+					// Static storage for stable ImGui references
+					static std::string chatServer;
+					static std::string chatUsername;
+					static std::string chatPassword;
+					static std::string chatSpace;
+					static std::string chatRoom;
+					static bool initialized = false;
+					
+					// Initialize from saved values only once
+					if (!initialized)
+					{
+						chatServer = Vars::Chat::Server.Value;
+						chatUsername = Vars::Chat::Username.Value;
+						chatPassword = Vars::Chat::Password.Value;
+						chatSpace = Vars::Chat::Space.Value;
+						chatRoom = Vars::Chat::Room.Value;
+						initialized = true;
+					}
+					
+					// Server Configuration
+					PushFont(F::Render.FontBold);
+					TextColored(F::Render.Accent, "Server Configuration");
+					PopFont();
+					Dummy({ 0, H::Draw.Scale(4) });
+					
+					if (FInputText("Server", chatServer, FInputTextEnum::Left))
+					{
+						Vars::Chat::Server.Value = chatServer;
+						F::Chat.SaveChatSettings();
+					}
+					
+					Dummy({ 0, H::Draw.Scale(8) });
+					Divider();
+					Dummy({ 0, H::Draw.Scale(4) });
+					
+					// Account Details
+					PushFont(F::Render.FontBold);
+					TextColored(F::Render.Accent, "Account Details");
+					PopFont();
+					Dummy({ 0, H::Draw.Scale(4) });
+					
+					if (FInputText("Username", chatUsername, FInputTextEnum::Left))
+					{
+						Vars::Chat::Username.Value = chatUsername;
+						F::Chat.SaveChatSettings();
+					}
+					if (FInputText("Password", chatPassword, FInputTextEnum::Right, ImGuiInputTextFlags_Password))
+					{
+						Vars::Chat::Password.Value = chatPassword;
+						F::Chat.SaveChatSettings();
+					}
+					
+					Dummy({ 0, H::Draw.Scale(8) });
+					Divider();
+					Dummy({ 0, H::Draw.Scale(4) });
+					
+					// Room Configuration
+					PushFont(F::Render.FontBold);
+					TextColored(F::Render.Accent, "Room Configuration");
+					PopFont();
+					Dummy({ 0, H::Draw.Scale(4) });
+					
+					if (FInputText("Space/Community", chatSpace, FInputTextEnum::Left))
+					{
+						Vars::Chat::Space.Value = chatSpace;
+						F::Chat.SaveChatSettings();
+					}
+					if (FInputText("Room", chatRoom, FInputTextEnum::Right))
+					{
+						Vars::Chat::Room.Value = chatRoom;
+						F::Chat.SaveChatSettings();
+					}
+					
+					Dummy({ 0, H::Draw.Scale(12) });
+					
+					F::Chat.DrawConnectionStatus();
+					
+					Dummy({ 0, H::Draw.Scale(8) });
+					
+					// Connection Buttons
+					if (FButton("Connect to Matrix", FButtonEnum::Left) && !F::Chat.IsConnected())
+					{
+						// Ensure Vars are synced with static variables before connecting
+						Vars::Chat::Server.Value = chatServer;
+						Vars::Chat::Username.Value = chatUsername;
+						Vars::Chat::Password.Value = chatPassword;
+						Vars::Chat::Space.Value = chatSpace;
+						Vars::Chat::Room.Value = chatRoom;
+						F::Chat.SaveChatSettings();
+						F::Chat.Connect();
+					}
+					if (FButton("Disconnect", FButtonEnum::Right | FButtonEnum::SameLine) && F::Chat.IsConnected())
+						F::Chat.Disconnect();
+					
+					Dummy({ 0, H::Draw.Scale(4) });
+					
+					// Account Creation Button
+					if (FButton("Create New Account", FButtonEnum::Left) && !F::Chat.IsConnected() && !F::Chat.IsLoginInProgress())
+					{
+						// Ensure Vars are synced with static variables before creating account
+						Vars::Chat::Server.Value = chatServer;
+						Vars::Chat::Username.Value = chatUsername;
+						Vars::Chat::Password.Value = chatPassword;
+						Vars::Chat::Space.Value = chatSpace;
+						Vars::Chat::Room.Value = chatRoom;
+						F::Chat.SaveChatSettings();
+						
+						if (!chatServer.empty() && !chatUsername.empty() && !chatPassword.empty())
+						{
+							// Copy values to avoid capture-by-reference issues
+							std::string server = chatServer;
+							std::string username = chatUsername;
+							std::string password = chatPassword;
+							
+							std::thread createThread([server, username, password]() {
+								F::Chat.CreateAccount(username, password);
+							});
+							createThread.detach();
+						}
+					}
+				} EndSection();
+				
+				if (Section("Settings"))
+				{
+					FToggle(Vars::Chat::AutoConnect, FToggleEnum::Left);
+					FToggle(Vars::Chat::ShowTimestamps, FToggleEnum::Right);
+				} EndSection();
+			}
+
+			/* Column 2 */
+			TableNextColumn();
+			{
+				if (Section("Information"))
+				{
+					Text("Matrix Chat Integration");
+					Separator();
+					Text("• Messages are displayed in TF2's in-game chat");
+					Text("• Use !! prefix to send messages to Matrix");
+					Text("• Example: !!Hello everyone");
+					Text("");
+					Text("Matrix Room: #%s:%s", Vars::Chat::Room.Value.c_str(), Vars::Chat::Server.Value.c_str());
+					Text("Space: #%s:%s", Vars::Chat::Space.Value.c_str(), Vars::Chat::Server.Value.c_str());
+					
+					if (!F::Chat.IsConnected())
+					{
+						Text("");
+						PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, 0.0f, 1.0f }); // Yellow
+						Text("Configure your settings and connect to start chatting");
+						PopStyleColor();
+					}
+					else
+					{
+						Text("");
+						PushStyleColor(ImGuiCol_Text, { 0.0f, 1.0f, 0.0f, 1.0f }); // Green
+						Text("Connected! Matrix messages will appear in-game");
+						PopStyleColor();
+					}
+				} EndSection();
+			}
+
+			EndTable();
+		}
+		break;
 	}
 	}
 }
