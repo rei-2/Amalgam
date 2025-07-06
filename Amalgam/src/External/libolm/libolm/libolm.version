@@ -1,0 +1,4 @@
+{
+  global: olm*; _olm*; megolm*; _ZN3olm*; _ZNK3olm*;
+  local: *;
+};

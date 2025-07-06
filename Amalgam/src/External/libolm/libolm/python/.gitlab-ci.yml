@@ -1,0 +1,75 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  LD_LIBRARY_PATH: "$CI_PROJECT_DIR/build"
+  DEFAULT_PYTHON: "3.9"
+
+cache:
+  paths:
+    - .cache/pip
+
+stages:
+  - build
+  - test
+  - dist
+
+before_script:
+  - pushd python
+  - pip --disable-pip-version-check install --upgrade pip
+
+build:python:
+  stage: build
+  image: docker.io/python:$DEFAULT_PYTHON
+  cache: { }
+  before_script: [ ]
+  script:
+    - apt-get -y update && apt-get -y install cmake
+    - cmake . -Bbuild
+    - cmake --build build
+  artifacts:
+    paths:
+      - build
+
+test:python:
+  stage: test
+  image: docker.io/python:$PYTHON_VERSIONS
+  parallel:
+    matrix:
+      - PYTHON_VERSIONS: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
+  script:
+    - pip install tox
+    - make headers
+    - tox -e py
+  dependencies:
+    - build:python
+  artifacts:
+    paths:
+      - python/.coverage
+      - python/coverage.xml
+
+dist:python:sdist:
+  stage: dist
+  image: docker.io/python:$DEFAULT_PYTHON
+  script:
+    - pip install build
+    - python -m build --sdist
+  dependencies: [ ]
+  artifacts:
+    paths:
+      - python/build/**
+      - python/dist/*.tar.gz
+
+dist:python:wheel:
+  stage: dist
+  image: docker.io/python:$PYTHON_VERSIONS
+  parallel:
+    matrix:
+      - PYTHON_VERSIONS: [ "3.6", "3.7", "3.8", "3.9" ]
+  script:
+    - pip install build
+    - python -m build --wheel
+  dependencies:
+    - build:python
+  artifacts:
+    paths:
+      - python/build/**
+      - python/dist/*.whl

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "cffi>=1.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-olm"
+version = "3.2.16"
+description = "python CFFI bindings for the olm cryptographic ratchet library"
+authors = [{name = "Damir Jelić", email = "poljar@termina.org.uk"}]
+license = {text = "Apache-2.0"}
+readme = "README.md"
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Communications",
+]
+dependencies = ["cffi>=1.0.0"]
+
+[project.urls]
+homepage = "https://gitlab.matrix.org/matrix-org/olm/-/tree/master/python"
+
+[tool.setuptools]
+packages = [ "olm" ]

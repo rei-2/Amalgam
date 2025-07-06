@@ -1,0 +1,51 @@
+default:
+  image: registry.fedoraproject.org/fedora-minimal:latest
+
+stages:
+  - build
+  - test
+  - trigger
+
+build:lib:
+  stage: build
+  tags:
+    - docker
+  script:
+    - microdnf --assumeyes --nodocs install cmake gcc gcc-c++
+    - cmake . -Bbuild
+    - cmake --build build
+  artifacts:
+    paths:
+      - build/
+
+test:lib:
+  stage: test
+  tags:
+    - docker
+  needs:
+    - build:lib
+  script:
+    - microdnf --assumeyes --nodocs install cmake
+    - pushd build/tests
+    - ctest .
+  artifacts:
+    paths:
+      - build/tests/Testing/Temporary/
+
+trigger:android:
+  stage: trigger
+  trigger:
+    strategy: depend
+    include: android/.gitlab-ci.yml
+
+trigger:javascript:
+  stage: trigger
+  trigger:
+    strategy: depend
+    include: javascript/.gitlab-ci.yml
+
+trigger:python:
+  stage: trigger
+  trigger:
+    strategy: depend
+    include: python/.gitlab-ci.yml

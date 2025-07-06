@@ -1,0 +1,167 @@
+import org.apache.tools.ant.taskdefs.condition.Os
+import com.vanniktech.maven.publish.AndroidLibrary
+import com.vanniktech.maven.publish.JavadocJar
+
+apply plugin: 'com.android.library'
+apply plugin: "com.vanniktech.maven.publish.base"
+
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 14
+        targetSdk 31
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "OLM_VERSION", "\"${project.getProperties().getOrDefault("VERSION_NAME", "0.0.0")}\""
+
+        // The following argument makes the Android Test Orchestrator run its
+        // "pm clear" command after each test invocation. This command ensures
+        // that the app's state is completely cleared between tests.
+        testInstrumentationRunnerArguments clearPackageData: 'true'
+
+        buildConfigField "String", "OLM_VERSION", "\"${project.getProperties().getOrDefault("VERSION_NAME", "0.0.0")}\""
+    }
+    buildTypes {
+        debug {
+            resValue "string", "git_olm_revision", "\"${gitRevision()}\""
+            resValue "string", "git_olm_revision_unix_date", "\"${gitRevisionUnixDate()}\""
+            resValue "string", "git_olm_revision_date", "\"${gitRevisionDate()}\""
+        }
+
+        release {
+            resValue "string", "git_olm_revision", "\"${gitRevision()}\""
+            resValue "string", "git_olm_revision_unix_date", "\"${gitRevisionUnixDate()}\""
+            resValue "string", "git_olm_revision_date", "\"${gitRevisionDate()}\""
+
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    sourceSets.main {
+        jniLibs.srcDir 'src/main/libs'
+        jni.srcDirs = []
+    }
+
+    task buildJavaDoc(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        destinationDir = file("./doc/")
+        options.memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PRIVATE
+        failOnError false
+    }
+
+    task ndkBuildNativeRelease(type: Exec, description: 'NDK building..') {
+        println 'ndkBuildNativeRelease starts..'
+        workingDir file('src/main')
+        commandLine getNdkBuildCmd(), 'NDK_DEBUG=0'
+    }
+
+    task ndkBuildNativeDebug(type: Exec, description: 'NDK building..') {
+        println 'ndkBuildNativeDebug starts..'
+        workingDir file('src/main')
+        commandLine getNdkBuildCmd(), 'NDK_DEBUG=1'
+    }
+
+    task cleanNative(type: Exec, description: 'Clean NDK build') {
+        workingDir file('src/main')
+        commandLine getNdkBuildCmd(), 'clean'
+    }
+
+    tasks.withType(JavaCompile) {
+        compileTask ->
+            if (compileTask.name.startsWith('compileDebugJava')) {
+                println 'test compile: Debug'
+                compileTask.dependsOn ndkBuildNativeDebug
+            } else if (compileTask.name.startsWith('compileReleaseJava')) {
+                println 'test compile: Release'
+                compileTask.dependsOn ndkBuildNativeRelease
+            }
+            compileTask.dependsOn buildJavaDoc
+    }
+
+    task androidJavadocs(type: Javadoc) {
+        source = android.sourceSets.main.java.srcDirs
+        classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+        android.libraryVariants.all { variant ->
+            if (variant.name == 'release') {
+                owner.classpath += variant.javaCompileProvider.get().classpath
+            }
+        }
+        exclude '**/R.html', '**/R.*.html', '**/index.html'
+    }
+
+    task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+        archiveClassifier.set('javadoc')
+        from androidJavadocs.destinationDir
+    }
+
+    task androidSourcesJar(type: Jar) {
+        archiveClassifier.set('sources')
+        from android.sourceSets.main.java.srcDirs
+    }
+
+    clean.dependsOn cleanNative
+
+
+    libraryVariants.all { variant ->
+        variant.outputs.each { output ->
+            def outputFile = output.outputFileName
+            if (outputFile != null && outputFile.endsWith('.aar')) {
+                output.outputFileName = outputFile.replace(".aar", "-${version}.aar")
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+def getNdkFolder() {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def ndkFolder = properties.getProperty('ndk.dir', null)
+    if (ndkFolder == null)
+        throw new GradleException("NDK location missing. Define it with ndk.dir in the local.properties file")
+
+    return ndkFolder
+}
+
+def getNdkBuildCmd() {
+    def ndkBuildCmd = getNdkFolder() + "/ndk-build"
+    if (Os.isFamily(Os.FAMILY_WINDOWS))
+        ndkBuildCmd += ".cmd"
+
+    return ndkBuildCmd
+}
+
+def gitRevision() {
+    def cmd = "git rev-parse --short HEAD"
+    return cmd.execute().text.trim()
+}
+
+def gitRevisionUnixDate() {
+    def cmd = "git show -s --format=%ct HEAD^{commit}"
+    return cmd.execute().text.trim()
+}
+
+def gitRevisionDate() {
+    def cmd = "git show -s --format=%ci HEAD^{commit}"
+    return cmd.execute().text.trim()
+}
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'junit:junit:4.13.2'
+
+    androidTestImplementation 'androidx.test:core:1.4.0'
+    androidTestImplementation 'androidx.test:runner:1.4.0'
+    androidTestImplementation 'androidx.test:rules:1.4.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+}
+
+mavenPublishing {
+    configure(new AndroidLibrary(new JavadocJar.Empty(), false))
+}

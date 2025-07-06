@@ -1,0 +1,147 @@
+<html>
+<head>
+<script src="../olm.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    Olm.init().then(function() {
+        demo();
+    });
+}, false);
+
+function demo() {
+    function progress(who, message) {
+        var message_element = document.createElement("pre");
+        var progress = document.getElementById(who + "_progress");
+        var start_content = document.createTextNode(message + "...");
+        var done_content = document.createTextNode(message + "... Done");
+        function start() {
+            message_element.appendChild(start_content);
+            progress.appendChild(message_element);
+        }
+        function done() {
+            message_element.replaceChild(done_content, start_content);
+        }
+        return {start:start, done:done};
+    }
+
+    window.alice = new Olm.Account();
+    window.bob = new Olm.Account();
+    var a_session = new Olm.Session();
+    var b_session = new Olm.Session();
+    var message_1;
+    var tasks = [];
+
+    tasks.push(["alice", "Creating account", function() { alice.create() }]);
+    tasks.push(["bob", "Creating account", function() { bob.create() }]);
+    tasks.push(["bob", "Generate one time keys", function() {
+        bob.generate_one_time_keys(1);
+    }]);
+    tasks.push(["alice", "Create outbound session", function() {
+        var bobs_id_keys = JSON.parse(bob.identity_keys());
+        var bobs_id_key = bobs_id_keys.curve25519;
+        var bobs_ot_keys = JSON.parse(bob.one_time_keys());
+        var bobs_ot_key;
+        for (key in bobs_ot_keys.curve25519) {
+            bobs_ot_key = bobs_ot_keys.curve25519[key];
+        }
+        a_session.create_outbound(alice, bobs_id_key, bobs_ot_key);
+    }]);
+    tasks.push(["alice", "Encrypt first message", function() {
+        message_1 = a_session.encrypt("");
+    }]);
+    tasks.push(["bob", "Create inbound session", function() {
+        b_session.create_inbound(bob, message_1.body);
+    }]);
+    tasks.push(["bob", "Decrypt first message", function() {
+        b_session.decrypt(message_1.type, message_1.body);
+    }]);
+
+    function glue_encrypt(from, to, from_session) {
+        var plain_input = document.getElementById(from + "_plain_input");
+        var cipher_output = document.getElementById(from + "_cipher_output");
+        var cipher_input = document.getElementById(to + "_cipher_input");
+        var encrypt = document.getElementById(from + "_encrypt");
+
+        encrypt.addEventListener("click", function() {
+            var message = from_session.encrypt(plain_input.value);
+            var message_element = document.createElement("pre");
+            var content = document.createTextNode(JSON.stringify(message));
+            message_element.appendChild(content);
+            cipher_output.appendChild(message_element);
+            message_element.addEventListener("click", function() {
+                cipher_input.value = JSON.stringify(message);
+            }, false);
+        }, false);
+    }
+
+    function glue_decrypt(to, to_session) {
+        var cipher_input = document.getElementById(to + "_cipher_input");
+        var plain_output = document.getElementById(to + "_plain_output");
+        var decrypt = document.getElementById(to + "_decrypt");
+
+        decrypt.addEventListener("click", function() {
+            var message = JSON.parse(cipher_input.value);
+            try {
+                var plaintext = to_session.decrypt(message.type, message.body);
+            } catch (e) {
+                var plaintext = "ERROR: " + e.message;
+            }
+            var message_element = document.createElement("pre");
+            var message_content = document.createTextNode(plaintext);
+            message_element.appendChild(message_content);
+            plain_output.appendChild(message_element);
+        }, false);
+    }
+
+    function do_tasks(next) {
+        if (tasks.length > 0) {
+            var task = tasks.shift();
+            var p = progress(task[0], task[1])
+            p.start();
+            window.setTimeout(function() {
+                task[2]();
+                p.done();
+                window.setTimeout(do_tasks, 50, next);
+            }, 50)
+        } else {
+            next();
+        }
+    }
+
+    do_tasks(function() {
+        glue_encrypt("alice", "bob", a_session);
+        glue_decrypt("bob", b_session);
+
+        glue_encrypt("bob", "alice", b_session);
+        glue_decrypt("alice", a_session);
+    });
+}
+
+</script>
+<body>
+<div id="alice">
+    <h1>Alice</h1>
+    <div id="alice_progress"></div>
+    <h2>Encryption</h2>
+    <textarea id="alice_plain_input"></textarea>
+    <button id="alice_encrypt">Encrypt</button>
+    <div id="alice_cipher_output"></div>
+    <h2>Decryption</h2>
+    <textarea id="alice_cipher_input"></textarea>
+    <button id="alice_decrypt">Decrypt</button>
+    <div id="alice_plain_output"></div>
+</div>
+<div id="bob">
+    <h1>Bob</h1>
+    <div id="bob_progress"></div>
+    <h2>Encryption</h2>
+    <textarea id="bob_plain_input"></textarea>
+    <button id="bob_encrypt">Encrypt</button>
+    <div id="bob_cipher_output"></div>
+    <h2>Decryption</h2>
+    <textarea id="bob_cipher_input"></textarea>
+    <button id="bob_decrypt">Decrypt</button>
+    <div id="bob_plain_output"></div>
+</div>
+</body>
+</html>

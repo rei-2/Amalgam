@@ -1,0 +1,21 @@
+abstract_target 'OLMKit' do
+
+	pod 'OLMKit', :path => '../OLMKit.podspec'
+
+	target 'OLMKit-iOS' do
+
+		platform :ios, '6.0'
+
+		target 'OLMKitTests-iOS' do
+			inherit! :search_paths
+		end
+	end
+
+	target 'OLMKit-macOS' do
+		platform :osx, '10.9'
+
+		target 'OLMKitTests-macOS' do
+			inherit! :search_paths
+		end
+	end
+end

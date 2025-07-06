@@ -1,0 +1,27 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: trzeci/emscripten
+      
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run:
+          name: Native Compile
+          command: make
+      - run:
+          name: Native Tests
+          command: make test
+      - run:
+          name: JS Compile
+          command: make js
+      - run:
+          name: Install JS Deps
+          working_directory: ~/repo/javascript
+          command: npm install
+      - run:
+          name: JS Tests
+          working_directory: ~/repo/javascript
+          command: npm run test

@@ -1,0 +1,13 @@
+module OLMKit {
+    header "../OLMAccount.h"
+    header "../OLMSession.h"
+    header "../OLMMessage.h"
+    header "../OLMUtility.h"
+    header "../OLMInboundGroupSession.h"
+    header "../OLMOutboundGroupSession.h"
+    header "../OLMPkEncryption.h"
+    header "../OLMPkDecryption.h"
+    header "../OLMPkSigning.h"
+    header "../OLMSAS.h"
+    export *
+}

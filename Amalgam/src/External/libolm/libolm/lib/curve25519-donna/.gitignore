@@ -1,0 +1,12 @@
+/curve25519-donna-c64.a
+/curve25519-donna.a
+/test-curve25519-donna
+/speed-curve25519-donna
+/test-curve25519-donna-c64
+/speed-curve25519-donna-c64
+/test-sc-curve25519-donna-c64
+/build
+*.o
+*.pyc
+/dist
+/MANIFEST

@@ -1,0 +1,46 @@
+# TODO: consider replacing this with a smaller image
+image: docker.io/inovex/gitlab-ci-android
+
+stages:
+  - build
+  - test
+
+variables:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+before_script:
+  - export GRADLE_USER_HOME=$(pwd)/.gradle
+  - export ANDROID_HOME=${ANDROID_SDK_HOME}
+  - echo "sdk.dir=${ANDROID_SDK_HOME}" > ./android/local.properties
+  - echo "ndk.dir=${ANDROID_NDK_HOME}" >> ./android/local.properties
+  - cp -R $ANDROID_SDK_ROOT/licenses ./android/.
+  - chmod +x ./android/gradlew
+
+cache:
+  key: ${CI_PROJECT_ID}
+  paths:
+    - android/.gradle/
+
+build:android:aar:
+  stage: build
+  tags:
+    - docker
+  script:
+    - pushd android
+    - ./gradlew clean assembleRelease
+  artifacts:
+    expire_in: 1 weeks
+    paths:
+      - android/olm-sdk/build/outputs/aar/*.aar
+      - android/local.properties
+
+test:android:aar:
+  stage: test
+  tags:
+    - docker
+  script:
+    - pushd android
+    - ./gradlew assembleAndroidTest
+    # TODO: Add emulator to run tests
+  needs:
+    - build:android:aar

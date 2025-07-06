@@ -1,0 +1,3 @@
+include include/olm/*.h
+include Makefile
+include olm_build.py

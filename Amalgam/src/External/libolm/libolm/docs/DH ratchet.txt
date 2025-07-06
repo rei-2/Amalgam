@@ -1,0 +1,39 @@
+lifelinestyle ::solid
+participantspacing 10
+
+participant :0 " " as p0
+lifelinestyle p0 #white
+
+actor "Alice" as A
+
+participant :0 " " as p1
+lifelinestyle p1 #white
+
+actor "Bob" as B
+
+participant :0 " " as p2
+lifelinestyle p2 #white
+
+
+parallel
+box over A: ""//R[0]//"" = ""HKDF(0, //S//)""
+box over B: ""//R[0]//"" = ""HKDF(0, //S//)""
+parallel off
+
+box over A: generate new ratchet keypair ""//T[0]//""
+A->B: ""//R[0]//(//msg0//)"", ""//T[0]//""
+A->B: ""//R[0]//(//msg1//)"", ""//T[0]//""
+A->B: ""//R[0]//(//msg2//)"", ""//T[0]//""
+box over B: generate new ratchet keypair ""//T[1]//""
+box over B: ""//R[1]//"" = ""HKDF(//R[0]//, DH(//T[1]//, //T[0]//))""
+B->A: ""//R[1]//(//msg3//)"", ""//T[1]//""
+box over A: ""//R[1]//"" = ""HKDF(//R[0]//, DH(//T[0]//, //T[1]//))""
+B->A: ""//R[1]//(//msg4//)"", ""//T[1]//""
+B->(13)A: ""//R[1]//(//msg5//)"", ""//T[1]//""
+space -14
+box over A: generate new ratchet keypair ""//T[2]//""
+box over A: ""//R[2]//"" = ""HKDF(//R[1]//, DH(//T[2]//, //T[1]//))""
+A->(3)B: ""//R[2]//(//msg6//)"", ""//T[2]//""
+box over B: ""//R[2]//"" = ""HKDF(//R[1]//, DH(//T[1]//, //T[2]//))""
+
+box over p0,p2 #EDF2AE:<size:10>where:\n  ""//S//"" is the shared secret derived from the 3ECDH exchange\n  ""//R[n]//"" is a root key\n  ""//T[n]//"" is a ratchet keypair\n  ""HKDF(//salt//, //key//)"" means performing an HMAC-based key derivation with a salt value of ""//salt//"" and input key material of ""//key//""\n  ""DH(//k1//, //k2//)"" means performing Diffie-Hellman with the private half of ""//k1//"" and the public half of ""//k2//""\n  ""//R[n]//(//msg//)"" means a message encrypted with a key derived from root key ""//R[n]//""

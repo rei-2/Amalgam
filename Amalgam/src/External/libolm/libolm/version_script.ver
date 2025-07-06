@@ -1,0 +1,9 @@
+# this is a 'version script' for the linker which tells it to only export
+# symbols starting 'olm_'.
+
+{
+    global:
+        olm_*;
+    local:
+        *;
+};
