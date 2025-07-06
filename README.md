@@ -53,6 +53,20 @@ All features are fully configurable through the COMP tab menu with individual to
 
   Configure via CHAT tab: set server (default: pendora.io), username, password, space (asyncroom), and room (talk). Messages appear in TF2 console and can be sent using `!!message` in game chat.
 
+## Development Setup
+
+### Quick Start
+1. **Run the automated setup:**
+   ```cmd
+   setup.bat
+   ```
+2. **Open the project:**
+   - Open `Amalgam.sln` in Visual Studio 2022
+   - Select configuration: `Release` and platform: `x64`
+   - Build the solution
+
+For detailed setup instructions, see [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md).
+
 ## Installation
 
 [Xenos](https://github.com/DarthTon/Xenos/releases) recommended for injection.
