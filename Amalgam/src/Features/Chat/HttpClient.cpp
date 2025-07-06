@@ -28,6 +28,18 @@
 // Include our header after CPR
 #include "HttpClient.h"
 
+// Static callback for logging
+static void(*g_LogCallback)(const std::string&, const std::string&) = nullptr;
+
+// Debug logging function
+void LogMatrixDebug(const std::string& message) {
+#ifdef _DEBUG
+    if (g_LogCallback) {
+        g_LogCallback("[MATRIX-HTTP]", message);
+    }
+#endif
+}
+
 namespace HttpClient 
 {
     HttpResponse Get(const std::string& url, const std::map<std::string, std::string>& headers)
@@ -35,15 +47,15 @@ namespace HttpClient
         try 
         {
             // Log request details
-            printf("[Matrix HTTP] GET Request: %s\n", url.c_str());
-            printf("[Matrix HTTP] Headers:\n");
+            LogMatrixDebug("[HTTP] GET Request: " + url);
+            LogMatrixDebug("[HTTP] Headers:");
             for (const auto& header : headers) 
             {
                 // Don't log sensitive headers in full
                 if (header.first == "Authorization") {
-                    printf("  %s: Bearer [REDACTED]\n", header.first.c_str());
+                    LogMatrixDebug("[HTTP]   " + header.first + ": Bearer [REDACTED]");
                 } else {
-                    printf("  %s: %s\n", header.first.c_str(), header.second.c_str());
+                    LogMatrixDebug("[HTTP]   " + header.first + ": " + header.second);
                 }
             }
             
@@ -53,12 +65,17 @@ namespace HttpClient
                 cprHeaders[header.first] = header.second;
             }
 
+            // Add common browser User-Agent if not already set
+            if (cprHeaders.find("User-Agent") == cprHeaders.end()) {
+                cprHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+            }
+            
             auto response = cpr::Get(cpr::Url{url}, cprHeaders, cpr::VerifySsl{false});
             
             // Log response details
-            printf("[Matrix HTTP] GET Response: Status %ld\n", response.status_code);
-            printf("[Matrix HTTP] Response Body: %s\n", response.text.c_str());
-            printf("[Matrix HTTP] ===================================\n");
+            LogMatrixDebug("[HTTP] GET Response: Status " + std::to_string(response.status_code));
+            LogMatrixDebug("[HTTP] Response Body: " + response.text);
+            LogMatrixDebug("[HTTP] ===================================");
             
             return {
                 static_cast<int>(response.status_code),
@@ -68,7 +85,7 @@ namespace HttpClient
         }
         catch (const std::exception& e)
         {
-            printf("[Matrix HTTP] GET Exception: %s\n", e.what());
+            LogMatrixDebug("[HTTP] GET Exception: " + std::string(e.what()));
             return { 0, "HTTP Error: " + std::string(e.what()), false };
         }
     }
@@ -78,18 +95,18 @@ namespace HttpClient
         try 
         {
             // Log request details
-            printf("[Matrix HTTP] POST Request: %s\n", url.c_str());
-            printf("[Matrix HTTP] Headers:\n");
+            LogMatrixDebug("[HTTP] POST Request: " + url);
+            LogMatrixDebug("[HTTP] Headers:");
             for (const auto& header : headers) 
             {
                 // Don't log sensitive headers in full
                 if (header.first == "Authorization") {
-                    printf("  %s: Bearer [REDACTED]\n", header.first.c_str());
+                    LogMatrixDebug("[HTTP]   " + header.first + ": Bearer [REDACTED]");
                 } else {
-                    printf("  %s: %s\n", header.first.c_str(), header.second.c_str());
+                    LogMatrixDebug("[HTTP]   " + header.first + ": " + header.second);
                 }
             }
-            printf("[Matrix HTTP] Request Body: %s\n", body.c_str());
+            LogMatrixDebug("[HTTP] Request Body: " + body);
             
             cpr::Header cprHeaders;
             for (const auto& header : headers) 
@@ -97,12 +114,17 @@ namespace HttpClient
                 cprHeaders[header.first] = header.second;
             }
 
+            // Add common browser User-Agent if not already set
+            if (cprHeaders.find("User-Agent") == cprHeaders.end()) {
+                cprHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+            }
+            
             auto response = cpr::Post(cpr::Url{url}, cpr::Body{body}, cprHeaders, cpr::VerifySsl{false});
             
             // Log response details
-            printf("[Matrix HTTP] POST Response: Status %ld\n", response.status_code);
-            printf("[Matrix HTTP] Response Body: %s\n", response.text.c_str());
-            printf("[Matrix HTTP] ===================================\n");
+            LogMatrixDebug("[HTTP] POST Response: Status " + std::to_string(response.status_code));
+            LogMatrixDebug("[HTTP] Response Body: " + response.text);
+            LogMatrixDebug("[HTTP] ===================================");
             
             return {
                 static_cast<int>(response.status_code),
@@ -112,7 +134,7 @@ namespace HttpClient
         }
         catch (const std::exception& e)
         {
-            printf("[Matrix HTTP] POST Exception: %s\n", e.what());
+            LogMatrixDebug("[HTTP] POST Exception: " + std::string(e.what()));
             return { 0, "HTTP Error: " + std::string(e.what()), false };
         }
     }
@@ -122,18 +144,18 @@ namespace HttpClient
         try 
         {
             // Log request details
-            printf("[Matrix HTTP] PUT Request: %s\n", url.c_str());
-            printf("[Matrix HTTP] Headers:\n");
+            LogMatrixDebug("[HTTP] PUT Request: " + url);
+            LogMatrixDebug("[HTTP] Headers:");
             for (const auto& header : headers) 
             {
                 // Don't log sensitive headers in full
                 if (header.first == "Authorization") {
-                    printf("  %s: Bearer [REDACTED]\n", header.first.c_str());
+                    LogMatrixDebug("[HTTP]   " + header.first + ": Bearer [REDACTED]");
                 } else {
-                    printf("  %s: %s\n", header.first.c_str(), header.second.c_str());
+                    LogMatrixDebug("[HTTP]   " + header.first + ": " + header.second);
                 }
             }
-            printf("[Matrix HTTP] Request Body: %s\n", body.c_str());
+            LogMatrixDebug("[HTTP] Request Body: " + body);
             
             cpr::Header cprHeaders;
             for (const auto& header : headers) 
@@ -141,12 +163,17 @@ namespace HttpClient
                 cprHeaders[header.first] = header.second;
             }
 
+            // Add common browser User-Agent if not already set
+            if (cprHeaders.find("User-Agent") == cprHeaders.end()) {
+                cprHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+            }
+            
             auto response = cpr::Put(cpr::Url{url}, cpr::Body{body}, cprHeaders, cpr::VerifySsl{false});
             
             // Log response details
-            printf("[Matrix HTTP] PUT Response: Status %ld\n", response.status_code);
-            printf("[Matrix HTTP] Response Body: %s\n", response.text.c_str());
-            printf("[Matrix HTTP] ===================================\n");
+            LogMatrixDebug("[HTTP] PUT Response: Status " + std::to_string(response.status_code));
+            LogMatrixDebug("[HTTP] Response Body: " + response.text);
+            LogMatrixDebug("[HTTP] ===================================");
             
             return {
                 static_cast<int>(response.status_code),
@@ -156,7 +183,7 @@ namespace HttpClient
         }
         catch (const std::exception& e)
         {
-            printf("[Matrix HTTP] PUT Exception: %s\n", e.what());
+            LogMatrixDebug("[HTTP] PUT Exception: " + std::string(e.what()));
             return { 0, "HTTP Error: " + std::string(e.what()), false };
         }
     }
@@ -171,5 +198,10 @@ namespace HttpClient
         {
             return input;
         }
+    }
+
+    // Set logging callback
+    void HttpClient::SetLogCallback(void(*callback)(const std::string&, const std::string&)) {
+        g_LogCallback = callback;
     }
 }

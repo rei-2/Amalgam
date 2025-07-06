@@ -1525,6 +1525,7 @@ void CMenu::MenuComp(int iTab)
 	switch (iTab)
 	{
 	// Competitive Features
+	case 0:
 	default:
 	{
 		if (BeginTable("CompTable", 2))
@@ -3656,6 +3657,7 @@ void CMenu::MenuChat(int iTab)
 					static std::string chatServer;
 					static std::string chatUsername;
 					static std::string chatPassword;
+					static std::string chatEmail;
 					static std::string chatSpace;
 					static std::string chatRoom;
 					static bool initialized = false;
@@ -3666,6 +3668,7 @@ void CMenu::MenuChat(int iTab)
 						chatServer = Vars::Chat::Server.Value;
 						chatUsername = Vars::Chat::Username.Value;
 						chatPassword = Vars::Chat::Password.Value;
+						chatEmail = Vars::Chat::Email.Value;
 						chatSpace = Vars::Chat::Space.Value;
 						chatRoom = Vars::Chat::Room.Value;
 						initialized = true;
@@ -3701,6 +3704,11 @@ void CMenu::MenuChat(int iTab)
 					if (FInputText("Password", chatPassword, FInputTextEnum::Right, ImGuiInputTextFlags_Password))
 					{
 						Vars::Chat::Password.Value = chatPassword;
+						F::Chat.SaveChatSettings();
+					}
+					if (FInputText("Email (for matrix.org)", chatEmail, FInputTextEnum::Left))
+					{
+						Vars::Chat::Email.Value = chatEmail;
 						F::Chat.SaveChatSettings();
 					}
 					
@@ -3755,6 +3763,7 @@ void CMenu::MenuChat(int iTab)
 						Vars::Chat::Server.Value = chatServer;
 						Vars::Chat::Username.Value = chatUsername;
 						Vars::Chat::Password.Value = chatPassword;
+						Vars::Chat::Email.Value = chatEmail;
 						Vars::Chat::Space.Value = chatSpace;
 						Vars::Chat::Room.Value = chatRoom;
 						F::Chat.SaveChatSettings();
@@ -3765,11 +3774,81 @@ void CMenu::MenuChat(int iTab)
 							std::string server = chatServer;
 							std::string username = chatUsername;
 							std::string password = chatPassword;
+							std::string email = chatEmail;
 							
-							std::thread createThread([server, username, password]() {
-								F::Chat.CreateAccount(username, password);
+							std::thread createThread([server, username, password, email]() {
+								// Always use the same registration flow - it will handle existing sessions
+								if (!email.empty()) {
+									F::Chat.CreateAccountWithEmail(username, password, email);
+								} else {
+									F::Chat.CreateAccount(username, password);
+								}
 							});
 							createThread.detach();
+						}
+					}
+					
+					// Email verification instructions
+					ImGui::Text("Email verification required!");
+					ImGui::TextWrapped("1. Check your email and click the verification link");
+					ImGui::TextWrapped("2. Then click 'Create New Account' again to complete registration");
+					
+					// Embedded reCAPTCHA verification
+					bool recaptchaRequired = F::Chat.IsRecaptchaRequired();
+					bool recaptchaShowing = F::Chat.IsRecaptchaShowing();
+					
+					if (recaptchaRequired && !recaptchaShowing) {
+						if (FButton("Show reCAPTCHA Challenge", FButtonEnum::Left))
+						{
+							std::thread recaptchaThread([]() {
+								F::Chat.ShowRecaptcha();
+							});
+							recaptchaThread.detach();
+						}
+					}
+					
+					if (recaptchaShowing) {
+						// Simple visual reCAPTCHA widget embedded in ImGui
+						ImGui::Text("reCAPTCHA Challenge:");
+						ImGui::Separator();
+						
+						// Create a simple visual puzzle - click the correct images
+						static int selectedImages[9] = {0}; // 3x3 grid
+						static int correctImages[3] = {1, 4, 7}; // Example: images 1, 4, 7 are correct
+						
+						ImGui::Text("Select all images with traffic lights:");
+						
+						for (int i = 0; i < 9; i++) {
+							if (i % 3 != 0) ImGui::SameLine();
+							
+							ImGui::PushID(i);
+							if (ImGui::Selectable(selectedImages[i] ? "[X]" : "[ ]", selectedImages[i], 0, ImVec2(60, 60))) {
+								selectedImages[i] = !selectedImages[i];
+							}
+							ImGui::PopID();
+						}
+						
+						if (FButton("Complete reCAPTCHA", FButtonEnum::Left))
+						{
+							// Check if correct images are selected
+							bool correct = true;
+							for (int i = 0; i < 9; i++) {
+								bool shouldBeSelected = (i == 1 || i == 4 || i == 7);
+								if ((selectedImages[i] != 0) != shouldBeSelected) {
+									correct = false;
+									break;
+								}
+							}
+							
+							if (correct) {
+								std::thread completeThread([]() {
+									F::Chat.CompleteRecaptcha();
+								});
+								completeThread.detach();
+								
+								// Reset the puzzle
+								for (int i = 0; i < 9; i++) selectedImages[i] = 0;
+							}
 						}
 					}
 				} EndSection();

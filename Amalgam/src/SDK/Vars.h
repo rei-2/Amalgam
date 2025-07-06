@@ -1376,11 +1376,13 @@ namespace Vars
 #endif
 
 	NAMESPACE_BEGIN(Chat)
-		CVar(Server, "Matrix server", std::string("pendora.io"), NOSAVE);
+		CVar(Server, "Matrix server", std::string("matrix.org"), NOSAVE);
 		CVar(Username, "Username", std::string(""), NOSAVE);
 		CVar(Password, "Password", std::string(""), NOSAVE);
-		CVar(Space, "Space/Community", std::string("asyncroom"), NOSAVE);
-		CVar(Room, "Room", std::string("talk"), NOSAVE);
+		CVar(Email, "Email for registration", std::string(""), NOSAVE);
+		CVar(RecaptchaResponse, "reCAPTCHA response token", std::string(""), NOSAVE);
+		CVar(Space, "Space/Community", std::string("amalgam-comp"), NOSAVE);
+		CVar(Room, "Room", std::string("chat"), NOSAVE);
 		CVar(AutoConnect, "Auto connect on startup", false);
 		CVar(ShowTimestamps, "Show timestamps", true);
 	NAMESPACE_END(Chat);

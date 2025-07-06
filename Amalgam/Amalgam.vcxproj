@@ -932,7 +932,9 @@
     <ClCompile Include="src\External\libolm\libolm\src\error.c" />
     <ClCompile Include="src\External\libolm\libolm\src\inbound_group_session.c" />
     <ClCompile Include="src\External\libolm\libolm\src\megolm.c" />
-    <ClCompile Include="src\External\libolm\libolm\src\memory.cpp" />
+    <ClCompile Include="src\External\libolm\libolm\src\memory.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="src\External\libolm\libolm\src\message.cpp" />
     <ClCompile Include="src\External\libolm\libolm\src\olm.cpp" />
     <ClCompile Include="src\External\libolm\libolm\src\outbound_group_session.c" />

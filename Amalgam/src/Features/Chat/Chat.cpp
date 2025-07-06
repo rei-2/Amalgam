@@ -6,6 +6,22 @@
 #include <fstream>
 #include <cstdio>
 
+#ifdef _WIN32
+#include <windows.h>
+#include <shellapi.h>
+#endif
+
+// Global chat instance pointer for HTTP logging
+static CChat* g_ChatInstance = nullptr;
+
+// Debug-only message macro
+#ifdef _DEBUG
+#define DEBUG_MSG(msg) do { if (g_ChatInstance) g_ChatInstance->QueueMessage("Matrix Debug", msg); } while(0)
+#else
+#define DEBUG_MSG(msg) do { } while(0)
+#endif
+
+
 CChat::CChat()
 {
     // Load chat settings on startup
@@ -13,6 +29,18 @@ CChat::CChat()
     
     // Initialize encryption system
     m_pCrypto = std::make_unique<MatrixCrypto>();
+    
+    // Set global instance pointer for HTTP logging
+    g_ChatInstance = this;
+    
+    // Set up HTTP logging callback to use TF2 console
+    HttpClient::SetLogCallback([](const std::string& prefix, const std::string& message) {
+        // Access the global chat instance to queue messages
+        if (g_ChatInstance) {
+            g_ChatInstance->QueueMessage(prefix, message);
+        }
+    });
+    
     
     // Auto-connect if enabled
     if (Vars::Chat::AutoConnect.Value)
@@ -23,6 +51,9 @@ CChat::CChat()
 
 CChat::~CChat()
 {
+    // Clear global instance pointer
+    g_ChatInstance = nullptr;
+    
     // Save chat settings on shutdown
     SaveChatSettings();
     Disconnect();
@@ -59,13 +90,18 @@ void CChat::Connect()
         m_sBaseUrl = "https://" + Vars::Chat::Server.Value;
         
         // Test basic connectivity first
-        QueueMessage("Matrix Debug", "Testing connectivity to: " + m_sBaseUrl);
+#ifdef _DEBUG
+        DEBUG_MSG("=== STARTING MATRIX REGISTRATION DEBUG ===");
+        DEBUG_MSG("Server: " + Vars::Chat::Server.Value);
+        DEBUG_MSG("Username: " + Vars::Chat::Username.Value);
+        DEBUG_MSG("Testing connectivity to: " + m_sBaseUrl);
+#endif
         auto versionResponse = HttpClient::Get(m_sBaseUrl + "/_matrix/client/versions", {});
-        QueueMessage("Matrix Debug", "Server versions check status: " + std::to_string(versionResponse.status_code));
+        DEBUG_MSG("Server versions check status: " + std::to_string(versionResponse.status_code));
         
         if (versionResponse.status_code == 0)
         {
-            QueueMessage("Matrix Debug", "Network connectivity failed: " + versionResponse.text);
+            DEBUG_MSG("Network connectivity failed: " + versionResponse.text);
             std::lock_guard<std::mutex> lock(m_StatusMutex);
             m_sLastError = "Cannot connect to server: " + versionResponse.text;
             m_bLoginInProgress.store(false);
@@ -102,7 +138,14 @@ void CChat::Connect()
             {
                 // User doesn't exist, try to create account
                 QueueMessage("Matrix", "User not found, attempting to create account...");
-                CreateAccount(username, password);
+                
+                // For matrix.org, prefer email registration if email is provided
+                if (Vars::Chat::Server.Value == "matrix.org" && !Vars::Chat::Email.Value.empty()) {
+                    QueueMessage("Matrix", "Using email registration for matrix.org");
+                    CreateAccountWithEmail(username, password, Vars::Chat::Email.Value);
+                } else {
+                    CreateAccount(username, password);
+                }
             }
             else
             {
@@ -131,16 +174,486 @@ void CChat::Disconnect()
     
     // Reset stop flag for next connection
     m_bShouldStop.store(false);
+    
+    // Note: We intentionally do NOT reset registration state here
+    // because the user might be in the middle of email verification
+    // Registration state will be reset when starting a new registration
+    // with different credentials or when registration completes
+}
+
+void CChat::CreateAccountWithEmail(const std::string& username, const std::string& password, const std::string& email)
+{
+    try
+    {
+        DEBUG_MSG("CreateAccountWithEmail called - Session: '" + m_sRegistrationSession + "'");
+        DEBUG_MSG("Email verification state - Requested: " + std::string(m_bEmailVerificationRequested ? "true" : "false") + 
+                    ", Completed: " + std::string(m_bEmailVerificationCompleted ? "true" : "false"));
+        
+        // Check if email verification was already requested for these exact credentials
+        bool sameCredentials = m_sPendingUsername == username && 
+                              m_sPendingPassword == password &&
+                              m_sLastEmailRequested == email;
+        
+        bool hasActiveRegistration = !m_sRegistrationSession.empty() && sameCredentials;
+        
+        if (hasActiveRegistration && m_bEmailVerificationRequested) {
+            DEBUG_MSG("Email verification already requested for these exact credentials");
+            
+            // If email verification is completed, try to complete registration
+            if (m_bEmailVerificationCompleted) {
+                DEBUG_MSG("Email verification completed - attempting registration");
+                CreateAccountInternal(username, password, m_sRegistrationSession);
+                return;
+            }
+            
+            // Email already sent but not yet verified - don't send duplicate
+            {
+                std::lock_guard<std::mutex> lock(m_StatusMutex);
+                m_sLastError = "";
+                m_sLastSuccess = "Email verification already sent to " + email + ". Check your email and click the verification link, then try 'Create New Account' again.";
+            }
+            return;
+        }
+        
+        // If credentials are different or no active session, reset and start fresh
+        if (!sameCredentials || m_sRegistrationSession.empty()) {
+            DEBUG_MSG("New registration attempt - resetting state");
+            ResetRegistrationState();
+            
+            // Store new credentials
+            m_sPendingUsername = username;
+            m_sPendingPassword = password;
+            m_sLastEmailRequested = email;
+        } else {
+            DEBUG_MSG("Continuing existing registration flow with same credentials");
+        }
+        
+        // Only get fresh auth flows if we don't have an active session
+        if (m_sRegistrationSession.empty()) {
+            DEBUG_MSG("No active session - checking server capabilities");
+            
+            // First, check login flows to see if SSO is available (per Element approach)
+            auto loginFlowResponse = HttpClient::Get(
+                "https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/login",
+                {}
+            );
+            
+            bool hasSsoFlow = false;
+            std::string ssoUrl;
+            
+            if (loginFlowResponse.status_code == 200) {
+                auto loginFlowJson = nlohmann::json::parse(loginFlowResponse.text);
+                if (loginFlowJson.contains("flows")) {
+                    for (const auto& flow : loginFlowJson["flows"]) {
+                        if (flow.contains("type")) {
+                            std::string flowType = flow["type"];
+                            if (flowType == "m.login.sso" || flowType == "m.login.cas") {
+                                hasSsoFlow = true;
+                                DEBUG_MSG("Server supports SSO authentication");
+                                // Build registration URL using the same OAuth2 flow as Element
+                                if (Vars::Chat::Server.Value == "matrix.org") {
+                                    // For matrix.org, use OAuth2 authorization with prompt=create
+                                    std::string clientId = "01JR7KPNATR5JC45E4VN9BRA5G";  // Element's client ID
+                                    std::string redirectUri = HttpClient::UrlEncode("https://app.element.io/");
+                                    std::string responseType = "code";
+                                    std::string scope = HttpClient::UrlEncode("openid urn:matrix:org.matrix.msc2967.client:api:* urn:matrix:org.matrix.msc2967.client:device:cMuq4TjeBc");
+                                    
+                                    ssoUrl = "https://account.matrix.org/authorize";
+                                    ssoUrl += "?client_id=" + clientId;
+                                    ssoUrl += "&redirect_uri=" + redirectUri;
+                                    ssoUrl += "&response_type=" + responseType;
+                                    ssoUrl += "&scope=" + scope;
+                                    ssoUrl += "&prompt=create";  // This is the key - tells OAuth to show registration
+                                    ssoUrl += "&response_mode=query";
+                                } else {
+                                    // For other servers, fall back to standard SSO approach
+                                    std::string redirectUrl = "https://app.element.io/";
+                                    ssoUrl = "https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/login/sso/redirect";
+                                    ssoUrl += "?redirectUrl=" + HttpClient::UrlEncode(redirectUrl);
+                                    ssoUrl += "&org.matrix.msc3824.action=register";
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Now try registration request to get auth flows
+            nlohmann::json flowRequest = {
+                {"username", username},
+                {"password", password},
+                {"device_id", "AmalgamClient"},
+                {"initial_device_display_name", "Amalgam TF2 Client"},
+                {"inhibit_login", false}
+            };
+            
+            auto flowResponse = HttpClient::Post(
+                "https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/register",
+                flowRequest.dump(),
+                {{"Content-Type", "application/json"}}
+            );
+            
+            if (flowResponse.status_code == 401)
+            {
+                // Parse the auth flows response
+                auto flowJson = nlohmann::json::parse(flowResponse.text);
+                if (flowJson.contains("session"))
+                {
+                    m_sRegistrationSession = flowJson["session"];
+                    DEBUG_MSG("Got new session: " + m_sRegistrationSession);
+                }
+                
+                if (flowJson.contains("flows")) {
+                    DEBUG_MSG("Available auth flows: " + flowJson["flows"].dump());
+                    
+                    // Check what flows are available
+                    bool hasEmailIdentity = false;
+                    bool hasRecaptcha = false;
+                    bool hasTerms = false;
+                    bool hasPassword = false;
+                    
+                    for (const auto& flow : flowJson["flows"]) {
+                        if (flow.contains("stages")) {
+                            for (const auto& stage : flow["stages"]) {
+                                std::string stageType = stage;
+                                if (stageType == "m.login.email.identity") hasEmailIdentity = true;
+                                if (stageType == "m.login.recaptcha") hasRecaptcha = true;
+                                if (stageType == "m.login.terms") hasTerms = true;
+                                if (stageType == "m.login.password") hasPassword = true;
+                            }
+                        }
+                    }
+                    
+                    DEBUG_MSG("Auth flow support - Email: " + std::string(hasEmailIdentity ? "yes" : "no") + 
+                                                ", ReCaptcha: " + std::string(hasRecaptcha ? "yes" : "no") +
+                                                ", Terms: " + std::string(hasTerms ? "yes" : "no") +
+                                                ", Password: " + std::string(hasPassword ? "yes" : "no"));
+                    
+                    // Matrix.org typically requires both email AND recaptcha
+                    if (hasRecaptcha && !hasEmailIdentity) {
+                        {
+                            std::lock_guard<std::mutex> lock(m_StatusMutex);
+                            m_sLastError = "Matrix.org requires reCAPTCHA verification. Please register manually at https://app.element.io";
+                        }
+                        return;
+                    }
+                }
+            } else if (flowResponse.status_code == 200) {
+                // Registration succeeded without additional auth
+                CompleteRegistration(flowResponse.text);
+                ResetRegistrationState();
+                return;
+            } else if (flowResponse.status_code == 403) {
+                DEBUG_MSG("Registration forbidden (403): " + flowResponse.text);
+                
+                // Use previously discovered SSO info
+                if (hasSsoFlow) {
+                    QueueMessage("Matrix", "Server requires external registration. Opening browser...");
+                    
+                    #ifdef _WIN32
+                        // Windows: use ShellExecute to open URL in default browser
+                        ShellExecuteA(NULL, "open", ssoUrl.c_str(), NULL, NULL, SW_SHOWNORMAL);
+                    #elif __linux__
+                        // Linux: use xdg-open
+                        system(("xdg-open \"" + ssoUrl + "\"").c_str());
+                    #elif __APPLE__
+                        // macOS: use open command
+                        system(("open \"" + ssoUrl + "\"").c_str());
+                    #endif
+                    
+                    {
+                        std::lock_guard<std::mutex> lock(m_StatusMutex);
+                        m_sLastError = "Opened browser for external registration. Please register there, then try connecting again.";
+                    }
+                } else {
+                    {
+                        std::lock_guard<std::mutex> lock(m_StatusMutex);
+                        m_sLastError = "Registration disabled on this server. Try a different homeserver or contact the admin.";
+                    }
+                }
+                return;
+            } else if (flowResponse.status_code == 429) {
+                DEBUG_MSG("Rate limited (429): " + flowResponse.text);
+                {
+                    std::lock_guard<std::mutex> lock(m_StatusMutex);
+                    m_sLastError = "Too many registration attempts. Please wait and try again later.";
+                }
+                return;
+            } else {
+                DEBUG_MSG("=== REGISTRATION FAILED ===");
+                DEBUG_MSG("HTTP Status: " + std::to_string(flowResponse.status_code));
+                DEBUG_MSG("Response Headers: " + (flowResponse.text.empty() ? std::string("[EMPTY]") : std::string("[PRESENT]")));
+                DEBUG_MSG("Full Response: " + flowResponse.text);
+                DEBUG_MSG("URL Used: https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/register");
+                {
+                    std::lock_guard<std::mutex> lock(m_StatusMutex);
+                    m_sLastError = "Failed to start registration with server: " + std::to_string(flowResponse.status_code) + " - " + flowResponse.text;
+                }
+                return;
+            }
+        } else {
+            DEBUG_MSG("Using existing session: " + m_sRegistrationSession);
+        }
+        
+        // Only request email verification if not already requested for this session
+        if (!m_bEmailVerificationRequested) {
+            DEBUG_MSG("Requesting email verification for the first time");
+            
+            // Ensure we have a valid session before requesting email verification
+            if (m_sRegistrationSession.empty()) {
+                DEBUG_MSG("Error: No registration session available for email verification");
+                {
+                    std::lock_guard<std::mutex> lock(m_StatusMutex);
+                    m_sLastError = "Registration session error. Please try again.";
+                }
+                return;
+            }
+            
+            // Generate unique client secret for this registration session
+            m_sClientSecret = "AmalgamSecret" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::system_clock::now().time_since_epoch()).count());
+            
+            nlohmann::json emailRequestData = {
+                {"client_secret", m_sClientSecret},
+                {"email", email},
+                {"send_attempt", 1}
+            };
+            
+            // Try homeserver's identity server endpoint first (spec compliant v2 API)
+            auto emailResponse = HttpClient::Post(
+                "https://" + Vars::Chat::Server.Value + "/_matrix/identity/v2/validate/email/requestToken",
+                emailRequestData.dump(),
+                {{"Content-Type", "application/json"}}
+            );
+            
+            bool usedHomeserverIdentity = (emailResponse.status_code == 200);
+            
+            if (!usedHomeserverIdentity) {
+                // Try Matrix.org's identity server endpoint (v2 API)
+                emailResponse = HttpClient::Post(
+                    "https://vector.im/_matrix/identity/v2/validate/email/requestToken",
+                    emailRequestData.dump(),
+                    {{"Content-Type", "application/json"}}
+                );
+            }
+            
+            if (emailResponse.status_code == 200) {
+                auto emailJson = nlohmann::json::parse(emailResponse.text);
+                m_sEmailSid = emailJson["sid"];
+                
+                // Track which identity server provided the SID
+                if (usedHomeserverIdentity) {
+                    m_sIdentityServer = Vars::Chat::Server.Value;
+                } else {
+                    m_sIdentityServer = "vector.im";
+                }
+                
+                // Mark email verification as requested
+                m_bEmailVerificationRequested = true;
+                
+                {
+                    std::lock_guard<std::mutex> lock(m_StatusMutex);
+                    m_sLastError = "";
+                    m_sLastSuccess = "Email verification sent to " + email + ". 1) Click the link in your email 2) After seeing 'Verification successful', click 'Create New Account' again.";
+                }
+                QueueMessage("Matrix", "Email verification sent to " + email);
+                DEBUG_MSG("Email SID: " + m_sEmailSid + ", Identity Server: " + m_sIdentityServer + ", Client Secret: " + m_sClientSecret);
+                
+            } else {
+                DEBUG_MSG("Email request failed: " + std::to_string(emailResponse.status_code));
+                {
+                    std::lock_guard<std::mutex> lock(m_StatusMutex);
+                    m_sLastError = "Failed to send email verification. Please try again or use a different email.";
+                }
+                return;
+            }
+        } else {
+            DEBUG_MSG("Email verification already requested - skipping duplicate request");
+            {
+                std::lock_guard<std::mutex> lock(m_StatusMutex);
+                m_sLastError = "";
+                m_sLastSuccess = "Email verification already sent. Check your email and click the verification link, then try again.";
+            }
+        }
+        
+        DEBUG_MSG("Email registration prepared - waiting for email verification");
+        
+    }
+    catch (const std::exception& e)
+    {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "Email registration error: " + std::string(e.what());
+        DEBUG_MSG("Email registration exception: " + std::string(e.what()));
+    }
+}
+
+void CChat::SubmitEmailVerification(const std::string& token)
+{
+    try
+    {
+        DEBUG_MSG("Session check - Session: '" + m_sRegistrationSession + "', Username: '" + m_sPendingUsername + "'");
+        DEBUG_MSG("Email SID: '" + m_sEmailSid + "', Client Secret: '" + m_sClientSecret + "'");
+        
+        // If session is empty, user might need to restart email registration
+        if (m_sRegistrationSession.empty()) {
+            DEBUG_MSG("Session empty - email verification may have expired");
+            {
+                std::lock_guard<std::mutex> lock(m_StatusMutex);
+                m_sLastError = "Email verification session expired. Please try 'Create New Account' again.";
+            }
+            return;
+        }
+        
+        if (m_sRegistrationSession.empty() || m_sPendingUsername.empty() || m_sEmailSid.empty() || m_sClientSecret.empty())
+        {
+            std::lock_guard<std::mutex> lock(m_StatusMutex);
+            m_sLastError = "No pending email verification session - Session: " + 
+                          (m_sRegistrationSession.empty() ? std::string("empty") : std::string("present")) + 
+                          ", Username: " + 
+                          (m_sPendingUsername.empty() ? std::string("empty") : std::string("present")) +
+                          ", EmailSID: " + 
+                          (m_sEmailSid.empty() ? std::string("empty") : std::string("present")) +
+                          ", ClientSecret: " + 
+                          (m_sClientSecret.empty() ? std::string("empty") : std::string("present"));
+            return;
+        }
+        
+        // According to Matrix spec, after clicking email link, just retry registration
+        // The token field is often not actually needed - the email click validates it
+        DEBUG_MSG("Proceeding with registration after email verification");
+        
+        // Mark email verification as completed
+        m_bEmailVerificationCompleted = true;
+        
+        {
+            std::lock_guard<std::mutex> lock(m_StatusMutex);
+            m_sLastError = "";
+            m_sLastSuccess = "Processing email verification...";
+        }
+        
+        // Now proceed with registration using the validated email
+        nlohmann::json registerData = {
+            {"username", m_sPendingUsername},
+            {"password", m_sPendingPassword},
+            {"device_id", "AmalgamClient"},
+            {"initial_device_display_name", "Amalgam TF2 Client"},
+            {"inhibit_login", false},
+            {"auth", {
+                {"type", "m.login.email.identity"},
+                {"threepid_creds", {
+                    {"client_secret", m_sClientSecret},
+                    {"id_server", m_sIdentityServer},
+                    {"sid", m_sEmailSid}
+                }},
+                {"session", m_sRegistrationSession}
+            }}
+        };
+        
+        DEBUG_MSG("Submitting registration with validated email");
+        
+        auto response = HttpClient::Post(
+            "https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/register",
+            registerData.dump(),
+            {{"Content-Type", "application/json"}}
+        );
+        
+        if (response.status_code == 200)
+        {
+            CompleteRegistration(response.text);
+            
+            // Clear all registration session data
+            ResetRegistrationState();
+        }
+        else
+        {
+            HandleRegistrationError(response.status_code, response.text);
+            
+            // Show error in UI status
+            std::lock_guard<std::mutex> lock(m_StatusMutex);
+            if (m_sLastError.empty()) {
+                m_sLastError = "Email verification failed - please try again";
+            }
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "Email verification error: " + std::string(e.what());
+    }
+}
+
+void CChat::CreateAccountInternal(const std::string& username, const std::string& password, const std::string& sessionId)
+{
+    try
+    {
+        // Create registration data
+        nlohmann::json registerData = {
+            {"username", username},
+            {"password", password},
+            {"device_id", "AmalgamClient"},
+            {"initial_device_display_name", "Amalgam TF2 Client"},
+            {"inhibit_login", false}
+        };
+        
+        if (!sessionId.empty())
+        {
+            registerData["auth"] = {
+                {"type", "m.login.password"},
+                {"user", username},
+                {"password", password},
+                {"session", sessionId}
+            };
+        }
+        
+        auto response = HttpClient::Post(
+            "https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/register",
+            registerData.dump(),
+            {{"Content-Type", "application/json"}}
+        );
+        
+        if (response.status_code == 200)
+        {
+            CompleteRegistration(response.text);
+        }
+        else if (response.status_code == 401)
+        {
+            HandleRegistrationError(response.status_code, response.text);
+        }
+        else
+        {
+            HandleRegistrationError(response.status_code, response.text);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "Account creation error: " + std::string(e.what());
+    }
 }
 
 void CChat::CreateAccount(const std::string& username, const std::string& password)
 {
     try
     {
+        DEBUG_MSG("=== STARTING REGULAR ACCOUNT CREATION ===");
+        printf("[DIRECT] Starting Matrix account creation for user: %s\n", username.c_str());
+        fflush(stdout);
+        DEBUG_MSG("Server: " + Vars::Chat::Server.Value);
+        DEBUG_MSG("Username: " + username);
+        
         // First, get the available auth flows from the server
+        nlohmann::json initialRequest = {
+            {"username", username},
+            {"password", password},
+            {"device_id", "AmalgamClient"},
+            {"initial_device_display_name", "Amalgam TF2 Client"},
+            {"inhibit_login", false}
+        };
+        
         auto flowResponse = HttpClient::Post(
             "https://" + Vars::Chat::Server.Value + "/_matrix/client/v3/register",
-            "{}",
+            initialRequest.dump(),
             {{"Content-Type", "application/json"}}
         );
         
@@ -155,29 +668,62 @@ void CChat::CreateAccount(const std::string& username, const std::string& passwo
             {
                 sessionId = flowJson["session"];
             }
-            flows = flowJson["flows"];
+            if (flowJson.contains("flows")) {
+                flows = flowJson["flows"];
+            }
+        }
+        else if (flowResponse.status_code == 200)
+        {
+            // Registration succeeded without additional auth
+            CompleteRegistration(flowResponse.text);
+            return;
         }
         
-        // Try to register with dummy auth (most common for open servers)
+        // Try to register with appropriate auth based on available flows
         nlohmann::json registerData = {
             {"username", username},
             {"password", password},
             {"device_id", "AmalgamClient"},
+            {"initial_device_display_name", "Amalgam TF2 Client"},
             {"inhibit_login", false}
         };
         
         if (!sessionId.empty())
         {
-            registerData["auth"] = {
-                {"type", "m.login.dummy"},
-                {"session", sessionId}
-            };
-        }
-        else
-        {
-            registerData["auth"] = {
-                {"type", "m.login.dummy"}
-            };
+            // Check if we need password auth or can use dummy auth
+            bool needsPasswordAuth = false;
+            bool canUseDummy = false;
+            
+            for (const auto& flow : flows) {
+                if (flow.contains("stages")) {
+                    for (const auto& stage : flow["stages"]) {
+                        std::string stageType = stage;
+                        if (stageType == "m.login.password") needsPasswordAuth = true;
+                        if (stageType == "m.login.dummy") canUseDummy = true;
+                    }
+                }
+            }
+            
+            if (needsPasswordAuth) {
+                registerData["auth"] = {
+                    {"type", "m.login.password"},
+                    {"user", username},
+                    {"password", password},
+                    {"session", sessionId}
+                };
+            }
+            else if (canUseDummy) {
+                registerData["auth"] = {
+                    {"type", "m.login.dummy"},
+                    {"session", sessionId}
+                };
+            }
+            else {
+                // No supported auth flow found
+                std::lock_guard<std::mutex> lock(m_StatusMutex);
+                m_sLastError = "No supported authentication flow available";
+                return;
+            }
         }
         
         auto response = HttpClient::Post(
@@ -202,6 +748,9 @@ void CChat::CreateAccount(const std::string& username, const std::string& passwo
                 m_sLastError = "";
                 m_sLastSuccess = "Account created successfully! You are now logged in.";
             }
+            
+            // Clear any pending registration state
+            ResetRegistrationState();
             
             // Join room and start sync (outside of mutex lock)
             if (HttpJoinRoom())
@@ -265,6 +814,226 @@ void CChat::CreateAccount(const std::string& username, const std::string& passwo
     }
 }
 
+void CChat::ShowRecaptcha()
+{
+    if (m_sRecaptchaPublicKey.empty()) {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "No reCAPTCHA public key available";
+        return;
+    }
+    
+    // Simple visual reCAPTCHA challenge - this is a placeholder for a real implementation
+    // In a real application, you would integrate with an actual reCAPTCHA service
+    std::lock_guard<std::mutex> lock(m_StatusMutex);
+    m_sLastSuccess = "Complete the visual challenge below, then click 'Complete Registration'";
+    m_bRecaptchaRequired = true;
+    m_bRecaptchaShowing = true;
+}
+
+void CChat::CompleteRecaptcha()
+{
+    if (m_sRegistrationSession.empty()) {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "No active registration session";
+        return;
+    }
+    
+    // Mark reCAPTCHA as completed
+    m_bRecaptchaRequired = false;
+    m_bRecaptchaShowing = false;
+    
+    {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastSuccess = "reCAPTCHA completed! Retrying registration...";
+    }
+    
+    // Automatically retry registration with session
+    CreateAccountInternal(m_sPendingUsername, m_sPendingPassword, m_sRegistrationSession);
+}
+
+
+std::string CChat::GetStatus() const
+{
+    std::lock_guard<std::mutex> lock(m_StatusMutex);
+    
+    // Return error first if there is one, otherwise return success message
+    if (!m_sLastError.empty()) {
+        return m_sLastError;
+    }
+    
+    if (!m_sLastSuccess.empty()) {
+        return m_sLastSuccess;
+    }
+    
+    // Default status
+    return "Ready";
+}
+
+
+void CChat::CompleteRegistration(const std::string& response_text)
+{
+    // Registration successful with login
+    auto json = nlohmann::json::parse(response_text);
+    m_sAccessToken = json["access_token"];
+    
+    // Set connected state first
+    m_bLoginInProgress.store(false);
+    m_bConnected.store(true);
+    
+    // Update status message without holding lock during other operations
+    {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "";
+        m_sLastSuccess = "Account created successfully! You are now logged in.";
+    }
+    
+    // Join room and start sync (outside of mutex lock)
+    if (HttpJoinRoom())
+    {
+        QueueMessage("Matrix", "Account created and connected to room '" + Vars::Chat::Room.Value + "' in space '" + Vars::Chat::Space.Value + "'");
+        QueueMessage("Matrix", "Use !! prefix to send messages to Matrix chat");
+        
+        // Initialize encryption after successful connection
+        InitializeEncryption();
+        
+        if (!m_ClientThread.joinable())
+        {
+            m_ClientThread = std::thread(&CChat::HandleMatrixEvents, this);
+        }
+    }
+}
+
+void CChat::HandleRegistrationError(int status_code, const std::string& response_text)
+{
+    try
+    {
+        auto json = nlohmann::json::parse(response_text);
+        std::string debugMessage;
+        
+        {
+            std::lock_guard<std::mutex> lock(m_StatusMutex);
+            
+            if (status_code == 400)
+            {
+                if (json.contains("errcode") && json["errcode"] == "M_USER_IN_USE")
+                {
+                    m_sLastError = "Username already taken. Try logging in instead.";
+                    // Reset registration state on username conflict
+                    ResetRegistrationState();
+                }
+                else if (json.contains("error"))
+                {
+                    m_sLastError = "Account creation failed: " + json["error"].get<std::string>();
+                }
+                else
+                {
+                    m_sLastError = "Invalid registration data";
+                }
+            }
+            else if (status_code == 403)
+            {
+                m_sLastError = "Registration disabled on this server. Contact server admin.";
+            }
+            else if (status_code == 429)
+            {
+                m_sLastError = "Too many registration attempts. Please wait and try again.";
+            }
+            else if (status_code == 401)
+            {
+                // Check for auth flows including reCAPTCHA
+                if (json.contains("session")) {
+                    m_sRegistrationSession = json["session"];
+                }
+                
+                // Check if reCAPTCHA is required
+                bool needsRecaptcha = false;
+                if (json.contains("flows")) {
+                    for (const auto& flow : json["flows"]) {
+                        if (flow.contains("stages")) {
+                            for (const auto& stage : flow["stages"]) {
+                                std::string stageType = stage.get<std::string>();
+                                if (stageType == "m.login.recaptcha") needsRecaptcha = true;
+                            }
+                        }
+                    }
+                }
+                
+                if (needsRecaptcha) {
+                    m_bRecaptchaRequired = true;
+                    
+                    // Extract reCAPTCHA public key from the response
+                    if (json.contains("params") && json["params"].contains("m.login.recaptcha") && 
+                        json["params"]["m.login.recaptcha"].contains("public_key")) {
+                        m_sRecaptchaPublicKey = json["params"]["m.login.recaptcha"]["public_key"];
+                        debugMessage = "reCAPTCHA public key extracted: " + m_sRecaptchaPublicKey;
+                    }
+                    
+                    m_sLastError = "";
+                    m_sLastSuccess = "Matrix.org requires reCAPTCHA verification. Complete the challenge below.";
+                } else {
+                    if (json.contains("error")) {
+                        m_sLastError = "Registration failed: " + json["error"].get<std::string>();
+                    } else {
+                        m_sLastError = "Authentication required - unknown flow";
+                    }
+                }
+            }
+            else
+            {
+                if (json.contains("error"))
+                {
+                    m_sLastError = "Registration failed: " + json["error"].get<std::string>();
+                }
+                else if (json.contains("errcode"))
+                {
+                    m_sLastError = "Registration failed: " + json["errcode"].get<std::string>();
+                }
+                else
+                {
+                    m_sLastError = "Registration failed with status: " + std::to_string(status_code);
+                }
+            }
+        }
+        
+        // Send debug message outside of mutex lock
+        if (!debugMessage.empty()) {
+            DEBUG_MSG(debugMessage);
+        }
+    }
+    catch (...)
+    {
+        std::lock_guard<std::mutex> lock(m_StatusMutex);
+        m_sLastError = "Registration failed with status: " + std::to_string(status_code);
+    }
+}
+
+void CChat::ResetRegistrationState()
+{
+    // Clear all registration session data
+    m_sRegistrationSession.clear();
+    m_sPendingUsername.clear();
+    m_sPendingPassword.clear();
+    m_sClientSecret.clear();
+    m_sEmailSid.clear();
+    m_sIdentityServer.clear();
+    m_sRecaptchaPublicKey.clear();
+    m_sLastEmailRequested.clear();
+    
+    // Reset state flags
+    m_bEmailVerificationRequested = false;
+    m_bEmailVerificationCompleted = false;
+    m_bRecaptchaRequired = false;
+    m_bRecaptchaShowing = false;
+    
+    QueueMessage("Matrix Debug", "Registration state reset");
+}
+
+bool CChat::IsEmailVerificationPending() const
+{
+    return m_bEmailVerificationRequested && !m_bEmailVerificationCompleted && 
+           !m_sRegistrationSession.empty() && !m_sEmailSid.empty();
+}
+
 
 void CChat::SendMessage(const std::string& message)
 {
@@ -294,7 +1063,7 @@ bool CChat::ProcessGameChatMessage(const std::string& message)
     // Check if message starts with !! prefix
     if (trimmedMessage.length() >= 2 && trimmedMessage.substr(0, 2) == "!!")
     {
-        QueueMessage("Matrix Debug", "Found !! prefix, processing Matrix message");
+        DEBUG_MSG("Found !! prefix, processing Matrix message");
         
         std::string chatMessage = trimmedMessage.substr(2); // Remove !! prefix
         
@@ -304,7 +1073,7 @@ bool CChat::ProcessGameChatMessage(const std::string& message)
         
         if (!chatMessage.empty())
         {
-            QueueMessage("Matrix Debug", "Sending: " + chatMessage);
+            DEBUG_MSG("Sending: " + chatMessage);
             
             // Check if we're connected before sending
             if (!m_bConnected.load())
@@ -314,12 +1083,12 @@ bool CChat::ProcessGameChatMessage(const std::string& message)
             }
             
             SendMessage(chatMessage);
-            QueueMessage("Matrix Debug", "Blocking message from game chat");
+            DEBUG_MSG("Blocking message from game chat");
             return true; // Message was processed and should be blocked from game chat
         }
         else
         {
-            QueueMessage("Matrix Debug", "Empty message after trimming, blocking from game chat");
+            DEBUG_MSG("Empty message after trimming, blocking from game chat");
             return true; // Block empty !! messages from game chat
         }
     }
@@ -344,6 +1113,8 @@ void CChat::ProcessIncomingMessage(const std::string& sender, const std::string&
     // Don't show our own messages twice
     if (senderName != Vars::Chat::Username.Value)
     {
+        // Queue the message for display on the main thread instead of calling ChatPrintf directly
+        // ChatPrintf is not thread-safe and crashes when called from background threads
         QueueMessage("[Matrix] " + senderName, content);
     }
 }
@@ -367,28 +1138,56 @@ void CChat::ProcessQueuedMessages()
 
 void CChat::DisplayInGameMessage(const std::string& sender, const std::string& content)
 {
-    // Only output to console if debug logging is enabled, otherwise just in-game chat
+    // Handle debug messages
     if (sender.find("Debug") != std::string::npos)
     {
-        // Debug messages only go to console/stdout when debug is enabled
-        printf("[Matrix] %s: %s\n", sender.c_str(), content.c_str());
+#ifdef _DEBUG
+        // Debug messages only go to console when debug is enabled
+        if (I::CVar)
+        {
+            Color_t tColor = { 100, 100, 100, 255 }; // Gray color for debug messages
+            I::CVar->ConsoleColorPrintf(tColor, "[%s] %s\n", sender.c_str(), content.c_str());
+        }
+#endif
         return;
     }
     
-    // Print regular Matrix messages to TF2's console with color
+    // Handle Matrix chat messages - try in-game chat first, fallback to console
+    if (I::ClientModeShared && I::ClientModeShared->m_pChatElement)
+    {
+        try
+        {
+            // Extract just the username from sender (remove [Matrix] prefix if present)
+            std::string userName = sender;
+            if (userName.find("[Matrix] ") == 0)
+            {
+                userName = userName.substr(9); // Remove "[Matrix] " prefix
+            }
+            
+            // Sanitize strings to prevent format issues
+            std::replace(userName.begin(), userName.end(), '%', '_');
+            std::string safeContent = content;
+            std::replace(safeContent.begin(), safeContent.end(), '%', '_');
+            
+            // Use ChatPrintf from main thread (should be safe)
+            I::ClientModeShared->m_pChatElement->ChatPrintf(0, "[Matrix] %s: %s", 
+                userName.c_str(), safeContent.c_str());
+            return;
+        }
+        catch (...)
+        {
+            // If ChatPrintf fails, fall through to console
+        }
+    }
+    
+#ifdef _DEBUG
+    // Fallback to console only in debug builds
     if (I::CVar)
     {
         Color_t tColor = { 0, 255, 255, 255 }; // Cyan color for Matrix messages
-        I::CVar->ConsoleColorPrintf(tColor, "[Matrix] %s: %s\n", sender.c_str(), content.c_str());
+        I::CVar->ConsoleColorPrintf(tColor, "%s: %s\n", sender.c_str(), content.c_str());
     }
-    
-    // DISABLED: In-game chat display for Matrix messages due to crashes
-    // Matrix messages will only appear in console to prevent game crashes
-    // This is safer and more reliable than trying to use TF2's chat system
-    // which can be unstable when accessed from external code
-    
-    // Note: Users can still see Matrix messages in the console (cyan color)
-    // If in-game display is needed in the future, it should be implemented
+#endif
     // with more robust error handling and interface validation
 }
 
@@ -479,7 +1278,7 @@ bool CChat::HttpLogin(const std::string& username, const std::string& password)
         {
             auto json = nlohmann::json::parse(response.text);
             m_sAccessToken = json["access_token"];
-            QueueMessage("Matrix Debug", "Login successful, access token obtained");
+            DEBUG_MSG("Login successful, access token obtained");
             return true;
         }
         else
@@ -488,8 +1287,8 @@ bool CChat::HttpLogin(const std::string& username, const std::string& password)
             if (response.status_code == 0)
             {
                 m_sLastError = "Network connection failed during login: " + response.text;
-                QueueMessage("Matrix Debug", "Login failed with network error (status 0)");
-                QueueMessage("Matrix Debug", "Error details: " + response.text);
+                DEBUG_MSG("Login failed with network error (status 0)");
+                DEBUG_MSG("Error details: " + response.text);
             }
             else
             {
@@ -517,8 +1316,7 @@ bool CChat::HttpJoinRoom()
     {
         std::map<std::string, std::string> headers = {
             {"Authorization", "Bearer " + m_sAccessToken},
-            {"Content-Type", "application/json"},
-            {"User-Agent", "Amalgam/1.0 Matrix Client"}
+            {"Content-Type", "application/json"}
         };
         
         // Ensure base URL is set (in case of race condition)
@@ -527,35 +1325,35 @@ bool CChat::HttpJoinRoom()
             m_sBaseUrl = "https://" + Vars::Chat::Server.Value;
         }
         
-        QueueMessage("Matrix Debug", "Starting room join process...");
-        QueueMessage("Matrix Debug", "Space: " + Vars::Chat::Space.Value + ", Room: " + Vars::Chat::Room.Value + ", Server: " + Vars::Chat::Server.Value);
-        QueueMessage("Matrix Debug", "Base URL: " + m_sBaseUrl);
+        DEBUG_MSG("Starting room join process...");
+        DEBUG_MSG("Space: " + Vars::Chat::Space.Value + ", Room: " + Vars::Chat::Room.Value + ", Server: " + Vars::Chat::Server.Value);
+        DEBUG_MSG("Base URL: " + m_sBaseUrl);
         
         // Test basic HTTP connectivity first
-        QueueMessage("Matrix Debug", "Testing HTTP connectivity...");
+        DEBUG_MSG("Testing HTTP connectivity...");
         auto testResponse = HttpClient::Get(m_sBaseUrl + "/_matrix/client/versions", {});
-        QueueMessage("Matrix Debug", "Connectivity test result: " + std::to_string(testResponse.status_code));
-        QueueMessage("Matrix Debug", "Connectivity test response: " + testResponse.text);
+        DEBUG_MSG("Connectivity test result: " + std::to_string(testResponse.status_code));
+        DEBUG_MSG("Connectivity test response: " + testResponse.text);
         
         // Strategy 1: Try to resolve and join the space first using directory lookup
         std::string spaceAlias = "#" + Vars::Chat::Space.Value + ":" + Vars::Chat::Server.Value;
         std::string encodedSpaceAlias = HttpClient::UrlEncode(spaceAlias);
         std::string spaceDirectoryUrl = m_sBaseUrl + "/_matrix/client/v3/directory/room/" + encodedSpaceAlias;
         
-        QueueMessage("Matrix Debug", "Looking up space in directory: " + spaceAlias);
-        QueueMessage("Matrix Debug", "Encoded alias: " + encodedSpaceAlias);
-        QueueMessage("Matrix Debug", "Full URL: " + spaceDirectoryUrl);
+        DEBUG_MSG("Looking up space in directory: " + spaceAlias);
+        DEBUG_MSG("Encoded alias: " + encodedSpaceAlias);
+        DEBUG_MSG("Full URL: " + spaceDirectoryUrl);
         
         auto spaceDirectoryResponse = HttpClient::Get(spaceDirectoryUrl, headers);
         
-        QueueMessage("Matrix Debug", "Space directory response code: " + std::to_string(spaceDirectoryResponse.status_code));
-        QueueMessage("Matrix Debug", "Space directory response: " + spaceDirectoryResponse.text);
+        DEBUG_MSG("Space directory response code: " + std::to_string(spaceDirectoryResponse.status_code));
+        DEBUG_MSG("Space directory response: " + spaceDirectoryResponse.text);
         
         if (spaceDirectoryResponse.status_code == 200)
         {
             auto spaceDirectoryJson = nlohmann::json::parse(spaceDirectoryResponse.text);
             std::string spaceRoomId = spaceDirectoryJson["room_id"];
-            QueueMessage("Matrix Debug", "Found space in directory: " + spaceRoomId);
+            DEBUG_MSG("Found space in directory: " + spaceRoomId);
             
             // Join the space using room ID
             auto joinSpaceResponse = HttpClient::Post(
@@ -566,7 +1364,7 @@ bool CChat::HttpJoinRoom()
             
             if (joinSpaceResponse.status_code == 200)
             {
-                QueueMessage("Matrix Debug", "Successfully joined space: " + spaceRoomId);
+                DEBUG_MSG("Successfully joined space: " + spaceRoomId);
                 
                 // Look for the talk room within the space hierarchy
                 auto hierarchyResponse = HttpClient::Get(
@@ -574,29 +1372,29 @@ bool CChat::HttpJoinRoom()
                     headers
                 );
                 
-                QueueMessage("Matrix Debug", "Space hierarchy response: " + std::to_string(hierarchyResponse.status_code));
+                DEBUG_MSG("Space hierarchy response: " + std::to_string(hierarchyResponse.status_code));
                 
                 if (hierarchyResponse.status_code == 200)
                 {
                     auto hierarchyJson = nlohmann::json::parse(hierarchyResponse.text);
-                    QueueMessage("Matrix Debug", "Got space hierarchy, looking for room: " + Vars::Chat::Room.Value);
-                    QueueMessage("Matrix Debug", "Hierarchy response: " + hierarchyResponse.text);
+                    DEBUG_MSG("Got space hierarchy, looking for room: " + Vars::Chat::Room.Value);
+                    DEBUG_MSG("Hierarchy response: " + hierarchyResponse.text);
                     
                     if (hierarchyJson.contains("rooms"))
                     {
-                        QueueMessage("Matrix Debug", "Found " + std::to_string(hierarchyJson["rooms"].size()) + " rooms in hierarchy");
+                        DEBUG_MSG("Found " + std::to_string(hierarchyJson["rooms"].size()) + " rooms in hierarchy");
                         
                         for (const auto& room : hierarchyJson["rooms"])
                         {
                             std::string roomName = room.contains("name") ? room["name"].get<std::string>() : "unnamed";
                             std::string roomId = room.contains("room_id") ? room["room_id"].get<std::string>() : "unknown";
                             
-                            QueueMessage("Matrix Debug", "Hierarchy room: " + roomName + " (" + roomId + ")");
+                            DEBUG_MSG("Hierarchy room: " + roomName + " (" + roomId + ")");
                             
                             if (room.contains("name") && room["name"] == Vars::Chat::Room.Value)
                             {
                                 std::string targetRoomId = room["room_id"];
-                                QueueMessage("Matrix Debug", "Found target room in hierarchy: " + targetRoomId);
+                                DEBUG_MSG("Found target room in hierarchy: " + targetRoomId);
                                 
                                 // Join the specific room
                                 auto roomJoinResponse = HttpClient::Post(
@@ -608,25 +1406,25 @@ bool CChat::HttpJoinRoom()
                                 if (roomJoinResponse.status_code == 200)
                                 {
                                     m_sRoomId = targetRoomId;
-                                    QueueMessage("Matrix Debug", "Successfully joined target room: " + targetRoomId);
+                                    DEBUG_MSG("Successfully joined target room: " + targetRoomId);
                                     return true;
                                 }
                                 else
                                 {
-                                    QueueMessage("Matrix Debug", "Failed to join target room: " + std::to_string(roomJoinResponse.status_code));
+                                    DEBUG_MSG("Failed to join target room: " + std::to_string(roomJoinResponse.status_code));
                                 }
                             }
                         }
                     }
                     else
                     {
-                        QueueMessage("Matrix Debug", "No rooms found in hierarchy");
+                        DEBUG_MSG("No rooms found in hierarchy");
                     }
                 }
                 else
                 {
-                    QueueMessage("Matrix Debug", "Failed to get space hierarchy: " + hierarchyResponse.text);
-                    QueueMessage("Matrix Debug", "Trying to join room directly by alias...");
+                    DEBUG_MSG("Failed to get space hierarchy: " + hierarchyResponse.text);
+                    DEBUG_MSG("Trying to join room directly by alias...");
                     
                     // Try to join the room directly by alias since hierarchy failed
                     std::string roomAlias = "#" + Vars::Chat::Room.Value + ":" + Vars::Chat::Server.Value;
@@ -639,7 +1437,7 @@ bool CChat::HttpJoinRoom()
                     {
                         auto roomDirectoryJson = nlohmann::json::parse(roomDirectoryResponse.text);
                         std::string targetRoomId = roomDirectoryJson["room_id"];
-                        QueueMessage("Matrix Debug", "Found room " + roomAlias + " -> " + targetRoomId);
+                        DEBUG_MSG("Found room " + roomAlias + " -> " + targetRoomId);
                         
                         // Try to join it
                         auto roomJoinResponse = HttpClient::Post(
@@ -651,23 +1449,23 @@ bool CChat::HttpJoinRoom()
                         if (roomJoinResponse.status_code == 200)
                         {
                             m_sRoomId = targetRoomId;
-                            QueueMessage("Matrix Debug", "Successfully joined room directly: " + targetRoomId);
+                            DEBUG_MSG("Successfully joined room directly: " + targetRoomId);
                             return true;
                         }
                         else
                         {
-                            QueueMessage("Matrix Debug", "Failed to join room " + roomAlias + ": " + std::to_string(roomJoinResponse.status_code));
+                            DEBUG_MSG("Failed to join room " + roomAlias + ": " + std::to_string(roomJoinResponse.status_code));
                         }
                     }
                     else
                     {
-                        QueueMessage("Matrix Debug", "Room " + roomAlias + " not found in directory");
+                        DEBUG_MSG("Room " + roomAlias + " not found in directory");
                     }
                 }
                 
                 // Use the space itself for messaging if no specific room found
                 m_sRoomId = spaceRoomId;
-                QueueMessage("Matrix Debug", "Using space as messaging room: " + spaceRoomId);
+                DEBUG_MSG("Using space as messaging room: " + spaceRoomId);
                 return true;
             }
         }
@@ -677,20 +1475,20 @@ bool CChat::HttpJoinRoom()
         std::string encodedRoomAlias = HttpClient::UrlEncode(roomAlias);
         std::string roomDirectoryUrl = m_sBaseUrl + "/_matrix/client/v3/directory/room/" + encodedRoomAlias;
         
-        QueueMessage("Matrix Debug", "Looking up room directly: " + roomAlias);
-        QueueMessage("Matrix Debug", "Encoded room alias: " + encodedRoomAlias);
-        QueueMessage("Matrix Debug", "Room directory URL: " + roomDirectoryUrl);
+        DEBUG_MSG("Looking up room directly: " + roomAlias);
+        DEBUG_MSG("Encoded room alias: " + encodedRoomAlias);
+        DEBUG_MSG("Room directory URL: " + roomDirectoryUrl);
         
         auto roomDirectoryResponse = HttpClient::Get(roomDirectoryUrl, headers);
         
-        QueueMessage("Matrix Debug", "Room directory response code: " + std::to_string(roomDirectoryResponse.status_code));
-        QueueMessage("Matrix Debug", "Room directory response: " + roomDirectoryResponse.text);
+        DEBUG_MSG("Room directory response code: " + std::to_string(roomDirectoryResponse.status_code));
+        DEBUG_MSG("Room directory response: " + roomDirectoryResponse.text);
         
         if (roomDirectoryResponse.status_code == 200)
         {
             auto roomDirectoryJson = nlohmann::json::parse(roomDirectoryResponse.text);
             std::string targetRoomId = roomDirectoryJson["room_id"];
-            QueueMessage("Matrix Debug", "Found room in directory: " + targetRoomId);
+            DEBUG_MSG("Found room in directory: " + targetRoomId);
             
             // Join the room using room ID
             auto joinRoomResponse = HttpClient::Post(
@@ -702,13 +1500,13 @@ bool CChat::HttpJoinRoom()
             if (joinRoomResponse.status_code == 200)
             {
                 m_sRoomId = targetRoomId;
-                QueueMessage("Matrix Debug", "Successfully joined room directly: " + targetRoomId);
+                DEBUG_MSG("Successfully joined room directly: " + targetRoomId);
                 return true;
             }
         }
         
         // Strategy 3: Try direct join using alias (bypass directory)
-        QueueMessage("Matrix Debug", "Trying direct join with alias: " + spaceAlias);
+        DEBUG_MSG("Trying direct join with alias: " + spaceAlias);
         
         auto directJoinSpaceResponse = HttpClient::Post(
             m_sBaseUrl + "/_matrix/client/v3/join/" + HttpClient::UrlEncode(spaceAlias),
@@ -716,18 +1514,18 @@ bool CChat::HttpJoinRoom()
             headers
         );
         
-        QueueMessage("Matrix Debug", "Direct space join response: " + std::to_string(directJoinSpaceResponse.status_code));
-        QueueMessage("Matrix Debug", "Direct space join response body: " + directJoinSpaceResponse.text);
+        DEBUG_MSG("Direct space join response: " + std::to_string(directJoinSpaceResponse.status_code));
+        DEBUG_MSG("Direct space join response body: " + directJoinSpaceResponse.text);
         
         if (directJoinSpaceResponse.status_code == 200)
         {
             auto spaceJson = nlohmann::json::parse(directJoinSpaceResponse.text);
             m_sRoomId = spaceJson["room_id"];
-            QueueMessage("Matrix Debug", "Successfully joined space via direct join: " + m_sRoomId);
+            DEBUG_MSG("Successfully joined space via direct join: " + m_sRoomId);
             return true;
         }
         
-        QueueMessage("Matrix Debug", "Trying direct join with room alias: " + roomAlias);
+        DEBUG_MSG("Trying direct join with room alias: " + roomAlias);
         
         auto directJoinRoomResponse = HttpClient::Post(
             m_sBaseUrl + "/_matrix/client/v3/join/" + HttpClient::UrlEncode(roomAlias),
@@ -735,14 +1533,14 @@ bool CChat::HttpJoinRoom()
             headers
         );
         
-        QueueMessage("Matrix Debug", "Direct room join response: " + std::to_string(directJoinRoomResponse.status_code));
-        QueueMessage("Matrix Debug", "Direct room join response body: " + directJoinRoomResponse.text);
+        DEBUG_MSG("Direct room join response: " + std::to_string(directJoinRoomResponse.status_code));
+        DEBUG_MSG("Direct room join response body: " + directJoinRoomResponse.text);
         
         if (directJoinRoomResponse.status_code == 200)
         {
             auto roomJson = nlohmann::json::parse(directJoinRoomResponse.text);
             m_sRoomId = roomJson["room_id"];
-            QueueMessage("Matrix Debug", "Successfully joined room via direct join: " + m_sRoomId);
+            DEBUG_MSG("Successfully joined room via direct join: " + m_sRoomId);
             return true;
         }
         
@@ -756,7 +1554,7 @@ bool CChat::HttpJoinRoom()
         
         for (const auto& alias : alternativeAliases)
         {
-            QueueMessage("Matrix Debug", "Trying alternative alias: " + alias);
+            DEBUG_MSG("Trying alternative alias: " + alias);
             
             auto altJoinResponse = HttpClient::Post(
                 m_sBaseUrl + "/_matrix/client/v3/join/" + HttpClient::UrlEncode(alias),
@@ -768,17 +1566,17 @@ bool CChat::HttpJoinRoom()
             {
                 auto altJson = nlohmann::json::parse(altJoinResponse.text);
                 m_sRoomId = altJson["room_id"];
-                QueueMessage("Matrix Debug", "Successfully joined with alternative alias: " + alias);
+                DEBUG_MSG("Successfully joined with alternative alias: " + alias);
                 return true;
             }
             else
             {
-                QueueMessage("Matrix Debug", "Alternative alias failed (" + std::to_string(altJoinResponse.status_code) + "): " + altJoinResponse.text);
+                DEBUG_MSG("Alternative alias failed (" + std::to_string(altJoinResponse.status_code) + "): " + altJoinResponse.text);
             }
         }
         
         // Strategy 4: Check what public rooms are available
-        QueueMessage("Matrix Debug", "Checking public rooms directory...");
+        DEBUG_MSG("Checking public rooms directory...");
         
         auto publicRoomsResponse = HttpClient::Get(
             m_sBaseUrl + "/_matrix/client/v3/publicRooms?limit=10",
@@ -791,21 +1589,21 @@ bool CChat::HttpJoinRoom()
                 auto publicJson = nlohmann::json::parse(publicRoomsResponse.text);
                 if (publicJson.contains("chunk"))
                 {
-                    QueueMessage("Matrix Debug", "Found " + std::to_string(publicJson["chunk"].size()) + " public rooms:");
+                    DEBUG_MSG("Found " + std::to_string(publicJson["chunk"].size()) + " public rooms:");
                     for (const auto& room : publicJson["chunk"])
                     {
                         if (room.contains("name") && room.contains("room_id"))
                         {
                             std::string roomName = room["name"];
                             std::string roomId = room["room_id"];
-                            QueueMessage("Matrix Debug", "- " + roomName + " (" + roomId + ")");
+                            DEBUG_MSG("- " + roomName + " (" + roomId + ")");
                             
                             // If we find any room that looks like it might be ours, try to join it
                             if (roomName.find("talk") != std::string::npos || 
                                 roomName.find("async") != std::string::npos ||
                                 roomName.find("amalgam") != std::string::npos)
                             {
-                                QueueMessage("Matrix Debug", "Attempting to join promising room: " + roomName);
+                                DEBUG_MSG("Attempting to join promising room: " + roomName);
                                 
                                 auto joinPublicResponse = HttpClient::Post(
                                     m_sBaseUrl + "/_matrix/client/v3/rooms/" + roomId + "/join",
@@ -816,7 +1614,7 @@ bool CChat::HttpJoinRoom()
                                 if (joinPublicResponse.status_code == 200)
                                 {
                                     m_sRoomId = roomId;
-                                    QueueMessage("Matrix Debug", "Successfully joined public room: " + roomName);
+                                    DEBUG_MSG("Successfully joined public room: " + roomName);
                                     return true;
                                 }
                             }
@@ -824,12 +1622,12 @@ bool CChat::HttpJoinRoom()
                     }
                 }
             } catch (...) {
-                QueueMessage("Matrix Debug", "Error parsing public rooms response");
+                DEBUG_MSG("Error parsing public rooms response");
             }
         }
         
         // Strategy 4.5: List all joined rooms and look for matches
-        QueueMessage("Matrix Debug", "Checking existing joined rooms...");
+        DEBUG_MSG("Checking existing joined rooms...");
         
         auto syncResponse = HttpClient::Get(
             m_sBaseUrl + "/_matrix/client/v3/sync?timeout=0",
@@ -842,17 +1640,17 @@ bool CChat::HttpJoinRoom()
             
             if (syncJson.contains("rooms") && syncJson["rooms"].contains("join"))
             {
-                QueueMessage("Matrix Debug", "Found " + std::to_string(syncJson["rooms"]["join"].size()) + " joined rooms");
+                DEBUG_MSG("Found " + std::to_string(syncJson["rooms"]["join"].size()) + " joined rooms");
                 
                 for (const auto& [roomId, roomData] : syncJson["rooms"]["join"].items())
                 {
-                    QueueMessage("Matrix Debug", "Checking room: " + roomId);
+                    DEBUG_MSG("Checking room: " + roomId);
                     
                     // Simple check - just use the first room we find
                     if (syncJson["rooms"]["join"].size() > 0)
                     {
                         m_sRoomId = roomId;
-                        QueueMessage("Matrix Debug", "Using existing room: " + roomId);
+                        DEBUG_MSG("Using existing room: " + roomId);
                         return true;
                     }
                 }
@@ -860,7 +1658,7 @@ bool CChat::HttpJoinRoom()
         }
         
         // Strategy 5: Create the room/space if they don't exist
-        QueueMessage("Matrix Debug", "Creating asyncroom space since it doesn't exist...");
+        DEBUG_MSG("Creating asyncroom space since it doesn't exist...");
         
         nlohmann::json createSpaceData = {
             {"name", "Amalgam AsyncRoom"},
@@ -882,7 +1680,7 @@ bool CChat::HttpJoinRoom()
             auto spaceJson = nlohmann::json::parse(createSpaceResponse.text);
             std::string spaceId = spaceJson["room_id"];
             
-            QueueMessage("Matrix Debug", "Successfully created space: " + spaceId);
+            DEBUG_MSG("Successfully created space: " + spaceId);
             
             // Now create the talk room within the space
             nlohmann::json createRoomData = {
@@ -904,7 +1702,7 @@ bool CChat::HttpJoinRoom()
                 auto roomJson = nlohmann::json::parse(createRoomResponse.text);
                 m_sRoomId = roomJson["room_id"];
                 
-                QueueMessage("Matrix Debug", "Successfully created talk room: " + m_sRoomId);
+                DEBUG_MSG("Successfully created talk room: " + m_sRoomId);
                 
                 // Add room to space hierarchy
                 nlohmann::json spaceChildData = {
@@ -917,20 +1715,20 @@ bool CChat::HttpJoinRoom()
                     headers
                 );
                 
-                QueueMessage("Matrix Debug", "Added room to space hierarchy");
+                DEBUG_MSG("Added room to space hierarchy");
                 return true;
             }
             else
             {
                 // Use the space itself for messaging
                 m_sRoomId = spaceId;
-                QueueMessage("Matrix Debug", "Using space for messaging: " + spaceId);
+                DEBUG_MSG("Using space for messaging: " + spaceId);
                 return true;
             }
         }
         
         // Strategy 6: Just create a simple public room called "amalgam"
-        QueueMessage("Matrix Debug", "Creating fallback room: amalgam");
+        DEBUG_MSG("Creating fallback room: amalgam");
         
         nlohmann::json fallbackRoomData = {
             {"name", "Amalgam Chat"},
@@ -950,11 +1748,11 @@ bool CChat::HttpJoinRoom()
         {
             auto roomJson = nlohmann::json::parse(fallbackResponse.text);
             m_sRoomId = roomJson["room_id"];
-            QueueMessage("Matrix Debug", "Successfully created fallback room: " + m_sRoomId);
+            DEBUG_MSG("Successfully created fallback room: " + m_sRoomId);
             return true;
         }
         
-        QueueMessage("Matrix Debug", "All strategies failed including room creation");
+        DEBUG_MSG("All strategies failed including room creation");
         std::lock_guard<std::mutex> lock(m_StatusMutex);
         m_sLastError = "Could not find, join, or create any rooms. Space: " + spaceAlias + ", Room: " + roomAlias;
         return false;
@@ -971,7 +1769,7 @@ bool CChat::HttpSendMessage(const std::string& message)
 {
     try
     {
-        QueueMessage("Matrix Debug", "Attempting to send message to room: " + m_sRoomId);
+        DEBUG_MSG("Attempting to send message to room: " + m_sRoomId);
         
         std::string eventType = "m.room.message";
         std::string content;
@@ -984,17 +1782,32 @@ bool CChat::HttpSendMessage(const std::string& message)
         
         // Check if encryption is enabled
         if (IsEncryptionEnabled()) {
-            QueueMessage("Matrix Debug", "Encrypting message with Megolm");
+            DEBUG_MSG("Encrypting message with Megolm");
             
-            // Share session key with other users in the room
-            // TODO: Get actual user list from room members - for now sharing with common test users
-            std::vector<std::string> user_ids = {
-                Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value,  // ourselves
-                "@async_123:" + Vars::Chat::Server.Value,   // other test users
-                "@i56i56ii56yu45:" + Vars::Chat::Server.Value,
-                "@y345y453yy:" + Vars::Chat::Server.Value,
-                "@y4u57yhh:" + Vars::Chat::Server.Value
-            };
+            // Ensure room session exists first
+            if (!m_pCrypto->EnsureRoomSession(m_sRoomId)) {
+                DEBUG_MSG("Failed to create/ensure room session");
+                content = msgData.dump(); // Fall back to unencrypted
+            } else {
+                // Share session key with other users in the room
+                std::vector<std::string> user_ids = m_vRoomMembers;
+            
+            // If we don't have room members yet, refresh them
+            if (user_ids.empty()) {
+                DEBUG_MSG("No room members cached, refreshing...");
+                HttpGetRoomMembers();
+                user_ids = m_vRoomMembers;
+            }
+            
+            // Ensure we include ourselves if not already in the list
+            std::string ourUserId = "@" + Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value;
+            if (std::find(user_ids.begin(), user_ids.end(), ourUserId) == user_ids.end()) {
+                user_ids.push_back(ourUserId);
+            }
+            
+            // Ensure we have fresh device keys for all users
+            DEBUG_MSG("Downloading device keys for " + std::to_string(user_ids.size()) + " users");
+            HttpDownloadDeviceKeys();
             
             // Claim one-time keys for proper Olm session establishment
             HttpClaimKeys(user_ids);
@@ -1004,21 +1817,33 @@ bool CChat::HttpSendMessage(const std::string& message)
             
             // Send any pending room keys via to-device messages
             auto pendingKeys = m_pCrypto->GetPendingRoomKeys();
+            DEBUG_MSG("Sending " + std::to_string(pendingKeys.size()) + " room key to-device messages");
             for (const auto& key : pendingKeys) {
                 HttpSendToDevice("m.room.encrypted", key.user_id, key.device_id, key.encrypted_content);
             }
             m_pCrypto->ClearPendingRoomKeys();
+            
+            // Brief delay to allow to-device messages to be processed
+            if (!pendingKeys.empty()) {
+                DEBUG_MSG("Waiting for to-device messages to be processed...");
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            }
             
             // Encrypt the message content
             std::string encryptedContent = m_pCrypto->EncryptMessage(m_sRoomId, eventType, msgData.dump());
             if (!encryptedContent.empty()) {
                 eventType = "m.room.encrypted";
                 content = encryptedContent;
-                QueueMessage("Matrix Debug", "Message encrypted successfully");
-            } else {
-                QueueMessage("Matrix Debug", "Encryption failed, sending unencrypted");
-                content = msgData.dump();
+                DEBUG_MSG("Message encrypted successfully");
+                } else {
+                    DEBUG_MSG("Encryption failed, sending unencrypted");
+                    content = msgData.dump();
+                }
             }
+        } else {
+            // Encryption disabled, send unencrypted message
+            content = msgData.dump();
+            DEBUG_MSG("Sending unencrypted message");
         }
         
         std::string txnId = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1030,13 +1855,13 @@ bool CChat::HttpSendMessage(const std::string& message)
         };
         
         std::string url = m_sBaseUrl + "/_matrix/client/v3/rooms/" + m_sRoomId + "/send/" + eventType + "/" + txnId;
-        QueueMessage("Matrix Debug", "Send URL: " + url);
+        DEBUG_MSG("Send URL: " + url);
         
         auto response = HttpClient::Put(url, content, headers);
         
         if (response.status_code == 200)
         {
-            QueueMessage("Matrix Debug", "Message sent successfully!");
+            DEBUG_MSG("Message sent successfully!");
             
             // Show our own message in console immediately
             std::string ourUserId = Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value;
@@ -1046,7 +1871,7 @@ bool CChat::HttpSendMessage(const std::string& message)
         }
         else
         {
-            QueueMessage("Matrix Debug", "Send failed with status: " + std::to_string(response.status_code));
+            DEBUG_MSG("Send failed with status: " + std::to_string(response.status_code));
             std::lock_guard<std::mutex> lock(m_StatusMutex);
             m_sLastError = "Send message failed with status: " + std::to_string(response.status_code);
             return false;
@@ -1056,7 +1881,7 @@ bool CChat::HttpSendMessage(const std::string& message)
     {
         std::lock_guard<std::mutex> lock(m_StatusMutex);
         m_sLastError = "Send message error: " + std::string(e.what());
-        QueueMessage("Matrix Debug", "Send exception: " + std::string(e.what()));
+        DEBUG_MSG("Send exception: " + std::string(e.what()));
         return false;
     }
 }
@@ -1084,7 +1909,7 @@ void CChat::HttpSync()
             static bool firstSync = true;
             if (firstSync)
             {
-                QueueMessage("Matrix Debug", "First sync successful, monitoring for messages...");
+                DEBUG_MSG("First sync successful, monitoring for messages...");
                 firstSync = false;
             }
             
@@ -1097,12 +1922,12 @@ void CChat::HttpSync()
                 static bool shownRooms = false;
                 if (!shownRooms)
                 {
-                    QueueMessage("Matrix Debug", "Rooms we're joined to:");
+                    DEBUG_MSG("Rooms we're joined to:");
                     for (const auto& [roomId, roomData] : json["rooms"]["join"].items())
                     {
-                        QueueMessage("Matrix Debug", "- Room ID: " + roomId);
+                        DEBUG_MSG("- Room ID: " + roomId);
                     }
-                    QueueMessage("Matrix Debug", "Looking for messages in: " + m_sRoomId);
+                    DEBUG_MSG("Looking for messages in: " + m_sRoomId);
                     shownRooms = true;
                 }
             }
@@ -1124,17 +1949,17 @@ void CChat::HttpSync()
                             // Handle encrypted messages
                             if (event.contains("type") && event["type"] == "m.room.encrypted" && IsEncryptionEnabled())
                             {
-                                QueueMessage("Matrix Debug", "Encrypted message received from " + sender);
+                                DEBUG_MSG("Encrypted message received from " + sender);
                                 if (event.contains("content")) {
                                     content = m_pCrypto->DecryptMessage(roomId, event["content"].dump());
                                     if (!content.empty() && !content.starts_with("[")) {
-                                        QueueMessage("Matrix Debug", "Decrypted message: " + content);
+                                        DEBUG_MSG("Decrypted message: " + content);
                                         processed = true;
                                     } else {
-                                        QueueMessage("Matrix Debug", "Decryption failed: " + content);
+                                        DEBUG_MSG("Decryption failed: " + content);
                                     }
                                 } else {
-                                    QueueMessage("Matrix Debug", "Encrypted event missing content");
+                                    DEBUG_MSG("Encrypted event missing content");
                                 }
                             }
                             // Handle unencrypted text messages
@@ -1143,7 +1968,7 @@ void CChat::HttpSync()
                                      event["content"]["msgtype"] == "m.text")
                             {
                                 content = event["content"]["body"];
-                                QueueMessage("Matrix Debug", "Unencrypted message from " + sender + ": " + content);
+                                DEBUG_MSG("Unencrypted message from " + sender + ": " + content);
                                 processed = true;
                             }
                             
@@ -1164,13 +1989,24 @@ void CChat::HttpSync()
                     {
                         // Process room key events
                         m_pCrypto->ProcessKeyShareEvent(event.dump());
-                        QueueMessage("Matrix Debug", "Processed room key event");
+                        DEBUG_MSG("Processed room key event");
                     }
                     else if (event.contains("type") && event["type"] == "m.room.encrypted")
                     {
                         // Decrypt and process encrypted to-device messages
                         // This would contain room keys encrypted with Olm
-                        QueueMessage("Matrix Debug", "Received encrypted to-device message");
+                        DEBUG_MSG("Received encrypted to-device message");
+                        if (event.contains("content")) {
+                            std::string decrypted_content = m_pCrypto->DecryptToDeviceMessage(event["content"].dump());
+                            if (!decrypted_content.empty() && !decrypted_content.starts_with("[")) {
+                                DEBUG_MSG("Decrypted to-device message: " + decrypted_content);
+                                // Process the decrypted content (should be a room key event)
+                                m_pCrypto->ProcessKeyShareEvent(decrypted_content);
+                                DEBUG_MSG("Processed decrypted room key event");
+                            } else {
+                                DEBUG_MSG("To-device decryption failed: " + decrypted_content);
+                            }
+                        }
                     }
                 }
             }
@@ -1186,7 +2022,7 @@ void CChat::HttpSync()
             static int errorCount = 0;
             if (errorCount < 3)
             {
-                QueueMessage("Matrix Debug", "Sync HTTP error " + std::to_string(response.status_code) + ": " + response.text);
+                DEBUG_MSG("Sync HTTP error " + std::to_string(response.status_code) + ": " + response.text);
                 errorCount++;
             }
         }
@@ -1197,7 +2033,7 @@ void CChat::HttpSync()
         static int errorCount = 0;
         if (errorCount < 3)
         {
-            QueueMessage("Matrix Debug", "Sync exception: " + std::string(e.what()));
+            DEBUG_MSG("Sync exception: " + std::string(e.what()));
             errorCount++;
         }
     }
@@ -1206,14 +2042,14 @@ void CChat::HttpSync()
 bool CChat::HttpUploadDeviceKeys()
 {
     if (!m_pCrypto) {
-        QueueMessage("Matrix Debug", "Cannot upload device keys - encryption not initialized");
+        DEBUG_MSG("Cannot upload device keys - encryption not initialized");
         return false;
     }
     
     try {
         std::string deviceKeysJson = m_pCrypto->GetDeviceKeys();
         if (deviceKeysJson.empty()) {
-            QueueMessage("Matrix Debug", "Failed to get device keys");
+            DEBUG_MSG("Failed to get device keys");
             return false;
         }
         
@@ -1230,14 +2066,14 @@ bool CChat::HttpUploadDeviceKeys()
         auto response = HttpClient::Post(url, uploadData.dump(), headers);
         
         if (response.status_code == 200) {
-            QueueMessage("Matrix Debug", "Device keys uploaded successfully");
+            DEBUG_MSG("Device keys uploaded successfully");
             return true;
         } else {
-            QueueMessage("Matrix Debug", "Failed to upload device keys: " + std::to_string(response.status_code) + " - " + response.text);
+            DEBUG_MSG("Failed to upload device keys: " + std::to_string(response.status_code) + " - " + response.text);
             return false;
         }
     } catch (const std::exception& e) {
-        QueueMessage("Matrix Debug", "Device key upload error: " + std::string(e.what()));
+        DEBUG_MSG("Device key upload error: " + std::string(e.what()));
         return false;
     }
 }
@@ -1257,11 +2093,17 @@ bool CChat::HttpDownloadDeviceKeys(const std::string& user_id)
         if (!user_id.empty()) {
             queryData["device_keys"][user_id] = nlohmann::json::array();
         } else {
-            // Get users in the current room from last sync
-            // For now, we'll just query our own user_id as a fallback
-            if (m_pCrypto) {
-                std::string our_user_id = m_pCrypto->GetDeviceId(); // This should be user_id, need to fix
-                // TODO: Store user_id properly in crypto class
+            // Query device keys for all room members
+            if (!m_vRoomMembers.empty()) {
+                for (const auto& member : m_vRoomMembers) {
+                    queryData["device_keys"][member] = nlohmann::json::array();
+                }
+                DEBUG_MSG("Querying device keys for " + std::to_string(m_vRoomMembers.size()) + " room members");
+            } else {
+                // Fallback: query our own user (construct from username and server)
+                std::string our_user_id = "@" + Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value;
+                queryData["device_keys"][our_user_id] = nlohmann::json::array();
+                DEBUG_MSG("No room members cached, querying own device keys only");
             }
         }
         
@@ -1299,16 +2141,16 @@ bool CChat::HttpDownloadDeviceKeys(const std::string& user_id)
                     
                     m_pCrypto->UpdateUserDevices(userId, userDevices);
                 }
-                QueueMessage("Matrix Debug", "Downloaded device keys for " + std::to_string(responseJson["device_keys"].size()) + " users");
+                DEBUG_MSG("Downloaded device keys for " + std::to_string(responseJson["device_keys"].size()) + " users");
                 return true;
             }
         } else {
-            QueueMessage("Matrix Debug", "Failed to download device keys: " + std::to_string(response.status_code));
+            DEBUG_MSG("Failed to download device keys: " + std::to_string(response.status_code));
         }
         
         return false;
     } catch (const std::exception& e) {
-        QueueMessage("Matrix Debug", "Device key download error: " + std::string(e.what()));
+        DEBUG_MSG("Device key download error: " + std::string(e.what()));
         return false;
     }
 }
@@ -1339,14 +2181,14 @@ bool CChat::HttpSendToDevice(const std::string& event_type, const std::string& t
         auto response = HttpClient::Put(url, sendData.dump(), headers);
         
         if (response.status_code == 200) {
-            QueueMessage("Matrix Debug", "To-device message sent: " + event_type);
+            DEBUG_MSG("To-device message sent: " + event_type);
             return true;
         } else {
-            QueueMessage("Matrix Debug", "Failed to send to-device message: " + std::to_string(response.status_code));
+            DEBUG_MSG("Failed to send to-device message: " + std::to_string(response.status_code));
             return false;
         }
     } catch (const std::exception& e) {
-        QueueMessage("Matrix Debug", "To-device send error: " + std::string(e.what()));
+        DEBUG_MSG("To-device send error: " + std::string(e.what()));
         return false;
     }
 }
@@ -1360,7 +2202,7 @@ bool CChat::HttpUploadOneTimeKeys()
     try {
         std::string oneTimeKeysJson = m_pCrypto->GetOneTimeKeys();
         if (oneTimeKeysJson.empty()) {
-            QueueMessage("Matrix Debug", "No one-time keys to upload");
+            DEBUG_MSG("No one-time keys to upload");
             return true;
         }
         
@@ -1378,14 +2220,14 @@ bool CChat::HttpUploadOneTimeKeys()
         
         if (response.status_code == 200) {
             m_pCrypto->MarkOneTimeKeysAsPublished();
-            QueueMessage("Matrix Debug", "One-time keys uploaded successfully");
+            DEBUG_MSG("One-time keys uploaded successfully");
             return true;
         } else {
-            QueueMessage("Matrix Debug", "Failed to upload one-time keys: " + std::to_string(response.status_code));
+            DEBUG_MSG("Failed to upload one-time keys: " + std::to_string(response.status_code));
             return false;
         }
     } catch (const std::exception& e) {
-        QueueMessage("Matrix Debug", "One-time key upload error: " + std::string(e.what()));
+        DEBUG_MSG("One-time key upload error: " + std::string(e.what()));
         return false;
     }
 }
@@ -1403,17 +2245,28 @@ bool CChat::HttpGetRoomMembers()
         if (response.status_code == 200) {
             auto responseJson = nlohmann::json::parse(response.text);
             if (responseJson.contains("chunk")) {
-                QueueMessage("Matrix Debug", "Found " + std::to_string(responseJson["chunk"].size()) + " room members");
-                // TODO: Store room members for key sharing
+                DEBUG_MSG("Found " + std::to_string(responseJson["chunk"].size()) + " room members");
+                
+                // Store room members for key sharing
+                m_vRoomMembers.clear();
+                for (const auto& member : responseJson["chunk"]) {
+                    if (member.contains("content") && member["content"].contains("membership") &&
+                        member["content"]["membership"] == "join" && member.contains("state_key")) {
+                        std::string user_id = member["state_key"];
+                        m_vRoomMembers.push_back(user_id);
+                        DEBUG_MSG("Added room member: " + user_id);
+                    }
+                }
+                DEBUG_MSG("Stored " + std::to_string(m_vRoomMembers.size()) + " active room members");
                 return true;
             }
         } else {
-            QueueMessage("Matrix Debug", "Failed to get room members: " + std::to_string(response.status_code));
+            DEBUG_MSG("Failed to get room members: " + std::to_string(response.status_code));
         }
         
         return false;
     } catch (const std::exception& e) {
-        QueueMessage("Matrix Debug", "Room members error: " + std::string(e.what()));
+        DEBUG_MSG("Room members error: " + std::string(e.what()));
         return false;
     }
 }
@@ -1443,29 +2296,30 @@ bool CChat::HttpClaimKeys(const std::vector<std::string>& user_ids)
         if (response.status_code == 200) {
             auto responseJson = nlohmann::json::parse(response.text);
             if (responseJson.contains("one_time_keys")) {
-                QueueMessage("Matrix Debug", "Claimed one-time keys for " + std::to_string(responseJson["one_time_keys"].size()) + " users");
+                DEBUG_MSG("Claimed one-time keys for " + std::to_string(responseJson["one_time_keys"].size()) + " users");
                 
                 // Process claimed keys and store them for session creation
                 for (auto& [userId, devices] : responseJson["one_time_keys"].items()) {
                     for (auto& [deviceId, keys] : devices.items()) {
                         for (auto& [keyId, keyValue] : keys.items()) {
-                            // Find the device's curve25519 key to map to this one-time key
-                            // For now, we'll use a simplified mapping
-                            std::string device_curve_key = "device_" + userId + "_" + deviceId;
-                            m_pCrypto->StoreClaimedKey(device_curve_key, keyValue);
-                            QueueMessage("Matrix Debug", "Stored claimed key " + keyId + " from " + userId + ":" + deviceId);
+                            // We need to map the claimed one-time key to the device's curve25519 key
+                            // The one-time key should be stored using the device's curve25519 key as the map key
+                            // For now, store with device ID as key - this will be resolved in the crypto layer
+                            std::string deviceKey = userId + ":" + deviceId;
+                            m_pCrypto->StoreClaimedKey(deviceKey, keyValue);
+                            DEBUG_MSG("Stored claimed key " + keyId + " from " + userId + ":" + deviceId);
                         }
                     }
                 }
                 return true;
             }
         } else {
-            QueueMessage("Matrix Debug", "Failed to claim keys: " + std::to_string(response.status_code));
+            DEBUG_MSG("Failed to claim keys: " + std::to_string(response.status_code));
         }
         
         return false;
     } catch (const std::exception& e) {
-        QueueMessage("Matrix Debug", "Key claim error: " + std::string(e.what()));
+        DEBUG_MSG("Key claim error: " + std::string(e.what()));
         return false;
     }
 }
@@ -1477,30 +2331,30 @@ bool CChat::InitializeEncryption()
     }
     
     // Initialize crypto with our user ID
-    bool success = m_pCrypto->Initialize(Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value);
+    bool success = m_pCrypto->Initialize("@" + Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value);
     if (success) {
         m_bEncryptionEnabled = true;
         QueueMessage("Matrix", "Encryption initialized for device: " + m_pCrypto->GetDeviceId());
         
         // Upload our device keys to the server
         if (HttpUploadDeviceKeys()) {
-            QueueMessage("Matrix Debug", "Device keys uploaded successfully");
+            DEBUG_MSG("Device keys uploaded successfully");
         } else {
-            QueueMessage("Matrix Debug", "Failed to upload device keys");
+            DEBUG_MSG("Failed to upload device keys");
         }
         
         // Upload one-time keys for session establishment
         if (HttpUploadOneTimeKeys()) {
-            QueueMessage("Matrix Debug", "One-time keys uploaded successfully");
+            DEBUG_MSG("One-time keys uploaded successfully");
         } else {
-            QueueMessage("Matrix Debug", "Failed to upload one-time keys");
+            DEBUG_MSG("Failed to upload one-time keys");
         }
+        
+        // Get room members for key sharing (must be done before downloading device keys)
+        HttpGetRoomMembers();
         
         // Download device keys for other users in the room
         HttpDownloadDeviceKeys();
-        
-        // Get room members for key sharing
-        HttpGetRoomMembers();
         
     } else {
         QueueMessage("Matrix", "Failed to initialize encryption - using unencrypted mode");
@@ -1529,7 +2383,7 @@ void CChat::SaveChatSettings()
             file.close();
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception&)
     {
         // Silently ignore save errors
     }
@@ -1562,7 +2416,7 @@ void CChat::LoadChatSettings()
                 Vars::Chat::ShowTimestamps.Value = chatSettings["show_timestamps"].get<bool>();
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception&)
     {
         // Silently ignore load errors - use defaults
     }

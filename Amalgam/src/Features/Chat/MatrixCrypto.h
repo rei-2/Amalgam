@@ -34,6 +34,7 @@ struct MegolmSession
     std::map<std::string, OlmInboundGroupSession*> inbound_sessions; // key = session_id
     uint32_t message_count = 0;
     int64_t creation_time = 0;
+    bool key_shared = false; // Track if session key has been shared
     
     ~MegolmSession();
 };
@@ -100,6 +101,7 @@ public:
     // Encryption/Decryption
     std::string EncryptMessage(const std::string& room_id, const std::string& event_type, const std::string& content);
     std::string DecryptMessage(const std::string& room_id, const std::string& encrypted_event);
+    std::string DecryptToDeviceMessage(const std::string& encrypted_event);
     
     // Session management
     bool EnsureRoomSession(const std::string& room_id);

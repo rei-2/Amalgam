@@ -45,10 +45,28 @@ private:
     std::string m_sRoomId;
     std::string m_sBaseUrl;
     std::string m_sNextBatch;
+    std::vector<std::string> m_vRoomMembers;
+    
+    // Email registration session data
+    std::string m_sRegistrationSession;
+    std::string m_sPendingUsername;
+    std::string m_sPendingPassword;
+    std::string m_sClientSecret;
+    std::string m_sEmailSid;
+    std::string m_sIdentityServer; // Track which identity server provided the SID
+    std::string m_sRecaptchaPublicKey;
+    bool m_bRecaptchaRequired = false;
+    bool m_bRecaptchaShowing = false;
+    
+    // Email verification state tracking
+    bool m_bEmailVerificationRequested = false;
+    bool m_bEmailVerificationCompleted = false;
+    std::string m_sLastEmailRequested; // Track last email to prevent duplicates
     
     // Encryption support
     std::unique_ptr<MatrixCrypto> m_pCrypto;
     bool m_bEncryptionEnabled = false;
+    
     
     // Helper functions
     void ProcessIncomingMessage(const std::string& sender, const std::string& content);
@@ -64,6 +82,13 @@ private:
     bool HttpJoinRoom();
     bool HttpSendMessage(const std::string& message);
     void HttpSync();
+    
+    // Registration helper functions
+    void CreateAccountInternal(const std::string& username, const std::string& password, const std::string& sessionId = "");
+    void CompleteRegistration(const std::string& response_text);
+    void HandleRegistrationError(int status_code, const std::string& response_text);
+    void ResetRegistrationState();
+    bool IsEmailVerificationPending() const;
     
     // Device and key management
     bool HttpUploadDeviceKeys();
@@ -81,10 +106,19 @@ public:
     void Connect();
     void Disconnect();
     void CreateAccount(const std::string& username, const std::string& password);
+    void CreateAccountWithEmail(const std::string& username, const std::string& password, const std::string& email);
+    void SubmitEmailVerification(const std::string& token);
+    void ShowRecaptcha();
+    void CompleteRecaptcha();
     void Login(const std::string& username, const std::string& password);
     
     // Chat settings persistence
     void SaveChatSettings();
+    
+    // Status information
+    std::string GetStatus() const;
+    bool IsRecaptchaRequired() const { return m_bRecaptchaRequired; }
+    bool IsRecaptchaShowing() const { return m_bRecaptchaShowing; }
     
     // Message handling
     void SendMessage(const std::string& message);

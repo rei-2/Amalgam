@@ -19,4 +19,7 @@ namespace HttpClient
     
     // URL encoding utility
     std::string UrlEncode(const std::string& input);
+    
+    // Set logging callback for HTTP requests
+    void SetLogCallback(void(*callback)(const std::string&, const std::string&));
 }

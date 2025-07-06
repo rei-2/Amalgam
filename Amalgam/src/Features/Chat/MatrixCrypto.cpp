@@ -440,6 +440,16 @@ bool MatrixCrypto::ShareSessionKey(const std::string& room_id, const std::vector
     
     auto& session = it->second;
     
+    // Only share the key if it hasn't been shared yet for this session
+    // Or if the session is very new (within last 10 seconds) - re-share to ensure delivery
+    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::system_clock::now().time_since_epoch()).count();
+    bool session_is_new = (now - session->creation_time) < 10000; // 10 seconds
+    
+    if (session->key_shared && !session_is_new) {
+        return true; // Key already shared for this session and it's not brand new
+    }
+    
     try {
         // Export the session key
         size_t key_length = olm_outbound_group_session_key_length(session->outbound_session);
@@ -474,7 +484,7 @@ bool MatrixCrypto::ShareSessionKey(const std::string& room_id, const std::vector
                 {"room_id", room_id},
                 {"session_id", session->session_id},
                 {"session_key", session_key},
-                {"chain_index", session->message_count}
+                {"chain_index", 0}  // Always start from 0 so recipients can decrypt all messages
             }},
             {"sender", m_sUserId},
             {"sender_key", sender_key}
@@ -482,22 +492,34 @@ bool MatrixCrypto::ShareSessionKey(const std::string& room_id, const std::vector
         
         // Share room keys with all devices of specified users
         std::lock_guard<std::mutex> device_lock(m_DevicesMutex);
+        int total_devices = 0;
+        int successful_encryptions = 0;
+        
         for (const auto& user_id : user_ids) {
             auto user_devices_it = m_UserDevices.find(user_id);
             if (user_devices_it != m_UserDevices.end()) {
                 for (const auto& [device_id, device] : user_devices_it->second) {
+                    total_devices++;
                     // Create Olm session if needed and encrypt the room key
                     if (CreateOlmSessionIfNeeded(device)) {
                         std::string encrypted_content = EncryptForDevice(device, room_key_event.dump());
                         if (!encrypted_content.empty()) {
                             // Store to be sent via to-device message
                             m_PendingRoomKeys.push_back({user_id, device_id, encrypted_content});
+                            successful_encryptions++;
                         }
                     }
                 }
             }
         }
         
+        if (total_devices == 0) {
+            // No devices found - this is likely the issue!
+            return false;
+        }
+        
+        // Mark the session key as shared
+        session->key_shared = true;
         return true;
     } catch (...) {
         return false;
@@ -611,12 +633,21 @@ bool MatrixCrypto::CreateOlmSessionIfNeeded(const MatrixDevice& device)
         std::string one_time_key;
         {
             std::lock_guard<std::mutex> key_lock(m_ClaimedKeysMutex);
+            
+            // First try to find by curve25519 key (old method)
             auto key_it = m_ClaimedOneTimeKeys.find(device.curve25519_key);
             if (key_it != m_ClaimedOneTimeKeys.end()) {
                 one_time_key = key_it->second;
             } else {
-                // No claimed key available - use device key as fallback
-                one_time_key = device.curve25519_key;
+                // Try to find by user:device format (new method)
+                std::string device_identifier = device.user_id + ":" + device.device_id;
+                key_it = m_ClaimedOneTimeKeys.find(device_identifier);
+                if (key_it != m_ClaimedOneTimeKeys.end()) {
+                    one_time_key = key_it->second;
+                } else {
+                    // No claimed key available - use device key as fallback
+                    one_time_key = device.curve25519_key;
+                }
             }
         }
         
@@ -788,4 +819,116 @@ void MatrixCrypto::StoreClaimedKey(const std::string& device_key, const std::str
 {
     std::lock_guard<std::mutex> lock(m_ClaimedKeysMutex);
     m_ClaimedOneTimeKeys[device_key] = one_time_key;
+}
+
+std::string MatrixCrypto::DecryptToDeviceMessage(const std::string& encrypted_event)
+{
+    try {
+        auto json = nlohmann::json::parse(encrypted_event);
+        
+        // Check for required fields per Matrix spec
+        if (!json.contains("algorithm") || !json.contains("ciphertext") || !json.contains("sender_key")) {
+            return "[Invalid encrypted to-device event format]";
+        }
+        
+        std::string algorithm = json["algorithm"];
+        if (algorithm != "m.olm.v1.curve25519-aes-sha2") {
+            return "[Unsupported to-device encryption algorithm: " + algorithm + "]";
+        }
+        
+        std::string sender_key = json["sender_key"];
+        
+        // Get our curve25519 key to find the correct ciphertext
+        std::string our_key;
+        if (m_pAccount) {
+            size_t id_keys_length = olm_account_identity_keys_length(m_pAccount);
+            std::vector<uint8_t> id_keys_buffer(id_keys_length);
+            
+            if (olm_account_identity_keys(m_pAccount, id_keys_buffer.data(), id_keys_length) != olm_error()) {
+                std::string id_keys_str(reinterpret_cast<char*>(id_keys_buffer.data()), id_keys_length);
+                auto id_keys_json = nlohmann::json::parse(id_keys_str);
+                our_key = id_keys_json["curve25519"];
+            }
+        }
+        
+        if (our_key.empty()) {
+            return "[Could not get our device key]";
+        }
+        
+        // Find the ciphertext intended for us
+        if (!json["ciphertext"].contains(our_key)) {
+            return "[Message not intended for this device]";
+        }
+        
+        auto ciphertext_obj = json["ciphertext"][our_key];
+        if (!ciphertext_obj.contains("type") || !ciphertext_obj.contains("body")) {
+            return "[Invalid ciphertext format]";
+        }
+        
+        int message_type = ciphertext_obj["type"];
+        std::string ciphertext_body = ciphertext_obj["body"];
+        
+        // Find or create Olm session for this sender
+        std::lock_guard<std::mutex> lock(m_OlmSessionsMutex);
+        auto session_it = m_OlmSessions.find(sender_key);
+        
+        OlmSession* session = nullptr;
+        if (session_it == m_OlmSessions.end()) {
+            // If it's a pre-key message (type 0), create inbound session
+            if (message_type == 0) {
+                size_t session_size = olm_session_size();
+                session = reinterpret_cast<OlmSession*>(new uint8_t[session_size]);
+                olm_session(session);
+                
+                // Create inbound session from pre-key message
+                std::vector<uint8_t> ciphertext_buffer(ciphertext_body.begin(), ciphertext_body.end());
+                size_t result = olm_create_inbound_session(session, m_pAccount, 
+                                                          ciphertext_buffer.data(), ciphertext_buffer.size());
+                
+                if (result == olm_error()) {
+                    delete[] reinterpret_cast<uint8_t*>(session);
+                    return "[Failed to create inbound session]";
+                }
+                
+                // Remove the one-time key that was used
+                olm_remove_one_time_keys(m_pAccount, session);
+                
+                // Store the session
+                m_OlmSessions[sender_key] = session;
+            } else {
+                return "[No session available for sender and message is not pre-key]";
+            }
+        } else {
+            session = session_it->second;
+        }
+        
+        // Decrypt the message
+        std::vector<uint8_t> ciphertext_buffer(ciphertext_body.begin(), ciphertext_body.end());
+        size_t max_plaintext_length = olm_decrypt_max_plaintext_length(session, message_type, 
+                                                                      ciphertext_buffer.data(), ciphertext_buffer.size());
+        
+        if (max_plaintext_length == olm_error()) {
+            return "[Failed to get max plaintext length]";
+        }
+        
+        std::vector<uint8_t> plaintext_buffer(max_plaintext_length);
+        std::vector<uint8_t> ciphertext_copy(ciphertext_body.begin(), ciphertext_body.end());
+        
+        size_t plaintext_length = olm_decrypt(session, message_type,
+                                             ciphertext_copy.data(), ciphertext_copy.size(),
+                                             plaintext_buffer.data(), max_plaintext_length);
+        
+        if (plaintext_length == olm_error()) {
+            const char* error = olm_session_last_error(session);
+            return "[To-device decryption failed: " + std::string(error ? error : "unknown error") + "]";
+        }
+        
+        std::string plaintext(reinterpret_cast<char*>(plaintext_buffer.data()), plaintext_length);
+        return plaintext;
+        
+    } catch (const std::exception& e) {
+        return "[To-device decryption error: " + std::string(e.what()) + "]";
+    } catch (...) {
+        return "[Unknown to-device decryption error]";
+    }
 }
