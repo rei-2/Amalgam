@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Unused dependencies
 mtxclient/
+
+# vcpkg
+vcpkg/
