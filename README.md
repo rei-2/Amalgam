@@ -1,6 +1,7 @@
 # Amalgam - Competitive Fork
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/coffeegrind123/Amalgam-Comp)](/../../stargazers)
+[![Matrix](https://img.shields.io/matrix/amalgam-comp:matrix.org?server_fqdn=matrix.org&logo=element&label=matrix)](https://matrix.to/#/#amalgam-comp:matrix.org)
 [![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/coffeegrind123/Amalgam-Comp/msbuild.yml?branch=master)](/../../actions)
 [![GitHub commit activity (branch)](https://img.shields.io/github/commit-activity/m/coffeegrind123/Amalgam-Comp)](/../../commits/)
 
