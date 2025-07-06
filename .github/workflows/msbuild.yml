@@ -38,6 +38,8 @@ jobs:
     run: |
       C:\vcpkg\vcpkg install cpr:x64-windows-static-md
       C:\vcpkg\vcpkg install nlohmann-json:x64-windows-static-md
+      C:\vcpkg\vcpkg install cpr:x64-windows
+      C:\vcpkg\vcpkg install nlohmann-json:x64-windows
 
   - name: Restore NuGet packages
     working-directory: ${{ github.workspace }}
