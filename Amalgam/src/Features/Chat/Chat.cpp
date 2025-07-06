@@ -1177,10 +1177,29 @@ void CChat::DisplayInGameMessage(const std::string& sender, const std::string& c
             // \x7 followed by 6 hex chars for custom color (cyan for Matrix)
             // \x3 for username color (default player name color)  
             // \x1 for normal white text and IMPORTANT: terminates color formatting
-            std::string formattedMessage = std::format(
-                "\x7""00FFFF[Matrix] \x3{}\x1: {}\x1", 
-                userName, safeContent
-            );
+            std::string formattedMessage;
+            
+            if (Vars::Chat::ShowTimestamps.Value)
+            {
+                // Get current time and format as [HH:MM:SS]
+                auto now = std::chrono::system_clock::now();
+                auto time_t = std::chrono::system_clock::to_time_t(now);
+                auto tm = *std::localtime(&time_t);
+                
+                std::string timestamp = std::format("[{:02d}:{:02d}:{:02d}] ", tm.tm_hour, tm.tm_min, tm.tm_sec);
+                
+                formattedMessage = std::format(
+                    "\x7""00FFFF{}\x7""00FFFF[Matrix] \x3{}\x1: {}\x1", 
+                    timestamp, userName, safeContent
+                );
+            }
+            else
+            {
+                formattedMessage = std::format(
+                    "\x7""00FFFF[Matrix] \x3{}\x1: {}\x1", 
+                    userName, safeContent
+                );
+            }
             
             // Use ChatPrintf with single string parameter (no variadic args)
             // This matches the working pattern from SDK.cpp

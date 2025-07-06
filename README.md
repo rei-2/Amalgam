@@ -47,11 +47,36 @@ All features are fully configurable through the COMP tab menu with individual to
 - **Matrix Chat Integration** - Full Matrix client with end-to-end encryption built directly into TF2
   - **Real E2E Encryption** - Complete libolm integration with Megolm group encryption and Olm device-to-device encryption
   - **Multi-User Support** - Device key management, session key sharing, and cross-device message decryption
-  - **TF2 Integration** - Send messages using `!!` prefix in TF2 chat, receive messages in console
-  - **Zero Setup** - Automatic account creation, room discovery, and encryption initialization
+  - **TF2 Chat Display** - Messages appear directly in TF2 chat with proper color formatting and usernames
+  - **Send with !! Prefix** - Type `!!message` in TF2 chat to send to Matrix (blocked from game chat)
+  - **Optional Timestamps** - Configurable timestamp display in [HH:MM:SS] format
   - **Production Ready** - Thread-safe background sync with Matrix homeservers
+  - **Auto-Discovery** - Automatic account creation, room discovery, and encryption initialization
 
-  Configure via CHAT tab: set server (default: pendora.io), username, password, space (asyncroom), and room (talk). Messages appear in TF2 console and can be sent using `!!message` in game chat.
+  Configure via CHAT tab: set server, username, password, space, and room. Messages display as: `[Matrix] @username: message`
+
+## Matrix Chat Integration
+
+Amalgam includes built-in Matrix chat integration for secure team communication:
+
+### Features
+- **End-to-End Encryption**: Full E2EE support using libolm
+- **Multi-user Support**: Connect multiple team members securely
+- **TF2 Color Support**: Team chat colors matching in-game display
+- **External Registration**: Support for custom Matrix homeservers
+- **In-game Integration**: Seamless chat overlay within TF2
+
+### Setup
+1. Configure Matrix settings in the Amalgam menu
+2. Enter your Matrix homeserver URL and credentials
+3. Join or create encrypted rooms for team communication
+4. Enable in-game chat overlay in Visual settings
+
+### Security
+- Uses industry-standard Matrix protocol with libolm encryption
+- All messages are end-to-end encrypted by default
+- No chat data stored locally without encryption
+- Supports device verification for enhanced security
 
 ## Development Setup
 
