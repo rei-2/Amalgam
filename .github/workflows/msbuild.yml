@@ -20,12 +20,15 @@ jobs:
     uses: microsoft/setup-msbuild@v2
 
   - name: Setup vcpkg
-    uses: microsoft/setup-vcpkg@v1
+    run: |
+      git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+      C:\vcpkg\bootstrap-vcpkg.bat
+      C:\vcpkg\vcpkg integrate install
 
   - name: Install vcpkg dependencies
     run: |
-      vcpkg install cpr:x64-windows-static-md
-      vcpkg install nlohmann-json:x64-windows-static-md
+      C:\vcpkg\vcpkg install cpr:x64-windows-static-md
+      C:\vcpkg\vcpkg install nlohmann-json:x64-windows-static-md
 
   - name: Restore NuGet packages
     working-directory: ${{ github.workspace }}
