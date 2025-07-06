@@ -19,11 +19,22 @@ jobs:
   - name: Add MSBuild to PATH
     uses: microsoft/setup-msbuild@v2
 
+  - name: Cache vcpkg
+    uses: actions/cache@v4
+    with:
+      path: C:\vcpkg
+      key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}
+      restore-keys: |
+        ${{ runner.os }}-vcpkg-
+
   - name: Setup vcpkg
     run: |
-      git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-      C:\vcpkg\bootstrap-vcpkg.bat
+      if (!(Test-Path "C:\vcpkg")) {
+        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+        C:\vcpkg\bootstrap-vcpkg.bat
+      }
       C:\vcpkg\vcpkg integrate install
+    shell: powershell
 
   - name: Install vcpkg dependencies
     run: |
