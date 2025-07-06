@@ -55,29 +55,6 @@ All features are fully configurable through the COMP tab menu with individual to
 
   Configure via CHAT tab: set server, username, password, space, and room. Messages display as: `[Matrix] @username: message`
 
-## Matrix Chat Integration
-
-Amalgam includes built-in Matrix chat integration for secure team communication:
-
-### Features
-- **End-to-End Encryption**: Full E2EE support using libolm
-- **Multi-user Support**: Connect multiple team members securely
-- **TF2 Color Support**: Team chat colors matching in-game display
-- **External Registration**: Support for custom Matrix homeservers
-- **In-game Integration**: Seamless chat overlay within TF2
-
-### Setup
-1. Configure Matrix settings in the Amalgam menu
-2. Enter your Matrix homeserver URL and credentials
-3. Join or create encrypted rooms for team communication
-4. Enable in-game chat overlay in Visual settings
-
-### Security
-- Uses industry-standard Matrix protocol with libolm encryption
-- All messages are end-to-end encrypted by default
-- No chat data stored locally without encryption
-- Supports device verification for enhanced security
-
 ## Development Setup
 
 ### Quick Start
