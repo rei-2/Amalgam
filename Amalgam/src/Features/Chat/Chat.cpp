@@ -5,6 +5,7 @@
 #include <ctime>
 #include <fstream>
 #include <cstdio>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -1164,14 +1165,26 @@ void CChat::DisplayInGameMessage(const std::string& sender, const std::string& c
                 userName = userName.substr(9); // Remove "[Matrix] " prefix
             }
             
-            // Sanitize strings to prevent format issues
+            // Sanitize strings to prevent format issues and null bytes
             std::replace(userName.begin(), userName.end(), '%', '_');
+            userName.erase(std::remove(userName.begin(), userName.end(), '\0'), userName.end());
+            
             std::string safeContent = content;
             std::replace(safeContent.begin(), safeContent.end(), '%', '_');
+            safeContent.erase(std::remove(safeContent.begin(), safeContent.end(), '\0'), safeContent.end());
             
-            // Use ChatPrintf from main thread (should be safe)
-            I::ClientModeShared->m_pChatElement->ChatPrintf(0, "[Matrix] %s: %s", 
-                userName.c_str(), safeContent.c_str());
+            // Build the properly formatted message with TF2 color codes
+            // \x7 followed by 6 hex chars for custom color (cyan for Matrix)
+            // \x3 for username color (default player name color)  
+            // \x1 for normal white text and IMPORTANT: terminates color formatting
+            std::string formattedMessage = std::format(
+                "\x7""00FFFF[Matrix] \x3{}\x1: {}\x1", 
+                userName, safeContent
+            );
+            
+            // Use ChatPrintf with single string parameter (no variadic args)
+            // This matches the working pattern from SDK.cpp
+            I::ClientModeShared->m_pChatElement->ChatPrintf(0, formattedMessage.c_str());
             return;
         }
         catch (...)
@@ -1180,8 +1193,8 @@ void CChat::DisplayInGameMessage(const std::string& sender, const std::string& c
         }
     }
     
+    // Fallback to console - only in debug builds to reduce console spam
 #ifdef _DEBUG
-    // Fallback to console only in debug builds
     if (I::CVar)
     {
         Color_t tColor = { 0, 255, 255, 255 }; // Cyan color for Matrix messages
@@ -1863,9 +1876,7 @@ bool CChat::HttpSendMessage(const std::string& message)
         {
             DEBUG_MSG("Message sent successfully!");
             
-            // Show our own message in console immediately
-            std::string ourUserId = Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value;
-            ProcessIncomingMessage(ourUserId, message);
+            // Don't show local echo - we'll receive it back from the server with proper formatting
             
             return true;
         }
