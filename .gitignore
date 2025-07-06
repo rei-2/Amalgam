@@ -367,3 +367,6 @@ mtxclient/
 
 # vcpkg
 vcpkg/
+
+# element-web
+element-web/
