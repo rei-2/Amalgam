@@ -18,6 +18,7 @@
 #include "../Features/Visuals/AmmoTracker/AmmoTracker.h"
 #include "../Features/Visuals/MarkSpot/MarkSpot.h"
 #include "../Features/Visuals/HealthBarESP/HealthBarESP.h"
+#include "../Features/Visuals/OffScreenIndicators/OffScreenIndicators.h"
 #include "../Features/Visuals/PlayerTrails/PlayerTrails.h"
 #include "../Features/Visuals/SplashRadius/SplashRadius.h"
 #include "../Features/Visuals/SentryESP/SentryESP.h"
@@ -70,6 +71,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::MarkSpot.Draw();
 			F::MarkSpot.HandleInput();
 			F::HealthBarESP.Draw();
+			F::OffScreenIndicators.Draw();
 			F::PlayerTrails.Draw();
 			F::SplashRadius.Draw();
 			F::SentryESP.Draw();

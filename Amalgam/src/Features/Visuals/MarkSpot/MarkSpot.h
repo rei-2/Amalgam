@@ -42,6 +42,11 @@ private:
     Color_t GenerateColor(const std::string& steamID);
     std::string GetLocalSteamID();
     
+    // Off-screen indicators for mark spots
+    void DrawOffScreenIndicators();
+    bool IsOnScreen(const Vec3& position);
+    void DrawArrow(int centerX, int centerY, float angle, const Color_t& color, int size = 10);
+    
 public:
     CMarkSpot() = default;
     void Draw();
