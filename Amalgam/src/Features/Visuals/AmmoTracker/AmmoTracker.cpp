@@ -257,7 +257,11 @@ void CAmmoTracker::Draw()
     
     for (const auto& [sKey, info] : m_SupplyPositions)
     {
-        if (!info.Respawning || !IsVisible(info.Position))
+        if (!info.Respawning)
+            continue;
+            
+        // Check visibility if "Show through walls" is disabled
+        if (!Vars::Competitive::AmmoTracker::ShowThroughWalls.Value && !IsVisible(info.Position))
             continue;
             
         Vec3 vScreenPos;

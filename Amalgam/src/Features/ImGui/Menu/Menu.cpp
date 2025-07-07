@@ -1586,8 +1586,9 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::AmmoTracker::ShowScreenPieChart, FToggleEnum::Right);
 					FToggle(Vars::Competitive::AmmoTracker::ShowSeconds, FToggleEnum::Left);
 					FToggle(Vars::Competitive::AmmoTracker::ShowMilliseconds, FToggleEnum::Right);
-					FToggle(Vars::Competitive::AmmoTracker::ScaleWithDistance, FToggleEnum::Left);
-					FToggle(Vars::Competitive::AmmoTracker::ScaleTextWithDistance, FToggleEnum::Right);
+					FToggle(Vars::Competitive::AmmoTracker::ShowThroughWalls, FToggleEnum::Left);
+					FToggle(Vars::Competitive::AmmoTracker::ScaleWithDistance, FToggleEnum::Right);
+					FToggle(Vars::Competitive::AmmoTracker::ScaleTextWithDistance, FToggleEnum::Left);
 					
 					FSlider(Vars::Competitive::AmmoTracker::MaxDistanceGroundPieChart, FSliderEnum::Left);
 					FSlider(Vars::Competitive::AmmoTracker::MaxDistanceScreenPieChart, FSliderEnum::Right);
