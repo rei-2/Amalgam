@@ -1058,6 +1058,7 @@ namespace Vars
 			CVar(ShowSeconds, "Show seconds timer", false, VISUAL);
 			CVar(ShowMilliseconds, "Show milliseconds", false, VISUAL);
 			CVar(ShowThroughWalls, "Show through walls", false, VISUAL);
+			CVar(ShowHudOverlay, "Show HUD overlay when standing on supplies", true, VISUAL);
 			CVar(ScaleWithDistance, "Scale with distance", true, VISUAL);
 			CVar(ScaleTextWithDistance, "Scale text with distance", true, VISUAL);
 			CVar(MaxDistanceGroundPieChart, "Max distance for ground charts", 1000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 3000.0f, 50.0f);

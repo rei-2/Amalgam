@@ -160,6 +160,90 @@ int CAmmoTracker::GetTextSize(float flDistance)
                     std::min(Vars::Competitive::AmmoTracker::TextSizeMax.Value, iResult));
 }
 
+bool CAmmoTracker::IsPlayerNearSupply(const Vec3& vPlayerPos, const Vec3& vSupplyPos, float flMaxDistance)
+{
+    float fDistance = vPlayerPos.DistTo(vSupplyPos);
+    return fDistance <= flMaxDistance;
+}
+
+void CAmmoTracker::DrawHudOverlay(const Vec3& vPlayerPos)
+{
+    if (!Vars::Competitive::AmmoTracker::ShowHudOverlay.Value)
+        return;
+    
+    // Get screen dimensions
+    int iScreenW, iScreenH;
+    I::MatSystemSurface->GetScreenSize(iScreenW, iScreenH);
+    
+    // HUD overlay settings
+    const int iHudCircleSize = 30;
+    const int iHudSpacing = 10;
+    const int iMarginFromEdge = 20;
+    
+    std::vector<std::pair<SupplyInfo, float>> vNearbySupplies;
+    float fCurrentTime = I::GlobalVars->curtime;
+    
+    // Find supplies the player is standing on
+    for (const auto& [sKey, info] : m_SupplyPositions)
+    {
+        if (!info.Respawning)
+            continue;
+            
+        if (IsPlayerNearSupply(vPlayerPos, info.Position))
+        {
+            float fTimeLeft = std::max(0.0f, RESPAWN_TIME - (fCurrentTime - info.DisappearTime));
+            vNearbySupplies.push_back({info, fTimeLeft});
+        }
+    }
+    
+    if (vNearbySupplies.empty())
+        return;
+    
+    // Calculate starting position (bottom right, with spacing between multiple items)
+    int iStartX = iScreenW - iMarginFromEdge - iHudCircleSize;
+    int iStartY = iScreenH - iMarginFromEdge - iHudCircleSize;
+    
+    // Draw each nearby supply
+    for (size_t i = 0; i < vNearbySupplies.size(); i++)
+    {
+        const auto& [info, fTimeLeft] = vNearbySupplies[i];
+        
+        // Calculate position for this circle (offset left for multiple items)
+        int iCircleX = iStartX - (i * (iHudCircleSize * 2 + iHudSpacing)) + iHudCircleSize;
+        int iCircleY = iStartY + iHudCircleSize;
+        
+        // Get colors
+        Color_t color = (info.Type == "health") ? 
+            Vars::Competitive::AmmoTracker::HealthColor.Value : 
+            Vars::Competitive::AmmoTracker::AmmoColor.Value;
+            
+        // Calculate percentage
+        float fTimePercent = fTimeLeft / RESPAWN_TIME;
+        
+        // Draw filled circle background
+        Color_t bgColor = {0, 0, 0, 150};
+        H::Draw.FillCircle(iCircleX, iCircleY, static_cast<float>(iHudCircleSize), 32, bgColor);
+        
+        // Draw progress pie chart
+        DrawClockFill(iCircleX, iCircleY, iHudCircleSize - 2, fTimePercent, 32, color);
+        
+        // Draw timer text in center
+        std::string sTimerText;
+        if (Vars::Competitive::AmmoTracker::ShowMilliseconds.Value)
+            sTimerText = std::format("{:.1f}", fTimeLeft);
+        else
+            sTimerText = std::format("{}", static_cast<int>(std::ceil(fTimeLeft)));
+        
+        auto pFont = H::Fonts.GetFont(FONT_ESP);
+        int iTextWidth, iTextHeight;
+        I::MatSystemSurface->GetTextSize(pFont, std::wstring(sTimerText.begin(), sTimerText.end()).c_str(), iTextWidth, iTextHeight);
+        
+        H::Draw.String(pFont, 
+                      iCircleX - (iTextWidth / 2), iCircleY - (iTextHeight / 2), 
+                      {255, 255, 255, 255}, ALIGN_CENTER, sTimerText.c_str());
+    }
+}
+
 void CAmmoTracker::DrawClockFill(int iCenterX, int iCenterY, int iRadius, float flPercentage, int iVertices, const Color_t& color)
 {
     if (flPercentage <= 0.0f || flPercentage > 1.0f)
@@ -254,6 +338,9 @@ void CAmmoTracker::Draw()
     
     float fCurrentTime = I::GlobalVars->curtime;
     Vec3 vPlayerPos = pLocal->GetAbsOrigin();
+    
+    // Draw HUD overlay for supplies the player is standing on
+    DrawHudOverlay(vPlayerPos);
     
     for (const auto& [sKey, info] : m_SupplyPositions)
     {

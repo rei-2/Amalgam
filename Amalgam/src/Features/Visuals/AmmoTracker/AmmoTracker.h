@@ -33,6 +33,8 @@ private:
     void DrawFilledProgress(const Vec3& vPos, int iRadius, float flPercentage, int iSegments, const Color_t& color);
     int GetScreenChartSize(float flDistance);
     int GetTextSize(float flDistance);
+    void DrawHudOverlay(const Vec3& vPlayerPos);
+    bool IsPlayerNearSupply(const Vec3& vPlayerPos, const Vec3& vSupplyPos, float flMaxDistance = 100.0f);
     
 public:
     void Draw();
