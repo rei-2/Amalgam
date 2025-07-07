@@ -19,14 +19,13 @@ enum class EViewMode
 class CEnemyCam
 {
 private:
-    // Configuration constants
-    static constexpr int CAMERA_WIDTH = 320;
-    static constexpr int CAMERA_HEIGHT = 240;
+    // Fixed constants
     static constexpr int BORDER_OFFSET = 5;
     static constexpr float FORWARD_OFFSET = 16.5f;
     static constexpr float UPWARD_OFFSET = 12.0f;
-    static constexpr float TRACK_TIME = 3.0f;
     static constexpr float SEARCH_INTERVAL = 0.5f;
+    
+    // Window size and position are now configurable via Vars::Competitive::EnemyCam::*
     
     // Camera state
     CTFPlayer* m_pTargetPlayer = nullptr;
@@ -55,6 +54,11 @@ private:
     void GetCameraView(Vec3& origin, Vec3& angles);
     void DrawOverlay();
     const char* GetClassName(int classId);
+    
+    // Configuration helpers
+    int GetCameraWidth() const { return Vars::Competitive::EnemyCam::WindowWidth.Value; }
+    int GetCameraHeight() const { return Vars::Competitive::EnemyCam::WindowHeight.Value; }
+    void GetCameraPosition(int& x, int& y) const;
     
 public:
     void Initialize();

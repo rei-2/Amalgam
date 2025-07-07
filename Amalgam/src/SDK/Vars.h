@@ -910,6 +910,10 @@ namespace Vars
 			CVar(TrackTime, "Track time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 10.0f, 0.5f);
 			CVar(OffsetX, "Offset X (forward/back)", 50.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, -200.0f, 200.0f, 5.0f);
 			CVar(OffsetY, "Offset Y (up/down)", 37.5f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, -200.0f, 200.0f, 5.0f);
+			CVar(WindowX, "Window X position", -1, VISUAL | SLIDER_CLAMP, -1, 1920, 5);
+			CVar(WindowY, "Window Y position", -1, VISUAL | SLIDER_CLAMP, -1, 1080, 5);
+			CVar(WindowWidth, "Window width", 320, VISUAL | SLIDER_CLAMP, 160, 640, 10);
+			CVar(WindowHeight, "Window height", 240, VISUAL | SLIDER_CLAMP, 120, 480, 10);
 		SUBNAMESPACE_END(EnemyCam);
 
 		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)

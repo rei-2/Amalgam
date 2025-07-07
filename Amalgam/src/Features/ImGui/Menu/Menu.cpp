@@ -1563,6 +1563,10 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::EnemyCam::TrackTime, FSliderEnum::Left);
 					FSlider(Vars::Competitive::EnemyCam::OffsetX, FSliderEnum::Right);
 					FSlider(Vars::Competitive::EnemyCam::OffsetY, FSliderEnum::Left);
+					FSlider(Vars::Competitive::EnemyCam::WindowX, FSliderEnum::Right);
+					FSlider(Vars::Competitive::EnemyCam::WindowY, FSliderEnum::Left);
+					FSlider(Vars::Competitive::EnemyCam::WindowWidth, FSliderEnum::Right);
+					FSlider(Vars::Competitive::EnemyCam::WindowHeight, FSliderEnum::Left);
 				} EndSection();
 
 				if (Section("Health Bar ESP"))

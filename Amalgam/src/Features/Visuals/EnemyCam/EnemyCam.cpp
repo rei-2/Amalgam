@@ -31,8 +31,8 @@ bool CEnemyCam::InitializeMaterials()
     {
         m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
             "m_pEnemyCameraTexture",
-            CAMERA_WIDTH,
-            CAMERA_HEIGHT,
+            GetCameraWidth(),
+            GetCameraHeight(),
             RT_SIZE_NO_CHANGE,
             IMAGE_FORMAT_RGB888,
             MATERIAL_RT_DEPTH_SHARED,
@@ -81,13 +81,9 @@ void CEnemyCam::Draw()
     if (!m_pTargetPlayer)
         return;
     
-    // Get screen size for positioning
-    int screenW, screenH;
-    I::MatSystemSurface->GetScreenSize(screenW, screenH);
-    
-    // Position camera in upper right corner
-    int x = screenW - CAMERA_WIDTH - BORDER_OFFSET;
-    int y = BORDER_OFFSET + 20; // Leave space for title
+    // Get configured camera position
+    int x, y;
+    GetCameraPosition(x, y);
     
     // Draw camera to screen
     auto renderCtx = I::MaterialSystem->GetRenderContext();
@@ -96,8 +92,8 @@ void CEnemyCam::Draw()
         
     renderCtx->DrawScreenSpaceRectangle(
         m_pCameraMaterial,
-        x, y, CAMERA_WIDTH, CAMERA_HEIGHT,
-        0, 0, CAMERA_WIDTH, CAMERA_HEIGHT,
+        x, y, GetCameraWidth(), GetCameraHeight(),
+        0, 0, GetCameraWidth(), GetCameraHeight(),
         m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
         nullptr, 1, 1
     );
@@ -120,9 +116,9 @@ void CEnemyCam::RenderView(void* ecx, const CViewSetup& view)
     CViewSetup enemyView = view;
     enemyView.x = 0;
     enemyView.y = 0;
-    enemyView.width = CAMERA_WIDTH;
-    enemyView.height = CAMERA_HEIGHT;
-    enemyView.m_flAspectRatio = static_cast<float>(CAMERA_WIDTH) / static_cast<float>(CAMERA_HEIGHT);
+    enemyView.width = GetCameraWidth();
+    enemyView.height = GetCameraHeight();
+    enemyView.m_flAspectRatio = static_cast<float>(GetCameraWidth()) / static_cast<float>(GetCameraHeight());
     enemyView.fov = 90;
     enemyView.origin = origin;
     enemyView.angles = angles;
@@ -473,20 +469,17 @@ void CEnemyCam::DrawOverlay()
     if (!m_pTargetPlayer)
         return;
     
-    // Get screen size
-    int screenW, screenH;
-    I::MatSystemSurface->GetScreenSize(screenW, screenH);
-    
-    // Calculate positions
-    int x = screenW - CAMERA_WIDTH - BORDER_OFFSET;
-    int y = BORDER_OFFSET;
+    // Get configured camera position
+    int x, y;
+    GetCameraPosition(x, y);
+    y -= 20; // Adjust for title bar
     
     // Draw title bar background
-    H::Draw.FillRect(x, y, CAMERA_WIDTH, 20, {130, 26, 17, 255});
-    H::Draw.LineRect(x, y, CAMERA_WIDTH, 20, {235, 64, 52, 255});
+    H::Draw.FillRect(x, y, GetCameraWidth(), 20, {130, 26, 17, 255});
+    H::Draw.LineRect(x, y, GetCameraWidth(), 20, {235, 64, 52, 255});
     
     // Draw camera border
-    H::Draw.LineRect(x, y + 20, CAMERA_WIDTH, CAMERA_HEIGHT, {235, 64, 52, 255});
+    H::Draw.LineRect(x, y + 20, GetCameraWidth(), GetCameraHeight(), {235, 64, 52, 255});
     
     // Draw player info
     if (!m_pTargetPlayer || !I::EngineClient)
@@ -557,7 +550,7 @@ void CEnemyCam::DrawOverlay()
             }
         }
         
-        H::Draw.String(H::Fonts.GetFont(FONT_ESP), x + CAMERA_WIDTH/2, y + 10, 
+        H::Draw.String(H::Fonts.GetFont(FONT_ESP), x + GetCameraWidth()/2, y + 10, 
                       {255, 255, 255, 255}, ALIGN_CENTER, title.c_str());
     }
     
@@ -635,5 +628,30 @@ const char* CEnemyCam::GetClassName(int classId)
         case TF_CLASS_SPY: return "Spy";
         case TF_CLASS_ENGINEER: return "Engineer";
         default: return "Unknown";
+    }
+}
+
+void CEnemyCam::GetCameraPosition(int& x, int& y) const
+{
+    // Get screen size
+    int screenW, screenH;
+    I::MatSystemSurface->GetScreenSize(screenW, screenH);
+    
+    // Check if user has set custom position (WindowX/WindowY >= 0)
+    if (Vars::Competitive::EnemyCam::WindowX.Value >= 0 && Vars::Competitive::EnemyCam::WindowY.Value >= 0)
+    {
+        // Use custom position
+        x = Vars::Competitive::EnemyCam::WindowX.Value;
+        y = Vars::Competitive::EnemyCam::WindowY.Value;
+        
+        // Clamp to screen bounds
+        x = std::max(0, std::min(x, screenW - GetCameraWidth()));
+        y = std::max(20, std::min(y, screenH - GetCameraHeight())); // Leave space for title bar
+    }
+    else
+    {
+        // Use default position (upper right corner)
+        x = screenW - GetCameraWidth() - BORDER_OFFSET;
+        y = BORDER_OFFSET + 20; // Leave space for title bar
     }
 }
