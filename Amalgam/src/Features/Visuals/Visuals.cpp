@@ -350,65 +350,66 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		{
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("View: ({:.3f}, {:.3f}, {:.3f})", pCmd->viewangles.x, pCmd->viewangles.y, pCmd->viewangles.z).c_str());
 			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Move: ({}, {}, {})", pCmd->forwardmove, pCmd->sidemove, pCmd->upmove).c_str());
-			
-			std::string sButtons = "NONE";
-			if (pCmd->buttons)
-			{
-				static std::vector<std::pair<int, const char*>> vFlags = {
-					PAIR(IN_ATTACK),
-					PAIR(IN_ATTACK2),
-					PAIR(IN_ATTACK3),
-					PAIR(IN_FORWARD),
-					PAIR(IN_BACK),
-					PAIR(IN_MOVELEFT),
-					PAIR(IN_MOVERIGHT),
-					PAIR(IN_JUMP),
-					PAIR(IN_DUCK),
-					PAIR(IN_RELOAD),
-					PAIR(IN_LEFT),
-					PAIR(IN_RIGHT),
-					PAIR(IN_SCORE),
-					/*
-					PAIR(IN_USE),
-					PAIR(IN_CANCEL),
-					PAIR(IN_RUN),
-					PAIR(IN_ALT1),
-					PAIR(IN_ALT2),
-					PAIR(IN_SPEED),
-					PAIR(IN_WALK),
-					PAIR(IN_ZOOM),
-					PAIR(IN_WEAPON1),
-					PAIR(IN_WEAPON2),
-					PAIR(IN_BULLRUSH),
-					PAIR(IN_GRENADE1),
-					PAIR(IN_GRENADE2),
-					*/
-				};
-
-				for (int i = 0; i < vFlags.size(); i++)
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Buttons: {:#034b} ({})", pCmd->buttons,
+				[&]()
 				{
-					auto& paFlag = vFlags[i];
-					if (pCmd->buttons & paFlag.first)
+					std::string sReturn = "NONE";
+					if (pCmd->buttons)
 					{
-						if (i)
-							sButtons += " | ";
-						else
-							sButtons = "";
-						sButtons += paFlag.second;
+						static std::vector<std::pair<int, const char*>> vFlags = {
+							PAIR(IN_ATTACK),
+							PAIR(IN_ATTACK2),
+							PAIR(IN_ATTACK3),
+							PAIR(IN_FORWARD),
+							PAIR(IN_BACK),
+							PAIR(IN_MOVELEFT),
+							PAIR(IN_MOVERIGHT),
+							PAIR(IN_JUMP),
+							PAIR(IN_DUCK),
+							PAIR(IN_RELOAD),
+							PAIR(IN_LEFT),
+							PAIR(IN_RIGHT),
+							PAIR(IN_SCORE),
+							/*
+							PAIR(IN_USE),
+							PAIR(IN_CANCEL),
+							PAIR(IN_RUN),
+							PAIR(IN_ALT1),
+							PAIR(IN_ALT2),
+							PAIR(IN_SPEED),
+							PAIR(IN_WALK),
+							PAIR(IN_ZOOM),
+							PAIR(IN_WEAPON1),
+							PAIR(IN_WEAPON2),
+							PAIR(IN_BULLRUSH),
+							PAIR(IN_GRENADE1),
+							PAIR(IN_GRENADE2),
+							*/
+						};
+
+						for (int i = 0; i < vFlags.size(); i++)
+						{
+							auto& paFlag = vFlags[i];
+							if (pCmd->buttons & paFlag.first)
+							{
+								if (i)
+									sReturn += " | ";
+								else
+									sReturn = "";
+								sReturn += paFlag.second;
+							}
+						}
 					}
-				}
-			}
-			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Buttons: {:#034b} ({})", pCmd->buttons, sButtons).c_str());
+					return sReturn;
+				}()
+				).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Tickcount: {}, Command: {}", pCmd->tick_count, pCmd->command_number).c_str());
 		}
-		{
-			Vec3 vOrigin = pLocal->m_vecOrigin();
-			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Origin: ({:.3f}, {:.3f}, {:.3f})", vOrigin.x, vOrigin.y, vOrigin.z).c_str());
-		}
-		{
-			Vec3 vVelocity = pLocal->m_vecVelocity();
-			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Velocity: {:.3f} ({:.3f}, {:.3f}, {:.3f})", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z).c_str());
-		}
-		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Tickcount: {}", pLocal->m_nTickBase()).c_str());
+		Vec3 vOrigin = pLocal->m_vecOrigin();
+		H::Draw.StringOutlined(fFont, x, y += nTall * 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Origin: ({:.3f}, {:.3f}, {:.3f})", vOrigin.x, vOrigin.y, vOrigin.z).c_str());
+		Vec3 vVelocity = pLocal->m_vecVelocity();
+		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Velocity: {:.3f} ({:.3f}, {:.3f}, {:.3f})", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z).c_str());
+		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Tickbase: {}", pLocal->m_nTickBase()).c_str());
 		//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
 		//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", F::Ticks.m_iShiftedTicks, F::Ticks.m_iShiftedGoal).c_str());
 		//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Round state: {}, {}, {}", SDK::GetRoundState(), SDK::GetWinningTeam(), I::EngineClient->IsPlayingDemo()).c_str());

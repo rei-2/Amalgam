@@ -550,7 +550,7 @@ void CMisc::PingReducer()
 
 void CMisc::UnlockAchievements()
 {
-	const auto pAchievementMgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVirtual(I::EngineClient, 114))();
+	const auto pAchievementMgr = U::Memory.CallVirtual<114, IAchievementMgr*>(I::EngineClient);
 	if (pAchievementMgr)
 	{
 		I::SteamUserStats->RequestCurrentStats();
@@ -563,7 +563,7 @@ void CMisc::UnlockAchievements()
 
 void CMisc::LockAchievements()
 {
-	const auto pAchievementMgr = reinterpret_cast<IAchievementMgr*(*)(void)>(U::Memory.GetVirtual(I::EngineClient, 114))();
+	const auto pAchievementMgr = U::Memory.CallVirtual<114, IAchievementMgr*>(I::EngineClient);
 	if (pAchievementMgr)
 	{
 		I::SteamUserStats->RequestCurrentStats();

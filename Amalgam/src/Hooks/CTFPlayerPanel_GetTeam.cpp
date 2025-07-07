@@ -8,6 +8,8 @@ MAKE_SIGNATURE(vgui_Panel_SetBgColor, "client.dll", "89 91 ? ? ? ? C3 CC CC CC C
 MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_GetTeam_Call, "client.dll", "8B 9F ? ? ? ? 40 32 F6", 0x0);
 MAKE_SIGNATURE(CTFTeamStatusPlayerPanel_Update_SetBgColor_Call, "client.dll", "48 8B 8F ? ? ? ? 4C 8B 6C 24 ? 48 85 C9 0F 84 ? ? ? ? 40 38 B7", 0x0);
 
+static int iPlayerIndex;
+
 MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 	void* rcx)
 {
@@ -28,8 +30,6 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 	return CALL_ORIGINAL(rcx);
 }
 
-static int CTFTeamStatusPlayerPanel_Update_PlayerIndex;
-
 MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(), bool,
 	void* rcx)
 {
@@ -38,7 +38,7 @@ MAKE_HOOK(CTFTeamStatusPlayerPanel_Update, S::CTFTeamStatusPlayerPanel_Update(),
 		return CALL_ORIGINAL(rcx);
 #endif
 
-	CTFTeamStatusPlayerPanel_Update_PlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
+	iPlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
 	return CALL_ORIGINAL(rcx);
 }
 
@@ -55,11 +55,11 @@ MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void,
 
 	if (dwRetAddr == dwDesired && Vars::Visuals::UI::ScoreboardColors.Value)
 	{
-		Color_t tColor = H::Color.GetScoreboardColor(CTFTeamStatusPlayerPanel_Update_PlayerIndex);
+		Color_t tColor = H::Color.GetScoreboardColor(iPlayerIndex);
 		if (tColor.a)
 		{
 			auto pResource = H::Entities.GetPR();
-			if (pResource && !pResource->m_bAlive(CTFTeamStatusPlayerPanel_Update_PlayerIndex))
+			if (pResource && !pResource->m_bAlive(iPlayerIndex))
 				tColor = tColor.Lerp({ 127, 127, 127, tColor.a }, 0.5f);
 
 			color = tColor;

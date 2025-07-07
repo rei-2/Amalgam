@@ -1496,24 +1496,24 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 			else switch (Vars::Aimbot::General::AimType.Value)
 			{
 			case Vars::Aimbot::General::AimTypeEnum::Smooth:
+				if (Vars::Aimbot::General::AssistStrength.Value == 100.f)
+					break;
+				[[fallthrough]];
 			case Vars::Aimbot::General::AimTypeEnum::Assistive:
 			{
-				if (/*Vars::Aimbot::General::AssistStrength.Value != 0.f &&*/ Vars::Aimbot::General::AssistStrength.Value != 100.f)
-				{
-					bPriority = bSplash ? iPriority <= iLowestSmoothPriority : iPriority < flLowestSmoothDist;
-					bDist = !bSplash || flDist < flLowestDist;
-					if (!bPriority || !bDist)
-						continue;
+				bPriority = bSplash ? iPriority <= iLowestSmoothPriority : iPriority < flLowestSmoothDist;
+				bDist = !bSplash || flDist < flLowestDist;
+				if (!bPriority || !bDist)
+					continue;
 
-					Vec3 vPlainAngles; Aim({}, { vPoint.m_Solution.m_flPitch, vPoint.m_Solution.m_flYaw, 0.f }, vPlainAngles, Vars::Aimbot::General::AimTypeEnum::Plain);
-					if (TestAngle(pLocal, pWeapon, tTarget, vPoint.m_vPoint, vPlainAngles, i, bSplash, &bHitSolid))
-					{
-						iLowestSmoothPriority = iPriority; flLowestSmoothDist = flDist;
-						vAngleTo = vAngles, vPredicted = tTarget.m_vPos;
-						m_vPlayerPath = tStorage.m_vPath;
-						m_vPlayerPath.push_back(tStorage.m_MoveData.m_vecAbsOrigin);
-						iReturn = 2;
-					}
+				Vec3 vPlainAngles; Aim({}, { vPoint.m_Solution.m_flPitch, vPoint.m_Solution.m_flYaw, 0.f }, vPlainAngles, Vars::Aimbot::General::AimTypeEnum::Plain);
+				if (TestAngle(pLocal, pWeapon, tTarget, vPoint.m_vPoint, vPlainAngles, i, bSplash, &bHitSolid))
+				{
+					iLowestSmoothPriority = iPriority; flLowestSmoothDist = flDist;
+					vAngleTo = vAngles, vPredicted = tTarget.m_vPos;
+					m_vPlayerPath = tStorage.m_vPath;
+					m_vPlayerPath.push_back(tStorage.m_MoveData.m_vecAbsOrigin);
+					iReturn = 2;
 				}
 			}
 			}
@@ -1573,28 +1573,30 @@ bool CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMeth
 		return true;
 	}
 
-	Math::ClampAngles(vToAngle);
-
+	bool bReturn = false;
 	switch (iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
 		vOut = vToAngle;
-		return false;
+		break;
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 		vOut = vCurAngle.LerpAngle(vToAngle, Vars::Aimbot::General::AssistStrength.Value / 100.f);
-		return true;
+		bReturn = true;
+		break;
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
 		Vec3 vMouseDelta = G::CurrentUserCmd->viewangles.DeltaAngle(G::LastUserCmd->viewangles);
 		Vec3 vTargetDelta = vToAngle.DeltaAngle(G::LastUserCmd->viewangles);
 		float flMouseDelta = vMouseDelta.Length2D(), flTargetDelta = vTargetDelta.Length2D();
 		vTargetDelta = vTargetDelta.Normalized() * std::min(flMouseDelta, flTargetDelta);
 		vOut = vCurAngle - vMouseDelta + vMouseDelta.LerpAngle(vTargetDelta, Vars::Aimbot::General::AssistStrength.Value / 100.f);
-		return true;
+		bReturn = true;
+		break;
 	}
 
-	return false;
+	Math::ClampAngles(vOut);
+	return bReturn;
 }
 
 // assume angle calculated outside with other overload

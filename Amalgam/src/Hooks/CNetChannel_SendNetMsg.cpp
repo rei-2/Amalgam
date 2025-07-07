@@ -27,8 +27,8 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 			switch (FNV1A::Hash32(localCvar->Name))
 			{
 			case FNV1A::Hash32Const("cl_interp"):
-				if (F::Backtrack.m_flWishInterp != -1.f)
-					strncpy_s(localCvar->Value, std::to_string(F::Backtrack.m_flWishInterp).c_str(), MAX_OSPATH);
+				if (F::Backtrack.m_flSentInterp != -1.f)
+					strncpy_s(localCvar->Value, std::to_string(F::Backtrack.m_flSentInterp).c_str(), MAX_OSPATH);
 				if (Vars::Misc::Game::AntiCheatCompatibility.Value)
 				{ try {
 					float flValue = std::stof(localCvar->Value);
@@ -88,8 +88,8 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 			switch (FNV1A::Hash32(cvarName))
 			{
 			case FNV1A::Hash32Const("cl_interp"):
-				if (F::Backtrack.m_flWishInterp != -1.f)
-					sValue = std::to_string(std::min(F::Backtrack.m_flWishInterp, 0.1f));
+				if (F::Backtrack.m_flSentInterp != -1.f)
+					sValue = std::to_string(std::min(F::Backtrack.m_flSentInterp, 0.1f));
 				else
 					sValue = pConVar->GetString();
 				break;

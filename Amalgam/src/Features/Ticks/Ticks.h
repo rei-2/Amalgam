@@ -3,7 +3,7 @@
 
 //#define TICKBASE_DEBUG
 
-class CTickshiftHandler
+class CTicks
 {
 	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
 
@@ -59,4 +59,4 @@ public:
 	int m_iDeficit = 0;
 };
 
-ADD_FEATURE(CTickshiftHandler, Ticks);
+ADD_FEATURE(CTicks, Ticks);

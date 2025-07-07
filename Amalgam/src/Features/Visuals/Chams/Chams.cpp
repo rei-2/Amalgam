@@ -298,7 +298,8 @@ void CChams::Store(CTFPlayer* pLocal)
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
 		{
 			// backtrack
-			if (Vars::Chams::Backtrack::Enabled.Value && pEntity != pLocal)
+			if (Vars::Chams::Backtrack::Enabled.Value && pEntity != pLocal
+				&& (F::Backtrack.GetFakeLatency() || F::Backtrack.GetFakeInterp() > G::Lerp || F::Backtrack.GetWindow()))
 			{
 				auto pWeapon = H::Entities.GetWeapon();
 				if (pWeapon && (G::PrimaryWeaponType != EWeaponType::PROJECTILE || Vars::Chams::Backtrack::Draw.Value & Vars::Chams::Backtrack::DrawEnum::Always))
