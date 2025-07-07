@@ -235,11 +235,10 @@ void CAmmoTracker::DrawHudOverlay(const Vec3& vPlayerPos)
             sTimerText = std::format("{}", static_cast<int>(std::ceil(fTimeLeft)));
         
         auto pFont = H::Fonts.GetFont(FONT_ESP);
-        int iTextWidth, iTextHeight;
-        I::MatSystemSurface->GetTextSize(pFont, std::wstring(sTimerText.begin(), sTimerText.end()).c_str(), iTextWidth, iTextHeight);
+        Vec2 vTextSize = H::Draw.GetTextSize(sTimerText.c_str(), pFont);
         
         H::Draw.String(pFont, 
-                      iCircleX - (iTextWidth / 2), iCircleY - (iTextHeight / 2), 
+                      iCircleX - static_cast<int>(vTextSize.x / 2), iCircleY - static_cast<int>(vTextSize.y / 2), 
                       {255, 255, 255, 255}, ALIGN_CENTER, sTimerText.c_str());
     }
 }
