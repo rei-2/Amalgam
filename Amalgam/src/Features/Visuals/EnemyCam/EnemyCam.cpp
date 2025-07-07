@@ -44,6 +44,13 @@ bool CEnemyCam::InitializeMaterials()
             m_pCameraTexture->IncrementReferenceCount();
     }
     
+    // Update tracked dimensions after successful initialization
+    if (m_pCameraMaterial && m_pCameraTexture)
+    {
+        m_iLastWidth = GetCameraWidth();
+        m_iLastHeight = GetCameraHeight();
+    }
+    
     return m_pCameraMaterial && m_pCameraTexture;
 }
 
@@ -71,6 +78,13 @@ void CEnemyCam::Draw()
     
     if (I::EngineVGui->IsGameUIVisible())
         return;
+    
+    // Check if materials need reloading due to size changes
+    if (CheckMaterialsNeedReload())
+    {
+        CleanupMaterials();
+        InitializeMaterials();
+    }
     
     if (!m_pCameraMaterial || !m_pCameraTexture)
         return;
@@ -654,4 +668,21 @@ void CEnemyCam::GetCameraPosition(int& x, int& y) const
         x = screenW - GetCameraWidth() - BORDER_OFFSET;
         y = BORDER_OFFSET + 20; // Leave space for title bar
     }
+}
+
+bool CEnemyCam::CheckMaterialsNeedReload()
+{
+    int currentWidth = GetCameraWidth();
+    int currentHeight = GetCameraHeight();
+    
+    // Check if size has changed since last initialization
+    if (m_iLastWidth != currentWidth || m_iLastHeight != currentHeight)
+    {
+        // Update tracked dimensions
+        m_iLastWidth = currentWidth;
+        m_iLastHeight = currentHeight;
+        return true;
+    }
+    
+    return false;
 }

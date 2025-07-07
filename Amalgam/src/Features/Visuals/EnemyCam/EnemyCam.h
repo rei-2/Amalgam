@@ -39,11 +39,16 @@ private:
     bool m_bInitialized = false;
     bool m_bEnabled = true;
     
+    // Size tracking for material reloading
+    int m_iLastWidth = 0;
+    int m_iLastHeight = 0;
+    
     // Camera settings are now read from Vars::Competitive::EnemyCam::* variables
     
     // Helper functions
     bool InitializeMaterials();
     void CleanupMaterials();
+    bool CheckMaterialsNeedReload();
     std::vector<CTFPlayer*> GetEnemyPlayers();
     CTFPlayer* FindTargetPlayer();
     CTFPlayer* FindClosestEnemy();
