@@ -200,7 +200,7 @@ void CEntities::Store()
 		if (bUpdateInfo)
 		{
 			PlayerInfo_t pi{};
-			if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
+			if (I::EngineClient->GetPlayerInfo(n, &pi))
 			{
 				bool bLocal = n == I::EngineClient->GetLocalPlayer();
 				if (bLocal) m_uFriendsID = pi.friendsID;
