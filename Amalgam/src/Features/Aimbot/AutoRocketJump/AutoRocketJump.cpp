@@ -45,13 +45,15 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			for (int n = 1; n < 10; n++)
 			{
 				F::MoveSim.RunTick(tStorage);
-				if (!pLocal->IsOnGround() || pLocal->IsSwimming())
-					continue;
+									if (!pLocal->IsOnGround() && !Vars::Misc::Movement::AllowCtapInAir.Value || pLocal->IsSwimming())
+						continue;
 
-				Vec3 vForward = tStorage.m_MoveData.m_vecVelocity.Normalized2D();
-				vPoint = tStorage.m_MoveData.m_vecAbsOrigin - vForward * flOffset; //- Vec3(0, 0, 20);
-				bShouldReturn = false;
-				break;
+					Vec3 vForward = tStorage.m_MoveData.m_vecVelocity.Normalized2D();
+					vPoint = tStorage.m_MoveData.m_vecAbsOrigin - vForward * flOffset; //- Vec3(0, 0, 20);
+					bShouldReturn = false;
+					// If we allow ctap in air, and we found a point, we can break.
+					if (Vars::Misc::Movement::AllowCtapInAir.Value && !vPoint.IsZero())
+						break;
 			}
 		}
 		F::MoveSim.Restore(tStorage);
@@ -114,7 +116,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 	bool bLastGrounded = bStaticGrounded;
 	bool bCurrGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
 	bool bDuck = pLocal->IsDucking();
-	if (m_iFrame == -1 && (bCurrGrounded ? bDuck : !bDuck))
+	if (m_iFrame == -1 && (bCurrGrounded ? bDuck : (!bDuck && !Vars::Misc::Movement::AllowCtapInAir.Value)))
 		return;
 
 	bool bValidWeapon = false;
@@ -160,8 +162,8 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 					SDK::Trace(Old, New, MASK_SOLID, &filter, &trace);
 					if (trace.DidHit())
 					{
-						if (!pLocal->IsOnGround() || pLocal->IsSwimming())
-							break;
+											if (!pLocal->IsOnGround() && !Vars::Misc::Movement::AllowCtapInAir.Value || pLocal->IsSwimming())
+						break;
 
 						auto WillHit = [](CTFPlayer* pLocal, const Vec3& vOrigin, const Vec3& vPoint)
 							{
@@ -201,14 +203,20 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 
 		if (bWillHit)
 		{
-			if (bCurrGrounded && bCurrGrounded == bLastGrounded)
+			// If AutoRocketJump or AutoCTap is enabled, initiate the c-tap sequence.
+			if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
 			{
-				if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
+				// Initiate c-tap if on ground or if in-air c-tap is allowed.
+				if ((bCurrGrounded && bCurrGrounded == bLastGrounded) || (!bCurrGrounded && Vars::Misc::Movement::AllowCtapInAir.Value))
+				{
 					m_iFrame = 0;
-				if (Vars::Misc::Movement::AutoRocketJump.Value)
-					m_bFull = true;
+					if (Vars::Misc::Movement::AutoRocketJump.Value)
+						m_bFull = true;
+				}
 			}
-			else if (!bCurrGrounded)
+
+			// Apply IN_ATTACK and SilentAngles if in-air c-tap is allowed and we are in air.
+			if (!bCurrGrounded && Vars::Misc::Movement::AllowCtapInAir.Value)
 			{
 				if (pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
 					pCmd->buttons |= IN_ATTACK;
@@ -220,6 +228,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 				}
 			}
 
+			// The reloading check should still apply.
 			if (m_iFrame != -1 && G::Reloading)
 			{
 				m_iFrame = -1;

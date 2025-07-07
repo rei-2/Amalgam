@@ -944,6 +944,7 @@ namespace Vars
 			CVar(NoPush, "No push", false);
 			CVar(AutoRocketJump, "Auto rocket jump", false);
 			CVar(AutoCTap, "Auto ctap", false);
+			CVar(AllowCtapInAir, "Allow ctap in air", false);
 			CVar(FastStop, "Fast stop", false);
 			CVar(FastAccelerate, "Fast accelerate", false);
 			CVar(CrouchSpeed, "Crouch speed", false);
