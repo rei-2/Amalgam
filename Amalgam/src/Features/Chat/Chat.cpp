@@ -1,4 +1,5 @@
 #include "Chat.h"
+#include "../Visuals/MarkSpot/MarkSpot.h"
 #include <chrono>
 #include <iomanip>
 #include <atomic>
@@ -1109,6 +1110,14 @@ void CChat::ProcessIncomingMessage(const std::string& sender, const std::string&
         {
             senderName = sender.substr(1, colonPos - 1); // Remove @ and :server part
         }
+    }
+    
+    // Check if this is a MarkSpot message and filter it out
+    if (content.starts_with("!MARK:"))
+    {
+        // Forward to MarkSpot feature for processing
+        F::MarkSpot.ProcessMatrixMessage(senderName, content);
+        return; // Don't display in chat
     }
     
     // Don't show our own messages twice

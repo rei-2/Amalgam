@@ -94,7 +94,11 @@ void CAmmoTracker::UpdateSupplyPositions()
     {
         for (auto pEntity : H::Entities.GetGroup(eGroupType))
         {
-            if (!pEntity || pEntity->IsDormant())
+            if (!pEntity)
+                continue;
+            
+            // Only skip dormant entities if "show through walls" is disabled
+            if (pEntity->IsDormant() && !Vars::Competitive::AmmoTracker::ShowThroughWalls.Value)
                 continue;
                 
             std::string sType = GetPickupType(pEntity);

@@ -1609,6 +1609,21 @@ void CMenu::MenuComp(int iTab)
 					FColorPicker(Vars::Competitive::AmmoTracker::SecondsColor, FColorPickerEnum::Left);
 				} EndSection();
 
+				if (Section("Mark Spot"))
+				{
+					FToggle(Vars::Competitive::MarkSpot::ShowThroughWalls, FToggleEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::MarkDuration, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::RateLimit, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::CircleRadius, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::CircleSegments, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::CircleAlpha, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PylonHeight, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::PylonSegments, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PylonWidth, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::PylonStartAlpha, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PylonEndAlpha, FSliderEnum::Left);
+				} EndSection();
+
 				if (Section("Player Trails"))
 				{
 					FSlider(Vars::Competitive::PlayerTrails::MaxTrailLength, FSliderEnum::Left);
@@ -1637,10 +1652,16 @@ void CMenu::MenuComp(int iTab)
 
 				if (Section("Splash Radius"))
 				{
-					FSlider(Vars::Competitive::SplashRadius::CircleSegments, FSliderEnum::Left);
-					FToggle(Vars::Competitive::SplashRadius::EnemyOnly, FToggleEnum::Right);
-					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
-					FColorPicker(Vars::Competitive::SplashRadius::CircleColor, FColorPickerEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::ShowFill, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::ShowEdge, FToggleEnum::Right);
+					FSlider(Vars::Competitive::SplashRadius::Segments, FSliderEnum::Left);
+					FSlider(Vars::Competitive::SplashRadius::EdgeWidth, FSliderEnum::Right);
+					FToggle(Vars::Competitive::SplashRadius::EnemyOnly, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::ShowRockets, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SplashRadius::ShowPipebombs, FToggleEnum::Left);
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
+					FColorPicker(Vars::Competitive::SplashRadius::FillColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::SplashRadius::EdgeColor, FColorPickerEnum::Right);
 				} EndSection();
 			}
 
@@ -1652,7 +1673,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::HealthBarESP, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::UberTracker, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::AmmoTracker, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::MarkSpot, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Uber Tracker"))

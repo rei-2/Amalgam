@@ -40,6 +40,8 @@ All features are fully configurable through the COMP tab menu with individual to
 - **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes and chams (2+ attackers within 4.5 seconds)
 - **PylonESP** - Vertical pylon indicators above enemy medics behind walls with segmented alpha fade and visibility-based rendering (800+ unit range)
 - **AmmoTracker** - Supply respawn ESP with visual countdown timers for health packs and ammo packs. Features filled pie charts (both ground-projected and screen-overlay), configurable timer text with scaling, distance filtering, and color customization for different supply types
+- **MarkSpot** - Team coordinate marking system via Matrix integration. Press E while aiming to create visual markers (ground circles + pylons) shared with team members. Features Matrix rate limiting compliance, Steam ID-based color generation, configurable mark duration (5-60s), and full visual customization
+- **SplashRadius** - Enhanced splash damage visualization with filled polygons and configurable edge lines. Shows rocket and pipebomb damage radius with dual-color system (fill + edge), adjustable transparency, edge width control, and projectile type filtering
 - **EnemyCam** - Picture-in-picture camera window showing enemy player perspectives with multiple targeting modes (closest, healed players, medics, top score) and configurable window position/size
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 - **Safe Bunnyhop** - Advanced movement assistance with configurable success rate (0-100%), safety mechanisms to prevent detection, and perfect jump limiting
@@ -76,4 +78,4 @@ For porting Lua scripts to C++, see the comprehensive [LUA_TO_CPP_PORTING_GUIDE.
 
 ## Installation
 
-[Xenos](https://github.com/DarthTon/Xenos/releases) recommended for injection.
+[Xenos](https://github.com/DarthTon/Xenos/releases) recommended.
