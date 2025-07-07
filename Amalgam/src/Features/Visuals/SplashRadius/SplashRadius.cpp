@@ -4,6 +4,12 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+// LOD distance constants (matching Lua module)
+static constexpr float FULL_RES = 500.0f;
+static constexpr float HALF_RES = 900.0f;
+static constexpr float EVEN_LOWER_RES = 1600.0f;
+static constexpr int MINIMUM_SEGMENTS = 4;
+
 void CSplashRadius::Draw()
 {
     // Check if feature is enabled
@@ -17,6 +23,11 @@ void CSplashRadius::Draw()
     auto pLocal = H::Entities.GetLocal();
     if (!pLocal)
         return;
+    
+    Vec3 playerPos = pLocal->GetAbsOrigin();
+    
+    // Collect all splash circles
+    std::vector<SplashCircle> allCircles;
     
     // Find all projectiles
     for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
@@ -50,12 +61,74 @@ void CSplashRadius::Draw()
         if (Vars::Competitive::SplashRadius::EnemyOnly.Value && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
             continue;
         
-        // Get the position of the projectile
-        Vec3 pos = pEntity->GetAbsOrigin();
+        // Add to circles collection
+        SplashCircle circle;
+        circle.Position = pEntity->GetAbsOrigin();
+        circle.Radius = radius;
+        circle.Team = pEntity->m_iTeamNum();
+        circle.Entity = pEntity;
         
-        // Draw 3D polygon on the ground (normal vector pointing up)
-        Vec3 normal = {0.0f, 0.0f, 1.0f};
-        Draw3DPolygon(pos, radius, normal, Vars::Competitive::SplashRadius::Segments.Value);
+        allCircles.push_back(circle);
+    }
+    
+    if (allCircles.empty())
+        return;
+    
+    // Group circles by team and merge if enabled
+    if (Vars::Competitive::SplashRadius::MergeOverlapping.Value)
+    {
+        // Separate by team
+        std::vector<SplashCircle> redCircles, bluCircles;
+        for (const auto& circle : allCircles)
+        {
+            if (circle.Team == 2) // RED
+                redCircles.push_back(circle);
+            else if (circle.Team == 3) // BLU
+                bluCircles.push_back(circle);
+        }
+        
+        // Create merged groups for each team
+        auto redGroups = CreateMergedGroups(redCircles);
+        auto bluGroups = CreateMergedGroups(bluCircles);
+        
+        // Draw red team groups
+        for (const auto& group : redGroups)
+        {
+            int segments = Vars::Competitive::SplashRadius::Segments.Value;
+            if (Vars::Competitive::SplashRadius::UseLOD.Value && !group.Circles.empty())
+            {
+                segments = ComputeLODSegments(group.Circles[0].Position, playerPos);
+            }
+            
+            DrawMergedGroup(group, segments);
+        }
+        
+        // Draw blue team groups
+        for (const auto& group : bluGroups)
+        {
+            int segments = Vars::Competitive::SplashRadius::Segments.Value;
+            if (Vars::Competitive::SplashRadius::UseLOD.Value && !group.Circles.empty())
+            {
+                segments = ComputeLODSegments(group.Circles[0].Position, playerPos);
+            }
+            
+            DrawMergedGroup(group, segments);
+        }
+    }
+    else
+    {
+        // Draw individual circles without merging
+        for (const auto& circle : allCircles)
+        {
+            int segments = Vars::Competitive::SplashRadius::Segments.Value;
+            if (Vars::Competitive::SplashRadius::UseLOD.Value)
+            {
+                segments = ComputeLODSegments(circle.Position, playerPos);
+            }
+            
+            Vec3 normal = {0.0f, 0.0f, 1.0f};
+            Draw3DPolygon(circle.Position, circle.Radius, normal, segments);
+        }
     }
 }
 
@@ -71,6 +144,209 @@ bool CSplashRadius::ShouldShowProjectile(CBaseEntity* pEntity)
     return false;
 }
 
+float CSplashRadius::Distance2D(const Vec3& pos1, const Vec3& pos2)
+{
+    float dx = pos1.x - pos2.x;
+    float dy = pos1.y - pos2.y;
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+bool CSplashRadius::IsPointInsideOtherCircles(const Vec3& point, const std::vector<SplashCircle>& circles, const SplashCircle* exclude)
+{
+    for (const auto& circle : circles)
+    {
+        if (&circle != exclude)
+        {
+            float dist = Distance2D(point, circle.Position);
+            if (dist < circle.Radius * 0.95f) // 0.95 threshold like Lua
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::vector<CircleGroup> CSplashRadius::CreateMergedGroups(const std::vector<SplashCircle>& circles)
+{
+    std::vector<CircleGroup> groups;
+    std::vector<bool> used(circles.size(), false);
+    
+    for (size_t i = 0; i < circles.size(); ++i)
+    {
+        if (used[i])
+            continue;
+        
+        CircleGroup group;
+        group.Circles.push_back(circles[i]);
+        group.Team = circles[i].Team;
+        used[i] = true;
+        
+        // Find all overlapping circles
+        for (size_t j = i + 1; j < circles.size(); ++j)
+        {
+            if (used[j])
+                continue;
+            
+            const auto& circle1 = circles[i];
+            const auto& circle2 = circles[j];
+            
+            float dist = Distance2D(circle1.Position, circle2.Position);
+            float combinedRadius = circle1.Radius + circle2.Radius;
+            
+            // Check if circles overlap
+            if (dist <= combinedRadius)
+            {
+                group.Circles.push_back(circle2);
+                used[j] = true;
+            }
+        }
+        
+        groups.push_back(group);
+    }
+    
+    return groups;
+}
+
+int CSplashRadius::ComputeLODSegments(const Vec3& position, const Vec3& playerPos)
+{
+    float distance = Distance2D(position, playerPos);
+    int maxSegments = Vars::Competitive::SplashRadius::Segments.Value;
+    
+    if (distance <= FULL_RES)
+        return maxSegments;
+    else if (distance <= HALF_RES)
+        return static_cast<int>(maxSegments * 0.5f);
+    else if (distance <= EVEN_LOWER_RES)
+        return static_cast<int>(maxSegments * 0.25f);
+    else
+        return MINIMUM_SEGMENTS;
+}
+
+void CSplashRadius::GenerateTrigCache(int segments)
+{
+    if (m_LastSegmentCount == segments)
+        return; // Cache still valid
+    
+    m_CosCache.clear();
+    m_SinCache.clear();
+    m_CosCache.reserve(segments + 1);
+    m_SinCache.reserve(segments + 1);
+    
+    for (int i = 0; i <= segments; ++i)
+    {
+        float angle = (static_cast<float>(i) / segments) * 2.0f * M_PI;
+        m_CosCache.push_back(std::cos(angle));
+        m_SinCache.push_back(std::sin(angle));
+    }
+    
+    m_LastSegmentCount = segments;
+}
+
+void CSplashRadius::DrawMergedGroup(const CircleGroup& group, int segments)
+{
+    if (group.Circles.empty())
+        return;
+    
+    // Generate trig cache for performance
+    GenerateTrigCache(segments);
+    
+    // Get colors based on team or configuration
+    Color_t fillColor = Vars::Competitive::SplashRadius::FillColor.Value;
+    Color_t edgeColor = Vars::Competitive::SplashRadius::EdgeColor.Value;
+    
+    if (Vars::Competitive::SplashRadius::TeamColors.Value)
+    {
+        if (group.Team == 2) // RED
+        {
+            fillColor = {255, 0, 0, static_cast<byte>(fillColor.a)};
+            edgeColor = {255, 0, 0, static_cast<byte>(edgeColor.a)};
+        }
+        else if (group.Team == 3) // BLU
+        {
+            fillColor = {3, 219, 252, static_cast<byte>(fillColor.a)};
+            edgeColor = {3, 219, 252, static_cast<byte>(edgeColor.a)};
+        }
+    }
+    
+    // Draw each circle in the group, but only visible portions
+    for (const auto& circle : group.Circles)
+    {
+        std::vector<Vertex_t> fillVertices;
+        std::vector<Vec3> edgePoints;
+        
+        // Add center point for filled polygon if enabled
+        if (Vars::Competitive::SplashRadius::ShowFill.Value)
+        {
+            Vec3 centerScreen;
+            if (SDK::W2S(circle.Position, centerScreen))
+            {
+                fillVertices.emplace_back(Vertex_t({ { centerScreen.x, centerScreen.y } }));
+            }
+        }
+        
+        // Generate edge points, but only add visible ones
+        for (int i = 0; i <= segments; ++i)
+        {
+            float worldX = circle.Position.x + m_CosCache[i] * circle.Radius;
+            float worldY = circle.Position.y + m_SinCache[i] * circle.Radius;
+            float worldZ = circle.Position.z;
+            Vec3 worldPoint = {worldX, worldY, worldZ};
+            
+            // Check if this point is visible (not inside other circles)
+            bool isVisible = !IsPointInsideOtherCircles(worldPoint, group.Circles, &circle);
+            
+            Vec3 screenPos;
+            if (isVisible && SDK::W2S(worldPoint, screenPos))
+            {
+                edgePoints.push_back(screenPos);
+                
+                if (Vars::Competitive::SplashRadius::ShowFill.Value)
+                {
+                    fillVertices.emplace_back(Vertex_t({ { screenPos.x, screenPos.y } }));
+                }
+            }
+        }
+        
+        // Draw filled polygon if enabled
+        if (Vars::Competitive::SplashRadius::ShowFill.Value && fillVertices.size() >= 3)
+        {
+            H::Draw.FillPolygon(fillVertices, fillColor);
+        }
+        
+        // Draw edge lines if enabled
+        if (Vars::Competitive::SplashRadius::ShowEdge.Value && edgePoints.size() >= 2)
+        {
+            int edgeWidth = Vars::Competitive::SplashRadius::EdgeWidth.Value;
+            
+            for (size_t i = 0; i < edgePoints.size() - 1; ++i)
+            {
+                Vec3 start = edgePoints[i];
+                Vec3 end = edgePoints[i + 1];
+                
+                // Draw line with configurable width
+                int halfWidth = edgeWidth / 2;
+                for (int w = -halfWidth; w <= halfWidth; w++)
+                {
+                    for (int h = -halfWidth; h <= halfWidth; h++)
+                    {
+                        if (w == 0 && h == 0)
+                        {
+                            H::Draw.Line(static_cast<int>(start.x), static_cast<int>(start.y),
+                                       static_cast<int>(end.x), static_cast<int>(end.y), edgeColor);
+                        }
+                        else if (edgeWidth > 1)
+                        {
+                            H::Draw.Line(static_cast<int>(start.x + w), static_cast<int>(start.y + h),
+                                       static_cast<int>(end.x + w), static_cast<int>(end.y + h), edgeColor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 Vec3 CSplashRadius::CrossProduct(const Vec3& a, const Vec3& b)
 {
     return Vec3(
@@ -82,6 +358,10 @@ Vec3 CSplashRadius::CrossProduct(const Vec3& a, const Vec3& b)
 
 void CSplashRadius::Draw3DPolygon(const Vec3& center, float radius, const Vec3& normal, int segments)
 {
+    // Get colors
+    Color_t fillColor = Vars::Competitive::SplashRadius::FillColor.Value;
+    Color_t edgeColor = Vars::Competitive::SplashRadius::EdgeColor.Value;
+    
     // Normalize the normal vector
     float length = std::sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
     if (length == 0.0f)
@@ -130,7 +410,6 @@ void CSplashRadius::Draw3DPolygon(const Vec3& center, float radius, const Vec3& 
     }
     
     // Generate edge points
-    std::vector<Vec3> edgePoints;
     std::vector<Vec3> edgeScreenPoints;
     
     for (int i = 0; i <= segments; ++i)
@@ -148,7 +427,6 @@ void CSplashRadius::Draw3DPolygon(const Vec3& center, float radius, const Vec3& 
         Vec3 screenPos;
         if (SDK::W2S(point, screenPos))
         {
-            edgePoints.push_back(point);
             edgeScreenPoints.push_back(screenPos);
             
             if (Vars::Competitive::SplashRadius::ShowFill.Value)
@@ -161,14 +439,13 @@ void CSplashRadius::Draw3DPolygon(const Vec3& center, float radius, const Vec3& 
     // Draw filled polygon if enabled
     if (Vars::Competitive::SplashRadius::ShowFill.Value && vertices.size() >= 3)
     {
-        H::Draw.FillPolygon(vertices, Vars::Competitive::SplashRadius::FillColor.Value);
+        H::Draw.FillPolygon(vertices, fillColor);
     }
     
     // Draw edge lines if enabled
     if (Vars::Competitive::SplashRadius::ShowEdge.Value && edgeScreenPoints.size() >= 2)
     {
         int edgeWidth = Vars::Competitive::SplashRadius::EdgeWidth.Value;
-        Color_t edgeColor = Vars::Competitive::SplashRadius::EdgeColor.Value;
         
         for (size_t i = 0; i < edgeScreenPoints.size() - 1; ++i)
         {
@@ -183,13 +460,11 @@ void CSplashRadius::Draw3DPolygon(const Vec3& center, float radius, const Vec3& 
                 {
                     if (w == 0 && h == 0)
                     {
-                        // Main line
                         H::Draw.Line(static_cast<int>(start.x), static_cast<int>(start.y),
                                    static_cast<int>(end.x), static_cast<int>(end.y), edgeColor);
                     }
                     else if (edgeWidth > 1)
                     {
-                        // Offset lines for thickness
                         H::Draw.Line(static_cast<int>(start.x + w), static_cast<int>(start.y + h),
                                    static_cast<int>(end.x + w), static_cast<int>(end.y + h), edgeColor);
                     }

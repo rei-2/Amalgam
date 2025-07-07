@@ -1659,6 +1659,9 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SplashRadius::EnemyOnly, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SplashRadius::ShowRockets, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SplashRadius::ShowPipebombs, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::MergeOverlapping, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SplashRadius::UseLOD, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::TeamColors, FToggleEnum::Right);
 					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
 					FColorPicker(Vars::Competitive::SplashRadius::FillColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::SplashRadius::EdgeColor, FColorPickerEnum::Right);

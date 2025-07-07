@@ -1014,6 +1014,9 @@ namespace Vars
 			CVar(EnemyOnly, "Enemy stickies only", true, VISUAL);
 			CVar(ShowRockets, "Show rocket radius", true, VISUAL);
 			CVar(ShowPipebombs, "Show pipebomb radius (stickies/pills)", true, VISUAL);
+			CVar(MergeOverlapping, "Merge overlapping circles", true, VISUAL);
+			CVar(UseLOD, "Use distance-based LOD", true, VISUAL);
+			CVar(TeamColors, "Use team colors", true, VISUAL);
 		SUBNAMESPACE_END(SplashRadius);
 
 		SUBNAMESPACE_BEGIN(CritHeals, Crit Heals)
@@ -1090,12 +1093,12 @@ namespace Vars
 			CVar(RateLimit, "Rate limit (seconds)", 2.0f, VISUAL | SLIDER_CLAMP, 1.0f, 10.0f, 0.5f);
 			CVar(CircleRadius, "Circle radius", 50, VISUAL | SLIDER_CLAMP, 10, 200, 5);
 			CVar(CircleSegments, "Circle segments", 32, VISUAL | SLIDER_CLAMP, 8, 64, 4);
-			CVar(CircleAlpha, "Circle alpha", 150, VISUAL | SLIDER_CLAMP, 50, 255, 5);
-			CVar(PylonHeight, "Pylon height", 200.0f, VISUAL | SLIDER_CLAMP, 50.0f, 500.0f, 25.0f);
-			CVar(PylonSegments, "Pylon segments", 8, VISUAL | SLIDER_CLAMP, 3, 20, 1);
+			CVar(CircleAlpha, "Circle alpha", 180, VISUAL | SLIDER_CLAMP, 50, 255, 5);
+			CVar(PylonHeight, "Pylon height", 275.0f, VISUAL | SLIDER_CLAMP, 50.0f, 500.0f, 25.0f);
+			CVar(PylonSegments, "Pylon segments", 20, VISUAL | SLIDER_CLAMP, 3, 20, 1);
 			CVar(PylonWidth, "Pylon width", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
-			CVar(PylonStartAlpha, "Pylon start alpha", 200, VISUAL | SLIDER_CLAMP, 50, 255, 5);
-			CVar(PylonEndAlpha, "Pylon end alpha", 50, VISUAL | SLIDER_CLAMP, 0, 200, 5);
+			CVar(PylonStartAlpha, "Pylon start alpha", 120, VISUAL | SLIDER_CLAMP, 50, 255, 5);
+			CVar(PylonEndAlpha, "Pylon end alpha", 20, VISUAL | SLIDER_CLAMP, 0, 200, 5);
 		SUBNAMESPACE_END(MarkSpot);
 	NAMESPACE_END(Competitive);
 
