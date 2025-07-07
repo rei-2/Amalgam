@@ -1622,6 +1622,7 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::MarkSpot::PylonWidth, FSliderEnum::Left);
 					FSlider(Vars::Competitive::MarkSpot::PylonStartAlpha, FSliderEnum::Right);
 					FSlider(Vars::Competitive::MarkSpot::PylonEndAlpha, FSliderEnum::Left);
+					FToggle(Vars::Competitive::MarkSpot::ShowOffScreenIndicators, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Player Trails"))
@@ -1659,9 +1660,11 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SplashRadius::EnemyOnly, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SplashRadius::ShowRockets, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SplashRadius::ShowPipebombs, FToggleEnum::Left);
-					FToggle(Vars::Competitive::SplashRadius::MergeOverlapping, FToggleEnum::Right);
-					FToggle(Vars::Competitive::SplashRadius::UseLOD, FToggleEnum::Left);
-					FToggle(Vars::Competitive::SplashRadius::TeamColors, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SplashRadius::ShowStickybombs, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SplashRadius::MergeOverlapping, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::UseLOD, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SplashRadius::TeamColors, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SplashRadius::ShowOnlyVisible, FToggleEnum::Right);
 					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
 					FColorPicker(Vars::Competitive::SplashRadius::FillColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::SplashRadius::EdgeColor, FColorPickerEnum::Right);
@@ -1677,7 +1680,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::UberTracker, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::AmmoTracker, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::MarkSpot, FToggleEnum::Right);
-					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::OffScreenIndicators, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Uber Tracker"))
@@ -3936,6 +3940,7 @@ void CMenu::MenuChat(int iTab)
 				{
 					FToggle(Vars::Chat::AutoConnect, FToggleEnum::Left);
 					FToggle(Vars::Chat::ShowTimestamps, FToggleEnum::Right);
+					FToggle(Vars::Chat::SaveCredentials, FToggleEnum::Left);
 				} EndSection();
 			}
 

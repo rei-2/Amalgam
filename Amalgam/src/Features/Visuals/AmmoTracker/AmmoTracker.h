@@ -28,6 +28,7 @@ private:
     std::string GetPickupType(CBaseEntity* pEntity);
     bool IsVisible(const Vec3& vPos);
     std::string GetPositionKey(const Vec3& vPos);
+    bool IsStationaryPickup(CBaseEntity* pEntity);
     void UpdateSupplyPositions();
     void DrawClockFill(int iCenterX, int iCenterY, int iRadius, float flPercentage, int iVertices, const Color_t& color);
     void DrawFilledProgress(const Vec3& vPos, int iRadius, float flPercentage, int iSegments, const Color_t& color);
@@ -35,6 +36,7 @@ private:
     int GetTextSize(float flDistance);
     void DrawHudOverlay(const Vec3& vPlayerPos);
     bool IsPlayerNearSupply(const Vec3& vPlayerPos, const Vec3& vSupplyPos, float flMaxDistance = 100.0f);
+    bool IsAnyPlayerNearSupply(const Vec3& vSupplyPos, float flMaxDistance = 100.0f);
     
 public:
     void Draw();

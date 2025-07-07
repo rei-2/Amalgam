@@ -891,13 +891,14 @@ namespace Vars
 			CVar(FocusFire, "Focus Fire Detection", true, VISUAL);
 			CVar(SentryESP, "Sentry Gun ESP", true, VISUAL);
 			CVar(StickyESP, "Sticky Bomb ESP", true, VISUAL);
-			CVar(SplashRadius, "Splash Radius Circles", false, VISUAL);
+			CVar(SplashRadius, "Splash Radius Circles", true, VISUAL);
 			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
 			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
 			CVar(MarkSpot, "Mark Spot Feature", true, VISUAL);
+			CVar(OffScreenIndicators, "Off-Screen Player Indicators", false, VISUAL);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
 		SUBNAMESPACE_END(Features);
@@ -1005,18 +1006,20 @@ namespace Vars
 		SUBNAMESPACE_END(SentryESP);
 
 		SUBNAMESPACE_BEGIN(SplashRadius, Splash Radius)
-			CVar(FillColor, "Fill color", Color_t(255, 255, 255, 100), VISUAL);
-			CVar(EdgeColor, "Edge color", Color_t(255, 255, 255, 255), VISUAL);
+			CVar(FillColor, "Fill color", Color_t(255, 255, 255, 25), VISUAL);
+			CVar(EdgeColor, "Edge color", Color_t(255, 255, 255, 45), VISUAL);
 			CVar(Segments, "Circle segments", 32, VISUAL | SLIDER_CLAMP, 8, 64, 4);
 			CVar(ShowFill, "Show filled polygon", true, VISUAL);
 			CVar(ShowEdge, "Show edge lines", true, VISUAL);
 			CVar(EdgeWidth, "Edge width", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
 			CVar(EnemyOnly, "Enemy stickies only", true, VISUAL);
 			CVar(ShowRockets, "Show rocket radius", true, VISUAL);
-			CVar(ShowPipebombs, "Show pipebomb radius (stickies/pills)", true, VISUAL);
+			CVar(ShowPipebombs, "Show pipebomb radius", true, VISUAL);
+			CVar(ShowStickybombs, "Show stickybomb radius", true, VISUAL);
 			CVar(MergeOverlapping, "Merge overlapping circles", true, VISUAL);
 			CVar(UseLOD, "Use distance-based LOD", true, VISUAL);
 			CVar(TeamColors, "Use team colors", true, VISUAL);
+			CVar(ShowOnlyVisible, "Show only visible projectiles", true, VISUAL);
 		SUBNAMESPACE_END(SplashRadius);
 
 		SUBNAMESPACE_BEGIN(CritHeals, Crit Heals)
@@ -1088,7 +1091,7 @@ namespace Vars
 		SUBNAMESPACE_END(AmmoTracker);
 
 		SUBNAMESPACE_BEGIN(MarkSpot, Mark Spot)
-			CVar(ShowThroughWalls, "Show through walls", false, VISUAL);
+			CVar(ShowThroughWalls, "Show through walls", true, VISUAL);
 			CVar(MarkDuration, "Mark duration (seconds)", 15.0f, VISUAL | SLIDER_CLAMP, 5.0f, 60.0f, 5.0f);
 			CVar(RateLimit, "Rate limit (seconds)", 2.0f, VISUAL | SLIDER_CLAMP, 1.0f, 10.0f, 0.5f);
 			CVar(CircleRadius, "Circle radius", 50, VISUAL | SLIDER_CLAMP, 10, 200, 5);
@@ -1099,6 +1102,7 @@ namespace Vars
 			CVar(PylonWidth, "Pylon width", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
 			CVar(PylonStartAlpha, "Pylon start alpha", 120, VISUAL | SLIDER_CLAMP, 50, 255, 5);
 			CVar(PylonEndAlpha, "Pylon end alpha", 20, VISUAL | SLIDER_CLAMP, 0, 200, 5);
+			CVar(ShowOffScreenIndicators, "Off-screen indicators", true, VISUAL);
 		SUBNAMESPACE_END(MarkSpot);
 	NAMESPACE_END(Competitive);
 
@@ -1457,5 +1461,6 @@ namespace Vars
 		CVar(Room, "Room", std::string("chat"), NOSAVE);
 		CVar(AutoConnect, "Auto connect on startup", false);
 		CVar(ShowTimestamps, "Show timestamps", true);
+		CVar(SaveCredentials, "Save login details", false);
 	NAMESPACE_END(Chat);
 }

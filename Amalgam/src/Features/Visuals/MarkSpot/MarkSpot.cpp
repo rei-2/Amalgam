@@ -299,8 +299,8 @@ void CMarkSpot::HandleInput()
     if (!pLocal || !pLocal->IsAlive())
         return;
     
-    // Check if E key is pressed
-    bool ePressed = GetAsyncKeyState('E') & 0x8000;
+    // Check if E key is pressed (only when game is focused)
+    bool ePressed = GetAsyncKeyState('E') & 0x8000 && SDK::IsGameWindowInFocus();
     
     // Only trigger on key press (not hold)
     if (ePressed && !m_bLastEPressed)
@@ -437,4 +437,138 @@ void CMarkSpot::Draw()
         DrawGroundCircle(mark.Position, mark.Color);
         DrawPylon(mark.Position, mark.Color);
     }
+    
+    // Draw off-screen indicators for mark spots
+    if (Vars::Competitive::MarkSpot::ShowOffScreenIndicators.Value)
+    {
+        DrawOffScreenIndicators();
+    }
+}
+
+
+bool CMarkSpot::IsOnScreen(const Vec3& position)
+{
+    Vec3 w2s;
+    if (SDK::W2S(position, w2s))
+    {
+        int screenW, screenH;
+        I::MatSystemSurface->GetScreenSize(screenW, screenH);
+        
+        // Check if the position is within screen bounds
+        return (w2s.x >= 0 && w2s.x <= screenW && w2s.y >= 0 && w2s.y <= screenH);
+    }
+    return false;
+}
+
+void CMarkSpot::DrawOffScreenIndicators()
+{
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return;
+    
+    // Get screen dimensions
+    int screenW, screenH;
+    I::MatSystemSurface->GetScreenSize(screenW, screenH);
+    
+    // Get local player's view angle for directional calculations
+    Vec3 realAngle = I::EngineClient->GetViewAngles();
+    float yaw = realAngle.y * 3.14159265358979323846f / 180.0f;
+    
+    // Set font for text rendering
+    auto font = H::Fonts.GetFont(FONT_ESP);
+    
+    // Get current map name for filtering
+    std::string currentMap = GetCurrentMapName();
+    if (currentMap.empty())
+        return;
+    
+    // Process all mark spots for current map
+    for (const auto& [markId, mark] : m_MarkSpots)
+    {
+        if (mark.MapName != currentMap)
+            continue;
+        
+        // Check if mark spot is off-screen
+        if (IsOnScreen(mark.Position))
+            continue;
+        
+        // Calculate directional position relative to local player
+        Vec3 localPos = pLocal->GetAbsOrigin();
+        Vec3 positionDiff = localPos - mark.Position;
+        
+        float x = std::cos(yaw) * positionDiff.y - std::sin(yaw) * positionDiff.x;
+        float y = std::cos(yaw) * positionDiff.x + std::sin(yaw) * positionDiff.y;
+        float len = std::sqrt(x * x + y * y);
+        
+        if (len == 0)
+            continue;
+        
+        // Normalize direction
+        x = x / len;
+        y = y / len;
+        
+        // Position indicator 200 pixels from screen center
+        float pos1 = screenW / 2.0f + x * 200.0f;
+        float pos2 = screenH / 2.0f + y * 200.0f;
+        
+        if (pos1 != pos1 || pos2 != pos2)  // NaN check
+            continue;
+        
+        int finalX = static_cast<int>(std::floor(pos1));
+        int finalY = static_cast<int>(std::floor(pos2));
+        
+        // Calculate distance for alpha
+        float distance = len;
+        int alpha = static_cast<int>(std::max(0.0f, 255.0f - (distance * 0.05f)));
+        
+        // Use mark spot color with distance-based alpha
+        Color_t indicatorColor = mark.Color;
+        indicatorColor.a = static_cast<byte>(alpha);
+        
+        // Calculate angle pointing toward the target (opposite of the direction to indicator)
+        float directionAngle = std::atan2(y, x); // Direction from indicator toward target
+        
+        // Draw arrow pointing toward the mark spot
+        DrawArrow(finalX, finalY, directionAngle, indicatorColor, 12);
+        
+        // Draw distance text below the arrow
+        std::string distanceText = std::to_string(static_cast<int>(distance)) + "u";
+        Vec2 textSize = H::Draw.GetTextSize(distanceText.c_str(), font);
+        
+        H::Draw.String(font, finalX - static_cast<int>(textSize.x) / 2, finalY + 15, indicatorColor, ALIGN_TOPLEFT, distanceText.c_str());
+    }
+}
+
+void CMarkSpot::DrawArrow(int centerX, int centerY, float angle, const Color_t& color, int size)
+{
+    // Calculate arrow points based on angle
+    float halfSize = size * 0.5f;
+    
+    // Arrow points (pointing right initially)
+    Vec3 tip = {static_cast<float>(centerX) + halfSize, static_cast<float>(centerY), 0.0f};
+    Vec3 base1 = {static_cast<float>(centerX) - halfSize, static_cast<float>(centerY) - halfSize * 0.6f, 0.0f};
+    Vec3 base2 = {static_cast<float>(centerX) - halfSize, static_cast<float>(centerY) + halfSize * 0.6f, 0.0f};
+    
+    // Rotate points around center
+    float cosA = std::cos(angle);
+    float sinA = std::sin(angle);
+    
+    auto rotatePoint = [&](Vec3& point) {
+        float x = point.x - static_cast<float>(centerX);
+        float y = point.y - static_cast<float>(centerY);
+        point.x = static_cast<float>(centerX) + (x * cosA - y * sinA);
+        point.y = static_cast<float>(centerY) + (x * sinA + y * cosA);
+    };
+    
+    rotatePoint(tip);
+    rotatePoint(base1);
+    rotatePoint(base2);
+    
+    // Draw arrow using lines
+    H::Draw.Line(static_cast<int>(tip.x), static_cast<int>(tip.y),
+                static_cast<int>(base1.x), static_cast<int>(base1.y), color);
+    H::Draw.Line(static_cast<int>(tip.x), static_cast<int>(tip.y),
+                static_cast<int>(base2.x), static_cast<int>(base2.y), color);
+    H::Draw.Line(static_cast<int>(base1.x), static_cast<int>(base1.y),
+                static_cast<int>(base2.x), static_cast<int>(base2.y), color);
 }

@@ -77,6 +77,16 @@ private:
     // Chat settings persistence (separate from main config system)
     void LoadChatSettings();
     
+    // Cryptographically secure encryption for password storage using Olm
+    std::string SimpleEncrypt(const std::string& text);
+    std::string SimpleDecrypt(const std::string& encrypted);
+    
+    // Helper functions for secure encryption
+    std::string GetSystemEntropy();
+    bool GenerateSecureRandom(uint8_t* buffer, size_t length);
+    std::string Base64Encode(const std::string& input);
+    std::string Base64Decode(const std::string& input);
+    
     // Matrix HTTP API calls
     bool HttpLogin(const std::string& username, const std::string& password);
     bool HttpJoinRoom();

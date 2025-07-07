@@ -44,6 +44,44 @@ std::string CAmmoTracker::GetPositionKey(const Vec3& vPos)
     return std::format("{:.0f}_{:.0f}_{:.0f}", vPos.x, vPos.y, vPos.z);
 }
 
+bool CAmmoTracker::IsStationaryPickup(CBaseEntity* pEntity)
+{
+    if (!pEntity)
+        return false;
+    
+    // Method 1: Check the model name - this is the most reliable way
+    const char* pModelName = I::ModelInfoClient->GetModelName(pEntity->GetModel());
+    if (!pModelName)
+        return false;
+    
+    std::string modelName = pModelName;
+    std::transform(modelName.begin(), modelName.end(), modelName.begin(), ::tolower);
+    
+    // Exclude dropped weapons/packs - these are temporary
+    if (modelName.find("dropped") != std::string::npos ||
+        modelName.find("w_") != std::string::npos) // Weapon models typically start with w_
+    {
+        return false;
+    }
+    
+    // Only include specific stationary pickup models
+    bool isStationaryModel = (modelName.find("medkit") != std::string::npos ||
+                             modelName.find("healthkit") != std::string::npos ||
+                             modelName.find("ammopack") != std::string::npos) &&
+                             modelName.find("items") != std::string::npos; // Stationary items are usually in items folder
+    
+    if (!isStationaryModel)
+        return false;
+    
+    // Method 2: Check if the entity has physics (dropped items usually have physics)
+    // Stationary pickups typically don't have active physics simulation
+    auto movetype = pEntity->m_MoveType();
+    if (movetype == MOVETYPE_VPHYSICS || movetype == MOVETYPE_PUSH)
+        return false; // These are usually dropped/physics items
+    
+    return true; // It's likely a stationary pickup
+}
+
 bool CAmmoTracker::IsVisible(const Vec3& vPos)
 {
     auto pLocal = H::Entities.GetLocal();
@@ -101,6 +139,10 @@ void CAmmoTracker::UpdateSupplyPositions()
             if (pEntity->IsDormant() && !Vars::Competitive::AmmoTracker::ShowThroughWalls.Value)
                 continue;
                 
+            // Skip non-stationary (moving/dropped) pickups
+            if (!IsStationaryPickup(pEntity))
+                continue;
+                
             std::string sType = GetPickupType(pEntity);
             if (sType.empty())
                 continue;
@@ -125,13 +167,36 @@ void CAmmoTracker::UpdateSupplyPositions()
     // Update respawn status
     for (auto& [sKey, info] : m_SupplyPositions)
     {
-        if (vCurrentSupplies.find(sKey) == vCurrentSupplies.end() && !info.Respawning)
+        bool supplyCurrentlyVisible = vCurrentSupplies.find(sKey) != vCurrentSupplies.end();
+        
+        if (!supplyCurrentlyVisible && !info.Respawning)
         {
-            // Supply disappeared, start respawn timer
-            info.Respawning = true;
-            info.DisappearTime = fCurrentTime;
+            // Only start respawn timer if we're confident the item was actually picked up
+            // When "show through walls" is disabled, we can trust visibility
+            // When "show through walls" is enabled, we need to be more careful
+            
+            bool shouldStartTimer = false;
+            
+            if (!Vars::Competitive::AmmoTracker::ShowThroughWalls.Value)
+            {
+                // "Show through walls" is disabled - if we can't see it, it was likely picked up
+                shouldStartTimer = true;
+            }
+            else
+            {
+                // "Show through walls" is enabled - only start timer if a player was actually near the supply
+                // This prevents false positives for supplies that disappeared for other reasons
+                shouldStartTimer = IsAnyPlayerNearSupply(info.Position);
+            }
+            
+            if (shouldStartTimer)
+            {
+                // Supply disappeared and we're confident it was picked up
+                info.Respawning = true;
+                info.DisappearTime = fCurrentTime;
+            }
         }
-        else if (vCurrentSupplies.find(sKey) != vCurrentSupplies.end() && info.Respawning)
+        else if (supplyCurrentlyVisible && info.Respawning)
         {
             // Supply respawned
             info.Respawning = false;
@@ -168,6 +233,22 @@ bool CAmmoTracker::IsPlayerNearSupply(const Vec3& vPlayerPos, const Vec3& vSuppl
 {
     float fDistance = vPlayerPos.DistTo(vSupplyPos);
     return fDistance <= flMaxDistance;
+}
+
+bool CAmmoTracker::IsAnyPlayerNearSupply(const Vec3& vSupplyPos, float flMaxDistance)
+{
+    // Check if any player (alive, on any team) is near the supply position
+    for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+    {
+        auto pPlayer = pEntity->As<CTFPlayer>();
+        if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsDormant())
+            continue;
+            
+        Vec3 vPlayerPos = pPlayer->GetAbsOrigin();
+        if (IsPlayerNearSupply(vPlayerPos, vSupplyPos, flMaxDistance))
+            return true;
+    }
+    return false;
 }
 
 void CAmmoTracker::DrawHudOverlay(const Vec3& vPlayerPos)
