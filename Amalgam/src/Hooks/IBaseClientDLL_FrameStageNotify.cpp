@@ -10,6 +10,7 @@
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/Chams/Chams.h"
 #include "../Features/Visuals/Glow/Glow.h"
+#include "../Features/Visuals/SentryESP/SentryESP.h"
 #include "../Features/Visuals/StickyESP/StickyESP.h"
 #include "../Features/Visuals/FocusFire/FocusFire.h"
 #include "../Features/Spectate/Spectate.h"
@@ -51,6 +52,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		auto pLocal = H::Entities.GetLocal();
 		
 		// Update competitive feature chams entities before chams system runs
+		F::SentryESP.UpdateChamsEntities();
 		F::StickyESP.UpdateChamsEntities();
 		F::FocusFire.UpdateChamsEntities();
 		

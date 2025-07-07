@@ -984,6 +984,7 @@
     <ClCompile Include="src\Features\Visuals\PlayerTrails\PlayerTrails.cpp" />
     <ClCompile Include="src\Features\Visuals\PylonESP\PylonESP.cpp" />
     <ClCompile Include="src\Features\Visuals\SplashRadius\SplashRadius.cpp" />
+    <ClCompile Include="src\Features\Visuals\SentryESP\SentryESP.cpp" />
     <ClCompile Include="src\Features\Visuals\StickyESP\StickyESP.cpp" />
     <ClCompile Include="src\Features\Visuals\PlayerConditions\PlayerConditions.cpp" />
     <ClCompile Include="src\Features\Visuals\Materials\Materials.cpp" />
@@ -1299,6 +1300,7 @@
     <ClInclude Include="src\Features\Visuals\PlayerTrails\PlayerTrails.h" />
     <ClInclude Include="src\Features\Visuals\PylonESP\PylonESP.h" />
     <ClInclude Include="src\Features\Visuals\SplashRadius\SplashRadius.h" />
+    <ClInclude Include="src\Features\Visuals\SentryESP\SentryESP.h" />
     <ClInclude Include="src\Features\Visuals\StickyESP\StickyESP.h" />
     <ClInclude Include="src\Features\Visuals\PlayerConditions\PlayerConditions.h" />
     <ClInclude Include="src\Features\Visuals\PlayerArrows\PlayerArrows.h" />

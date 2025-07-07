@@ -889,6 +889,7 @@ namespace Vars
 			CVar(EnemyCam, "Enemy Camera", true, VISUAL);
 			CVar(PylonESP, "Medic Pylon ESP", true, VISUAL);
 			CVar(FocusFire, "Focus Fire Detection", true, VISUAL);
+			CVar(SentryESP, "Sentry Gun ESP", true, VISUAL);
 			CVar(StickyESP, "Sticky Bomb ESP", true, VISUAL);
 			CVar(SplashRadius, "Splash Radius Circles", false, VISUAL);
 			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
@@ -979,6 +980,23 @@ namespace Vars
 			CVar(TeamInvisibleColor, "Team invisible color", Color_t(0, 0, 255, 255), VISUAL);
 			CVar(EnableChams, "Enable chams", false, VISUAL);
 		SUBNAMESPACE_END(StickyESP);
+
+		SUBNAMESPACE_BEGIN(SentryESP, Sentry ESP)
+			CVar(ShowLine, "Show aim line", true, VISUAL);
+			CVar(ShowBoxes, "Show ESP boxes", true, VISUAL);
+			CVar(ShowChams, "Show chams on targeting sentries", true, VISUAL);
+			CVar(ShowThroughWalls, "Show ESP through walls", true, VISUAL);
+			CVar(ShowFriendly, "Show friendly sentries", false, VISUAL);
+			CVar(UseCorners, "Use corner boxes", true, VISUAL);
+			CVar(CornerLength, "Corner length", 10, VISUAL | SLIDER_CLAMP, 5, 25, 1);
+			CVar(BoxThickness, "Box thickness", 2, VISUAL | SLIDER_CLAMP, 1, 5, 1);
+			CVar(LineLength, "Aim line length", 1100.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 200.0f, 2000.0f, 50.0f);
+			CVar(SafeColor, "Safe color (visible)", Color_t(0, 255, 0, 125), VISUAL);
+			CVar(DangerColor, "Danger color (targeting)", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(HiddenColor, "Hidden color (not visible)", Color_t(150, 150, 150, 125), VISUAL);
+			CVar(LineColor, "Aim line color", Color_t(255, 0, 0, 255), VISUAL);
+			CVar(TextColor, "Level text color", Color_t(255, 255, 255, 255), VISUAL);
+		SUBNAMESPACE_END(SentryESP);
 
 		SUBNAMESPACE_BEGIN(SplashRadius, Splash Radius)
 			CVar(CircleColor, "Circle color", Color_t(255, 255, 255, 255), VISUAL);

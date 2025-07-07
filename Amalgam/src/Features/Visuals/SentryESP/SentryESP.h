@@ -1,0 +1,37 @@
+#pragma once
+#include "../../../SDK/SDK.h"
+#include <unordered_set>
+#include <unordered_map>
+
+struct SentryAimData
+{
+    Vec3 MuzzlePos;
+    Vec3 AimAngles;
+    CBaseEntity* Target = nullptr;
+    bool IsValid = false;
+};
+
+class CSentryESP
+{
+private:
+    // State tracking
+    std::unordered_set<int> m_SentriesTargetingLocal;
+    
+    // Helper functions
+    bool IsVisible(CBaseEntity* pEntity, CTFPlayer* pLocal);
+    SentryAimData GetSentryAimData(CBaseEntity* pSentry);
+    Vec3 GetAimLineEndPos(const Vec3& startPos, const Vec3& angles);
+    void DrawESPBox(int x1, int y1, int x2, int y2, Color_t color);
+    void DrawCornerBox(int x1, int y1, int x2, int y2, Color_t color);
+    Vec3 GetPositionFromMatrix(const matrix3x4& matrix);
+    Vec3 GetAnglesFromMatrix(const matrix3x4& matrix);
+    
+public:
+    // Chams tracking for sentries (following StickyESP pattern)
+    std::unordered_map<int, bool> m_mEntities;
+    
+    void Draw();
+    void UpdateChamsEntities(); // Separate function to populate chams entities
+};
+
+ADD_FEATURE(CSentryESP, SentryESP)

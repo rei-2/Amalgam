@@ -833,6 +833,73 @@ public:
 
 This example demonstrates successful event-driven feature integration with real-time tactical applications.
 
+## Example: SentryESP Advanced Targeting Detection
+
+The most recent integration was the sentryline.lua sentry gun ESP and targeting system:
+
+### Analysis Phase
+- **Purpose**: Advanced sentry gun ESP with aim line visualization and targeting detection
+- **Key Features**: Corner-style boxes, aim trajectory lines, targeting detection, special chams for threats
+- **Category**: Always-on tactical ESP feature with comprehensive configuration options
+
+### Implementation Highlights
+```cpp
+// Advanced sentry ESP with full menu configuration
+class CSentryESP
+{
+private:
+    std::unordered_set<int> m_SentriesTargetingLocal;
+    std::unordered_map<int, bool> m_mEntities; // Chams tracking
+    
+public:
+    void Draw(); // Main ESP rendering
+    void UpdateChamsEntities(); // Chams entity population
+};
+```
+
+### Key Integration Points
+- **Entity iteration**: Used `H::Entities.GetGroup(EGroupType::BUILDINGS_ALL)` for building access
+- **Bone matrix analysis**: Real-time sentry muzzle position and aim angle calculation
+- **Chams integration**: Followed StickyESP pattern with `UpdateChamsEntities()` and `m_mEntities` map
+- **Menu system**: Complete configuration with 14 customizable options
+
+### API Mappings Applied
+- **Entity access**: `entities.FindByClass("CObjectSentrygun")` → `EGroupType::BUILDINGS_ALL` filtering
+- **Bone matrices**: `SetupBones()` with `matrix3x4 aBones[MAXSTUDIOBONES]` for muzzle positioning
+- **Target detection**: `pSentry->m_hEnemy().Get()` for real-time target tracking
+- **Chams system**: `F::SentryESP.m_mEntities[entityIndex]` pattern following StickyESP
+
+### Fixes Applied During Port
+1. **Entity alive check**: Removed `pEntity->IsAlive()` (not available on `CBaseEntity`) - buildings use `IsDormant()` and `m_bBuilding()` checks
+2. **Matrix type correction**: Fixed `matrix3x4_t` → `matrix3x4` for proper bone matrix handling
+3. **Chams integration**: Replaced `ShouldChams()` method with `UpdateChamsEntities()` and `m_mEntities` map pattern
+4. **Entity group access**: Fixed `EGroupType::WORLD_BUILDINGS` → `EGroupType::BUILDINGS_ALL`
+5. **Math functions**: Used `Math::VectorAngles()` and `Math::AngleVectors()` instead of `SDK::`
+
+### Menu Integration Steps
+1. **Main toggle**: Added to `Vars::Competitive::Features::SentryESP` in main features list
+2. **Configuration section**: Added complete "Sentry ESP" submenu with all 14 options
+3. **Menu UI**: Added toggles, sliders, and color pickers to `Menu.cpp` following established patterns
+4. **Variable definitions**: Added comprehensive `SUBNAMESPACE_BEGIN(SentryESP)` section in `Vars.h`
+
+### Final Result
+- Always-enabled sentry gun ESP with real-time targeting detection
+- Corner-style boxes with level indicators (M for mini, 1-3 for upgrade levels)
+- Aim line visualization showing sentry firing trajectories (configurable length)
+- Color-coded threat system: green (safe), red (targeting), grey (hidden)
+- Special chams highlighting for sentries actively targeting the player
+- Complete menu configuration with 14 customizable options
+- Seamless integration with existing building chams and ESP systems
+
+### Key Lessons Learned
+1. **Chams patterns**: StickyESP/FocusFire pattern with `UpdateChamsEntities()` and `m_mEntities` map is required for working chams
+2. **Entity type handling**: Buildings and players have different API patterns - always check existing implementations
+3. **Menu integration**: Both main toggle AND detailed configuration section required for proper menu visibility
+4. **Bone matrix analysis**: Real-time bone matrix calculations enable precise targeting detection beyond basic entity relationships
+5. **API validation**: Always verify method availability on specific entity types (`IsAlive()` only exists on `CTFPlayer`, not `CBaseEntity`)
+
+This example demonstrates the most comprehensive ESP feature integration, showcasing advanced targeting detection, complete menu configuration, and proper chams system integration.
+
 ## Example: PylonESP Wall-Penetrating Indicators
 
 The most recent integration was the pylon.lua medic tracking system:
@@ -979,5 +1046,9 @@ This guide provides the foundation for porting any Lua script to Amalgam's C++ c
 3. **Avoid premature optimization**: Caching and performance optimizations can cause flickering
 4. **Use native systems**: Leverage existing ESP, chams, and drawing systems when possible
 5. **Test iteratively**: Build, test, fix issues, repeat until behavior matches exactly
+6. **Chams integration**: Use StickyESP/FocusFire pattern with `UpdateChamsEntities()` and `m_mEntities` map for working chams
+7. **Entity type validation**: Always verify method availability (`IsAlive()` only on `CTFPlayer`, not `CBaseEntity`)
+8. **Menu integration**: Both main toggle AND detailed configuration section required for visibility
+9. **Bone matrix analysis**: Use `matrix3x4 aBones[MAXSTUDIOBONES]` for precise positioning calculations
 
 Remember: when in doubt, look at existing similar features in the codebase. The ESP system is particularly good reference for entity access and drawing patterns. For always-on features, use the UberTracker as a reference implementation.

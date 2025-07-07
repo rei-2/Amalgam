@@ -1538,7 +1538,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::EnemyCam, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::PylonESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::FocusFire, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::SentryESP, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::SplashRadius, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
@@ -1640,6 +1641,25 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::UberTracker::UberRate, FSliderEnum::Right);
 					FSlider(Vars::Competitive::UberTracker::KritzRate, FSliderEnum::Left);
 					FSlider(Vars::Competitive::UberTracker::KritzDropThreshold, FSliderEnum::Right);
+				} EndSection();
+
+				if (Section("Sentry ESP"))
+				{
+					FToggle(Vars::Competitive::SentryESP::ShowLine, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SentryESP::ShowBoxes, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SentryESP::ShowChams, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SentryESP::ShowThroughWalls, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SentryESP::ShowFriendly, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SentryESP::UseCorners, FToggleEnum::Right);
+					FSlider(Vars::Competitive::SentryESP::CornerLength, FSliderEnum::Left);
+					FSlider(Vars::Competitive::SentryESP::BoxThickness, FSliderEnum::Right);
+					FSlider(Vars::Competitive::SentryESP::LineLength, FSliderEnum::Left);
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
+					FColorPicker(Vars::Competitive::SentryESP::SafeColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::SentryESP::DangerColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::SentryESP::HiddenColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::SentryESP::LineColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::SentryESP::TextColor, FColorPickerEnum::Left);
 				} EndSection();
 
 				if (Section("Sticky ESP"))

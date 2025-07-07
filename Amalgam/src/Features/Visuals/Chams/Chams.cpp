@@ -6,6 +6,7 @@
 #include "../../Players/PlayerUtils.h"
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "../StickyESP/StickyESP.h"
+#include "../SentryESP/SentryESP.h"
 #include "../FocusFire/FocusFire.h"
 
 static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bEnemy, bool bTeam)
@@ -77,6 +78,23 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	}
 	// building chams
 	case ETFClassID::CObjectSentrygun:
+	{
+		// Special chams for sentries targeting the local player (following StickyESP pattern)
+		if (Vars::Competitive::SentryESP::ShowChams.Value && 
+			!F::SentryESP.m_mEntities.empty() &&
+			F::SentryESP.m_mEntities.count(pEntity->entindex()))
+		{
+			// Use proper visible and occluded materials for through-wall visibility
+			auto visibleMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Color_t(255, 0, 0, 255) } };
+			auto occludedMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Color_t(255, 0, 0, 150) } };
+			*pChams = Chams_t(visibleMaterial, occludedMaterial);
+			return true;
+		}
+		
+		auto pOwner = pEntity->As<CBaseObject>()->m_hBuilder().Get();
+		if (!pOwner) pOwner = pEntity;
+		return GetPlayerChams(pOwner, pEntity, pLocal, pChams, Vars::Chams::Enemy::Buildings.Value, Vars::Chams::Team::Buildings.Value);
+	}
 	case ETFClassID::CObjectDispenser:
 	case ETFClassID::CObjectTeleporter:
 	{

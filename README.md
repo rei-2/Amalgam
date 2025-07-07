@@ -35,6 +35,7 @@ All features are fully configurable through the COMP tab menu with individual to
 - **HealthBarESP** - Health bars for visible-only players. Includes a medic mode (health bars for teammates when playing medic), health-responsive visibility, and overheal display
 - **CritHeals Indicator** - Triangle indicators above players eligible for crit heals (medic-only feature) with uber build rate warnings
 - **PlayerTrails** - Colored movement trails for enemy players showing their recent paths with visibility-based display and fade-out effects
+- **SentryESP** - Advanced sentry gun ESP with aim line visualization, targeting detection, and special chams for threats. Features corner-style boxes with level indicators (M/1/2/3), real-time aim trajectory lines, and color-coded threat system (green=safe, red=targeting, grey=hidden)
 - **StickyESP** - Stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), distance filtering, and chams support
 - **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes and chams (2+ attackers within 4.5 seconds)
 - **PylonESP** - Vertical pylon indicators above enemy medics behind walls with segmented alpha fade and visibility-based rendering (800+ unit range)
@@ -68,6 +69,9 @@ All features are fully configurable through the COMP tab menu with individual to
    - Build the solution
 
 For detailed setup instructions, see [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md).
+
+### Lua Script Porting
+For porting Lua scripts to C++, see the comprehensive [LUA_TO_CPP_PORTING_GUIDE.md](LUA_TO_CPP_PORTING_GUIDE.md) with detailed examples, API mappings, and common fixes for successful integration.
 
 ## Installation
 
