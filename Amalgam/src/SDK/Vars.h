@@ -943,8 +943,9 @@ namespace Vars
 			CVar(AutoJumpbug, "Auto jumpbug", false);
 			CVar(NoPush, "No push", false);
 			CVar(AutoRocketJump, "Auto rocket jump", false);
-			CVar(AutoCTap, "Auto ctap", false);
+						CVar(AutoCTap, "Auto ctap", false);
 			CVar(AllowCtapInAir, "Allow ctap in air", false);
+			CVar(CtapInAirDistance, "C-tap in air distance", 25.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f);
 			CVar(FastStop, "Fast stop", false);
 			CVar(FastAccelerate, "Fast accelerate", false);
 			CVar(CrouchSpeed, "Crouch speed", false);
