@@ -896,6 +896,7 @@ namespace Vars
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
+			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
 		SUBNAMESPACE_END(Features);
@@ -1050,6 +1051,29 @@ namespace Vars
 			CVar(SuccessRate, "Success rate", 95, VISUAL | SLIDER_CLAMP, 0, 100, 5);
 			CVar(SafetyEnabled, "Safety enabled", true, VISUAL);
 		SUBNAMESPACE_END(SafeBhop);
+
+		SUBNAMESPACE_BEGIN(AmmoTracker, Ammo Tracker)
+			CVar(ShowGroundPieChart, "Show ground pie charts", false, VISUAL);
+			CVar(ShowScreenPieChart, "Show screen pie charts", true, VISUAL);
+			CVar(ShowSeconds, "Show seconds timer", false, VISUAL);
+			CVar(ShowMilliseconds, "Show milliseconds", false, VISUAL);
+			CVar(ScaleWithDistance, "Scale with distance", true, VISUAL);
+			CVar(ScaleTextWithDistance, "Scale text with distance", true, VISUAL);
+			CVar(MaxDistanceGroundPieChart, "Max distance for ground charts", 1000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 3000.0f, 50.0f);
+			CVar(MaxDistanceScreenPieChart, "Max distance for screen charts", 1000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 3000.0f, 50.0f);
+			CVar(MaxDistanceText, "Max distance for text", 1000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 3000.0f, 50.0f);
+			CVar(PieChartSize, "Pie chart size", 20, VISUAL | SLIDER_CLAMP, 10, 50, 2);
+			CVar(PieChartSegments, "Pie chart segments", 32, VISUAL | SLIDER_CLAMP, 8, 64, 4);
+			CVar(MinScreenChartSize, "Min screen chart size", 5, VISUAL | SLIDER_CLAMP, 3, 15, 1);
+			CVar(MaxScreenChartSize, "Max screen chart size", 20, VISUAL | SLIDER_CLAMP, 10, 50, 2);
+			CVar(MaxScaleDistance, "Max scale distance", 1000.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 500.0f, 2000.0f, 50.0f);
+			CVar(TextSizeMin, "Min text size", 12, VISUAL | SLIDER_CLAMP, 8, 20, 1);
+			CVar(TextSizeMax, "Max text size", 20, VISUAL | SLIDER_CLAMP, 14, 30, 1);
+			CVar(TextSizeDefault, "Default text size", 16, VISUAL | SLIDER_CLAMP, 10, 24, 1);
+			CVar(HealthColor, "Health pack color", Color_t(155, 200, 155, 200), VISUAL);
+			CVar(AmmoColor, "Ammo pack color", Color_t(255, 255, 155, 200), VISUAL);
+			CVar(SecondsColor, "Timer text color", Color_t(255, 255, 255, 255), VISUAL);
+		SUBNAMESPACE_END(AmmoTracker);
 	NAMESPACE_END(Competitive);
 
 	NAMESPACE_BEGIN(Radar)

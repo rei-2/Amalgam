@@ -993,6 +993,7 @@
     <ClCompile Include="src\Features\Visuals\Radar\Radar.cpp" />
     <ClCompile Include="src\Features\Visuals\SpectatorList\SpectatorList.cpp" />
     <ClCompile Include="src\Features\Visuals\UberTracker\UberTracker.cpp" />
+    <ClCompile Include="src\Features\Visuals\AmmoTracker\AmmoTracker.cpp" />
     <ClCompile Include="src\Features\Visuals\Visuals.cpp" />
     <ClCompile Include="src\Hooks\bf_read_ReadString.cpp" />
     <ClCompile Include="src\Hooks\CAchievementMgr_CheckAchievementsEnabled.cpp" />
@@ -1307,6 +1308,7 @@
     <ClInclude Include="src\Features\Visuals\Radar\Radar.h" />
     <ClInclude Include="src\Features\Visuals\SpectatorList\SpectatorList.h" />
     <ClInclude Include="src\Features\Visuals\UberTracker\UberTracker.h" />
+    <ClInclude Include="src\Features\Visuals\AmmoTracker\AmmoTracker.h" />
     <ClInclude Include="src\Features\Visuals\Visuals.h" />
     <ClInclude Include="src\Hooks\Direct3DDevice9.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGameRules.h" />

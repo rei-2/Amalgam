@@ -15,6 +15,7 @@
 #include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 #include "../Features/Visuals/UberTracker/UberTracker.h"
+#include "../Features/Visuals/AmmoTracker/AmmoTracker.h"
 #include "../Features/Visuals/HealthBarESP/HealthBarESP.h"
 #include "../Features/Visuals/PlayerTrails/PlayerTrails.h"
 #include "../Features/Visuals/SplashRadius/SplashRadius.h"
@@ -64,6 +65,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::CritHack.Draw(pLocal);
 			F::Ticks.Draw(pLocal);
 			F::UberTracker.Draw();
+			F::AmmoTracker.Draw();
 			F::HealthBarESP.Draw();
 			F::PlayerTrails.Draw();
 			F::SplashRadius.Draw();

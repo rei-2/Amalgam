@@ -1080,7 +1080,7 @@ bool CChat::ProcessGameChatMessage(const std::string& message)
             if (!m_bConnected.load())
             {
                 QueueMessage("Matrix", "Not connected to Matrix server");
-                return true; // Still block from game chat
+                return false; // Allow message to pass through to game chat when not connected
             }
             
             SendMessage(chatMessage);

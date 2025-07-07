@@ -23,7 +23,7 @@ A competitive-focused fork featuring enhanced information gathering and advantag
   </a>
 </p>
 
-###### AVX2 may be faster than SSE2 though not all CPUs support it (`Steam > Help > System Information > Processor Information > AVX2`). Freetype uses freetype as the text rasterizer and includes some custom fonts, which results in better looking text but larger DLL sizes. PDBs are for developer use.
+###### AVX2 may be faster than SSE2 though not all CPUs support it (`Steam > Help > System Information > Processor Information > AVX2`). Freetype uses freetype as the text rasterizer and includes some custom fonts, which results in better looking text but larger DLL sizes.
 ###### If nightly.link is down, you can still download through [github](https://github.com/coffeegrind123/Amalgam-Comp/actions) with an account.
 
 ## Added Features
@@ -39,6 +39,7 @@ All features are fully configurable through the COMP tab menu with individual to
 - **StickyESP** - Stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), distance filtering, and chams support
 - **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes and chams (2+ attackers within 4.5 seconds)
 - **PylonESP** - Vertical pylon indicators above enemy medics behind walls with segmented alpha fade and visibility-based rendering (800+ unit range)
+- **AmmoTracker** - Supply respawn ESP with visual countdown timers for health packs and ammo packs. Features filled pie charts (both ground-projected and screen-overlay), configurable timer text with scaling, distance filtering, and color customization for different supply types
 - **EnemyCam** - Picture-in-picture camera window showing enemy player perspectives with multiple targeting modes (closest, healed players, medics, top score) and configurable window position/size
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 - **Safe Bunnyhop** - Advanced movement assistance with configurable success rate (0-100%), safety mechanisms to prevent detection, and perfect jump limiting
@@ -49,7 +50,7 @@ All features are fully configurable through the COMP tab menu with individual to
   - **Real E2E Encryption** - Complete libolm integration with Megolm group encryption and Olm device-to-device encryption
   - **Multi-User Support** - Device key management, session key sharing, and cross-device message decryption
   - **TF2 Chat Display** - Messages appear directly in TF2 chat with proper color formatting and usernames
-  - **Send with !! Prefix** - Type `!!message` in TF2 chat to send to Matrix (blocked from game chat)
+  - **Send with !! Prefix** - Type `!!message` in TF2 chat to send to Matrix (blocked from game chat when connected, passes through when not connected)
   - **Optional Timestamps** - Configurable timestamp display in [HH:MM:SS] format
   - **Production Ready** - Thread-safe background sync with Matrix homeservers
   - **Auto-Discovery** - Automatic account creation, room discovery, and encryption initialization

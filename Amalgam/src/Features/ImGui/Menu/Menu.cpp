@@ -1580,6 +1580,33 @@ void CMenu::MenuComp(int iTab)
 					FColorPicker(Vars::Competitive::HealthBarESP::OverhealColor, FColorPickerEnum::Left);
 				} EndSection();
 
+				if (Section("Ammo Tracker"))
+				{
+					FToggle(Vars::Competitive::AmmoTracker::ShowGroundPieChart, FToggleEnum::Left);
+					FToggle(Vars::Competitive::AmmoTracker::ShowScreenPieChart, FToggleEnum::Right);
+					FToggle(Vars::Competitive::AmmoTracker::ShowSeconds, FToggleEnum::Left);
+					FToggle(Vars::Competitive::AmmoTracker::ShowMilliseconds, FToggleEnum::Right);
+					FToggle(Vars::Competitive::AmmoTracker::ScaleWithDistance, FToggleEnum::Left);
+					FToggle(Vars::Competitive::AmmoTracker::ScaleTextWithDistance, FToggleEnum::Right);
+					
+					FSlider(Vars::Competitive::AmmoTracker::MaxDistanceGroundPieChart, FSliderEnum::Left);
+					FSlider(Vars::Competitive::AmmoTracker::MaxDistanceScreenPieChart, FSliderEnum::Right);
+					FSlider(Vars::Competitive::AmmoTracker::MaxDistanceText, FSliderEnum::Left);
+					FSlider(Vars::Competitive::AmmoTracker::PieChartSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::AmmoTracker::PieChartSegments, FSliderEnum::Left);
+					FSlider(Vars::Competitive::AmmoTracker::MinScreenChartSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::AmmoTracker::MaxScreenChartSize, FSliderEnum::Left);
+					FSlider(Vars::Competitive::AmmoTracker::MaxScaleDistance, FSliderEnum::Right);
+					FSlider(Vars::Competitive::AmmoTracker::TextSizeMin, FSliderEnum::Left);
+					FSlider(Vars::Competitive::AmmoTracker::TextSizeMax, FSliderEnum::Right);
+					FSlider(Vars::Competitive::AmmoTracker::TextSizeDefault, FSliderEnum::Left);
+					
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
+					FColorPicker(Vars::Competitive::AmmoTracker::HealthColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::AmmoTracker::AmmoColor, FColorPickerEnum::Right);
+					FColorPicker(Vars::Competitive::AmmoTracker::SecondsColor, FColorPickerEnum::Left);
+				} EndSection();
+
 				if (Section("Player Trails"))
 				{
 					FSlider(Vars::Competitive::PlayerTrails::MaxTrailLength, FSliderEnum::Left);
@@ -1622,7 +1649,8 @@ void CMenu::MenuComp(int iTab)
 				{
 					FToggle(Vars::Competitive::Features::HealthBarESP, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::UberTracker, FToggleEnum::Right);
-					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::AmmoTracker, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Uber Tracker"))
