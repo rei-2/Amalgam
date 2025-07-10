@@ -52,27 +52,19 @@ bool CAmmoTracker::IsStationaryPickup(CBaseEntity* pEntity)
     // Method 1: Check entity class - exclude dropped weapons entirely
     auto classID = pEntity->GetClassID();
     
-    // Exclude any dropped weapon classes
-    if (classID >= ETFClassID::CTFDroppedWeapon && classID <= ETFClassID::CTFDroppedWeapon + 50) // Range check for dropped weapons
+    // Exclude dropped weapon classes
+    if (classID == ETFClassID::CTFDroppedWeapon)
         return false;
     
-    // Only allow specific pickup classes
-    if (classID != ETFClassID::CItem_HealthKit && 
-        classID != ETFClassID::CItem_HealthKitSmall && 
-        classID != ETFClassID::CItem_HealthKitMedium &&
-        classID != ETFClassID::CItem_HealthKitFull &&
-        classID != ETFClassID::CItem_AmmoPack &&
-        classID != ETFClassID::CItem_AmmoPackSmall &&
-        classID != ETFClassID::CItem_AmmoPackMedium &&
-        classID != ETFClassID::CItem_AmmoPackFull &&
-        classID != ETFClassID::CHalloweenPickup &&
-        classID != ETFClassID::CHalloweenSoulPack &&
-        classID != ETFClassID::CHalloweenGiftPickup)
+    // Include Halloween pickup classes that we know exist
+    if (classID == ETFClassID::CHalloweenPickup ||
+        classID == ETFClassID::CHalloweenSoulPack ||
+        classID == ETFClassID::CHalloweenGiftPickup)
     {
-        return false;
+        return true; // These are always valid stationary pickups
     }
     
-    // Method 2: Check the model name for additional filtering
+    // Method 2: Check the model name for filtering
     const char* pModelName = I::ModelInfoClient->GetModelName(pEntity->GetModel());
     if (!pModelName)
         return false;
@@ -84,7 +76,8 @@ bool CAmmoTracker::IsStationaryPickup(CBaseEntity* pEntity)
     if (modelName.find("dropped") != std::string::npos ||
         modelName.find("w_") != std::string::npos ||  // Weapon models typically start with w_
         modelName.find("thrown") != std::string::npos ||
-        modelName.find("weapon") != std::string::npos)
+        modelName.find("weapon") != std::string::npos ||
+        modelName.find("backpack") != std::string::npos) // Dropped backpacks
     {
         return false;
     }
@@ -94,7 +87,11 @@ bool CAmmoTracker::IsStationaryPickup(CBaseEntity* pEntity)
     if (movetype == MOVETYPE_VPHYSICS || movetype == MOVETYPE_PUSH)
         return false; // These are usually dropped/physics items
     
-    // Method 4: Check if it's a proper stationary pickup model
+    // Method 4: Only include items that are in the items/ folder (stationary map pickups)
+    if (modelName.find("items/") == std::string::npos)
+        return false;
+    
+    // Method 5: Check if it's a proper stationary pickup model
     bool isStationaryModel = (modelName.find("medkit") != std::string::npos ||
                              modelName.find("healthkit") != std::string::npos ||
                              modelName.find("ammopack") != std::string::npos ||
