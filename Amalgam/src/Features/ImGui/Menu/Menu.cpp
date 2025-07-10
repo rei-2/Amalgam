@@ -1543,6 +1543,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::SplashRadius, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::FlatTextures, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Movement Features"))
@@ -1682,6 +1683,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::MarkSpot, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::OffScreenIndicators, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::ScoreboardRevealer, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Uber Tracker"))

@@ -490,7 +490,10 @@ void CMarkSpot::DrawOffScreenIndicators()
         
         // Calculate ground target position (where the circle is drawn)
         Vec3 localPos = pLocal->GetAbsOrigin();
-        Vec3 groundTargetPos = Vec3(mark.Position.x, mark.Position.y, mark.Position.z); // Use the mark's actual ground Z position
+        
+        // Force arrow to point horizontally by using local player's Z level
+        // This ensures arrows point toward the mark location at ground level, not upward/downward
+        Vec3 groundTargetPos = Vec3(mark.Position.x, mark.Position.y, localPos.z);
         
         // Check if ground target position is off-screen
         Vec3 w2s;

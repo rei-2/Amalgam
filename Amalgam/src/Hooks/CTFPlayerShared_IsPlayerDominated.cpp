@@ -18,7 +18,7 @@ MAKE_HOOK(CTFPlayerShared_IsPlayerDominated, S::CTFPlayerShared_IsPlayerDominate
 
 	const bool bResult = CALL_ORIGINAL(rcx, index);
 
-	if (Vars::Visuals::UI::RevealScoreboard.Value && dwRetAddr == dwDesired && !bResult)
+	if (Vars::Competitive::Features::ScoreboardRevealer.Value && dwRetAddr == dwDesired && !bResult)
 		*static_cast<uintptr_t*>(_AddressOfReturnAddress()) = dwJump;
 
 	return bResult;

@@ -899,6 +899,8 @@ namespace Vars
 			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
 			CVar(MarkSpot, "Mark Spot Feature", true, VISUAL);
 			CVar(OffScreenIndicators, "Off-Screen Player Indicators", false, VISUAL);
+			CVar(ScoreboardRevealer, "Reveal Class Icons in Scoreboard", false, VISUAL);
+			CVar(FlatTextures, "Flat Textures", false, VISUAL);
 			CVar(OffScreenIndicatorsName, "Show player names", true, VISUAL);
 			CVar(OffScreenIndicatorsClass, "Show player classes", true, VISUAL);
 			CVar(OffScreenIndicatorsHealth, "Show player health", true, VISUAL);

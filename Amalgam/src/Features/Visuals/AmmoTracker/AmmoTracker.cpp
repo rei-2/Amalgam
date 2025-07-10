@@ -49,7 +49,30 @@ bool CAmmoTracker::IsStationaryPickup(CBaseEntity* pEntity)
     if (!pEntity)
         return false;
     
-    // Method 1: Check the model name - this is the most reliable way
+    // Method 1: Check entity class - exclude dropped weapons entirely
+    auto classID = pEntity->GetClassID();
+    
+    // Exclude any dropped weapon classes
+    if (classID >= ETFClassID::CTFDroppedWeapon && classID <= ETFClassID::CTFDroppedWeapon + 50) // Range check for dropped weapons
+        return false;
+    
+    // Only allow specific pickup classes
+    if (classID != ETFClassID::CItem_HealthKit && 
+        classID != ETFClassID::CItem_HealthKitSmall && 
+        classID != ETFClassID::CItem_HealthKitMedium &&
+        classID != ETFClassID::CItem_HealthKitFull &&
+        classID != ETFClassID::CItem_AmmoPack &&
+        classID != ETFClassID::CItem_AmmoPackSmall &&
+        classID != ETFClassID::CItem_AmmoPackMedium &&
+        classID != ETFClassID::CItem_AmmoPackFull &&
+        classID != ETFClassID::CHalloweenPickup &&
+        classID != ETFClassID::CHalloweenSoulPack &&
+        classID != ETFClassID::CHalloweenGiftPickup)
+    {
+        return false;
+    }
+    
+    // Method 2: Check the model name for additional filtering
     const char* pModelName = I::ModelInfoClient->GetModelName(pEntity->GetModel());
     if (!pModelName)
         return false;
@@ -59,27 +82,26 @@ bool CAmmoTracker::IsStationaryPickup(CBaseEntity* pEntity)
     
     // Exclude dropped weapons/packs - these are temporary
     if (modelName.find("dropped") != std::string::npos ||
-        modelName.find("w_") != std::string::npos) // Weapon models typically start with w_
+        modelName.find("w_") != std::string::npos ||  // Weapon models typically start with w_
+        modelName.find("thrown") != std::string::npos ||
+        modelName.find("weapon") != std::string::npos)
     {
         return false;
     }
     
-    // Only include specific stationary pickup models
-    bool isStationaryModel = (modelName.find("medkit") != std::string::npos ||
-                             modelName.find("healthkit") != std::string::npos ||
-                             modelName.find("ammopack") != std::string::npos) &&
-                             modelName.find("items") != std::string::npos; // Stationary items are usually in items folder
-    
-    if (!isStationaryModel)
-        return false;
-    
-    // Method 2: Check if the entity has physics (dropped items usually have physics)
-    // Stationary pickups typically don't have active physics simulation
+    // Method 3: Check movement type (dropped items usually have physics)
     auto movetype = pEntity->m_MoveType();
     if (movetype == MOVETYPE_VPHYSICS || movetype == MOVETYPE_PUSH)
         return false; // These are usually dropped/physics items
     
-    return true; // It's likely a stationary pickup
+    // Method 4: Check if it's a proper stationary pickup model
+    bool isStationaryModel = (modelName.find("medkit") != std::string::npos ||
+                             modelName.find("healthkit") != std::string::npos ||
+                             modelName.find("ammopack") != std::string::npos ||
+                             modelName.find("health") != std::string::npos ||
+                             modelName.find("ammo") != std::string::npos);
+    
+    return isStationaryModel;
 }
 
 bool CAmmoTracker::IsVisible(const Vec3& vPos)
@@ -509,9 +531,61 @@ void CAmmoTracker::Event(IGameEvent* pEvent, uint32_t uHash)
         if (sType.empty())
             return;
             
-        // Get the pickup location
-        Vec3 vPos = pEntity->m_vecOrigin();
-        std::string sKey = GetPositionKey(vPos);
+        // Find the nearest pickup entity to the player who picked it up
+        Vec3 playerPos = pEntity->m_vecOrigin();
+        Vec3 pickupPos = playerPos; // Default fallback
+        float closestDist = 200.0f; // Max pickup distance
+        bool foundPickup = false;
+        
+        // Search for nearby pickup entities of the correct type
+        std::vector<EGroupType> vPickupGroups = {EGroupType::PICKUPS_HEALTH, EGroupType::PICKUPS_AMMO};
+        
+        for (auto eGroupType : vPickupGroups)
+        {
+            for (auto pPickupEntity : H::Entities.GetGroup(eGroupType))
+            {
+                if (!pPickupEntity)
+                    continue;
+                
+                // Only consider stationary map pickups, not dropped weapons
+                if (!IsStationaryPickup(pPickupEntity))
+                    continue;
+                    
+                std::string entityType = GetPickupType(pPickupEntity);
+                if (entityType == sType)
+                {
+                    Vec3 entityPos = pPickupEntity->GetAbsOrigin();
+                    float dist = playerPos.DistTo(entityPos);
+                    
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        pickupPos = entityPos;
+                        foundPickup = true;
+                    }
+                }
+            }
+        }
+        
+        // If no pickup entity found nearby, try to find from our existing tracked positions
+        if (!foundPickup)
+        {
+            for (const auto& [sExistingKey, existingInfo] : m_SupplyPositions)
+            {
+                if (existingInfo.Type == sType && !existingInfo.Respawning)
+                {
+                    float dist = playerPos.DistTo(existingInfo.Position);
+                    if (dist < closestDist)
+                    {
+                        closestDist = dist;
+                        pickupPos = existingInfo.Position;
+                        foundPickup = true;
+                    }
+                }
+            }
+        }
+        
+        std::string sKey = GetPositionKey(pickupPos);
         
         // Check if we're already tracking this position
         if (m_SupplyPositions.find(sKey) != m_SupplyPositions.end())
@@ -521,11 +595,11 @@ void CAmmoTracker::Event(IGameEvent* pEvent, uint32_t uHash)
             info.Respawning = true;
             info.DisappearTime = I::GlobalVars->curtime;
         }
-        else
+        else if (foundPickup)
         {
             // Add new supply position and immediately mark as respawning
             SupplyInfo info;
-            info.Position = vPos;
+            info.Position = pickupPos;
             info.Type = sType;
             info.Respawning = true;
             info.DisappearTime = I::GlobalVars->curtime;

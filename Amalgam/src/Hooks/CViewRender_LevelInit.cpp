@@ -2,6 +2,7 @@
 
 #include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Visuals/Visuals.h"
+#include "../Features/Visuals/FlatTextures/FlatTextures.h"
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/Ticks/Ticks.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
@@ -28,4 +29,6 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVirtual(I::ViewRender, 1), void,
 	F::Spectate.m_iIntendedTarget = -1;
 
 	CALL_ORIGINAL(rcx);
+	
+	F::FlatTextures.OnLevelInitPostEntity();
 }
