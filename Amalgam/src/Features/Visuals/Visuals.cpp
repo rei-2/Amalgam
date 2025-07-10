@@ -7,6 +7,7 @@
 #include "../PacketManip/AntiAim/AntiAim.h"
 #include "../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "CameraWindow/CameraWindow.h"
+#include "EnemyCam/EnemyCam.h"
 #include "../Players/PlayerUtils.h"
 #include "../Spectate/Spectate.h"
 
