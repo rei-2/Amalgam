@@ -11,7 +11,7 @@ bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nCon
 	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
 	if (iType != SKIP_CHECK && !vWeapons.empty())
 	{
-		if (auto pWeapon = pSkip && pSkip->IsPlayer() ? pSkip->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr)
+		if (auto pWeapon = pSkip && pSkip->IsPlayer() ? pSkip->As<CTFPlayer>()->m_hActiveWeapon()->As<CTFWeaponBase>() : nullptr)
 		{
 			int iWeaponID = pWeapon->GetWeaponID();
 			bWeapon = std::find(vWeapons.begin(), vWeapons.end(), iWeaponID) != vWeapons.end();
@@ -54,7 +54,7 @@ bool CTraceFilterCollideable::ShouldHitEntity(IHandleEntity* pServerEntity, int 
 	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
 	if (iType != SKIP_CHECK && !vWeapons.empty())
 	{
-		if (auto pWeapon = pSkip && pSkip->IsPlayer() ? pSkip->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr)
+		if (auto pWeapon = pSkip && pSkip->IsPlayer() ? pSkip->As<CTFPlayer>()->m_hActiveWeapon()->As<CTFWeaponBase>() : nullptr)
 		{
 			int iWeaponID = pWeapon->GetWeaponID();
 			bWeapon = std::find(vWeapons.begin(), vWeapons.end(), iWeaponID) != vWeapons.end();

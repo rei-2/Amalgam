@@ -60,7 +60,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		if (!pPlayer || pPlayer->IsDormant())
 			return;
 
-		pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+		pWeapon = pPlayer->m_hActiveWeapon()->As<CTFWeaponBase>();
 		if (I::Input->CAM_IsThirdPerson())
 			vAngles = pPlayer->GetEyeAngles();
 
@@ -241,7 +241,7 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 		case ETFClassID::CTFProjectile_Flare:
 			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::ScorchShot)
 			{
-				pWeapon = pEntity->As<CTFProjectile_Flare>()->m_hLauncher().Get()->As<CTFWeaponBase>();
+				pWeapon = pEntity->As<CTFProjectile_Flare>()->m_hLauncher()->As<CTFWeaponBase>();
 				bShouldDraw = pWeapon && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT;
 			}
 		}
@@ -253,13 +253,13 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 		case ETFClassID::CTFWeaponBaseGrenadeProj:
 		case ETFClassID::CTFWeaponBaseMerasmusGrenade:
 		case ETFClassID::CTFGrenadePipebombProjectile:
-			pOwner = pEntity->As<CTFGrenadePipebombProjectile>()->m_hThrower().Get()->As<CTFPlayer>();
+			pOwner = pEntity->As<CTFGrenadePipebombProjectile>()->m_hThrower()->As<CTFPlayer>();
 			break;
 		case ETFClassID::CTFProjectile_Rocket:
 		case ETFClassID::CTFProjectile_SentryRocket:
 		case ETFClassID::CTFProjectile_EnergyBall:
 		case ETFClassID::CTFProjectile_Flare:
-			pOwner = pEntity->m_hOwnerEntity().Get()->As<CTFPlayer>();
+			pOwner = pEntity->m_hOwnerEntity()->As<CTFPlayer>();
 		}
 		if (!pOwner || !pOwner->IsPlayer())
 			continue;
@@ -825,7 +825,7 @@ void CVisuals::Store(CTFPlayer* pLocal)
 			if (pPlayer == pLocal || !(pPlayer->m_iTeamNum() != pLocal->m_iTeamNum() ? Vars::ESP::Other::SniperSightlines.Value & Vars::ESP::Other::SniperSightlinesEnum::Enemy : Vars::ESP::Other::SniperSightlines.Value & Vars::ESP::Other::SniperSightlinesEnum::Team))
 				continue;
 
-			auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+			auto pWeapon = pPlayer->m_hActiveWeapon()->As<CTFWeaponBase>();
 			if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || !pPlayer->InCond(TF_COND_AIMING) ||
 				!pWeapon || pWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW || pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN)
 				continue;

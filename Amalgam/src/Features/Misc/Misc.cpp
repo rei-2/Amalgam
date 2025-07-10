@@ -429,7 +429,7 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
 			continue;
 
-		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+		auto pWeapon = pPlayer->m_hActiveWeapon()->As<CTFWeaponBase>();
 		if (!pWeapon
 			|| pWeapon->GetWeaponID() != TF_WEAPON_KNIFE
 			&& !(G::PrimaryWeaponType == EWeaponType::MELEE && SDK::AttribHookValue(0, "crit_from_behind", pWeapon) > 0)

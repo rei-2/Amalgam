@@ -14,7 +14,7 @@ void CEntities::Store()
 		return;
 
 	m_pLocal = pLocal->As<CTFPlayer>();
-	m_pLocalWeapon = m_pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+	m_pLocalWeapon = m_pLocal->m_hActiveWeapon()->As<CTFWeaponBase>();
 
 	for (int n = I::EngineClient->GetMaxClients() + 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
 	{
@@ -108,7 +108,7 @@ void CEntities::Store()
 
 			if (nClassID == ETFClassID::CTFProjectile_Flare)
 			{
-				auto pLauncher = pEntity->As<CTFProjectile_Flare>()->m_hLauncher().Get()->As<CTFWeaponBase>();
+				auto pLauncher = pEntity->As<CTFProjectile_Flare>()->m_hLauncher()->As<CTFWeaponBase>();
 				if (pEntity->m_hOwnerEntity().Get() == m_pLocal && pLauncher && pLauncher->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_DETONATE)
 					m_mGroups[EGroupType::MISC_LOCAL_FLARES].push_back(pEntity);
 			}
@@ -450,7 +450,7 @@ CTFPlayer* CEntities::GetLocal()
 CTFWeaponBase* CEntities::GetWeapon()
 {
 	auto pLocal = GetLocal();
-	return pLocal ? pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr;
+	return pLocal ? pLocal->m_hActiveWeapon()->As<CTFWeaponBase>() : nullptr;
 	//return m_pLocalWeapon;
 }
 CTFPlayerResource* CEntities::GetPR()

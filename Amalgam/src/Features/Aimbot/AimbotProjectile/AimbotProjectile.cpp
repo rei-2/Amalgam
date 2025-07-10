@@ -187,7 +187,7 @@ float CAimbotProjectile::GetSplashRadius(CBaseEntity* pProjectile, CTFWeaponBase
 	if (pAirblast)
 	{
 		pWeapon = pAirblast;
-		pPlayer = pWeapon->m_hOwner().Get()->As<CTFPlayer>();
+		pPlayer = pWeapon->m_hOwner()->As<CTFPlayer>();
 	}
 	switch (pProjectile->GetClassID())
 	{

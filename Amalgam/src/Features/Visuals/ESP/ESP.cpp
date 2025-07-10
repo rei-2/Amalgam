@@ -72,7 +72,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 		}
 
 		int iClassNum = pPlayer->m_iClass();
-		auto pWeapon = pPlayer->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+		auto pWeapon = pPlayer->m_hActiveWeapon()->As<CTFWeaponBase>();
 
 		PlayerCache& tCache = m_mPlayerCache[pEntity];
 		tCache.m_flAlpha = (pPlayer->IsDormant() ? Vars::ESP::DormantAlpha.Value : Vars::ESP::ActiveAlpha.Value) / 255.f;

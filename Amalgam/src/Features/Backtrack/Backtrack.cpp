@@ -324,7 +324,7 @@ void CBacktrack::ReportShot(int iIndex)
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
-	if (!pEntity || SDK::GetWeaponType(pEntity->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>()) != EWeaponType::HITSCAN)
+	if (!pEntity || SDK::GetWeaponType(pEntity->As<CTFPlayer>()->m_hActiveWeapon()->As<CTFWeaponBase>()) != EWeaponType::HITSCAN)
 		return;
 
 	m_mDidShoot[pEntity->entindex()] = true;
