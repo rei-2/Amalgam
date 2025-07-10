@@ -151,56 +151,42 @@ void CAmmoTracker::UpdateSupplyPositions()
             std::string sKey = GetPositionKey(vPos);
             vCurrentSupplies[sKey] = true;
             
-            // Add new supply if not tracked
+            // Add new supply if not tracked (only add if currently visible - not respawning)
             if (m_SupplyPositions.find(sKey) == m_SupplyPositions.end())
             {
                 SupplyInfo info;
                 info.Position = vPos;
                 info.Type = sType;
-                info.Respawning = false;
+                info.Respawning = false;  // New supplies start as available
                 info.DisappearTime = 0.0f;
                 m_SupplyPositions[sKey] = info;
+            }
+            else
+            {
+                // Update existing supply - if we can see it and it was respawning, it's now available
+                SupplyInfo& info = m_SupplyPositions[sKey];
+                if (info.Respawning)
+                {
+                    info.Respawning = false;
+                    info.DisappearTime = 0.0f;
+                }
             }
         }
     }
     
-    // Update respawn status
-    for (auto& [sKey, info] : m_SupplyPositions)
+    // Clean up supplies that have finished respawning and expired
+    for (auto it = m_SupplyPositions.begin(); it != m_SupplyPositions.end();)
     {
-        bool supplyCurrentlyVisible = vCurrentSupplies.find(sKey) != vCurrentSupplies.end();
+        SupplyInfo& info = it->second;
         
-        if (!supplyCurrentlyVisible && !info.Respawning)
+        // Remove supplies that have been respawning for longer than respawn time + buffer
+        if (info.Respawning && (fCurrentTime - info.DisappearTime) > (RESPAWN_TIME + 5.0f))
         {
-            // Only start respawn timer if we're confident the item was actually picked up
-            // When "show through walls" is disabled, we can trust visibility
-            // When "show through walls" is enabled, we need to be more careful
-            
-            bool shouldStartTimer = false;
-            
-            if (!Vars::Competitive::AmmoTracker::ShowThroughWalls.Value)
-            {
-                // "Show through walls" is disabled - if we can't see it, it was likely picked up
-                shouldStartTimer = true;
-            }
-            else
-            {
-                // "Show through walls" is enabled - only start timer if a player was actually near the supply
-                // This prevents false positives for supplies that disappeared for other reasons
-                shouldStartTimer = IsAnyPlayerNearSupply(info.Position);
-            }
-            
-            if (shouldStartTimer)
-            {
-                // Supply disappeared and we're confident it was picked up
-                info.Respawning = true;
-                info.DisappearTime = fCurrentTime;
-            }
+            it = m_SupplyPositions.erase(it);
         }
-        else if (supplyCurrentlyVisible && info.Respawning)
+        else
         {
-            // Supply respawned
-            info.Respawning = false;
-            info.DisappearTime = 0.0f;
+            ++it;
         }
     }
 }
@@ -482,6 +468,68 @@ void CAmmoTracker::Draw()
                           static_cast<int>(vScreenPos.x), static_cast<int>(vScreenPos.y - 15), 
                           Vars::Competitive::AmmoTracker::SecondsColor.Value, 
                           ALIGN_CENTER, sTimerText.c_str());
+        }
+    }
+}
+
+void CAmmoTracker::Event(IGameEvent* pEvent, uint32_t uHash)
+{
+    if (uHash == FNV1A::Hash32Const("item_pickup"))
+    {
+        if (!Vars::Competitive::Features::AmmoTracker.Value)
+            return;
+            
+        auto pEntity = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")))->As<CTFPlayer>();
+        if (!pEntity || !pEntity->IsPlayer())
+            return;
+            
+        const char* sItemName = pEvent->GetString("item");
+        if (!sItemName)
+            return;
+            
+        // Determine pickup type - check for any health/ammo related items including Halloween
+        std::string itemName = sItemName;
+        std::transform(itemName.begin(), itemName.end(), itemName.begin(), ::tolower);
+        
+        std::string sType = "";
+        if (itemName.find("medkit") != std::string::npos || 
+            itemName.find("healthkit") != std::string::npos ||
+            itemName.find("health") != std::string::npos ||
+            itemName.find("candy") != std::string::npos ||      // Halloween candy items
+            itemName.find("soul") != std::string::npos)         // Halloween soul packs
+        {
+            sType = "health";
+        }
+        else if (itemName.find("ammopack") != std::string::npos ||
+                 itemName.find("ammo") != std::string::npos)
+        {
+            sType = "ammo";
+        }
+        
+        if (sType.empty())
+            return;
+            
+        // Get the pickup location
+        Vec3 vPos = pEntity->m_vecOrigin();
+        std::string sKey = GetPositionKey(vPos);
+        
+        // Check if we're already tracking this position
+        if (m_SupplyPositions.find(sKey) != m_SupplyPositions.end())
+        {
+            // Mark as picked up (start respawn timer)
+            SupplyInfo& info = m_SupplyPositions[sKey];
+            info.Respawning = true;
+            info.DisappearTime = I::GlobalVars->curtime;
+        }
+        else
+        {
+            // Add new supply position and immediately mark as respawning
+            SupplyInfo info;
+            info.Position = vPos;
+            info.Type = sType;
+            info.Respawning = true;
+            info.DisappearTime = I::GlobalVars->curtime;
+            m_SupplyPositions[sKey] = info;
         }
     }
 }

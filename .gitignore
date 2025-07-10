@@ -370,3 +370,8 @@ vcpkg/
 
 # element-web
 element-web/
+
+# Matrix SDK dependencies
+matrix-js-sdk/
+matrix-sdk-crypto-wasm/
+vodozemac/

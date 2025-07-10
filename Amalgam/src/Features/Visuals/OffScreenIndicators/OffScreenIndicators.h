@@ -12,6 +12,7 @@ private:
     // Helper functions
     Color_t GenerateColor(const std::string& steamID);
     std::string GetPlayerSteamID(CTFPlayer* pPlayer);
+    std::string GetPlayerClassName(int classId);
     bool IsOnScreen(CBaseEntity* entity);
     void DrawArrow(int centerX, int centerY, float angle, const Color_t& color, int size = 10);
     

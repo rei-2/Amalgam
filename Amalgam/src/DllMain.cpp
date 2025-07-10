@@ -4,23 +4,39 @@
 
 DWORD WINAPI MainThread(LPVOID lpParam)
 {
-	U::Core.Load();
-	U::Core.Loop();
-	U::Core.Unload();
+	try
+	{
+		U::Core.Load();
+		U::Core.Loop();
+		U::Core.Unload();
 
-	CrashLog::Unload();
-	FreeLibraryAndExitThread(static_cast<HMODULE>(lpParam), EXIT_SUCCESS);
+		CrashLog::Unload();
+		FreeLibraryAndExitThread(static_cast<HMODULE>(lpParam), EXIT_SUCCESS);
+	}
+	catch (...)
+	{
+		// Silent failure - just exit thread
+		FreeLibraryAndExitThread(static_cast<HMODULE>(lpParam), EXIT_FAILURE);
+	}
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-	if (fdwReason == DLL_PROCESS_ATTACH)
+	try
 	{
-		CrashLog::Initialize();
+		if (fdwReason == DLL_PROCESS_ATTACH)
+		{
+			CrashLog::Initialize();
 
-		if (const auto hMainThread = CreateThread(nullptr, 0, MainThread, hinstDLL, 0, nullptr))
-			CloseHandle(hMainThread);
+			if (const auto hMainThread = CreateThread(nullptr, 0, MainThread, hinstDLL, 0, nullptr))
+				CloseHandle(hMainThread);
+		}
+
+		return TRUE;
 	}
-
-	return TRUE;
+	catch (...)
+	{
+		// Silent failure - don't crash the target process
+		return FALSE;
+	}
 }

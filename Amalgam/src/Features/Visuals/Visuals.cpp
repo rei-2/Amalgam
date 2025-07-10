@@ -799,6 +799,7 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 		G::PathStorage.clear();
 		G::SphereStorage.clear();
 		G::SweptStorage.clear();
+		F::EnemyCam.Reset();
 	}
 }
 

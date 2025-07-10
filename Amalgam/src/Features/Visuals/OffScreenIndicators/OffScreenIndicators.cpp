@@ -37,6 +37,23 @@ std::string COffScreenIndicators::GetPlayerSteamID(CTFPlayer* pPlayer)
     return "";
 }
 
+std::string COffScreenIndicators::GetPlayerClassName(int classId)
+{
+    switch (classId)
+    {
+        case 1: return "Scout";
+        case 2: return "Sniper";
+        case 3: return "Soldier";
+        case 4: return "Demoman";
+        case 5: return "Medic";
+        case 6: return "Heavy";
+        case 7: return "Pyro";
+        case 8: return "Spy";
+        case 9: return "Engineer";
+        default: return "Unknown";
+    }
+}
+
 Color_t COffScreenIndicators::GenerateColor(const std::string& steamID)
 {
     if (m_ColorCache.find(steamID) != m_ColorCache.end())
@@ -147,9 +164,10 @@ void COffScreenIndicators::Draw()
         x = x / len;
         y = y / len;
         
-        // Position indicator 200 pixels from screen center
-        float pos1 = screenW / 2.0f + x * 200.0f;
-        float pos2 = screenH / 2.0f + y * 200.0f;
+        // Position indicator at configurable distance from screen center
+        float indicatorRange = Vars::Competitive::Features::OffScreenIndicatorsRange.Value;
+        float pos1 = screenW / 2.0f + x * indicatorRange;
+        float pos2 = screenH / 2.0f + y * indicatorRange;
         
         if (pos1 != pos1 || pos2 != pos2)  // NaN check
             continue;
@@ -171,7 +189,8 @@ void COffScreenIndicators::Draw()
         
         // Calculate distance for alpha
         float distance = len;
-        int alpha = static_cast<int>(std::max(0.0f, 255.0f - (distance * 0.05f)));
+        int baseAlpha = Vars::Competitive::Features::OffScreenIndicatorsAlpha.Value;
+        int alpha = static_cast<int>(std::max(0.0f, static_cast<float>(baseAlpha) - (distance * 0.05f)));
         
         // Get color based on player Steam ID
         std::string steamID = GetPlayerSteamID(pPlayer);
@@ -185,14 +204,44 @@ void COffScreenIndicators::Draw()
         // Calculate angle pointing toward the target (opposite of the direction to indicator)
         float directionAngle = std::atan2(y, x); // Direction from indicator toward target
         
-        // Draw arrow pointing toward the player
-        DrawArrow(finalX, finalY, directionAngle, playerColor, 15);
+        // Draw arrow pointing toward the player with configurable size
+        int arrowSize = Vars::Competitive::Features::OffScreenIndicatorsSize.Value;
+        DrawArrow(finalX, finalY, directionAngle, playerColor, arrowSize);
         
-        // Draw player name below arrow
-        Vec2 nameSize = H::Draw.GetTextSize(playerName.c_str(), font);
-        H::Draw.String(font, finalX - static_cast<int>(nameSize.x) / 2, finalY + 20, {255, 255, 255, static_cast<byte>(alpha)}, ALIGN_TOPLEFT, playerName.c_str());
+        // Draw information with toggleable options
+        int currentY = finalY + arrowSize + 5;
         
-        // Draw health below name
-        H::Draw.String(font, finalX - static_cast<int>(nameSize.x) / 2, finalY + 35, {0, 255, 0, static_cast<byte>(alpha)}, ALIGN_TOPLEFT, healthText.c_str());
+        // Draw player name if enabled
+        if (Vars::Competitive::Features::OffScreenIndicatorsName.Value)
+        {
+            Vec2 nameSize = H::Draw.GetTextSize(playerName.c_str(), font);
+            H::Draw.String(font, finalX - static_cast<int>(nameSize.x) / 2, currentY, {255, 255, 255, static_cast<byte>(alpha)}, ALIGN_TOPLEFT, playerName.c_str());
+            currentY += 15;
+        }
+        
+        // Draw player class if enabled
+        if (Vars::Competitive::Features::OffScreenIndicatorsClass.Value)
+        {
+            std::string className = GetPlayerClassName(pPlayer->m_iClass());
+            Vec2 classSize = H::Draw.GetTextSize(className.c_str(), font);
+            H::Draw.String(font, finalX - static_cast<int>(classSize.x) / 2, currentY, {255, 255, 0, static_cast<byte>(alpha)}, ALIGN_TOPLEFT, className.c_str());
+            currentY += 15;
+        }
+        
+        // Draw health if enabled
+        if (Vars::Competitive::Features::OffScreenIndicatorsHealth.Value)
+        {
+            Vec2 healthSize = H::Draw.GetTextSize(healthText.c_str(), font);
+            H::Draw.String(font, finalX - static_cast<int>(healthSize.x) / 2, currentY, {0, 255, 0, static_cast<byte>(alpha)}, ALIGN_TOPLEFT, healthText.c_str());
+            currentY += 15;
+        }
+        
+        // Draw distance if enabled
+        if (Vars::Competitive::Features::OffScreenIndicatorsDistance.Value)
+        {
+            std::string distanceText = std::to_string(static_cast<int>(distance)) + "u";
+            Vec2 distSize = H::Draw.GetTextSize(distanceText.c_str(), font);
+            H::Draw.String(font, finalX - static_cast<int>(distSize.x) / 2, currentY, {200, 200, 200, static_cast<byte>(alpha)}, ALIGN_TOPLEFT, distanceText.c_str());
+        }
     }
 }

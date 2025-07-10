@@ -488,13 +488,25 @@ void CMarkSpot::DrawOffScreenIndicators()
         if (mark.MapName != currentMap)
             continue;
         
-        // Check if mark spot is off-screen
-        if (IsOnScreen(mark.Position))
-            continue;
+        // Calculate ground target position (where the circle is drawn)
+        Vec3 localPos = pLocal->GetAbsOrigin();
+        Vec3 groundTargetPos = Vec3(mark.Position.x, mark.Position.y, mark.Position.z); // Use the mark's actual ground Z position
+        
+        // Check if ground target position is off-screen
+        Vec3 w2s;
+        if (SDK::W2S(groundTargetPos, w2s))
+        {
+            int screenW, screenH;
+            I::MatSystemSurface->GetScreenSize(screenW, screenH);
+            
+            // If the ground position is within screen bounds, skip drawing indicator
+            if (w2s.x >= 0 && w2s.x <= screenW && w2s.y >= 0 && w2s.y <= screenH)
+                continue;
+        }
         
         // Calculate directional position relative to local player
-        Vec3 localPos = pLocal->GetAbsOrigin();
-        Vec3 positionDiff = localPos - mark.Position;
+        // Point arrow toward ground circle center, not the aim position
+        Vec3 positionDiff = localPos - groundTargetPos;
         
         float x = std::cos(yaw) * positionDiff.y - std::sin(yaw) * positionDiff.x;
         float y = std::cos(yaw) * positionDiff.x + std::sin(yaw) * positionDiff.y;

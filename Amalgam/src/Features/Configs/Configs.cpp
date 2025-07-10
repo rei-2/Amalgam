@@ -2,6 +2,7 @@
 
 #include "../Binds/Binds.h"
 #include "../Visuals/Materials/Materials.h"
+#include "../Chat/Chat.h"
 
 boost::property_tree::ptree CConfigs::ColorToTree(const Color_t& color)
 {
@@ -357,17 +358,94 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 			if (!bLoadNosave && pVar->m_iFlags & NOSAVE)
 				continue;
 
-			SaveMain(bool, varTree)
-			else SaveMain(int, varTree)
-			else SaveMain(float, varTree)
-			else SaveMain(IntRange_t, varTree)
-			else SaveMain(FloatRange_t, varTree)
-			else SaveMain(std::string, varTree)
-			else SaveMain(VA_LIST(std::vector<std::pair<std::string, Color_t>>), varTree)
-			else SaveMain(Color_t, varTree)
-			else SaveMain(Gradient_t, varTree)
-			else SaveMain(DragBox_t, varTree)
-			else SaveMain(WindowBox_t, varTree)
+			// Special handling for Chat credentials - encrypt password and clear others when SaveCredentials is disabled
+			if ((pVar->m_sName == "Vars::Chat::Password" || pVar->m_sName == "Vars::Chat::Username" || 
+				 pVar->m_sName == "Vars::Chat::Email" || pVar->m_sName == "Vars::Chat::Server" ||
+				 pVar->m_sName == "Vars::Chat::Space" || pVar->m_sName == "Vars::Chat::Room") && pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				std::string originalValue;
+				
+				// Get the current value
+				if (stringVar->Map.find(DEFAULT_BIND) != stringVar->Map.end())
+					originalValue = stringVar->Map[DEFAULT_BIND];
+				
+				// Check if SaveCredentials is enabled
+				bool shouldSaveCredentials = false;
+				for (auto& pCheckVar : G::Vars)
+				{
+					if (pCheckVar->m_sName == "Vars::Chat::SaveCredentials" && pCheckVar->m_iType == typeid(bool).hash_code())
+					{
+						auto saveCredsVar = pCheckVar->As<bool>();
+						if (saveCredsVar->Map.find(DEFAULT_BIND) != saveCredsVar->Map.end())
+							shouldSaveCredentials = saveCredsVar->Map[DEFAULT_BIND];
+						break;
+					}
+				}
+				
+				if (pVar->m_sName == "Vars::Chat::Password")
+				{
+					// Special password handling - encrypt if SaveCredentials is enabled
+					if (shouldSaveCredentials && !originalValue.empty())
+					{
+						// Encrypt the password
+						std::string encryptedPassword = F::Chat.EncryptPassword(originalValue);
+						if (!encryptedPassword.empty())
+						{
+							// Temporarily replace with encrypted version
+							stringVar->Map[DEFAULT_BIND] = encryptedPassword;
+							SaveMain(std::string, varTree);
+							// Restore original password
+							stringVar->Map[DEFAULT_BIND] = originalValue;
+						}
+						else
+						{
+							// Encryption failed, save empty string
+							stringVar->Map[DEFAULT_BIND] = "";
+							SaveMain(std::string, varTree);
+							stringVar->Map[DEFAULT_BIND] = originalValue;
+						}
+					}
+					else
+					{
+						// SaveCredentials disabled or password empty, save empty string
+						stringVar->Map[DEFAULT_BIND] = "";
+						SaveMain(std::string, varTree);
+						stringVar->Map[DEFAULT_BIND] = originalValue;
+					}
+				}
+				else
+				{
+					// Other chat credentials - save if SaveCredentials is enabled, otherwise save empty
+					if (shouldSaveCredentials)
+					{
+						SaveMain(std::string, varTree);
+					}
+					else
+					{
+						// SaveCredentials disabled, save empty string
+						std::string tempValue = stringVar->Map[DEFAULT_BIND];
+						stringVar->Map[DEFAULT_BIND] = "";
+						SaveMain(std::string, varTree);
+						stringVar->Map[DEFAULT_BIND] = tempValue;
+					}
+				}
+			}
+			else
+			{
+				// Standard variable saving
+				SaveMain(bool, varTree)
+				else SaveMain(int, varTree)
+				else SaveMain(float, varTree)
+				else SaveMain(IntRange_t, varTree)
+				else SaveMain(FloatRange_t, varTree)
+				else SaveMain(std::string, varTree)
+				else SaveMain(VA_LIST(std::vector<std::pair<std::string, Color_t>>), varTree)
+				else SaveMain(Color_t, varTree)
+				else SaveMain(Gradient_t, varTree)
+				else SaveMain(DragBox_t, varTree)
+				else SaveMain(WindowBox_t, varTree)
+			}
 		}
 		writeTree.put_child("ConVars", varTree);
 
@@ -470,11 +548,14 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 		if (const auto conVars = readTree.get_child_optional("ConVars"))
 		{
 			auto& varTree = *conVars;
+			
+			// First pass: Load all variables normally
 			for (auto& pVar : G::Vars)
 			{
 				if (!bLoadNosave && pVar->m_iFlags & NOSAVE)
 					continue;
 
+				// Standard variable loading for all variables (including chat credentials)
 				LoadMain(bool, varTree)
 				else LoadMain(int, varTree)
 				else LoadMain(float, varTree)
@@ -486,6 +567,75 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				else LoadMain(Gradient_t, varTree)
 				else LoadMain(DragBox_t, varTree)
 				else LoadMain(WindowBox_t, varTree)
+			}
+			
+			// Second pass: Handle chat credential decryption and clearing
+			bool shouldLoadCredentials = false;
+			
+			// Get SaveCredentials setting (now that all variables are loaded)
+			for (auto& pCheckVar : G::Vars)
+			{
+				if (pCheckVar->m_sName == "Vars::Chat::SaveCredentials" && pCheckVar->m_iType == typeid(bool).hash_code())
+				{
+					auto saveCredsVar = pCheckVar->As<bool>();
+					if (saveCredsVar && saveCredsVar->Map.find(DEFAULT_BIND) != saveCredsVar->Map.end())
+						shouldLoadCredentials = saveCredsVar->Map[DEFAULT_BIND];
+					break;
+				}
+			}
+			
+			// Apply chat credential handling
+			for (auto& pVar : G::Vars)
+			{
+				if ((pVar->m_sName == "Vars::Chat::Password" || pVar->m_sName == "Vars::Chat::Username" || 
+					 pVar->m_sName == "Vars::Chat::Email" || pVar->m_sName == "Vars::Chat::Server" ||
+					 pVar->m_sName == "Vars::Chat::Space" || pVar->m_sName == "Vars::Chat::Room") && 
+					 pVar->m_iType == typeid(std::string).hash_code())
+				{
+					auto stringVar = pVar->As<std::string>();
+					if (!stringVar) continue;
+					
+					std::string loadedValue;
+					if (stringVar->Map.find(DEFAULT_BIND) != stringVar->Map.end())
+						loadedValue = stringVar->Map[DEFAULT_BIND];
+					
+					if (pVar->m_sName == "Vars::Chat::Password")
+					{
+						// Special password handling - decrypt if SaveCredentials is enabled
+						if (shouldLoadCredentials && !loadedValue.empty())
+						{
+							// Try to decrypt the password
+							std::string decryptedPassword = F::Chat.DecryptPassword(loadedValue);
+							if (!decryptedPassword.empty())
+							{
+								// Successfully decrypted, replace the encrypted value
+								stringVar->Map[DEFAULT_BIND] = decryptedPassword;
+								stringVar->Value = decryptedPassword;
+							}
+							// If decryption fails, keep the loaded value (might be legacy plain text)
+						}
+						else
+						{
+							// SaveCredentials disabled, clear the password
+							stringVar->Map[DEFAULT_BIND] = "";
+							stringVar->Value = "";
+						}
+					}
+					else
+					{
+						// Other chat credentials - clear if SaveCredentials is disabled
+						if (!shouldLoadCredentials)
+						{
+							stringVar->Map[DEFAULT_BIND] = "";
+							stringVar->Value = "";
+						}
+						else
+						{
+							// If SaveCredentials is enabled, ensure Value field is updated
+							stringVar->Value = stringVar->Map[DEFAULT_BIND];
+						}
+					}
+				}
 			}
 		}
 
@@ -502,6 +652,245 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 	}
 
 	return true;
+}
+
+bool CConfigs::SaveChatCredentials(const std::string& sConfigName)
+{
+	try
+	{
+		
+		// Ensure default values are set in runtime variables if they're empty
+		for (auto& pVar : G::Vars)
+		{
+			if (pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				if (stringVar->Map.find(DEFAULT_BIND) != stringVar->Map.end())
+				{
+					std::string& currentValue = stringVar->Map[DEFAULT_BIND];
+					
+					// Set default values if empty
+					if (currentValue.empty())
+					{
+						if (pVar->m_sName == "Vars::Chat::Server")
+							currentValue = "matrix.org";
+						else if (pVar->m_sName == "Vars::Chat::Space")
+							currentValue = "amalgam-comp";
+						else if (pVar->m_sName == "Vars::Chat::Room")
+							currentValue = "chat";
+					}
+				}
+			}
+		}
+		
+		// Read existing config if it exists
+		boost::property_tree::ptree readTree;
+		if (std::filesystem::exists(m_sConfigPath + sConfigName + m_sConfigExtension))
+		{
+			read_json(m_sConfigPath + sConfigName + m_sConfigExtension, readTree);
+		}
+		
+		// Get or create the ConVars section
+		boost::property_tree::ptree conVars;
+		if (auto existingConVars = readTree.get_child_optional("ConVars"))
+		{
+			conVars = *existingConVars;
+		}
+		
+		// Update only chat credential variables
+		std::vector<std::string> chatVars = {
+			"Vars::Chat::Server", "Vars::Chat::Username", "Vars::Chat::Password", 
+			"Vars::Chat::Email", "Vars::Chat::Space", "Vars::Chat::Room", "Vars::Chat::SaveCredentials"
+		};
+		
+		for (auto& pVar : G::Vars)
+		{
+			// Only process chat credential variables
+			if (std::find(chatVars.begin(), chatVars.end(), pVar->m_sName) == chatVars.end())
+				continue;
+			
+			// Debug: Show we found a chat variable  
+			SDK::Output("Amalgam", std::format("Found chat var: {}", pVar->m_sName).c_str(), { 255, 255, 0 }, true, true);
+			
+				
+			if (pVar->m_iType != typeid(std::string).hash_code() && pVar->m_iType != typeid(bool).hash_code())
+				continue;
+			
+			// Debug: Show current value in this variable
+			if (pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				if (stringVar->Map.find(DEFAULT_BIND) != stringVar->Map.end())
+				{
+					SDK::Output("Amalgam", std::format("  {} current value: '{}'", pVar->m_sName, stringVar->Map[DEFAULT_BIND]).c_str(), { 0, 255, 255 }, true, true);
+				}
+			}
+			else if (pVar->m_iType == typeid(bool).hash_code())
+			{
+				auto boolVar = pVar->As<bool>();
+				if (boolVar->Map.find(DEFAULT_BIND) != boolVar->Map.end())
+				{
+					SDK::Output("Amalgam", std::format("  {} current value: {}", pVar->m_sName, boolVar->Map[DEFAULT_BIND] ? "true" : "false").c_str(), { 0, 255, 255 }, true, true);
+				}
+			}
+				
+			// Special handling for Chat credentials - encrypt password and clear others when SaveCredentials is disabled
+			if ((pVar->m_sName == "Vars::Chat::Password" || pVar->m_sName == "Vars::Chat::Username" || 
+				 pVar->m_sName == "Vars::Chat::Email" || pVar->m_sName == "Vars::Chat::Server" ||
+				 pVar->m_sName == "Vars::Chat::Space" || pVar->m_sName == "Vars::Chat::Room") && pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				std::string originalValue;
+				
+				// Get the current value
+				if (stringVar->Map.find(DEFAULT_BIND) != stringVar->Map.end())
+					originalValue = stringVar->Map[DEFAULT_BIND];
+				
+				// Check if SaveCredentials is enabled
+				bool shouldSaveCredentials = false;
+				for (auto& pCheckVar : G::Vars)
+				{
+					if (pCheckVar->m_sName == "Vars::Chat::SaveCredentials" && pCheckVar->m_iType == typeid(bool).hash_code())
+					{
+						auto saveCredsVar = pCheckVar->As<bool>();
+						if (saveCredsVar->Map.find(DEFAULT_BIND) != saveCredsVar->Map.end())
+							shouldSaveCredentials = saveCredsVar->Map[DEFAULT_BIND];
+						break;
+					}
+				}
+				
+				boost::property_tree::ptree mapTree;
+				
+				if (pVar->m_sName == "Vars::Chat::Password")
+				{
+					// Special password handling - save if SaveCredentials is enabled
+					if (shouldSaveCredentials && !originalValue.empty())
+					{
+						// "Encrypt" the password (currently plaintext for simplicity)
+						std::string savedPassword = F::Chat.EncryptPassword(originalValue);
+						mapTree.put(std::to_string(DEFAULT_BIND), savedPassword);
+					}
+					else
+					{
+						// SaveCredentials disabled or password empty, save empty string
+						mapTree.put(std::to_string(DEFAULT_BIND), "");
+					}
+				}
+				else
+				{
+					// Other chat credentials handling
+					if (pVar->m_sName == "Vars::Chat::Username" || pVar->m_sName == "Vars::Chat::Email")
+					{
+						// Username and Email: save if SaveCredentials is enabled, otherwise save empty
+						if (shouldSaveCredentials)
+						{
+							mapTree.put(std::to_string(DEFAULT_BIND), originalValue);
+						}
+						else
+						{
+							// SaveCredentials disabled, save empty string
+							mapTree.put(std::to_string(DEFAULT_BIND), "");
+						}
+					}
+					else
+					{
+						// Server, Space, Room: always save current value, but restore defaults if empty
+						std::string valueToSave = originalValue;
+						
+						// Restore default values if empty
+						if (valueToSave.empty())
+						{
+							if (pVar->m_sName == "Vars::Chat::Server")
+								valueToSave = "matrix.org";
+							else if (pVar->m_sName == "Vars::Chat::Space")
+								valueToSave = "amalgam-comp";
+							else if (pVar->m_sName == "Vars::Chat::Room")
+								valueToSave = "chat";
+						}
+						
+						mapTree.put(std::to_string(DEFAULT_BIND), valueToSave);
+					}
+				}
+				
+				conVars.put_child(pVar->m_sName, mapTree);
+			}
+			else if (pVar->m_sName == "Vars::Chat::SaveCredentials" && pVar->m_iType == typeid(bool).hash_code())
+			{
+				// Always save the SaveCredentials setting
+				auto boolVar = pVar->As<bool>();
+				boost::property_tree::ptree mapTree;
+				
+				bool value = false;
+				if (boolVar->Map.find(DEFAULT_BIND) != boolVar->Map.end())
+					value = boolVar->Map[DEFAULT_BIND];
+				
+				mapTree.put(std::to_string(DEFAULT_BIND), value);
+				conVars.put_child(pVar->m_sName, mapTree);
+			}
+		}
+		
+		// Update the ConVars section in the tree
+		readTree.put_child("ConVars", conVars);
+		
+		// Write the updated config back
+		write_json(m_sConfigPath + sConfigName + m_sConfigExtension, readTree);
+		
+		return true;
+	}
+	catch (...)
+	{
+		return false;
+	}
+}
+
+bool CConfigs::SaveChatCredentials(const std::string& sConfigName, const std::string& username, const std::string& password, const std::string& email)
+{
+	try
+	{
+		// Temporarily set the Vars values to the provided parameters
+		std::string oldUsername = Vars::Chat::Username.Value;
+		std::string oldPassword = Vars::Chat::Password.Value;
+		std::string oldEmail = Vars::Chat::Email.Value;
+		
+		// Set both .Value and the actual Map storage that config system uses
+		Vars::Chat::Username.Value = username;
+		Vars::Chat::Password.Value = password;
+		Vars::Chat::Email.Value = email;
+		
+		// Also set the Map storage directly (this is what the config system actually reads)
+		for (auto& pVar : G::Vars)
+		{
+			if (pVar->m_sName == "Vars::Chat::Username" && pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				stringVar->Map[DEFAULT_BIND] = username;
+			}
+			else if (pVar->m_sName == "Vars::Chat::Password" && pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				stringVar->Map[DEFAULT_BIND] = password;
+			}
+			else if (pVar->m_sName == "Vars::Chat::Email" && pVar->m_iType == typeid(std::string).hash_code())
+			{
+				auto stringVar = pVar->As<std::string>();
+				stringVar->Map[DEFAULT_BIND] = email;
+			}
+		}
+		
+		// Call the regular SaveChatCredentials function
+		bool result = SaveChatCredentials(sConfigName);
+		
+		// Restore the original values (though they should be the same now)
+		Vars::Chat::Username.Value = oldUsername;
+		Vars::Chat::Password.Value = oldPassword;
+		Vars::Chat::Email.Value = oldEmail;
+		
+		return result;
+	}
+	catch (...)
+	{
+		return false;
+	}
 }
 
 #define SaveRegular(type, tree) SaveJson(tree, pVar->m_sName, pVar->As<type>()->Map[DEFAULT_BIND])

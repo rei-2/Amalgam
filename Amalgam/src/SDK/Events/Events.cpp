@@ -12,6 +12,7 @@
 #include "../../Features/Visuals/Visuals.h"
 #include "../../Features/Visuals/CritHeals/CritHeals.h"
 #include "../../Features/Visuals/FocusFire/FocusFire.h"
+#include "../../Features/Visuals/AmmoTracker/AmmoTracker.h"
 
 bool CEventListener::Initialize()
 {
@@ -54,6 +55,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	F::AutoHeal.Event(pEvent, uHash);
 	F::Misc.Event(pEvent, uHash);
 	F::Visuals.Event(pEvent, uHash);
+	F::AmmoTracker.Event(pEvent, uHash);
 	switch (uHash)
 	{
 	case FNV1A::Hash32Const("player_hurt"):

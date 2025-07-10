@@ -36,6 +36,8 @@ public:
 
 	bool SaveConfig(const std::string& sConfigName, bool bNotify = true);
 	bool LoadConfig(const std::string& sConfigName, bool bNotify = true);
+	bool SaveChatCredentials(const std::string& sConfigName = "default");
+	bool SaveChatCredentials(const std::string& sConfigName, const std::string& username, const std::string& password, const std::string& email);
 	void DeleteConfig(const std::string& sConfigName, bool bNotify = true);
 	void ResetConfig(const std::string& sConfigName, bool bNotify = true);
 	bool SaveVisual(const std::string& sConfigName, bool bNotify = true);

@@ -259,8 +259,20 @@ void CFocusFire::OnPlayerHurt(int victimIndex, int attackerIndex)
     if (!pVictimPlayer || !pAttackerPlayer)
         return;
     
-    // Skip if victim == attacker
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return;
+    
+    // Skip if victim == attacker (self-damage)
     if (victimIndex == attackerIndex)
+        return;
+    
+    // Skip if attacker is on same team as victim (friendly fire shouldn't count)
+    if (pVictimPlayer->m_iTeamNum() == pAttackerPlayer->m_iTeamNum())
+        return;
+    
+    // Skip if attacker is not on our team (we only track our team's attacks)
+    if (pAttackerPlayer->m_iTeamNum() != pLocal->m_iTeamNum())
         return;
     
     // Skip dormant entities

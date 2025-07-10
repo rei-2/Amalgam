@@ -6,6 +6,7 @@
 #include <mutex>
 #include <atomic>
 #include <queue>
+#include <algorithm>
 
 // Include SDK after standard headers
 #include "../../SDK/SDK.h"
@@ -32,6 +33,7 @@ private:
     std::atomic<bool> m_bConnected{false};
     std::atomic<bool> m_bLoginInProgress{false};
     std::atomic<bool> m_bShouldStop{false};
+    std::atomic<bool> m_bAutoConnectAttempted{false};
     std::string m_sLastError;
     std::string m_sLastSuccess;
     mutable std::mutex m_StatusMutex;
@@ -39,6 +41,12 @@ private:
     // Thread-safe message queue for UI updates
     std::queue<ChatMessage> m_MessageQueue;
     mutable std::mutex m_MessageQueueMutex;
+    
+    // Lazy initialization flag
+    bool m_bInitialized;
+    
+    // Lazy initialization method
+    void EnsureInitialized();
     
     // Matrix client data
     std::string m_sAccessToken;
@@ -66,6 +74,8 @@ private:
     // Encryption support
     std::unique_ptr<MatrixCrypto> m_pCrypto;
     bool m_bEncryptionEnabled = false;
+    std::map<std::string, bool> m_RoomEncryptionState; // Track per-room encryption state
+    mutable std::mutex m_EncryptionStateMutex;
     
     
     // Helper functions
@@ -73,9 +83,6 @@ private:
     void HandleMatrixEvents();
     void DisplayInGameMessage(const std::string& sender, const std::string& content);
     void QueueMessage(const std::string& sender, const std::string& content);
-    
-    // Chat settings persistence (separate from main config system)
-    void LoadChatSettings();
     
     // Cryptographically secure encryption for password storage using Olm
     std::string SimpleEncrypt(const std::string& text);
@@ -105,8 +112,12 @@ private:
     bool HttpDownloadDeviceKeys(const std::string& user_id = "");
     bool HttpSendToDevice(const std::string& event_type, const std::string& target_user, const std::string& target_device, const std::string& content);
     bool HttpUploadOneTimeKeys();
+    bool HttpUploadKeys(); // Unified key upload method
     bool HttpClaimKeys(const std::vector<std::string>& user_ids);
     bool HttpGetRoomMembers();
+    
+    // Room key sharing
+    void SendPendingRoomKeys();
     
 public:
     CChat();
@@ -123,7 +134,12 @@ public:
     void Login(const std::string& username, const std::string& password);
     
     // Chat settings persistence
-    void SaveChatSettings();
+    void SaveChatCredentials();
+    void LoadChatCredentials();
+    
+    // Public encryption methods for config system
+    std::string EncryptPassword(const std::string& password);
+    std::string DecryptPassword(const std::string& encryptedPassword);
     
     // Status information
     std::string GetStatus() const;
@@ -137,6 +153,11 @@ public:
     bool InitializeEncryption();
     void EnableEncryption(bool enable) { m_bEncryptionEnabled = enable; }
     bool IsEncryptionEnabled() const { return m_bEncryptionEnabled && m_pCrypto != nullptr; }
+    
+    // Room encryption state management
+    void SetRoomEncryption(const std::string& room_id, bool encrypted);
+    bool IsRoomEncrypted(const std::string& room_id) const;
+    bool ShouldEncryptMessage(const std::string& room_id) const;
     
     // Status
     bool IsConnected() const { return m_bConnected.load(); }

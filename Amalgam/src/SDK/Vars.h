@@ -899,6 +899,13 @@ namespace Vars
 			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
 			CVar(MarkSpot, "Mark Spot Feature", true, VISUAL);
 			CVar(OffScreenIndicators, "Off-Screen Player Indicators", false, VISUAL);
+			CVar(OffScreenIndicatorsName, "Show player names", true, VISUAL);
+			CVar(OffScreenIndicatorsClass, "Show player classes", true, VISUAL);
+			CVar(OffScreenIndicatorsHealth, "Show player health", true, VISUAL);
+			CVar(OffScreenIndicatorsDistance, "Show distance", false, VISUAL);
+			CVar(OffScreenIndicatorsRange, "Detection range", 200.0f, VISUAL | SLIDER_MIN, 50.0f, 500.0f, 10.0f);
+			CVar(OffScreenIndicatorsSize, "Arrow size", 15, VISUAL | SLIDER_CLAMP, 5, 30, 1);
+			CVar(OffScreenIndicatorsAlpha, "Text transparency", 255, VISUAL | SLIDER_CLAMP, 100, 255, 5);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
 		SUBNAMESPACE_END(Features);
@@ -1452,13 +1459,13 @@ namespace Vars
 #endif
 
 	NAMESPACE_BEGIN(Chat)
-		CVar(Server, "Matrix server", std::string("matrix.org"), NOSAVE);
-		CVar(Username, "Username", std::string(""), NOSAVE);
-		CVar(Password, "Password", std::string(""), NOSAVE);
-		CVar(Email, "Email for registration", std::string(""), NOSAVE);
+		CVar(Server, "Matrix server", std::string("matrix.org"));
+		CVar(Username, "Username", std::string(""));
+		CVar(Password, "Password", std::string(""));
+		CVar(Email, "Email for registration", std::string(""));
 		CVar(RecaptchaResponse, "reCAPTCHA response token", std::string(""), NOSAVE);
-		CVar(Space, "Space/Community", std::string("amalgam-comp"), NOSAVE);
-		CVar(Room, "Room", std::string("chat"), NOSAVE);
+		CVar(Space, "Space/Community", std::string("amalgam-comp"));
+		CVar(Room, "Room", std::string("chat"));
 		CVar(AutoConnect, "Auto connect on startup", false);
 		CVar(ShowTimestamps, "Show timestamps", true);
 		CVar(SaveCredentials, "Save login details", false);

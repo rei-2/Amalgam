@@ -70,6 +70,7 @@ public:
     void Unload();
     void Draw();
     void RenderView(void* ecx, const CViewSetup& view);
+    void Reset();
     
     bool IsEnabled() const { return m_bEnabled; }
     void SetEnabled(bool enabled) { m_bEnabled = enabled; }

@@ -40,6 +40,7 @@ private:
     
 public:
     void Draw();
+    void Event(IGameEvent* pEvent, uint32_t uHash);
 };
 
 ADD_FEATURE(CAmmoTracker, AmmoTracker)

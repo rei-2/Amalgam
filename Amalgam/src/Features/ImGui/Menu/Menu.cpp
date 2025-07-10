@@ -1706,6 +1706,17 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::UberTracker::KritzDropThreshold, FSliderEnum::Right);
 				} EndSection();
 
+				if (Section("Off-Screen Indicators"))
+				{
+					FToggle(Vars::Competitive::Features::OffScreenIndicatorsName, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::OffScreenIndicatorsClass, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::OffScreenIndicatorsHealth, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::OffScreenIndicatorsDistance, FToggleEnum::Right);
+					FSlider(Vars::Competitive::Features::OffScreenIndicatorsRange, FSliderEnum::Left);
+					FSlider(Vars::Competitive::Features::OffScreenIndicatorsSize, FSliderEnum::Right);
+					FSlider(Vars::Competitive::Features::OffScreenIndicatorsAlpha, FSliderEnum::Left);
+				} EndSection();
+
 				if (Section("Sentry ESP"))
 				{
 					FToggle(Vars::Competitive::SentryESP::ShowLine, FToggleEnum::Left);
@@ -3729,6 +3740,9 @@ void CMenu::MenuChat(int iTab)
 	// Main Chat Tab
 	case 0:
 	{
+		// Flag to trigger chat credentials save from anywhere in this tab
+		static bool g_triggerChatSave = false;
+		
 		if (BeginTable("ChatTable", 2))
 		{
 			/* Column 1 */
@@ -3744,8 +3758,9 @@ void CMenu::MenuChat(int iTab)
 					static std::string chatSpace;
 					static std::string chatRoom;
 					static bool initialized = false;
+					static bool shouldSaveCredentials = false;
 					
-					// Initialize from saved values only once
+					// Initialize from saved values (handled by main config system)
 					if (!initialized)
 					{
 						chatServer = Vars::Chat::Server.Value;
@@ -3757,17 +3772,29 @@ void CMenu::MenuChat(int iTab)
 						initialized = true;
 					}
 					
+					// Sync from Vars to UI only when Vars have meaningful values
+					// This ensures UI shows loaded credentials without conflicting with user input
+					if (!Vars::Chat::Username.Value.empty() && chatUsername.empty())
+						chatUsername = Vars::Chat::Username.Value;
+					if (!Vars::Chat::Password.Value.empty() && chatPassword.empty())
+						chatPassword = Vars::Chat::Password.Value;
+					if (!Vars::Chat::Email.Value.empty() && chatEmail.empty())
+						chatEmail = Vars::Chat::Email.Value;
+					if (!Vars::Chat::Server.Value.empty() && chatServer.empty())
+						chatServer = Vars::Chat::Server.Value;
+					if (!Vars::Chat::Space.Value.empty() && chatSpace.empty())
+						chatSpace = Vars::Chat::Space.Value;
+					if (!Vars::Chat::Room.Value.empty() && chatRoom.empty())
+						chatRoom = Vars::Chat::Room.Value;
+					
 					// Server Configuration
 					PushFont(F::Render.FontBold);
 					TextColored(F::Render.Accent, "Server Configuration");
 					PopFont();
 					Dummy({ 0, H::Draw.Scale(4) });
 					
-					if (FInputText("Server", chatServer, FInputTextEnum::Left))
-					{
-						Vars::Chat::Server.Value = chatServer;
-						F::Chat.SaveChatSettings();
-					}
+					FInputText("Server", chatServer, FInputTextEnum::Left);
+					Vars::Chat::Server.Value = chatServer;
 					
 					Dummy({ 0, H::Draw.Scale(8) });
 					Divider();
@@ -3779,20 +3806,21 @@ void CMenu::MenuChat(int iTab)
 					PopFont();
 					Dummy({ 0, H::Draw.Scale(4) });
 					
-					if (FInputText("Username", chatUsername, FInputTextEnum::Left))
+					FInputText("Username", chatUsername, FInputTextEnum::Left);
+					Vars::Chat::Username.Value = chatUsername;
+					
+					FInputText("Password", chatPassword, FInputTextEnum::Right, ImGuiInputTextFlags_Password);
+					Vars::Chat::Password.Value = chatPassword;
+					
+					FInputText("Email (for matrix.org)", chatEmail, FInputTextEnum::Left);
+					Vars::Chat::Email.Value = chatEmail;
+					
+					// Check if SaveCredentials was toggled and we need to save
+					if (g_triggerChatSave)
 					{
-						Vars::Chat::Username.Value = chatUsername;
-						F::Chat.SaveChatSettings();
-					}
-					if (FInputText("Password", chatPassword, FInputTextEnum::Right, ImGuiInputTextFlags_Password))
-					{
-						Vars::Chat::Password.Value = chatPassword;
-						F::Chat.SaveChatSettings();
-					}
-					if (FInputText("Email (for matrix.org)", chatEmail, FInputTextEnum::Left))
-					{
-						Vars::Chat::Email.Value = chatEmail;
-						F::Chat.SaveChatSettings();
+						// Save using the current UI values directly
+						F::Configs.SaveChatCredentials("default", chatUsername, chatPassword, chatEmail);
+						g_triggerChatSave = false; // Reset flag
 					}
 					
 					Dummy({ 0, H::Draw.Scale(8) });
@@ -3805,16 +3833,11 @@ void CMenu::MenuChat(int iTab)
 					PopFont();
 					Dummy({ 0, H::Draw.Scale(4) });
 					
-					if (FInputText("Space/Community", chatSpace, FInputTextEnum::Left))
-					{
-						Vars::Chat::Space.Value = chatSpace;
-						F::Chat.SaveChatSettings();
-					}
-					if (FInputText("Room", chatRoom, FInputTextEnum::Right))
-					{
-						Vars::Chat::Room.Value = chatRoom;
-						F::Chat.SaveChatSettings();
-					}
+					FInputText("Space/Community", chatSpace, FInputTextEnum::Left);
+					Vars::Chat::Space.Value = chatSpace;
+					
+					FInputText("Room", chatRoom, FInputTextEnum::Right);
+					Vars::Chat::Room.Value = chatRoom;
 					
 					Dummy({ 0, H::Draw.Scale(12) });
 					
@@ -3831,7 +3854,6 @@ void CMenu::MenuChat(int iTab)
 						Vars::Chat::Password.Value = chatPassword;
 						Vars::Chat::Space.Value = chatSpace;
 						Vars::Chat::Room.Value = chatRoom;
-						F::Chat.SaveChatSettings();
 						F::Chat.Connect();
 					}
 					if (FButton("Disconnect", FButtonEnum::Right | FButtonEnum::SameLine) && F::Chat.IsConnected())
@@ -3849,7 +3871,6 @@ void CMenu::MenuChat(int iTab)
 						Vars::Chat::Email.Value = chatEmail;
 						Vars::Chat::Space.Value = chatSpace;
 						Vars::Chat::Room.Value = chatRoom;
-						F::Chat.SaveChatSettings();
 						
 						if (!chatServer.empty() && !chatUsername.empty() && !chatPassword.empty())
 						{
@@ -3940,7 +3961,13 @@ void CMenu::MenuChat(int iTab)
 				{
 					FToggle(Vars::Chat::AutoConnect, FToggleEnum::Left);
 					FToggle(Vars::Chat::ShowTimestamps, FToggleEnum::Right);
-					FToggle(Vars::Chat::SaveCredentials, FToggleEnum::Left);
+					
+					// Special handling for SaveCredentials - auto-save only chat credentials when changed
+					if (FToggle(Vars::Chat::SaveCredentials, FToggleEnum::Left))
+					{
+						// SaveCredentials toggle changed, set flag to trigger save with current UI values
+						g_triggerChatSave = true;
+					}
 				} EndSection();
 			}
 

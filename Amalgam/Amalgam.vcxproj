@@ -402,7 +402,7 @@
       <OmitFramePointers />
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -410,7 +410,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
@@ -434,7 +434,7 @@
       </OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -442,7 +442,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
@@ -466,7 +466,7 @@
       </OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -474,7 +474,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
@@ -498,7 +498,7 @@
       </OmitFramePointers>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
       <BufferSecurityCheck>false</BufferSecurityCheck>
@@ -506,7 +506,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
@@ -527,7 +527,7 @@
       <OmitFramePointers />
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
     </ClCompile>
@@ -536,7 +536,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFreetype|Win32'">
@@ -556,7 +556,7 @@
       </OmitFramePointers>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
     </ClCompile>
@@ -565,7 +565,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseAVX2|Win32'">
@@ -585,7 +585,7 @@
       </OmitFramePointers>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
     </ClCompile>
@@ -594,7 +594,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseFreetypeAVX2|Win32'">
@@ -614,7 +614,7 @@
       </OmitFramePointers>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
     </ClCompile>
@@ -623,7 +623,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -647,14 +647,14 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
@@ -681,14 +681,14 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
@@ -715,14 +715,14 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
@@ -749,14 +749,14 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
@@ -779,17 +779,17 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -810,17 +810,17 @@
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -841,17 +841,17 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -872,17 +872,17 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <SupportJustMyCode>
       </SupportJustMyCode>
-      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-md\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\vcpkg\installed\x64-windows-static-static\include;..\vcpkg\installed\x64-windows\include;src\External\libolm\libolm\include;src\External\libolm\libolm\lib</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-md\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\vcpkg\installed\x64-windows-static-static\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>$(CoreLibraryDependencies);%(AdditionalDependencies);cpr.lib;libcurl.lib;zlib.lib;ws2_32.lib;wldap32.lib;crypt32.lib;normaliz.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

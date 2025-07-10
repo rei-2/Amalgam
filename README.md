@@ -43,6 +43,7 @@ All features are fully configurable through the COMP tab menu with individual to
 - **MarkSpot** - Team coordinate marking system via Matrix integration. Press E while aiming to create visual markers (ground circles + pylons) shared with team members. Features Matrix rate limiting compliance, Steam ID-based color generation, configurable mark duration (5-60s), and full visual customization
 - **SplashRadius** - Enhanced splash damage visualization with filled polygons and configurable edge lines. Shows rocket and pipebomb damage radius with dual-color system (fill + edge), adjustable transparency, edge width control, and projectile type filtering
 - **EnemyCam** - Picture-in-picture camera window showing enemy player perspectives with multiple targeting modes (closest, healed players, medics, top score) and configurable window position/size
+- **OffScreenIndicators** - Directional arrows pointing to off-screen enemies with comprehensive information display. Features configurable arrow size (5-30px), detection range (50-500px from screen center), Steam ID-based color coding, and toggleable information display including player names, classes, health values, and distances. Alpha transparency automatically adjusts based on distance for visual hierarchy
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
 - **Safe Bunnyhop** - Advanced movement assistance with configurable success rate (0-100%), safety mechanisms to prevent detection, and perfect jump limiting
 

@@ -686,3 +686,12 @@ bool CEnemyCam::CheckMaterialsNeedReload()
     
     return false;
 }
+
+void CEnemyCam::Reset()
+{
+    m_pTargetPlayer = nullptr;
+    m_pTargetMedic = nullptr;
+    m_flTargetSwitchTime = 0.0f;
+    m_flLastSearchTime = 0.0f;
+    m_bEnabled = true; // Re-enable camera after reset
+}

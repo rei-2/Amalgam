@@ -67,11 +67,13 @@ void CCore::LogFailText()
 
 void CCore::Load()
 {
-	if (m_bUnload = m_bFailed = FNV1A::Hash32(GetProcessName(GetCurrentProcessId()).c_str()) != FNV1A::Hash32Const("tf_win64.exe"))
+	try
 	{
-		AppendFailText("Invalid process");
-		return;
-	}
+		if (m_bUnload = m_bFailed = FNV1A::Hash32(GetProcessName(GetCurrentProcessId()).c_str()) != FNV1A::Hash32Const("tf_win64.exe"))
+		{
+			AppendFailText("Invalid process");
+			return;
+		}
 
 	float flTime = 0.f;
 	while (!U::Memory.FindSignature("client.dll", "48 8B 0D ? ? ? ? 48 8B 10 48 8B 19 48 8B C8 FF 92") || !SDK::GetTeamFortressWindow())
@@ -102,6 +104,13 @@ void CCore::Load()
 	F::Configs.m_bConfigLoaded = true;
 
 	SDK::Output("Amalgam", "Loaded", { 175, 150, 255 }, true, true, true);
+	}
+	catch (...)
+	{
+		AppendFailText("Exception during initialization");
+		m_bUnload = m_bFailed = true;
+		return;
+	}
 }
 
 void CCore::Loop()
