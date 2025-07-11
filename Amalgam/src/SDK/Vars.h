@@ -909,6 +909,7 @@ namespace Vars
 			CVar(OffScreenIndicatorsRange, "Detection range", 200.0f, VISUAL | SLIDER_MIN, 50.0f, 500.0f, 10.0f);
 			CVar(OffScreenIndicatorsSize, "Arrow size", 15, VISUAL | SLIDER_CLAMP, 5, 30, 1);
 			CVar(OffScreenIndicatorsAlpha, "Text transparency", 255, VISUAL | SLIDER_CLAMP, 100, 255, 5);
+			CVar(OffScreenIndicatorsAvatars, "Use Steam avatars", false, VISUAL);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
 		SUBNAMESPACE_END(Features);

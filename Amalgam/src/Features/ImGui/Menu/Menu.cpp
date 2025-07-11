@@ -1727,9 +1727,10 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::OffScreenIndicatorsClass, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::OffScreenIndicatorsHealth, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::OffScreenIndicatorsDistance, FToggleEnum::Right);
-					FSlider(Vars::Competitive::Features::OffScreenIndicatorsRange, FSliderEnum::Left);
-					FSlider(Vars::Competitive::Features::OffScreenIndicatorsSize, FSliderEnum::Right);
-					FSlider(Vars::Competitive::Features::OffScreenIndicatorsAlpha, FSliderEnum::Left);
+					FToggle(Vars::Competitive::Features::OffScreenIndicatorsAvatars, FToggleEnum::Left);
+					FSlider(Vars::Competitive::Features::OffScreenIndicatorsRange, FSliderEnum::Right);
+					FSlider(Vars::Competitive::Features::OffScreenIndicatorsSize, FSliderEnum::Left);
+					FSlider(Vars::Competitive::Features::OffScreenIndicatorsAlpha, FSliderEnum::Right);
 				} EndSection();
 
 				if (Section("Sentry ESP"))
