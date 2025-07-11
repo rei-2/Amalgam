@@ -84,28 +84,26 @@ void CFlatTextures::RestoreMaterials()
     if (!I::MaterialSystem)
         return;
         
-    MaterialHandle_t matHandle = I::MaterialSystem->FirstMaterial();
-    
-    while (matHandle != I::MaterialSystem->InvalidMaterial())
+    // Instead of iterating through materials during shutdown,
+    // iterate through our cached materials directly to avoid crashes
+    for (auto& pair : m_OriginalTextures)
     {
-        IMaterial* pMaterial = I::MaterialSystem->GetMaterial(matHandle);
+        const std::string& matName = pair.first;
+        ITexture* pOriginalTexture = pair.second;
         
-        if (pMaterial)
-        {
-            const std::string matName = pMaterial->GetName();
+        if (!pOriginalTexture)
+            continue;
             
-            // Restore original texture if we have it cached
-            if (m_OriginalTextures.find(matName) != m_OriginalTextures.end())
+        // Find the material by name safely
+        IMaterial* pMaterial = I::MaterialSystem->FindMaterial(matName.c_str(), TEXTURE_GROUP_OTHER, false);
+        if (pMaterial && !pMaterial->IsErrorMaterial())
+        {
+            IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
+            if (pBaseTexVar)
             {
-                IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
-                if (pBaseTexVar)
-                {
-                    pBaseTexVar->SetTextureValue(m_OriginalTextures[matName]);
-                }
+                pBaseTexVar->SetTextureValue(pOriginalTexture);
             }
         }
-        
-        matHandle = I::MaterialSystem->NextMaterial(matHandle);
     }
     
     // Clear the cache
