@@ -113,11 +113,13 @@ private:
     bool HttpSendToDevice(const std::string& event_type, const std::string& target_user, const std::string& target_device, const std::string& content);
     bool HttpUploadOneTimeKeys();
     bool HttpUploadKeys(); // Unified key upload method
+    bool HttpUploadInitialKeys(); // Combined device + one-time keys upload (Element-web compatible)
     bool HttpClaimKeys(const std::vector<std::string>& user_ids);
     bool HttpGetRoomMembers();
     
     // Room key sharing
     void SendPendingRoomKeys();
+    bool HttpSendRoomKeyRequest(const std::string& room_id, const std::string& session_id, const std::string& sender_key); // Element-web compatible
     
 public:
     CChat();

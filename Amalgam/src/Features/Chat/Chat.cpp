@@ -2159,15 +2159,15 @@ void CChat::HttpSync()
                 
                 SDK::Output("Matrix", ("One-time keys remaining: " + std::to_string(currentKeyCount)).c_str(), { 200, 200, 255, 255 });
                 
-                // Get max keys and calculate threshold (maintain ~half)
+                // Element-web compatible key thresholds (from Element's patterns)
                 if (m_pCrypto && m_pCrypto->GetOlmAccount())
                 {
-                    size_t maxKeys = olm_account_max_number_of_one_time_keys(m_pCrypto->GetOlmAccount());
-                    size_t threshold = maxKeys / 2;
+                    const int MIN_OTK_COUNT = 5;     // Element-web minimum threshold
+                    const int MAX_OTK_COUNT = 100;   // Element-web maximum upload
                     
-                    if (currentKeyCount < static_cast<int>(threshold))
+                    if (currentKeyCount < MIN_OTK_COUNT)
                     {
-                        SDK::Output("Matrix", ("Key count (" + std::to_string(currentKeyCount) + ") below threshold (" + std::to_string(threshold) + "), replenishing...").c_str(), { 255, 255, 100, 255 });
+                        SDK::Output("Matrix", ("Key count (" + std::to_string(currentKeyCount) + ") below Element-web threshold (" + std::to_string(MIN_OTK_COUNT) + "), replenishing...").c_str(), { 255, 255, 100, 255 });
                         
                         // Upload new one-time keys
                         if (HttpUploadKeys())
@@ -2370,8 +2370,11 @@ bool CChat::HttpUploadDeviceKeys()
             return false;
         }
         
+        // Parse device keys and format exactly like Element-web's IUploadKeysRequest
+        auto deviceKeys = nlohmann::json::parse(deviceKeysJson);
+        
         nlohmann::json uploadData = {
-            {"device_keys", nlohmann::json::parse(deviceKeysJson)}
+            {"device_keys", deviceKeys}
         };
         
         std::map<std::string, std::string> headers = {
@@ -2666,9 +2669,12 @@ bool CChat::HttpUploadKeys()
             return true;
         }
         
+        // Format the upload data to match Element-web's IUploadKeysRequest interface
         // Only upload one-time keys during replenishment (device keys already uploaded during initial setup)
+        auto oneTimeKeys = nlohmann::json::parse(oneTimeKeysJson);
+        
         nlohmann::json uploadData = {
-            {"one_time_keys", nlohmann::json::parse(oneTimeKeysJson)}
+            {"one_time_keys", oneTimeKeys}
         };
         
         std::map<std::string, std::string> headers = {
@@ -2881,21 +2887,24 @@ bool CChat::InitializeEncryption()
         SDK::Output("Matrix", "Global encryption ENABLED", { 150, 255, 150, 255 });
         QueueMessage("Matrix", "Encryption initialized for device: " + m_pCrypto->GetDeviceId());
         
-        // Upload our device keys to the server
-        if (HttpUploadDeviceKeys()) {
-            SDK::Output("Matrix", "Device keys uploaded successfully", { 150, 255, 150, 255 });
-        } else {
-            SDK::Output("Matrix", "Failed to upload device keys", { 255, 150, 150, 255 });
+        // Follow Element-web initialization sequence: device validation -> key upload -> device keys download
+        
+        // Step 1: Validate our device credentials before proceeding (Element-web pattern)
+        std::string userId = "@" + Vars::Chat::Username.Value + ":" + Vars::Chat::Server.Value;
+        if (m_sAccessToken.empty() || userId.empty() || Vars::Chat::Username.Value.empty()) {
+            SDK::Output("Matrix", "Device validation failed - missing credentials", { 255, 150, 150, 255 });
+            return false;
         }
         
-        // Upload one-time keys for session establishment
-        if (HttpUploadOneTimeKeys()) {
-            SDK::Output("Matrix", "One-time keys uploaded successfully", { 150, 255, 150, 255 });
+        // Step 2: Upload device keys and one-time keys together (Element-web compatible method)
+        if (HttpUploadInitialKeys()) {
+            SDK::Output("Matrix", "Device and one-time keys uploaded successfully", { 150, 255, 150, 255 });
         } else {
-            SDK::Output("Matrix", "Failed to upload one-time keys", { 255, 150, 150, 255 });
+            SDK::Output("Matrix", "Failed to upload initial keys", { 255, 150, 150, 255 });
+            // Continue anyway for compatibility
         }
         
-        // Get room members for key sharing (must be done before downloading device keys)
+        // Step 3: Get room members for key sharing (must be done before downloading device keys)
         HttpGetRoomMembers();
         
         // Download device keys for other users in the room
@@ -2968,6 +2977,90 @@ std::string CChat::DecryptPassword(const std::string& encryptedPassword)
     return SimpleDecrypt(encryptedPassword);
 }
 
+bool CChat::HttpUploadInitialKeys()
+{
+    EnsureInitialized();
+    
+    if (!m_pCrypto) {
+        DEBUG_MSG("Cannot upload initial keys - encryption not initialized");
+        return false;
+    }
+    
+    try {
+        // Get device keys
+        std::string deviceKeysJson = m_pCrypto->GetDeviceKeys();
+        if (deviceKeysJson.empty()) {
+            DEBUG_MSG("Failed to get device keys");
+            return false;
+        }
+        
+        // Get one-time keys
+        std::string oneTimeKeysJson = m_pCrypto->GetOneTimeKeys();
+        if (oneTimeKeysJson.empty()) {
+            DEBUG_MSG("Failed to get one-time keys");
+            return false;
+        }
+        
+        // Parse both key sets
+        auto deviceKeys = nlohmann::json::parse(deviceKeysJson);
+        auto oneTimeKeys = nlohmann::json::parse(oneTimeKeysJson);
+        
+        // Create combined upload data exactly matching Element-web's IUploadKeysRequest
+        nlohmann::json uploadData = {
+            {"device_keys", deviceKeys},
+            {"one_time_keys", oneTimeKeys}
+        };
+        
+        std::map<std::string, std::string> headers = {
+            {"Authorization", "Bearer " + m_sAccessToken},
+            {"Content-Type", "application/json"}
+        };
+        
+        std::string url = m_sBaseUrl + "/_matrix/client/v3/keys/upload";
+        auto response = HttpClient::Post(url, uploadData.dump(), headers);
+        
+        if (response.status_code == 200) {
+            // Mark one-time keys as published
+            m_pCrypto->MarkOneTimeKeysAsPublished();
+            
+            // Parse response to get key counts (Element-web compatible)
+            try {
+                auto responseJson = nlohmann::json::parse(response.text);
+                if (responseJson.contains("one_time_key_counts")) {
+                    auto& keyCounts = responseJson["one_time_key_counts"];
+                    if (keyCounts.contains("signed_curve25519")) {
+                        int keyCount = keyCounts["signed_curve25519"];
+                        DEBUG_MSG("Server now has " + std::to_string(keyCount) + " one-time keys");
+                    }
+                }
+            } catch (const std::exception& e) {
+                DEBUG_MSG("Could not parse key upload response: " + std::string(e.what()));
+            }
+            
+            DEBUG_MSG("Initial keys (device + one-time) uploaded successfully");
+            return true;
+        } else {
+            std::string errorMsg = "Failed to upload initial keys (HTTP " + std::to_string(response.status_code) + ")";
+            if (response.status_code == 401) {
+                errorMsg += " - Authentication failed";
+            } else if (response.status_code == 403) {
+                errorMsg += " - Forbidden";
+            }
+            if (!response.text.empty()) {
+                errorMsg += " - " + response.text;
+            }
+            SDK::Output("Matrix", errorMsg.c_str(), { 255, 150, 150, 255 });
+            DEBUG_MSG(errorMsg);
+            return false;
+        }
+    } catch (const std::exception& e) {
+        std::string errorMsg = "Initial key upload error: " + std::string(e.what());
+        SDK::Output("Matrix", errorMsg.c_str(), { 255, 150, 150, 255 });
+        DEBUG_MSG(errorMsg);
+        return false;
+    }
+}
+
 void CChat::SendPendingRoomKeys()
 {
     if (!m_pCrypto || !IsEncryptionEnabled()) {
@@ -3003,6 +3096,54 @@ void CChat::SendPendingRoomKeys()
         } catch (const std::exception& e) {
             SDK::Output("Matrix", ("Error sending room key: " + std::string(e.what())).c_str(), { 255, 150, 150, 255 });
         }
+    }
+}
+
+bool CChat::HttpSendRoomKeyRequest(const std::string& room_id, const std::string& session_id, const std::string& sender_key)
+{
+    EnsureInitialized();
+    
+    if (!m_pCrypto) {
+        DEBUG_MSG("Cannot send room key request - crypto not initialized");
+        return false;
+    }
+    
+    try {
+        // Create room key request exactly matching Element-web format
+        // This matches the m.room_key_request event structure
+        std::string request_id = std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count());
+        
+        nlohmann::json request_content = {
+            {"action", "request"},
+            {"body", {
+                {"algorithm", "m.megolm.v1.aes-sha2"},
+                {"room_id", room_id},
+                {"session_id", session_id},
+                {"sender_key", sender_key}
+            }},
+            {"request_id", request_id},
+            {"requesting_device_id", m_pCrypto->GetDeviceId()}
+        };
+        
+        // Send to all devices of all users in the room (Element-web pattern)
+        bool success = true;
+        for (const auto& member : m_vRoomMembers) {
+            if (!HttpSendToDevice("m.room_key_request", member, "*", request_content.dump())) {
+                success = false;
+                DEBUG_MSG("Failed to send room key request to " + member);
+            }
+        }
+        
+        if (success) {
+            DEBUG_MSG("Room key request sent successfully for session " + session_id);
+        }
+        
+        return success;
+        
+    } catch (const std::exception& e) {
+        DEBUG_MSG("Room key request error: " + std::string(e.what()));
+        return false;
     }
 }
 
