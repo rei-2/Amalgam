@@ -901,6 +901,7 @@ namespace Vars
 			CVar(OffScreenIndicators, "Off-Screen Player Indicators", false, VISUAL);
 			CVar(ScoreboardRevealer, "Reveal Class Icons in Scoreboard", false, VISUAL);
 			CVar(FlatTextures, "Flat Textures", false, VISUAL);
+			CVar(SpectateAll, "Spectate All Players", true, VISUAL);
 			CVar(OffScreenIndicatorsName, "Show player names", true, VISUAL);
 			CVar(OffScreenIndicatorsClass, "Show player classes", true, VISUAL);
 			CVar(OffScreenIndicatorsHealth, "Show player health", true, VISUAL);
@@ -1113,6 +1114,13 @@ namespace Vars
 			CVar(PylonEndAlpha, "Pylon end alpha", 20, VISUAL | SLIDER_CLAMP, 0, 200, 5);
 			CVar(ShowOffScreenIndicators, "Off-screen indicators", true, VISUAL);
 		SUBNAMESPACE_END(MarkSpot);
+		
+		SUBNAMESPACE_BEGIN(SpectateAll, Spectate All)
+			CVar(EnemySpectate, "Enemy spectate", true, VISUAL);
+			CVar(FreeCamera, "Free camera", false, VISUAL);
+			CVar(HideSpectatedPlayer, "Hide spectated player model", true, VISUAL);
+			CVar(CameraSpeed, "Camera speed", 5.0f, VISUAL | SLIDER_CLAMP, 1.0f, 20.0f, 0.5f);
+		SUBNAMESPACE_END(SpectateAll);
 	NAMESPACE_END(Competitive);
 
 	NAMESPACE_BEGIN(Radar)

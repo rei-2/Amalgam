@@ -4,6 +4,7 @@
 #include "../Features/Visuals/Glow/Glow.h"
 #include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Visuals/CameraWindow/CameraWindow.h"
+#include "../Features/Misc/SpectateAll/SpectateAll.h"
 
 MAKE_SIGNATURE(CBaseAnimating_DrawModel, "client.dll", "4C 8B DC 49 89 5B ? 89 54 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8D 3D", 0x0);
 MAKE_SIGNATURE(CEconEntity_DrawOverriddenViewmodel_DrawModel_Call, "client.dll", "41 8B D5 FF 50 ? 8B 97", 0x6);
@@ -40,6 +41,15 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVirtual(I::ModelRender, 1
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(pInfo.entity_index);
+	
+	// Check if this player should be hidden for SpectateAll
+	if (pEntity && pEntity->GetClassID() == ETFClassID::CTFPlayer)
+	{
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		if (pPlayer && F::SpectateAll.ShouldHidePlayer(pPlayer))
+			return; // Don't render the spectated player
+	}
+	
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
 	if (pEntity && pRenderContext && pEntity->GetClassID() == ETFClassID::CTFViewModel)
 	{

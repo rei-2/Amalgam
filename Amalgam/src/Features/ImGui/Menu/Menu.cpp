@@ -1626,6 +1626,14 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::MarkSpot::ShowOffScreenIndicators, FToggleEnum::Right);
 				} EndSection();
 
+				if (Section("Spectate All"))
+				{
+					FToggle(Vars::Competitive::SpectateAll::EnemySpectate, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SpectateAll::FreeCamera, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SpectateAll::HideSpectatedPlayer, FToggleEnum::Left);
+					FSlider(Vars::Competitive::SpectateAll::CameraSpeed, FSliderEnum::Right);
+				} EndSection();
+
 				if (Section("Player Trails"))
 				{
 					FSlider(Vars::Competitive::PlayerTrails::MaxTrailLength, FSliderEnum::Left);
@@ -1684,6 +1692,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::OffScreenIndicators, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::MatchHUD, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::ScoreboardRevealer, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::SpectateAll, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Uber Tracker"))

@@ -1,6 +1,7 @@
 #include "../SDK/SDK.h"
 
 #include "../Features/Visuals/Visuals.h"
+#include "../Features/Misc/SpectateAll/SpectateAll.h"
 
 MAKE_HOOK(CClientModeShared_OverrideView, U::Memory.GetVirtual(I::ClientModeShared, 16), void,
 	void* rcx, CViewSetup* pView)
@@ -17,6 +18,7 @@ MAKE_HOOK(CClientModeShared_OverrideView, U::Memory.GetVirtual(I::ClientModeShar
 	auto pLocal = H::Entities.GetLocal();
 	if (pLocal && pView)
 	{
+		F::SpectateAll.OverrideView(pView);
 		F::Visuals.FOV(pLocal, pView);
 		F::Visuals.ThirdPerson(pLocal, pView);
 	}
