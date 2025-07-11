@@ -495,7 +495,7 @@ void CMenu::MenuAimbot(int iTab)
 				if (Section("Line", 8))
 				{
 					FColorPicker(Vars::Colors::Line, FColorPickerEnum::None, { -H::Draw.Scale(12), 0 });
-					FColorPicker(Vars::Colors::LineClipped);
+					FColorPicker(Vars::Colors::LineIgnoreZ);
 					FToggle(Vars::Visuals::Line::Enabled);
 					FSlider(Vars::Visuals::Line::DrawDuration);
 				} EndSection();
@@ -503,19 +503,19 @@ void CMenu::MenuAimbot(int iTab)
 				{
 					FDropdown(Vars::Visuals::Hitbox::BonesEnabled, FDropdownEnum::None, -50);
 					FColorPicker(Vars::Colors::BoneHitboxEdge, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
-					FColorPicker(Vars::Colors::BoneHitboxEdgeClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
+					FColorPicker(Vars::Colors::BoneHitboxEdgeIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
 					FColorPicker(Vars::Colors::BoneHitboxFace, FColorPickerEnum::SameLine, { H::Draw.Scale(10), 0 }, { H::Draw.Scale(10), H::Draw.Scale(20) });
-					FColorPicker(Vars::Colors::BoneHitboxFaceClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
+					FColorPicker(Vars::Colors::BoneHitboxFaceIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
 					FColorPicker(Vars::Colors::TargetHitboxEdge, FColorPickerEnum::SameLine, { -H::Draw.Scale(50), H::Draw.Scale(20) }, { H::Draw.Scale(10), H::Draw.Scale(20) });
-					FColorPicker(Vars::Colors::TargetHitboxEdgeClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
+					FColorPicker(Vars::Colors::TargetHitboxEdgeIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
 					FColorPicker(Vars::Colors::TargetHitboxFace, FColorPickerEnum::SameLine, { H::Draw.Scale(10), 0 }, { H::Draw.Scale(10), H::Draw.Scale(20) });
-					FColorPicker(Vars::Colors::TargetHitboxFaceClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
+					FColorPicker(Vars::Colors::TargetHitboxFaceIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(20) });
 
 					FDropdown(Vars::Visuals::Hitbox::BoundsEnabled, FDropdownEnum::None, -50);
 					FColorPicker(Vars::Colors::BoundHitboxEdge, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::BoundHitboxEdgeClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::BoundHitboxEdgeIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 					FColorPicker(Vars::Colors::BoundHitboxFace, FColorPickerEnum::SameLine, { H::Draw.Scale(10), 0 }, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::BoundHitboxFaceClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::BoundHitboxFaceIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 
 					FSlider(Vars::Visuals::Hitbox::DrawDuration);
 				} EndSection();
@@ -527,19 +527,19 @@ void CMenu::MenuAimbot(int iTab)
 				{
 					FDropdown(Vars::Visuals::Simulation::PlayerPath, FDropdownEnum::Left, -20);
 					FColorPicker(Vars::Colors::PlayerPath, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::PlayerPathClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::PlayerPathIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 					FDropdown(Vars::Visuals::Simulation::ProjectilePath, FDropdownEnum::Right, -20);
 					FColorPicker(Vars::Colors::ProjectilePath, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::ProjectilePathClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::ProjectilePathIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 					FDropdown(Vars::Visuals::Simulation::TrajectoryPath, FDropdownEnum::Left, -20);
 					FColorPicker(Vars::Colors::TrajectoryPath, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::TrajectoryPathClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::TrajectoryPathIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 					FDropdown(Vars::Visuals::Simulation::ShotPath, FDropdownEnum::Right, -20);
 					FColorPicker(Vars::Colors::ShotPath, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::ShotPathClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::ShotPathIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 					FDropdown(Vars::Visuals::Simulation::SplashRadius, FDropdownEnum::None, -20);
 					FColorPicker(Vars::Colors::SplashRadius, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-					FColorPicker(Vars::Colors::SplashRadiusClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+					FColorPicker(Vars::Colors::SplashRadiusIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 					FToggle(Vars::Visuals::Simulation::Timed, FToggleEnum::Left);
 					FToggle(Vars::Visuals::Simulation::Box, FToggleEnum::Right);
 					FToggle(Vars::Visuals::Simulation::ProjectileCamera, FToggleEnum::Left);
@@ -552,7 +552,7 @@ void CMenu::MenuAimbot(int iTab)
 					{
 						FDropdown(Vars::Visuals::Simulation::RealPath, FDropdownEnum::None, -20);
 						FColorPicker(Vars::Colors::RealPath, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
-						FColorPicker(Vars::Colors::RealPathClipped, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
+						FColorPicker(Vars::Colors::RealPathIgnoreZ, FColorPickerEnum::SameLine, {}, { H::Draw.Scale(10), H::Draw.Scale(40) });
 
 						FSlider(Vars::Visuals::Simulation::SeparatorSpacing, FSliderEnum::Left);
 						FSlider(Vars::Visuals::Simulation::SeparatorLength, FSliderEnum::Right);
@@ -4250,14 +4250,14 @@ void CMenu::MenuSearch(std::string sSearch)
 			}
 			if (iOverride == -2)
 				break;
-			FColorPicker(*pVar, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, {}, nullptr, iOverride, iOverride);
+			FColorPicker(*pVar, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, {}, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, nullptr, iOverride, iOverride);
 			break;
 		}
 		case WidgetEnum::FGColorPicker:
 		{
 			auto pVar = pBase->As<Gradient_t>();
-			FColorPicker(*pVar, true, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, {}, nullptr, iOverride/*, iOverride*/);
-			FColorPicker(*pVar, false, !(++i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, {}, nullptr, iOverride/*, iOverride*/);
+			FColorPicker(*pVar, true, !(i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, {}, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, nullptr, iOverride/*, iOverride*/);
+			FColorPicker(*pVar, false, !(++i % 2) ? FColorPickerEnum::Left : FColorPickerEnum::Right, {}, { H::Draw.Scale(12), H::Draw.Scale(12) }, {}, nullptr, iOverride/*, iOverride*/);
 			break;
 		}
 		case WidgetEnum::FKeybind:

@@ -87,7 +87,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 	if (!pLocal)
 		return;
 
-	if (m_iWaitingForTarget != -1 && m_flWaitingForDamage < TICKS_TO_TIME(pLocal->m_nTickBase()))
+	if (m_iWaitingForTarget != -1 && m_flWaitingForDamage < I::GlobalVars->curtime)
 	{
 		if (auto pTarget = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget))->As<CTFPlayer>())
 		{
@@ -265,7 +265,7 @@ void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase*
 	if (pWeapon->GetWeaponSpread())
 	{
 		// check for perfect bullet
-		const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
+		const float flTimeSinceLastShot = I::GlobalVars->curtime - pWeapon->m_flLastFireTime();
 		if (flTimeSinceLastShot <= (pWeapon->GetBulletsPerShot() > 1 ? 0.25f : 1.25f))
 			return;
 	}

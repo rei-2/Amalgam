@@ -10,7 +10,7 @@ MAKE_HOOK(CTFRocketLauncher_CheckReloadMisfire, S::CTFRocketLauncher_CheckReload
 	if (!SDK::AttribHookValue(0, "can_overload", pWeapon))
 		return false;
 
-	auto pPlayer = pWeapon->m_hOwner().Get()->As<CTFPlayer>();
+	auto pPlayer = pWeapon->m_hOwner()->As<CTFPlayer>();
 	int iClip1 = pWeapon->m_iClip1();
 	if (pWeapon->m_bRemoveable()) // just using this var since it's in the datamap and doesn't seem to be used on the client
 	{

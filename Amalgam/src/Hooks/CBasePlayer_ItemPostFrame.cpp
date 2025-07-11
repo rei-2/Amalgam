@@ -99,7 +99,7 @@ MAKE_HOOK(CBasePlayer_ItemPostFrame, S::CBasePlayer_ItemPostFrame(), void,
 	else
 	{
 		// not perfect but seems to work fine enough for casual use
-		auto pViewmodel = pLocal->m_hViewModel().Get()->As<CBaseAnimating>();
+		auto pViewmodel = pLocal->m_hViewModel()->As<CBaseAnimating>();
 		if (!pViewmodel)
 			return CALL_ORIGINAL(rcx);
 

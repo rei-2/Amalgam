@@ -14,7 +14,7 @@ bool CTFWeaponBase::HasPrimaryAmmoForShot()
 
 bool CTFWeaponBase::CanPrimaryAttack()
 {
-	auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+	auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
 	if (!pOwner)
 		return false;
 
@@ -24,7 +24,7 @@ bool CTFWeaponBase::CanPrimaryAttack()
 
 bool CTFWeaponBase::CanSecondaryAttack()
 {
-	auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+	auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
 	if (!pOwner)
 		return false;
 
@@ -34,7 +34,7 @@ bool CTFWeaponBase::CanSecondaryAttack()
 
 bool CTFWeaponBase::CanFireCriticalShot(bool bIsHeadshot)
 {
-	auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+	auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
 	if (!pOwner)
 		return false;
 
@@ -168,7 +168,7 @@ float CTFSniperRifle::GetHeadshotMult(CTFPlayer* pTarget)
 {
 	auto GetMainMult = [&]()
 		{
-			auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+			auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
 			if (pOwner && pOwner->IsCritBoosted())
 				return 3.f;
 
@@ -197,7 +197,7 @@ float CTFSniperRifle::GetBodyshotMult(CTFPlayer* pTarget)
 {
 	auto GetMainMult = [&]()
 		{
-			auto pOwner = m_hOwnerEntity().Get()->As<CTFPlayer>();
+			auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
 			if (pOwner && pOwner->IsCritBoosted())
 				return 3.f;
 

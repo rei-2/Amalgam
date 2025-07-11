@@ -14,7 +14,7 @@ void CEntities::Store()
 		return;
 
 	m_pLocal = pLocal->As<CTFPlayer>();
-	m_pLocalWeapon = m_pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+	m_pLocalWeapon = m_pLocal->m_hActiveWeapon()->As<CTFWeaponBase>();
 
 	for (int n = I::EngineClient->GetMaxClients() + 1; n <= I::ClientEntityList->GetHighestEntityIndex(); n++)
 	{
@@ -108,7 +108,7 @@ void CEntities::Store()
 
 			if (nClassID == ETFClassID::CTFProjectile_Flare)
 			{
-				auto pLauncher = pEntity->As<CTFProjectile_Flare>()->m_hLauncher().Get()->As<CTFWeaponBase>();
+				auto pLauncher = pEntity->As<CTFProjectile_Flare>()->m_hLauncher()->As<CTFWeaponBase>();
 				if (pEntity->m_hOwnerEntity().Get() == m_pLocal && pLauncher && pLauncher->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_DETONATE)
 					m_mGroups[EGroupType::MISC_LOCAL_FLARES].push_back(pEntity);
 			}
@@ -156,6 +156,8 @@ void CEntities::Store()
 	std::unordered_map<uint32_t, int> mLevels = {};
 	if (bUpdateInfo)
 	{
+		m_mIPriorities.clear();
+		m_mUPriorities.clear();
 		m_mIFriends.clear();
 		m_mUFriends.clear();
 		m_mIParty.clear();
@@ -164,8 +166,6 @@ void CEntities::Store()
 		m_mUF2P.clear();
 		m_mILevels.clear();
 		m_mULevels.clear();
-		m_mIPriorities.clear();
-		m_mUPriorities.clear();
 
 		if (auto pLobby = I::TFGCClientSystem->GetLobby())
 		{
@@ -200,10 +200,11 @@ void CEntities::Store()
 		if (bUpdateInfo)
 		{
 			PlayerInfo_t pi{};
-			if (I::EngineClient->GetPlayerInfo(n, &pi) && !pi.fakeplayer)
+			if (I::EngineClient->GetPlayerInfo(n, &pi))
 			{
 				bool bLocal = n == I::EngineClient->GetLocalPlayer();
 				if (bLocal) m_uFriendsID = pi.friendsID;
+
 				m_mIPriorities[n] = m_mUPriorities[pi.friendsID] = !bLocal ? F::PlayerUtils.GetPriority(pi.friendsID, false) : 0;
 				m_mIFriends[n] = m_mUFriends[pi.friendsID] = I::SteamFriends->HasFriend({ pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual }, k_EFriendFlagImmediate);
 				m_mIParty[n] = m_mUParty[pi.friendsID] = mParties.contains(pi.friendsID) ? mParties[pi.friendsID] : 0;
@@ -326,19 +327,23 @@ void CEntities::Clear(bool bShutdown)
 	m_pLocalWeapon = nullptr;
 	m_pPlayerResource = nullptr;
 	m_mGroups.clear();
-	m_bSettingUpBones = false;
 
 	if (bShutdown)
 	{
 		m_mSimTimes.clear();
 		m_mOldSimTimes.clear();
 		m_mDeltaTimes.clear();
+		m_mLagTimes.clear();
 		m_mChokes.clear();
-		m_mDormancy.clear();
+		m_mSetTicks.clear();
 		m_mBones.clear();
-		m_mEyeAngles.clear();
 		m_mOldAngles.clear();
+		m_mEyeAngles.clear();
 		m_mLagCompensation.clear();
+		m_mDormancy.clear();
+		m_mAvgVelocities.clear();
+		m_mModels.clear();
+		m_mOrigins.clear();
 	}
 }
 
@@ -445,7 +450,7 @@ CTFPlayer* CEntities::GetLocal()
 CTFWeaponBase* CEntities::GetWeapon()
 {
 	auto pLocal = GetLocal();
-	return pLocal ? pLocal->m_hActiveWeapon().Get()->As<CTFWeaponBase>() : nullptr;
+	return pLocal ? pLocal->m_hActiveWeapon()->As<CTFWeaponBase>() : nullptr;
 	//return m_pLocalWeapon;
 }
 CTFPlayerResource* CEntities::GetPR()

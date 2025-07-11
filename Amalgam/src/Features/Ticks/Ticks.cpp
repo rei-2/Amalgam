@@ -5,13 +5,13 @@
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 #include "../Backtrack/Backtrack.h"
 
-void CTickshiftHandler::Reset()
+void CTicks::Reset()
 {
 	m_bSpeedhack = m_bDoubletap = m_bRecharge = m_bWarp = false;
 	m_iShiftedTicks = m_iShiftedGoal = 0;
 }
 
-void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
+void CTicks::Recharge(CTFPlayer* pLocal)
 {
 	if (!m_bGoalReached)
 		return;
@@ -40,7 +40,7 @@ void CTickshiftHandler::Recharge(CTFPlayer* pLocal)
 	m_iShiftedGoal = m_iShiftedTicks + 1;
 }
 
-void CTickshiftHandler::Warp()
+void CTicks::Warp()
 {
 	if (!m_bGoalReached)
 		return;
@@ -54,7 +54,7 @@ void CTickshiftHandler::Warp()
 	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::Doubletap::WarpRate.Value + 1, 0);
 }
 
-void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
+void CTicks::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	if (!m_bGoalReached)
 		return;
@@ -78,7 +78,7 @@ void CTickshiftHandler::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 		m_bAntiWarp = pLocal->m_hGroundEntity();
 }
 
-void CTickshiftHandler::Speedhack()
+void CTicks::Speedhack()
 {
 	m_bSpeedhack = Vars::Speedhack::Enabled.Value;
 	if (!m_bSpeedhack)
@@ -87,17 +87,17 @@ void CTickshiftHandler::Speedhack()
 	m_bDoubletap = m_bWarp = m_bRecharge = false;
 }
 
-void CTickshiftHandler::SaveShootPos(CTFPlayer* pLocal)
+void CTicks::SaveShootPos(CTFPlayer* pLocal)
 {
 	if (!m_bDoubletap && !m_bWarp)
 		m_vShootPos = pLocal->GetShootPos();
 }
-Vec3 CTickshiftHandler::GetShootPos()
+Vec3 CTicks::GetShootPos()
 {
 	return m_vShootPos;
 }
 
-void CTickshiftHandler::SaveShootAngle(CUserCmd* pCmd, bool bSendPacket)
+void CTicks::SaveShootAngle(CUserCmd* pCmd, bool bSendPacket)
 {
 	static auto sv_maxusrcmdprocessticks_holdaim = U::ConVars.FindVar("sv_maxusrcmdprocessticks_holdaim");
 
@@ -106,14 +106,14 @@ void CTickshiftHandler::SaveShootAngle(CUserCmd* pCmd, bool bSendPacket)
 	else if (!m_bShootAngle && G::Attacking == 1 && sv_maxusrcmdprocessticks_holdaim->GetBool())
 		m_vShootAngle = pCmd->viewangles, m_bShootAngle = true;
 }
-Vec3* CTickshiftHandler::GetShootAngle()
+Vec3* CTicks::GetShootAngle()
 {
 	if (m_bShootAngle && I::ClientState->chokedcommands)
 		return &m_vShootAngle;
 	return nullptr;
 }
 
-bool CTickshiftHandler::CanChoke()
+bool CTicks::CanChoke()
 {
 	static auto sv_maxusrcmdprocessticks = U::ConVars.FindVar("sv_maxusrcmdprocessticks");
 	int iMaxTicks = sv_maxusrcmdprocessticks->GetInt();
@@ -123,7 +123,7 @@ bool CTickshiftHandler::CanChoke()
 	return I::ClientState->chokedcommands < 21 && m_iShiftedTicks + I::ClientState->chokedcommands < iMaxTicks;
 }
 
-void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
+void CTicks::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	static Vec3 vVelocity = {};
 	static int iMaxTicks = 0;
@@ -172,7 +172,7 @@ void CTickshiftHandler::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 	*/
 }
 
-bool CTickshiftHandler::ValidWeapon(CTFWeaponBase* pWeapon)
+bool CTicks::ValidWeapon(CTFWeaponBase* pWeapon)
 {
 	switch (pWeapon->GetWeaponID())
 	{
@@ -202,7 +202,7 @@ bool CTickshiftHandler::ValidWeapon(CTFWeaponBase* pWeapon)
 	return true;
 }
 
-void CTickshiftHandler::CLMoveFunc(float accumulated_extra_samples, bool bFinalTick)
+void CTicks::CLMoveFunc(float accumulated_extra_samples, bool bFinalTick)
 {
 	static auto CL_Move = U::Hooks.m_mHooks["CL_Move"];
 
@@ -223,7 +223,7 @@ void CTickshiftHandler::CLMoveFunc(float accumulated_extra_samples, bool bFinalT
 		CL_Move->Call<void>(accumulated_extra_samples, bFinalTick);
 }
 
-void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
+void CTicks::CLMove(float accumulated_extra_samples, bool bFinalTick)
 {
 	if (auto pWeapon = H::Entities.GetWeapon())
 	{
@@ -305,7 +305,7 @@ void CTickshiftHandler::CLMove(float accumulated_extra_samples, bool bFinalTick)
 	}
 }
 
-void CTickshiftHandler::CLMoveManage(CTFPlayer* pLocal)
+void CTicks::CLMoveManage(CTFPlayer* pLocal)
 {
 	if (!pLocal)
 		return;
@@ -315,7 +315,7 @@ void CTickshiftHandler::CLMoveManage(CTFPlayer* pLocal)
 	Speedhack();
 }
 
-void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
+void CTicks::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
 {
 	F::NetworkFix.FixInputDelay(bFinalTick);
 
@@ -323,7 +323,7 @@ void CTickshiftHandler::Run(float accumulated_extra_samples, bool bFinalTick, CT
 	CLMove(accumulated_extra_samples, bFinalTick);
 }
 
-void CTickshiftHandler::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
+void CTicks::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
 {
 	if (!pLocal)
 		return;
@@ -336,7 +336,7 @@ void CTickshiftHandler::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSen
 	SaveShootAngle(pCmd, *pSendPacket);
 }
 
-void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
+void CTicks::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
 {
 	if (!m_bDoubletap && !m_bWarp && !m_bSpeedhack)
 		return;
@@ -352,7 +352,7 @@ void CTickshiftHandler::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
 		*pSendPacket = true;
 }
 
-int CTickshiftHandler::GetTicks(CTFWeaponBase* pWeapon)
+int CTicks::GetTicks(CTFWeaponBase* pWeapon)
 {
 	if (m_bDoubletap && m_iShiftedGoal < m_iShiftedTicks)
 		return m_iShiftedTicks - m_iShiftedGoal;
@@ -368,7 +368,7 @@ int CTickshiftHandler::GetTicks(CTFWeaponBase* pWeapon)
 	return std::min(Vars::Doubletap::TickLimit.Value - 1, m_iMaxShift);
 }
 
-int CTickshiftHandler::GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks)
+int CTicks::GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks)
 {
 	iTicks = std::min(m_iMaxShift + 1, iTicks);
 
@@ -384,7 +384,7 @@ int CTickshiftHandler::GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks)
 	return 1 + (iTicks - iDelay) / std::ceilf(pWeapon->GetFireRate() / TICK_INTERVAL);
 }
 
-int CTickshiftHandler::GetMinimumTicksNeeded(CTFWeaponBase* pWeapon)
+int CTicks::GetMinimumTicksNeeded(CTFWeaponBase* pWeapon)
 {
 	int iDelay = 1;
 	switch (pWeapon->GetWeaponID())
@@ -398,7 +398,7 @@ int CTickshiftHandler::GetMinimumTicksNeeded(CTFWeaponBase* pWeapon)
 	return (GetShotsWithinPacket(pWeapon) - 1) * std::ceilf(pWeapon->GetFireRate() / TICK_INTERVAL) + iDelay;
 }
 
-void CTickshiftHandler::Draw(CTFPlayer* pLocal)
+void CTicks::Draw(CTFPlayer* pLocal)
 {
 	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Ticks) || !pLocal->IsAlive())
 		return;

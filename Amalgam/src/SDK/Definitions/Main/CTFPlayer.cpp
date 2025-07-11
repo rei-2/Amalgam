@@ -165,7 +165,7 @@ bool CTFPlayer::CanAttack(bool bCloak, bool bLocal)
 			? (m_flStealthNoAttackExpire() > TICKS_TO_TIME(m_nTickBase()) && !InCond(TF_COND_STEALTHED_USER_BUFF)) || InCond(TF_COND_STEALTHED)
 			: m_flInvisibility() && (InCond(TF_COND_STEALTHED) || !InCond(TF_COND_STEALTHED_USER_BUFF) && !InCond(TF_COND_STEALTHED_USER_BUFF_FADING)))
 		{
-			auto pWeapon = m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+			auto pWeapon = m_hActiveWeapon()->As<CTFWeaponBase>();
 			if (!pWeapon || pWeapon->GetWeaponID() != TF_WEAPON_GRAPPLINGHOOK)
 				return false;
 		}

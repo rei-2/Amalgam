@@ -10,7 +10,7 @@ MAKE_SIGNATURE(CTFHudMatchStatus_UpdatePlayerAvatar, "client.dll", "4D 85 C0 0F 
 MAKE_SIGNATURE(SectionedListPanel_SetItemFgColor, "client.dll", "40 53 48 83 EC ? 48 8B D9 3B 91 ? ? ? ? 73 ? 3B 91 ? ? ? ? 7F ? 48 8B 89 ? ? ? ? 48 89 7C 24 ? 8B FA 48 03 FF 39 54 F9 ? 75 ? 39 54 F9 ? 75 ? 48 8B 0C F9 41 8B D0 48 8B 01 FF 90 ? ? ? ? 48 8B 83 ? ? ? ? B2 ? 48 8B 0C F8 48 8B 01 FF 90 ? ? ? ? 48 8B 83 ? ? ? ? 45 33 C0", 0x0);
 MAKE_SIGNATURE(CTFClientScoreBoardDialog_UpdatePlayerList_SetItemFgColor_Call, "client.dll", "49 8B 04 24 8B D5 C7 44 24", 0x0);
 
-static int CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex;
+static int iPlayerIndex;
 
 MAKE_HOOK(CTFClientScoreBoardDialog_UpdatePlayerAvatar, S::CTFClientScoreBoardDialog_UpdatePlayerAvatar(), void,
 	void* rcx, int playerIndex, KeyValues* kv)
@@ -20,7 +20,7 @@ MAKE_HOOK(CTFClientScoreBoardDialog_UpdatePlayerAvatar, S::CTFClientScoreBoardDi
 		return CALL_ORIGINAL(rcx, playerIndex, kv);
 #endif
 
-	CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex = playerIndex;
+	iPlayerIndex = playerIndex;
 
 	int iType = 0; F::PlayerUtils.GetPlayerName(playerIndex, nullptr, &iType);
 	if (iType != 1)
@@ -79,11 +79,11 @@ MAKE_HOOK(SectionedListPanel_SetItemFgColor, S::SectionedListPanel_SetItemFgColo
 
 	if (dwDesired == dwRetAddr && Vars::Visuals::UI::ScoreboardColors.Value)
 	{
-		Color_t tColor = H::Color.GetScoreboardColor(CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex);
+		Color_t tColor = H::Color.GetScoreboardColor(iPlayerIndex);
 		if (tColor.a)
 		{
 			auto pResource = H::Entities.GetPR();
-			if (pResource && !pResource->m_bAlive(CTFClientScoreBoardDialog_UpdatePlayerList_PlayerIndex))
+			if (pResource && !pResource->m_bAlive(iPlayerIndex))
 				tColor = tColor.Lerp({ 127, 127, 127, tColor.a }, 0.5f);
 
 			color = tColor;

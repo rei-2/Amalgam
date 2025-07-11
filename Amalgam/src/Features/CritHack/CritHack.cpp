@@ -154,7 +154,7 @@ void CCritHack::GetTotalCrits(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	{
 		int iTestShots = iCritChecks, iTestCrits = iCritSeedRequests;
 		float flTestBucket = flBucket;
-		float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
+		float flTickBase = I::GlobalVars->curtime;
 		float flLastRapidFireCritCheckTime = pWeapon->m_flLastRapidFireCritCheckTime();
 		int iAttempts = std::min(iPotentialCrits, 1000);
 		for (int i = 0; i < 1000; i++)
@@ -367,7 +367,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	}
 
 	bool bRapidFire = pWeapon->IsRapidFire();
-	bool bStreamWait = bRapidFire && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
+	bool bStreamWait = bRapidFire && I::GlobalVars->curtime < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
 
 	int iClosestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
 	int iClosestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
@@ -420,7 +420,7 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 
 	auto& tStorage = m_mStorage[iSlot];
 	bool bRapidFire = pWeapon->IsRapidFire();
-	bool bStreamWait = bRapidFire && TICKS_TO_TIME(pLocal->m_nTickBase()) < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
+	bool bStreamWait = bRapidFire && I::GlobalVars->curtime < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f;
 
 	int closestCrit = !tStorage.m_vCritCommands.empty() ? tStorage.m_vCritCommands.front() : 0;
 	int closestSkip = !tStorage.m_vSkipCommands.empty() ? tStorage.m_vSkipCommands.front() : 0;
@@ -433,20 +433,6 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 		return closestSkip;
 
 	return pCmd->command_number;
-}
-
-bool CCritHack::CalcIsAttackCriticalHandler()
-{
-	if (!I::Prediction->m_bFirstTimePredicted)
-		return false;
-
-	if (m_iWishRandomSeed)
-	{
-		*G::RandomSeed() = m_iWishRandomSeed;
-		m_iWishRandomSeed = 0;
-	}
-
-	return true;
 }
 
 void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
@@ -699,7 +685,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 
 #ifdef SERVER_CRIT_DATA
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("AllDamage: {} ({})", m_iRangedDamage + m_iMeleeDamage, m_iMeleeDamage).c_str());
-			
+		
 		if (pCTFGameStats)
 		{
 			if (auto pServerAnimating = S::GetServerAnimating.Call<void*>(pLocal->entindex()))

@@ -322,7 +322,9 @@ void CGlow::Store(CTFPlayer* pLocal)
 		if (pEntity->IsPlayer() && !pEntity->IsDormant())
 		{
 			// backtrack
-			if (Vars::Glow::Backtrack::Enabled.Value && (Vars::Glow::Backtrack::Stencil.Value || Vars::Glow::Backtrack::Blur.Value) && pEntity != pLocal)
+			if (Vars::Glow::Backtrack::Enabled.Value && pEntity != pLocal
+				&& (Vars::Glow::Backtrack::Stencil.Value || Vars::Glow::Backtrack::Blur.Value)
+				&& (F::Backtrack.GetFakeLatency() || F::Backtrack.GetFakeInterp() > G::Lerp || F::Backtrack.GetWindow()))
 			{
 				auto pWeapon = H::Entities.GetWeapon();
 				if (pWeapon && (G::PrimaryWeaponType != EWeaponType::PROJECTILE || Vars::Glow::Backtrack::Draw.Value & Vars::Glow::Backtrack::DrawEnum::Always))

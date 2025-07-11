@@ -32,7 +32,7 @@ enum Scale_
 
 class CDraw
 {
-	std::unordered_map<uint64, int> m_mAvatars = {};
+	std::unordered_map<uint32, int> m_mAvatars = {};
 
 public:
 	inline bool IsColorBright(const Color_t& clr)

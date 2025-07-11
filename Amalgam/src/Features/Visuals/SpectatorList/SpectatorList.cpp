@@ -73,7 +73,7 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 	{
 	case OBS_MODE_FIRSTPERSON:
 	case OBS_MODE_THIRDPERSON:
-		pTarget = pLocal->m_hObserverTarget().Get()->As<CTFPlayer>();
+		pTarget = pLocal->m_hObserverTarget()->As<CTFPlayer>();
 	}
 	PlayerInfo_t pi{};
 	if (!pTarget || pTarget != pLocal && !I::EngineClient->GetPlayerInfo(pTarget->entindex(), &pi))
