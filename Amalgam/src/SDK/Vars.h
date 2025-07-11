@@ -1123,6 +1123,7 @@ namespace Vars
 			CVar(ExcludeMapCameras, "Exclude map cameras", true, VISUAL);
 			CVar(ThirdPersonMouseLook, "Mouse look in third person", true, VISUAL);
 			CVar(CameraSpeed, "Camera speed", 5.0f, VISUAL | SLIDER_CLAMP, 1.0f, 20.0f, 0.5f);
+			CVar(CameraDistance, "Camera distance", 150.0f, VISUAL | SLIDER_CLAMP, 50.0f, 500.0f, 10.0f);
 		SUBNAMESPACE_END(SpectateAll);
 	NAMESPACE_END(Competitive);
 
@@ -1478,7 +1479,7 @@ namespace Vars
 		CVar(Email, "Email for registration", std::string(""));
 		CVar(RecaptchaResponse, "reCAPTCHA response token", std::string(""), NOSAVE);
 		CVar(Space, "Space/Community", std::string("amalgam-comp"));
-		CVar(Room, "Room", std::string("chat"));
+		CVar(Room, "Room", std::string("talk"));
 		CVar(AutoConnect, "Auto connect on startup", false);
 		CVar(ShowTimestamps, "Show timestamps", true);
 		CVar(SaveCredentials, "Save login details", false);

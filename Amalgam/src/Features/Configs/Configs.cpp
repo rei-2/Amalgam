@@ -677,7 +677,7 @@ bool CConfigs::SaveChatCredentials(const std::string& sConfigName)
 						else if (pVar->m_sName == "Vars::Chat::Space")
 							currentValue = "amalgam-comp";
 						else if (pVar->m_sName == "Vars::Chat::Room")
-							currentValue = "chat";
+							currentValue = "talk";
 					}
 				}
 			}
@@ -805,7 +805,7 @@ bool CConfigs::SaveChatCredentials(const std::string& sConfigName)
 							else if (pVar->m_sName == "Vars::Chat::Space")
 								valueToSave = "amalgam-comp";
 							else if (pVar->m_sName == "Vars::Chat::Room")
-								valueToSave = "chat";
+								valueToSave = "talk";
 						}
 						
 						mapTree.put(std::to_string(DEFAULT_BIND), valueToSave);

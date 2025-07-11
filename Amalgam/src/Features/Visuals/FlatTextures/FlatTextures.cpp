@@ -13,7 +13,10 @@ void CFlatTextures::OnLevelShutdown()
 {
     if (m_bEnabled)
     {
-        RestoreMaterials();
+        // Don't try to restore materials during level shutdown as the game
+        // is already cleaning everything up - just clear our cache
+        m_OriginalTextures.clear();
+        m_CachedMaterials.clear();
         m_bEnabled = false;
     }
 }
@@ -82,32 +85,47 @@ void CFlatTextures::ProcessMaterials()
 void CFlatTextures::RestoreMaterials()
 {
     if (!I::MaterialSystem)
+    {
+        // Clear cache even if MaterialSystem is invalid
+        m_OriginalTextures.clear();
         return;
-        
-    // Instead of iterating through materials during shutdown,
-    // iterate through our cached materials directly to avoid crashes
-    for (auto& pair : m_OriginalTextures)
+    }
+    
+    // Safely iterate through cached materials to avoid crashes during shutdown
+    // Create a copy of the map to avoid iterator invalidation issues
+    auto originalTexturesCopy = m_OriginalTextures;
+    
+    // Clear the original map immediately to prevent recursive calls
+    m_OriginalTextures.clear();
+    
+    for (const auto& pair : originalTexturesCopy)
     {
         const std::string& matName = pair.first;
         ITexture* pOriginalTexture = pair.second;
         
+        // Skip if texture pointer is null or invalid
         if (!pOriginalTexture)
             continue;
             
-        // Find the material by name safely
-        IMaterial* pMaterial = I::MaterialSystem->FindMaterial(matName.c_str(), TEXTURE_GROUP_OTHER, false);
-        if (pMaterial && !pMaterial->IsErrorMaterial())
+        try
         {
-            IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
-            if (pBaseTexVar)
+            // Find the material by name safely
+            IMaterial* pMaterial = I::MaterialSystem->FindMaterial(matName.c_str(), TEXTURE_GROUP_OTHER, false);
+            if (pMaterial && !pMaterial->IsErrorMaterial())
             {
-                pBaseTexVar->SetTextureValue(pOriginalTexture);
+                IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
+                if (pBaseTexVar)
+                {
+                    pBaseTexVar->SetTextureValue(pOriginalTexture);
+                }
             }
         }
+        catch (...)
+        {
+            // Silently handle any exceptions during material restoration
+            continue;
+        }
     }
-    
-    // Clear the cache
-    m_OriginalTextures.clear();
 }
 
 void CFlatTextures::SetEnabled(bool enabled)

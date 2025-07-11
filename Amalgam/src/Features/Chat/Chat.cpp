@@ -2203,13 +2203,13 @@ void CChat::HttpSync()
                 }
             }
             
-            // Process events from our target room only
+            // Process events from ALL joined rooms (like original working version)
             if (json.contains("rooms") && json["rooms"].contains("join"))
             {
                 for (const auto& [roomId, roomData] : json["rooms"]["join"].items())
                 {
-                    // Only process messages from our target room
-                    if (roomId == m_sRoomId && roomData.contains("timeline") && roomData["timeline"].contains("events"))
+                    // Process messages from all joined rooms, not just target room
+                    if (roomData.contains("timeline") && roomData["timeline"].contains("events"))
                     {
                         for (const auto& event : roomData["timeline"]["events"])
                         {
@@ -2261,7 +2261,8 @@ void CChat::HttpSync()
                                      event["content"]["msgtype"] == "m.text")
                             {
                                 content = event["content"]["body"];
-                                DEBUG_MSG("Unencrypted message from " + sender + ": " + content);
+                                // Debug: Show message received with room info (like original working version)
+                                DEBUG_MSG("Message in " + roomId + " from " + sender + ": " + content);
                                 processed = true;
                             }
                             

@@ -190,7 +190,7 @@ void CSpectateAll::ApplyThirdPersonView(CViewSetup* pView)
     Vector originalOrigin = pView->origin;
     
     // Move back and slightly up for better third person view
-    pView->origin -= forward * 150.0f;
+    pView->origin -= forward * Vars::Competitive::SpectateAll::CameraDistance.Value;
     pView->origin += up * 50.0f;
     
     // Trace to make sure we don't go through walls
@@ -236,8 +236,8 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
     // Hide weapons and cosmetics belonging to the spectated player
     auto classID = pEntity->GetClassID();
     
-    // Check for weapons - only hide if weapon hiding is enabled
-    if (Vars::Competitive::SpectateAll::HideSpectatedWeapons.Value)
+    // Check for weapons - only hide if weapon hiding is enabled AND we're in first person mode
+    if (Vars::Competitive::SpectateAll::HideSpectatedWeapons.Value && !m_bThirdPersonMode)
     {
         // Check by class ID first
         if (classID == ETFClassID::CTFWeaponBase || 
@@ -246,11 +246,18 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
             classID == ETFClassID::CBaseCombatWeapon)
         {
             auto pWeapon = pEntity->As<CTFWeaponBase>();
-            if (pWeapon && pWeapon->m_hOwner().Get() == m_pCurrentSpectatedPlayer)
-                return true;
+            if (pWeapon)
+            {
+                // Check both owner and parent relationships
+                auto pOwner = pWeapon->m_hOwner().Get();
+                auto pParent = pEntity->m_hOwnerEntity().Get();
+                
+                if (pOwner == m_pCurrentSpectatedPlayer || pParent == m_pCurrentSpectatedPlayer)
+                    return true;
+            }
         }
         
-        // Also check by model path for world weapons (w_ models)
+        // Also check by model path for all weapon models
         auto pModel = pEntity->GetModel();
         if (pModel)
         {
@@ -258,15 +265,28 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
             if (modelName)
             {
                 std::string modelPath(modelName);
-                // Check for weapon models (w_ prefix indicates world weapon models)
-                if (modelPath.find("models/weapons/w_") != std::string::npos ||
-                    modelPath.find("models/workshop/weapons/") != std::string::npos)
+                // Check for both world and view weapon models
+                if (modelPath.find("models/weapons/") != std::string::npos ||
+                    modelPath.find("models/workshop/weapons/") != std::string::npos ||
+                    modelPath.find("/weapons/") != std::string::npos)
                 {
-                    // Check if this weapon belongs to our spectated player
-                    // For world weapons, check proximity or owner relationships
+                    // Check multiple ownership relationships
                     auto pOwner = pEntity->m_hOwnerEntity().Get();
+                    
                     if (pOwner == m_pCurrentSpectatedPlayer)
                         return true;
+                        
+                    // For weapons without clear ownership, check proximity
+                    if (!pOwner && m_pCurrentSpectatedPlayer)
+                    {
+                        Vector weaponPos = pEntity->m_vecOrigin();
+                        Vector playerPos = m_pCurrentSpectatedPlayer->m_vecOrigin();
+                        float distance = (weaponPos - playerPos).Length();
+                        
+                        // If weapon is very close to player (within 100 units), likely belongs to them
+                        if (distance < 100.0f)
+                            return true;
+                    }
                 }
             }
         }

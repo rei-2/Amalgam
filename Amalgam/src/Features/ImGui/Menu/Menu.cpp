@@ -1635,6 +1635,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::ThirdPersonMouseLook, FToggleEnum::Right);
 					FSlider(Vars::Competitive::SpectateAll::CameraSpeed, FSliderEnum::Left);
+					FSlider(Vars::Competitive::SpectateAll::CameraDistance, FSliderEnum::Right);
 				} EndSection();
 
 				if (Section("Player Trails"))
