@@ -1631,6 +1631,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::EnemySpectate, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::FreeCamera, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedPlayer, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SpectateAll::ThirdPersonMouseLook, FToggleEnum::Left);
 					FSlider(Vars::Competitive::SpectateAll::CameraSpeed, FSliderEnum::Right);
 				} EndSection();
 

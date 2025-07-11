@@ -42,12 +42,21 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVirtual(I::ModelRender, 1
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(pInfo.entity_index);
 	
-	// Check if this player should be hidden for SpectateAll
-	if (pEntity && pEntity->GetClassID() == ETFClassID::CTFPlayer)
+	// Check if this entity should be hidden for SpectateAll
+	if (pEntity)
 	{
-		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer && F::SpectateAll.ShouldHidePlayer(pPlayer))
-			return; // Don't render the spectated player
+		// Check if it's the spectated player
+		if (pEntity->GetClassID() == ETFClassID::CTFPlayer)
+		{
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (pPlayer && F::SpectateAll.ShouldHidePlayer(pPlayer))
+				return; // Don't render the spectated player
+		}
+		// Check if it's an entity belonging to the spectated player (weapons, cosmetics)
+		else if (F::SpectateAll.ShouldHideEntity(pEntity->As<CBaseEntity>()))
+		{
+			return; // Don't render this entity
+		}
 	}
 	
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();

@@ -14,6 +14,28 @@ bool CSpectateAll::ShouldSpectate()
     bool isAlive = pLocal->IsAlive();
     bool shouldActivate = !isAlive;
     
+    // If enabled, skip map cameras by sending next spectate command
+    if (shouldActivate && Vars::Competitive::SpectateAll::ExcludeMapCameras.Value)
+    {
+        int observerMode = pLocal->m_iObserverMode();
+        if (observerMode == OBS_MODE_FIXED)
+        {
+            // TF2 is showing a static map camera, skip to next player
+            static float lastSkipTime = 0.0f;
+            float currentTime = I::GlobalVars->curtime;
+            
+            // Prevent spam by limiting skip frequency
+            if (currentTime - lastSkipTime > 0.1f)
+            {
+                // Send spec_next command to skip to next target
+                I::EngineClient->ClientCmd_Unrestricted("spec_next");
+                lastSkipTime = currentTime;
+            }
+            
+            return false; // Don't override while skipping
+        }
+    }
+    
     // Store origin when transitioning from alive to dead
     if (m_bWasAlive && !isAlive)
     {
@@ -122,14 +144,36 @@ void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
         
         // Set view to player's perspective first
         pView->origin = pTarget->GetEyePosition();
-        pView->angles = pTarget->GetEyeAngles();
         
-        // Apply third person view if enabled
         if (m_bThirdPersonMode)
         {
+            // Use mouse look in third person if enabled
+            if (Vars::Competitive::SpectateAll::ThirdPersonMouseLook.Value)
+            {
+                // Initialize third person angles if switching
+                static bool wasFirstPerson = true;
+                if (wasFirstPerson)
+                {
+                    m_vThirdPersonAngles = pTarget->GetEyeAngles();
+                    wasFirstPerson = false;
+                }
+                
+                // Use stored third person angles for mouse look
+                pView->angles = m_vThirdPersonAngles;
+            }
+            else
+            {
+                // Use player's eye angles
+                pView->angles = pTarget->GetEyeAngles();
+            }
+            
             ApplyThirdPersonView(pView);
         }
-        // If first person mode, keep the player's eye position and angles
+        else
+        {
+            // First person mode - use player's exact angles
+            pView->angles = pTarget->GetEyeAngles();
+        }
     }
     else
     {
@@ -177,6 +221,52 @@ bool CSpectateAll::ShouldHidePlayer(CTFPlayer* pPlayer)
     return false;
 }
 
+bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
+{
+    if (!Vars::Competitive::Features::SpectateAll.Value)
+        return false;
+        
+    if (!Vars::Competitive::SpectateAll::HideSpectatedPlayer.Value)
+        return false;
+        
+    if (!m_pCurrentSpectatedPlayer)
+        return false;
+        
+    SpectateMode mode = GetCurrentMode();
+    if (mode != SpectateMode::ENEMY || m_bThirdPersonMode)
+        return false;
+        
+    // Hide weapons and cosmetics belonging to the spectated player
+    auto classID = pEntity->GetClassID();
+    
+    // Check for weapons - check against weapon base classes
+    if (classID == ETFClassID::CTFWeaponBase || 
+        classID == ETFClassID::CTFWeaponBaseGun ||
+        classID == ETFClassID::CTFWeaponBaseMelee ||
+        classID == ETFClassID::CBaseCombatWeapon)
+    {
+        auto pWeapon = pEntity->As<CTFWeaponBase>();
+        if (pWeapon && pWeapon->m_hOwner().Get() == m_pCurrentSpectatedPlayer)
+            return true;
+    }
+    
+    // Check for wearables/cosmetics (CTFWearable)
+    if (classID == ETFClassID::CTFWearable || classID == ETFClassID::CTFWearableDemoShield)
+    {
+        // Get the owner of the wearable
+        auto pWearable = pEntity->As<CBaseEntity>();
+        if (pWearable)
+        {
+            // Check if it belongs to our spectated player
+            auto pOwner = pWearable->m_hOwnerEntity().Get();
+            if (pOwner == m_pCurrentSpectatedPlayer)
+                return true;
+        }
+    }
+    
+    return false;
+}
+
 void CSpectateAll::OverrideView(CViewSetup* pView)
 {
     if (!ShouldSpectate() || !pView)
@@ -202,8 +292,37 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         if (spaceDown && !spacePressed)
         {
             m_bThirdPersonMode = !m_bThirdPersonMode;
+            
+            // Initialize third person angles when switching to third person
+            if (m_bThirdPersonMode && m_pCurrentSpectatedPlayer)
+            {
+                m_vThirdPersonAngles = m_pCurrentSpectatedPlayer->GetEyeAngles();
+            }
         }
         spacePressed = spaceDown;
+        
+        // Handle mouse input for third person mode
+        if (m_bThirdPersonMode && Vars::Competitive::SpectateAll::ThirdPersonMouseLook.Value)
+        {
+            // Get mouse delta (this would need proper mouse input handling)
+            // For now, we'll use a simple approach with engine's view angles
+            QAngle engineAngles;
+            I::EngineClient->GetViewAngles(engineAngles);
+            
+            // Update third person angles based on mouse movement
+            static QAngle lastEngineAngles = engineAngles;
+            QAngle deltaAngles = engineAngles - lastEngineAngles;
+            
+            m_vThirdPersonAngles += deltaAngles;
+            
+            // Clamp pitch
+            if (m_vThirdPersonAngles.x > 89.0f)
+                m_vThirdPersonAngles.x = 89.0f;
+            if (m_vThirdPersonAngles.x < -89.0f)
+                m_vThirdPersonAngles.x = -89.0f;
+                
+            lastEngineAngles = engineAngles;
+        }
     }
     else
     {

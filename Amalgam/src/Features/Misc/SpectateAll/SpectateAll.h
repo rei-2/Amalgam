@@ -18,6 +18,7 @@ private:
     // State tracking variables
     Vector m_vStoredOrigin;
     QAngle m_vStoredAngles;
+    QAngle m_vThirdPersonAngles;
     bool m_bIsSpectating = false;
     bool m_bWasAlive = true;
     bool m_bThirdPersonMode = true;  // Default to third person when spectating enemies
@@ -35,6 +36,7 @@ public:
     void OverrideView(CViewSetup* pView);
     bool ShouldSpectate();
     bool ShouldHidePlayer(CTFPlayer* pPlayer);
+    bool ShouldHideEntity(CBaseEntity* pEntity);
 };
 
 ADD_FEATURE(CSpectateAll, SpectateAll)
