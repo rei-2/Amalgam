@@ -424,51 +424,51 @@ void CDraw::DrawHudTextureByName(float x, float y, float s, const char* sTexture
 
 void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& eAlign)
 {
-	if (const auto nID = static_cast<uint64>(nFriendID + 0x0110000100000000))
+	if (!nFriendID)
+		return;
+
+	switch (eAlign)
 	{
-		switch (eAlign)
+	case ALIGN_TOPLEFT: break;
+	case ALIGN_TOP: x -= w / 2; break;
+	case ALIGN_TOPRIGHT: x -= w; break;
+	case ALIGN_LEFT: y -= h / 2; break;
+	case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
+	case ALIGN_RIGHT: x -= w; y -= h / 2; break;
+	case ALIGN_BOTTOMLEFT: y -= h; break;
+	case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
+	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
+	}
+
+	if (m_mAvatars.contains(nFriendID))
+	{
+		I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
+		I::MatSystemSurface->DrawSetTexture(m_mAvatars[nFriendID]);
+		I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
+	}
+	else
+	{
+		const int nAvatar = I::SteamFriends->GetMediumFriendAvatar(CSteamID(nFriendID, k_EUniversePublic, k_EAccountTypeIndividual));
+
+		uint32 newW = 0, newH = 0;
+		if (I::SteamUtils->GetImageSize(nAvatar, &newW, &newH))
 		{
-		case ALIGN_TOPLEFT: break;
-		case ALIGN_TOP: x -= w / 2; break;
-		case ALIGN_TOPRIGHT: x -= w; break;
-		case ALIGN_LEFT: y -= h / 2; break;
-		case ALIGN_CENTER: x -= w / 2; y -= h / 2; break;
-		case ALIGN_RIGHT: x -= w; y -= h / 2; break;
-		case ALIGN_BOTTOMLEFT: y -= h; break;
-		case ALIGN_BOTTOM: x -= w / 2; y -= h; break;
-		case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
-		}
+			const uint32 nSize = newW * newH * uint32(sizeof(uint8) * 4);
+			auto* pData = static_cast<uint8*>(std::malloc(nSize));
+			if (!pData)
+				return;
 
-		if (m_mAvatars.contains(nID))
-		{	// The avatar has been cached
-			I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
-			I::MatSystemSurface->DrawSetTexture(m_mAvatars[nID]);
-			I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
-		}
-		else
-		{	// Retrieve the avatar
-			const int nAvatar = I::SteamFriends->GetMediumFriendAvatar(CSteamID(nID));
-
-			uint32 newW = 0, newH = 0;
-			if (I::SteamUtils->GetImageSize(nAvatar, &newW, &newH))
+			if (I::SteamUtils->GetImageRGBA(nAvatar, pData, nSize))
 			{
-				const uint32 nSize = newW * newH * uint32(sizeof(uint8) * 4);
-				auto* pData = static_cast<uint8*>(std::malloc(nSize));
-				if (!pData)
-					return;
-
-				if (I::SteamUtils->GetImageRGBA(nAvatar, pData, nSize))
+				const int nTextureID = I::MatSystemSurface->CreateNewTextureID(true);
+				if (I::MatSystemSurface->IsTextureIDValid(nTextureID))
 				{
-					const int nTextureID = I::MatSystemSurface->CreateNewTextureID(true);
-					if (I::MatSystemSurface->IsTextureIDValid(nTextureID))
-					{
-						I::MatSystemSurface->DrawSetTextureRGBA(nTextureID, pData, newW, newH, 0, false);
-						m_mAvatars[nID] = nTextureID;
-					}
+					I::MatSystemSurface->DrawSetTextureRGBA(nTextureID, pData, newW, newH, 0, false);
+					m_mAvatars[nFriendID] = nTextureID;
 				}
-
-				std::free(pData);
 			}
+
+			std::free(pData);
 		}
 	}
 }

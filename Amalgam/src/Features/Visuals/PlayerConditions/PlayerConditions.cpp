@@ -368,7 +368,7 @@ void CPlayerConditions::Draw(CTFPlayer* pLocal)
 	{
 	case OBS_MODE_FIRSTPERSON:
 	case OBS_MODE_THIRDPERSON:
-		pTarget = pLocal->m_hObserverTarget().Get()->As<CTFPlayer>();
+		pTarget = pLocal->m_hObserverTarget()->As<CTFPlayer>();
 	}
 	if (!pTarget || !pTarget->IsPlayer() || !pTarget->IsAlive())
 		return;

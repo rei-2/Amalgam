@@ -12,19 +12,6 @@ void CBacktrack::Reset()
 
 
 
-float CBacktrack::GetLerp()
-{
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
-		return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, 0.1f);
-
-	return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, m_flMaxUnlag);
-}
-
-float CBacktrack::GetFake()
-{
-	return std::clamp(Vars::Backtrack::Latency.Value / 1000.f, 0.f, m_flMaxUnlag);
-}
-
 float CBacktrack::GetReal(int iFlow, bool bNoFake)
 {
 	auto pNetChan = I::EngineClient->GetNetChannelInfo();
@@ -32,8 +19,26 @@ float CBacktrack::GetReal(int iFlow, bool bNoFake)
 		return 0.f;
 
 	if (iFlow != MAX_FLOWS)
-		return pNetChan->GetLatency(iFlow) - (bNoFake && iFlow == FLOW_INCOMING ? m_flFakeLatency : 0.f);
-	return pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - (bNoFake ? m_flFakeLatency : 0.f);
+		return pNetChan->GetLatency(iFlow) - (bNoFake && iFlow == FLOW_INCOMING ? GetFakeLatency() : 0.f);
+	return pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - (bNoFake ? GetFakeLatency() : 0.f);
+}
+
+float CBacktrack::GetWishFake()
+{
+	return std::clamp(Vars::Backtrack::Latency.Value / 1000.f, 0.f, m_flMaxUnlag);
+}
+
+float CBacktrack::GetWishLerp()
+{
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, 0.1f);
+
+	return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, m_flMaxUnlag);
+}
+
+float CBacktrack::GetFakeLatency()
+{
+	return m_flFakeLatency;
 }
 
 float CBacktrack::GetFakeInterp()
@@ -42,6 +47,11 @@ float CBacktrack::GetFakeInterp()
 		return std::min(m_flFakeInterp, 0.1f);
 
 	return m_flFakeInterp;
+}
+
+float CBacktrack::GetWindow()
+{
+	return Vars::Backtrack::Window.Value / 1000.f;
 }
 
 int CBacktrack::GetAnticipatedChoke(int iMethod)
@@ -60,15 +70,15 @@ void CBacktrack::SendLerp()
 	if (!tTimer.Run(0.1f))
 		return;
 
-	float flTarget = GetLerp();
-	if (m_flWishInterp != flTarget)
+	float flTarget = GetWishLerp();
+	if (m_flSentInterp != flTarget)
 	{
-		m_flWishInterp = flTarget;
+		m_flSentInterp = flTarget;
 
 		auto pNetChan = reinterpret_cast<CNetChannel*>(I::EngineClient->GetNetChannelInfo());
 		if (pNetChan && I::EngineClient->IsConnected())
 		{
-			NET_SetConVar tConvar1 = { "cl_interp", std::to_string(m_flWishInterp).c_str() };
+			NET_SetConVar tConvar1 = { "cl_interp", std::to_string(m_flSentInterp).c_str() };
 			pNetChan->SendNetMsg(tConvar1);
 
 			NET_SetConVar tConvar2 = { "cl_interp_ratio", "1" };
@@ -83,7 +93,7 @@ void CBacktrack::SendLerp()
 void CBacktrack::SetLerp(IGameEvent* pEvent)
 {
 	if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) == I::EngineClient->GetLocalPlayer())
-		m_flFakeInterp = m_flWishInterp;
+		m_flFakeInterp = m_flSentInterp;
 }
 
 void CBacktrack::UpdateDatagram()
@@ -131,12 +141,12 @@ std::vector<TickRecord*> CBacktrack::GetValidRecords(std::vector<TickRecord*>& v
 	float flCorrect = std::clamp(GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(GetFakeInterp()), 0.f, m_flMaxUnlag);
 	int iServerTick = m_iTickCount + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value + TIME_TO_TICKS(GetReal(FLOW_OUTGOING));
 
-	if (!Vars::Misc::Game::AntiCheatCompatibility.Value && Vars::Backtrack::Window.Value)
+	if (!Vars::Misc::Game::AntiCheatCompatibility.Value && GetWindow())
 	{
 		for (auto pRecord : vRecords)
 		{
 			float flDelta = fabsf(flCorrect - TICKS_TO_TIME(iServerTick - TIME_TO_TICKS(pRecord->m_flSimTime + flTimeMod)));
-			if (flDelta > Vars::Backtrack::Window.Value / 1000.f)
+			if (flDelta > GetWindow())
 				continue;
 
 			vReturn.push_back(pRecord);
@@ -314,7 +324,7 @@ void CBacktrack::ReportShot(int iIndex)
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
-	if (!pEntity || SDK::GetWeaponType(pEntity->As<CTFPlayer>()->m_hActiveWeapon().Get()->As<CTFWeaponBase>()) != EWeaponType::HITSCAN)
+	if (!pEntity || SDK::GetWeaponType(pEntity->As<CTFPlayer>()->m_hActiveWeapon()->As<CTFWeaponBase>()) != EWeaponType::HITSCAN)
 		return;
 
 	m_mDidShoot[pEntity->entindex()] = true;
@@ -337,7 +347,7 @@ void CBacktrack::AdjustPing(CNetChannel* pNetChan)
 			float flTimescale = host_timescale->GetFloat();
 
 			static float flStaticReal = 0.f;
-			float flFake = GetFake(), flReal = TICKS_TO_TIME(pLocal->m_nTickBase() - m_nOldTickBase);
+			float flFake = GetWishFake(), flReal = TICKS_TO_TIME(pLocal->m_nTickBase() - m_nOldTickBase);
 			flStaticReal += (flReal + 5 * TICK_INTERVAL - flStaticReal) * 0.1f;
 
 			int nInReliableState = pNetChan->m_nInReliableState, nInSequenceNr = pNetChan->m_nInSequenceNr; float flLatency = 0.f;
@@ -388,7 +398,7 @@ void CBacktrack::Draw(CTFPlayer* pLocal)
 	{
 		static Timer tTimer = {};
 		if (tTimer.Run(0.5f))
-			flFakeLatency = m_flFakeLatency;
+			flFakeLatency = GetFakeLatency();
 	}
 	float flFakeLerp = GetFakeInterp() > G::Lerp ? GetFakeInterp() : 0.f;
 

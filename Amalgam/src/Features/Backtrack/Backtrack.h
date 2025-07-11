@@ -50,6 +50,9 @@ class CBacktrack
 	int m_nOldTickBase = 0;
 	float m_flMaxUnlag = 1.f;
 
+	float m_flFakeLatency = 0.f;
+	float m_flFakeInterp = 0.015f;
+
 public:
 	void Store();
 	void SendLerp();
@@ -59,10 +62,12 @@ public:
 	bool GetRecords(CBaseEntity* pEntity, std::vector<TickRecord*>& vReturn);
 	std::vector<TickRecord*> GetValidRecords(std::vector<TickRecord*>& vRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false, float flTimeMod = 0.f);
 
-	float GetLerp();
-	float GetFake();
 	float GetReal(int iFlow = MAX_FLOWS, bool bNoFake = true);
+	float GetWishFake();
+	float GetWishLerp();
+	float GetFakeLatency();
 	float GetFakeInterp();
+	float GetWindow();
 	void SetLerp(IGameEvent* pEvent);
 	int GetAnticipatedChoke(int iMethod = Vars::Aimbot::General::AimType.Value);
 
@@ -72,10 +77,7 @@ public:
 	void RestorePing(CNetChannel* netChannel);
 
 	int m_iTickCount = 0;
-
-	float m_flFakeLatency = 0.f;
-	float m_flFakeInterp = 0.015f;
-	float m_flWishInterp = -1.f;
+	float m_flSentInterp = -1.f;
 
 	TickRecord m_tRecord = {}; // for temporary use
 };

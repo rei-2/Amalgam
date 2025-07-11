@@ -58,6 +58,8 @@ bool CAimbotGlobal::IsHitboxValid(uint32_t uHash, int nHitbox, int iHitboxes)
 	switch (uHash)
 	{
 	case FNV1A::Hash32Const("models/vsh/player/saxton_hale.mdl"):
+	case FNV1A::Hash32Const("models/vsh/player/hell_hale.mdl"):
+	case FNV1A::Hash32Const("models/vsh/player/santa_hale.mdl"):
 	{
 		switch (nHitbox)
 		{

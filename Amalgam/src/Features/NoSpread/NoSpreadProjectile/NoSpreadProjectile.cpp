@@ -31,9 +31,6 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	case TF_WEAPON_SYRINGEGUN_MEDIC:
 	case TF_WEAPON_GRAPPLINGHOOK:
 	{
-		float flOldCurrentTime = I::GlobalVars->curtime;
-		I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
-
 		SDK::RandomSeed(SDK::SeedFileLineHash(MD5_PseudoRandom(pCmd->command_number) & 0x7FFFFFFF, "SelectWeightedSequence", 0));
 		for (int i = 0; i < 6; ++i)
 			SDK::RandomFloat();
@@ -58,7 +55,6 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 			pCmd->viewangles -= vAngAdd;
 			G::PSilentAngles = true;
 		}
-		I::GlobalVars->curtime = flOldCurrentTime;
 	}
 	}
 }

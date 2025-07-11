@@ -29,9 +29,9 @@ void CAutoDetonate::RestorePlayers()
 static inline bool GetRadius(EGroupType entityGroup, CBaseEntity* pProjectile, float& flRadius, CTFWeaponBase*& pWeapon)
 {
 	if (entityGroup == EGroupType::MISC_LOCAL_STICKIES)
-		pWeapon = pProjectile->As<CTFGrenadePipebombProjectile>()->m_hOriginalLauncher().Get()->As<CTFWeaponBase>();
+		pWeapon = pProjectile->As<CTFGrenadePipebombProjectile>()->m_hOriginalLauncher()->As<CTFWeaponBase>();
 	else
-		pWeapon = pProjectile->As<CTFProjectile_Flare>()->m_hLauncher().Get()->As<CTFWeaponBase>();
+		pWeapon = pProjectile->As<CTFProjectile_Flare>()->m_hLauncher()->As<CTFWeaponBase>();
 	if (!pWeapon)
 	{
 		pWeapon = H::Entities.GetWeapon();

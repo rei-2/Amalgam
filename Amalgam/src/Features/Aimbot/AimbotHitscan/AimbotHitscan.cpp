@@ -207,6 +207,8 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 	switch (H::Entities.GetModel(pTarget->entindex()))
 	{
 	case FNV1A::Hash32Const("models/vsh/player/saxton_hale.mdl"):
+	case FNV1A::Hash32Const("models/vsh/player/hell_hale.mdl"):
+	case FNV1A::Hash32Const("models/vsh/player/santa_hale.mdl"):
 	{
 		switch (nHitbox)
 		{
@@ -632,36 +634,40 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 
 bool CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 {
+	auto pLocal = H::Entities.GetLocal();
+	Vec3 vPunch = pLocal ? pLocal->m_vecPunchAngle() : Vec3();
+
 	if (Vec3* pDoubletapAngle = F::Ticks.GetShootAngle())
 	{
-		vOut = *pDoubletapAngle;
+		vOut = *pDoubletapAngle - vPunch;
 		return true;
 	}
 
-	if (auto pLocal = H::Entities.GetLocal())
-		vToAngle -= pLocal->m_vecPunchAngle();
-	Math::ClampAngles(vToAngle);
-
+	bool bReturn = false;
+	vToAngle -= vPunch;
 	switch (iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
 		vOut = vToAngle;
-		return false;
+		break;
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 		vOut = vCurAngle.LerpAngle(vToAngle, Vars::Aimbot::General::AssistStrength.Value / 100.f);
-		return true;
+		bReturn = true;
+		break;
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
 		Vec3 vMouseDelta = G::CurrentUserCmd->viewangles.DeltaAngle(G::LastUserCmd->viewangles);
 		Vec3 vTargetDelta = vToAngle.DeltaAngle(G::LastUserCmd->viewangles);
 		float flMouseDelta = vMouseDelta.Length2D(), flTargetDelta = vTargetDelta.Length2D();
 		vTargetDelta = vTargetDelta.Normalized() * std::min(flMouseDelta, flTargetDelta);
 		vOut = vCurAngle - vMouseDelta + vMouseDelta.LerpAngle(vTargetDelta, Vars::Aimbot::General::AssistStrength.Value / 100.f);
-		return true;
+		bReturn = true;
+		break;
 	}
 
-	return false;
+	Math::ClampAngles(vOut);
+	return bReturn;
 }
 
 // assume angle calculated outside with other overload
@@ -711,10 +717,10 @@ static inline void DrawVisuals(CTFPlayer* pLocal, Target_t& tTarget, int nWeapon
 				float flDist = vEyePos.DistTo(tTarget.m_vPos);
 				Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo + pLocal->m_vecPunchAngle(), &vForward);
 
+				if (Vars::Colors::LineIgnoreZ.Value.a)
+					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::LineIgnoreZ.Value);
 				if (Vars::Colors::Line.Value.a)
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::Line.Value);
-				if (Vars::Colors::LineClipped.Value.a)
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::LineClipped.Value, true);
+					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::Line.Value, true);
 			}
 			if (bBoxes)
 			{

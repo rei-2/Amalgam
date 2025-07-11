@@ -89,8 +89,8 @@ public:
 		case ETFClassID::CTFProjectile_ThrowableBrick:
 		case ETFClassID::CTFProjectile_ThrowableRepel:
 		{
-			paReturn.first = pProjectile->As<CTFGrenadePipebombProjectile>()->m_hOriginalLauncher().Get()->As<CTFWeaponBase>();
-			paReturn.second = pProjectile->As<CTFWeaponBaseGrenadeProj>()->m_hThrower().Get()->As<CTFPlayer>();
+			paReturn.first = pProjectile->As<CTFGrenadePipebombProjectile>()->m_hOriginalLauncher()->As<CTFWeaponBase>();
+			paReturn.second = pProjectile->As<CTFWeaponBaseGrenadeProj>()->m_hThrower()->As<CTFPlayer>();
 			break;
 		}
 		case ETFClassID::CTFBaseRocket:
@@ -108,16 +108,16 @@ public:
 		case ETFClassID::CTFProjectile_EnergyBall:
 		case ETFClassID::CTFProjectile_Flare:
 		{
-			paReturn.first = pProjectile->As<CTFBaseRocket>()->m_hLauncher().Get()->As<CTFWeaponBase>();
-			paReturn.second = paReturn.first ? paReturn.first->m_hOwner().Get()->As<CTFPlayer>() : nullptr;
+			paReturn.first = pProjectile->As<CTFBaseRocket>()->m_hLauncher()->As<CTFWeaponBase>();
+			paReturn.second = paReturn.first ? paReturn.first->m_hOwner()->As<CTFPlayer>() : nullptr;
 			break;
 		}
 		case ETFClassID::CTFBaseProjectile:
 		case ETFClassID::CTFProjectile_EnergyRing:
 		//case ETFClassID::CTFProjectile_Syringe:
 		{
-			paReturn.first = pProjectile->As<CTFBaseProjectile>()->m_hLauncher().Get()->As<CTFWeaponBase>();
-			paReturn.second = paReturn.first ? paReturn.first->m_hOwner().Get()->As<CTFPlayer>() : nullptr;
+			paReturn.first = pProjectile->As<CTFBaseProjectile>()->m_hLauncher()->As<CTFWeaponBase>();
+			paReturn.second = paReturn.first ? paReturn.first->m_hOwner()->As<CTFPlayer>() : nullptr;
 			break;
 		}
 		}

@@ -169,7 +169,7 @@ void CCheaterDetection::ReportDamage(IGameEvent* pEvent)
 	if (!pEntity || !pEntity->IsPlayer() || pEntity->IsDormant())
 		return;
 
-	auto pWeapon = pEntity->m_hActiveWeapon().Get()->As<CTFWeaponBase>();
+	auto pWeapon = pEntity->m_hActiveWeapon()->As<CTFWeaponBase>();
 	switch (SDK::GetWeaponType(pWeapon))
 	{
 	case EWeaponType::UNKNOWN:
