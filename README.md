@@ -43,8 +43,8 @@ All features are fully configurable through the COMP tab menu with individual to
 - **MarkSpot** - Team coordinate marking system via Matrix integration. Press E while aiming to create visual markers (ground circles + pylons) shared with team members. Features Matrix rate limiting compliance, Steam ID-based color generation, configurable mark duration (5-60s), and full visual customization
 - **SplashRadius** - Enhanced splash damage visualization with filled polygons and configurable edge lines. Shows rocket and pipebomb damage radius with dual-color system (fill + edge), adjustable transparency, edge width control, and projectile type filtering
 - **EnemyCam** - Picture-in-picture camera window showing enemy player perspectives with multiple targeting modes (closest, healed players, medics, top score) and configurable window position/size
-- **OffScreenIndicators** - Directional arrows pointing to off-screen enemies with comprehensive information display. Features configurable arrow size (5-30px), detection range (50-500px from screen center), Steam ID-based color coding, and toggleable information display including player names, classes, health values, and distances. Alpha transparency automatically adjusts based on distance for visual hierarchy
-- **SpectateAll** - Advanced spectating system for tactical analysis when dead. Features enemy spectating with first/third person toggle (Space key), free camera movement (WASDQE), player model hiding in first person mode, and configurable camera speed. Mouse1 cycles through enemy players for comprehensive battlefield analysis
+- **OffScreenIndicators** - Steam avatar-based indicators pointing to off-screen enemies with comprehensive information display. Features Steam avatar rendering for real players, embedded fallback avatar for bots, configurable size (5-30px), detection range (50-500px from screen center), Steam ID-based color coding, and toggleable information display including player names, classes, health values, and distances. Alpha transparency automatically adjusts based on distance for visual hierarchy
+- **SpectateAll** - Advanced spectating system for tactical analysis when dead. Features enemy spectating with first/third person toggle (Space key), free camera movement (WASDQE), configurable camera distance (50-500 units), weapon hiding in first-person mode only, and configurable camera speed. Mouse1 cycles through enemy players for comprehensive battlefield analysis
 - **ScoreboardRevealer** - Enhanced scoreboard functionality that reveals hidden enemy player information for strategic analysis
 - **FlatTextures** - Reduces visual clutter by flattening map textures, improving enemy visibility and reducing graphical distractions during competitive play
 - **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
@@ -61,7 +61,7 @@ All features are fully configurable through the COMP tab menu with individual to
   - **Production Ready** - Thread-safe background sync with Matrix homeservers
   - **Auto-Discovery** - Automatic account creation, room discovery, and encryption initialization
 
-  Configure via CHAT tab: set server, username, password, space, and room. Messages display as: `[Matrix] @username: message`
+  Configure via CHAT tab: set server, username, password, space, and room. Default room changed from 'chat' to 'talk'. Messages display as: `[Matrix] @username: message`
 
 ## Development Setup
 

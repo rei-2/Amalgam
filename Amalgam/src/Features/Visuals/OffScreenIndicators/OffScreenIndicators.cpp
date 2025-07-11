@@ -212,30 +212,35 @@ void COffScreenIndicators::Draw()
         
         if (Vars::Competitive::Features::OffScreenIndicatorsAvatars.Value)
         {
+            int avatarSize = arrowSize * 2; // Make avatar bigger than arrow for visibility
+            bool avatarDrawn = false;
+            
             if (pi.friendsID != 0)
             {
-                // Draw Steam avatar for real players
-                int avatarSize = arrowSize * 2; // Make avatar bigger than arrow for visibility
+                // Try to draw Steam avatar for real players
                 H::Draw.Avatar(finalX - avatarSize/2, finalY - avatarSize/2, avatarSize, avatarSize, pi.friendsID, ALIGN_TOPLEFT);
+                avatarDrawn = true;
             }
-            else
+            
+            if (!avatarDrawn)
             {
-                // Use embedded avatar for bots/players without Steam ID
+                // Fallback to embedded avatar for bots/players without Steam ID or failed Steam avatars
                 int fallbackTexture = GetFallbackAvatarTexture();
                 if (fallbackTexture > 0)
                 {
-                    int avatarSize = arrowSize * 2;
                     // Draw the embedded avatar texture
                     I::MatSystemSurface->DrawSetTexture(fallbackTexture);
                     I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
                     I::MatSystemSurface->DrawTexturedRect(finalX - avatarSize/2, finalY - avatarSize/2, 
                                                         finalX + avatarSize/2, finalY + avatarSize/2);
+                    avatarDrawn = true;
                 }
-                else
-                {
-                    // Final fallback to arrow if texture creation failed
-                    DrawArrow(finalX, finalY, directionAngle, playerColor, arrowSize);
-                }
+            }
+            
+            if (!avatarDrawn)
+            {
+                // Final fallback to arrow if entire avatar system failed
+                DrawArrow(finalX, finalY, directionAngle, playerColor, arrowSize);
             }
         }
         else
