@@ -226,32 +226,55 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
     if (!Vars::Competitive::Features::SpectateAll.Value)
         return false;
         
-    if (!Vars::Competitive::SpectateAll::HideSpectatedPlayer.Value)
-        return false;
-        
     if (!m_pCurrentSpectatedPlayer)
         return false;
         
     SpectateMode mode = GetCurrentMode();
-    if (mode != SpectateMode::ENEMY || m_bThirdPersonMode)
+    if (mode != SpectateMode::ENEMY)
         return false;
         
     // Hide weapons and cosmetics belonging to the spectated player
     auto classID = pEntity->GetClassID();
     
-    // Check for weapons - check against weapon base classes
-    if (classID == ETFClassID::CTFWeaponBase || 
-        classID == ETFClassID::CTFWeaponBaseGun ||
-        classID == ETFClassID::CTFWeaponBaseMelee ||
-        classID == ETFClassID::CBaseCombatWeapon)
+    // Check for weapons - only hide if weapon hiding is enabled
+    if (Vars::Competitive::SpectateAll::HideSpectatedWeapons.Value)
     {
-        auto pWeapon = pEntity->As<CTFWeaponBase>();
-        if (pWeapon && pWeapon->m_hOwner().Get() == m_pCurrentSpectatedPlayer)
-            return true;
+        // Check by class ID first
+        if (classID == ETFClassID::CTFWeaponBase || 
+            classID == ETFClassID::CTFWeaponBaseGun ||
+            classID == ETFClassID::CTFWeaponBaseMelee ||
+            classID == ETFClassID::CBaseCombatWeapon)
+        {
+            auto pWeapon = pEntity->As<CTFWeaponBase>();
+            if (pWeapon && pWeapon->m_hOwner().Get() == m_pCurrentSpectatedPlayer)
+                return true;
+        }
+        
+        // Also check by model path for world weapons (w_ models)
+        auto pModel = pEntity->GetModel();
+        if (pModel)
+        {
+            const char* modelName = I::ModelInfoClient->GetModelName(pModel);
+            if (modelName)
+            {
+                std::string modelPath(modelName);
+                // Check for weapon models (w_ prefix indicates world weapon models)
+                if (modelPath.find("models/weapons/w_") != std::string::npos ||
+                    modelPath.find("models/workshop/weapons/") != std::string::npos)
+                {
+                    // Check if this weapon belongs to our spectated player
+                    // For world weapons, check proximity or owner relationships
+                    auto pOwner = pEntity->m_hOwnerEntity().Get();
+                    if (pOwner == m_pCurrentSpectatedPlayer)
+                        return true;
+                }
+            }
+        }
     }
     
-    // Check for wearables/cosmetics (CTFWearable)
-    if (classID == ETFClassID::CTFWearable || classID == ETFClassID::CTFWearableDemoShield)
+    // Check for wearables/cosmetics (always hide with player model)
+    if (Vars::Competitive::SpectateAll::HideSpectatedPlayer.Value &&
+        (classID == ETFClassID::CTFWearable || classID == ETFClassID::CTFWearableDemoShield))
     {
         // Get the owner of the wearable
         auto pWearable = pEntity->As<CBaseEntity>();
