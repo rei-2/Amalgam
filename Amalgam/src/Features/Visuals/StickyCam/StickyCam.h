@@ -56,9 +56,6 @@ private:
 	IMaterial* m_pChamsMaterial = nullptr;
 	bool m_bInitialized = false;
 
-	// Chams tracking for players in sticky radius
-	std::unordered_map<int, bool> m_mEntities;
-
 	// Configuration helpers
 	int GetCameraWidth() const { return Vars::Competitive::StickyCam::WindowWidth.Value; }
 	int GetCameraHeight() const { return Vars::Competitive::StickyCam::WindowHeight.Value; }
@@ -96,6 +93,9 @@ private:
 	int m_iLastHeight = 0;
 
 public:
+	// Chams tracking for players in sticky radius (public for Chams system access)
+	std::unordered_map<int, bool> m_mEntities;
+
 	void Initialize();
 	void Unload();
 	void Draw();
