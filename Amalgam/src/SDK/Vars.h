@@ -1292,6 +1292,10 @@ namespace Vars
 			CVar(GiantWeaponSounds, "Giant weapon sounds", false);
 		SUBNAMESPACE_END(Sound);
 
+		SUBNAMESPACE_BEGIN(Features, Misc Features)
+			CVar(ChatBubbles, "Chat Bubbles", true, VISUAL);
+		SUBNAMESPACE_END(Features);
+
 		SUBNAMESPACE_BEGIN(Game)
 			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", true);
 			CVar(F2PChatBypass, "F2P chat bypass", false);

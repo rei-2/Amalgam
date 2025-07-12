@@ -1477,6 +1477,10 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Sound::HitsoundAlways, FToggleEnum::Left);
 					FToggle(Vars::Misc::Sound::GiantWeaponSounds);
 				} EndSection();
+				if (Section("Misc Features"))
+				{
+					FToggle(Vars::Misc::Features::ChatBubbles);
+				} EndSection();
 				if (Section("Game", 8))
 				{
 					FToggle(Vars::Misc::Game::AntiCheatCompatibility, FToggleEnum::Left);

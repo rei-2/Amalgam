@@ -38,6 +38,9 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 		int iCommandID = msgData.ReadByte();
 		if (iVoiceMenu == 1 && iCommandID == 6)
 			F::AutoHeal.m_mMedicCallers[iEntityID] = true;
+		
+		// Add ChatBubbles voice command handling
+		F::ChatBubbles.OnVoiceSubtitle(iEntityID, iVoiceMenu, iCommandID);
 
 		break;
 	}

@@ -80,6 +80,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::OffScreenIndicators.Draw();
 			F::PlayerTrails.Draw();
 			F::SplashRadius.Draw();
+			F::ChatBubbles.Draw();
 			F::CraterCheck.Draw();
 			F::SentryESP.Draw();
 			F::StickyESP.Draw();
