@@ -10,6 +10,15 @@ MAKE_HOOK(DSP_Process, S::DSP_Process(), void,
 		return CALL_ORIGINAL(idsp, pbfront, pbrear, pbcenter, sampleCount);
 #endif
 
-	if (!Vars::Misc::Sound::RemoveDSP.Value)
+	if (Vars::Misc::Sound::RemoveDSP.Value)
+	{
+		// Skip DSP processing but still allow audio to pass through
+		// by clearing the DSP ID (set to 0 for no processing)
+		CALL_ORIGINAL(0, pbfront, pbrear, pbcenter, sampleCount);
+	}
+	else
+	{
+		// Normal DSP processing
 		CALL_ORIGINAL(idsp, pbfront, pbrear, pbcenter, sampleCount);
+	}
 }
