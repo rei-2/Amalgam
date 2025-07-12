@@ -37,11 +37,21 @@ void CCraterCheck::Draw()
     if (dotProduct < 0.5f)
         return;
     
-    // Get player's fall velocity for damage calculation
-    float fallVelocity = std::abs(pLocal->m_vecVelocity().z);
+    // Calculate actual landing velocity by predicting fall distance
+    Vec3 playerPos = pLocal->GetAbsOrigin();
+    float currentFallVelocity = std::abs(pLocal->m_vecVelocity().z);
     
-    // Calculate potential fall damage at landing spot
-    float fallDamage = CalculateFallDamage(pLocal, fallVelocity);
+    // Calculate distance to landing spot
+    float distanceToLanding = playerPos.z - hitPos.z;
+    
+    // Use physics formula to calculate final velocity: v² = u² + 2as
+    // where: v = final velocity, u = initial velocity, a = gravity (800 units/s²), s = distance
+    float gravity = 800.0f; // TF2's gravity constant
+    float finalVelocitySquared = (currentFallVelocity * currentFallVelocity) + (2 * gravity * distanceToLanding);
+    float predictedLandingVelocity = std::sqrt(std::max(0.0f, finalVelocitySquared));
+    
+    // Calculate potential fall damage at landing spot using predicted velocity
+    float fallDamage = CalculateFallDamage(pLocal, predictedLandingVelocity);
     bool willDie = (fallDamage >= pLocal->m_iHealth());
     
     // If "only show lethal" is enabled, skip safe landings

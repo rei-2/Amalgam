@@ -1040,7 +1040,7 @@ namespace Vars
 			CVar(ShowFill, "Show filled polygon", true, VISUAL);
 			CVar(ShowEdge, "Show edge lines", true, VISUAL);
 			CVar(EdgeWidth, "Edge width", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
-			CVar(OnlyShowLethal, "Only show lethal landings", false, VISUAL);
+			CVar(OnlyShowLethal, "Only show lethal landings", true, VISUAL);
 			CVar(LethalFillColor, "Lethal fill color", Color_t(255, 0, 0, 60), VISUAL);
 			CVar(LethalEdgeColor, "Lethal edge color", Color_t(255, 0, 0, 150), VISUAL);
 			CVar(SafeFillColor, "Safe fill color", Color_t(0, 255, 0, 60), VISUAL);
