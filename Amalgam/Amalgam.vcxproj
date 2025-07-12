@@ -978,6 +978,7 @@
     <ClCompile Include="src\Features\Visuals\CraterCheck\CraterCheck.cpp" />
     <ClCompile Include="src\Features\Visuals\CritHeals\CritHeals.cpp" />
     <ClCompile Include="src\Features\Visuals\EnemyCam\EnemyCam.cpp" />
+    <ClCompile Include="src\Features\Visuals\StickyCam\StickyCam.cpp" />
     <ClCompile Include="src\Features\Visuals\ESP\ESP.cpp" />
     <ClCompile Include="src\Features\Visuals\FakeAngle\FakeAngle.cpp" />
     <ClCompile Include="src\Features\Visuals\FlatTextures\FlatTextures.cpp" />
@@ -1301,6 +1302,7 @@
     <ClInclude Include="src\Features\Visuals\CraterCheck\CraterCheck.h" />
     <ClInclude Include="src\Features\Visuals\CritHeals\CritHeals.h" />
     <ClInclude Include="src\Features\Visuals\EnemyCam\EnemyCam.h" />
+    <ClInclude Include="src\Features\Visuals\StickyCam\StickyCam.h" />
     <ClInclude Include="src\Features\Visuals\ESP\ESP.h" />
     <ClInclude Include="src\Features\Visuals\FakeAngle\FakeAngle.h" />
     <ClInclude Include="src\Features\Visuals\FlatTextures\FlatTextures.h" />

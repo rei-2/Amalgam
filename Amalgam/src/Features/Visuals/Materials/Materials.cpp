@@ -3,6 +3,7 @@
 #include "../Glow/Glow.h"
 #include "../CameraWindow/CameraWindow.h"
 #include "../EnemyCam/EnemyCam.h"
+#include "../StickyCam/StickyCam.h"
 #include "../../Configs/Configs.h"
 #include "../../Binds/Binds.h"
 #include <filesystem>
@@ -192,6 +193,7 @@ void CMaterials::LoadMaterials()
 	F::Glow.Initialize();
 	F::CameraWindow.Initialize();
 	F::EnemyCam.Initialize();
+	F::StickyCam.Initialize();
 
 	S::InitializeStandardMaterials.Call<void>();
 	auto pMaterial = *reinterpret_cast<IMaterial**>(U::Memory.RelToAbs(S::Wireframe()));
@@ -212,6 +214,7 @@ void CMaterials::UnloadMaterials()
 	F::Glow.Unload();
 	F::CameraWindow.Unload();
 	F::EnemyCam.Unload();
+	F::StickyCam.Unload();
 }
 
 void CMaterials::ReloadMaterials()

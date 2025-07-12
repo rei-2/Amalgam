@@ -887,6 +887,7 @@ namespace Vars
 	NAMESPACE_BEGIN(Competitive)
 		SUBNAMESPACE_BEGIN(Features, Competitive Features)
 			CVar(EnemyCam, "Enemy Camera", true, VISUAL);
+			CVar(StickyCam, "Sticky Camera", true, VISUAL);
 			CVar(PylonESP, "Medic Pylon ESP", true, VISUAL);
 			CVar(FocusFire, "Focus Fire Detection", true, VISUAL);
 			CVar(SentryESP, "Sentry Gun ESP", true, VISUAL);
@@ -930,6 +931,27 @@ namespace Vars
 			CVar(WindowWidth, "Window width", 320, VISUAL | SLIDER_CLAMP, 160, 640, 10);
 			CVar(WindowHeight, "Window height", 240, VISUAL | SLIDER_CLAMP, 120, 480, 10);
 		SUBNAMESPACE_END(EnemyCam);
+
+		SUBNAMESPACE_BEGIN(StickyCam, Sticky Camera)
+			CVarEnum(Mode, "Camera mode", 0, VISUAL, nullptr,
+				VA_LIST("Manual", "Follow Latest"),
+				Manual, FollowLatest);
+			CVarEnum(ViewMode, "View mode", 1, VISUAL, nullptr,
+				VA_LIST("Raw", "Offset"),
+				Raw, Offset);
+			CVar(TrackTime, "Target lock time", 5.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.0f, 10.0f, 0.5f);
+			CVar(OffsetX, "Offset X (forward/back)", 0.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, -200.0f, 200.0f, 5.0f);
+			CVar(OffsetY, "Offset Y (up/down)", 35.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, -200.0f, 200.0f, 5.0f);
+			CVar(WindowX, "Window X position", 5, VISUAL | SLIDER_CLAMP, -1, 1920, 5);
+			CVar(WindowY, "Window Y position", 300, VISUAL | SLIDER_CLAMP, -1, 1080, 5);
+			CVar(WindowWidth, "Window width", 500, VISUAL | SLIDER_CLAMP, 160, 640, 10);
+			CVar(WindowHeight, "Window height", 300, VISUAL | SLIDER_CLAMP, 120, 480, 10);
+			CVar(SearchRadius, "Target search radius", 584.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 1000.0f, 10.0f);
+			CVar(CameraOffset, "Camera offset distance", 35.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 10.0f, 100.0f, 5.0f);
+			CVar(AngleSpeed, "Angle interpolation speed", 0.1f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.01f, 1.0f, 0.01f);
+			CVar(ShowWarnings, "Show range warnings", true, VISUAL);
+			CVar(ShowOverlay, "Show camera overlay", true, VISUAL);
+		SUBNAMESPACE_END(StickyCam);
 
 		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)
 			CVar(ShowTopBox, "Show info box", true, VISUAL);

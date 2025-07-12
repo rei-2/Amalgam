@@ -2,6 +2,7 @@
 
 #include "../Features/Visuals/CameraWindow/CameraWindow.h"
 #include "../Features/Visuals/EnemyCam/EnemyCam.h"
+#include "../Features/Visuals/StickyCam/StickyCam.h"
 
 MAKE_HOOK(CViewRender_RenderView, U::Memory.GetVirtual(I::ViewRender, 6), void,
 	void* rcx, const CViewSetup& view, ClearFlags_t nClearFlags, RenderViewInfo_t whatToDraw)
@@ -17,4 +18,5 @@ MAKE_HOOK(CViewRender_RenderView, U::Memory.GetVirtual(I::ViewRender, 6), void,
 
 	F::CameraWindow.RenderView(rcx, view);
 	F::EnemyCam.RenderView(rcx, view);
+	F::StickyCam.RenderView(rcx, view);
 }

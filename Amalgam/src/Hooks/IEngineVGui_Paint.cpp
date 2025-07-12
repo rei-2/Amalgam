@@ -28,6 +28,7 @@
 #include "../Features/Visuals/FocusFire/FocusFire.h"
 #include "../Features/Visuals/PylonESP/PylonESP.h"
 #include "../Features/Visuals/EnemyCam/EnemyCam.h"
+#include "../Features/Visuals/StickyCam/StickyCam.h"
 #include "../Features/Visuals/FlatTextures/FlatTextures.h"
 #include "../Features/TempShowHealth/TempShowHealth.h"
 #include "../Features/Chat/Chat.h"
@@ -52,6 +53,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 		{
 			F::CameraWindow.Draw();
 			F::EnemyCam.Draw();
+			F::StickyCam.Draw();
 			F::Visuals.DrawAntiAim(pLocal);
 
 			F::Visuals.DrawPickupTimers();

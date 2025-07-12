@@ -1577,6 +1577,24 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::EnemyCam::WindowHeight, FSliderEnum::Left);
 				} EndSection();
 
+				if (Section("Sticky Camera"))
+				{
+					FDropdown(Vars::Competitive::StickyCam::Mode, FDropdownEnum::Left);
+					FDropdown(Vars::Competitive::StickyCam::ViewMode, FDropdownEnum::Right);
+					FSlider(Vars::Competitive::StickyCam::TrackTime, FSliderEnum::Left);
+					FSlider(Vars::Competitive::StickyCam::OffsetX, FSliderEnum::Right);
+					FSlider(Vars::Competitive::StickyCam::OffsetY, FSliderEnum::Left);
+					FSlider(Vars::Competitive::StickyCam::WindowX, FSliderEnum::Right);
+					FSlider(Vars::Competitive::StickyCam::WindowY, FSliderEnum::Left);
+					FSlider(Vars::Competitive::StickyCam::WindowWidth, FSliderEnum::Right);
+					FSlider(Vars::Competitive::StickyCam::WindowHeight, FSliderEnum::Left);
+					FSlider(Vars::Competitive::StickyCam::SearchRadius, FSliderEnum::Right);
+					FSlider(Vars::Competitive::StickyCam::CameraOffset, FSliderEnum::Left);
+					FSlider(Vars::Competitive::StickyCam::AngleSpeed, FSliderEnum::Right);
+					FToggle(Vars::Competitive::StickyCam::ShowWarnings, FToggleEnum::Left);
+					FToggle(Vars::Competitive::StickyCam::ShowOverlay, FToggleEnum::Right);
+				} EndSection();
+
 				if (Section("Health Bar ESP"))
 				{
 					FSlider(Vars::Competitive::HealthBarESP::Alpha, FSliderEnum::Left);
