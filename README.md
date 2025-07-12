@@ -31,26 +31,29 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 ### Competitive Information Systems
 All features are fully configurable through the COMP tab menu with individual toggles and customization options.
 
-- **UberTracker** - Comprehensive uber advantage tracking with detailed medic information, weapon types, and advantage calculations
-- **HealthBarESP** - Health bars for visible-only players. Includes a medic mode (health bars for teammates when playing medic), health-responsive visibility, and overheal display
-- **CritHeals Indicator** - Triangle indicators above players eligible for crit heals (medic-only feature) with uber build rate warnings
-- **PlayerTrails** - Colored movement trails for enemy players showing their recent paths with visibility-based display and fade-out effects
-- **SentryESP** - Advanced sentry gun ESP with aim line visualization, targeting detection, and special chams for threats. Features corner-style boxes with level indicators (M/1/2/3), real-time aim trajectory lines, and color-coded threat system (green=safe, red=targeting, grey=hidden)
-- **StickyESP** - Stickybomb ESP with 2D/3D boxes, visibility-based coloring (green=visible, red=invisible), distance filtering, and chams support
-- **FocusFire** - Multi-targeting detection system that highlights enemies being focused by multiple teammates with red corner boxes and chams (2+ attackers within 4.5 seconds)
-- **PylonESP** - Vertical pylon indicators above enemy medics behind walls with segmented alpha fade and visibility-based rendering (800+ unit range)
-- **AmmoTracker** - Supply respawn ESP with visual countdown timers for health packs and ammo packs. Features filled pie charts (both ground-projected and screen-overlay), configurable timer text with scaling, distance filtering, and color customization for different supply types
-- **MarkSpot** - Team coordinate marking system via Matrix integration. Press E while aiming to create visual markers (ground circles + pylons) shared with team members. Features Matrix rate limiting compliance, Steam ID-based color generation, configurable mark duration (5-60s), and full visual customization
-- **SplashRadius** - Enhanced splash damage visualization with filled polygons and configurable edge lines. Shows rocket and pipebomb damage radius with dual-color system (fill + edge), adjustable transparency, edge width control, and projectile type filtering
-- **CraterCheck** - Fall damage prediction system that displays colored polygons where you're aiming while airborne. Shows red circles for lethal landings (will die from fall damage) and green circles for safe landings (will survive). Uses TF2's exact fall damage formula (5 * velocity/300 * maxhealth/100) with 650 units/sec threshold. Features smart surface detection (only horizontal surfaces), realistic airborne detection (filters small jumps), configurable radius/segments, optional lethal-only mode, and fully customizable colors
-- **EnemyCam** - Picture-in-picture camera window showing enemy player perspectives with multiple targeting modes (closest, healed players, medics, top score) and configurable window position/size
-- **StickyCam** - Demoman-only sticky bomb security camera system that provides picture-in-picture views from sticky positions. Features two modes: Manual (TAB cycling through stickies) and Follow Latest (auto-tracks newest sticky). Includes smart camera positioning with ceiling/floor detection, enemy target tracking with lock duration, configurable search radius, visual range warnings, team-colored frames, and "Always Show" option to display camera even without targets. Bonus feature: red chams for enemies within sticky damage radius using actual netvar damage values
-- **OffScreenIndicators** - Steam avatar-based indicators pointing to off-screen enemies with comprehensive information display. Features Steam avatar rendering for real players, embedded fallback avatar for bots, configurable size (5-30px), detection range (50-500px from screen center), Steam ID-based color coding, and toggleable information display including player names, classes, health values, and distances. Alpha transparency automatically adjusts based on distance for visual hierarchy
-- **SpectateAll** - Advanced spectating system for tactical analysis when dead. Features enemy spectating with first/third person toggle (Space key), free camera movement (WASDQE), configurable camera distance (50-500 units), weapon hiding in first-person mode only, and configurable camera speed. Mouse1 cycles through enemy players for comprehensive battlefield analysis
-- **ScoreboardRevealer** - Enhanced scoreboard functionality that reveals hidden enemy player information for strategic analysis
-- **FlatTextures** - Reduces visual clutter by flattening map textures, improving enemy visibility and reducing graphical distractions during competitive play
-- **Match HUD Enhancement** - Enemy health and class information displayed on match scoreboard/HUD for instant target assessment
-- **Safe Bunnyhop** - Advanced movement assistance with configurable success rate (0-100%), safety mechanisms to prevent detection, and perfect jump limiting
+| Feature | Category | Description |
+|---------|----------|-------------|
+| **UberTracker** | Medical | Comprehensive uber advantage tracking with detailed medic information, weapon types, and advantage calculations |
+| **HealthBarESP** | Visual | Health bars for visible-only players. Includes medic mode, health-responsive visibility, and overheal display |
+| **CritHeals Indicator** | Medical | Triangle indicators above players eligible for crit heals (medic-only) with uber build rate warnings |
+| **PlayerTrails** | Movement | Colored movement trails for enemy players showing recent paths with visibility-based display and fade-out |
+| **SentryESP** | Buildings | Advanced sentry ESP with aim lines, targeting detection, chams, level indicators, and color-coded threat system |
+| **StickyESP** | Explosives | Stickybomb ESP with 2D/3D boxes, visibility-based coloring, distance filtering, and chams support |
+| **FocusFire** | Combat | Multi-targeting detection highlighting enemies focused by multiple teammates (2+ attackers within 4.5s) |
+| **PylonESP** | Visual | Vertical pylon indicators above enemy medics behind walls with segmented alpha fade (800+ unit range) |
+| **AmmoTracker** | Resources | Supply respawn ESP with visual countdown timers, pie charts, timer text scaling, and distance filtering |
+| **MarkSpot** | Communication | Team coordinate marking via Matrix integration. Press E to create shared visual markers with team |
+| **SplashRadius** | Combat | Enhanced splash damage visualization with filled polygons showing rocket/pipebomb damage radius |
+| **CraterCheck** | Movement | Fall damage prediction showing red (lethal) or green (safe) landing zones using TF2's exact damage formula |
+| **EnemyCam** | Spectating | Picture-in-picture camera showing enemy perspectives with multiple targeting modes and configurable window |
+| **StickyCam** | Spectating | Demoman sticky bomb security camera with manual/auto modes, enemy tracking, and damage radius chams |
+| **OffScreenIndicators** | Visual | Steam avatar-based indicators for off-screen enemies with names, classes, health, and distance info |
+| **SpectateAll** | Spectating | Advanced spectating system with enemy cam, free movement (WASDQE), and first/third person toggle |
+| **ScoreboardRevealer** | Information | Enhanced scoreboard revealing hidden enemy player information for strategic analysis |
+| **FlatTextures** | Visual | Reduces visual clutter by flattening map textures for improved enemy visibility |
+| **Match HUD Enhancement** | Interface | Enemy health and class information displayed on match scoreboard/HUD for instant assessment |
+| **Safe Bunnyhop** | Movement | Advanced movement assistance with configurable success rate and safety mechanisms |
+| **Disable Freezecam** | Spectating | Disables freezecam delay after death for instant spectating and immediate tactical awareness |
 
 ### Communication & Coordination
 

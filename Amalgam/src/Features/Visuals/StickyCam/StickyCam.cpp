@@ -960,11 +960,12 @@ void CStickyCam::UpdateChamsEntities()
 		if (velocity.Length() >= 1.0f)
 			continue;
 		
-		// Get sticky position and damage radius
-		Vec3 stickyPos = stickyData.pSticky->GetAbsOrigin();
+		// Get sticky position and damage radius  
 		auto pGrenade = stickyData.pSticky->As<CBaseGrenade>();
 		if (!pGrenade)
 			continue;
+		
+		Vec3 stickyPos = stickyData.pSticky->GetAbsOrigin();
 		
 		float damageRadius = pGrenade->m_DmgRadius();
 		if (damageRadius <= 0.0f)

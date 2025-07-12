@@ -914,6 +914,7 @@ namespace Vars
 			CVar(OffScreenIndicatorsAvatars, "Use Steam avatars", true, VISUAL);
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
+			CVar(DisableFreezeCam, "Disable Freezecam", false, VISUAL);
 		SUBNAMESPACE_END(Features);
 
 		SUBNAMESPACE_BEGIN(EnemyCam, Enemy Camera)

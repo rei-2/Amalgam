@@ -66,6 +66,12 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		F::CheaterDetection.Run();
 		F::Spectate.NetUpdateEnd(pLocal);
 
+		// Disable freezecam feature
+		if (Vars::Competitive::Features::DisableFreezeCam.Value && pLocal && pLocal->m_iObserverMode() == OBS_MODE_FREEZECAM)
+		{
+			pLocal->m_iObserverMode() = OBS_MODE_FIRSTPERSON;
+		}
+
 		F::Visuals.Modulate();
 		F::Visuals.DrawHitboxes(1);
 		break;
