@@ -69,7 +69,7 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
             playerData.lastVoiceTime = currentTime;
         
         // Create new message
-        ChatMessage newMessage;
+        ChatBubbleMessage newMessage;
         newMessage.message = message;
         newMessage.playerName = playerName;
         newMessage.timestamp = currentTime;
@@ -87,7 +87,7 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
     }
     
     // Add to global chat log
-    ChatMessage globalMessage;
+    ChatBubbleMessage globalMessage;
     globalMessage.message = message;
     globalMessage.playerName = playerName;
     globalMessage.timestamp = currentTime;
@@ -115,7 +115,7 @@ void CChatBubbles::CleanOldMessages()
         // Remove expired messages
         messages.erase(
             std::remove_if(messages.begin(), messages.end(),
-                [currentTime](const ChatMessage& msg) {
+                [currentTime](const ChatBubbleMessage& msg) {
                     return currentTime - msg.timestamp > MESSAGE_LIFETIME;
                 }),
             messages.end()
@@ -135,7 +135,7 @@ void CChatBubbles::CleanOldMessages()
     // Clean global messages
     m_GlobalChatLog.erase(
         std::remove_if(m_GlobalChatLog.begin(), m_GlobalChatLog.end(),
-            [currentTime](const ChatMessage& msg) {
+            [currentTime](const ChatBubbleMessage& msg) {
                 return currentTime - msg.timestamp > MESSAGE_LIFETIME;
             }),
         m_GlobalChatLog.end()
@@ -194,15 +194,12 @@ std::vector<std::string> CChatBubbles::WrapText(const std::string& text, float m
 Vec2 CChatBubbles::MeasureTextSize(const std::string& text)
 {
     auto font = H::Fonts.GetFont(FONT_ESP);
-    if (font == 0)
+    if (!font)
         return {0.0f, 0.0f};
     
-    // Get text dimensions using proper wstring conversion
-    std::wstring wideText = std::wstring(text.begin(), text.end());
-    int width, height;
-    I::MatSystemSurface->GetTextSize(font, wideText.c_str(), width, height);
-    
-    return {static_cast<float>(width), static_cast<float>(height)};
+    // Use H::Draw for consistent text measurement
+    return {static_cast<float>(H::Draw.GetTextWidth(font, text.c_str())), 
+            static_cast<float>(H::Draw.GetTextHeight(font))};
 }
 
 Vec2 CChatBubbles::CalculateBubbleDimensions(const std::vector<std::string>& lines)
@@ -235,7 +232,7 @@ int CChatBubbles::CalculateOpacity(float messageAge)
     return opacity < 2 ? 0 : opacity;
 }
 
-float CChatBubbles::DrawChatBubble(ChatMessage& message, const Vec3& worldPos, float yOffset)
+float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset)
 {
     // Get screen position
     Vec3 screenPos;
@@ -355,8 +352,9 @@ void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
     
     // Get player name and voice command text
     std::string playerName = "Player"; // Default fallback
-    if (auto pInfo = I::EngineClient->GetPlayerInfo(entityIndex))
-        playerName = pInfo->name;
+    player_info_t pInfo;
+    if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
+        playerName = pInfo.name;
     std::string voiceCommand = GetVoiceCommandText(menu, item);
     
     // Add voice command message for ALL players (including enemies!)

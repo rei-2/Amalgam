@@ -13,8 +13,8 @@ struct VoiceCommand
     std::string text;
 };
 
-// Chat message entry
-struct ChatMessage
+// Chat bubble message entry
+struct ChatBubbleMessage
 {
     std::string message;
     std::string playerName;
@@ -23,13 +23,13 @@ struct ChatMessage
     Vec3 smoothPos;
     bool hasSmoothPos;
     
-    ChatMessage() : timestamp(0.0f), isVoice(false), hasSmoothPos(false) {}
+    ChatBubbleMessage() : timestamp(0.0f), isVoice(false), hasSmoothPos(false) {}
 };
 
 // Player chat data
 struct PlayerChatData
 {
-    std::vector<ChatMessage> messages;
+    std::vector<ChatBubbleMessage> messages;
     float lastVoiceTime;
     
     PlayerChatData() : lastVoiceTime(0.0f) {}
@@ -53,7 +53,7 @@ private:
     
     // Player data storage
     std::unordered_map<int, PlayerChatData> m_PlayerData;
-    std::vector<ChatMessage> m_GlobalChatLog;
+    std::vector<ChatBubbleMessage> m_GlobalChatLog;
     
     // Helper functions
     std::string GetVoiceCommandText(int menu, int item);
@@ -67,7 +67,7 @@ private:
     
     // Drawing functions
     int CalculateOpacity(float messageAge);
-    float DrawChatBubble(ChatMessage& message, const Vec3& worldPos, float yOffset);
+    float DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset);
     void DrawPlayerBubbles(CTFPlayer* pPlayer);
     
 public:
