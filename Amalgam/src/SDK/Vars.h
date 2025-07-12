@@ -896,6 +896,7 @@ namespace Vars
 			CVar(CraterCheck, "Crater Check Indicator", false, VISUAL);
 			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
+			CVar(ChatBubbles, "Chat Bubbles", false, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
 			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
@@ -1292,9 +1293,6 @@ namespace Vars
 			CVar(GiantWeaponSounds, "Giant weapon sounds", false);
 		SUBNAMESPACE_END(Sound);
 
-		SUBNAMESPACE_BEGIN(Features, Misc Features)
-			CVar(ChatBubbles, "Chat Bubbles", true, VISUAL);
-		SUBNAMESPACE_END(Features);
 
 		SUBNAMESPACE_BEGIN(Game)
 			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", true);

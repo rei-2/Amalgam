@@ -74,6 +74,7 @@ public:
     // Main functions
     void OnVoiceSubtitle(int entityIndex, int menu, int item);
     void OnChatMessage(bf_read& msgData);
+    void OnSoundPlayed(int entityIndex, const char* soundName);
     void Draw();
     void Reset();
 };

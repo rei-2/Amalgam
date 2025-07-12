@@ -804,6 +804,13 @@ void CStickyCam::Draw()
 	if (!m_pCurrentSticky || !m_pCameraMaterial || !m_pCameraTexture)
 		return;
 	
+	// Validate sticky entity before using it
+	if (m_pCurrentSticky->IsDormant())
+	{
+		m_pCurrentSticky = nullptr;
+		return;
+	}
+	
 	Vec3 stickyPos = m_pCurrentSticky->GetAbsOrigin();
 	Vec3 normal = GetStickyNormal(m_pCurrentSticky);
 	Vec3 cameraPos = CalculateCameraOffset(stickyPos, normal);

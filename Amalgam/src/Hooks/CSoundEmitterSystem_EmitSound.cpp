@@ -1,4 +1,5 @@
 #include "../SDK/SDK.h"
+#include "../Features/Visuals/ChatBubbles/ChatBubbles.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -149,6 +150,12 @@ MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), voi
 	if (ShouldBlockSound(ep.m_pSoundName))
 		return;
 
+	// Send sound info to ChatBubbles for enemy sound display
+	if (entindex > 0 && ep.m_pSoundName)
+	{
+		F::ChatBubbles.OnSoundPlayed(entindex, ep.m_pSoundName);
+	}
+
 	return CALL_ORIGINAL(rcx, filter, entindex, ep);
 }
 
@@ -181,6 +188,12 @@ MAKE_HOOK(S_StartSound, S::S_StartSound(), int,
 		H::Entities.ManualNetwork(params);
 	if (params.pSfx && ShouldBlockSound(params.pSfx->getname()))
 		return 0;
+
+	// Send sound info to ChatBubbles for enemy sound display
+	if (params.entchannel > 0 && params.pSfx && params.pSfx->getname())
+	{
+		F::ChatBubbles.OnSoundPlayed(params.entchannel, params.pSfx->getname());
+	}
 
 	return CALL_ORIGINAL(params);
 }

@@ -1477,10 +1477,6 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Sound::HitsoundAlways, FToggleEnum::Left);
 					FToggle(Vars::Misc::Sound::GiantWeaponSounds);
 				} EndSection();
-				if (Section("Misc Features"))
-				{
-					FToggle(Vars::Misc::Features::ChatBubbles);
-				} EndSection();
 				if (Section("Game", 8))
 				{
 					FToggle(Vars::Misc::Game::AntiCheatCompatibility, FToggleEnum::Left);
@@ -1554,7 +1550,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::CraterCheck, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::FlatTextures, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::ChatBubbles, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::FlatTextures, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::DisableFreezeCam, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::NoHats, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::HiderESP, FToggleEnum::Left);

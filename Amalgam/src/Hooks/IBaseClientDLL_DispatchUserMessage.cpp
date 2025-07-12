@@ -37,6 +37,11 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 		int iEntityID = msgData.ReadByte();
 		int iVoiceMenu = msgData.ReadByte();
 		int iCommandID = msgData.ReadByte();
+		
+		// Debug: Show voice commands being captured
+		I::CVar->ConsolePrintf("VoiceSubtitle: Entity %d, Menu %d, Command %d\n", 
+		                      iEntityID, iVoiceMenu, iCommandID);
+		
 		if (iVoiceMenu == 1 && iCommandID == 6)
 			F::AutoHeal.m_mMedicCallers[iEntityID] = true;
 		

@@ -79,6 +79,10 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
         // Add to front of list
         playerData.messages.insert(playerData.messages.begin(), newMessage);
         
+        // Debug: Confirm message was added
+        I::CVar->ConsolePrintf("AddChatMessage: Added '%s' for player %d, total: %d\n", 
+                              message.c_str(), entityIndex, static_cast<int>(playerData.messages.size()));
+        
         // Limit messages per player
         while (playerData.messages.size() > MAX_MESSAGES_PER_PLAYER)
         {
@@ -194,12 +198,7 @@ std::vector<std::string> CChatBubbles::WrapText(const std::string& text, float m
 Vec2 CChatBubbles::MeasureTextSize(const std::string& text)
 {
     auto font = H::Fonts.GetFont(FONT_ESP);
-    if (!font)
-        return {0.0f, 0.0f};
-    
-    // Use H::Draw for consistent text measurement
-    return {static_cast<float>(H::Draw.GetTextWidth(font, text.c_str())), 
-            static_cast<float>(H::Draw.GetTextHeight(font))};
+    return H::Draw.GetTextSize(text.c_str(), font);
 }
 
 Vec2 CChatBubbles::CalculateBubbleDimensions(const std::vector<std::string>& lines)
@@ -278,13 +277,16 @@ float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& world
     
     // Draw background
     Color_t bgColor = {0, 0, 0, static_cast<byte>(opacity * 0.8f)};
-    H::Draw.FillRect(
-        static_cast<int>(message.smoothPos.x - bubbleDims.x / 2),
-        static_cast<int>(message.smoothPos.y - bubbleDims.y),
-        static_cast<int>(bubbleDims.x),
-        static_cast<int>(bubbleDims.y),
-        bgColor
-    );
+    int rectX = static_cast<int>(message.smoothPos.x - bubbleDims.x / 2);
+    int rectY = static_cast<int>(message.smoothPos.y - bubbleDims.y);
+    int rectW = static_cast<int>(bubbleDims.x);
+    int rectH = static_cast<int>(bubbleDims.y);
+    
+    H::Draw.FillRect(rectX, rectY, rectW, rectH, bgColor);
+    
+    // Draw border
+    Color_t borderColor = {255, 255, 255, static_cast<byte>(opacity)};
+    H::Draw.LineRect(rectX, rectY, rectW, rectH, borderColor);
     
     // Draw text lines
     Color_t textColor = {255, 255, 255, static_cast<byte>(opacity)};
@@ -294,14 +296,10 @@ float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& world
     {
         Vec2 lineSize = MeasureTextSize(line);
         
-        H::Draw.String(
-            H::Fonts.GetFont(FONT_ESP),
-            static_cast<int>(message.smoothPos.x - bubbleDims.x / 2 + BUBBLE_PADDING),
-            static_cast<int>(message.smoothPos.y - bubbleDims.y + BUBBLE_PADDING + yTextOffset),
-            textColor,
-            ALIGN_TOPLEFT,
-            line.c_str()
-        );
+        int textX = static_cast<int>(message.smoothPos.x - bubbleDims.x / 2 + BUBBLE_PADDING);
+        int textY = static_cast<int>(message.smoothPos.y - bubbleDims.y + BUBBLE_PADDING + yTextOffset);
+        
+        H::Draw.String(H::Fonts.GetFont(FONT_ESP), textX, textY, textColor, ALIGN_TOPLEFT, line.c_str());
         
         yTextOffset += lineSize.y + 2;
     }
@@ -319,6 +317,10 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
     if (it == m_PlayerData.end())
         return;
     
+    // Debug: Confirm we're drawing bubbles
+    I::CVar->ConsolePrintf("DrawPlayerBubbles: Drawing %d messages for player %d\n", 
+                          static_cast<int>(it->second.messages.size()), playerIndex);
+    
     // Get player head position
     Vec3 headPos = pPlayer->GetAbsOrigin() + Vec3(0, 0, 75);
     
@@ -332,7 +334,7 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
 
 void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
 {
-    if (!Vars::Misc::Features::ChatBubbles.Value)
+    if (!Vars::Competitive::Features::ChatBubbles.Value)
         return;
     
     // Get player info
@@ -352,7 +354,7 @@ void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
     
     // Get player name and voice command text
     std::string playerName = "Player"; // Default fallback
-    player_info_t pInfo;
+    PlayerInfo_t pInfo;
     if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
         playerName = pInfo.name;
     std::string voiceCommand = GetVoiceCommandText(menu, item);
@@ -363,7 +365,7 @@ void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
 
 void CChatBubbles::OnChatMessage(bf_read& msgData)
 {
-    if (!Vars::Misc::Features::ChatBubbles.Value)
+    if (!Vars::Competitive::Features::ChatBubbles.Value)
         return;
     
     // This would handle SayText/SayText2 messages for chat
@@ -371,10 +373,82 @@ void CChatBubbles::OnChatMessage(bf_read& msgData)
     // Chat message parsing can be added later if needed
 }
 
+void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
+{
+    if (!Vars::Competitive::Features::ChatBubbles.Value)
+        return;
+    
+    if (!soundName || entityIndex <= 0)
+        return;
+    
+    // Get the entity to validate it's a player
+    auto pEntity = I::ClientEntityList->GetClientEntity(entityIndex);
+    if (!pEntity)
+        return;
+    
+    auto pPlayer = pEntity->As<CTFPlayer>();
+    if (!pPlayer)
+        return;
+    
+    // Only show sounds for enemy team players
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal || pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
+        return;
+    
+    // Get player name
+    std::string playerName = "Player";
+    PlayerInfo_t pInfo;
+    if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
+        playerName = pInfo.name;
+    
+    // Filter out irrelevant sounds - only show voice commands and important player sounds
+    std::string soundPath = soundName;
+    
+    // Remove the `)` character that appears at the start of some sound paths
+    if (!soundPath.empty() && soundPath[0] == ')')
+        soundPath = soundPath.substr(1);
+    
+    std::transform(soundPath.begin(), soundPath.end(), soundPath.begin(), ::tolower);
+    
+    // Check if it's a voice command sound - including misc/ for broader coverage
+    bool isVoiceCommand = soundPath.find("vo/") != std::string::npos || 
+                         soundPath.find("voice/") != std::string::npos ||
+                         soundPath.find("misc/") != std::string::npos;
+    
+    // Check if it's a weapon sound
+    //bool isWeaponSound = soundPath.find("weapons/") != std::string::npos;
+    
+    // Check if it's a player action sound
+    //bool isPlayerAction = soundPath.find("player/") != std::string::npos ||
+    //                     soundPath.find("items/") != std::string::npos;
+    
+    // Only show relevant sounds
+    if (!isVoiceCommand) // && !isWeaponSound && !isPlayerAction)
+        return;
+    
+    // Extract just the filename from the sound path
+    std::string soundFile = soundName;
+    size_t lastSlash = soundFile.find_last_of("/\\");
+    if (lastSlash != std::string::npos)
+        soundFile = soundFile.substr(lastSlash + 1);
+    
+    // Remove file extension
+    size_t lastDot = soundFile.find_last_of(".");
+    if (lastDot != std::string::npos)
+        soundFile = soundFile.substr(0, lastDot);
+    
+    // Add the sound as a chat message with appropriate prefix
+    std::string prefix = "[Voice] ";
+    //if (isVoiceCommand) prefix = "[Voice] ";
+    //else if (isWeaponSound) prefix = "[Weapon] ";
+    //else if (isPlayerAction) prefix = "[Action] ";
+    
+    AddChatMessage(prefix + soundFile, playerName, entityIndex, false);
+}
 
 void CChatBubbles::Draw()
 {
-    if (!Vars::Misc::Features::ChatBubbles.Value)
+    if (!Vars::Competitive::Features::ChatBubbles.Value)
         return;
     
     if (I::EngineVGui->IsGameUIVisible())
@@ -386,6 +460,13 @@ void CChatBubbles::Draw()
     
     // Clean old messages
     CleanOldMessages();
+    
+    // Debug: Check if we have any messages
+    if (!m_PlayerData.empty())
+    {
+        I::CVar->ConsolePrintf("ChatBubbles Draw: %d players with messages\n", 
+                              static_cast<int>(m_PlayerData.size()));
+    }
     
     // Draw bubbles for all players
     for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
