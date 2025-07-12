@@ -117,15 +117,14 @@ bool CStickyCam::IsDemoman()
 
 Vec3 CStickyCam::CalculateAngles(const Vec3& source, const Vec3& dest)
 {
-	const float M_RADPI = 57.2957795f;
 	Vec3 delta = SubtractVectors(dest, source);
 	float hyp = sqrtf(delta.x * delta.x + delta.y * delta.y);
 	
-	// Calculate pitch
-	float pitch = atan2f(delta.z, hyp) * M_RADPI;
+	// Calculate pitch (convert radians to degrees)
+	float pitch = atan2f(delta.z, hyp) * 57.2957795f;
 	
-	// Calculate yaw
-	float yaw = atan2f(delta.y, delta.x) * M_RADPI;
+	// Calculate yaw (convert radians to degrees)
+	float yaw = atan2f(delta.y, delta.x) * 57.2957795f;
 	
 	// Adjust yaw based on quadrant
 	if (delta.x < 0)
