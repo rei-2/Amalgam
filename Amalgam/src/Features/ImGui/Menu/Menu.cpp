@@ -1595,6 +1595,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::StickyCam::ShowWarnings, FToggleEnum::Left);
 					FToggle(Vars::Competitive::StickyCam::ShowOverlay, FToggleEnum::Right);
 					FToggle(Vars::Competitive::StickyCam::AlwaysShow, FToggleEnum::Left);
+					FToggle(Vars::Competitive::StickyCam::ShowChams, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Health Bar ESP"))

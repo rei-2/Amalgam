@@ -938,6 +938,63 @@ void CStickyCam::Reset()
 
 void CStickyCam::UpdateChamsEntities()
 {
-	// This function is called from the chams system to populate entities that should have chams
-	// For stickycam, we want to apply chams to targets within range and make the current sticky invisible
+	// Clear previous chams entries
+	m_mEntities.clear();
+	
+	if (!IsEnabled() || !IsDemoman() || !Vars::Competitive::StickyCam::ShowChams.Value)
+		return;
+	
+	auto pLocal = H::Entities.GetLocal();
+	if (!pLocal)
+		return;
+	
+	// Apply chams to players within damage radius of all our stickies
+	for (const auto& stickyData : m_Stickies)
+	{
+		if (!stickyData.pSticky || stickyData.pSticky->IsDormant())
+			continue;
+		
+		// Check if sticky is stationary
+		Vec3 velocity;
+		stickyData.pSticky->EstimateAbsVelocity(velocity);
+		if (velocity.Length() >= 1.0f)
+			continue;
+		
+		// Get sticky position and damage radius
+		Vec3 stickyPos = stickyData.pSticky->GetAbsOrigin();
+		auto pGrenade = stickyData.pSticky->As<CBaseGrenade>();
+		if (!pGrenade)
+			continue;
+		
+		float damageRadius = pGrenade->m_DmgRadius();
+		if (damageRadius <= 0.0f)
+			damageRadius = 146.0f; // Default sticky damage radius
+		
+		// Check all players for proximity to this sticky
+		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+		{
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsDormant())
+				continue;
+			
+			// Skip local player
+			if (pPlayer == pLocal)
+				continue;
+			
+			// Skip teammates
+			if (pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
+				continue;
+			
+			// Check distance to sticky
+			Vec3 playerPos = pPlayer->GetAbsOrigin();
+			Vec3 delta = SubtractVectors(playerPos, stickyPos);
+			float distance = delta.Length();
+			
+			if (distance <= damageRadius)
+			{
+				// Player is within sticky damage radius - apply chams
+				m_mEntities[pPlayer->entindex()] = true;
+			}
+		}
+	}
 }

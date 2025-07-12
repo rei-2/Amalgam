@@ -952,6 +952,7 @@ namespace Vars
 			CVar(ShowWarnings, "Show range warnings", true, VISUAL);
 			CVar(ShowOverlay, "Show camera overlay", true, VISUAL);
 			CVar(AlwaysShow, "Always show camera (even without targets)", false, VISUAL);
+			CVar(ShowChams, "Show chams on players in sticky radius", true, VISUAL);
 		SUBNAMESPACE_END(StickyCam);
 
 		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)

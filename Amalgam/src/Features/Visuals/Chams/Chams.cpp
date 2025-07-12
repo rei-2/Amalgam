@@ -7,6 +7,7 @@
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "../StickyESP/StickyESP.h"
 #include "../SentryESP/SentryESP.h"
+#include "../StickyCam/StickyCam.h"
 #include "../FocusFire/FocusFire.h"
 
 static inline bool GetPlayerChams(CBaseEntity* pPlayer, CBaseEntity* pEntity, CTFPlayer* pLocal, Chams_t* pChams, bool bEnemy, bool bTeam)
@@ -62,7 +63,19 @@ bool CChams::GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams)
 	// player chams
 	case ETFClassID::CTFPlayer:
 	{
-		// Check for FocusFire chams first
+		// Check for StickyCam chams first (players in sticky radius)
+		if (Vars::Competitive::StickyCam::ShowChams.Value && 
+			!F::StickyCam.m_mEntities.empty() &&
+			F::StickyCam.m_mEntities.count(pEntity->entindex()))
+		{
+			// Use red chams for players in sticky damage radius
+			auto visibleMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Color_t(255, 0, 0, 255) } };
+			auto occludedMaterial = std::vector<std::pair<std::string, Color_t>>{ { "Flat", Color_t(255, 0, 0, 150) } };
+			*pChams = Chams_t(visibleMaterial, occludedMaterial);
+			return true;
+		}
+		
+		// Check for FocusFire chams
 		if (Vars::Competitive::FocusFire::EnableChams.Value && 
 			!F::FocusFire.m_mEntities.empty() &&
 			F::FocusFire.m_mEntities.count(pEntity->entindex()))
