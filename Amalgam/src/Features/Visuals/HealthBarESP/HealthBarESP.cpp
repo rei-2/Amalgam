@@ -1,4 +1,9 @@
 #include "HealthBarESP.h"
+#include <cmath>
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 void CHealthBarESP::Draw()
 {
@@ -42,36 +47,34 @@ void CHealthBarESP::Draw()
         if (distSqr > (Vars::Competitive::HealthBarESP::MaxDistance.Value * Vars::Competitive::HealthBarESP::MaxDistance.Value))
             continue;
         
-        // Visibility check - more lenient to reduce flickering
-        Vec3 eyePos = localPos + pLocal->m_vecViewOffset();
-        Vec3 targetPos = playerPos;
-        targetPos.z += 40.0f; // Chest height
-        
-        CGameTrace trace = {};
-        CTraceFilterHitscan filter = {}; 
-        filter.pSkip = pLocal;
-        
-        SDK::Trace(eyePos, targetPos, MASK_VISIBLE, &filter, &trace);
-        
-        bool isVisible;
-        if (isFriendly)
-            isVisible = (trace.fraction > 0.90f); // More lenient for teammates to reduce flicker
-        else
-            isVisible = (trace.fraction > 0.90f || trace.m_pEnt == pPlayer); // More lenient to reduce flicker
-        
-        if (!isVisible)
-            continue;
-        
         int health = pPlayer->m_iHealth();
         int maxHealth = pPlayer->GetMaxHealth();
         
-        // Draw health bar (fixed position and width, no wobble)
-        Vec3 screenPos;
-        if (SDK::W2S(playerPos, screenPos))
+        // Check visibility for bars and polygons separately
+        bool isVisible = IsVisible(playerPos);
+        
+        // Draw health polygon under player if enabled and visible (or through walls enabled)
+        if (Vars::Competitive::HealthBarESP::ShowPolygons.Value)
         {
-            int x = (int)(screenPos.x - Vars::Competitive::HealthBarESP::BarWidth.Value / 2);
-            int y = (int)(screenPos.y + 30);
-            DrawHealthBar(x, y, Vars::Competitive::HealthBarESP::BarWidth.Value, health, maxHealth);
+            if (Vars::Competitive::HealthBarESP::PolygonThroughWalls.Value || isVisible)
+            {
+                DrawHealthPolygon(playerPos, health, maxHealth);
+            }
+        }
+        
+        // Draw health bar if enabled and visible (or through walls enabled for bars)
+        if (Vars::Competitive::HealthBarESP::ShowHealthBars.Value)
+        {
+            if (Vars::Competitive::HealthBarESP::ShowThroughWalls.Value || isVisible)
+            {
+                Vec3 screenPos;
+                if (SDK::W2S(playerPos, screenPos))
+                {
+                    int x = (int)(screenPos.x - Vars::Competitive::HealthBarESP::BarWidth.Value / 2);
+                    int y = (int)(screenPos.y + 30);
+                    DrawHealthBar(x, y, Vars::Competitive::HealthBarESP::BarWidth.Value, health, maxHealth);
+                }
+            }
         }
     }
 }
@@ -80,26 +83,21 @@ Color_t CHealthBarESP::GetHealthBarColor(int health, int maxHealth)
 {
     if (health > maxHealth)
     {
-        // Overheal color (blue) - always full brightness
+        // Overheal color (blue) - use user's alpha setting
         Color_t result = Vars::Competitive::HealthBarESP::OverhealColor.Value;
-        result.a = 255;
+        result.a = static_cast<byte>(Vars::Competitive::HealthBarESP::Alpha.Value);
         return result;
     }
     else
     {
-        // Red to green gradient with health-based alpha (from lua script)
+        // Red to green gradient using user's alpha setting
         float ratio = (float)health / (float)maxHealth;
-        
-        // More dramatic alpha: lower health = much more visible  
-        // Full health = 100 alpha, critical health = 255 alpha
-        int currentAlpha = (int)(255 - (ratio * 155)); // As health goes down, alpha goes up
-        currentAlpha = std::max(100, std::min(255, currentAlpha));
         
         Color_t result;
         result.r = (int)(255 * (1.0f - ratio));
         result.g = (int)(255 * ratio);
         result.b = 0;
-        result.a = currentAlpha;
+        result.a = static_cast<byte>(Vars::Competitive::HealthBarESP::Alpha.Value);
         return result;
     }
 }
@@ -124,5 +122,88 @@ void CHealthBarESP::DrawHealthBar(int x, int y, int width, int health, int maxHe
         Color_t overhealColor = Vars::Competitive::HealthBarESP::OverhealColor.Value;
         overhealColor.a = static_cast<byte>(Vars::Competitive::HealthBarESP::Alpha.Value);
         H::Draw.FillRect(x + healthBarSize, y + 1, overhealSize - 1, Vars::Competitive::HealthBarESP::BarHeight.Value - 2, overhealColor);
+    }
+}
+
+bool CHealthBarESP::IsVisible(const Vec3& vPos)
+{
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return false;
+    
+    Vec3 vEyePos = pLocal->GetAbsOrigin() + pLocal->m_vecViewOffset();
+    Vec3 targetPos = vPos;
+    targetPos.z += 40.0f; // Chest height
+    
+    CGameTrace trace = {};
+    CTraceFilterHitscan filter = {};
+    filter.pSkip = pLocal;
+    
+    SDK::Trace(vEyePos, targetPos, MASK_VISIBLE, &filter, &trace);
+    
+    return trace.fraction > 0.90f;
+}
+
+void CHealthBarESP::DrawHealthPolygon(const Vec3& playerPos, int health, int maxHealth)
+{
+    // Get health color based on current health
+    Color_t healthColor = GetHealthBarColor(health, maxHealth);
+    
+    // Calculate health percentage for polygon fill
+    float healthRatio = (float)std::min(health, maxHealth) / (float)maxHealth;
+    float overhealRatio = (health > maxHealth) ? (float)(health - maxHealth) / (float)maxHealth : 0.0f;
+    
+    // Create polygon points around player position
+    const int segments = Vars::Competitive::HealthBarESP::PolygonSegments.Value;
+    const float radius = Vars::Competitive::HealthBarESP::PolygonRadius.Value;
+    
+    std::vector<Vertex_t> vertices;
+    
+    // Generate circle points on the ground
+    for (int i = 0; i < segments; i++)
+    {
+        float angle = (2.0f * M_PI * i) / segments;
+        Vec3 worldPoint = playerPos;
+        worldPoint.x += cos(angle) * radius;
+        worldPoint.y += sin(angle) * radius;
+        worldPoint.z -= 10.0f; // Slightly below player feet
+        
+        Vec3 screenPoint;
+        if (SDK::W2S(worldPoint, screenPoint))
+        {
+            vertices.emplace_back(Vertex_t(Vector2D(screenPoint.x, screenPoint.y)));
+        }
+        else
+        {
+            return; // If any point is off-screen, don't draw
+        }
+    }
+    
+    // Only draw if we have enough vertices
+    if (vertices.size() < 3)
+        return;
+    
+    // Draw filled polygon if enabled
+    if (Vars::Competitive::HealthBarESP::ShowPolygonFill.Value)
+    {
+        // Draw main health portion
+        if (healthRatio > 0.0f)
+        {
+            H::Draw.FillPolygon(vertices, healthColor);
+        }
+        
+        // Draw overheal portion with different color if present
+        if (overhealRatio > 0.0f)
+        {
+            Color_t overhealColor = Vars::Competitive::HealthBarESP::OverhealColor.Value;
+            overhealColor.a = static_cast<byte>(Vars::Competitive::HealthBarESP::Alpha.Value);
+            H::Draw.FillPolygon(vertices, overhealColor);
+        }
+    }
+    
+    // Draw polygon edge if enabled
+    if (Vars::Competitive::HealthBarESP::ShowPolygonEdge.Value)
+    {
+        H::Draw.LinePolygon(vertices, healthColor);
     }
 }

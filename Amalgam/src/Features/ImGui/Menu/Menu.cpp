@@ -1583,7 +1583,15 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::HealthBarESP::BarHeight, FSliderEnum::Right);
 					FSlider(Vars::Competitive::HealthBarESP::BarWidth, FSliderEnum::Left);
 					FSlider(Vars::Competitive::HealthBarESP::MaxDistance, FSliderEnum::Right);
-					FToggle(Vars::Competitive::HealthBarESP::MedicMode);
+					FToggle(Vars::Competitive::HealthBarESP::MedicMode, FToggleEnum::Left);
+					FToggle(Vars::Competitive::HealthBarESP::ShowHealthBars, FToggleEnum::Right);
+					FToggle(Vars::Competitive::HealthBarESP::ShowThroughWalls, FToggleEnum::Left);
+					FToggle(Vars::Competitive::HealthBarESP::ShowPolygons, FToggleEnum::Left);
+					FToggle(Vars::Competitive::HealthBarESP::PolygonThroughWalls, FToggleEnum::Right);
+					FToggle(Vars::Competitive::HealthBarESP::ShowPolygonFill, FToggleEnum::Left);
+					FToggle(Vars::Competitive::HealthBarESP::ShowPolygonEdge, FToggleEnum::Right);
+					FSlider(Vars::Competitive::HealthBarESP::PolygonRadius, FSliderEnum::Left);
+					FSlider(Vars::Competitive::HealthBarESP::PolygonSegments, FSliderEnum::Right);
 					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color picker
 					FColorPicker(Vars::Competitive::HealthBarESP::OverhealColor, FColorPickerEnum::Left);
 				} EndSection();

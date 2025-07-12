@@ -959,6 +959,14 @@ namespace Vars
 			CVar(MaxDistance, "Max distance", 3500.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 500.0f, 8000.0f, 100.0f);
 			CVar(MedicMode, "Medic mode (teammates)", true, VISUAL);
 			CVar(OverhealColor, "Overheal color", Color_t(71, 166, 255, 255), VISUAL);
+			CVar(ShowHealthBars, "Show health bars", true, VISUAL);
+			CVar(ShowThroughWalls, "Show bars through walls", false, VISUAL);
+			CVar(ShowPolygons, "Show health polygons", false, VISUAL);
+			CVar(PolygonThroughWalls, "Show polygons through walls", false, VISUAL);
+			CVar(PolygonRadius, "Polygon radius", 50.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 20.0f, 200.0f, 5.0f);
+			CVar(PolygonSegments, "Polygon segments", 16, VISUAL | SLIDER_CLAMP, 8, 64, 1);
+			CVar(ShowPolygonFill, "Show polygon fill", true, VISUAL);
+			CVar(ShowPolygonEdge, "Show polygon edge", true, VISUAL);
 		SUBNAMESPACE_END(HealthBarESP);
 
 		SUBNAMESPACE_BEGIN(PylonESP, Pylon ESP)

@@ -17,6 +17,8 @@ private:
     // Helper functions
     Color_t GetHealthBarColor(int health, int maxHealth);
     void DrawHealthBar(int x, int y, int width, int health, int maxHealth);
+    void DrawHealthPolygon(const Vec3& playerPos, int health, int maxHealth);
+    bool IsVisible(const Vec3& vPos);
 
 public:
     void Draw();
