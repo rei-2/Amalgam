@@ -360,6 +360,24 @@ void CStickyCam::UpdateStickies()
 		}
 	}
 	
+	// Clean up visited stickies list - remove any that are no longer in our stickies list
+	for (int i = m_VisitedStickies.size() - 1; i >= 0; i--)
+	{
+		bool found = false;
+		for (const auto& sticky : m_Stickies)
+		{
+			if (sticky.pSticky == m_VisitedStickies[i])
+			{
+				found = true;
+				break;
+			}
+		}
+		if (!found)
+		{
+			m_VisitedStickies.erase(m_VisitedStickies.begin() + i);
+		}
+	}
+	
 	// Update current sticky if invalid
 	if (!m_pCurrentSticky || m_pCurrentSticky->IsDormant())
 	{
@@ -367,7 +385,10 @@ void CStickyCam::UpdateStickies()
 		m_pCurrentTarget = nullptr;
 		m_bTargetVisible = false;
 		
-		// Find a valid sticky with nearby targets
+		// In manual mode, just find any valid sticky (don't require targets)
+		// In follow latest mode, find sticky with targets for better experience
+		bool needTargets = (GetMode() == EStickyMode::FOLLOW_LATEST);
+		
 		for (const auto& sticky : m_Stickies)
 		{
 			if (!sticky.pSticky)
@@ -378,8 +399,36 @@ void CStickyCam::UpdateStickies()
 			sticky.pSticky->EstimateAbsVelocity(velocity);
 			if (velocity.Length() < 1.0f)
 			{
-				Vec3 stickyPos = sticky.pSticky->GetAbsOrigin();
-				if (FindNearestVisiblePlayer(stickyPos))
+				if (!needTargets)
+				{
+					// Manual mode: any stationary sticky is fine
+					m_pCurrentSticky = sticky.pSticky;
+					break;
+				}
+				else
+				{
+					// Follow latest mode: prefer stickies with targets
+					Vec3 stickyPos = sticky.pSticky->GetAbsOrigin();
+					if (FindNearestVisiblePlayer(stickyPos))
+					{
+						m_pCurrentSticky = sticky.pSticky;
+						break;
+					}
+				}
+			}
+		}
+		
+		// If follow latest mode didn't find a sticky with targets, fall back to any sticky
+		if (!m_pCurrentSticky && needTargets)
+		{
+			for (const auto& sticky : m_Stickies)
+			{
+				if (!sticky.pSticky)
+					continue;
+				
+				Vec3 velocity;
+				sticky.pSticky->EstimateAbsVelocity(velocity);
+				if (velocity.Length() < 1.0f)
 				{
 					m_pCurrentSticky = sticky.pSticky;
 					break;
@@ -449,6 +498,20 @@ void CStickyCam::CycleNextSticky()
 		m_pCurrentTarget = nullptr;
 		m_bTargetVisible = false;
 		m_flTargetLockTime = 0.0f;
+	}
+	else
+	{
+		// Safety fallback: if no unvisited stickies but we have available ones,
+		// this means the visited list might be corrupted, so reset it
+		if (!availableStickies.empty())
+		{
+			m_VisitedStickies.clear();
+			m_pCurrentSticky = availableStickies[0];
+			m_VisitedStickies.push_back(m_pCurrentSticky);
+			m_pCurrentTarget = nullptr;
+			m_bTargetVisible = false;
+			m_flTargetLockTime = 0.0f;
+		}
 	}
 }
 
