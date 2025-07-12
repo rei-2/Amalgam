@@ -544,7 +544,7 @@ bool CStickyCam::IsTargetWithinRange(CTFPlayer* pTarget, const Vec3& stickyPos)
 
 void CStickyCam::DrawOverlay()
 {
-	if (!Vars::Competitive::StickyCam::ShowOverlay.Value || !m_pCurrentSticky || !m_pCurrentTarget)
+	if (!Vars::Competitive::StickyCam::ShowOverlay.Value || !m_pCurrentSticky)
 		return;
 	
 	DrawStickyRangeWarning();
@@ -553,14 +553,22 @@ void CStickyCam::DrawOverlay()
 	int camX, camY;
 	GetCameraPosition(camX, camY);
 	
-	// Get player name
-	std::string playerName = "Unknown";
-	PlayerInfo_t pi{};
-	if (I::EngineClient->GetPlayerInfo(m_pCurrentTarget->entindex(), &pi))
-		playerName = pi.name;
+	// Get player name and status
+	std::string playerName = "No Target";
+	std::string targetStatus = "Searching";
+	float timeRemaining = 0.0f;
 	
-	float timeRemaining = std::max(0.0f, Vars::Competitive::StickyCam::TrackTime.Value - (I::GlobalVars->curtime - m_flTargetLockTime));
-	std::string targetStatus = m_bTargetVisible ? "Tracking" : "Target Lost";
+	if (m_pCurrentTarget)
+	{
+		PlayerInfo_t pi{};
+		if (I::EngineClient->GetPlayerInfo(m_pCurrentTarget->entindex(), &pi))
+			playerName = pi.name;
+		else
+			playerName = "Unknown";
+		
+		timeRemaining = std::max(0.0f, Vars::Competitive::StickyCam::TrackTime.Value - (I::GlobalVars->curtime - m_flTargetLockTime));
+		targetStatus = m_bTargetVisible ? "Tracking" : "Target Lost";
+	}
 	std::string modeText = (GetMode() == EStickyMode::FOLLOW_LATEST) ? "Latest" : "Manual";
 	
 	// Count available stickies
@@ -730,7 +738,20 @@ void CStickyCam::Draw()
 		m_vSmoothedAngles = LerpAngles(m_vSmoothedAngles, targetAngles, Vars::Competitive::StickyCam::AngleSpeed.Value);
 	}
 	
-	if (!m_pCurrentTarget || !m_bTargetVisible)
+	// Check if we should display the camera
+	bool shouldDisplay = false;
+	if (Vars::Competitive::StickyCam::AlwaysShow.Value)
+	{
+		// Always show if we have a sticky (even without targets)
+		shouldDisplay = true;
+	}
+	else
+	{
+		// Only show when we have a visible target
+		shouldDisplay = (m_pCurrentTarget && m_bTargetVisible);
+	}
+	
+	if (!shouldDisplay)
 		return;
 	
 	// Draw camera to screen
@@ -757,7 +778,23 @@ void CStickyCam::Draw()
 
 void CStickyCam::RenderView(void* ecx, const CViewSetup& view)
 {
-	if (!m_bInitialized || !m_pCurrentSticky || !m_pCurrentTarget || !m_pCameraTexture || !m_bTargetVisible)
+	if (!m_bInitialized || !m_pCurrentSticky || !m_pCameraTexture)
+		return;
+	
+	// Check if we should render the camera view
+	bool shouldRender = false;
+	if (Vars::Competitive::StickyCam::AlwaysShow.Value)
+	{
+		// Always render if we have a sticky
+		shouldRender = true;
+	}
+	else
+	{
+		// Only render when we have a visible target
+		shouldRender = (m_pCurrentTarget && m_bTargetVisible);
+	}
+	
+	if (!shouldRender)
 		return;
 	
 	Vec3 stickyPos = m_pCurrentSticky->GetAbsOrigin();

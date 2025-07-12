@@ -951,6 +951,7 @@ namespace Vars
 			CVar(AngleSpeed, "Angle interpolation speed", 0.1f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.01f, 1.0f, 0.01f);
 			CVar(ShowWarnings, "Show range warnings", true, VISUAL);
 			CVar(ShowOverlay, "Show camera overlay", true, VISUAL);
+			CVar(AlwaysShow, "Always show camera (even without targets)", false, VISUAL);
 		SUBNAMESPACE_END(StickyCam);
 
 		SUBNAMESPACE_BEGIN(UberTracker, Uber Tracker)

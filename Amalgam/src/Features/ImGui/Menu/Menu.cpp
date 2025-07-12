@@ -1542,6 +1542,7 @@ void CMenu::MenuComp(int iTab)
 					}
 					PopTransparent();
 					FToggle(Vars::Competitive::Features::EnemyCam, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::StickyCam, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::PylonESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::FocusFire, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::SentryESP, FToggleEnum::Right);
@@ -1593,6 +1594,7 @@ void CMenu::MenuComp(int iTab)
 					FSlider(Vars::Competitive::StickyCam::AngleSpeed, FSliderEnum::Right);
 					FToggle(Vars::Competitive::StickyCam::ShowWarnings, FToggleEnum::Left);
 					FToggle(Vars::Competitive::StickyCam::ShowOverlay, FToggleEnum::Right);
+					FToggle(Vars::Competitive::StickyCam::AlwaysShow, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Health Bar ESP"))
