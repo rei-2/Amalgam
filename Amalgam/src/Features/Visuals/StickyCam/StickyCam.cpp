@@ -954,6 +954,11 @@ void CStickyCam::UpdateChamsEntities()
 		if (!stickyData.pSticky || stickyData.pSticky->IsDormant())
 			continue;
 		
+		// Additional entity validation to prevent crashes
+		auto pEntity = I::ClientEntityList->GetClientEntity(stickyData.pSticky->entindex());
+		if (!pEntity || pEntity != stickyData.pSticky)
+			continue;
+		
 		// Check if sticky is stationary
 		Vec3 velocity;
 		stickyData.pSticky->EstimateAbsVelocity(velocity);
@@ -965,9 +970,18 @@ void CStickyCam::UpdateChamsEntities()
 		if (!pGrenade)
 			continue;
 		
-		Vec3 stickyPos = stickyData.pSticky->GetAbsOrigin();
+		// Additional validation before accessing grenade properties
+		Vec3 stickyPos;
+		float damageRadius;
 		
-		float damageRadius = pGrenade->m_DmgRadius();
+		try {
+			stickyPos = stickyData.pSticky->GetAbsOrigin();
+			damageRadius = pGrenade->m_DmgRadius();
+		}
+		catch (...) {
+			// Skip this sticky if accessing its properties fails
+			continue;
+		}
 		if (damageRadius <= 0.0f)
 			damageRadius = 146.0f; // Default sticky damage radius
 		
