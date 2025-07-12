@@ -91,6 +91,14 @@ void CFlatTextures::RestoreMaterials()
         return;
     }
     
+    // Additional safety check: don't restore during engine shutdown or when not in game
+    if (!I::EngineClient || !I::EngineClient->IsInGame())
+    {
+        // Clear cache if not in game to prevent stale texture pointers
+        m_OriginalTextures.clear();
+        return;
+    }
+    
     // Safely iterate through cached materials to avoid crashes during shutdown
     // Create a copy of the map to avoid iterator invalidation issues
     auto originalTexturesCopy = m_OriginalTextures;
@@ -116,7 +124,17 @@ void CFlatTextures::RestoreMaterials()
                 IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
                 if (pBaseTexVar)
                 {
-                    pBaseTexVar->SetTextureValue(pOriginalTexture);
+                    // Use a nested try-catch specifically for texture operations
+                    try 
+                    {
+                        pBaseTexVar->SetTextureValue(pOriginalTexture);
+                    }
+                    catch (...)
+                    {
+                        // Texture restoration failed, likely due to invalid texture pointer
+                        // This can happen if textures were freed/reloaded. Skip and continue.
+                        continue;
+                    }
                 }
             }
         }
