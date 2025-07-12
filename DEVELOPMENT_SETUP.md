@@ -7,7 +7,12 @@
    setup.bat
    ```
 
-2. **Open the project:**
+2. **Initialize submodules:**
+   ```cmd
+   git submodule update --init --recursive
+   ```
+
+3. **Open the project:**
    - Open `Amalgam.sln` in Visual Studio 2022
    - Select configuration: `Release` and platform: `x64`
    - Build the solution
@@ -39,7 +44,12 @@ If you prefer to set up manually or the automated script fails:
    vcpkg integrate install
    ```
 
-3. **Restore NuGet packages:**
+3. **Initialize submodules:**
+   ```cmd
+   git submodule update --init --recursive
+   ```
+
+4. **Restore NuGet packages:**
    ```cmd
    nuget restore Amalgam.sln
    ```
@@ -57,6 +67,8 @@ If you prefer to set up manually or the automated script fails:
 - **nlohmann-json** - JSON parsing library
 - **boost** - Boost libraries (via NuGet)
 - **libolm** - Matrix encryption library (embedded in source)
+- **AmalgamLoader** - DLL injection tool (submodule)
+- **Blackbone** - Process manipulation library (nested submodule)
 
 ## Output
 

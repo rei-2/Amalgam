@@ -1,0 +1,3 @@
+[submodule "AmalgamLoader"]
+	path = AmalgamLoader
+	url = https://github.com/coffeegrind123/AmalgamLoader.git

@@ -102,9 +102,22 @@ if errorlevel 1 (
 
 cd ..
 
+:: Initialize submodules
+echo.
+echo [5/6] Initializing submodules...
+echo Initializing AmalgamLoader and Blackbone submodules...
+git submodule update --init --recursive
+if errorlevel 1 (
+    echo ERROR: Failed to initialize submodules
+    pause
+    exit /b 1
+) else (
+    echo Submodules initialized successfully
+)
+
 :: Restore NuGet packages
 echo.
-echo [5/5] Restoring NuGet packages...
+echo [6/6] Restoring NuGet packages...
 where nuget >nul 2>&1
 if errorlevel 1 (
     echo WARNING: NuGet not found in PATH
@@ -143,5 +156,7 @@ echo - cpr (C++ Requests)
 echo - nlohmann-json
 echo - boost (via NuGet)
 echo - libolm (embedded in source)
+echo - AmalgamLoader (submodule)
+echo - Blackbone (nested submodule)
 echo.
 pause
