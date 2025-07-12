@@ -1,5 +1,6 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/Visuals/ChatBubbles/ChatBubbles.h"
 #include "../Features/Misc/Misc.h"
 #include "../Features/Output/Output.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"

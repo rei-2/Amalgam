@@ -1,5 +1,6 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/Visuals/ChatBubbles/ChatBubbles.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Ticks/Ticks.h"
 #include "../Features/CritHack/CritHack.h"

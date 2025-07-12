@@ -194,12 +194,13 @@ std::vector<std::string> CChatBubbles::WrapText(const std::string& text, float m
 Vec2 CChatBubbles::MeasureTextSize(const std::string& text)
 {
     auto font = H::Fonts.GetFont(FONT_ESP);
-    if (!font)
+    if (font == 0)
         return {0.0f, 0.0f};
     
-    // Get text dimensions
+    // Get text dimensions using proper wstring conversion
+    std::wstring wideText = std::wstring(text.begin(), text.end());
     int width, height;
-    I::MatSystemSurface->GetTextSize(font, Utils::ConvertUtf8ToWide(text).c_str(), width, height);
+    I::MatSystemSurface->GetTextSize(font, wideText.c_str(), width, height);
     
     return {static_cast<float>(width), static_cast<float>(height)};
 }
@@ -353,7 +354,9 @@ void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
     playerData.lastVoiceTime = currentTime;
     
     // Get player name and voice command text
-    std::string playerName = pTFPlayer->GetPlayerName();
+    std::string playerName = "Player"; // Default fallback
+    if (auto pInfo = I::EngineClient->GetPlayerInfo(entityIndex))
+        playerName = pInfo->name;
     std::string voiceCommand = GetVoiceCommandText(menu, item);
     
     // Add voice command message for ALL players (including enemies!)
@@ -370,15 +373,6 @@ void CChatBubbles::OnChatMessage(bf_read& msgData)
     // Chat message parsing can be added later if needed
 }
 
-void CChatBubbles::OnPlayerHurt(CTFPlayer* pVictim, CTFPlayer* pAttacker, int damage)
-{
-    // We can use damage events to detect enemy actions and show voice responses
-    // This improves upon the Lua version by catching more voice command contexts
-    if (!Vars::Misc::Features::ChatBubbles.Value)
-        return;
-    
-    // Could add damage callouts or other contextual voice commands here
-}
 
 void CChatBubbles::Draw()
 {
