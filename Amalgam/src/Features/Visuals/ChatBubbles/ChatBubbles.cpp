@@ -418,12 +418,12 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     // Check if it's a weapon sound
     //bool isWeaponSound = soundPath.find("weapons/") != std::string::npos;
     
-    // Check if it's a player action sound
-    //bool isPlayerAction = soundPath.find("player/") != std::string::npos ||
-    //                     soundPath.find("items/") != std::string::npos;
+    // Check if it's a player action sound (re-enabled for testing drawing)
+    bool isPlayerAction = soundPath.find("player/") != std::string::npos ||
+                         soundPath.find("items/") != std::string::npos;
     
     // Only show relevant sounds
-    if (!isVoiceCommand) // && !isWeaponSound && !isPlayerAction)
+    if (!isVoiceCommand && !isPlayerAction) // && !isWeaponSound)
         return;
     
     // Extract just the filename from the sound path
@@ -438,10 +438,10 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
         soundFile = soundFile.substr(0, lastDot);
     
     // Add the sound as a chat message with appropriate prefix
-    std::string prefix = "[Voice] ";
-    //if (isVoiceCommand) prefix = "[Voice] ";
+    std::string prefix = "[Sound] ";
+    if (isVoiceCommand) prefix = "[Voice] ";
     //else if (isWeaponSound) prefix = "[Weapon] ";
-    //else if (isPlayerAction) prefix = "[Action] ";
+    else if (isPlayerAction) prefix = "[Action] ";
     
     AddChatMessage(prefix + soundFile, playerName, entityIndex, false);
 }
