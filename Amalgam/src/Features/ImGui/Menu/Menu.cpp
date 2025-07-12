@@ -1553,6 +1553,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::FlatTextures, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::DisableFreezeCam, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::NoHats, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Movement Features"))

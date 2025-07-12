@@ -57,6 +57,16 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVirtual(I::ModelRender, 1
 		{
 			return; // Don't render this entity
 		}
+		
+		// NoHats feature - hide all cosmetics/wearables
+		if (Vars::Competitive::Features::NoHats.Value)
+		{
+			auto classID = pEntity->GetClassID();
+			if (classID == ETFClassID::CTFWearable || classID == ETFClassID::CTFWearableDemoShield)
+			{
+				return; // Don't render wearables/cosmetics
+			}
+		}
 	}
 	
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();

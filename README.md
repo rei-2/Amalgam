@@ -54,6 +54,7 @@ All features are fully configurable through the COMP tab menu with individual to
 | **Match HUD Enhancement** | Interface | Enemy health and class information displayed on match scoreboard/HUD for instant assessment |
 | **Safe Bunnyhop** | Movement | Advanced movement assistance with configurable success rate and safety mechanisms |
 | **Disable Freezecam** | Spectating | Disables freezecam delay after death for instant spectating and immediate tactical awareness |
+| **No Hats** | Visual | Removes all cosmetic items and hats from all players for improved visibility and reduced clutter |
 
 ### Communication & Coordination
 

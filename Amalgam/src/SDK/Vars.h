@@ -915,6 +915,7 @@ namespace Vars
 			CVar(MatchHUD, "Match HUD Enhancement", true, VISUAL);
 			CVar(SafeBhop, "Safe Bunnyhop", false, VISUAL);
 			CVar(DisableFreezeCam, "Disable Freezecam", false, VISUAL);
+			CVar(NoHats, "Remove Hats/Cosmetics", false, VISUAL);
 		SUBNAMESPACE_END(Features);
 
 		SUBNAMESPACE_BEGIN(EnemyCam, Enemy Camera)
