@@ -89,4 +89,6 @@ For porting Lua scripts to C++, see the comprehensive [LUA_TO_CPP_PORTING_GUIDE.
 
 ## Installation
 
-[Xenos](https://github.com/DarthTon/Xenos/releases) recommended.
+**AmalgamLoader.exe** (included with downloads) is the recommended injection tool. It's automatically built and includes all necessary dependencies.
+
+Alternative: [Xenos](https://github.com/DarthTon/Xenos/releases) also works if you prefer a separate injector.

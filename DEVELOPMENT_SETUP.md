@@ -7,12 +7,7 @@
    setup.bat
    ```
 
-2. **Initialize submodules:**
-   ```cmd
-   git submodule update --init --recursive
-   ```
-
-3. **Open the project:**
+2. **Open the project:**
    - Open `Amalgam.sln` in Visual Studio 2022
    - Select configuration: `Release` and platform: `x64`
    - Build the solution
@@ -72,10 +67,13 @@ If you prefer to set up manually or the automated script fails:
 
 ## Output
 
-Built DLLs will be located in:
+Built files will be located in:
 ```
 output/x64/[Configuration]/Amalgam[Platform][Configuration].dll
+output/x64/[Configuration]/AmalgamLoader.exe
 ```
+
+**Note:** AmalgamLoader.exe is the recommended injection tool. It's built automatically and included in the output directory.
 
 ## Troubleshooting
 
