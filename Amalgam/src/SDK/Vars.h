@@ -892,6 +892,7 @@ namespace Vars
 			CVar(SentryESP, "Sentry Gun ESP", true, VISUAL);
 			CVar(StickyESP, "Sticky Bomb ESP", true, VISUAL);
 			CVar(SplashRadius, "Splash Radius Circles", true, VISUAL);
+			CVar(CraterCheck, "Crater Check Indicator", false, VISUAL);
 			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
@@ -1032,6 +1033,19 @@ namespace Vars
 			CVar(TeamColors, "Use team colors", true, VISUAL);
 			CVar(ShowOnlyVisible, "Show only visible projectiles", true, VISUAL);
 		SUBNAMESPACE_END(SplashRadius);
+
+		SUBNAMESPACE_BEGIN(CraterCheck, Crater Check)
+			CVar(Radius, "Crater radius", 100.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 50.0f, 500.0f, 25.0f);
+			CVar(Segments, "Circle segments", 24, VISUAL | SLIDER_CLAMP, 8, 64, 4);
+			CVar(ShowFill, "Show filled polygon", true, VISUAL);
+			CVar(ShowEdge, "Show edge lines", true, VISUAL);
+			CVar(EdgeWidth, "Edge width", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
+			CVar(OnlyShowLethal, "Only show lethal landings", false, VISUAL);
+			CVar(LethalFillColor, "Lethal fill color", Color_t(255, 0, 0, 60), VISUAL);
+			CVar(LethalEdgeColor, "Lethal edge color", Color_t(255, 0, 0, 150), VISUAL);
+			CVar(SafeFillColor, "Safe fill color", Color_t(0, 255, 0, 60), VISUAL);
+			CVar(SafeEdgeColor, "Safe edge color", Color_t(0, 255, 0, 150), VISUAL);
+		SUBNAMESPACE_END(CraterCheck);
 
 		SUBNAMESPACE_BEGIN(CritHeals, Crit Heals)
 			CVar(Range, "Detection range", 800.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 200.0f, 1500.0f, 50.0f);

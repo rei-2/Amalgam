@@ -5,6 +5,7 @@
 #include "../../Binds/Binds.h"
 #include "../../Visuals/Groups/Groups.h"
 #include "../../Players/PlayerUtils.h"
+#include "../../TempShowHealth/TempShowHealth.h"
 #include "../../Spectate/Spectate.h"
 #include "../../Resolver/Resolver.h"
 #include "../../Visuals/Visuals.h"
@@ -1535,13 +1536,19 @@ void CMenu::MenuComp(int iTab)
 			{
 				if (Section("Visual Features"))
 				{
-					FToggle(Vars::Competitive::Features::EnemyCam, FToggleEnum::Left);
+					PushTransparent(true); // Always greyed out - feature is broken
+					{
+						FToggle("Show enemy health", &F::TempShowHealth.m_bEnabled);
+					}
+					PopTransparent();
+					FToggle(Vars::Competitive::Features::EnemyCam, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::PylonESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::FocusFire, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::SentryESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::SplashRadius, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::CraterCheck, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::FlatTextures, FToggleEnum::Right);
 				} EndSection();
@@ -1634,7 +1641,11 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedWeapons, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::ThirdPersonMouseLook, FToggleEnum::Right);
-					FToggle(Vars::Competitive::SpectateAll::SpyVision, FToggleEnum::Left);
+					PushTransparent(true); // Always greyed out - feature is broken  
+					{
+						FToggle(Vars::Competitive::SpectateAll::SpyVision, FToggleEnum::Left);
+					}
+					PopTransparent();
 					FSlider(Vars::Competitive::SpectateAll::CameraSpeed, FSliderEnum::Right);
 					FSlider(Vars::Competitive::SpectateAll::CameraDistance, FSliderEnum::Left);
 				} EndSection();
@@ -1682,6 +1693,25 @@ void CMenu::MenuComp(int iTab)
 					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
 					FColorPicker(Vars::Competitive::SplashRadius::FillColor, FColorPickerEnum::Left);
 					FColorPicker(Vars::Competitive::SplashRadius::EdgeColor, FColorPickerEnum::Right);
+				} EndSection();
+
+				if (Section("Crater Check"))
+				{
+					FToggle(Vars::Competitive::CraterCheck::ShowFill, FToggleEnum::Left);
+					FToggle(Vars::Competitive::CraterCheck::ShowEdge, FToggleEnum::Right);
+					FToggle(Vars::Competitive::CraterCheck::OnlyShowLethal, FToggleEnum::Left);
+					FSlider(Vars::Competitive::CraterCheck::Radius, FSliderEnum::Left);
+					FSlider(Vars::Competitive::CraterCheck::Segments, FSliderEnum::Right);
+					FSlider(Vars::Competitive::CraterCheck::EdgeWidth, FSliderEnum::Left);
+					Dummy({ 0, H::Draw.Scale(4) }); // Add spacing before color pickers
+					FColorPicker(Vars::Competitive::CraterCheck::LethalFillColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::CraterCheck::LethalEdgeColor, FColorPickerEnum::Right);
+					PushTransparent(Vars::Competitive::CraterCheck::OnlyShowLethal.Value);
+					{
+						FColorPicker(Vars::Competitive::CraterCheck::SafeFillColor, FColorPickerEnum::Left);
+						FColorPicker(Vars::Competitive::CraterCheck::SafeEdgeColor, FColorPickerEnum::Right);
+					}
+					PopTransparent();
 				} EndSection();
 			}
 

@@ -21,6 +21,7 @@
 #include "../Features/Visuals/OffScreenIndicators/OffScreenIndicators.h"
 #include "../Features/Visuals/PlayerTrails/PlayerTrails.h"
 #include "../Features/Visuals/SplashRadius/SplashRadius.h"
+#include "../Features/Visuals/CraterCheck/CraterCheck.h"
 #include "../Features/Visuals/SentryESP/SentryESP.h"
 #include "../Features/Visuals/StickyESP/StickyESP.h"
 #include "../Features/Visuals/CritHeals/CritHeals.h"
@@ -76,6 +77,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::OffScreenIndicators.Draw();
 			F::PlayerTrails.Draw();
 			F::SplashRadius.Draw();
+			F::CraterCheck.Draw();
 			F::SentryESP.Draw();
 			F::StickyESP.Draw();
 			F::CritHeals.Draw();
