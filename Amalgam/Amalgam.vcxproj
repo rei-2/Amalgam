@@ -983,6 +983,7 @@
     <ClCompile Include="src\Features\Visuals\FakeAngle\FakeAngle.cpp" />
     <ClCompile Include="src\Features\Visuals\FlatTextures\FlatTextures.cpp" />
     <ClCompile Include="src\Features\Visuals\FocusFire\FocusFire.cpp" />
+    <ClCompile Include="src\Features\Visuals\HiderESP\HiderESP.cpp" />
     <ClCompile Include="src\Features\Visuals\Glow\Glow.cpp" />
     <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
     <ClCompile Include="src\Features\Visuals\HealthBarESP\HealthBarESP.cpp" />
@@ -1307,6 +1308,7 @@
     <ClInclude Include="src\Features\Visuals\FakeAngle\FakeAngle.h" />
     <ClInclude Include="src\Features\Visuals\FlatTextures\FlatTextures.h" />
     <ClInclude Include="src\Features\Visuals\FocusFire\FocusFire.h" />
+    <ClInclude Include="src\Features\Visuals\HiderESP\HiderESP.h" />
     <ClInclude Include="src\Features\Visuals\Glow\Glow.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\Features\Visuals\HealthBarESP\HealthBarESP.h" />

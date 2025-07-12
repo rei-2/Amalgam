@@ -28,6 +28,7 @@
 #include "../Features/Visuals/FocusFire/FocusFire.h"
 #include "../Features/Visuals/PylonESP/PylonESP.h"
 #include "../Features/Visuals/EnemyCam/EnemyCam.h"
+#include "../Features/Visuals/HiderESP/HiderESP.h"
 #include "../Features/Visuals/StickyCam/StickyCam.h"
 #include "../Features/Visuals/FlatTextures/FlatTextures.h"
 #include "../Features/TempShowHealth/TempShowHealth.h"
@@ -85,6 +86,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::CritHeals.Draw();
 			F::FocusFire.Draw();
 			F::PylonESP.Draw();
+			F::HiderESP.Draw();
 			F::TempShowHealth.Run(pLocal);
 			F::FlatTextures.Update();
 			F::Visuals.DrawDebugInfo(pLocal);

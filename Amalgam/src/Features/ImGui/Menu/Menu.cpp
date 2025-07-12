@@ -1547,18 +1547,24 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::FocusFire, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::SentryESP, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::StickyESP, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::SplashRadius, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::CraterCheck, FToggleEnum::Right);
-					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::SplashRadius, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::CraterCheck, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::PlayerTrails, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::CritHeals, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::FlatTextures, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::DisableFreezeCam, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::NoHats, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::HiderESP, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Movement Features"))
 				{
 					FToggle(Vars::Competitive::Features::SafeBhop, FToggleEnum::Left);
+				} EndSection();
+
+				if (Section("Hider ESP"))
+				{
+					FToggle(Vars::Competitive::Features::HiderESP, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Safe Bunnyhop"))
