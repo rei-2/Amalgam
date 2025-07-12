@@ -1634,8 +1634,9 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedWeapons, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::ThirdPersonMouseLook, FToggleEnum::Right);
-					FSlider(Vars::Competitive::SpectateAll::CameraSpeed, FSliderEnum::Left);
-					FSlider(Vars::Competitive::SpectateAll::CameraDistance, FSliderEnum::Right);
+					FToggle(Vars::Competitive::SpectateAll::SpyVision, FToggleEnum::Left);
+					FSlider(Vars::Competitive::SpectateAll::CameraSpeed, FSliderEnum::Right);
+					FSlider(Vars::Competitive::SpectateAll::CameraDistance, FSliderEnum::Left);
 				} EndSection();
 
 				if (Section("Player Trails"))

@@ -1123,6 +1123,7 @@ namespace Vars
 			CVar(HideSpectatedWeapons, "Hide spectated player weapons", false, VISUAL);
 			CVar(ExcludeMapCameras, "Exclude map cameras", true, VISUAL);
 			CVar(ThirdPersonMouseLook, "Mouse look in third person", true, VISUAL);
+			CVar(SpyVision, "Show enemy health/names", true, VISUAL);
 			CVar(CameraSpeed, "Camera speed", 5.0f, VISUAL | SLIDER_CLAMP, 1.0f, 20.0f, 0.5f);
 			CVar(CameraDistance, "Camera distance", 150.0f, VISUAL | SLIDER_CLAMP, 50.0f, 500.0f, 10.0f);
 		SUBNAMESPACE_END(SpectateAll);

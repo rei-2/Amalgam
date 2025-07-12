@@ -215,10 +215,17 @@ void COffScreenIndicators::Draw()
             int avatarSize = arrowSize * 2; // Make avatar bigger than arrow for visibility
             bool avatarDrawn = false;
             
+            // Calculate avatar position
+            int avatarX = finalX - avatarSize/2;
+            int avatarY = finalY - avatarSize/2;
+            
             if (pi.friendsID != 0)
             {
-                // Try to draw Steam avatar for real players
-                H::Draw.Avatar(finalX - avatarSize/2, finalY - avatarSize/2, avatarSize, avatarSize, pi.friendsID, ALIGN_TOPLEFT);
+                // Draw 1-pixel Steam ID color border around Steam avatar
+                H::Draw.LineRect(avatarX - 1, avatarY - 1, avatarSize + 2, avatarSize + 2, playerColor);
+                
+                // Draw Steam avatar for real players
+                H::Draw.Avatar(avatarX, avatarY, avatarSize, avatarSize, pi.friendsID, ALIGN_TOPLEFT);
                 avatarDrawn = true;
             }
             
@@ -228,11 +235,13 @@ void COffScreenIndicators::Draw()
                 int fallbackTexture = GetFallbackAvatarTexture();
                 if (fallbackTexture > 0)
                 {
+                    // Draw 1-pixel Steam ID color border around embedded avatar
+                    H::Draw.LineRect(avatarX - 1, avatarY - 1, avatarSize + 2, avatarSize + 2, playerColor);
+                    
                     // Draw the embedded avatar texture
                     I::MatSystemSurface->DrawSetTexture(fallbackTexture);
                     I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
-                    I::MatSystemSurface->DrawTexturedRect(finalX - avatarSize/2, finalY - avatarSize/2, 
-                                                        finalX + avatarSize/2, finalY + avatarSize/2);
+                    I::MatSystemSurface->DrawTexturedRect(avatarX, avatarY, avatarX + avatarSize, avatarY + avatarSize);
                     avatarDrawn = true;
                 }
             }

@@ -28,6 +28,7 @@
 #include "../Features/Visuals/PylonESP/PylonESP.h"
 #include "../Features/Visuals/EnemyCam/EnemyCam.h"
 #include "../Features/Visuals/FlatTextures/FlatTextures.h"
+#include "../Features/TempShowHealth/TempShowHealth.h"
 #include "../Features/Chat/Chat.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
@@ -80,6 +81,7 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::CritHeals.Draw();
 			F::FocusFire.Draw();
 			F::PylonESP.Draw();
+			F::TempShowHealth.Run(pLocal);
 			F::FlatTextures.Update();
 			F::Visuals.DrawDebugInfo(pLocal);
 		}

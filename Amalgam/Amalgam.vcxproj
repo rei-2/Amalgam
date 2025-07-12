@@ -972,6 +972,7 @@
     <ClCompile Include="src\Features\Simulation\MovementSimulation\MovementSimulation.cpp" />
     <ClCompile Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.cpp" />
     <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
+    <ClCompile Include="src\Features\TempShowHealth\TempShowHealth.cpp" />
     <ClCompile Include="src\Features\Ticks\Ticks.cpp" />
     <ClCompile Include="src\Features\Visuals\Chams\Chams.cpp" />
     <ClCompile Include="src\Features\Visuals\CritHeals\CritHeals.cpp" />
@@ -1293,6 +1294,7 @@
     <ClInclude Include="src\Features\Simulation\MovementSimulation\MovementSimulation.h" />
     <ClInclude Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.h" />
     <ClInclude Include="src\Features\Spectate\Spectate.h" />
+    <ClInclude Include="src\Features\TempShowHealth\TempShowHealth.h" />
     <ClInclude Include="src\Features\Ticks\Ticks.h" />
     <ClInclude Include="src\Features\Visuals\Chams\Chams.h" />
     <ClInclude Include="src\Features\Visuals\CritHeals\CritHeals.h" />
