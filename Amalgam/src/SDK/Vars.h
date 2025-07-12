@@ -924,9 +924,9 @@ namespace Vars
 			CVar(ShowTracers, "Show Tracers", false, VISUAL);
 			CVar(BoxColor, "Box Color", Color_t(255, 165, 0, 255), VISUAL);
 			CVar(TracerColor, "Tracer Color", Color_t(0, 0, 255, 255), VISUAL);
-			CVar(TimeToMark, "Time to Mark (seconds)", 5.5f, VISUAL);
-			CVar(MovementThreshold, "Movement Threshold", 1.0f, VISUAL);
-			CVar(MaxDistance, "Max Distance", 1650.0f, VISUAL);
+			CVar(TimeToMark, "Time to Mark (seconds)", 5.5f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 20.0f, 0.5f);
+			CVar(MovementThreshold, "Movement Threshold", 1.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.1f, 10.0f, 0.1f);
+			CVar(MaxDistance, "Max Distance", 1650.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 100.0f, 5000.0f, 50.0f);
 		SUBNAMESPACE_END(HiderESP);
 
 		SUBNAMESPACE_BEGIN(EnemyCam, Enemy Camera)
