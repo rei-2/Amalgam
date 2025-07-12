@@ -2,7 +2,6 @@
 #include "../../../SDK/SDK.h"
 #include "../../Chat/Chat.h"
 #include <algorithm>
-#include <format>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -429,10 +428,18 @@ void CMarkSpot::Draw()
         return;
     
     // Draw all marks for current map
-    for (const auto& [markId, mark] : m_MarkSpots)
+    for (auto& markPair : m_MarkSpots)
     {
+        auto& mark = markPair.second;
         if (mark.MapName != currentMap)
             continue;
+        
+        // Update and draw pulse rings if enabled
+        if (Vars::Competitive::MarkSpot::ShowPulseRings.Value)
+        {
+            UpdatePulseRings(mark);
+            DrawPulseRings(mark);
+        }
         
         DrawGroundCircle(mark.Position, mark.Color);
         DrawPylon(mark.Position, mark.Color);
@@ -586,4 +593,94 @@ void CMarkSpot::DrawArrow(int centerX, int centerY, float angle, const Color_t& 
                 static_cast<int>(base2.x), static_cast<int>(base2.y), color);
     H::Draw.Line(static_cast<int>(base1.x), static_cast<int>(base1.y),
                 static_cast<int>(base2.x), static_cast<int>(base2.y), color);
+}
+
+void CMarkSpot::UpdatePulseRings(MarkSpotInfo& mark)
+{
+    float currentTime = I::GlobalVars->curtime;
+    float pulseInterval = 1.0f / Vars::Competitive::MarkSpot::PulseRingSpeed.Value; // Convert speed to interval
+    float maxRadius = static_cast<float>(Vars::Competitive::MarkSpot::PulseRingMaxRadius.Value);
+    
+    // Create new pulse ring every second (adjusted by speed)
+    if (mark.PulseRings.empty() || (currentTime - mark.PulseRings.back().StartTime) >= pulseInterval)
+    {
+        PulseRing newRing;
+        newRing.StartTime = currentTime;
+        newRing.CurrentRadius = 0.0f;
+        newRing.Color = mark.Color;
+        mark.PulseRings.push_back(newRing);
+    }
+    
+    // Update existing pulse rings
+    for (auto& ring : mark.PulseRings)
+    {
+        float elapsed = currentTime - ring.StartTime;
+        float progress = elapsed * Vars::Competitive::MarkSpot::PulseRingSpeed.Value;
+        
+        // Expand ring outward
+        ring.CurrentRadius = progress * maxRadius;
+        
+        // Fade out as ring expands
+        float fadeProgress = ring.CurrentRadius / maxRadius;
+        int alpha = static_cast<int>(Vars::Competitive::MarkSpot::PulseRingAlpha.Value * (1.0f - fadeProgress));
+        ring.Color.a = static_cast<byte>(std::max(0, alpha));
+    }
+    
+    // Remove expired rings
+    for (auto it = mark.PulseRings.begin(); it != mark.PulseRings.end();)
+    {
+        if (it->CurrentRadius >= maxRadius)
+        {
+            it = mark.PulseRings.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+}
+
+void CMarkSpot::DrawPulseRings(MarkSpotInfo& mark)
+{
+    // Draw each pulse ring as a circle outline
+    for (const auto& ring : mark.PulseRings)
+    {
+        if (ring.CurrentRadius <= 0.0f || ring.Color.a <= 0)
+            continue;
+        
+        // Create circle points
+        const int segments = 32; // Fixed segments for smooth circles
+        std::vector<Vertex_t> vertices;
+        
+        for (int i = 0; i < segments; i++)
+        {
+            float angle = (2.0f * M_PI * i) / segments;
+            Vec3 worldPoint = mark.Position;
+            worldPoint.x += cos(angle) * ring.CurrentRadius;
+            worldPoint.y += sin(angle) * ring.CurrentRadius;
+            worldPoint.z += 5.0f; // Slightly above ground to avoid z-fighting
+            
+            Vec3 screenPoint;
+            if (SDK::W2S(worldPoint, screenPoint))
+            {
+                vertices.emplace_back(Vertex_t(Vector2D(screenPoint.x, screenPoint.y)));
+            }
+            else
+            {
+                return; // If any point is off-screen, don't draw this ring
+            }
+        }
+        
+        // Only draw if we have enough vertices
+        if (vertices.size() >= 3)
+        {
+            // Check visibility if through walls is disabled
+            if (Vars::Competitive::MarkSpot::ShowThroughWalls.Value || 
+                IsVisible(H::Entities.GetLocal()->GetEyePosition(), mark.Position))
+            {
+                // Draw pulse ring outline
+                H::Draw.LinePolygon(vertices, ring.Color);
+            }
+        }
+    }
 }

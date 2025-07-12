@@ -1136,6 +1136,10 @@ namespace Vars
 			CVar(PylonStartAlpha, "Pylon start alpha", 120, VISUAL | SLIDER_CLAMP, 50, 255, 5);
 			CVar(PylonEndAlpha, "Pylon end alpha", 20, VISUAL | SLIDER_CLAMP, 0, 200, 5);
 			CVar(ShowOffScreenIndicators, "Off-screen indicators", true, VISUAL);
+			CVar(ShowPulseRings, "Show pulse rings", false, VISUAL);
+			CVar(PulseRingSpeed, "Pulse ring speed", 1.0f, VISUAL | SLIDER_CLAMP, 0.5f, 3.0f, 0.1f);
+			CVar(PulseRingMaxRadius, "Pulse ring max radius", 150, VISUAL | SLIDER_CLAMP, 75, 300, 10);
+			CVar(PulseRingAlpha, "Pulse ring alpha", 120, VISUAL | SLIDER_CLAMP, 50, 255, 5);
 		SUBNAMESPACE_END(MarkSpot);
 		
 		SUBNAMESPACE_BEGIN(SpectateAll, Spectate All)

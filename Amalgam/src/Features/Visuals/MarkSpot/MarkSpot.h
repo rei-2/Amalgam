@@ -4,6 +4,13 @@
 #include <unordered_map>
 #include <string>
 
+struct PulseRing
+{
+    float StartTime;
+    float CurrentRadius;
+    Color_t Color;
+};
+
 struct MarkSpotInfo
 {
     Vec3 Position;
@@ -11,6 +18,7 @@ struct MarkSpotInfo
     float CreatedTime;
     std::string SenderSteamID;
     Color_t Color;
+    std::vector<PulseRing> PulseRings;
 };
 
 class CMarkSpot
@@ -37,6 +45,8 @@ private:
     void CleanupExpiredMarks();
     void DrawGroundCircle(const Vec3& position, const Color_t& color);
     void DrawPylon(const Vec3& basePosition, const Color_t& color);
+    void DrawPulseRings(MarkSpotInfo& mark);
+    void UpdatePulseRings(MarkSpotInfo& mark);
     bool IsVisible(const Vec3& fromPos, const Vec3& targetPos);
     void SendMarkSpotMessage(const MarkSpotInfo& mark);
     Color_t GenerateColor(const std::string& steamID);

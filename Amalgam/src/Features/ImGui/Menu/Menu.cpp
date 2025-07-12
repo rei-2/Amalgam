@@ -1628,17 +1628,21 @@ void CMenu::MenuComp(int iTab)
 				if (Section("Mark Spot"))
 				{
 					FToggle(Vars::Competitive::MarkSpot::ShowThroughWalls, FToggleEnum::Left);
-					FSlider(Vars::Competitive::MarkSpot::MarkDuration, FSliderEnum::Right);
-					FSlider(Vars::Competitive::MarkSpot::RateLimit, FSliderEnum::Left);
-					FSlider(Vars::Competitive::MarkSpot::CircleRadius, FSliderEnum::Right);
-					FSlider(Vars::Competitive::MarkSpot::CircleSegments, FSliderEnum::Left);
-					FSlider(Vars::Competitive::MarkSpot::CircleAlpha, FSliderEnum::Right);
-					FSlider(Vars::Competitive::MarkSpot::PylonHeight, FSliderEnum::Left);
-					FSlider(Vars::Competitive::MarkSpot::PylonSegments, FSliderEnum::Right);
-					FSlider(Vars::Competitive::MarkSpot::PylonWidth, FSliderEnum::Left);
-					FSlider(Vars::Competitive::MarkSpot::PylonStartAlpha, FSliderEnum::Right);
-					FSlider(Vars::Competitive::MarkSpot::PylonEndAlpha, FSliderEnum::Left);
-					FToggle(Vars::Competitive::MarkSpot::ShowOffScreenIndicators, FToggleEnum::Right);
+					FToggle(Vars::Competitive::MarkSpot::ShowPulseRings, FToggleEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::MarkDuration, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::RateLimit, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::CircleRadius, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::CircleSegments, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::CircleAlpha, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::PylonHeight, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PylonSegments, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::PylonWidth, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PylonStartAlpha, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::PylonEndAlpha, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PulseRingSpeed, FSliderEnum::Left);
+					FSlider(Vars::Competitive::MarkSpot::PulseRingMaxRadius, FSliderEnum::Right);
+					FSlider(Vars::Competitive::MarkSpot::PulseRingAlpha, FSliderEnum::Left);
+					FToggle(Vars::Competitive::MarkSpot::ShowOffScreenIndicators, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Spectate All"))
