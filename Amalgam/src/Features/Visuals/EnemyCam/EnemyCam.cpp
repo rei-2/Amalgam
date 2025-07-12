@@ -488,12 +488,29 @@ void CEnemyCam::DrawOverlay()
     GetCameraPosition(x, y);
     y -= 20; // Adjust for title bar
     
-    // Draw title bar background
-    H::Draw.FillRect(x, y, GetCameraWidth(), 20, {130, 26, 17, 255});
-    H::Draw.LineRect(x, y, GetCameraWidth(), 20, {235, 64, 52, 255});
+    // Get team color for frame
+    auto pLocal = H::Entities.GetLocal();
+    Color_t frameColor = {235, 64, 52, 255}; // Default red
+    Color_t fillColor = {130, 26, 17, 255}; // Default dark red
     
-    // Draw camera border
-    H::Draw.LineRect(x, y + 20, GetCameraWidth(), GetCameraHeight(), {235, 64, 52, 255});
+    if (pLocal)
+    {
+        frameColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), pLocal->m_iTeamNum(), false);
+        // Make fill color darker by reducing RGB values
+        fillColor = {
+            static_cast<byte>(frameColor.r * 0.55f),
+            static_cast<byte>(frameColor.g * 0.55f), 
+            static_cast<byte>(frameColor.b * 0.55f),
+            255
+        };
+    }
+    
+    // Draw team-colored title bar background
+    H::Draw.FillRect(x, y, GetCameraWidth(), 20, fillColor);
+    H::Draw.LineRect(x, y, GetCameraWidth(), 20, frameColor);
+    
+    // Draw team-colored camera border
+    H::Draw.LineRect(x, y + 20, GetCameraWidth(), GetCameraHeight(), frameColor);
     
     // Draw player info
     if (!m_pTargetPlayer || !I::EngineClient)

@@ -610,10 +610,27 @@ void CStickyCam::DrawOverlay()
 			{255, 255, 255, 200}, {0, 0, 0, 255}, ALIGN_TOPLEFT, "Auto-tracking latest sticky");
 	}
 	
-	// Draw camera outline
-	H::Draw.LineRect(camX, camY, GetCameraWidth(), GetCameraHeight(), {235, 64, 52, 255});
-	H::Draw.LineRect(camX, camY - 20, GetCameraWidth(), 20, {235, 64, 52, 255});
-	H::Draw.FillRect(camX + 1, camY - 19, GetCameraWidth() - 2, 18, {130, 26, 17, 255});
+	// Get team color for frame
+	auto pLocal = H::Entities.GetLocal();
+	Color_t frameColor = {235, 64, 52, 255}; // Default red
+	Color_t fillColor = {130, 26, 17, 255}; // Default dark red
+	
+	if (pLocal)
+	{
+		frameColor = H::Color.GetTeamColor(pLocal->m_iTeamNum(), pLocal->m_iTeamNum(), false);
+		// Make fill color darker by reducing RGB values
+		fillColor = {
+			static_cast<byte>(frameColor.r * 0.55f),
+			static_cast<byte>(frameColor.g * 0.55f), 
+			static_cast<byte>(frameColor.b * 0.55f),
+			255
+		};
+	}
+	
+	// Draw team-colored camera outline
+	H::Draw.LineRect(camX, camY, GetCameraWidth(), GetCameraHeight(), frameColor);
+	H::Draw.LineRect(camX, camY - 20, GetCameraWidth(), 20, frameColor);
+	H::Draw.FillRect(camX + 1, camY - 19, GetCameraWidth() - 2, 18, fillColor);
 }
 
 bool CStickyCam::CheckMaterialsNeedReload()
