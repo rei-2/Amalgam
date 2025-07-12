@@ -919,6 +919,16 @@ namespace Vars
 			CVar(HiderESP, "Hider ESP", true, VISUAL);
 		SUBNAMESPACE_END(Features);
 
+		SUBNAMESPACE_BEGIN(HiderESP, Hider ESP)
+			CVar(ShowBoxes, "Show Boxes", true, VISUAL);
+			CVar(ShowTracers, "Show Tracers", false, VISUAL);
+			CVar(BoxColor, "Box Color", Color_t(255, 165, 0, 255), VISUAL);
+			CVar(TracerColor, "Tracer Color", Color_t(0, 0, 255, 255), VISUAL);
+			CVar(TimeToMark, "Time to Mark (seconds)", 5.5f, VISUAL);
+			CVar(MovementThreshold, "Movement Threshold", 1.0f, VISUAL);
+			CVar(MaxDistance, "Max Distance", 1650.0f, VISUAL);
+		SUBNAMESPACE_END(HiderESP);
+
 		SUBNAMESPACE_BEGIN(EnemyCam, Enemy Camera)
 			CVarEnum(Mode, "Camera mode", 0, VISUAL, nullptr,
 				VA_LIST("Closest", "Healed", "Medic", "Top Score", "Random"),
@@ -1105,7 +1115,6 @@ namespace Vars
 		SUBNAMESPACE_END(CritHeals);
 
 		SUBNAMESPACE_BEGIN(FocusFire, Focus Fire)
-			CVar(DisplayTime, "Display time", 3.0f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 1.0f, 10.0f, 0.5f);
 			CVar(MaxTargets, "Max targets shown", 5, VISUAL | SLIDER_CLAMP, 1, 15, 1);
 			CVar(ShowHealthDrop, "Show health drop", true, VISUAL);
 			CVar(MinAttackers, "Min attackers required", 2, VISUAL | SLIDER_CLAMP, 1, 10, 1);
@@ -1175,7 +1184,6 @@ namespace Vars
 			CVar(HideSpectatedPlayer, "Hide spectated player model", true, VISUAL);
 			CVar(HideSpectatedWeapons, "Hide spectated player weapons", false, VISUAL);
 			CVar(ExcludeMapCameras, "Exclude map cameras", true, VISUAL);
-			CVar(ThirdPersonMouseLook, "Mouse look in third person", true, VISUAL);
 			CVar(SpyVision, "Show enemy health/names", true, VISUAL);
 			CVar(CameraSpeed, "Camera speed", 5.0f, VISUAL | SLIDER_CLAMP, 1.0f, 20.0f, 0.5f);
 			CVar(CameraDistance, "Camera distance", 150.0f, VISUAL | SLIDER_CLAMP, 50.0f, 500.0f, 10.0f);
@@ -1281,7 +1289,6 @@ namespace Vars
 				VA_LIST("Footsteps", "Noisemaker", "Frying pan", "Water"),
 				Footsteps = 1 << 0, Noisemaker = 1 << 1, FryingPan = 1 << 2, Water = 1 << 3);
 			CVar(HitsoundAlways, "Hitsound always", false);
-			CVar(RemoveDSP, "Remove DSP", false);
 			CVar(GiantWeaponSounds, "Giant weapon sounds", false);
 		SUBNAMESPACE_END(Sound);
 

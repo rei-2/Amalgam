@@ -41,12 +41,14 @@ bool CSpectateAll::ShouldSpectate()
     {
         m_vStoredOrigin = pLocal->m_vecOrigin();
         m_bIsSpectating = false;
+        m_bInFreeCam = false;
         m_iCurrentEnemyIndex = 0;
     }
     // Reset when respawning
     else if (!m_bWasAlive && isAlive)
     {
         m_bIsSpectating = false;
+        m_bInFreeCam = false;
     }
     
     m_bWasAlive = isAlive;
@@ -55,12 +57,62 @@ bool CSpectateAll::ShouldSpectate()
 
 SpectateMode CSpectateAll::GetCurrentMode()
 {
-    if (Vars::Competitive::SpectateAll::FreeCamera.Value)
+    // If manually in freecam mode (via mouse2), override other settings
+    if (m_bInFreeCam)
+        return SpectateMode::FREE_CAMERA;
+    else if (Vars::Competitive::SpectateAll::FreeCamera.Value)
         return SpectateMode::FREE_CAMERA;
     else if (Vars::Competitive::SpectateAll::EnemySpectate.Value)
         return SpectateMode::ENEMY;
     else
         return SpectateMode::NORMAL;
+}
+
+void CSpectateAll::HandleMouseInput()
+{
+    // Handle mouse input for player cycling and freecam
+    static bool mouse1Pressed = false;
+    static bool mouse2Pressed = false;
+    bool mouse1Down = GetAsyncKeyState(VK_LBUTTON) & 0x8000;
+    bool mouse2Down = GetAsyncKeyState(VK_RBUTTON) & 0x8000;
+    
+    // Mouse2 (right click) - toggle freecam mode
+    if (mouse2Down && !mouse2Pressed)
+    {
+        m_bInFreeCam = !m_bInFreeCam;
+        
+        // When entering freecam, store current camera position
+        if (m_bInFreeCam && m_pCurrentSpectatedPlayer)
+        {
+            // Store the current spectated player's position as starting point
+            m_vStoredOrigin = m_pCurrentSpectatedPlayer->GetEyePosition();
+        }
+        else if (m_bInFreeCam)
+        {
+            // If no current player, use stored origin or current view
+            // m_vStoredOrigin should already be set from initialization
+        }
+    }
+    
+    // Mouse1 (left click) - cycle players (and exit freecam if active)
+    if (mouse1Down && !mouse1Pressed)
+    {
+        // If in freecam, exit freecam and cycle to next player
+        if (m_bInFreeCam)
+        {
+            m_bInFreeCam = false;
+        }
+        
+        // Cycle to next enemy player
+        auto enemies = H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES);
+        if (!enemies.empty())
+        {
+            m_iCurrentEnemyIndex = (m_iCurrentEnemyIndex + 1) % enemies.size();
+        }
+    }
+    
+    mouse1Pressed = mouse1Down;
+    mouse2Pressed = mouse2Down;
 }
 
 CTFPlayer* CSpectateAll::GetNextEnemyPlayer()
@@ -72,20 +124,6 @@ CTFPlayer* CSpectateAll::GetNextEnemyPlayer()
     auto enemies = H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES);
     if (enemies.empty())
         return nullptr;
-        
-    // Manual switching with Mouse1 (left click) - only in enemy spectate mode
-    SpectateMode currentMode = GetCurrentMode();
-    if (currentMode == SpectateMode::ENEMY)
-    {
-        static bool mousePressed = false;
-        bool mouseDown = GetAsyncKeyState(VK_LBUTTON) & 0x8000;
-        
-        if (mouseDown && !mousePressed)
-        {
-            m_iCurrentEnemyIndex = (m_iCurrentEnemyIndex + 1) % enemies.size();
-        }
-        mousePressed = mouseDown;
-    }
     
     // Ensure valid index
     if (m_iCurrentEnemyIndex >= enemies.size())
@@ -147,25 +185,17 @@ void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
         
         if (m_bThirdPersonMode)
         {
-            // Use mouse look in third person if enabled
-            if (Vars::Competitive::SpectateAll::ThirdPersonMouseLook.Value)
+            // Always use mouse look in third person
+            // Initialize third person angles if switching
+            static bool wasFirstPerson = true;
+            if (wasFirstPerson)
             {
-                // Initialize third person angles if switching
-                static bool wasFirstPerson = true;
-                if (wasFirstPerson)
-                {
-                    m_vThirdPersonAngles = pTarget->GetEyeAngles();
-                    wasFirstPerson = false;
-                }
-                
-                // Use stored third person angles for mouse look
-                pView->angles = m_vThirdPersonAngles;
+                m_vThirdPersonAngles = pTarget->GetEyeAngles();
+                wasFirstPerson = false;
             }
-            else
-            {
-                // Use player's eye angles
-                pView->angles = pTarget->GetEyeAngles();
-            }
+            
+            // Use stored third person angles for mouse look
+            pView->angles = m_vThirdPersonAngles;
             
             ApplyThirdPersonView(pView);
         }
@@ -323,11 +353,14 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
     if (!pLocal)
         return;
     
+    // Handle mouse input for freecam and player cycling
+    HandleMouseInput();
+    
     // Handle different spectate modes
     SpectateMode mode = GetCurrentMode();
     
-    // Handle Space key toggle for first/third person (only in Enemy Spectate mode)
-    if (mode == SpectateMode::ENEMY)
+    // Handle Space key toggle for first/third person (only in Enemy Spectate mode and not in freecam)
+    if (mode == SpectateMode::ENEMY && !m_bInFreeCam)
     {
         static bool spacePressed = false;
         bool spaceDown = GetAsyncKeyState(VK_SPACE) & 0x8000;
@@ -345,7 +378,7 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         spacePressed = spaceDown;
         
         // Handle mouse input for third person mode
-        if (m_bThirdPersonMode && Vars::Competitive::SpectateAll::ThirdPersonMouseLook.Value)
+        if (m_bThirdPersonMode)
         {
             // Get mouse delta (this would need proper mouse input handling)
             // For now, we'll use a simple approach with engine's view angles
@@ -367,9 +400,9 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
             lastEngineAngles = engineAngles;
         }
     }
-    else
+    else if (!m_bInFreeCam)
     {
-        // Clear spectated player when not in enemy spectate mode
+        // Clear spectated player when not in enemy spectate mode and not in freecam
         m_pCurrentSpectatedPlayer = nullptr;
     }
     

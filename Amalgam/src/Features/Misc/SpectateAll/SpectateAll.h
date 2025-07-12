@@ -22,10 +22,12 @@ private:
     bool m_bIsSpectating = false;
     bool m_bWasAlive = true;
     bool m_bThirdPersonMode = true;  // Default to third person when spectating enemies
+    bool m_bInFreeCam = false;       // Track if currently in freecam mode
     int m_iCurrentEnemyIndex = 0;
     CTFPlayer* m_pCurrentSpectatedPlayer = nullptr;
     
     // Helper functions
+    void HandleMouseInput();
     CTFPlayer* GetNextEnemyPlayer();
     void HandleFreeCamera(CViewSetup* pView);
     void HandleEnemySpectate(CViewSetup* pView);

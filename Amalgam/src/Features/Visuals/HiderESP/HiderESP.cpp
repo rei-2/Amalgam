@@ -58,7 +58,7 @@ bool CHiderESP::IsPlayerInRange(CTFPlayer* pPlayer, CTFPlayer* pLocal)
     Vec3 playerPos = pPlayer->m_vecOrigin();
     Vec3 localPos = pLocal->m_vecOrigin();
     
-    return DistanceBetweenVectors(playerPos, localPos) <= MAX_DISTANCE;
+    return DistanceBetweenVectors(playerPos, localPos) <= Vars::Competitive::HiderESP::MaxDistance.Value;
 }
 
 void CHiderESP::UpdatePlayerData(CTFPlayer* pPlayer)
@@ -87,13 +87,13 @@ void CHiderESP::UpdatePlayerData(CTFPlayer* pPlayer)
     
     float distance = DistanceBetweenVectors(currentPos, data.LastPosition);
     
-    if (distance > UPDATE_POSITION_THRESHOLD)
+    if (distance > Vars::Competitive::HiderESP::MovementThreshold.Value)
     {
         data.LastPosition = currentPos;
         data.LastMoveTime = currentTime;
         data.IsHider = false;
     }
-    else if (currentTime - data.LastMoveTime > TIME_TO_MARK_AS_HIDER)
+    else if (currentTime - data.LastMoveTime > Vars::Competitive::HiderESP::TimeToMark.Value)
     {
         data.IsHider = true;
     }
@@ -108,7 +108,7 @@ void CHiderESP::DrawPlayerESP(CTFPlayer* pPlayer, const HiderData& data)
     int centerY = screenH / 2;
     
     // Draw box
-    if (SHOW_BOXES)
+    if (Vars::Competitive::HiderESP::ShowBoxes.Value)
     {
         Vec3 mins = pPlayer->m_vecMins();
         Vec3 maxs = pPlayer->m_vecMaxs();
@@ -127,17 +127,17 @@ void CHiderESP::DrawPlayerESP(CTFPlayer* pPlayer, const HiderData& data)
             int x2 = static_cast<int>(screenBottom.x + width / 2);
             int y2 = static_cast<int>(screenBottom.y);
             
-            H::Draw.LineRect(x1, y1, width, height, BOX_COLOR);
+            H::Draw.LineRect(x1, y1, x2 - x1, y2 - y1, Vars::Competitive::HiderESP::BoxColor.Value);
         }
     }
     
     // Draw tracer
-    if (SHOW_TRACERS)
+    if (Vars::Competitive::HiderESP::ShowTracers.Value)
     {
         Vec3 screenPos;
         if (SDK::W2S(playerPos, screenPos))
         {
-            H::Draw.Line(centerX, screenH, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y), TRACER_COLOR);
+            H::Draw.Line(centerX, centerY, static_cast<int>(screenPos.x), static_cast<int>(screenPos.y), Vars::Competitive::HiderESP::TracerColor.Value);
         }
     }
 }

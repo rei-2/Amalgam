@@ -375,3 +375,6 @@ element-web/
 matrix-js-sdk/
 matrix-sdk-crypto-wasm/
 vodozemac/
+
+# Source SDK
+source-sdk-2013/

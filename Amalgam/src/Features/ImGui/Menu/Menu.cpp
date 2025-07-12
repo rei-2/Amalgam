@@ -1475,7 +1475,6 @@ void CMenu::MenuMisc(int iTab)
 				{
 					FDropdown(Vars::Misc::Sound::Block);
 					FToggle(Vars::Misc::Sound::HitsoundAlways, FToggleEnum::Left);
-					FToggle(Vars::Misc::Sound::RemoveDSP, FToggleEnum::Right);
 					FToggle(Vars::Misc::Sound::GiantWeaponSounds);
 				} EndSection();
 				if (Section("Game", 8))
@@ -1562,15 +1561,22 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::SafeBhop, FToggleEnum::Left);
 				} EndSection();
 
-				if (Section("Hider ESP"))
-				{
-					FToggle(Vars::Competitive::Features::HiderESP, FToggleEnum::Left);
-				} EndSection();
 
 				if (Section("Safe Bunnyhop"))
 				{
 					FSlider(Vars::Competitive::SafeBhop::SuccessRate, FSliderEnum::Left);
 					FToggle(Vars::Competitive::SafeBhop::SafetyEnabled, FToggleEnum::Right);
+				} EndSection();
+
+				if (Section("Hider ESP"))
+				{
+					FToggle(Vars::Competitive::HiderESP::ShowBoxes, FToggleEnum::Left);
+					FToggle(Vars::Competitive::HiderESP::ShowTracers, FToggleEnum::Right);
+					FColorPicker(Vars::Competitive::HiderESP::BoxColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Competitive::HiderESP::TracerColor, FColorPickerEnum::Right);
+					FSlider(Vars::Competitive::HiderESP::TimeToMark, FSliderEnum::Left);
+					FSlider(Vars::Competitive::HiderESP::MovementThreshold, FSliderEnum::Right);
+					FSlider(Vars::Competitive::HiderESP::MaxDistance, FSliderEnum::Left);
 				} EndSection();
 
 				if (Section("Enemy Camera"))
@@ -1681,7 +1687,6 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedPlayer, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedWeapons, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Left);
-					FToggle(Vars::Competitive::SpectateAll::ThirdPersonMouseLook, FToggleEnum::Right);
 					PushTransparent(true); // Always greyed out - feature is broken  
 					{
 						FToggle(Vars::Competitive::SpectateAll::SpyVision, FToggleEnum::Left);
@@ -1868,7 +1873,6 @@ void CMenu::MenuComp(int iTab)
 
 				if (Section("Focus Fire"))
 				{
-					FSlider(Vars::Competitive::FocusFire::DisplayTime, FSliderEnum::Left);
 					FSlider(Vars::Competitive::FocusFire::MaxTargets, FSliderEnum::Right);
 					FSlider(Vars::Competitive::FocusFire::MinAttackers, FSliderEnum::Left);
 					FSlider(Vars::Competitive::FocusFire::TrackerTimeWindow, FSliderEnum::Right);
