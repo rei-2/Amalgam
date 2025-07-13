@@ -62,47 +62,36 @@ if errorlevel 1 (
 echo [1/3] Creating obfuscated copy...
 set "OBFUSCATED_FILE=%OUTPUT_DIR%\%~n1_obfuscated%~x1"
 
-:: Create ProtectMyTooling configuration with chained packers for better evasion
-echo Creating advanced multi-packer config...
-(
-echo {
-echo   "config": {
-echo     "verbose": false,
-echo     "debug": false,
-echo     "timeout": 120,
-echo     "arch": "x64"
-echo   }
-echo }
-) > "tools\temp_config.json"
-
-echo [2/3] Running ProtectMyTooling with chained packers...
+echo [2/3] Running ProtectMyTooling with config file...
 
 :: Determine the correct directory for ProtectMyTooling
 if "%PMT_FOUND%"=="tools\ProtectMyTooling\ProtectMyTooling.py" (
     set "PMT_DIR=tools\ProtectMyTooling"
     set "PMT_RELATIVE_INPUT=..\..\%INPUT_FILE%"
     set "PMT_RELATIVE_OUTPUT=..\..\%OBFUSCATED_FILE%"
+    set "CONFIG_PATH=..\..\config\ProtectMyTooling.yaml"
 ) else (
     for %%I in ("%PMT_FOUND%") do set "PMT_DIR=%%~dpI"
     set "PMT_RELATIVE_INPUT=%INPUT_FILE%"
     set "PMT_RELATIVE_OUTPUT=%OBFUSCATED_FILE%"
+    set "CONFIG_PATH=config\ProtectMyTooling.yaml"
 )
 
 pushd "%PMT_DIR%"
 
-:: Use multiple packers in chain for better AV evasion
-:: Fallback chain if advanced packers not available: hyperion,upx
-python ProtectMyTooling.py hyperion,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%"
+:: Use config file approach with chained packers for better AV evasion
+echo Running with chain: sgn,amber,upx
+python ProtectMyTooling.py sgn,amber,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
 if errorlevel 1 (
     echo Advanced packing failed, trying simple UPX...
-    python ProtectMyTooling.py upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%"
+    python ProtectMyTooling.py upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
 )
 
 if errorlevel 1 (
     echo WARNING: ProtectMyTooling failed, using original file
     popd
-    del "tools\temp_config.json" >nul 2>&1
-    goto :eof
+    echo Build-time obfuscation skipped, but build will continue with runtime protection
+    exit /b 0
 )
 
 popd
@@ -118,7 +107,7 @@ if exist "%OBFUSCATED_FILE%" (
 )
 
 :: Cleanup
-del "tools\temp_config.json" >nul 2>&1
+echo Cleanup completed
 
 echo.
 echo Obfuscation process completed.

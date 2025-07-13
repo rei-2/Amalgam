@@ -165,9 +165,21 @@ if errorlevel 1 (
             exit /b 1
         )
     )
+    echo Restoring packages with downloaded NuGet...
     nuget.exe restore Amalgam.sln
+    if errorlevel 1 (
+        echo ERROR: Failed to restore NuGet packages
+        echo Retrying with detailed output...
+        nuget.exe restore Amalgam.sln -Verbosity detailed
+    )
 ) else (
+    echo Restoring packages with system NuGet...
     nuget restore Amalgam.sln
+    if errorlevel 1 (
+        echo ERROR: Failed to restore NuGet packages
+        echo Retrying with detailed output...
+        nuget restore Amalgam.sln -Verbosity detailed
+    )
 )
 
 echo.
@@ -197,7 +209,7 @@ echo - Blackbone (nested submodule in AmalgamLoader)
 echo - ProtectMyTooling (build-time obfuscation framework)
 echo.
 echo Build Features:
-echo - Multi-layer build-time obfuscation (Hyperion + UPX chain)
+echo - Multi-layer build-time obfuscation (SGN + Amber + UPX chain)
 echo - Runtime signature randomization with embedded hash detection
 echo - Generic naming (no identifying strings)
 echo - Enhanced AV evasion through chained packers
