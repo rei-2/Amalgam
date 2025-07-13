@@ -22,8 +22,6 @@ If you prefer to set up manually or the automated script fails:
 - **Visual Studio 2022** (Community, Professional, or Enterprise)
   - Install with "Desktop development with C++" workload
 - **Git** (for cloning dependencies)
-- **Python 3.x** (optional, for build-time obfuscation)
-  - Required for ProtectMyTooling integration
 
 ### Steps
 
@@ -46,17 +44,7 @@ If you prefer to set up manually or the automated script fails:
    git submodule update --init --recursive
    ```
 
-4. **Setup ProtectMyTooling (optional):**
-   ```cmd
-   mkdir tools
-   cd tools
-   git clone https://github.com/mgeeky/ProtectMyTooling.git
-   cd ProtectMyTooling
-   pip install -r requirements.txt
-   cd ../..
-   ```
-
-5. **Restore NuGet packages:**
+4. **Restore NuGet packages:**
    ```cmd
    nuget restore Amalgam.sln
    ```
@@ -86,10 +74,9 @@ output/x64/[Configuration]/AmalgamLoader.exe
 ```
 
 **Note:** AmalgamLoader.exe is the recommended injection tool. It's built automatically and includes:
-- Multi-layer build-time obfuscation (Hyperion + UPX chain via ProtectMyTooling)
 - Runtime signature randomization (applied on first run)
 - Hash-based processing detection (self-contained, no external files)
-- Enhanced AV evasion through chained packers and runtime modification
+- Enhanced evasion through runtime modification
 
 ## Troubleshooting
 

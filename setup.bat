@@ -108,8 +108,8 @@ cd ..
 
 :: Initialize submodules
 echo.
-echo [5/6] Initializing submodules...
-echo Initializing AmalgamLoader, Blackbone, and ProtectMyTooling submodules...
+echo [5/5] Initializing submodules...
+echo Initializing AmalgamLoader and Blackbone submodules...
 git submodule update --init --recursive
 if errorlevel 1 (
     echo ERROR: Failed to initialize submodules
@@ -119,40 +119,9 @@ if errorlevel 1 (
     echo Submodules initialized successfully
 )
 
-:: Setup ProtectMyTooling (from submodule)
-echo.
-echo [6/7] Setting up ProtectMyTooling...
-if exist "tools\ProtectMyTooling\ProtectMyTooling.py" (
-    echo ProtectMyTooling submodule found, setting up dependencies...
-    
-    :: Check for Python
-    python --version >nul 2>&1
-    if errorlevel 1 (
-        echo WARNING: Python not found! ProtectMyTooling requires Python 3.x
-        echo Please install Python from: https://www.python.org/downloads/
-        echo You can still build without obfuscation (runtime signature randomization will still work)
-    ) else (
-        echo Installing Python requirements for ProtectMyTooling...
-        cd tools\ProtectMyTooling
-        pip install -r requirements.txt
-        if errorlevel 1 (
-            echo WARNING: Failed to install Python requirements
-            echo ProtectMyTooling may not work properly
-            echo Build will fall back to runtime signature randomization only
-        ) else (
-            echo ProtectMyTooling setup completed successfully
-        )
-        cd ..\..
-    )
-) else (
-    echo WARNING: ProtectMyTooling submodule not properly initialized
-    echo Run 'git submodule update --init --recursive' manually
-    echo Build will use runtime signature randomization only
-)
-
 :: Restore NuGet packages
 echo.
-echo [7/7] Restoring NuGet packages...
+echo [6/6] Restoring NuGet packages...
 where nuget >nul 2>&1
 if errorlevel 1 (
     echo WARNING: NuGet not found in PATH
@@ -191,7 +160,7 @@ echo You can now:
 echo 1. Open Amalgam.sln in Visual Studio 2022
 echo 2. Build the project (Release/x64 recommended)
 echo 3. Output will be in: output\x64\Release\
-echo 4. AmalgamLoader.exe will be automatically obfuscated during build
+echo 4. AmalgamLoader.exe includes runtime signature randomization
 echo.
 echo Available build configurations:
 echo - Release
@@ -206,13 +175,10 @@ echo - boost (via NuGet)
 echo - libolm (embedded in source)
 echo - AmalgamLoader (submodule with signature randomization)
 echo - Blackbone (nested submodule in AmalgamLoader)
-echo - ProtectMyTooling (build-time obfuscation framework)
 echo.
 echo Build Features:
-echo - Multi-layer build-time obfuscation (SGN + Amber + UPX chain)
 echo - Runtime signature randomization with embedded hash detection
 echo - Generic naming (no identifying strings)
-echo - Enhanced AV evasion through chained packers
 echo - Self-contained processing state (no external marker files)
 echo.
 pause
