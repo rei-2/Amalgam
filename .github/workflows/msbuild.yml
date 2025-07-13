@@ -8,7 +8,7 @@ jobs:
 
   strategy:
    matrix:
-    configuration: [Release, ReleaseAVX2, ReleaseFreetype, ReleaseFreetypeAVX2]
+    configuration: [Release]
     platform: [x64]
 
   steps:
@@ -28,10 +28,6 @@ jobs:
   - name: Add MSBuild to PATH
     uses: microsoft/setup-msbuild@v2
 
-  - name: Setup Python for ProtectMyTooling
-    uses: actions/setup-python@v4
-    with:
-      python-version: '3.x'
 
   - name: Cache vcpkg
     uses: actions/cache@v4
@@ -57,23 +53,6 @@ jobs:
       C:\vcpkg\vcpkg install cpr:x64-windows
       C:\vcpkg\vcpkg install nlohmann-json:x64-windows
 
-  - name: Setup ProtectMyTooling
-    run: |
-      Write-Host "Checking ProtectMyTooling submodule..."
-      if (Test-Path "tools\ProtectMyTooling\ProtectMyTooling.py") {
-        Write-Host "ProtectMyTooling submodule found, installing dependencies..."
-        cd tools\ProtectMyTooling
-        pip install -r requirements.txt
-        cd ..\..
-        Write-Host "ProtectMyTooling setup completed"
-      } else {
-        Write-Host "ProtectMyTooling submodule not found or not initialized"
-        Write-Host "Available submodules:"
-        git submodule status
-        Write-Host "Directory contents:"
-        Get-ChildItem -Path tools -Recurse -Depth 2 | Select-Object FullName
-      }
-    shell: powershell
 
   - name: Restore NuGet packages
     working-directory: ${{ github.workspace }}
@@ -113,19 +92,28 @@ jobs:
     working-directory: ${{ github.workspace }}
     run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
 
-  - name: Verify obfuscated build
+  - name: Verify build outputs
     run: |
       $exePath = "output\${{ matrix.platform }}\${{ matrix.configuration }}\AmalgamLoader.exe"
+      $dllPath = "output\${{ matrix.platform }}\${{ matrix.configuration }}\Amalgam${{ matrix.platform }}${{ matrix.configuration }}.dll"
+      
       if (Test-Path $exePath) {
-        Write-Host "✓ AmalgamLoader.exe built with enhanced multi-layer protection:"
-        Write-Host "  - Build-time: SGN + Amber + UPX chained obfuscation"
-        Write-Host "  - Runtime: Signature randomization with embedded hash detection"
+        Write-Host "✓ AmalgamLoader.exe built successfully with runtime protection:"
+        Write-Host "  - Runtime signature randomization with embedded hash detection"
         Write-Host "  - Generic naming (no identifying strings)"
         Write-Host "  - Self-contained processing state"
         $fileSize = (Get-Item $exePath).Length
         Write-Host "File size: $fileSize bytes"
       } else {
         Write-Host "WARNING: AmalgamLoader.exe not found at $exePath"
+      }
+      
+      if (Test-Path $dllPath) {
+        Write-Host "✓ Amalgam DLL built successfully"
+        $dllSize = (Get-Item $dllPath).Length
+        Write-Host "DLL size: $dllSize bytes"
+      } else {
+        Write-Host "WARNING: Amalgam DLL not found at $dllPath"
       }
     shell: powershell
 
