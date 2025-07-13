@@ -105,8 +105,3 @@ jobs:
      path: |
        output/${{ matrix.platform }}/${{ matrix.configuration }}/*.dll
        output/${{ matrix.platform }}/${{ matrix.configuration }}/*.exe
-
-  - uses: actions/upload-artifact@v4
-    with:
-     name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}PDB
-     path: output/${{ matrix.platform }}/${{ matrix.configuration }}/*.pdb
