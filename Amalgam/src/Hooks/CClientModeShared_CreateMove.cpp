@@ -57,10 +57,14 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
 
-	// correct tick_count for fakeinterp / nointerp
-	pCmd->tick_count += TICKS_TO_TIME(F::Backtrack.GetFakeInterp()) - (Vars::Visuals::Removals::Interpolation.Value ? 0 : TICKS_TO_TIME(G::Lerp));
-	if (G::OriginalMove.m_iButtons & IN_DUCK) // lol
-		pCmd->buttons |= IN_DUCK;
+	if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
+	{	// correct tick_count for fakeinterp / nointerp
+		pCmd->tick_count += TIME_TO_TICKS(F::Backtrack.GetFakeInterp());
+		if (!Vars::Visuals::Removals::Interpolation.Value && Vars::Visuals::Removals::NoLerp.Value)
+			pCmd->tick_count -= TIME_TO_TICKS(G::Lerp);
+	}
+	if (G::OriginalMove.m_iButtons & IN_DUCK)
+		pCmd->buttons |= IN_DUCK; // lol
 
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
