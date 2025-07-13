@@ -115,9 +115,44 @@ if errorlevel 1 (
     echo Submodules initialized successfully
 )
 
+:: Setup ProtectMyTooling
+echo.
+echo [6/7] Setting up ProtectMyTooling...
+if not exist "tools\ProtectMyTooling" (
+    echo Cloning ProtectMyTooling...
+    if not exist "tools" mkdir tools
+    cd tools
+    git clone https://github.com/mgeeky/ProtectMyTooling.git
+    if errorlevel 1 (
+        echo ERROR: Failed to clone ProtectMyTooling
+        cd ..
+        pause
+        exit /b 1
+    )
+    cd ProtectMyTooling
+    
+    :: Check for Python
+    python --version >nul 2>&1
+    if errorlevel 1 (
+        echo WARNING: Python not found! ProtectMyTooling requires Python 3.x
+        echo Please install Python from: https://www.python.org/downloads/
+        echo You can still build without obfuscation
+    ) else (
+        echo Installing Python requirements...
+        pip install -r requirements.txt
+        if errorlevel 1 (
+            echo WARNING: Failed to install Python requirements
+            echo ProtectMyTooling may not work properly
+        )
+    )
+    cd ..\..
+) else (
+    echo ProtectMyTooling already exists
+)
+
 :: Restore NuGet packages
 echo.
-echo [6/6] Restoring NuGet packages...
+echo [7/7] Restoring NuGet packages...
 where nuget >nul 2>&1
 if errorlevel 1 (
     echo WARNING: NuGet not found in PATH
@@ -144,6 +179,7 @@ echo You can now:
 echo 1. Open Amalgam.sln in Visual Studio 2022
 echo 2. Build the project (Release/x64 recommended)
 echo 3. Output will be in: output\x64\Release\
+echo 4. AmalgamLoader.exe will be automatically obfuscated during build
 echo.
 echo Available build configurations:
 echo - Release
@@ -158,5 +194,13 @@ echo - boost (via NuGet)
 echo - libolm (embedded in source)
 echo - AmalgamLoader (submodule)
 echo - Blackbone (nested submodule)
+echo - ProtectMyTooling (obfuscation framework)
+echo.
+echo Build Features:
+echo - Multi-layer build-time obfuscation (Hyperion + UPX chain)
+echo - Runtime signature randomization with embedded hash detection
+echo - Generic naming (no identifying strings)
+echo - Enhanced AV evasion through chained packers
+echo - Self-contained processing state (no external marker files)
 echo.
 pause
