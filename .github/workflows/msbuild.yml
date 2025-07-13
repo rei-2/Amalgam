@@ -77,7 +77,23 @@ jobs:
 
   - name: Restore NuGet packages
     working-directory: ${{ github.workspace }}
-    run: nuget restore Amalgam.sln
+    run: |
+      Write-Host "Restoring NuGet packages with timeout..."
+      $timeout = 300
+      $job = Start-Job -ScriptBlock { nuget restore Amalgam.sln }
+      if (Wait-Job $job -Timeout $timeout) {
+        Receive-Job $job
+        if ($job.State -eq "Failed") {
+          Write-Host "NuGet restore failed, retrying..."
+          nuget restore Amalgam.sln -Verbosity detailed
+        }
+      } else {
+        Write-Host "NuGet restore timed out, retrying with detailed output..."
+        Stop-Job $job
+        nuget restore Amalgam.sln -Verbosity detailed
+      }
+      Remove-Job $job -Force
+    shell: powershell
 
   - name: Build
     working-directory: ${{ github.workspace }}
