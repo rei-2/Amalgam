@@ -93,9 +93,7 @@ bool CNoSpreadHitscan::ParsePlayerPerf(std::string sMsg)
 		if (flNewServerTime < m_flServerTime)
 			return true;
 
-		auto pNetChan = I::EngineClient->GetNetChannelInfo();
-		bool bLoopback = pNetChan && pNetChan->IsLoopback();
-
+		bool bLoopback = SDK::IsLoopback();
 		m_flServerTime = flNewServerTime;
 
 		if (bLoopback)

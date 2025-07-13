@@ -199,13 +199,9 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::Ping && pResource && !bLocal)
 			{
-				auto pNetChan = I::EngineClient->GetNetChannelInfo();
-				if (pNetChan && !pNetChan->IsLoopback())
-				{
-					int iPing = pResource->m_iPing(iIndex);
-					if (iPing && (iPing >= 200 || iPing <= 5))
-						tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("{}MS", iPing), Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
-				}
+				int iPing = pResource->m_iPing(iIndex);
+				if (iPing && (iPing >= 200 || iPing <= 5))
+					tCache.m_vText.emplace_back(ESPTextEnum::Right, std::format("{}MS", iPing), Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value);
 			}
 
 			if (Vars::ESP::Player.Value & Vars::ESP::PlayerEnum::KDR && pResource && !bLocal)
