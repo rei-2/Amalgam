@@ -209,7 +209,7 @@ struct FailedDevice
     static const int64_t MAX_RETRY_DELAY_MS = 30000; // 30 seconds
     
     int64_t GetNextRetryTime() const {
-        int64_t delay = BASE_RETRY_DELAY_MS * (1 << std::min(retry_count, 5));
+        int64_t delay = BASE_RETRY_DELAY_MS * (1LL << std::min(retry_count, 5));
         return last_attempt_time + std::min(delay, MAX_RETRY_DELAY_MS);
     }
 };

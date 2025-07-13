@@ -3035,6 +3035,7 @@ bool CChat::HttpUploadInitialKeys()
                     }
                 }
             } catch (const std::exception& e) {
+                (void)e; // Suppress unused variable warning in release builds
                 DEBUG_MSG("Could not parse key upload response: " + std::string(e.what()));
             }
             
@@ -3143,6 +3144,7 @@ bool CChat::HttpSendRoomKeyRequest(const std::string& room_id, const std::string
         return success;
         
     } catch (const std::exception& e) {
+        (void)e; // Suppress unused variable warning in release builds
         DEBUG_MSG("Room key request error: " + std::string(e.what()));
         return false;
     }
