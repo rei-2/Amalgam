@@ -79,8 +79,22 @@ jobs:
     working-directory: ${{ github.workspace }}
     run: |
       Write-Host "Restoring NuGet packages with timeout..."
+      $slnPath = "${{ github.workspace }}\Amalgam.sln"
+      Write-Host "Solution path: $slnPath"
+      
+      if (!(Test-Path $slnPath)) {
+        Write-Host "ERROR: Solution file not found at $slnPath"
+        Get-ChildItem ${{ github.workspace }} | Select-Object Name
+        exit 1
+      }
+      
       $timeout = 300
-      $job = Start-Job -ScriptBlock { nuget restore Amalgam.sln }
+      $job = Start-Job -ScriptBlock { 
+        param($path)
+        Set-Location (Split-Path $path)
+        nuget restore (Split-Path $path -Leaf)
+      } -ArgumentList $slnPath
+      
       if (Wait-Job $job -Timeout $timeout) {
         Receive-Job $job
         if ($job.State -eq "Failed") {
