@@ -44,25 +44,25 @@ static inline bool CheckDXLevel()
 
 void CCore::AppendFailText(const char* sMessage)
 {
-	ssFailStream << std::format("{}\n", sMessage);
+	m_ssFailStream << std::format("{}\n", sMessage);
 	OutputDebugStringA(std::format("{}\n", sMessage).c_str());
 }
 
 void CCore::LogFailText()
 {
-	ssFailStream << "\nBuilt @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
-	ssFailStream << "Ctrl + C to copy. \n";
+	m_ssFailStream << "\nBuilt @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
+	m_ssFailStream << "Ctrl + C to copy. \n";
 	try
 	{
 		std::ofstream file;
 		file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
-		file << ssFailStream.str() + "\n\n\n";
+		file << m_ssFailStream.str() + "\n\n\n";
 		file.close();
-		ssFailStream << "Logged to Amalgam\\fail_log.txt. ";
+		m_ssFailStream << "Logged to Amalgam\\fail_log.txt. ";
 	}
 	catch (...) {}
 
-	SDK::Output("Failed to load", ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
+	SDK::Output("Failed to load", m_ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
 }
 
 void CCore::Load()
