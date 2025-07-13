@@ -570,9 +570,7 @@ void CVisuals::DrawHitboxes(int iStore)
 	{
 		vHitboxes.clear();
 
-		auto pNetChan = I::EngineClient->GetNetChannelInfo();
-		bool bLocalhost = pNetChan && pNetChan->IsLoopback();
-
+		bool bLocalhost = SDK::IsLoopback();
 		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();

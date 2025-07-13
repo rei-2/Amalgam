@@ -16,11 +16,11 @@ public:
 
 	bool m_bUnload = false;
 
-private:
 	bool m_bFailed = false;
 	bool m_bFailed2 = false;
+	std::stringstream m_ssFailStream;
 
-	std::stringstream ssFailStream;
+private:
 };
 
 ADD_FEATURE_CUSTOM(CCore, Core, U);

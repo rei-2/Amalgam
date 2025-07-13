@@ -1202,7 +1202,11 @@ void CMenu::MenuVisuals(int iTab)
 				if (Section("Removals", 8))
 				{
 					FToggle(Vars::Visuals::Removals::Interpolation, FToggleEnum::Left);
-					FToggle(Vars::Visuals::Removals::NoLerp, FToggleEnum::Right);
+					PushTransparent(Vars::Visuals::Removals::Interpolation.Value);
+					{
+						FToggle(Vars::Visuals::Removals::NoLerp, FToggleEnum::Right);
+					}
+					PopTransparent();
 					FToggle(Vars::Visuals::Removals::Disguises, FToggleEnum::Left);
 					FToggle(Vars::Visuals::Removals::Taunts, FToggleEnum::Right);
 					FToggle(Vars::Visuals::Removals::Scope, FToggleEnum::Left);

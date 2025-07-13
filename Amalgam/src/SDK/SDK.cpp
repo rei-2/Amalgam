@@ -389,6 +389,12 @@ bool SDK::PredictOrigin(Vec3& vOut, Vec3& vOrigin, Vec3 vVelocity, float flLaten
 	return !trace.DidHit();
 }
 
+bool SDK::IsLoopback()
+{
+	auto pNetChan = I::EngineClient->GetNetChannelInfo();
+	return pNetChan && pNetChan->IsLoopback();
+}
+
 int SDK::GetRoundState()
 {
 	if (auto pGameRules = I::TFGameRules())

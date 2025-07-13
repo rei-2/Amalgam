@@ -88,7 +88,7 @@ namespace SDK
 	void RandomSeed(int iSeed);
 	int RandomInt(int iMinVal = 0, int iMaxVal = 0x7FFF);
 	float RandomFloat(float flMinVal = 0.f, float flMaxVal = 1.f);
-	
+
 	bool W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways = false);
 	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr);
 	bool IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin);
@@ -104,6 +104,7 @@ namespace SDK
 	Vec3 PredictOrigin(Vec3& vOrigin, Vec3 vVelocity, float flLatency, bool bTrace = true, Vec3 vMins = {}, Vec3 vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
 	bool PredictOrigin(Vec3& vOut, Vec3& vOrigin, Vec3 vVelocity, float flLatency, bool bTrace = true, Vec3 vMins = {}, Vec3 vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
 
+	bool IsLoopback();
 	int GetRoundState();
 	int GetWinningTeam();
 	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType = nullptr);

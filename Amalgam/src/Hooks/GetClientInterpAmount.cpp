@@ -12,7 +12,7 @@ MAKE_HOOK(GetClientInterpAmount, S::GetClientInterpAmount(), float,
 		return CALL_ORIGINAL();
 #endif
 
-	if (Vars::Visuals::Removals::NoLerp.Value)
+	if (Vars::Visuals::Removals::NoLerp.Value && !Vars::Visuals::Removals::Interpolation.Value)
 		return CALL_ORIGINAL();
 
 	static const auto dwDesired1 = S::CNetGraphPanel_DrawTextFields_GetClientInterpAmount_Call1();

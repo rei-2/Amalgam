@@ -20,7 +20,7 @@ struct Frame
 	std::string m_sName = "";
 };
 
-static std::deque<Frame> StackTrace(PCONTEXT context)
+static std::deque<Frame> StackTrace(PCONTEXT pContext)
 {
 	HANDLE hProcess = GetCurrentProcess();
 	HANDLE hThread = GetCurrentThread();
@@ -30,22 +30,21 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 	
 	SymSetOptions(SYMOPT_LOAD_LINES);
 
-	STACKFRAME64 frame = {};
-	frame.AddrPC.Offset = context->Rip;
-	frame.AddrFrame.Offset = context->Rbp;
-	frame.AddrStack.Offset = context->Rsp;
-	frame.AddrPC.Mode = AddrModeFlat;
-	frame.AddrFrame.Mode = AddrModeFlat;
-	frame.AddrStack.Mode = AddrModeFlat;
+	STACKFRAME64 tStackFrame = {};
+	tStackFrame.AddrPC.Offset = pContext->Rip;
+	tStackFrame.AddrFrame.Offset = pContext->Rbp;
+	tStackFrame.AddrStack.Offset = pContext->Rsp;
+	tStackFrame.AddrPC.Mode = AddrModeFlat;
+	tStackFrame.AddrFrame.Mode = AddrModeFlat;
+	tStackFrame.AddrStack.Mode = AddrModeFlat;
 
 	std::deque<Frame> vTrace = {};
-	while (StackWalk64(IMAGE_FILE_MACHINE_AMD64, hProcess, hThread, &frame, context, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
+	while (StackWalk64(IMAGE_FILE_MACHINE_AMD64, hProcess, hThread, &tStackFrame, pContext, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
 	{
 		Frame tFrame = {};
+		tFrame.m_uAddress = tStackFrame.AddrPC.Offset;
 
-		tFrame.m_uAddress = frame.AddrPC.Offset;
-
-		if (auto hBase = HINSTANCE(SymGetModuleBase64(hProcess, frame.AddrPC.Offset)))
+		if (auto hBase = HINSTANCE(SymGetModuleBase64(hProcess, tStackFrame.AddrPC.Offset)))
 		{
 			tFrame.m_uBase = uintptr_t(hBase);
 
@@ -60,13 +59,13 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 			DWORD dwOffset = 0;
 			IMAGEHLP_LINE64 line = {};
 			line.SizeOfStruct = sizeof(IMAGEHLP_LINE64);
-			if (SymGetLineFromAddr64(hProcess, frame.AddrPC.Offset, &dwOffset, &line))
+			if (SymGetLineFromAddr64(hProcess, tStackFrame.AddrPC.Offset, &dwOffset, &line))
 			{
 				tFrame.m_sFile = line.FileName;
 				tFrame.m_uLine = line.LineNumber;
-				auto find = tFrame.m_sFile.rfind("\\");
-				if (find != std::string::npos)
-					tFrame.m_sFile.replace(0, find + 1, "");
+				auto iFind = tFrame.m_sFile.rfind("\\");
+				if (iFind != std::string::npos)
+					tFrame.m_sFile.replace(0, iFind + 1, "");
 			}
 		}
 
@@ -76,7 +75,7 @@ static std::deque<Frame> StackTrace(PCONTEXT context)
 			auto symbol = PIMAGEHLP_SYMBOL64(buf);
 			symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64) + 255;
 			symbol->MaxNameLength = 254;
-			if (SymGetSymFromAddr64(hProcess, frame.AddrPC.Offset, &dwOffset, symbol))
+			if (SymGetSymFromAddr64(hProcess, tStackFrame.AddrPC.Offset, &dwOffset, symbol))
 				tFrame.m_sName = symbol->Name;
 		}
 
@@ -104,8 +103,8 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	mAddresses[ExceptionInfo->ExceptionRecord->ExceptionAddress] = true;
 
 	std::stringstream ssErrorStream;
-	ssErrorStream << std::format("Error: {:#X}\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-	ssErrorStream << std::format("Address: {:#X}\n\n", uintptr_t(ExceptionInfo->ExceptionRecord->ExceptionAddress));
+	ssErrorStream << std::format("Error: {:#x}\n\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+
 	ssErrorStream << std::format("RIP: {:#x}\n", ExceptionInfo->ContextRecord->Rip);
 	ssErrorStream << std::format("RAX: {:#x}\n", ExceptionInfo->ContextRecord->Rax);
 	ssErrorStream << std::format("RCX: {:#x}\n", ExceptionInfo->ContextRecord->Rcx);

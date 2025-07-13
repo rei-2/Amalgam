@@ -19,11 +19,7 @@ void CReadPacketState::Restore()
 void CNetworkFix::FixInputDelay(bool bFinalTick)
 {
 	static auto CL_ReadPackets = U::Hooks.m_mHooks["CL_ReadPackets"];
-	if (!I::EngineClient->IsInGame() || !Vars::Misc::Game::NetworkFix.Value || !CL_ReadPackets)
-		return;
-
-	auto pNetChan = I::EngineClient->GetNetChannelInfo();
-	if (pNetChan && pNetChan->IsLoopback())
+	if (!Vars::Misc::Game::NetworkFix.Value || !I::EngineClient->IsInGame() || SDK::IsLoopback() || !CL_ReadPackets)
 		return;
 
 	CReadPacketState Backup = {};
@@ -37,11 +33,7 @@ void CNetworkFix::FixInputDelay(bool bFinalTick)
 
 bool CNetworkFix::ShouldReadPackets()
 {
-	if (!I::EngineClient->IsInGame() || !Vars::Misc::Game::NetworkFix.Value)
-		return true;
-
-	auto pNetChan = I::EngineClient->GetNetChannelInfo();
-	if (pNetChan && pNetChan->IsLoopback())
+	if (!Vars::Misc::Game::NetworkFix.Value || !I::EngineClient->IsInGame() || SDK::IsLoopback())
 		return true;
 
 	m_State.Restore();
