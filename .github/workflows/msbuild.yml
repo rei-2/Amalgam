@@ -15,6 +15,15 @@ jobs:
   - uses: actions/checkout@v4
     with:
       submodules: recursive
+      token: ${{ secrets.GITHUB_TOKEN }}
+
+  - name: Initialize and update submodules
+    run: |
+      Write-Host "Initializing submodules..."
+      git submodule update --init --recursive
+      Write-Host "Submodule status:"
+      git submodule status
+    shell: powershell
 
   - name: Add MSBuild to PATH
     uses: microsoft/setup-msbuild@v2
@@ -50,15 +59,19 @@ jobs:
 
   - name: Setup ProtectMyTooling
     run: |
-      if (!(Test-Path "tools\ProtectMyTooling")) {
-        New-Item -ItemType Directory -Force -Path "tools"
-        cd tools
-        git clone https://github.com/mgeeky/ProtectMyTooling.git
-        cd ProtectMyTooling
+      Write-Host "Checking ProtectMyTooling submodule..."
+      if (Test-Path "tools\ProtectMyTooling\ProtectMyTooling.py") {
+        Write-Host "ProtectMyTooling submodule found, installing dependencies..."
+        cd tools\ProtectMyTooling
         pip install -r requirements.txt
         cd ..\..
+        Write-Host "ProtectMyTooling setup completed"
       } else {
-        Write-Host "ProtectMyTooling already exists"
+        Write-Host "ProtectMyTooling submodule not found or not initialized"
+        Write-Host "Available submodules:"
+        git submodule status
+        Write-Host "Directory contents:"
+        Get-ChildItem -Path tools -Recurse -Depth 2 | Select-Object FullName
       }
     shell: powershell
 

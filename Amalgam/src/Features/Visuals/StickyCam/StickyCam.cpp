@@ -304,7 +304,7 @@ void CStickyCam::UpdateStickies()
 		return;
 	
 	// Clean up invalid stickies
-	for (int i = m_Stickies.size() - 1; i >= 0; i--)
+	for (int i = static_cast<int>(m_Stickies.size()) - 1; i >= 0; i--)
 	{
 		if (!m_Stickies[i].pSticky || m_Stickies[i].pSticky->IsDormant())
 		{
@@ -361,7 +361,7 @@ void CStickyCam::UpdateStickies()
 	}
 	
 	// Clean up visited stickies list - remove any that are no longer in our stickies list
-	for (int i = m_VisitedStickies.size() - 1; i >= 0; i--)
+	for (int i = static_cast<int>(m_VisitedStickies.size()) - 1; i >= 0; i--)
 	{
 		bool found = false;
 		for (const auto& sticky : m_Stickies)

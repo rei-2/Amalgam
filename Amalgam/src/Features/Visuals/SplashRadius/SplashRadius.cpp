@@ -697,8 +697,8 @@ std::vector<Vec3> CSplashRadius::ComputeConvexHull(std::vector<Vec3> points)
     }
     
     // Build upper hull
-    int lowerHullSize = hull.size();
-    for (int i = points.size() - 2; i >= 0; i--)
+    int lowerHullSize = static_cast<int>(hull.size());
+    for (int i = static_cast<int>(points.size()) - 2; i >= 0; i--)
     {
         const auto& p = points[i];
         while (hull.size() > lowerHullSize)

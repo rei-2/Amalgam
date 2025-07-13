@@ -299,7 +299,7 @@ void CAmmoTracker::DrawHudOverlay(const Vec3& vPlayerPos)
         const auto& [info, fTimeLeft] = vNearbySupplies[i];
         
         // Calculate position for this circle (offset left for multiple items)
-        int iCircleX = iStartX - (i * (iHudCircleSize * 2 + iHudSpacing)) + iHudCircleSize;
+        int iCircleX = iStartX - (static_cast<int>(i) * (iHudCircleSize * 2 + iHudSpacing)) + iHudCircleSize;
         int iCircleY = iStartY + iHudCircleSize;
         
         // Get colors
@@ -349,8 +349,8 @@ void CAmmoTracker::DrawClockFill(int iCenterX, int iCenterY, int iRadius, float 
     vertices.emplace_back(Vertex_t({ { static_cast<float>(iCenterX), static_cast<float>(iCenterY) } }));
     
     // Calculate pie slice
-    float flStartAngle = -90.0f * M_PI / 180.0f; // Start at top
-    float flEndAngle = flStartAngle + (2.0f * M_PI * flPercentage);
+    float flStartAngle = -90.0f * static_cast<float>(M_PI) / 180.0f; // Start at top
+    float flEndAngle = flStartAngle + (2.0f * static_cast<float>(M_PI) * flPercentage);
     float flStep = (flEndAngle - flStartAngle) / iVertices;
     
     // Add edge vertices

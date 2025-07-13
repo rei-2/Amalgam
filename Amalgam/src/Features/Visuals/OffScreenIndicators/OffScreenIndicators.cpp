@@ -318,7 +318,7 @@ std::vector<unsigned char> COffScreenIndicators::DecodeBase64(const std::string&
             {
                 size_t pos = chars.find(base64[i + j]);
                 if (pos != std::string::npos)
-                    temp = (temp << 6) | pos;
+                    temp = (temp << 6) | static_cast<unsigned int>(pos);
                 else
                     temp <<= 6;
             }
