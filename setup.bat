@@ -209,7 +209,7 @@ echo - Blackbone (nested submodule in AmalgamLoader)
 echo - ProtectMyTooling (build-time obfuscation framework)
 echo.
 echo Build Features:
-echo - Multi-layer build-time obfuscation (SGN + Amber + UPX chain)
+echo - Multi-layer build-time obfuscation (PE2SHC + SGN + UPX chain)
 echo - Runtime signature randomization with embedded hash detection
 echo - Generic naming (no identifying strings)
 echo - Enhanced AV evasion through chained packers

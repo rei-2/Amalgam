@@ -79,12 +79,16 @@ if "%PMT_FOUND%"=="tools\ProtectMyTooling\ProtectMyTooling.py" (
 
 pushd "%PMT_DIR%"
 
-:: Use config file approach with chained packers for better AV evasion
-echo Running with chain: sgn,amber,upx
-python ProtectMyTooling.py sgn,amber,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
+:: Use config file approach with PE packers for better AV evasion
+echo Running with chain: pe2shc,sgn,upx (PE to shellcode conversion + SGN)
+python ProtectMyTooling.py pe2shc,sgn,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
 if errorlevel 1 (
-    echo Advanced packing failed, trying simple UPX...
-    python ProtectMyTooling.py upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
+    echo PE2SHC+SGN chain failed, trying amber,upx...
+    python ProtectMyTooling.py amber,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
+    if errorlevel 1 (
+        echo Advanced packing failed, trying simple UPX...
+        python ProtectMyTooling.py upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%"
+    )
 )
 
 if errorlevel 1 (
@@ -112,7 +116,7 @@ echo Cleanup completed
 echo.
 echo Obfuscation process completed.
 echo The executable now has:
-echo - Multi-layer build-time obfuscation (Hyperion + UPX chain)
+echo - Multi-layer build-time obfuscation (PE2SHC + SGN + UPX chain)
 echo - Runtime signature randomization (on first run)
 echo - Generic naming throughout (no identifying strings)
 echo - Enhanced AV evasion through chained packers
