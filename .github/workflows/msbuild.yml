@@ -82,7 +82,7 @@ jobs:
         $fileSize = (Get-Item $exePath).Length
         Write-Host "File size: $fileSize bytes"
       } else {
-        Write-Host "⚠ AmalgamLoader.exe not found at $exePath"
+        Write-Host "WARNING: AmalgamLoader.exe not found at $exePath"
       }
     shell: powershell
 
