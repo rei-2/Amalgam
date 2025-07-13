@@ -79,17 +79,9 @@ if "%PMT_FOUND%"=="tools\ProtectMyTooling\ProtectMyTooling.py" (
 
 pushd "%PMT_DIR%"
 
-:: Use config file approach with PE packers for better AV evasion
+:: Use PE2SHC + SGN + UPX chain - no fallbacks, succeed or fail
 echo Running with chain: pe2shc,sgn,upx (PE to shellcode conversion + SGN)
 python ProtectMyTooling.py pe2shc,sgn,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
-if errorlevel 1 (
-    echo PE2SHC+SGN chain failed, trying amber,upx...
-    python ProtectMyTooling.py amber,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
-    if errorlevel 1 (
-        echo Advanced packing failed, trying simple UPX...
-        python ProtectMyTooling.py upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%"
-    )
-)
 
 if errorlevel 1 (
     echo WARNING: ProtectMyTooling failed, using original file
