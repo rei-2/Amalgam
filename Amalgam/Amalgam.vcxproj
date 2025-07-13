@@ -1562,4 +1562,15 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\boost.1.86.0\build\boost.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\boost.1.86.0\build\boost.targets'))" />
   </Target>
+  <Target Name="CopyProtectMyToolingConfig" BeforeTargets="Build">
+    <PropertyGroup>
+      <ConfigSource>..\config\ProtectMyTooling.yaml</ConfigSource>
+      <ConfigDest>..\tools\ProtectMyTooling\config\ProtectMyTooling.yaml</ConfigDest>
+    </PropertyGroup>
+    <Message Text="Copying ProtectMyTooling config from main repo to submodule..." Importance="high" />
+    <MakeDir Directories="..\tools\ProtectMyTooling\config" Condition="!Exists('..\tools\ProtectMyTooling\config')" />
+    <Copy SourceFiles="$(ConfigSource)" DestinationFiles="$(ConfigDest)" Condition="Exists('$(ConfigSource)')" />
+    <Message Text="ProtectMyTooling config copied successfully" Importance="high" Condition="Exists('$(ConfigSource)')" />
+    <Warning Text="ProtectMyTooling config not found at $(ConfigSource)" Condition="!Exists('$(ConfigSource)')" />
+  </Target>
 </Project>
