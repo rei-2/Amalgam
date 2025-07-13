@@ -1,0 +1,230 @@
+
+verbose: 1
+debug: 1
+timeout: 300
+
+ioc: True
+watermark: []
+
+check_av_command: 'powershell.exe -c "(Get-MpPreference).DisableRealtimeMonitoring -eq $true"'
+disable_av_command: 'powershell.exe -c "Set-MpPreference -DisableRealtimeMonitioning $true; Add-MpPreference -ExclusionPath (Get-Location).Path"'
+enable_av_command: 'powershell.exe -c "Set-MpPreference -DisableRealtimeMonitoring $false"'
+
+#
+# Preset packers chain in GUI upon input file open - Enhanced chains for better evasion
+#
+gui_default_chain_pe: sgn,amber,upx
+gui_default_chain_dotnet: confuserex,sgn
+gui_default_chain_shellcode: sgn,donut
+
+
+# UPX (x86, x64) - Enhanced for AV evasion
+upx_path: "contrib\\upx\\upx-3.96-win32\\upx.exe"
+upx_compress: 9
+upx_corrupt: 1
+upx_args: "--ultra-brute --overlay=copy" 
+
+
+# peCloakCapstone (x86)
+#pecloak_python_path: python2
+#pecloak_script_path: "contrib\\peCloakCapstone\\peCloak.py"
+#pecloak_args: 
+
+
+# Hyperion (x86, x64)
+hyperion_path: "contrib\\Hyperion\\hyperion.exe"
+hyperion_args: 
+
+#
+# Open-Source ConfuserEx-v1.5.0 forked by mkaring
+#
+confuserex_path: "contrib\\ConfuserEx\\active-mkaring\\Confuser.CLI.exe"
+confuserex_project_file: "contrib\\_project-files\\ConfuserEx\\mkaring-maximum.crproj"
+
+#
+# RedBackdoorer
+#
+# we'll used default one
+backdoor_path:
+backdoor_save: 1
+backdoor_run: 2
+backdoor_args:
+
+#
+# peresed
+#
+# we'll used default one: "python3 -m pe_tools.peresed"
+peresed_path:
+
+#
+# Call Obfuscator
+#
+callobf_path_x86: "contrib\\CallObf\\cobf86.exe"
+callobf_path_x64: "contrib\\CallObf\\cobf64.exe"
+callobf_config: generate-automatically
+#callobf_config: "contrib\\_project-files\\CallObf\\configExample.ini"
+
+#
+# Amber
+#
+amber_path: "contrib\\Amber\\amber.exe"
+amber_args: 
+
+#
+# AtomPePacker
+#
+atompepacker_path: "contrib\\AtomPePacker\\PePacker.exe"
+atompepacker_args: 
+
+#
+# Donut
+#
+donut_path: "contrib\\donut\\donut.exe"
+donut_args: 
+donut_engine: '3'
+donut_cmdline:
+donut_thread: False
+donut_cmdline_unicode: False
+donut_method:
+donut_appdomain:
+donut_class:
+donut_exit: '1'
+
+#
+# Freeze
+#
+#freeze_path: "contrib\\Freeze\\Freeze.exe"
+#freeze_console: False
+#freeze_encrypt: False
+#freeze_export: ''
+#freeze_process: ''
+#freeze_sandbox: False
+
+#
+# Mangle
+#
+mangle_path: "contrib\\Mangle\\Mangle.exe"
+mangle_strip_go: True
+mangle_args: 
+mangle_increase: 0
+mangle_certificate: 'contrib\\Mangle\\signed-executables\\WINWORD.EXE'
+
+#
+# MPRESS
+#
+mpress_path: "contrib\\MPRESS\\mpress.exe"
+
+#
+# NimPackt-v1
+#
+nimpackt_path: "contrib\\NimPackt-v1\\NimPackt.py"
+nimpackt_args: 
+nimpackt_bake_args:
+nimpackt_nopatchamsi: False
+nimpackt_nodisableetw: False
+nimpackt_nounhook: False
+nimpackt_nosyscalls: False
+nimpackt_sleep: False
+nimpackt_32bit: False
+nimpackt_showconsole: False
+nimpackt_inject_remote: False
+nimpackt_target:
+nimpackt_existing: False
+
+#
+# Nimcrypt2
+#
+nimcrypt2_path: "contrib\\Nimcrypt2\\nimcrypt.exe"
+nimcrypt2_args: 
+nimcrypt2_unhook: True
+nimcrypt2_process: 
+nimcrypt2_encrypt_strings: True
+nimcrypt2_get_syscallstub: False
+nimcrypt2_llvm_obfuscator: False
+nimcrypt2_no_randomization: False
+nimcrypt2_no_sandbox: False
+nimcrypt2_no_ppid_spoof: False
+
+#
+# NimSyscallPacker
+#
+#nimsyscall_path: "contrib\\NimSyscallPacker\\NimSyscallLoader.exe"
+#nimsyscall_args:
+
+#
+# PEunion
+#
+peunion_path: "contrib\\PEunion\\peubuild.exe"
+peunion_native86_project_path: "contrib\\_project-files\\PEunion\\native86.peu"
+peunion_dotnet86_project_path: "contrib\\_project-files\\PEunion\\dotnet86.peu"
+peunion_dotnet64_project_path: "contrib\\_project-files\\PEunion\\dotnet64.peu"
+
+
+#
+# ScareCrow
+#
+scarecrow_path: "contrib\\ScareCrow\\ScareCrow.exe"
+scarecrow_args: 
+scarecrow_loader:
+scarecrow_domain:
+scarecrow_valid:
+scarecrow_password:
+scarecrow_inject:
+scarecrow_sandbox: False
+scarecrow_sign: False
+
+#
+# pe2shc
+#
+pe2shc_path: "contrib\\pe2shc\\pe2shc.exe"
+pe2shc_args: 
+
+#
+# sRDI
+#
+srdi_path: 'contrib\\sRDI\\ConvertToShellcode.py'
+srdi_function: ''
+srdi_data: ''
+srdi_obfuscate_imports: True
+srdi_import_delay: 2
+srdi_clear_header: True
+srdi_pass_shellcode_base: True
+
+#
+# sgn
+#
+sgn_path: "contrib\\sgn\\sgn.exe"
+sgn_args: 
+
+#
+# jadams/Packer64
+#
+packer64_path: "contrib\\packer64\\Packer.exe"
+
+#
+# Charterino/AsStrongAsFuck
+#   1 - ConstantsEncoding
+#   2 - ModuleRenaming
+#   3 - HiddenNamespace
+#   4 - ReferenceProxy
+#   5 - RenameObfuscation
+#   6 - MutatinObf
+#   7 - NumbersToModuleReference
+#   8 - JunkProtection
+#   9 - ControlFlowObfuscation
+#
+asstrongasfuck_path: "contrib\\AsStrongAsFuck\\AsStrongAsFuck.exe"
+asstrongasfuck_opts: "235789"
+
+
+#
+# AnErrupTion/LoGiC.NET
+#
+logicnet_path: "contrib\\LoGIC.NET\\LoGiC.NET.exe"
+
+
+#
+# Invoke-Obfuscation by Daniel Bohannon
+#
+invobf_path: "contrib\\Invoke-Obfuscation\\Invoke-Obfuscation.ps1"
+invobf_powershell: powershell.exe
