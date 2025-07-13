@@ -79,9 +79,9 @@ if "%PMT_FOUND%"=="tools\ProtectMyTooling\ProtectMyTooling.py" (
 
 pushd "%PMT_DIR%"
 
-:: Use PE2SHC + SGN + UPX chain - no fallbacks, succeed or fail
-echo Running with chain: pe2shc,sgn,upx (PE to shellcode conversion + SGN)
-python ProtectMyTooling.py pe2shc,sgn,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
+:: Use SGN + Amber + UPX chain as configured in ProtectMyTooling.yaml
+echo Running with chain: sgn,amber,upx (as per gui_default_chain_pe)
+python ProtectMyTooling.py sgn,amber,upx "%PMT_RELATIVE_INPUT%" "%PMT_RELATIVE_OUTPUT%" -c "%CONFIG_PATH%"
 
 if errorlevel 1 (
     echo WARNING: ProtectMyTooling failed, using original file
@@ -108,7 +108,7 @@ echo Cleanup completed
 echo.
 echo Obfuscation process completed.
 echo The executable now has:
-echo - Multi-layer build-time obfuscation (PE2SHC + SGN + UPX chain)
+echo - Multi-layer build-time obfuscation (SGN + Amber + UPX chain)
 echo - Runtime signature randomization (on first run)
 echo - Generic naming throughout (no identifying strings)
 echo - Enhanced AV evasion through chained packers

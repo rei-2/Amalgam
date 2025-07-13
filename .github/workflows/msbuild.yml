@@ -118,7 +118,7 @@ jobs:
       $exePath = "output\${{ matrix.platform }}\${{ matrix.configuration }}\AmalgamLoader.exe"
       if (Test-Path $exePath) {
         Write-Host "✓ AmalgamLoader.exe built with enhanced multi-layer protection:"
-        Write-Host "  - Build-time: PE2SHC + SGN + UPX chained obfuscation"
+        Write-Host "  - Build-time: SGN + Amber + UPX chained obfuscation"
         Write-Host "  - Runtime: Signature randomization with embedded hash detection"
         Write-Host "  - Generic naming (no identifying strings)"
         Write-Host "  - Self-contained processing state"
