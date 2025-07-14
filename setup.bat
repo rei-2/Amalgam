@@ -78,7 +78,7 @@ if not exist "vcpkg.exe" (
 echo.
 echo [4/5] Installing dependencies...
 echo Installing cpr (C++ Requests library)...
-vcpkg.exe install cpr:x64-windows-static-md
+vcpkg.exe install cpr:x64-windows-static
 if errorlevel 1 (
     echo ERROR: Failed to install cpr
     pause
@@ -86,7 +86,7 @@ if errorlevel 1 (
 )
 
 echo Installing nlohmann-json...
-vcpkg.exe install nlohmann-json:x64-windows-static-md
+vcpkg.exe install nlohmann-json:x64-windows-static
 if errorlevel 1 (
     echo ERROR: Failed to install nlohmann-json
     pause
@@ -169,8 +169,8 @@ echo - ReleaseFreetype
 echo - ReleaseFreetypeAVX2
 echo.
 echo Dependencies installed:
-echo - cpr (C++ Requests) - x64-windows-static-md
-echo - nlohmann-json - x64-windows-static-md
+echo - cpr (C++ Requests) - x64-windows-static
+echo - nlohmann-json - x64-windows-static
 echo - boost (via NuGet)
 echo - libolm (embedded in source)
 echo - AmalgamLoader (submodule with signature randomization)
