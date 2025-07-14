@@ -13,13 +13,19 @@ MAKE_HOOK(CSkyboxView_Enable3dSkyboxFog, S::CSkyboxView_Enable3dSkyboxFog(), voi
 	if (!(Vars::Visuals::World::Modulations.Value & Vars::Visuals::World::ModulationsEnum::Fog) || I::EngineClient->IsTakingScreenshot() && Vars::Visuals::UI::CleanScreenshots.Value)
 		return CALL_ORIGINAL(rcx);
 
-	if (!Vars::Colors::FogModulation.Value.a)
-		return;
-
 	CALL_ORIGINAL(rcx);
 	if (auto pRenderContext = I::MaterialSystem->GetRenderContext())
 	{
-		float blend[3] = { float(Vars::Colors::FogModulation.Value.r) / 255.f, float(Vars::Colors::FogModulation.Value.g) / 255.f, float(Vars::Colors::FogModulation.Value.b) / 255.f };
-		pRenderContext->FogColor3fv(blend);
+		if (Vars::Colors::FogModulation.Value.a)
+		{
+			pRenderContext->FogColor3ub(Vars::Colors::FogModulation.Value.r, Vars::Colors::FogModulation.Value.g, Vars::Colors::FogModulation.Value.b);
+
+			float flRatio = 255.f / Vars::Colors::FogModulation.Value.a;
+			float flStart, flEnd; pRenderContext->GetFogDistances(&flStart, &flEnd, nullptr);
+			pRenderContext->FogStart(flStart * flRatio);
+			pRenderContext->FogEnd(flEnd * flRatio);
+		}
+		else
+			pRenderContext->FogMode(MATERIAL_FOG_NONE);
 	}
 }
