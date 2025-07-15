@@ -768,7 +768,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;__CONFIGURATION__="Release";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;CURL_STATICLIB;__CONFIGURATION__="Release";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -799,7 +799,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;IMGUI_ENABLE_FREETYPE;AMALGAM_CUSTOM_FONTS;__CONFIGURATION__="ReleaseFreetype";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;CURL_STATICLIB;IMGUI_ENABLE_FREETYPE;AMALGAM_CUSTOM_FONTS;__CONFIGURATION__="ReleaseFreetype";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -830,7 +830,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;__CONFIGURATION__="ReleaseAVX2";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;CURL_STATICLIB;__CONFIGURATION__="ReleaseAVX2";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -861,7 +861,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;IMGUI_ENABLE_FREETYPE;AMALGAM_CUSTOM_FONTS;__CONFIGURATION__="ReleaseFreetypeAVX2";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_DISABLE_CONSTEXPR_MUTEX_CONSTRUCTOR;CURL_STATICLIB;IMGUI_ENABLE_FREETYPE;AMALGAM_CUSTOM_FONTS;__CONFIGURATION__="ReleaseFreetypeAVX2";__PLATFORM__="x64";%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -1552,6 +1552,10 @@
   <ItemGroup>
     <Library Include="include\freetype\freetype.lib" />
   </ItemGroup>
+  <PropertyGroup>
+    <VcpkgEnabled>true</VcpkgEnabled>
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\boost.1.87.0\build\boost.targets" Condition="Exists('..\packages\boost.1.87.0\build\boost.targets')" />

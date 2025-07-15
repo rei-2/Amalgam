@@ -64,7 +64,7 @@ jobs:
 
   - name: Install vcpkg dependencies
     run: |
-      Write-Host "Installing static dependencies for embedding..."
+      Write-Host "Installing static dependencies for Amalgam DLL embedding..."
       
       Write-Host "Installing cpr:x64-windows-static..."
       C:\vcpkg\vcpkg install cpr:x64-windows-static
@@ -79,10 +79,6 @@ jobs:
         Write-Host "ERROR: Failed to install nlohmann-json:x64-windows-static"
         exit 1
       }
-      
-      Write-Host "Installing dynamic dependencies for fallback..."
-      C:\vcpkg\vcpkg install cpr:x64-windows
-      C:\vcpkg\vcpkg install nlohmann-json:x64-windows
       
       Write-Host "Verifying installed packages..."
       C:\vcpkg\vcpkg list
@@ -131,10 +127,7 @@ jobs:
 
   - name: Build
     working-directory: ${{ github.workspace }}
-    run: |
-      $env:VCPKG_DEFAULT_TRIPLET = "x64-windows-static"
-      msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }} /p:VcpkgTriplet=x64-windows-static /p:ForceImportBeforeCppTargets="C:\vcpkg\scripts\buildsystems\msbuild\vcpkg.targets"
-    shell: powershell
+    run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
 
   - name: Verify build outputs
     run: |
