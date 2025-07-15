@@ -139,14 +139,12 @@ jobs:
       $dllPath = "output\${{ matrix.platform }}\${{ matrix.configuration }}\Amalgam${{ matrix.platform }}${{ matrix.configuration }}.dll"
       
       if (Test-Path $exePath) {
-        Write-Host "✓ AmalgamLoader.exe built successfully with runtime protection:"
-        Write-Host "  - Runtime signature randomization with embedded hash detection"
-        Write-Host "  - Generic naming without identifying strings"
-        Write-Host "  - Self-contained processing state"
+        Write-Host "✓ AmalgamLoader.exe built successfully"
         $fileSize = (Get-Item $exePath).Length
         Write-Host "File size: $fileSize bytes"
       } else {
-        Write-Host "WARNING: AmalgamLoader.exe not found at $exePath"
+        Write-Host "ERROR: AmalgamLoader.exe not found"
+        exit 1
       }
       
       if (Test-Path $dllPath) {
@@ -154,7 +152,7 @@ jobs:
         $dllSize = (Get-Item $dllPath).Length
         Write-Host "DLL size: $dllSize bytes"
       } else {
-        Write-Host "WARNING: Amalgam DLL not found at $dllPath"
+        Write-Host "WARNING: Amalgam DLL not found"
       }
     shell: powershell
 
