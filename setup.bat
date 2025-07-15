@@ -93,9 +93,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo Installing additional dependencies for dynamic linking...
-vcpkg.exe install cpr:x64-windows
-vcpkg.exe install nlohmann-json:x64-windows
+echo Note: Dynamic versions not needed - using static linking only...
 
 echo Integrating vcpkg with Visual Studio...
 vcpkg.exe integrate install
@@ -169,16 +167,17 @@ echo - ReleaseFreetype
 echo - ReleaseFreetypeAVX2
 echo.
 echo Dependencies installed:
-echo - cpr (C++ Requests) - x64-windows-static
-echo - nlohmann-json - x64-windows-static
+echo - cpr (C++ Requests) - x64-windows-static (for Amalgam DLL only)
+echo - nlohmann-json - x64-windows-static (for Amalgam DLL only)
 echo - boost (via NuGet)
 echo - libolm (embedded in source)
-echo - AmalgamLoader (submodule with signature randomization)
+echo - AmalgamLoader (submodule - standalone executable)
 echo - Blackbone (nested submodule in AmalgamLoader)
 echo.
 echo Build Features:
 echo - Runtime signature randomization with embedded hash detection
 echo - Generic naming (no identifying strings)
 echo - Self-contained processing state (no external marker files)
+echo - Static linking: Amalgam DLL embeds dependencies, AmalgamLoader is standalone
 echo.
 pause
