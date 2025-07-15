@@ -40,18 +40,59 @@ jobs:
   - name: Setup vcpkg
     run: |
       if (!(Test-Path "C:\vcpkg")) {
+        Write-Host "Cloning vcpkg..."
         git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: Failed to clone vcpkg"
+          exit 1
+        }
+        Write-Host "Bootstrapping vcpkg..."
         C:\vcpkg\bootstrap-vcpkg.bat
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: Failed to bootstrap vcpkg"
+          exit 1
+        }
+      } else {
+        Write-Host "vcpkg already exists"
       }
+      Write-Host "Integrating vcpkg with Visual Studio..."
       C:\vcpkg\vcpkg integrate install
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "WARNING: Failed to integrate vcpkg"
+      }
     shell: powershell
 
   - name: Install vcpkg dependencies
     run: |
-      C:\vcpkg\vcpkg install cpr:x64-windows-static-md
-      C:\vcpkg\vcpkg install nlohmann-json:x64-windows-static-md
+      Write-Host "Installing static dependencies for embedding..."
+      
+      Write-Host "Installing cpr:x64-windows-static..."
+      C:\vcpkg\vcpkg install cpr:x64-windows-static
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Failed to install cpr:x64-windows-static"
+        exit 1
+      }
+      
+      Write-Host "Installing nlohmann-json:x64-windows-static..."
+      C:\vcpkg\vcpkg install nlohmann-json:x64-windows-static
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Failed to install nlohmann-json:x64-windows-static"
+        exit 1
+      }
+      
+      Write-Host "Installing dynamic dependencies for fallback..."
       C:\vcpkg\vcpkg install cpr:x64-windows
       C:\vcpkg\vcpkg install nlohmann-json:x64-windows
+      
+      Write-Host "Verifying installed packages..."
+      C:\vcpkg\vcpkg list
+      
+      Write-Host "Re-integrating vcpkg after dependency installation..."
+      C:\vcpkg\vcpkg integrate install
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "WARNING: Failed to re-integrate vcpkg"
+      }
+    shell: powershell
 
 
   - name: Restore NuGet packages
