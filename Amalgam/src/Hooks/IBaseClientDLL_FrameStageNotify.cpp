@@ -70,6 +70,8 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		if (Vars::Competitive::Features::DisableFreezeCam.Value && pLocal && pLocal->m_iObserverMode() == OBS_MODE_FREEZECAM)
 		{
 			pLocal->m_iObserverMode() = OBS_MODE_FIRSTPERSON;
+			// Also reset observer target to prevent freezecam lock
+			pLocal->m_hObserverTarget().Set(nullptr);
 		}
 
 		F::Visuals.Modulate();

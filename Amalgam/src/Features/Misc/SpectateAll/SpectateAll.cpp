@@ -14,11 +14,20 @@ bool CSpectateAll::ShouldSpectate()
     bool isAlive = pLocal->IsAlive();
     bool shouldActivate = !isAlive;
     
-    // If enabled, skip map cameras by sending next spectate command
-    if (shouldActivate && Vars::Competitive::SpectateAll::ExcludeMapCameras.Value)
+    // Handle special observer modes
+    if (shouldActivate)
     {
         int observerMode = pLocal->m_iObserverMode();
-        if (observerMode == OBS_MODE_FIXED)
+        
+        // Force out of freezecam if we're in it (helps with mouse input)
+        if (observerMode == OBS_MODE_FREEZECAM)
+        {
+            pLocal->m_iObserverMode() = OBS_MODE_FIRSTPERSON;
+            pLocal->m_hObserverTarget().Set(nullptr);
+        }
+        
+        // If enabled, skip map cameras by sending next spectate command
+        if (Vars::Competitive::SpectateAll::ExcludeMapCameras.Value && observerMode == OBS_MODE_FIXED)
         {
             // TF2 is showing a static map camera, skip to next player
             static float lastSkipTime = 0.0f;
@@ -171,10 +180,9 @@ void CSpectateAll::HandleFreeCamera(CViewSetup* pView)
     if (GetAsyncKeyState('E') & 0x8000)
         m_vStoredOrigin -= up * speed;
     
-    // Apply the new camera position and use stored angles for free camera
+    // Apply the new camera position and let engine handle mouse input
     pView->origin = m_vStoredOrigin;
-    // Use stored angles for free camera movement (allows mouse look)
-    // The engine will handle mouse input automatically
+    // Don't override view angles - let the engine handle mouse input naturally
 }
 
 void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
@@ -473,18 +481,18 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         {
             F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
         }
+        
+        // When entering freecam, reset regular spectate system
+        if (!m_bLastInFreeCam && m_bInFreeCam)
+        {
+            F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
+        }
     }
     
     switch (mode)
     {
         case SpectateMode::FREE_CAMERA:
             HandleFreeCamera(pView);
-            // Preserve viewangles when entering free camera
-            if (modeChanged && !m_bLastInFreeCam)
-            {
-                // Use current view angles for smooth transition
-                m_vStoredAngles = pView->angles;
-            }
             break;
             
         case SpectateMode::ENEMY:
