@@ -1,5 +1,6 @@
 #pragma once
 #include "../../../SDK/SDK.h"
+#include "../../Spectate/Spectate.h"
 
 enum class SpectateMode
 {
