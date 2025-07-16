@@ -69,7 +69,8 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		// Disable freezecam feature
 		if (Vars::Competitive::Features::DisableFreezeCam.Value && pLocal && pLocal->m_iObserverMode() == OBS_MODE_FREEZECAM)
 		{
-			pLocal->m_iObserverMode() = OBS_MODE_FIRSTPERSON;
+			// Use third person by default to avoid inheriting player viewangles
+			pLocal->m_iObserverMode() = OBS_MODE_THIRDPERSON;
 			// Also reset observer target to prevent freezecam lock
 			pLocal->m_hObserverTarget().Set(nullptr);
 		}

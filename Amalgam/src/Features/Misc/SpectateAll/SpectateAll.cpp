@@ -19,11 +19,24 @@ bool CSpectateAll::ShouldSpectate()
     {
         int observerMode = pLocal->m_iObserverMode();
         
-        // Force out of freezecam if we're in it (helps with mouse input)
+        // Track and handle freezecam transitions
         if (observerMode == OBS_MODE_FREEZECAM)
         {
-            pLocal->m_iObserverMode() = OBS_MODE_FIRSTPERSON;
+            // Remember what mode we should return to (if we haven't already stored it)
+            if (m_iLastObserverMode == OBS_MODE_NONE)
+            {
+                // Default to third person if no previous mode
+                m_iLastObserverMode = OBS_MODE_THIRDPERSON;
+            }
+            
+            // Force out of freezecam using the remembered mode
+            pLocal->m_iObserverMode() = m_iLastObserverMode;
             pLocal->m_hObserverTarget().Set(nullptr);
+        }
+        else if (observerMode != OBS_MODE_FREEZECAM && observerMode != OBS_MODE_NONE)
+        {
+            // Remember non-freezecam modes for later restoration
+            m_iLastObserverMode = observerMode;
         }
         
         // If enabled, skip map cameras by sending next spectate command
@@ -52,12 +65,14 @@ bool CSpectateAll::ShouldSpectate()
         m_bIsSpectating = false;
         m_bInFreeCam = false;
         m_iCurrentEnemyIndex = 0;
+        m_iLastObserverMode = OBS_MODE_NONE; // Reset observer mode tracking on death
     }
     // Reset when respawning
     else if (!m_bWasAlive && isAlive)
     {
         m_bIsSpectating = false;
         m_bInFreeCam = false;
+        m_iLastObserverMode = OBS_MODE_NONE; // Reset observer mode tracking
     }
     
     m_bWasAlive = isAlive;
@@ -115,11 +130,12 @@ void CSpectateAll::HandleMouseInput()
             m_bInFreeCam = false;
         }
         
-        // Cycle to next enemy player
+        // Cycle to next enemy player (preserving current first/third person mode)
         auto enemies = H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES);
         if (!enemies.empty())
         {
             m_iCurrentEnemyIndex = (m_iCurrentEnemyIndex + 1) % enemies.size();
+            // Note: m_bThirdPersonMode is automatically preserved during player cycling
         }
     }
     
@@ -199,12 +215,15 @@ void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
         if (m_bThirdPersonMode)
         {
             // Always use mouse look in third person
-            // Initialize third person angles if switching
-            static bool wasFirstPerson = true;
-            if (wasFirstPerson)
+            // Initialize third person angles when switching players or modes
+            static CTFPlayer* lastTargetPlayer = nullptr;
+            if (lastTargetPlayer != pTarget)
             {
-                m_vThirdPersonAngles = pTarget->GetEyeAngles();
-                wasFirstPerson = false;
+                // New player - initialize angles based on current view
+                QAngle currentAngles;
+                I::EngineClient->GetViewAngles(currentAngles);
+                m_vThirdPersonAngles = currentAngles;
+                lastTargetPlayer = pTarget;
             }
             
             // Use stored third person angles for mouse look
