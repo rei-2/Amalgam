@@ -396,7 +396,12 @@ void CStickyCam::UpdateStickies()
 			
 			// Check if sticky is stationary
 			Vec3 velocity;
-			sticky.pSticky->EstimateAbsVelocity(velocity);
+			try {
+				sticky.pSticky->EstimateAbsVelocity(velocity);
+			}
+			catch (...) {
+				continue;
+			}
 			if (velocity.Length() < 1.0f)
 			{
 				if (!needTargets)
@@ -427,7 +432,12 @@ void CStickyCam::UpdateStickies()
 					continue;
 				
 				Vec3 velocity;
-				sticky.pSticky->EstimateAbsVelocity(velocity);
+				try {
+					sticky.pSticky->EstimateAbsVelocity(velocity);
+				}
+				catch (...) {
+					continue;
+				}
 				if (velocity.Length() < 1.0f)
 				{
 					m_pCurrentSticky = sticky.pSticky;
@@ -462,7 +472,12 @@ void CStickyCam::CycleNextSticky()
 			continue;
 		
 		Vec3 velocity;
-		sticky.pSticky->EstimateAbsVelocity(velocity);
+		try {
+			sticky.pSticky->EstimateAbsVelocity(velocity);
+		}
+		catch (...) {
+			continue;
+		}
 		if (velocity.Length() < 1.0f)
 			availableStickies.push_back(sticky.pSticky);
 	}
@@ -624,10 +639,15 @@ void CStickyCam::DrawOverlay()
 	if (m_pCurrentTarget)
 	{
 		PlayerInfo_t pi{};
-		if (I::EngineClient->GetPlayerInfo(m_pCurrentTarget->entindex(), &pi))
-			playerName = pi.name;
-		else
+		try {
+			if (I::EngineClient->GetPlayerInfo(m_pCurrentTarget->entindex(), &pi))
+				playerName = pi.name;
+			else
+				playerName = "Unknown";
+		}
+		catch (...) {
 			playerName = "Unknown";
+		}
 		
 		timeRemaining = std::max(0.0f, Vars::Competitive::StickyCam::TrackTime.Value - (I::GlobalVars->curtime - m_flTargetLockTime));
 		targetStatus = m_bTargetVisible ? "Tracking" : "Target Lost";
@@ -641,7 +661,12 @@ void CStickyCam::DrawOverlay()
 		if (sticky.pSticky && !sticky.pSticky->IsDormant())
 		{
 			Vec3 velocity;
-			sticky.pSticky->EstimateAbsVelocity(velocity);
+			try {
+				sticky.pSticky->EstimateAbsVelocity(velocity);
+			}
+			catch (...) {
+				continue;
+			}
 			if (velocity.Length() < 1.0f)
 				availableCount++;
 		}
@@ -754,7 +779,12 @@ CBaseEntity* CStickyCam::FindLatestSticky()
 		
 		// Check if sticky is stationary
 		Vec3 velocity;
-		sticky.pSticky->EstimateAbsVelocity(velocity);
+		try {
+			sticky.pSticky->EstimateAbsVelocity(velocity);
+		}
+		catch (...) {
+			continue;
+		}
 		if (velocity.Length() >= 1.0f)
 			continue;
 		
@@ -770,7 +800,7 @@ CBaseEntity* CStickyCam::FindLatestSticky()
 
 void CStickyCam::Draw()
 {
-	if (!IsEnabled() || !IsDemoman() || !m_bInitialized || !I::EngineClient->IsInGame())
+	if (!IsEnabled() || !IsDemoman() || !m_bInitialized || !I::EngineClient->IsInGame() || !I::EngineClient->IsConnected())
 		return;
 	
 	if (I::EngineVGui->IsGameUIVisible())
@@ -805,15 +835,30 @@ void CStickyCam::Draw()
 		return;
 	
 	// Validate sticky entity before using it
-	if (m_pCurrentSticky->IsDormant())
+	if (!m_pCurrentSticky || m_pCurrentSticky->IsDormant())
 	{
 		m_pCurrentSticky = nullptr;
 		return;
 	}
 	
-	Vec3 stickyPos = m_pCurrentSticky->GetAbsOrigin();
-	Vec3 normal = GetStickyNormal(m_pCurrentSticky);
-	Vec3 cameraPos = CalculateCameraOffset(stickyPos, normal);
+	// Additional entity validation to prevent crashes
+	auto pEntityFromList = I::ClientEntityList->GetClientEntity(m_pCurrentSticky->entindex());
+	if (!pEntityFromList || pEntityFromList != m_pCurrentSticky)
+	{
+		m_pCurrentSticky = nullptr;
+		return;
+	}
+	
+	Vec3 stickyPos, normal, cameraPos;
+	try {
+		stickyPos = m_pCurrentSticky->GetAbsOrigin();
+		normal = GetStickyNormal(m_pCurrentSticky);
+		cameraPos = CalculateCameraOffset(stickyPos, normal);
+	}
+	catch (...) {
+		m_pCurrentSticky = nullptr;
+		return;
+	}
 	
 	m_pCurrentTarget = FindNearestVisiblePlayer(cameraPos);
 	
@@ -868,6 +913,14 @@ void CStickyCam::RenderView(void* ecx, const CViewSetup& view)
 	if (!m_bInitialized || !m_pCurrentSticky || !m_pCameraTexture)
 		return;
 	
+	// Additional entity validation to prevent crashes
+	auto pEntityFromList = I::ClientEntityList->GetClientEntity(m_pCurrentSticky->entindex());
+	if (!pEntityFromList || pEntityFromList != m_pCurrentSticky)
+	{
+		m_pCurrentSticky = nullptr;
+		return;
+	}
+	
 	// Check if we should render the camera view
 	bool shouldRender = false;
 	if (Vars::Competitive::StickyCam::AlwaysShow.Value)
@@ -884,9 +937,16 @@ void CStickyCam::RenderView(void* ecx, const CViewSetup& view)
 	if (!shouldRender)
 		return;
 	
-	Vec3 stickyPos = m_pCurrentSticky->GetAbsOrigin();
-	Vec3 normal = GetStickyNormal(m_pCurrentSticky);
-	Vec3 cameraOrigin = CalculateCameraOffset(stickyPos, normal);
+	Vec3 stickyPos, normal, cameraOrigin;
+	try {
+		stickyPos = m_pCurrentSticky->GetAbsOrigin();
+		normal = GetStickyNormal(m_pCurrentSticky);
+		cameraOrigin = CalculateCameraOffset(stickyPos, normal);
+	}
+	catch (...) {
+		m_pCurrentSticky = nullptr;
+		return;
+	}
 	
 	if (!IsCameraViewClear(cameraOrigin, m_vSmoothedAngles))
 		return;
@@ -962,13 +1022,29 @@ void CStickyCam::UpdateChamsEntities()
 			continue;
 		
 		// Additional entity validation to prevent crashes
-		auto pEntity = I::ClientEntityList->GetClientEntity(stickyData.pSticky->entindex());
+		int stickyIndex = 0;
+		try {
+			stickyIndex = stickyData.pSticky->entindex();
+		}
+		catch (...) {
+			continue;
+		}
+		
+		if (stickyIndex <= 0 || stickyIndex >= 2048)
+			continue;
+		
+		auto pEntity = I::ClientEntityList->GetClientEntity(stickyIndex);
 		if (!pEntity || pEntity != stickyData.pSticky)
 			continue;
 		
 		// Check if sticky is stationary
 		Vec3 velocity;
-		stickyData.pSticky->EstimateAbsVelocity(velocity);
+		try {
+			stickyData.pSticky->EstimateAbsVelocity(velocity);
+		}
+		catch (...) {
+			continue;
+		}
 		if (velocity.Length() >= 1.0f)
 			continue;
 		

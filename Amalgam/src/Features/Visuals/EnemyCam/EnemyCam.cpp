@@ -73,7 +73,7 @@ void CEnemyCam::CleanupMaterials()
 
 void CEnemyCam::Draw()
 {
-    if (!Vars::Competitive::Features::EnemyCam.Value || !m_bEnabled || !m_bInitialized || !I::EngineClient->IsInGame())
+    if (!Vars::Competitive::Features::EnemyCam.Value || !m_bEnabled || !m_bInitialized || !I::EngineClient->IsInGame() || !I::EngineClient->IsConnected())
         return;
     
     if (I::EngineVGui->IsGameUIVisible())
@@ -94,6 +94,27 @@ void CEnemyCam::Draw()
     
     if (!m_pTargetPlayer)
         return;
+    
+    // Final validation before rendering
+    try {
+        int entityIndex = m_pTargetPlayer->entindex();
+        if (entityIndex <= 0 || entityIndex > 64)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+        
+        auto pEntityFromList = I::ClientEntityList->GetClientEntity(entityIndex);
+        if (!pEntityFromList || pEntityFromList != m_pTargetPlayer)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+    }
+    catch (...) {
+        m_pTargetPlayer = nullptr;
+        return;
+    }
     
     // Get configured camera position
     int x, y;
@@ -121,6 +142,27 @@ void CEnemyCam::RenderView(void* ecx, const CViewSetup& view)
 {
     if (!m_bEnabled || !m_bInitialized || !m_pTargetPlayer || !m_pCameraTexture)
         return;
+    
+    // Validate target before rendering
+    try {
+        int entityIndex = m_pTargetPlayer->entindex();
+        if (entityIndex <= 0 || entityIndex > 64)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+        
+        auto pEntityFromList = I::ClientEntityList->GetClientEntity(entityIndex);
+        if (!pEntityFromList || pEntityFromList != m_pTargetPlayer)
+        {
+            m_pTargetPlayer = nullptr;
+            return;
+        }
+    }
+    catch (...) {
+        m_pTargetPlayer = nullptr;
+        return;
+    }
     
     // Get camera view
     Vec3 origin, angles;

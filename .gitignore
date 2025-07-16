@@ -383,3 +383,5 @@ source-sdk-2013/
 data/
 
 packer/
+
+output/

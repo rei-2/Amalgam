@@ -61,6 +61,13 @@ void CSpectate::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (iButtons)
 		m_iIntendedTarget = -1;
 
+	// Don't interfere with viewangles if SpectateAll is active
+	if (Vars::Competitive::Features::SpectateAll.Value && pLocal && !pLocal->IsAlive())
+	{
+		// SpectateAll is handling viewangles, don't override them
+		return;
+	}
+
 	static bool bStaticView = false;
 	const bool bLastView = bStaticView;
 	const bool bCurrView = bStaticView = m_iTarget != -1;

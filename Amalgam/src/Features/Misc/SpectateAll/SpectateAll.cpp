@@ -92,6 +92,9 @@ void CSpectateAll::HandleMouseInput()
             // If no current player, use stored origin or current view
             // m_vStoredOrigin should already be set from initialization
         }
+        
+        // Reset regular spectate system when toggling freecam
+        F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
     }
     
     // Mouse1 (left click) - cycle players (and exit freecam if active)
@@ -168,8 +171,10 @@ void CSpectateAll::HandleFreeCamera(CViewSetup* pView)
     if (GetAsyncKeyState('E') & 0x8000)
         m_vStoredOrigin -= up * speed;
     
-    // Apply the new camera position
+    // Apply the new camera position and use stored angles for free camera
     pView->origin = m_vStoredOrigin;
+    // Use stored angles for free camera movement (allows mouse look)
+    // The engine will handle mouse input automatically
 }
 
 void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
@@ -346,6 +351,10 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
     {
         // Clear spectated player when not spectating
         m_pCurrentSpectatedPlayer = nullptr;
+        // Reset spectate state to prevent viewangle conflicts
+        m_bIsSpectating = false;
+        m_bInFreeCam = false;
+        m_bThirdPersonMode = true;
         return;
     }
     
@@ -372,7 +381,14 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
             // Initialize third person angles when switching to third person
             if (m_bThirdPersonMode && m_pCurrentSpectatedPlayer)
             {
-                m_vThirdPersonAngles = m_pCurrentSpectatedPlayer->GetEyeAngles();
+                // Use current view angles instead of player angles for smooth transition
+                m_vThirdPersonAngles = pView->angles;
+            }
+            // When switching to first person, disable regular spectate viewangle override
+            else if (!m_bThirdPersonMode)
+            {
+                // Reset the regular spectate system to prevent viewangle conflicts
+                F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
             }
         }
         spacePressed = spaceDown;
@@ -380,22 +396,39 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         // Handle mouse input for third person mode
         if (m_bThirdPersonMode)
         {
-            // Get mouse delta (this would need proper mouse input handling)
-            // For now, we'll use a simple approach with engine's view angles
+            // Get mouse delta using engine's view angles
             QAngle engineAngles;
             I::EngineClient->GetViewAngles(engineAngles);
             
             // Update third person angles based on mouse movement
             static QAngle lastEngineAngles = engineAngles;
+            static bool initialized = false;
+            
+            if (!initialized)
+            {
+                lastEngineAngles = engineAngles;
+                initialized = true;
+            }
+            
             QAngle deltaAngles = engineAngles - lastEngineAngles;
             
-            m_vThirdPersonAngles += deltaAngles;
-            
-            // Clamp pitch
-            if (m_vThirdPersonAngles.x > 89.0f)
-                m_vThirdPersonAngles.x = 89.0f;
-            if (m_vThirdPersonAngles.x < -89.0f)
-                m_vThirdPersonAngles.x = -89.0f;
+            // Only update if there's actually mouse movement
+            if (deltaAngles.Length() > 0.01f)
+            {
+                m_vThirdPersonAngles += deltaAngles;
+                
+                // Clamp pitch
+                if (m_vThirdPersonAngles.x > 89.0f)
+                    m_vThirdPersonAngles.x = 89.0f;
+                if (m_vThirdPersonAngles.x < -89.0f)
+                    m_vThirdPersonAngles.x = -89.0f;
+                    
+                // Normalize yaw
+                while (m_vThirdPersonAngles.y > 180.0f)
+                    m_vThirdPersonAngles.y -= 360.0f;
+                while (m_vThirdPersonAngles.y < -180.0f)
+                    m_vThirdPersonAngles.y += 360.0f;
+            }
                 
             lastEngineAngles = engineAngles;
         }
@@ -412,12 +445,46 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         m_vStoredOrigin = pView->origin;
         m_vStoredAngles = pView->angles;
         m_bIsSpectating = true;
+        // Reset regular spectate system to prevent conflicts
+        F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
+    }
+    
+    // Detect mode transitions and handle viewangle preservation
+    bool modeChanged = false;
+    if (m_bLastInFreeCam != m_bInFreeCam || m_bLastThirdPersonMode != m_bThirdPersonMode)
+    {
+        modeChanged = true;
+        
+        // When transitioning out of free camera, preserve current viewangles
+        if (m_bLastInFreeCam && !m_bInFreeCam)
+        {
+            // Reset regular spectate system to prevent old viewangle restoration
+            F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
+        }
+        
+        // When transitioning from first person to third person, use current viewangles
+        if (!m_bLastThirdPersonMode && m_bThirdPersonMode && m_pCurrentSpectatedPlayer)
+        {
+            m_vThirdPersonAngles = pView->angles;
+        }
+        
+        // When transitioning to first person, reset regular spectate system
+        if (m_bLastThirdPersonMode && !m_bThirdPersonMode)
+        {
+            F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
+        }
     }
     
     switch (mode)
     {
         case SpectateMode::FREE_CAMERA:
             HandleFreeCamera(pView);
+            // Preserve viewangles when entering free camera
+            if (modeChanged && !m_bLastInFreeCam)
+            {
+                // Use current view angles for smooth transition
+                m_vStoredAngles = pView->angles;
+            }
             break;
             
         case SpectateMode::ENEMY:
@@ -429,4 +496,8 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
             // Default TF2 spectating behavior
             break;
     }
+    
+    // Store current state for next frame
+    m_bLastInFreeCam = m_bInFreeCam;
+    m_bLastThirdPersonMode = m_bThirdPersonMode;
 }

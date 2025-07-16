@@ -7,7 +7,20 @@ std::string CUberTracker::GetMedicID(CBaseEntity* pEntity)
 	if (!pEntity)
 		return "unknown";
 	
-	return std::to_string(pEntity->entindex()) + "_unnamed";
+	try {
+		int entityIndex = pEntity->entindex();
+		if (entityIndex <= 0 || entityIndex >= 2048)
+			return "unknown";
+		
+		auto pEntityFromList = I::ClientEntityList->GetClientEntity(entityIndex);
+		if (!pEntityFromList || pEntityFromList != pEntity)
+			return "unknown";
+		
+		return std::to_string(entityIndex) + "_unnamed";
+	}
+	catch (...) {
+		return "unknown";
+	}
 }
 
 std::string CUberTracker::GetWeaponType(int iItemDefinitionIndex, bool* bIsKritzOverride)
@@ -82,7 +95,14 @@ float CUberTracker::TranslateKritzToUber(CBaseEntity* pEntity, const std::string
 		tracker.LastUberValue = 0.0f;
 		tracker.LastUpdateTime = flCurrentTime;
 		
-		int iTeamNumber = pEntity->m_iTeamNum();
+		int iTeamNumber = 0;
+		try {
+			iTeamNumber = pEntity->m_iTeamNum();
+		}
+		catch (...) {
+			return flActualKritzPercentage;
+		}
+		
 		auto pLocal = H::Entities.GetLocal();
 		if (pLocal)
 		{
@@ -264,6 +284,9 @@ void CUberTracker::Draw()
 	if (I::EngineVGui->IsGameUIVisible())
 		return;
 	
+	if (!I::EngineClient->IsConnected() || !I::EngineClient->IsInGame())
+		return;
+	
 	auto pLocal = H::Entities.GetLocal();
 	if (!pLocal)
 		return;
@@ -279,15 +302,36 @@ void CUberTracker::Draw()
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (!pPlayer || pPlayer->m_iClass() != TF_CLASS_MEDIC)
+		if (!pPlayer)
 			continue;
 		
-		int iTeamNumber = pPlayer->m_iTeamNum();
-		if (iTeamNumber != TF_TEAM_RED && iTeamNumber != TF_TEAM_BLUE)
-			continue;
+		// Validate entity before accessing members
+		int iTeamNumber = 0;
+		bool bIsAlive = false;
+		CTFWeaponBase* pMedigun = nullptr;
 		
-		bool bIsAlive = pPlayer->IsAlive();
-		auto pMedigun = pPlayer->GetWeaponFromSlot(SLOT_SECONDARY);
+		try {
+			int entityIndex = pPlayer->entindex();
+			if (entityIndex <= 0 || entityIndex > 64)
+				continue;
+			
+			auto pEntityFromList = I::ClientEntityList->GetClientEntity(entityIndex);
+			if (!pEntityFromList || pEntityFromList != pPlayer)
+				continue;
+			
+			if (pPlayer->m_iClass() != TF_CLASS_MEDIC)
+				continue;
+			
+			iTeamNumber = pPlayer->m_iTeamNum();
+			if (iTeamNumber != TF_TEAM_RED && iTeamNumber != TF_TEAM_BLUE)
+				continue;
+			
+			bIsAlive = pPlayer->IsAlive();
+			pMedigun = pPlayer->GetWeaponFromSlot(SLOT_SECONDARY);
+		}
+		catch (...) {
+			continue;
+		}
 		
 		if (!pMedigun)
 			continue;
@@ -296,8 +340,16 @@ void CUberTracker::Draw()
 		if (!pMedigunWeapon)
 			continue;
 		
-		float flChargeLevel = pMedigunWeapon->m_flChargeLevel();
-		int iItemDefIndex = pMedigun->m_iItemDefinitionIndex();
+		float flChargeLevel = 0.0f;
+		int iItemDefIndex = 0;
+		
+		try {
+			flChargeLevel = pMedigunWeapon->m_flChargeLevel();
+			iItemDefIndex = pMedigun->m_iItemDefinitionIndex();
+		}
+		catch (...) {
+			continue;
+		}
 		
 		bool bIsKritzOverride = false;
 		std::string sWeaponName = GetWeaponType(iItemDefIndex, &bIsKritzOverride);
@@ -321,10 +373,15 @@ void CUberTracker::Draw()
 		MedicInfo medicInfo;
 		// Get player name properly
 		PlayerInfo_t pi{};
-		if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
-			medicInfo.Name = F::PlayerUtils.GetPlayerName(pPlayer->entindex(), pi.name);
-		else
-			medicInfo.Name = "Medic " + std::to_string(pPlayer->entindex());
+		try {
+			if (I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi))
+				medicInfo.Name = F::PlayerUtils.GetPlayerName(pPlayer->entindex(), pi.name);
+			else
+				medicInfo.Name = "Medic " + std::to_string(pPlayer->entindex());
+		}
+		catch (...) {
+			medicInfo.Name = "Unknown Medic";
+		}
 		medicInfo.WeaponName = sWeaponName;
 		medicInfo.RealWeaponName = sRealWeaponName;
 		medicInfo.UberPercentage = flPercentageValue;
