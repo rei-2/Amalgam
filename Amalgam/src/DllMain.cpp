@@ -2,6 +2,8 @@
 #include "Core/Core.h"
 #include "Utils/CrashLog/CrashLog.h"
 
+// Force manual mapping only - no LoadLibrary fallback
+
 DWORD WINAPI MainThread(LPVOID lpParam)
 {
 	try
@@ -11,12 +13,14 @@ DWORD WINAPI MainThread(LPVOID lpParam)
 		U::Core.Unload();
 
 		CrashLog::Unload();
-		FreeLibraryAndExitThread(static_cast<HMODULE>(lpParam), EXIT_SUCCESS);
+		
+		// Manual mapping only - use ExitThread instead of FreeLibraryAndExitThread
+		ExitThread(EXIT_SUCCESS);
 	}
 	catch (...)
 	{
-		// Silent failure - just exit thread
-		FreeLibraryAndExitThread(static_cast<HMODULE>(lpParam), EXIT_FAILURE);
+		// Silent failure - just exit thread (manual mapping only)
+		ExitThread(EXIT_FAILURE);
 	}
 }
 
