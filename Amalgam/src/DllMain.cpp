@@ -4,23 +4,59 @@
 
 DWORD WINAPI MainThread(LPVOID lpParam)
 {
-	U::Core.Load();
-	U::Core.Loop();
-	U::Core.Unload();
+	try
+	{
+		U::Core.Load();
+		U::Core.Loop();
+		U::Core.Unload();
 
-	CrashLog::Unload();
-	FreeLibraryAndExitThread(static_cast<HMODULE>(lpParam), EXIT_SUCCESS);
+		CrashLog::Unload();
+		
+		// Check if this is manual mapping or native injection
+		HMODULE hModule = static_cast<HMODULE>(lpParam);
+		if (hModule && GetModuleHandleA(nullptr) != hModule)
+		{
+			// Native injection - use FreeLibraryAndExitThread
+			FreeLibraryAndExitThread(hModule, EXIT_SUCCESS);
+		}
+		else
+		{
+			// Manual mapping - use ExitThread only
+			ExitThread(EXIT_SUCCESS);
+		}
+	}
+	catch (...)
+	{
+		// Silent failure - handle both injection methods
+		HMODULE hModule = static_cast<HMODULE>(lpParam);
+		if (hModule && GetModuleHandleA(nullptr) != hModule)
+		{
+			FreeLibraryAndExitThread(hModule, EXIT_FAILURE);
+		}
+		else
+		{
+			ExitThread(EXIT_FAILURE);
+		}
+	}
 }
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-	if (fdwReason == DLL_PROCESS_ATTACH)
+	try
 	{
-		CrashLog::Initialize();
+		if (fdwReason == DLL_PROCESS_ATTACH)
+		{
+			CrashLog::Initialize();
 
-		if (const auto hMainThread = CreateThread(nullptr, 0, MainThread, hinstDLL, 0, nullptr))
-			CloseHandle(hMainThread);
+			if (const auto hMainThread = CreateThread(nullptr, 0, MainThread, hinstDLL, 0, nullptr))
+				CloseHandle(hMainThread);
+		}
+
+		return TRUE;
 	}
-
-	return TRUE;
+	catch (...)
+	{
+		// Silent failure - don't crash the target process
+		return FALSE;
+	}
 }
