@@ -2,8 +2,6 @@
 #include "Core/Core.h"
 #include "Utils/CrashLog/CrashLog.h"
 
-// Force manual mapping only - no LoadLibrary fallback
-
 DWORD WINAPI MainThread(LPVOID lpParam)
 {
 	try
@@ -14,13 +12,31 @@ DWORD WINAPI MainThread(LPVOID lpParam)
 
 		CrashLog::Unload();
 		
-		// Manual mapping only - use ExitThread instead of FreeLibraryAndExitThread
-		ExitThread(EXIT_SUCCESS);
+		// Check if this is manual mapping or native injection
+		HMODULE hModule = static_cast<HMODULE>(lpParam);
+		if (hModule && GetModuleHandleA(nullptr) != hModule)
+		{
+			// Native injection - use FreeLibraryAndExitThread
+			FreeLibraryAndExitThread(hModule, EXIT_SUCCESS);
+		}
+		else
+		{
+			// Manual mapping - use ExitThread only
+			ExitThread(EXIT_SUCCESS);
+		}
 	}
 	catch (...)
 	{
-		// Silent failure - just exit thread (manual mapping only)
-		ExitThread(EXIT_FAILURE);
+		// Silent failure - handle both injection methods
+		HMODULE hModule = static_cast<HMODULE>(lpParam);
+		if (hModule && GetModuleHandleA(nullptr) != hModule)
+		{
+			FreeLibraryAndExitThread(hModule, EXIT_FAILURE);
+		}
+		else
+		{
+			ExitThread(EXIT_FAILURE);
+		}
 	}
 }
 
