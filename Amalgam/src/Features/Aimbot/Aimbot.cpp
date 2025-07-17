@@ -85,12 +85,14 @@ void CAimbot::Draw(CTFPlayer* pLocal)
 	if (pWeapon && !SDK::AttribHookValue(1, "mult_dmg", pWeapon))
 		return;
 
-	if (Vars::Aimbot::General::AimFOV.Value >= 90.f)
+	float fovSize = Vars::Aimbot::General::AimFOV.Value;
+	
+	if (fovSize >= 90.f)
 		return;
 
 	float flW = H::Draw.m_nScreenW, flH = H::Draw.m_nScreenH;
-	float flRadius = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value)) / tanf(DEG2RAD(pLocal->m_iFOV()) / 2) * flW * (4.f / 6.f) / (16.f / 9.f);
-	H::Draw.LineCircle(H::Draw.m_nScreenW / 2, H::Draw.m_nScreenH / 2, flRadius, 68, Vars::Colors::FOVCircle.Value);
+	float flRadius = tanf(DEG2RAD(fovSize)) / tanf(DEG2RAD(pLocal->m_iFOV()) / 2) * flW * (4.f / 6.f) / (16.f / 9.f);
+	H::Draw.LineCircle(flW / 2, flH / 2, flRadius, 68, Vars::Colors::FOVCircle.Value);
 }
 
 void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
