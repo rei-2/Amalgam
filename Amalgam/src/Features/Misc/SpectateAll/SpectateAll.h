@@ -26,6 +26,7 @@ private:
     bool m_bInFreeCam = false;       // Track if currently in freecam mode
     bool m_bLastInFreeCam = false;   // Track previous freecam state
     bool m_bLastThirdPersonMode = true; // Track previous third person state
+    bool m_bForceAngleReset = false; // Force reset of mouse tracking variables
     int m_iLastObserverMode = OBS_MODE_NONE; // Track last observer mode before freezecam
     int m_iCurrentEnemyIndex = 0;
     CTFPlayer* m_pCurrentSpectatedPlayer = nullptr;

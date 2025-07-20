@@ -219,10 +219,9 @@ void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
             static CTFPlayer* lastTargetPlayer = nullptr;
             if (lastTargetPlayer != pTarget)
             {
-                // New player - initialize angles based on current view
-                QAngle currentAngles;
-                I::EngineClient->GetViewAngles(currentAngles);
-                m_vThirdPersonAngles = currentAngles;
+                // New player - initialize angles based on player's eye angles instead of engine angles
+                // This prevents inheriting bad angles from previous spectated players
+                m_vThirdPersonAngles = pTarget->GetEyeAngles();
                 lastTargetPlayer = pTarget;
             }
             
@@ -410,6 +409,9 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
             {
                 // Use current view angles instead of player angles for smooth transition
                 m_vThirdPersonAngles = pView->angles;
+                
+                // Force reset of mouse tracking static variables to prevent interference
+                m_bForceAngleReset = true;
             }
             // When switching to first person, disable regular spectate viewangle override
             else if (!m_bThirdPersonMode)
@@ -423,24 +425,26 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         // Handle mouse input for third person mode
         if (m_bThirdPersonMode)
         {
-            // Get mouse delta using engine's view angles
-            QAngle engineAngles;
-            I::EngineClient->GetViewAngles(engineAngles);
-            
-            // Update third person angles based on mouse movement
-            static QAngle lastEngineAngles = engineAngles;
+            // Use command viewangles for mouse input instead of engine angles
+            // This prevents interference from spectated player's movements
+            static QAngle lastCmdAngles = pCmd->viewangles;
             static bool initialized = false;
             
-            if (!initialized)
+            // Handle forced reset or initialization
+            if (!initialized || m_bForceAngleReset)
             {
-                lastEngineAngles = engineAngles;
+                lastCmdAngles = pCmd->viewangles;
                 initialized = true;
+                m_bForceAngleReset = false;
             }
             
-            QAngle deltaAngles = engineAngles - lastEngineAngles;
+            QAngle deltaAngles = pCmd->viewangles - lastCmdAngles;
             
-            // Only update if there's actually mouse movement
-            if (deltaAngles.Length() > 0.01f)
+            // Only update if there's actually mouse movement and we're not switching players
+            static CTFPlayer* lastMousePlayer = m_pCurrentSpectatedPlayer;
+            bool playerSwitched = (lastMousePlayer != m_pCurrentSpectatedPlayer);
+            
+            if (!playerSwitched && deltaAngles.Length() > 0.01f)
             {
                 m_vThirdPersonAngles += deltaAngles;
                 
@@ -456,8 +460,9 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
                 while (m_vThirdPersonAngles.y < -180.0f)
                     m_vThirdPersonAngles.y += 360.0f;
             }
-                
-            lastEngineAngles = engineAngles;
+            
+            lastCmdAngles = pCmd->viewangles;
+            lastMousePlayer = m_pCurrentSpectatedPlayer;
         }
     }
     else if (!m_bInFreeCam)
