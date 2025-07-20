@@ -68,11 +68,20 @@ void CHealthBarESP::Draw()
             if (Vars::Competitive::HealthBarESP::ShowThroughWalls.Value || isVisible)
             {
                 Vec3 screenPos;
-                if (SDK::W2S(playerPos, screenPos))
+                // Use chest height position for better close-range projection
+                Vec3 chestPos = playerPos;
+                chestPos.z += 40.0f;
+                
+                if (SDK::W2S(chestPos, screenPos))
                 {
-                    int x = (int)(screenPos.x - Vars::Competitive::HealthBarESP::BarWidth.Value / 2);
-                    int y = (int)(screenPos.y + 30);
-                    DrawHealthBar(x, y, Vars::Competitive::HealthBarESP::BarWidth.Value, health, maxHealth);
+                    // Allow health bars slightly off-screen for close range players
+                    if (screenPos.x >= -100 && screenPos.x <= H::Draw.GetScreenW() + 100 &&
+                        screenPos.y >= -100 && screenPos.y <= H::Draw.GetScreenH() + 100)
+                    {
+                        int x = (int)(screenPos.x - Vars::Competitive::HealthBarESP::BarWidth.Value / 2);
+                        int y = (int)(screenPos.y + 30);
+                        DrawHealthBar(x, y, Vars::Competitive::HealthBarESP::BarWidth.Value, health, maxHealth);
+                    }
                 }
             }
         }
@@ -135,13 +144,24 @@ bool CHealthBarESP::IsVisible(const Vec3& vPos)
     Vec3 targetPos = vPos;
     targetPos.z += 40.0f; // Chest height
     
+    // Check distance first - if very close, be more lenient with visibility
+    float distance = (targetPos - vEyePos).Length();
+    if (distance < 150.0f)
+    {
+        // At very close range, skip trace check to prevent disappearing
+        return true;
+    }
+    
     CGameTrace trace = {};
     CTraceFilterHitscan filter = {};
     filter.pSkip = pLocal;
     
     SDK::Trace(vEyePos, targetPos, MASK_VISIBLE, &filter, &trace);
     
-    return trace.fraction > 0.90f;
+    // Use more lenient trace fraction for close range
+    float requiredFraction = (distance < 300.0f) ? 0.75f : 0.90f;
+    
+    return trace.fraction > requiredFraction;
 }
 
 void CHealthBarESP::DrawHealthPolygon(const Vec3& playerPos, int health, int maxHealth)
@@ -171,12 +191,14 @@ void CHealthBarESP::DrawHealthPolygon(const Vec3& playerPos, int health, int max
         Vec3 screenPoint;
         if (SDK::W2S(worldPoint, screenPoint))
         {
-            vertices.emplace_back(Vertex_t(Vector2D(screenPoint.x, screenPoint.y)));
+            // Allow some off-screen coordinates for close-range visibility
+            if (screenPoint.x >= -200 && screenPoint.x <= H::Draw.GetScreenW() + 200 &&
+                screenPoint.y >= -200 && screenPoint.y <= H::Draw.GetScreenH() + 200)
+            {
+                vertices.emplace_back(Vertex_t(Vector2D(screenPoint.x, screenPoint.y)));
+            }
         }
-        else
-        {
-            return; // If any point is off-screen, don't draw
-        }
+        // Don't return early if one point fails - continue with other points
     }
     
     // Only draw if we have enough vertices

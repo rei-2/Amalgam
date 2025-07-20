@@ -95,7 +95,12 @@ void CCritHeals::Draw()
             Vec3 screenPos;
             if (SDK::W2S(headPos, screenPos))
             {
-                DrawTriangle((int)screenPos.x, (int)screenPos.y, isEnemy);
+                // Allow some off-screen drawing for close-range players
+                if (screenPos.x >= -100 && screenPos.x <= H::Draw.GetScreenW() + 100 &&
+                    screenPos.y >= -100 && screenPos.y <= H::Draw.GetScreenH() + 100)
+                {
+                    DrawTriangle((int)screenPos.x, (int)screenPos.y, isEnemy);
+                }
             }
         }
     }
@@ -194,13 +199,24 @@ bool CCritHeals::IsPlayerVisible(CTFPlayer* pPlayer, CTFPlayer* pLocal)
     
     bool isTeammate = (pPlayer->m_iTeamNum() == pLocal->m_iTeamNum());
     
+    // Check distance first - if very close, skip trace check for teammates
+    float distance = (targetPos - eyePos).Length();
+    if (isTeammate && distance < 150.0f)
+    {
+        // At very close range, always show teammates to prevent disappearing
+        return true;
+    }
+    
     CGameTrace trace = {};
     CTraceFilterHitscan filter = {};
     filter.pSkip = pLocal;
     
     SDK::Trace(eyePos, targetPos, MASK_VISIBLE, &filter, &trace);
     
-    return isTeammate ? (trace.fraction > 0.90f) : (trace.fraction > 0.90f || trace.m_pEnt == pPlayer);
+    // Use more lenient trace fraction for close range
+    float requiredFraction = (distance < 300.0f) ? 0.75f : 0.90f;
+    
+    return isTeammate ? (trace.fraction > requiredFraction) : (trace.fraction > requiredFraction || trace.m_pEnt == pPlayer);
 }
 
 void CCritHeals::OnPlayerHurt(int victimIndex)
