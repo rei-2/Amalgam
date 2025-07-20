@@ -74,12 +74,22 @@ void CFlatTextures::ProcessMaterials()
                         unsigned char flatPixel[4] = {cachedColor.r, cachedColor.g, cachedColor.b, cachedColor.a};
                         
                         // Store original texture if not already stored
-                        IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
+                        IMaterialVar* pBaseTexVar = nullptr;
+                        try
+                        {
+                            pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
+                        }
+                        catch (...) {}
+                        
                         if (pBaseTexVar && m_OriginalTextures.find(matName) == m_OriginalTextures.end())
                         {
-                            ITexture* originalTex = pBaseTexVar->GetTextureValue();
-                            if (originalTex)
-                                m_OriginalTextures[matName] = originalTex;
+                            try
+                            {
+                                ITexture* originalTex = pBaseTexVar->GetTextureValue();
+                                if (originalTex)
+                                    m_OriginalTextures[matName] = originalTex;
+                            }
+                            catch (...) {}
                         }
                         
                         // Create a flat 1x1 texture from the sampled color
@@ -88,7 +98,11 @@ void CFlatTextures::ProcessMaterials()
                         
                         if (pFlatTexture && pBaseTexVar)
                         {
-                            pBaseTexVar->SetTextureValue(pFlatTexture);
+                            try
+                            {
+                                pBaseTexVar->SetTextureValue(pFlatTexture);
+                            }
+                            catch (...) {}
                         }
                     }
                 }
@@ -150,23 +164,33 @@ void CFlatTextures::RestoreMaterials()
         try
         {
             // Find the material by name safely
-            IMaterial* pMaterial = I::MaterialSystem->FindMaterial(matName.c_str(), TEXTURE_GROUP_OTHER, false);
-            if (pMaterial && !pMaterial->IsErrorMaterial())
+            IMaterial* pMaterial = nullptr;
+            try
             {
-                IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
-                if (pBaseTexVar)
+                pMaterial = I::MaterialSystem->FindMaterial(matName.c_str(), TEXTURE_GROUP_OTHER, false);
+            }
+            catch (...)
+            {
+                continue;
+            }
+            
+            if (pMaterial)
+            {
+                try
                 {
-                    // Use a nested try-catch specifically for texture operations
-                    try 
+                    if (!pMaterial->IsErrorMaterial())
                     {
-                        pBaseTexVar->SetTextureValue(pOriginalTexture);
+                        IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
+                        if (pBaseTexVar)
+                        {
+                            pBaseTexVar->SetTextureValue(pOriginalTexture);
+                        }
                     }
-                    catch (...)
-                    {
-                        // Texture restoration failed, likely due to invalid texture pointer
-                        // This can happen if textures were freed/reloaded. Skip and continue.
-                        continue;
-                    }
+                }
+                catch (...)
+                {
+                    // Material operations failed, likely due to corrupted object
+                    continue;
                 }
             }
         }

@@ -558,8 +558,18 @@ void CGlow::Initialize()
 	if (!m_pMatGlowColor)
 	{
 		m_pMatGlowColor = I::MaterialSystem->FindMaterial("dev/glow_color", TEXTURE_GROUP_OTHER);
-		m_pMatGlowColor->IncrementReferenceCount();
-		F::Materials.m_mMatList[m_pMatGlowColor] = true;
+		if (m_pMatGlowColor)
+		{
+			try
+			{
+				m_pMatGlowColor->IncrementReferenceCount();
+				F::Materials.m_mMatList[m_pMatGlowColor] = true;
+			}
+			catch (...)
+			{
+				m_pMatGlowColor = nullptr;
+			}
+		}
 	}
 
 	if (!m_pRenderBuffer1)
@@ -617,43 +627,67 @@ void CGlow::Unload()
 {
 	if (m_pMatGlowColor)
 	{
-		m_pMatGlowColor->DecrementReferenceCount();
-		m_pMatGlowColor->DeleteIfUnreferenced();
+		try 
+		{
+			m_pMatGlowColor->DecrementReferenceCount();
+			m_pMatGlowColor->DeleteIfUnreferenced();
+		}
+		catch (...) {}
 		m_pMatGlowColor = nullptr;
 	}
 
 	if (m_pMatBlurX)
 	{
-		m_pMatBlurX->DecrementReferenceCount();
-		m_pMatBlurX->DeleteIfUnreferenced();
+		try 
+		{
+			m_pMatBlurX->DecrementReferenceCount();
+			m_pMatBlurX->DeleteIfUnreferenced();
+		}
+		catch (...) {}
 		m_pMatBlurX = nullptr;
 	}
 
 	if (m_pMatBlurY)
 	{
-		m_pMatBlurY->DecrementReferenceCount();
-		m_pMatBlurY->DeleteIfUnreferenced();
+		try 
+		{
+			m_pMatBlurY->DecrementReferenceCount();
+			m_pMatBlurY->DeleteIfUnreferenced();
+		}
+		catch (...) {}
 		m_pMatBlurY = nullptr;
 	}
 
 	if (m_pMatHaloAddToScreen)
 	{
-		m_pMatHaloAddToScreen->DecrementReferenceCount();
-		m_pMatHaloAddToScreen->DeleteIfUnreferenced();
+		try 
+		{
+			m_pMatHaloAddToScreen->DecrementReferenceCount();
+			m_pMatHaloAddToScreen->DeleteIfUnreferenced();
+		}
+		catch (...) {}
 		m_pMatHaloAddToScreen = nullptr;
 	}
 
 	if (m_pRenderBuffer1)
 	{
-		m_pRenderBuffer1->DecrementReferenceCount();
-		m_pRenderBuffer1->DeleteIfUnreferenced();
+		try 
+		{
+			m_pRenderBuffer1->DecrementReferenceCount();
+			m_pRenderBuffer1->DeleteIfUnreferenced();
+		}
+		catch (...) {}
 		m_pRenderBuffer1 = nullptr;
 	}
 
 	if (m_pRenderBuffer2)
 	{
-		m_pRenderBuffer2->DecrementReferenceCount();
-		m_pRenderBuffer2->DeleteIfUnreferenced();
+		try 
+		{
+			m_pRenderBuffer2->DecrementReferenceCount();
+			m_pRenderBuffer2->DeleteIfUnreferenced();
+		}
+		catch (...) {}
 		m_pRenderBuffer2 = nullptr;
 	}
 }

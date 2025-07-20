@@ -28,8 +28,20 @@ void CMaterials::Remove(IMaterial* pMaterial)
 	if (m_mMatList.contains(pMaterial))
 		m_mMatList.erase(pMaterial);
 
-	pMaterial->DecrementReferenceCount();
-	pMaterial->DeleteIfUnreferenced();
+	try
+	{
+		// Additional validation - check if the material pointer looks valid
+		if (reinterpret_cast<uintptr_t>(pMaterial) > 0x1000 && 
+			reinterpret_cast<uintptr_t>(pMaterial) < 0x7FFFFFFFFFFF)
+		{
+			pMaterial->DecrementReferenceCount();
+			pMaterial->DeleteIfUnreferenced();
+		}
+	}
+	catch (...)
+	{
+		// Silently handle corrupted material objects
+	}
 	pMaterial = nullptr;
 }
 
@@ -245,11 +257,30 @@ void CMaterials::SetColor(Material_t* pMaterial, Color_t tColor)
 
 	if (pMaterial)
 	{
-		StoreVars(*pMaterial);
-		if (pMaterial->m_phongtint)
-			pMaterial->m_phongtint->SetVecValue(r, g, b);
-		if (pMaterial->m_envmaptint)
-			pMaterial->m_envmaptint->SetVecValue(r, g, b);
+		try
+		{
+			StoreVars(*pMaterial);
+			if (pMaterial->m_phongtint)
+			{
+				try
+				{
+					pMaterial->m_phongtint->SetVecValue(r, g, b);
+				}
+				catch (...) {}
+			}
+			if (pMaterial->m_envmaptint)
+			{
+				try
+				{
+					pMaterial->m_envmaptint->SetVecValue(r, g, b);
+				}
+				catch (...) {}
+			}
+		}
+		catch (...)
+		{
+			// Handle corrupted material variable operations
+		}
 	}
 }
 
