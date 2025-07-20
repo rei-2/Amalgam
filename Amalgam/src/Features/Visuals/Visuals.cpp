@@ -848,7 +848,7 @@ void CVisuals::Store(CTFPlayer* pLocal)
 void CVisuals::OverrideWorldTextures()
 {
 	auto uHash = FNV1A::Hash32(Vars::Visuals::World::WorldTexture.Value.c_str());
-	if (uHash == FNV1A::Hash32Const("Default"))
+	if (uHash == FNV1A::Hash32Const("Default") || !I::MaterialSystem)
 		return;
 
 	KeyValues* kv = new KeyValues("LightmappedGeneric");
@@ -877,43 +877,60 @@ void CVisuals::OverrideWorldTextures()
 		kv->SetString("$basetexture", Vars::Visuals::World::WorldTexture.Value.c_str());
 	}
 
-	for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
+	try
 	{
-		auto pMaterial = I::MaterialSystem->GetMaterial(h);
-		if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached() || pMaterial->IsTranslucent() || pMaterial->IsSpriteCard())
-			continue;
-
-		std::string_view sGroup = pMaterial->GetTextureGroupName();
-		std::string_view sName = pMaterial->GetName();
-
-		if (!sGroup._Starts_with("World")
-			|| sName.find("water") != std::string_view::npos || sName.find("glass") != std::string_view::npos
-			|| sName.find("door") != std::string_view::npos || sName.find("tools") != std::string_view::npos
-			|| sName.find("player") != std::string_view::npos || sName.find("chicken") != std::string_view::npos
-			|| sName.find("wall28") != std::string_view::npos || sName.find("wall26") != std::string_view::npos
-			|| sName.find("decal") != std::string_view::npos || sName.find("overlay") != std::string_view::npos
-			|| sName.find("hay") != std::string_view::npos)
+		for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
 		{
-			continue;
-		}
+			auto pMaterial = I::MaterialSystem->GetMaterial(h);
+			if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached() || pMaterial->IsTranslucent() || pMaterial->IsSpriteCard())
+				continue;
 
-		pMaterial->SetShaderAndParams(kv);
+			std::string_view sGroup = pMaterial->GetTextureGroupName();
+			std::string_view sName = pMaterial->GetName();
+
+			if (!sGroup._Starts_with("World")
+				|| sName.find("water") != std::string_view::npos || sName.find("glass") != std::string_view::npos
+				|| sName.find("door") != std::string_view::npos || sName.find("tools") != std::string_view::npos
+				|| sName.find("player") != std::string_view::npos || sName.find("chicken") != std::string_view::npos
+				|| sName.find("wall28") != std::string_view::npos || sName.find("wall26") != std::string_view::npos
+				|| sName.find("decal") != std::string_view::npos || sName.find("overlay") != std::string_view::npos
+				|| sName.find("hay") != std::string_view::npos)
+			{
+				continue;
+			}
+
+			pMaterial->SetShaderAndParams(kv);
+		}
+	}
+	catch (...)
+	{
+		// Handle any exceptions during material processing
 	}
 }
 
 static inline void ApplyModulation(const Color_t& tColor, bool bSky = false)
 {
-	for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
+	if (!I::MaterialSystem)
+		return;
+
+	try
 	{
-		auto pMaterial = I::MaterialSystem->GetMaterial(h);
-		if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached())
-			continue;
+		for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
+		{
+			auto pMaterial = I::MaterialSystem->GetMaterial(h);
+			if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached())
+				continue;
 
-		auto sGroup = std::string_view(pMaterial->GetTextureGroupName());
-		if (!bSky ? !sGroup._Starts_with("World") : !sGroup._Starts_with("SkyBox"))
-			continue;
+			auto sGroup = std::string_view(pMaterial->GetTextureGroupName());
+			if (!bSky ? !sGroup._Starts_with("World") : !sGroup._Starts_with("SkyBox"))
+				continue;
 
-		pMaterial->ColorModulate(tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f);
+			pMaterial->ColorModulate(tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f);
+		}
+	}
+	catch (...)
+	{
+		// Handle any exceptions during material modulation
 	}
 }
 

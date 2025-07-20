@@ -5,21 +5,32 @@
 // Draws camera to the screen
 void CCameraWindow::Draw()
 {
-	if (!m_pCameraMaterial || !m_bShouldDraw || !I::EngineClient->IsInGame())
+	if (!m_pCameraMaterial || !m_bShouldDraw || !I::EngineClient->IsInGame() || !I::MaterialSystem || !m_pCameraTexture)
 		return;
 
 	auto& tWindowBox = Vars::Visuals::Simulation::ProjectileWindow.Value;
 
 	// Draw to screen
 	const auto renderCtx = I::MaterialSystem->GetRenderContext();
-	renderCtx->DrawScreenSpaceRectangle(
-		m_pCameraMaterial,
-		tWindowBox.x - tWindowBox.w / 2, tWindowBox.y, tWindowBox.w, tWindowBox.h,
-		0, 0, tWindowBox.w, tWindowBox.h,
-		m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
-		nullptr, 1, 1
-	);
-	renderCtx->Release();
+	if (!renderCtx)
+		return;
+
+	try
+	{
+		renderCtx->DrawScreenSpaceRectangle(
+			m_pCameraMaterial,
+			tWindowBox.x - tWindowBox.w / 2, tWindowBox.y, tWindowBox.w, tWindowBox.h,
+			0, 0, tWindowBox.w, tWindowBox.h,
+			m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
+			nullptr, 1, 1
+		);
+		renderCtx->Release();
+	}
+	catch (...)
+	{
+		if (renderCtx)
+			renderCtx->Release();
+	}
 }
 
 // Renders another view onto a texture
@@ -51,17 +62,33 @@ void CCameraWindow::RenderView(void* ecx, const CViewSetup& pViewSetup)
 
 void CCameraWindow::RenderCustomView(void* ecx, const CViewSetup& pViewSetup, ITexture* pTexture)
 {
+	if (!I::MaterialSystem || !pTexture)
+		return;
+
 	const auto renderCtx = I::MaterialSystem->GetRenderContext();
+	if (!renderCtx)
+		return;
 
-	renderCtx->PushRenderTargetAndViewport();
-	renderCtx->SetRenderTarget(pTexture);
+	try
+	{
+		renderCtx->PushRenderTargetAndViewport();
+		renderCtx->SetRenderTarget(pTexture);
 
-	static auto ViewRender_RenderView = U::Hooks.m_mHooks["CViewRender_RenderView"];
-	if (ViewRender_RenderView)
-		ViewRender_RenderView->Call<void>(ecx, pViewSetup, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
+		static auto ViewRender_RenderView = U::Hooks.m_mHooks["CViewRender_RenderView"];
+		if (ViewRender_RenderView)
+			ViewRender_RenderView->Call<void>(ecx, pViewSetup, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
 
-	renderCtx->PopRenderTargetAndViewport();
-	renderCtx->Release();
+		renderCtx->PopRenderTargetAndViewport();
+		renderCtx->Release();
+	}
+	catch (...)
+	{
+		if (renderCtx)
+		{
+			try { renderCtx->PopRenderTargetAndViewport(); } catch (...) {}
+			renderCtx->Release();
+		}
+	}
 }
 
 void CCameraWindow::Initialize()
@@ -73,19 +100,27 @@ void CCameraWindow::Initialize()
 		m_pCameraMaterial = F::Materials.Create("CameraMaterial", kv);
 	}
 
-	if (!m_pCameraTexture)
+	if (!m_pCameraTexture && I::MaterialSystem)
 	{
-		m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
-			"m_pCameraTexture",
-			1,
-			1,
-			RT_SIZE_FULL_FRAME_BUFFER,
-			IMAGE_FORMAT_RGB888,
-			MATERIAL_RT_DEPTH_SHARED,
-			TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
-			CREATERENDERTARGETFLAGS_HDR
-		);
-		m_pCameraTexture->IncrementReferenceCount();
+		try
+		{
+			m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
+				"m_pCameraTexture",
+				1,
+				1,
+				RT_SIZE_FULL_FRAME_BUFFER,
+				IMAGE_FORMAT_RGB888,
+				MATERIAL_RT_DEPTH_SHARED,
+				TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
+				CREATERENDERTARGETFLAGS_HDR
+			);
+			if (m_pCameraTexture)
+				m_pCameraTexture->IncrementReferenceCount();
+		}
+		catch (...)
+		{
+			m_pCameraTexture = nullptr;
+		}
 	}
 }
 

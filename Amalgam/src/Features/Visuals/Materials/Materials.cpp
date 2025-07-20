@@ -11,8 +11,12 @@
 
 IMaterial* CMaterials::Create(char const* szName, KeyValues* pKV)
 {
+	if (!I::MaterialSystem)
+		return nullptr;
+		
 	IMaterial* pMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
-	m_mMatList[pMaterial] = true;
+	if (pMaterial)
+		m_mMatList[pMaterial] = true;
 	return pMaterial;
 }
 
@@ -89,6 +93,9 @@ static inline void ModifyKeyValues(KeyValues* pKV)
 
 void CMaterials::LoadMaterials()
 {
+	if (!I::MaterialSystem)
+		return;
+
 	// default materials
 	StoreStruct( // hacky
 		"None",
