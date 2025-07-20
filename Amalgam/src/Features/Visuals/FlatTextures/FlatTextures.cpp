@@ -26,59 +26,91 @@ void CFlatTextures::ProcessMaterials()
     if (!I::MaterialSystem)
         return;
         
-    MaterialHandle_t matHandle = I::MaterialSystem->FirstMaterial();
-    
-    while (matHandle != I::MaterialSystem->InvalidMaterial())
+    try
     {
-        IMaterial* pMaterial = I::MaterialSystem->GetMaterial(matHandle);
+        MaterialHandle_t matHandle = I::MaterialSystem->FirstMaterial();
         
-        if (pMaterial)
+        while (matHandle != I::MaterialSystem->InvalidMaterial())
         {
-            const std::string matName = pMaterial->GetName();
-            
-            // Only process world textures, skip transparent, sprite, and special materials
-            if (!pMaterial->IsTranslucent() && 
-                !pMaterial->IsSpriteCard() &&
-                matName.find("chicken") == std::string::npos &&
-                matName.find("water") == std::string::npos &&
-                matName.find("sky") == std::string::npos &&
-                std::string(pMaterial->GetTextureGroupName()).find(TEXTURE_GROUP_WORLD) == 0)
+            IMaterial* pMaterial = nullptr;
+            try 
             {
-                // Check if we've already cached this material
-                if (m_CachedMaterials.find(matName) == m_CachedMaterials.end())
+                pMaterial = I::MaterialSystem->GetMaterial(matHandle);
+            }
+            catch (...)
+            {
+                matHandle = I::MaterialSystem->NextMaterial(matHandle);
+                continue;
+            }
+            
+            if (pMaterial)
+            {
+                try
                 {
-                    unsigned char pixel[4] = {0};
+                    const std::string matName = pMaterial->GetName();
                     
-                    // Get the preview color sample from the material
-                    pMaterial->GetPreviewImage(pixel, 1, 1, IMAGE_FORMAT_RGBA8888);
-                    
-                    // Cache the color
-                    m_CachedMaterials[matName] = {pixel[0], pixel[1], pixel[2], pixel[3]};
+                    // Only process world textures, skip transparent, sprite, and special materials
+                    if (!pMaterial->IsTranslucent() && 
+                        !pMaterial->IsSpriteCard() &&
+                        matName.find("chicken") == std::string::npos &&
+                        matName.find("water") == std::string::npos &&
+                        matName.find("sky") == std::string::npos &&
+                        std::string(pMaterial->GetTextureGroupName()).find(TEXTURE_GROUP_WORLD) == 0)
+                    {
+                        // Check if we've already cached this material
+                        if (m_CachedMaterials.find(matName) == m_CachedMaterials.end())
+                        {
+                            unsigned char pixel[4] = {0};
+                            
+                            // Get the preview color sample from the material
+                            pMaterial->GetPreviewImage(pixel, 1, 1, IMAGE_FORMAT_RGBA8888);
+                            
+                            // Cache the color
+                            m_CachedMaterials[matName] = {pixel[0], pixel[1], pixel[2], pixel[3]};
+                        }
+                        
+                        // Get the cached color
+                        Color_t cachedColor = m_CachedMaterials[matName];
+                        unsigned char flatPixel[4] = {cachedColor.r, cachedColor.g, cachedColor.b, cachedColor.a};
+                        
+                        // Store original texture if not already stored
+                        IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
+                        if (pBaseTexVar && m_OriginalTextures.find(matName) == m_OriginalTextures.end())
+                        {
+                            ITexture* originalTex = pBaseTexVar->GetTextureValue();
+                            if (originalTex)
+                                m_OriginalTextures[matName] = originalTex;
+                        }
+                        
+                        // Create a flat 1x1 texture from the sampled color
+                        ITexture* pFlatTexture = I::MaterialSystem->CreateTextureFromBits(
+                            1, 1, 1, IMAGE_FORMAT_RGBA8888, 4, flatPixel);
+                        
+                        if (pFlatTexture && pBaseTexVar)
+                        {
+                            pBaseTexVar->SetTextureValue(pFlatTexture);
+                        }
+                    }
                 }
-                
-                // Get the cached color
-                Color_t cachedColor = m_CachedMaterials[matName];
-                unsigned char flatPixel[4] = {cachedColor.r, cachedColor.g, cachedColor.b, cachedColor.a};
-                
-                // Store original texture if not already stored
-                IMaterialVar* pBaseTexVar = pMaterial->FindVar("$basetexture", nullptr);
-                if (pBaseTexVar && m_OriginalTextures.find(matName) == m_OriginalTextures.end())
+                catch (...)
                 {
-                    m_OriginalTextures[matName] = pBaseTexVar->GetTextureValue();
-                }
-                
-                // Create a flat 1x1 texture from the sampled color
-                ITexture* pFlatTexture = I::MaterialSystem->CreateTextureFromBits(
-                    1, 1, 1, IMAGE_FORMAT_RGBA8888, 4, flatPixel);
-                
-                if (pFlatTexture && pBaseTexVar)
-                {
-                    pBaseTexVar->SetTextureValue(pFlatTexture);
+                    // Skip this material if any operation fails
                 }
             }
+            
+            try
+            {
+                matHandle = I::MaterialSystem->NextMaterial(matHandle);
+            }
+            catch (...)
+            {
+                break;
+            }
         }
-        
-        matHandle = I::MaterialSystem->NextMaterial(matHandle);
+    }
+    catch (...)
+    {
+        // Handle any top-level exceptions during material processing
     }
 }
 

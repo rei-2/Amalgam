@@ -27,21 +27,28 @@ bool CEnemyCam::InitializeMaterials()
         m_pCameraMaterial = F::Materials.Create("EnemyCameraMaterial", kv);
     }
     
-    if (!m_pCameraTexture)
+    if (!m_pCameraTexture && I::MaterialSystem)
     {
-        m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
-            "m_pEnemyCameraTexture",
-            GetCameraWidth(),
-            GetCameraHeight(),
-            RT_SIZE_NO_CHANGE,
-            IMAGE_FORMAT_RGB888,
-            MATERIAL_RT_DEPTH_SHARED,
-            TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
-            CREATERENDERTARGETFLAGS_HDR
-        );
-        
-        if (m_pCameraTexture)
-            m_pCameraTexture->IncrementReferenceCount();
+        try
+        {
+            m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
+                "m_pEnemyCameraTexture",
+                GetCameraWidth(),
+                GetCameraHeight(),
+                RT_SIZE_NO_CHANGE,
+                IMAGE_FORMAT_RGB888,
+                MATERIAL_RT_DEPTH_SHARED,
+                TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
+                CREATERENDERTARGETFLAGS_HDR
+            );
+            
+            if (m_pCameraTexture)
+                m_pCameraTexture->IncrementReferenceCount();
+        }
+        catch (...)
+        {
+            m_pCameraTexture = nullptr;
+        }
     }
     
     // Update tracked dimensions after successful initialization
@@ -121,18 +128,32 @@ void CEnemyCam::Draw()
     GetCameraPosition(x, y);
     
     // Draw camera to screen
+    if (!I::MaterialSystem)
+        return;
+        
     auto renderCtx = I::MaterialSystem->GetRenderContext();
     if (!renderCtx)
         return;
         
-    renderCtx->DrawScreenSpaceRectangle(
-        m_pCameraMaterial,
-        x, y, GetCameraWidth(), GetCameraHeight(),
-        0, 0, GetCameraWidth(), GetCameraHeight(),
-        m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
-        nullptr, 1, 1
-    );
-    renderCtx->Release();
+    try
+    {
+        if (m_pCameraTexture && m_pCameraMaterial)
+        {
+            renderCtx->DrawScreenSpaceRectangle(
+                m_pCameraMaterial,
+                x, y, GetCameraWidth(), GetCameraHeight(),
+                0, 0, GetCameraWidth(), GetCameraHeight(),
+                m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
+                nullptr, 1, 1
+            );
+        }
+        renderCtx->Release();
+    }
+    catch (...)
+    {
+        if (renderCtx)
+            renderCtx->Release();
+    }
     
     // Draw overlay
     DrawOverlay();

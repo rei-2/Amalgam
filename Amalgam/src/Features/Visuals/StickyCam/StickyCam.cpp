@@ -31,21 +31,28 @@ bool CStickyCam::InitializeMaterials()
 	}
 	
 	// Create render target texture
-	if (!m_pCameraTexture)
+	if (!m_pCameraTexture && I::MaterialSystem)
 	{
-		m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
-			"m_pStickyCameraTexture",
-			GetCameraWidth(),
-			GetCameraHeight(),
-			RT_SIZE_NO_CHANGE,
-			IMAGE_FORMAT_RGB888,
-			MATERIAL_RT_DEPTH_SHARED,
-			TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
-			CREATERENDERTARGETFLAGS_HDR
-		);
-		
-		if (m_pCameraTexture)
-			m_pCameraTexture->IncrementReferenceCount();
+		try
+		{
+			m_pCameraTexture = I::MaterialSystem->CreateNamedRenderTargetTextureEx(
+				"m_pStickyCameraTexture",
+				GetCameraWidth(),
+				GetCameraHeight(),
+				RT_SIZE_NO_CHANGE,
+				IMAGE_FORMAT_RGB888,
+				MATERIAL_RT_DEPTH_SHARED,
+				TEXTUREFLAGS_CLAMPS | TEXTUREFLAGS_CLAMPT,
+				CREATERENDERTARGETFLAGS_HDR
+			);
+			
+			if (m_pCameraTexture)
+				m_pCameraTexture->IncrementReferenceCount();
+		}
+		catch (...)
+		{
+			m_pCameraTexture = nullptr;
+		}
 	}
 	
 	// Update tracked dimensions after successful initialization
@@ -887,6 +894,9 @@ void CStickyCam::Draw()
 		return;
 	
 	// Draw camera to screen
+	if (!I::MaterialSystem)
+		return;
+		
 	auto renderCtx = I::MaterialSystem->GetRenderContext();
 	if (!renderCtx)
 		return;
@@ -895,14 +905,25 @@ void CStickyCam::Draw()
 	int x, y;
 	GetCameraPosition(x, y);
 	
-	renderCtx->DrawScreenSpaceRectangle(
-		m_pCameraMaterial,
-		x, y, GetCameraWidth(), GetCameraHeight(),
-		0, 0, GetCameraWidth(), GetCameraHeight(),
-		m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
-		nullptr, 1, 1
-	);
-	renderCtx->Release();
+	try
+	{
+		if (m_pCameraTexture && m_pCameraMaterial)
+		{
+			renderCtx->DrawScreenSpaceRectangle(
+				m_pCameraMaterial,
+				x, y, GetCameraWidth(), GetCameraHeight(),
+				0, 0, GetCameraWidth(), GetCameraHeight(),
+				m_pCameraTexture->GetActualWidth(), m_pCameraTexture->GetActualHeight(),
+				nullptr, 1, 1
+			);
+		}
+		renderCtx->Release();
+	}
+	catch (...)
+	{
+		if (renderCtx)
+			renderCtx->Release();
+	}
 	
 	// Draw overlay
 	DrawOverlay();
@@ -976,19 +997,33 @@ void CStickyCam::RenderView(void* ecx, const CViewSetup& view)
 	stickyView.angles = m_vSmoothedAngles;
 	
 	// Render to texture
+	if (!I::MaterialSystem || !m_pCameraTexture)
+		return;
+		
 	auto renderCtx = I::MaterialSystem->GetRenderContext();
 	if (!renderCtx)
 		return;
 	
-	renderCtx->PushRenderTargetAndViewport();
-	renderCtx->SetRenderTarget(m_pCameraTexture);
-	
-	static auto ViewRender_RenderView = U::Hooks.m_mHooks["CViewRender_RenderView"];
-	if (ViewRender_RenderView)
-		ViewRender_RenderView->Call<void>(ecx, stickyView, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
-	
-	renderCtx->PopRenderTargetAndViewport();
-	renderCtx->Release();
+	try
+	{
+		renderCtx->PushRenderTargetAndViewport();
+		renderCtx->SetRenderTarget(m_pCameraTexture);
+		
+		static auto ViewRender_RenderView = U::Hooks.m_mHooks["CViewRender_RenderView"];
+		if (ViewRender_RenderView)
+			ViewRender_RenderView->Call<void>(ecx, stickyView, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
+		
+		renderCtx->PopRenderTargetAndViewport();
+		renderCtx->Release();
+	}
+	catch (...)
+	{
+		if (renderCtx)
+		{
+			try { renderCtx->PopRenderTargetAndViewport(); } catch (...) {}
+			renderCtx->Release();
+		}
+	}
 }
 
 void CStickyCam::Reset()
