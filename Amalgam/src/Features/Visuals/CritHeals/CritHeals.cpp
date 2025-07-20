@@ -96,8 +96,8 @@ void CCritHeals::Draw()
             if (SDK::W2S(headPos, screenPos))
             {
                 // Allow some off-screen drawing for close-range players
-                if (screenPos.x >= -100 && screenPos.x <= H::Draw.GetScreenW() + 100 &&
-                    screenPos.y >= -100 && screenPos.y <= H::Draw.GetScreenH() + 100)
+                if (screenPos.x >= -100 && screenPos.x <= H::Draw.m_nScreenW + 100 &&
+                    screenPos.y >= -100 && screenPos.y <= H::Draw.m_nScreenH + 100)
                 {
                     DrawTriangle((int)screenPos.x, (int)screenPos.y, isEnemy);
                 }

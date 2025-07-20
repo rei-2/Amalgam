@@ -75,8 +75,8 @@ void CHealthBarESP::Draw()
                 if (SDK::W2S(chestPos, screenPos))
                 {
                     // Allow health bars slightly off-screen for close range players
-                    if (screenPos.x >= -100 && screenPos.x <= H::Draw.GetScreenW() + 100 &&
-                        screenPos.y >= -100 && screenPos.y <= H::Draw.GetScreenH() + 100)
+                    if (screenPos.x >= -100 && screenPos.x <= H::Draw.m_nScreenW + 100 &&
+                        screenPos.y >= -100 && screenPos.y <= H::Draw.m_nScreenH + 100)
                     {
                         int x = (int)(screenPos.x - Vars::Competitive::HealthBarESP::BarWidth.Value / 2);
                         int y = (int)(screenPos.y + 30);
@@ -192,8 +192,8 @@ void CHealthBarESP::DrawHealthPolygon(const Vec3& playerPos, int health, int max
         if (SDK::W2S(worldPoint, screenPoint))
         {
             // Allow some off-screen coordinates for close-range visibility
-            if (screenPoint.x >= -200 && screenPoint.x <= H::Draw.GetScreenW() + 200 &&
-                screenPoint.y >= -200 && screenPoint.y <= H::Draw.GetScreenH() + 200)
+            if (screenPoint.x >= -200 && screenPoint.x <= H::Draw.m_nScreenW + 200 &&
+                screenPoint.y >= -200 && screenPoint.y <= H::Draw.m_nScreenH + 200)
             {
                 vertices.emplace_back(Vertex_t(Vector2D(screenPoint.x, screenPoint.y)));
             }
