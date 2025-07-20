@@ -425,6 +425,11 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         // Handle mouse input for third person mode
         if (m_bThirdPersonMode)
         {
+            // Get current user command to track mouse input
+            auto pCmd = !I::EngineClient->IsPlayingDemo() ? G::LastUserCmd : I::Input->GetUserCmd(I::ClientState->lastoutgoingcommand);
+            if (!pCmd)
+                return;
+                
             // Use command viewangles for mouse input instead of engine angles
             // This prevents interference from spectated player's movements
             static QAngle lastCmdAngles = pCmd->viewangles;
