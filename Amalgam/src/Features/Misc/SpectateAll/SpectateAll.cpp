@@ -32,6 +32,14 @@ bool CSpectateAll::ShouldSpectate()
             // Force out of freezecam using the remembered mode
             pLocal->m_iObserverMode() = m_iLastObserverMode;
             pLocal->m_hObserverTarget().Set(nullptr);
+            
+            // Clear freezecam viewangles to prevent inheritance
+            QAngle neutralAngles(0.0f, 0.0f, 0.0f);
+            I::EngineClient->SetViewAngles(neutralAngles);
+            
+            // Reset our stored angles to prevent contamination
+            m_vThirdPersonAngles = neutralAngles;
+            m_bForceAngleReset = true;
         }
         else if (observerMode != OBS_MODE_FREEZECAM && observerMode != OBS_MODE_NONE)
         {
@@ -219,10 +227,34 @@ void CSpectateAll::HandleEnemySpectate(CViewSetup* pView)
             static CTFPlayer* lastTargetPlayer = nullptr;
             if (lastTargetPlayer != pTarget)
             {
-                // New player - initialize angles based on player's eye angles instead of engine angles
-                // This prevents inheriting bad angles from previous spectated players
-                m_vThirdPersonAngles = pTarget->GetEyeAngles();
+                // New player - use neutral angles to prevent inheriting corrupted viewangles
+                // Only inherit from player if we don't have valid stored angles
+                if (m_vThirdPersonAngles.Length() < 0.1f || !IsValidAngle(m_vThirdPersonAngles))
+                {
+                    // Use a neutral behind-the-player view instead of player's potentially corrupted eye angles
+                    QAngle playerAngles = pTarget->GetEyeAngles();
+                    
+                    // Validate player angles before using them
+                    if (IsValidAngle(playerAngles))
+                    {
+                        m_vThirdPersonAngles.x = 0.0f; // Level pitch
+                        m_vThirdPersonAngles.y = playerAngles.y + 180.0f; // Face opposite direction
+                        m_vThirdPersonAngles.z = 0.0f; // No roll
+                    }
+                    else
+                    {
+                        // Player angles are corrupted, use completely neutral angles
+                        m_vThirdPersonAngles = QAngle(0.0f, 0.0f, 0.0f);
+                    }
+                    
+                    // Normalize yaw
+                    while (m_vThirdPersonAngles.y > 180.0f)
+                        m_vThirdPersonAngles.y -= 360.0f;
+                    while (m_vThirdPersonAngles.y < -180.0f)
+                        m_vThirdPersonAngles.y += 360.0f;
+                }
                 lastTargetPlayer = pTarget;
+                m_bForceAngleReset = true;
             }
             
             // Use stored third person angles for mouse look
@@ -407,8 +439,18 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
             // Initialize third person angles when switching to third person
             if (m_bThirdPersonMode && m_pCurrentSpectatedPlayer)
             {
-                // Use current view angles instead of player angles for smooth transition
-                m_vThirdPersonAngles = pView->angles;
+                // Don't inherit from pView->angles as they might be corrupted
+                // Instead, initialize with a clean neutral view behind the player
+                QAngle playerAngles = m_pCurrentSpectatedPlayer->GetEyeAngles();
+                m_vThirdPersonAngles.x = 0.0f; // Level pitch
+                m_vThirdPersonAngles.y = playerAngles.y + 180.0f; // Face opposite direction
+                m_vThirdPersonAngles.z = 0.0f; // No roll
+                
+                // Normalize yaw
+                while (m_vThirdPersonAngles.y > 180.0f)
+                    m_vThirdPersonAngles.y -= 360.0f;
+                while (m_vThirdPersonAngles.y < -180.0f)
+                    m_vThirdPersonAngles.y += 360.0f;
                 
                 // Force reset of mouse tracking static variables to prevent interference
                 m_bForceAngleReset = true;
@@ -499,10 +541,23 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
             F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
         }
         
-        // When transitioning from first person to third person, use current viewangles
+        // When transitioning from first person to third person, use clean neutral angles
         if (!m_bLastThirdPersonMode && m_bThirdPersonMode && m_pCurrentSpectatedPlayer)
         {
-            m_vThirdPersonAngles = pView->angles;
+            // Don't inherit potentially corrupted pView->angles
+            // Use neutral angles behind the player instead
+            QAngle playerAngles = m_pCurrentSpectatedPlayer->GetEyeAngles();
+            m_vThirdPersonAngles.x = 0.0f; // Level pitch
+            m_vThirdPersonAngles.y = playerAngles.y + 180.0f; // Face opposite direction
+            m_vThirdPersonAngles.z = 0.0f; // No roll
+            
+            // Normalize yaw
+            while (m_vThirdPersonAngles.y > 180.0f)
+                m_vThirdPersonAngles.y -= 360.0f;
+            while (m_vThirdPersonAngles.y < -180.0f)
+                m_vThirdPersonAngles.y += 360.0f;
+                
+            m_bForceAngleReset = true;
         }
         
         // When transitioning to first person, reset regular spectate system
@@ -537,4 +592,17 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
     // Store current state for next frame
     m_bLastInFreeCam = m_bInFreeCam;
     m_bLastThirdPersonMode = m_bThirdPersonMode;
+}
+
+bool CSpectateAll::IsValidAngle(const QAngle& angle)
+{
+    // Check for NaN values
+    if (isnan(angle.x) || isnan(angle.y) || isnan(angle.z))
+        return false;
+        
+    // Check for extreme values that could indicate corruption
+    if (abs(angle.x) > 360.0f || abs(angle.y) > 360.0f || abs(angle.z) > 360.0f)
+        return false;
+        
+    return true;
 }

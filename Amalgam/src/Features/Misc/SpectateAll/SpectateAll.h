@@ -38,6 +38,7 @@ private:
     void HandleEnemySpectate(CViewSetup* pView);
     void ApplyThirdPersonView(CViewSetup* pView);
     SpectateMode GetCurrentMode();
+    bool IsValidAngle(const QAngle& angle);
     
 public:
     void OverrideView(CViewSetup* pView);
