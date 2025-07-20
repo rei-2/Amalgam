@@ -879,27 +879,42 @@ void CVisuals::OverrideWorldTextures()
 
 	try
 	{
-		for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
+		int iterationCount = 0;
+		const int maxIterations = 10000; // Safety limit to prevent infinite loops
+		
+		for (auto h = I::MaterialSystem->FirstMaterial(); 
+			 h != I::MaterialSystem->InvalidMaterial() && iterationCount < maxIterations; 
+			 h = I::MaterialSystem->NextMaterial(h))
 		{
+			iterationCount++;
+			
 			auto pMaterial = I::MaterialSystem->GetMaterial(h);
 			if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached() || pMaterial->IsTranslucent() || pMaterial->IsSpriteCard())
 				continue;
 
-			std::string_view sGroup = pMaterial->GetTextureGroupName();
-			std::string_view sName = pMaterial->GetName();
-
-			if (!sGroup._Starts_with("World")
-				|| sName.find("water") != std::string_view::npos || sName.find("glass") != std::string_view::npos
-				|| sName.find("door") != std::string_view::npos || sName.find("tools") != std::string_view::npos
-				|| sName.find("player") != std::string_view::npos || sName.find("chicken") != std::string_view::npos
-				|| sName.find("wall28") != std::string_view::npos || sName.find("wall26") != std::string_view::npos
-				|| sName.find("decal") != std::string_view::npos || sName.find("overlay") != std::string_view::npos
-				|| sName.find("hay") != std::string_view::npos)
+			try
 			{
+				std::string_view sGroup = pMaterial->GetTextureGroupName();
+				std::string_view sName = pMaterial->GetName();
+
+				if (!sGroup._Starts_with("World")
+					|| sName.find("water") != std::string_view::npos || sName.find("glass") != std::string_view::npos
+					|| sName.find("door") != std::string_view::npos || sName.find("tools") != std::string_view::npos
+					|| sName.find("player") != std::string_view::npos || sName.find("chicken") != std::string_view::npos
+					|| sName.find("wall28") != std::string_view::npos || sName.find("wall26") != std::string_view::npos
+					|| sName.find("decal") != std::string_view::npos || sName.find("overlay") != std::string_view::npos
+					|| sName.find("hay") != std::string_view::npos)
+				{
+					continue;
+				}
+
+				pMaterial->SetShaderAndParams(kv);
+			}
+			catch (...)
+			{
+				// Skip this material if any operation fails
 				continue;
 			}
-
-			pMaterial->SetShaderAndParams(kv);
 		}
 	}
 	catch (...)
@@ -915,17 +930,32 @@ static inline void ApplyModulation(const Color_t& tColor, bool bSky = false)
 
 	try
 	{
-		for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
+		int iterationCount = 0;
+		const int maxIterations = 10000; // Safety limit to prevent infinite loops
+		
+		for (auto h = I::MaterialSystem->FirstMaterial(); 
+			 h != I::MaterialSystem->InvalidMaterial() && iterationCount < maxIterations; 
+			 h = I::MaterialSystem->NextMaterial(h))
 		{
+			iterationCount++;
+			
 			auto pMaterial = I::MaterialSystem->GetMaterial(h);
 			if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached())
 				continue;
 
-			auto sGroup = std::string_view(pMaterial->GetTextureGroupName());
-			if (!bSky ? !sGroup._Starts_with("World") : !sGroup._Starts_with("SkyBox"))
-				continue;
+			try
+			{
+				auto sGroup = std::string_view(pMaterial->GetTextureGroupName());
+				if (!bSky ? !sGroup._Starts_with("World") : !sGroup._Starts_with("SkyBox"))
+					continue;
 
-			pMaterial->ColorModulate(tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f);
+				pMaterial->ColorModulate(tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f);
+			}
+			catch (...)
+			{
+				// Skip this material if any operation fails
+				continue;
+			}
 		}
 	}
 	catch (...)

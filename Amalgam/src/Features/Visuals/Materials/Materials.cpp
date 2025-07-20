@@ -11,13 +11,23 @@
 
 IMaterial* CMaterials::Create(char const* szName, KeyValues* pKV)
 {
-	if (!I::MaterialSystem)
+	if (!I::MaterialSystem || !szName || !pKV)
 		return nullptr;
 		
-	IMaterial* pMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
-	if (pMaterial)
-		m_mMatList[pMaterial] = true;
-	return pMaterial;
+	try
+	{
+		IMaterial* pMaterial = I::MaterialSystem->CreateMaterial(szName, pKV);
+		if (pMaterial && !pMaterial->IsErrorMaterial())
+		{
+			m_mMatList[pMaterial] = true;
+			return pMaterial;
+		}
+	}
+	catch (...)
+	{
+		// Material creation failed
+	}
+	return nullptr;
 }
 
 void CMaterials::Remove(IMaterial* pMaterial)
@@ -25,22 +35,27 @@ void CMaterials::Remove(IMaterial* pMaterial)
 	if (!pMaterial)
 		return;
 
-	if (m_mMatList.contains(pMaterial))
-		m_mMatList.erase(pMaterial);
-
 	try
 	{
-		// Additional validation - check if the material pointer looks valid
-		if (reinterpret_cast<uintptr_t>(pMaterial) > 0x1000 && 
-			reinterpret_cast<uintptr_t>(pMaterial) < 0x7FFFFFFFFFFF)
+		// Only operate on materials we've tracked
+		if (m_mMatList.contains(pMaterial))
 		{
-			pMaterial->DecrementReferenceCount();
-			pMaterial->DeleteIfUnreferenced();
+			m_mMatList.erase(pMaterial);
+			
+			// Additional validation - check if the material pointer looks valid
+			if (reinterpret_cast<uintptr_t>(pMaterial) > 0x1000 && 
+				reinterpret_cast<uintptr_t>(pMaterial) < 0x7FFFFFFFFFFF)
+			{
+				pMaterial->DecrementReferenceCount();
+				pMaterial->DeleteIfUnreferenced();
+			}
 		}
 	}
 	catch (...)
 	{
-		// Silently handle corrupted material objects
+		// Silently handle corrupted material objects - still remove from tracking
+		if (m_mMatList.contains(pMaterial))
+			m_mMatList.erase(pMaterial);
 	}
 	pMaterial = nullptr;
 }
@@ -202,10 +217,16 @@ void CMaterials::LoadMaterials()
 	for (auto& [_, tMaterial] : m_mMaterials)
 	{
 		KeyValues* kv = new KeyValues(tMaterial.m_sName.c_str());
+		if (!kv)
+			continue;
+			
 		bool bLoad = kv->LoadFromBuffer(tMaterial.m_sName.c_str(), tMaterial.m_sVMT.c_str());
 		ModifyKeyValues(kv);
 			
 		tMaterial.m_pMaterial = Create(tMaterial.m_sName.c_str(), kv);
+		
+		// KeyValues are now owned by the material system, don't delete manually
+		// The material system will handle cleanup
 		//StoreVars(tMaterial);
 	}
 
@@ -318,10 +339,14 @@ void CMaterials::AddMaterial(const char* sName)
 	auto& tMaterial = m_mMaterials[uHash];
 
 	KeyValues* kv = new KeyValues(sName);
+	if (!kv)
+		return;
+		
 	kv->LoadFromBuffer(sName, tMaterial.m_sVMT.c_str());
 	ModifyKeyValues(kv);
 
 	tMaterial.m_pMaterial = Create(sName, kv);
+	// KeyValues ownership transferred to material system
 	//StoreVars(tMaterial);
 
 	std::ofstream outStream(F::Configs.m_sMaterialsPath + sName + ".vmt");
@@ -346,10 +371,17 @@ void CMaterials::EditMaterial(const char* sName, const char* sVMT)
 		tMaterial.m_sVMT = sVMT;
 
 		KeyValues* kv = new KeyValues(sName);
+		if (!kv)
+		{
+			m_bLoaded = true;
+			return;
+		}
+		
 		kv->LoadFromBuffer(sName, sVMT);
 		ModifyKeyValues(kv);
 
 		tMaterial.m_pMaterial = Create(sName, kv);
+		// KeyValues ownership transferred to material system
 		//StoreVars(tMaterial);
 
 		std::ofstream outStream(F::Configs.m_sMaterialsPath + sName + ".vmt");
