@@ -372,8 +372,29 @@ float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& world
     
     // No border (white outline removed)
     
-    // Draw text lines
-    Color_t textColor = {255, 255, 255, static_cast<byte>(opacity)};
+    // Calculate text color based on background brightness
+    Color_t textColor;
+    if (Vars::Competitive::Features::ChatBubblesSteamIDColor.Value)
+    {
+        // Calculate luminance of background color to determine text color
+        float luminance = (0.299f * bgColor.r + 0.587f * bgColor.g + 0.114f * bgColor.b) / 255.0f;
+        
+        // Use black text on bright backgrounds, white text on dark backgrounds
+        if (luminance > 0.5f)
+        {
+            textColor = {0, 0, 0, static_cast<byte>(opacity)}; // Black text
+        }
+        else
+        {
+            textColor = {255, 255, 255, static_cast<byte>(opacity)}; // White text
+        }
+    }
+    else
+    {
+        // Default white text on black background
+        textColor = {255, 255, 255, static_cast<byte>(opacity)};
+    }
+    
     float yTextOffset = 0.0f;
     
     for (const auto& line : wrappedLines)
@@ -416,33 +437,9 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
 
 void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
 {
-    if (!Vars::Competitive::Features::ChatBubbles.Value)
-        return;
-    
-    // Get player info
-    auto pPlayer = I::ClientEntityList->GetClientEntity(entityIndex);
-    if (!pPlayer) return;
-    
-    auto pTFPlayer = pPlayer->As<CTFPlayer>();
-    if (!pTFPlayer) return;
-    
-    // Apply voice cooldown to prevent spam
-    float currentTime = I::GlobalVars->curtime;
-    auto& playerData = m_PlayerData[entityIndex];
-    if (currentTime - playerData.lastVoiceTime < VOICE_COOLDOWN)
-        return;
-    
-    playerData.lastVoiceTime = currentTime;
-    
-    // Get player name and voice command text
-    std::string playerName = "Player"; // Default fallback
-    PlayerInfo_t pInfo;
-    if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
-        playerName = pInfo.name;
-    std::string voiceCommand = GetVoiceCommandText(menu, item);
-    
-    // Add voice command message for ALL players (including enemies!)
-    AddChatMessage(voiceCommand, playerName, entityIndex, true);
+    // Voice commands are now handled entirely through OnSoundPlayed for consistency
+    // This function is kept for compatibility but does nothing
+    return;
 }
 
 void CChatBubbles::OnChatMessage(bf_read& msgData)
@@ -472,10 +469,13 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     if (!pPlayer)
         return;
     
-    // Only show sounds for enemy team players
-    auto pLocal = H::Entities.GetLocal();
-    if (!pLocal || pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
-        return;
+    // Optional team filtering
+    if (Vars::Competitive::Features::ChatBubblesEnemyOnly.Value)
+    {
+        auto pLocal = H::Entities.GetLocal();
+        if (!pLocal || pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
+            return;
+    }
     
     // Get player name
     std::string playerName = "Player";
@@ -492,24 +492,26 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     
     std::transform(soundPath.begin(), soundPath.end(), soundPath.begin(), ::tolower);
     
-    // Check if it's a voice command sound (menu-triggered voice commands only)
-    bool isVoiceCommand = soundPath.find("voice/") != std::string::npos ||
-                         soundPath.find("misc/") != std::string::npos;
-    
-    // Check for voicelines - all vo/ sounds plus specific patterns
-    bool isVoiceline = soundPath.find("vo/") != std::string::npos ||
-                      soundPath.find("domination") != std::string::npos ||
-                      soundPath.find("revenge") != std::string::npos ||
-                      soundPath.find("battlecry") != std::string::npos ||
-                      soundPath.find("paincrit") != std::string::npos ||
-                      soundPath.find("painsharp") != std::string::npos ||
-                      soundPath.find("painsevere") != std::string::npos ||
-                      soundPath.find("autoonfire") != std::string::npos ||
-                      soundPath.find("taunt") != std::string::npos ||
-                      soundPath.find("_pain") != std::string::npos ||
-                      soundPath.find("_death") != std::string::npos ||
-                      soundPath.find("_laugh") != std::string::npos ||
-                      soundPath.find("_yell") != std::string::npos;
+    // Check for voice commands and voicelines - comprehensive detection
+    bool isVoiceSound = soundPath.find("vo/") != std::string::npos ||
+                       soundPath.find("voice/") != std::string::npos ||
+                       soundPath.find("misc/") != std::string::npos ||
+                       soundPath.find("domination") != std::string::npos ||
+                       soundPath.find("revenge") != std::string::npos ||
+                       soundPath.find("battlecry") != std::string::npos ||
+                       soundPath.find("paincrit") != std::string::npos ||
+                       soundPath.find("painsharp") != std::string::npos ||
+                       soundPath.find("painsevere") != std::string::npos ||
+                       soundPath.find("autoonfire") != std::string::npos ||
+                       soundPath.find("taunt") != std::string::npos ||
+                       soundPath.find("_pain") != std::string::npos ||
+                       soundPath.find("_death") != std::string::npos ||
+                       soundPath.find("_laugh") != std::string::npos ||
+                       soundPath.find("_yell") != std::string::npos ||
+                       soundPath.find("medic") != std::string::npos ||
+                       soundPath.find("thanks") != std::string::npos ||
+                       soundPath.find("moveup") != std::string::npos ||
+                       soundPath.find("incoming") != std::string::npos;
     
     // Check if it's a weapon sound
     //bool isWeaponSound = soundPath.find("weapons/") != std::string::npos;
@@ -533,20 +535,20 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
                           soundPath.find("water") != std::string::npos))
         return;
     
-    // Debug: Log all detected sounds to see what's happening
-    if ((isVoiceCommand || isVoiceline) && pPlayer)
+    // Debug: Log detected voice sounds
+    if (isVoiceSound && pPlayer)
     {
         std::string playerName = "Unknown";
         PlayerInfo_t pInfo;
         if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
             playerName = pInfo.name;
             
-        I::CVar->ConsolePrintf("ChatBubbles Sound: %s from [%s] entity %d (Voice:%d, Voiceline:%d)\n", 
-                              soundName, playerName.c_str(), entityIndex, isVoiceCommand, isVoiceline);
+        I::CVar->ConsolePrintf("ChatBubbles Voice: %s from [%s] entity %d\n", 
+                              soundName, playerName.c_str(), entityIndex);
     }
     
     // Only show relevant sounds
-    if (!isVoiceCommand && !isVoiceline && !isPlayerAction) // && !isWeaponSound)
+    if (!isVoiceSound && !isPlayerAction) // && !isWeaponSound)
         return;
     
     // Extract just the filename from the sound path
@@ -577,8 +579,7 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     
     // Add the sound as a chat message with appropriate prefix
     std::string prefix = "[Sound] ";
-    if (isVoiceCommand) prefix = "[Voice] ";
-    else if (isVoiceline) prefix = "[Voice] ";
+    if (isVoiceSound) prefix = "[Voice] ";
     //else if (isWeaponSound) prefix = "[Weapon] ";
     else if (isPlayerAction) prefix = "[Action] ";
     

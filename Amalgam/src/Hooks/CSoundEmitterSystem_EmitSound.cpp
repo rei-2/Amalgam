@@ -153,11 +153,15 @@ MAKE_HOOK(CSoundEmitterSystem_EmitSound, S::CSoundEmitterSystem_EmitSound(), voi
 	// Send sound info to ChatBubbles for enemy sound display
 	if (entindex > 0 && ep.m_pSoundName)
 	{
-		// Debug: Log voiceline sound hook calls only
+		// Debug: Log all potential voice sounds for investigation
 		std::string soundName = ep.m_pSoundName;
 		if (soundName.find("vo/") != std::string::npos || 
+		    soundName.find("voice/") != std::string::npos ||
+		    soundName.find("misc/") != std::string::npos ||
 		    soundName.find("domination") != std::string::npos ||
-		    soundName.find("revenge") != std::string::npos)
+		    soundName.find("revenge") != std::string::npos ||
+		    soundName.find("medic") != std::string::npos ||
+		    soundName.find("thanks") != std::string::npos)
 		{
 			I::CVar->ConsolePrintf("CSoundEmitterSystem_EmitSound: %s from entindex %d\n", 
 			                      ep.m_pSoundName, entindex);
@@ -201,11 +205,15 @@ MAKE_HOOK(S_StartSound, S::S_StartSound(), int,
 	// Send sound info to ChatBubbles for enemy sound display
 	if (params.soundsource > 0 && params.pSfx && params.pSfx->getname())
 	{
-		// Debug: Log voiceline sound hook calls only
+		// Debug: Log all potential voice sounds for investigation
 		std::string soundName = params.pSfx->getname();
 		if (soundName.find("vo/") != std::string::npos || 
+		    soundName.find("voice/") != std::string::npos ||
+		    soundName.find("misc/") != std::string::npos ||
 		    soundName.find("domination") != std::string::npos ||
-		    soundName.find("revenge") != std::string::npos)
+		    soundName.find("revenge") != std::string::npos ||
+		    soundName.find("medic") != std::string::npos ||
+		    soundName.find("thanks") != std::string::npos)
 		{
 			I::CVar->ConsolePrintf("S_StartSound: %s from soundsource %d\n", 
 			                      params.pSfx->getname(), params.soundsource);

@@ -899,6 +899,7 @@ namespace Vars
 			CVar(ChatBubbles, "Chat Bubbles", true, VISUAL);
 			CVar(ChatBubblesSteamIDColor, "Chat Bubbles SteamID Color", false, VISUAL);
 			CVar(ChatBubblesNonFloat, "Chat Bubbles Non-Float", false, VISUAL);
+			CVar(ChatBubblesEnemyOnly, "Chat Bubbles Enemy Only", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
 			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
