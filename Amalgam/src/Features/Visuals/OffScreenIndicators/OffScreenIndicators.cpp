@@ -14,8 +14,7 @@ int COffScreenIndicators::m_iFallbackAvatarTexture = 0;
 bool COffScreenIndicators::IsOnScreen(CBaseEntity* entity)
 {
     Vec3 w2s;
-    // Use extended bounds checking like FOV arrows for better accuracy
-    if (SDK::W2S(entity->GetAbsOrigin(), w2s, true))
+    if (SDK::W2S(entity->GetAbsOrigin(), w2s))
     {
         int screenW, screenH;
         I::MatSystemSurface->GetScreenSize(screenW, screenH);
@@ -81,27 +80,36 @@ Color_t COffScreenIndicators::GenerateColor(const std::string& steamID)
 
 void COffScreenIndicators::DrawArrow(int centerX, int centerY, float angle, const Color_t& color, int size)
 {
-    // Use FOV arrows drawing logic for better accuracy
-    Vec2 vCenter = { static_cast<float>(centerX), static_cast<float>(centerY) };
+    // Calculate arrow points based on angle
+    float halfSize = size * 0.5f;
     
-    // Convert angle to match FOV arrows calculation
-    const float flDeg = DEG2RAD(angle * 180.0f / M_PI);
-    const float flCos = cos(flDeg);
-    const float flSin = sin(flDeg);
-
-    float flScale = size;
-    Vec2 v1 = { -flScale, flScale / 2 },
-        v2 = { -flScale, -flScale / 2 },
-        v3 = { -flScale * sqrt(3.f) / 2, 0 };
+    // Arrow points (pointing right initially)
+    Vec3 tip = {static_cast<float>(centerX) + halfSize, static_cast<float>(centerY), 0.0f};
+    Vec3 base1 = {static_cast<float>(centerX) - halfSize, static_cast<float>(centerY) - halfSize * 0.6f, 0.0f};
+    Vec3 base2 = {static_cast<float>(centerX) - halfSize, static_cast<float>(centerY) + halfSize * 0.6f, 0.0f};
     
-    // Use filled polygon like FOV arrows for better visibility
-    H::Draw.FillPolygon(
-        {
-            { { vCenter.x + v1.x * flCos - v1.y * flSin, vCenter.y + v1.y * flCos + v1.x * flSin } },
-            { { vCenter.x + v2.x * flCos - v2.y * flSin, vCenter.y + v2.y * flCos + v2.x * flSin } },
-            { { vCenter.x + v3.x * flCos - v3.y * flSin, vCenter.y + v3.y * flCos + v3.x * flSin } }
-        }, color
-    );
+    // Rotate points around center
+    float cosA = std::cos(angle);
+    float sinA = std::sin(angle);
+    
+    auto rotatePoint = [&](Vec3& point) {
+        float x = point.x - static_cast<float>(centerX);
+        float y = point.y - static_cast<float>(centerY);
+        point.x = static_cast<float>(centerX) + (x * cosA - y * sinA);
+        point.y = static_cast<float>(centerY) + (x * sinA + y * cosA);
+    };
+    
+    rotatePoint(tip);
+    rotatePoint(base1);
+    rotatePoint(base2);
+    
+    // Draw arrow using lines
+    H::Draw.Line(static_cast<int>(tip.x), static_cast<int>(tip.y),
+                static_cast<int>(base1.x), static_cast<int>(base1.y), color);
+    H::Draw.Line(static_cast<int>(tip.x), static_cast<int>(tip.y),
+                static_cast<int>(base2.x), static_cast<int>(base2.y), color);
+    H::Draw.Line(static_cast<int>(base1.x), static_cast<int>(base1.y),
+                static_cast<int>(base2.x), static_cast<int>(base2.y), color);
 }
 
 void COffScreenIndicators::Draw()
@@ -139,28 +147,36 @@ void COffScreenIndicators::Draw()
         if (pPlayer == pLocal || pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
             continue;
         
-        // Use more accurate FOV arrows screen detection
-        Vec3 vScreenPos;
-        bool isOnScreen = SDK::W2S(pPlayer->GetCenter(), vScreenPos, true);
-        if (isOnScreen) {
-            // Additional screen bounds check like FOV arrows
-            if (vScreenPos.x >= 0 && vScreenPos.x <= screenW && vScreenPos.y >= 0 && vScreenPos.y <= screenH)
-                continue;
-        }
+        // Check if player is off-screen
+        if (IsOnScreen(pPlayer))
+            continue;
         
-        // Use FOV arrows positioning logic for better accuracy
-        Vec2 vCenter = { screenW / 2.f, screenH / 2.f };
-        Vec3 vLocalPos = pLocal->GetEyePosition();
-        Vec3 vPlayerPos = pPlayer->GetCenter();
+        // Calculate directional position relative to local player
+        Vec3 localPos = pLocal->GetAbsOrigin();
+        Vec3 playerPos = pPlayer->GetAbsOrigin();
+        Vec3 positionDiff = localPos - playerPos;
         
-        // Calculate angle between screen center and target
-        Vec3 vAngle = Math::VectorAngles({ vCenter.x - vScreenPos.x, vCenter.y - vScreenPos.y, 0 });
-        float angle = vAngle.y * M_PI / 180.0f;
+        float x = std::cos(yaw) * positionDiff.y - std::sin(yaw) * positionDiff.x;
+        float y = std::cos(yaw) * positionDiff.x + std::sin(yaw) * positionDiff.y;
+        float len = std::sqrt(x * x + y * y);
         
-        // Position indicator at configurable distance from screen center (like FOV arrows offset)
-        float flOffset = Vars::Competitive::Features::OffScreenIndicatorsRange.Value;
-        int finalX = static_cast<int>(vCenter.x + cos(angle) * flOffset);
-        int finalY = static_cast<int>(vCenter.y + sin(angle) * flOffset);
+        if (len == 0)
+            continue;
+        
+        // Normalize direction
+        x = x / len;
+        y = y / len;
+        
+        // Position indicator at configurable distance from screen center
+        float indicatorRange = Vars::Competitive::Features::OffScreenIndicatorsRange.Value;
+        float pos1 = screenW / 2.0f + x * indicatorRange;
+        float pos2 = screenH / 2.0f + y * indicatorRange;
+        
+        if (pos1 != pos1 || pos2 != pos2)  // NaN check
+            continue;
+        
+        int finalX = static_cast<int>(std::floor(pos1));
+        int finalY = static_cast<int>(std::floor(pos2));
         
         // Get player name
         std::string playerName = "Player " + std::to_string(pPlayer->entindex());
@@ -174,25 +190,10 @@ void COffScreenIndicators::Draw()
         int health = pPlayer->m_iHealth();
         std::string healthText = std::to_string(health);
         
-        // Calculate distance for alpha using FOV arrows logic
-        float distance = vLocalPos.DistTo(vPlayerPos);
-        float flMaxDistance = 1000.0f; // Similar to FOV arrows max distance
-        float flMap = Math::RemapVal(distance, flMaxDistance, flMaxDistance * 0.9f, 0.f, 1.f);
+        // Calculate distance for alpha
+        float distance = len;
         int baseAlpha = Vars::Competitive::Features::OffScreenIndicatorsAlpha.Value;
-        int alpha = static_cast<int>(flMap * baseAlpha);
-        
-        // Additional screen-based transparency like FOV arrows
-        if (isOnScreen) {
-            float flMin = std::min(vCenter.x, vCenter.y);
-            float flMax = std::max(vCenter.x, vCenter.y);
-            float flDist = sqrt(powf(vScreenPos.x - vCenter.x, 2) + powf(vScreenPos.y - vCenter.y, 2));
-            float flTransparency = 1.f - std::clamp((flDist - flMin) / (flMin != flMax ? flMax - flMin : 1), 0.f, 1.f);
-            alpha = static_cast<int>(std::max(float(alpha) - flTransparency * baseAlpha, 0.f));
-        }
-        
-        // Early exit if alpha is too low (like FOV arrows)
-        if (!alpha)
-            continue;
+        int alpha = static_cast<int>(std::max(0.0f, static_cast<float>(baseAlpha) - (distance * 0.05f)));
         
         // Get color based on player Steam ID
         std::string steamID = GetPlayerSteamID(pPlayer);
@@ -203,8 +204,8 @@ void COffScreenIndicators::Draw()
             playerColor.a = static_cast<byte>(alpha);
         }
         
-        // Use the angle calculated from FOV arrows logic
-        float directionAngle = angle;
+        // Calculate angle pointing toward the target (opposite of the direction to indicator)
+        float directionAngle = std::atan2(y, x); // Direction from indicator toward target
         
         // Draw indicator - either Steam avatar or arrow
         int arrowSize = Vars::Competitive::Features::OffScreenIndicatorsSize.Value;
