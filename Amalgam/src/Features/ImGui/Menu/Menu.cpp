@@ -1561,6 +1561,12 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::HiderESP, FToggleEnum::Left);
 				} EndSection();
 
+				if (Section("Chat Bubbles"))
+				{
+					FToggle(Vars::Competitive::Features::ChatBubblesSteamIDColor, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::ChatBubblesNonFloat, FToggleEnum::Right);
+				} EndSection();
+
 				if (Section("Movement Features"))
 				{
 					FToggle(Vars::Competitive::Features::SafeBhop, FToggleEnum::Left);

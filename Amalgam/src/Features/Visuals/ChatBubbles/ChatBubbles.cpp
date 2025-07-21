@@ -52,6 +52,27 @@ std::string CChatBubbles::GetVoiceCommandText(int menu, int item)
     return "Unknown Command";
 }
 
+Color_t CChatBubbles::GenerateColor(const std::string& steamID)
+{
+    if (m_ColorCache.find(steamID) != m_ColorCache.end())
+        return m_ColorCache[steamID];
+    
+    // Simple hash function for color generation (same as OffScreenIndicators)
+    uint32_t hash = 0;
+    for (char c : steamID)
+    {
+        hash += static_cast<uint32_t>(c);
+    }
+    
+    int r = static_cast<int>((hash * 11) % 200 + 55);
+    int g = static_cast<int>((hash * 23) % 200 + 55);
+    int b = static_cast<int>((hash * 37) % 200 + 55);
+    
+    Color_t color = {static_cast<byte>(r), static_cast<byte>(g), static_cast<byte>(b), 255};
+    m_ColorCache[steamID] = color;
+    return color;
+}
+
 void CChatBubbles::AddChatMessage(const std::string& message, const std::string& playerName, int entityIndex, bool isVoice)
 {
     float currentTime = I::GlobalVars->curtime;
@@ -68,25 +89,53 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
         if (isVoice)
             playerData.lastVoiceTime = currentTime;
         
-        // Create new message
-        ChatBubbleMessage newMessage;
-        newMessage.message = message;
-        newMessage.playerName = playerName;
-        newMessage.timestamp = currentTime;
-        newMessage.isVoice = isVoice;
-        newMessage.hasSmoothPos = false;
-        
-        // Add to front of list
-        playerData.messages.insert(playerData.messages.begin(), newMessage);
-        
-        // Debug: Confirm message was added
-        I::CVar->ConsolePrintf("AddChatMessage: Added '%s' for player %d, total: %d\n", 
-                              message.c_str(), entityIndex, static_cast<int>(playerData.messages.size()));
-        
-        // Limit messages per player
-        while (playerData.messages.size() > MAX_MESSAGES_PER_PLAYER)
+        // Check for duplicate message in recent messages
+        bool foundDuplicate = false;
+        for (auto& existingMsg : playerData.messages)
         {
-            playerData.messages.pop_back();
+            if (existingMsg.message == message && (currentTime - existingMsg.timestamp) < 3.0f)
+            {
+                // Update existing message count and timestamp
+                existingMsg.count++;
+                existingMsg.timestamp = currentTime;
+                foundDuplicate = true;
+                
+                // Debug: Confirm message count updated
+                if (isVoice || message.find("[Voice]") != std::string::npos)
+                {
+                    I::CVar->ConsolePrintf("AddChatMessage: Updated '%s' count to %d for player %d\n", 
+                                          message.c_str(), existingMsg.count, entityIndex);
+                }
+                break;
+            }
+        }
+        
+        if (!foundDuplicate)
+        {
+            // Create new message
+            ChatBubbleMessage newMessage;
+            newMessage.message = message;
+            newMessage.playerName = playerName;
+            newMessage.timestamp = currentTime;
+            newMessage.isVoice = isVoice;
+            newMessage.hasSmoothPos = false;
+            newMessage.count = 1;
+            
+            // Add to front of list
+            playerData.messages.insert(playerData.messages.begin(), newMessage);
+            
+            // Debug: Confirm message was added (only for voicelines and non-action sounds)
+            if (isVoice || message.find("[Voice]") != std::string::npos)
+            {
+                I::CVar->ConsolePrintf("AddChatMessage: Added '%s' for player %d\n", 
+                                      message.c_str(), entityIndex);
+            }
+            
+            // Limit messages per player
+            while (playerData.messages.size() > MAX_MESSAGES_PER_PLAYER)
+            {
+                playerData.messages.pop_back();
+            }
         }
     }
     
@@ -97,6 +146,7 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
     globalMessage.timestamp = currentTime;
     globalMessage.isVoice = isVoice;
     globalMessage.hasSmoothPos = false;
+    globalMessage.count = 1;
     
     m_GlobalChatLog.insert(m_GlobalChatLog.begin(), globalMessage);
     
@@ -231,7 +281,7 @@ int CChatBubbles::CalculateOpacity(float messageAge)
     return opacity < 2 ? 0 : opacity;
 }
 
-float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset)
+float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset, int entityIndex)
 {
     // Get screen position
     Vec3 screenPos;
@@ -245,48 +295,82 @@ float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& world
     if (opacity <= 2)
         return 0.0f;
     
-    // Prepare display text
-    std::string displayText = message.isVoice ? 
-        ("(Voice) " + message.message) : message.message;
+    // Prepare display text with count
+    std::string displayText = message.message;
+    if (message.count > 1) {
+        displayText += " x" + std::to_string(message.count);
+    }
     
     // Wrap text and calculate dimensions
     auto wrappedLines = WrapText(displayText, BUBBLE_MAX_WIDTH - (BUBBLE_PADDING * 2));
     Vec2 bubbleDims = CalculateBubbleDimensions(wrappedLines);
     
-    // Get screen dimensions
-    int screenW, screenH;
-    I::MatSystemSurface->GetScreenSize(screenW, screenH);
+    // Calculate bubble position
+    float bubbleX, bubbleY;
     
-    // Calculate bubble position with screen bounds
-    float bubbleX = std::max(bubbleDims.x / 2, 
-                    std::min(static_cast<float>(screenW) - bubbleDims.x / 2, screenPos.x));
-    float bubbleY = std::max(bubbleDims.y, 
-                    std::min(static_cast<float>(screenH) - 20, screenPos.y - bubbleDims.y - 20 - yOffset));
-    
-    // Smooth position interpolation
-    if (!message.hasSmoothPos)
+    if (Vars::Competitive::Features::ChatBubblesNonFloat.Value)
     {
-        message.smoothPos = {bubbleX, bubbleY, 0.0f};
-        message.hasSmoothPos = true;
+        // Non-float behavior: Direct positioning like health bars
+        bubbleX = screenPos.x;
+        bubbleY = screenPos.y - bubbleDims.y - 20 - yOffset;
     }
     else
     {
-        message.smoothPos.x += (bubbleX - message.smoothPos.x) * SMOOTHING_FACTOR;
-        message.smoothPos.y += (bubbleY - message.smoothPos.y) * SMOOTHING_FACTOR;
+        // Original floating behavior with screen bounds and smoothing
+        int screenW, screenH;
+        I::MatSystemSurface->GetScreenSize(screenW, screenH);
+        
+        bubbleX = std::max(bubbleDims.x / 2, 
+                          std::min(static_cast<float>(screenW) - bubbleDims.x / 2, screenPos.x));
+        bubbleY = std::max(bubbleDims.y, 
+                          std::min(static_cast<float>(screenH) - 20, screenPos.y - bubbleDims.y - 20 - yOffset));
+        
+        // Smooth position interpolation
+        if (!message.hasSmoothPos)
+        {
+            message.smoothPos = {bubbleX, bubbleY, 0.0f};
+            message.hasSmoothPos = true;
+        }
+        else
+        {
+            message.smoothPos.x += (bubbleX - message.smoothPos.x) * SMOOTHING_FACTOR;
+            message.smoothPos.y += (bubbleY - message.smoothPos.y) * SMOOTHING_FACTOR;
+        }
+        
+        bubbleX = message.smoothPos.x;
+        bubbleY = message.smoothPos.y;
+    }
+    
+    // Get background color
+    Color_t bgColor;
+    if (Vars::Competitive::Features::ChatBubblesSteamIDColor.Value)
+    {
+        // Get player's SteamID for color generation
+        PlayerInfo_t pInfo;
+        std::string steamID = "default";
+        if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
+        {
+            steamID = std::to_string(pInfo.friendsID);
+        }
+        
+        Color_t playerColor = GenerateColor(steamID);
+        bgColor = {playerColor.r, playerColor.g, playerColor.b, static_cast<byte>(opacity * 0.8f)};
+    }
+    else
+    {
+        // Default black background
+        bgColor = {0, 0, 0, static_cast<byte>(opacity * 0.8f)};
     }
     
     // Draw background
-    Color_t bgColor = {0, 0, 0, static_cast<byte>(opacity * 0.8f)};
-    int rectX = static_cast<int>(message.smoothPos.x - bubbleDims.x / 2);
-    int rectY = static_cast<int>(message.smoothPos.y - bubbleDims.y);
+    int rectX = static_cast<int>(bubbleX - bubbleDims.x / 2);
+    int rectY = static_cast<int>(bubbleY - bubbleDims.y);
     int rectW = static_cast<int>(bubbleDims.x);
     int rectH = static_cast<int>(bubbleDims.y);
     
     H::Draw.FillRect(rectX, rectY, rectW, rectH, bgColor);
     
-    // Draw border
-    Color_t borderColor = {255, 255, 255, static_cast<byte>(opacity)};
-    H::Draw.LineRect(rectX, rectY, rectW, rectH, borderColor);
+    // No border (white outline removed)
     
     // Draw text lines
     Color_t textColor = {255, 255, 255, static_cast<byte>(opacity)};
@@ -296,8 +380,8 @@ float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& world
     {
         Vec2 lineSize = MeasureTextSize(line);
         
-        int textX = static_cast<int>(message.smoothPos.x - bubbleDims.x / 2 + BUBBLE_PADDING);
-        int textY = static_cast<int>(message.smoothPos.y - bubbleDims.y + BUBBLE_PADDING + yTextOffset);
+        int textX = static_cast<int>(bubbleX - bubbleDims.x / 2 + BUBBLE_PADDING);
+        int textY = static_cast<int>(bubbleY - bubbleDims.y + BUBBLE_PADDING + yTextOffset);
         
         H::Draw.String(H::Fonts.GetFont(FONT_ESP), textX, textY, textColor, ALIGN_TOPLEFT, line.c_str());
         
@@ -317,9 +401,7 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
     if (it == m_PlayerData.end())
         return;
     
-    // Debug: Confirm we're drawing bubbles
-    I::CVar->ConsolePrintf("DrawPlayerBubbles: Drawing %d messages for player %d\n", 
-                          static_cast<int>(it->second.messages.size()), playerIndex);
+    // Debug removed to prevent spam
     
     // Get player head position
     Vec3 headPos = pPlayer->GetAbsOrigin() + Vec3(0, 0, 75);
@@ -328,7 +410,7 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
     float yOffset = 0.0f;
     for (auto& message : it->second.messages)
     {
-        yOffset += DrawChatBubble(message, headPos, yOffset);
+        yOffset += DrawChatBubble(message, headPos, yOffset, playerIndex);
     }
 }
 
@@ -410,13 +492,12 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     
     std::transform(soundPath.begin(), soundPath.end(), soundPath.begin(), ::tolower);
     
-    // Check if it's a voice command sound - including misc/ for broader coverage
-    bool isVoiceCommand = soundPath.find("vo/") != std::string::npos || 
-                         soundPath.find("voice/") != std::string::npos ||
+    // Check if it's a voice command sound (menu-triggered voice commands only)
+    bool isVoiceCommand = soundPath.find("voice/") != std::string::npos ||
                          soundPath.find("misc/") != std::string::npos;
     
-    // Check for additional voiceline patterns - be more comprehensive with vo/ detection
-    bool isVoiceline = (soundPath.find("vo/") != std::string::npos && !isVoiceCommand) ||
+    // Check for voicelines - all vo/ sounds plus specific patterns
+    bool isVoiceline = soundPath.find("vo/") != std::string::npos ||
                       soundPath.find("domination") != std::string::npos ||
                       soundPath.find("revenge") != std::string::npos ||
                       soundPath.find("battlecry") != std::string::npos ||
@@ -437,15 +518,31 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     bool isPlayerAction = soundPath.find("player/") != std::string::npos ||
                          soundPath.find("items/") != std::string::npos;
     
-    // Filter out footsteps from player actions
-    if (isPlayerAction && soundPath.find("footsteps") != std::string::npos)
+    // Filter out footsteps and other noisy player actions
+    if (isPlayerAction && (soundPath.find("footsteps") != std::string::npos ||
+                          soundPath.find("flesh_impact") != std::string::npos ||
+                          soundPath.find("body_medium_impact") != std::string::npos ||
+                          soundPath.find("dirt") != std::string::npos ||
+                          soundPath.find("concrete") != std::string::npos ||
+                          soundPath.find("metal") != std::string::npos ||
+                          soundPath.find("wood") != std::string::npos ||
+                          soundPath.find("gravel") != std::string::npos ||
+                          soundPath.find("grass") != std::string::npos ||
+                          soundPath.find("sand") != std::string::npos ||
+                          soundPath.find("tile") != std::string::npos ||
+                          soundPath.find("water") != std::string::npos))
         return;
     
-    // Debug: Log all sounds for analysis
-    if (isVoiceCommand || isVoiceline || isPlayerAction)
+    // Debug: Log all detected sounds to see what's happening
+    if ((isVoiceCommand || isVoiceline) && pPlayer)
     {
-        I::CVar->ConsolePrintf("ChatBubbles Sound: %s from entity %d (Voice:%d, Voiceline:%d, Action:%d)\n", 
-                              soundName, entityIndex, isVoiceCommand, isVoiceline, isPlayerAction);
+        std::string playerName = "Unknown";
+        PlayerInfo_t pInfo;
+        if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
+            playerName = pInfo.name;
+            
+        I::CVar->ConsolePrintf("ChatBubbles Sound: %s from [%s] entity %d (Voice:%d, Voiceline:%d)\n", 
+                              soundName, playerName.c_str(), entityIndex, isVoiceCommand, isVoiceline);
     }
     
     // Only show relevant sounds
@@ -463,14 +560,29 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     if (lastDot != std::string::npos)
         soundFile = soundFile.substr(0, lastDot);
     
+    // Clean up the filename
+    std::string cleanedFile = soundFile;
+    
+    // Replace underscores with spaces
+    std::replace(cleanedFile.begin(), cleanedFile.end(), '_', ' ');
+    
+    // Remove numbers from the end (e.g., "domination01" -> "domination")
+    size_t pos = cleanedFile.length();
+    while (pos > 0 && std::isdigit(cleanedFile[pos - 1])) {
+        pos--;
+    }
+    if (pos < cleanedFile.length()) {
+        cleanedFile = cleanedFile.substr(0, pos);
+    }
+    
     // Add the sound as a chat message with appropriate prefix
     std::string prefix = "[Sound] ";
     if (isVoiceCommand) prefix = "[Voice] ";
-    else if (isVoiceline) prefix = "[Voiceline] ";
+    else if (isVoiceline) prefix = "[Voice] ";
     //else if (isWeaponSound) prefix = "[Weapon] ";
     else if (isPlayerAction) prefix = "[Action] ";
     
-    AddChatMessage(prefix + soundFile, playerName, entityIndex, false);
+    AddChatMessage(prefix + cleanedFile, playerName, entityIndex, false);
 }
 
 void CChatBubbles::Draw()
@@ -488,11 +600,13 @@ void CChatBubbles::Draw()
     // Clean old messages
     CleanOldMessages();
     
-    // Debug: Check if we have any messages
-    if (!m_PlayerData.empty())
+    // Debug: Check if we have any messages (limit spam)
+    static int drawCallCount = 0;
+    drawCallCount++;
+    if (!m_PlayerData.empty() && drawCallCount % 60 == 0)  // Log every 60 frames
     {
-        I::CVar->ConsolePrintf("ChatBubbles Draw: %d players with messages\n", 
-                              static_cast<int>(m_PlayerData.size()));
+        I::CVar->ConsolePrintf("Draw call %d: %d players with messages\n", 
+                              drawCallCount, static_cast<int>(m_PlayerData.size()));
     }
     
     // Draw bubbles for all players

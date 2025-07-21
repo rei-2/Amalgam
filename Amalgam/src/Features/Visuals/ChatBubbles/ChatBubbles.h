@@ -22,8 +22,9 @@ struct ChatBubbleMessage
     bool isVoice;
     Vec3 smoothPos;
     bool hasSmoothPos;
+    int count;
     
-    ChatBubbleMessage() : timestamp(0.0f), isVoice(false), hasSmoothPos(false) {}
+    ChatBubbleMessage() : timestamp(0.0f), isVoice(false), hasSmoothPos(false), count(1) {}
 };
 
 // Player chat data
@@ -55,9 +56,13 @@ private:
     std::unordered_map<int, PlayerChatData> m_PlayerData;
     std::vector<ChatBubbleMessage> m_GlobalChatLog;
     
+    // SteamID color cache
+    std::unordered_map<std::string, Color_t> m_ColorCache;
+    
     // Helper functions
     std::string GetVoiceCommandText(int menu, int item);
     void AddChatMessage(const std::string& message, const std::string& playerName, int entityIndex, bool isVoice);
+    Color_t GenerateColor(const std::string& steamID);
     void CleanOldMessages();
     
     // Text rendering helpers
@@ -67,7 +72,7 @@ private:
     
     // Drawing functions
     int CalculateOpacity(float messageAge);
-    float DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset);
+    float DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset, int entityIndex);
     void DrawPlayerBubbles(CTFPlayer* pPlayer);
     
 public:

@@ -897,6 +897,8 @@ namespace Vars
 			CVar(PlayerTrails, "Player Movement Trails", true, VISUAL);
 			CVar(CritHeals, "Critical Heal Indicators", true, VISUAL);
 			CVar(ChatBubbles, "Chat Bubbles", true, VISUAL);
+			CVar(ChatBubblesSteamIDColor, "Chat Bubbles SteamID Color", false, VISUAL);
+			CVar(ChatBubblesNonFloat, "Chat Bubbles Non-Float", false, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
 			CVar(AmmoTracker, "Ammo Pack Respawn ESP", true, VISUAL);
