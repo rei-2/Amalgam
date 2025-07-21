@@ -61,7 +61,6 @@ private:
     
     // Helper functions
     std::string GetVoiceCommandText(int menu, int item);
-    void AddChatMessage(const std::string& message, const std::string& playerName, int entityIndex, bool isVoice);
     Color_t GenerateColor(const std::string& steamID);
     void CleanOldMessages();
     
@@ -82,6 +81,9 @@ public:
     void OnSoundPlayed(int entityIndex, const char* soundName);
     void Draw();
     void Reset();
+    
+    // Public interface for external access
+    void AddChatMessage(const std::string& message, const std::string& playerName, int entityIndex, bool isVoice);
 };
 
 ADD_FEATURE(CChatBubbles, ChatBubbles)

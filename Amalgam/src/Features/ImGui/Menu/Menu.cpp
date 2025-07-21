@@ -1566,6 +1566,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::ChatBubblesSteamIDColor, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::ChatBubblesNonFloat, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::ChatBubblesEnemyOnly, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::ChatBubblesTextChat, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::ChatBubblesVoiceSounds, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Movement Features"))

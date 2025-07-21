@@ -100,12 +100,14 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
                 existingMsg.timestamp = currentTime;
                 foundDuplicate = true;
                 
+#ifdef _DEBUG
                 // Debug: Confirm message count updated
                 if (isVoice || message.find("[Voice]") != std::string::npos)
                 {
                     I::CVar->ConsolePrintf("AddChatMessage: Updated '%s' count to %d for player %d\n", 
                                           message.c_str(), existingMsg.count, entityIndex);
                 }
+#endif
                 break;
             }
         }
@@ -124,12 +126,14 @@ void CChatBubbles::AddChatMessage(const std::string& message, const std::string&
             // Add to front of list
             playerData.messages.insert(playerData.messages.begin(), newMessage);
             
+#ifdef _DEBUG
             // Debug: Confirm message was added (only for voicelines and non-action sounds)
             if (isVoice || message.find("[Voice]") != std::string::npos)
             {
                 I::CVar->ConsolePrintf("AddChatMessage: Added '%s' for player %d\n", 
                                       message.c_str(), entityIndex);
             }
+#endif
             
             // Limit messages per player
             while (playerData.messages.size() > MAX_MESSAGES_PER_PLAYER)
@@ -454,7 +458,7 @@ void CChatBubbles::OnChatMessage(bf_read& msgData)
 
 void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
 {
-    if (!Vars::Competitive::Features::ChatBubbles.Value)
+    if (!Vars::Competitive::Features::ChatBubbles.Value || !Vars::Competitive::Features::ChatBubblesVoiceSounds.Value)
         return;
     
     if (!soundName || entityIndex <= 0)
@@ -535,6 +539,7 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
                           soundPath.find("water") != std::string::npos))
         return;
     
+#ifdef _DEBUG
     // Debug: Log detected voice sounds
     if (isVoiceSound && pPlayer)
     {
@@ -546,6 +551,7 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
         I::CVar->ConsolePrintf("ChatBubbles Voice: %s from [%s] entity %d\n", 
                               soundName, playerName.c_str(), entityIndex);
     }
+#endif
     
     // Only show relevant sounds
     if (!isVoiceSound && !isPlayerAction) // && !isWeaponSound)
@@ -564,6 +570,25 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     
     // Clean up the filename
     std::string cleanedFile = soundFile;
+    
+    // Special handling for grenade_jump_lp to prevent spam
+    if (cleanedFile.find("grenade_jump_lp") != std::string::npos)
+    {
+        cleanedFile = "grenade_jump_lp";
+        
+        // Check if this player already has this sound within the last 2 seconds
+        auto& playerData = m_PlayerData[entityIndex];
+        float currentTime = I::GlobalVars->curtime;
+        
+        for (const auto& msg : playerData.messages)
+        {
+            if (msg.message.find("grenade jump lp") != std::string::npos && 
+                (currentTime - msg.timestamp) < 2.0f)
+            {
+                return; // Skip this sound to prevent spam
+            }
+        }
+    }
     
     // Replace underscores with spaces
     std::replace(cleanedFile.begin(), cleanedFile.end(), '_', ' ');
@@ -601,6 +626,7 @@ void CChatBubbles::Draw()
     // Clean old messages
     CleanOldMessages();
     
+#ifdef _DEBUG
     // Debug: Check if we have any messages (limit spam)
     static int drawCallCount = 0;
     drawCallCount++;
@@ -609,6 +635,7 @@ void CChatBubbles::Draw()
         I::CVar->ConsolePrintf("Draw call %d: %d players with messages\n", 
                               drawCallCount, static_cast<int>(m_PlayerData.size()));
     }
+#endif
     
     // Draw bubbles for all players
     for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
