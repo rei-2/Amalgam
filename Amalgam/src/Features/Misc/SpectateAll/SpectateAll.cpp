@@ -72,6 +72,53 @@ bool CSpectateAll::ShouldSpectate()
             
             return false; // Don't override while skipping
         }
+        
+        // If enabled, skip objective cameras by detecting objective entities
+        if (Vars::Competitive::SpectateAll::ExcludeObjectiveCameras.Value)
+        {
+            auto pTarget = pLocal->m_hObserverTarget().Get();
+            if (pTarget && !pTarget->IsPlayer())
+            {
+                // Additional safety check - ensure we can get the class ID safely
+                ETFClassID classID;
+                bool canGetClassID = false;
+                try 
+                {
+                    classID = pTarget->GetClassID();
+                    canGetClassID = true;
+                }
+                catch (...)
+                {
+                    // If we can't get class ID safely, skip this check
+                    canGetClassID = false;
+                }
+                
+                if (canGetClassID)
+                {
+                    // Check if spectating objective entities
+                    bool isObjectiveEntity = (classID == ETFClassID::CCaptureFlag ||     // Intelligence/briefcase
+                                            classID == ETFClassID::CTeamTrainWatcher ||   // Payload cart watcher
+                                            classID == ETFClassID::CCaptureZone);         // Capture point zones
+                    
+                    if (isObjectiveEntity)
+                    {
+                        // TF2 is showing an objective camera, skip to next target
+                        static float lastObjectiveSkipTime = 0.0f;
+                        float currentTime = I::GlobalVars->curtime;
+                        
+                        // Prevent spam by limiting skip frequency
+                        if (currentTime - lastObjectiveSkipTime > 0.1f)
+                        {
+                            // Send spec_next command to skip to next target
+                            I::EngineClient->ClientCmd_Unrestricted("spec_next");
+                            lastObjectiveSkipTime = currentTime;
+                        }
+                        
+                        return false; // Don't override while skipping
+                    }
+                }
+            }
+        }
     }
     
     // Store origin when transitioning from alive to dead

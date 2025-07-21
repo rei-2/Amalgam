@@ -1567,7 +1567,8 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::ChatBubblesNonFloat, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::ChatBubblesEnemyOnly, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::ChatBubblesTextChat, FToggleEnum::Right);
-					FToggle(Vars::Competitive::Features::ChatBubblesVoiceSounds, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::ChatBubblesVoiceCommands, FToggleEnum::Left);
+					FToggle(Vars::Competitive::Features::ChatBubblesVoiceSounds, FToggleEnum::Right);
 				} EndSection();
 
 				if (Section("Movement Features"))
@@ -1701,6 +1702,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedPlayer, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedWeapons, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SpectateAll::ExcludeObjectiveCameras, FToggleEnum::Right);
 					PushTransparent(true); // Always greyed out - feature is broken  
 					{
 						FToggle(Vars::Competitive::SpectateAll::SpyVision, FToggleEnum::Left);

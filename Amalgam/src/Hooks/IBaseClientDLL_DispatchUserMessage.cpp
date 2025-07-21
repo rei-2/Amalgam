@@ -66,37 +66,64 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 		{
 			try
 			{
+				// Safer bounds checking
 				int entityIndex = msgData.ReadByte();
-				if (entityIndex <= 0 || entityIndex > 64)
+				if (entityIndex <= 0 || entityIndex > I::GlobalVars->maxClients)
+					break;
+				
+				// Validate entity exists before proceeding
+				auto pEntity = I::ClientEntityList->GetClientEntity(entityIndex);
+				if (!pEntity)
+					break;
+					
+				auto pPlayer = pEntity->As<CTFPlayer>();
+				if (!pPlayer)
 					break;
 				
 				msgData.ReadByte(); // Skip chat type
 				
-				// Read all the message parts like the Lua script
+				// Read strings exactly like the Lua script
 				char content[256] = {0};
 				char name[256] = {0};  
 				char message[256] = {0};
 				char param3[256] = {0};
 				char param4[256] = {0};
 				
-				msgData.ReadString(content, sizeof(content), true);
-				msgData.ReadString(name, sizeof(name), true);
-				msgData.ReadString(message, sizeof(message), true);
-				msgData.ReadString(param3, sizeof(param3), true);
-				msgData.ReadString(param4, sizeof(param4), true);
+				// Check remaining bytes before each read
+				if (msgData.GetNumBitsLeft() < 8) break;
+				msgData.ReadString(content, sizeof(content) - 1, true);
+				content[sizeof(content) - 1] = '\0';
+				
+				if (msgData.GetNumBitsLeft() < 8) break;
+				msgData.ReadString(name, sizeof(name) - 1, true);
+				name[sizeof(name) - 1] = '\0';
+				
+				if (msgData.GetNumBitsLeft() < 8) break;
+				msgData.ReadString(message, sizeof(message) - 1, true);
+				message[sizeof(message) - 1] = '\0';
+				
+				if (msgData.GetNumBitsLeft() < 8) break;
+				msgData.ReadString(param3, sizeof(param3) - 1, true);
+				param3[sizeof(param3) - 1] = '\0';
+				
+				if (msgData.GetNumBitsLeft() < 8) break;
+				msgData.ReadString(param4, sizeof(param4) - 1, true);
+				param4[sizeof(param4) - 1] = '\0';
 				
 				std::string playerName;
 				std::string chatText;
 				
-				// Check if it's a TF_Chat format message
+				// First check TF_Chat format (exactly like Lua)
 				std::string contentStr = content;
 				if (contentStr.find("TF_Chat") != std::string::npos) {
 					if (strlen(name) > 0 && strlen(message) > 0) {
 						playerName = name;
 						chatText = message;
 					}
-				} else {
-					// Try to parse "PlayerName: Message" format from any of the parts
+				}
+				
+				// If TF_Chat didn't work, try parsing colon format from all parts
+				if (playerName.empty() || chatText.empty()) {
 					const char* parts[] = {content, name, message, param3, param4};
 					
 					for (int i = 0; i < 5; i++) {
@@ -104,55 +131,75 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 							std::string part = parts[i];
 							size_t colonPos = part.find(": ");
 							if (colonPos != std::string::npos) {
-								playerName = part.substr(0, colonPos);
-								chatText = part.substr(colonPos + 2);
+								std::string parsedName = part.substr(0, colonPos);
+								std::string parsedText = part.substr(colonPos + 2);
 								
-								// Remove *DEAD* and *TEAM* prefixes like the Lua script
-								if (playerName.find("*DEAD*") == 0)
-									playerName = playerName.substr(6);
-								if (playerName.find("*TEAM*") == 0)
-									playerName = playerName.substr(6);
+								// Remove *DEAD* and *TEAM* prefixes exactly like Lua
+								if (parsedName.find("*DEAD*") == 0)
+									parsedName = parsedName.substr(6);
+								if (parsedName.find("*TEAM*") == 0)
+									parsedName = parsedName.substr(6);
 								
-								// Trim whitespace
-								size_t start = playerName.find_first_not_of(" \t");
-								size_t end = playerName.find_last_not_of(" \t");
-								if (start != std::string::npos && end != std::string::npos)
-									playerName = playerName.substr(start, end - start + 1);
-								
-								break;
+								// Trim whitespace (Lua's gsub("^%s*(.-)%s*$", "%1"))
+								size_t start = parsedName.find_first_not_of(" \t");
+								size_t end = parsedName.find_last_not_of(" \t");
+								if (start != std::string::npos && end != std::string::npos) {
+									playerName = parsedName.substr(start, end - start + 1);
+									chatText = parsedText;
+									break;
+								}
 							}
 						}
 					}
 				}
 				
+				// Process the message if we found both name and text
 				if (!playerName.empty() && !chatText.empty()) {
-					// Optional team filtering
+					// Optional team filtering (pPlayer already validated above)
 					if (Vars::Competitive::Features::ChatBubblesEnemyOnly.Value) {
-						auto pPlayer = I::ClientEntityList->GetClientEntity(entityIndex);
-						if (pPlayer) {
-							auto pTFPlayer = pPlayer->As<CTFPlayer>();
-							auto pLocal = H::Entities.GetLocal();
-							if (pTFPlayer && pLocal && pTFPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
-								break;
+						auto pLocal = H::Entities.GetLocal();
+						if (pLocal && pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
+							break;
+					}
+					
+					// Determine final message based on parsing method
+					std::string finalMessage = chatText;
+					
+					// Only modify message (remove first character) if it came from colon parsing, not TF_Chat
+					std::string contentStr = content;
+					if (contentStr.find("TF_Chat") == std::string::npos) {
+						// This came from colon parsing - apply Lua's chatText:sub(2) modification
+						if (finalMessage.length() > 1) {
+							finalMessage = finalMessage.substr(1);
 						}
 					}
+					// If it came from TF_Chat, use the message as-is (no modification)
 					
 #ifdef _DEBUG
-					I::CVar->ConsolePrintf("SayText2: %s: %s\n", playerName.c_str(), chatText.c_str());
+					I::CVar->ConsolePrintf("SayText2 Chat: [%s]: %s -> %s (TF_Chat: %s)\n", 
+						playerName.c_str(), chatText.c_str(), finalMessage.c_str(),
+						(contentStr.find("TF_Chat") != std::string::npos) ? "yes" : "no");
 #endif
 					
-					// Remove leading character if it exists (like the Lua script does)
-					if (chatText.length() > 1 && (chatText[0] == '\x01' || chatText[0] == '\x03')) {
-						chatText = chatText.substr(1);
+					// Add the message exactly like Lua
+					if (!finalMessage.empty() && finalMessage.length() < 200 && playerName.length() < 64) {
+						F::ChatBubbles.AddChatMessage(finalMessage, playerName, entityIndex, false);
 					}
-					
-					std::string fullMessage = "[Chat] " + chatText;
-					F::ChatBubbles.AddChatMessage(fullMessage, playerName, entityIndex, false);
 				}
+			}
+			catch (const std::exception& e)
+			{
+#ifdef _DEBUG
+				I::CVar->ConsolePrintf("ChatBubbles SayText2 exception: %s\n", e.what());
+#endif
+				// Continue processing other messages
 			}
 			catch (...)
 			{
-				// Silently handle exceptions
+#ifdef _DEBUG
+				I::CVar->ConsolePrintf("ChatBubbles SayText2 unknown exception\n");
+#endif
+				// Continue processing other messages
 			}
 		}
 		break;

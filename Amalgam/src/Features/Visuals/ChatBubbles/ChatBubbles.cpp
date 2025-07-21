@@ -287,6 +287,13 @@ int CChatBubbles::CalculateOpacity(float messageAge)
 
 float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& worldPos, float yOffset, int entityIndex)
 {
+    // Safety checks
+    if (entityIndex <= 0 || entityIndex > I::GlobalVars->maxClients)
+        return 0.0f;
+        
+    if (message.message.empty() || message.message.length() > 500)
+        return 0.0f;
+        
     // Get screen position
     Vec3 screenPos;
     if (!SDK::W2S(worldPos, screenPos))
@@ -349,12 +356,20 @@ float CChatBubbles::DrawChatBubble(ChatBubbleMessage& message, const Vec3& world
     Color_t bgColor;
     if (Vars::Competitive::Features::ChatBubblesSteamIDColor.Value)
     {
-        // Get player's SteamID for color generation
-        PlayerInfo_t pInfo;
+        // Get player's SteamID for color generation (with safety checks)
+        PlayerInfo_t pInfo = {};  // Initialize to zero
         std::string steamID = "default";
-        if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
+        
+        try 
         {
-            steamID = std::to_string(pInfo.friendsID);
+            if (I::EngineClient && I::EngineClient->GetPlayerInfo(entityIndex, &pInfo) && pInfo.friendsID != 0)
+            {
+                steamID = std::to_string(pInfo.friendsID);
+            }
+        }
+        catch (...)
+        {
+            steamID = "default";
         }
         
         Color_t playerColor = GenerateColor(steamID);
@@ -422,8 +437,11 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
         return;
     
     int playerIndex = pPlayer->entindex();
+    if (playerIndex <= 0 || playerIndex > I::GlobalVars->maxClients)
+        return;
+        
     auto it = m_PlayerData.find(playerIndex);
-    if (it == m_PlayerData.end())
+    if (it == m_PlayerData.end() || it->second.messages.empty())
         return;
     
     // Debug removed to prevent spam
@@ -441,9 +459,62 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
 
 void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
 {
-    // Voice commands are now handled entirely through OnSoundPlayed for consistency
-    // This function is kept for compatibility but does nothing
-    return;
+    if (!Vars::Competitive::Features::ChatBubbles.Value || !Vars::Competitive::Features::ChatBubblesVoiceCommands.Value)
+        return;
+    
+    // Safety checks
+    if (entityIndex <= 0 || entityIndex > I::GlobalVars->maxClients)
+        return;
+    
+    // Get the entity to validate it's a player
+    auto pEntity = I::ClientEntityList->GetClientEntity(entityIndex);
+    if (!pEntity)
+        return;
+    
+    auto pPlayer = pEntity->As<CTFPlayer>();
+    if (!pPlayer)
+        return;
+    
+    // Optional team filtering
+    if (Vars::Competitive::Features::ChatBubblesEnemyOnly.Value)
+    {
+        auto pLocal = H::Entities.GetLocal();
+        if (!pLocal || pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
+            return;
+    }
+    
+    // Voice command cooldown check (like Lua: 1 second)
+    float currentTime = I::GlobalVars->curtime;
+    auto& playerData = m_PlayerData[entityIndex];
+    if (currentTime - playerData.lastVoiceTime <= VOICE_COOLDOWN)
+        return;
+    
+    // Get player name (with safety checks)
+    std::string playerName = "Player";
+    try 
+    {
+        PlayerInfo_t pInfo = {};
+        if (I::EngineClient && I::EngineClient->GetPlayerInfo(entityIndex, &pInfo) && strlen(pInfo.name) > 0)
+        {
+            playerName = std::string(pInfo.name, strnlen(pInfo.name, sizeof(pInfo.name) - 1));
+        }
+    }
+    catch (...)
+    {
+        playerName = "Player";
+    }
+    
+    // Get voice command text using existing mapping
+    std::string voiceCommand = GetVoiceCommandText(menu, item);
+    
+#ifdef _DEBUG
+    I::CVar->ConsolePrintf("VoiceSubtitle: Entity %d [%s] - Menu %d, Item %d: %s\n", 
+                          entityIndex, playerName.c_str(), menu, item, voiceCommand.c_str());
+#endif
+    
+    // Add as voice message (matching Lua behavior exactly)
+    AddChatMessage(voiceCommand, playerName, entityIndex, true);
+    playerData.lastVoiceTime = currentTime;
 }
 
 void CChatBubbles::OnChatMessage(bf_read& msgData)
@@ -481,11 +552,20 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
             return;
     }
     
-    // Get player name
+    // Get player name (with safety checks)
     std::string playerName = "Player";
-    PlayerInfo_t pInfo;
-    if (I::EngineClient->GetPlayerInfo(entityIndex, &pInfo))
-        playerName = pInfo.name;
+    try 
+    {
+        PlayerInfo_t pInfo = {};  // Initialize to zero
+        if (I::EngineClient && I::EngineClient->GetPlayerInfo(entityIndex, &pInfo) && strlen(pInfo.name) > 0)
+        {
+            playerName = std::string(pInfo.name, strnlen(pInfo.name, sizeof(pInfo.name) - 1));
+        }
+    }
+    catch (...)
+    {
+        playerName = "Player";
+    }
     
     // Filter out irrelevant sounds - only show voice commands and important player sounds
     std::string soundPath = soundName;
@@ -496,7 +576,26 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
     
     std::transform(soundPath.begin(), soundPath.end(), soundPath.begin(), ::tolower);
     
-    // Check for voice commands and voicelines - comprehensive detection
+    // If voice commands are enabled, check if this player recently used a voice command
+    // to avoid showing the same thing twice (once as voice command, once as sound)
+    if (Vars::Competitive::Features::ChatBubblesVoiceCommands.Value)
+    {
+        auto& playerData = m_PlayerData[entityIndex];
+        float currentTime = I::GlobalVars->curtime;
+        
+        // If a voice command was used within the last 0.5 seconds, skip voice sounds to prevent duplicates
+        if (currentTime - playerData.lastVoiceTime <= 0.5f)
+        {
+            // Check if this is likely a voice sound that would duplicate the voice command
+            bool isVoiceSound = soundPath.find("vo/") != std::string::npos ||
+                               soundPath.find("voice/") != std::string::npos;
+            
+            if (isVoiceSound)
+                return; // Skip this sound to prevent duplicate with voice command
+        }
+    }
+    
+    // Check for voice commands and voicelines - comprehensive detection  
     bool isVoiceSound = soundPath.find("vo/") != std::string::npos ||
                        soundPath.find("voice/") != std::string::npos ||
                        soundPath.find("misc/") != std::string::npos ||
@@ -637,14 +736,27 @@ void CChatBubbles::Draw()
     }
 #endif
     
-    // Draw bubbles for all players
-    for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+    // Draw bubbles for all players (with safety checks)
+    try 
     {
-        auto pPlayer = pEntity->As<CTFPlayer>();
-        if (pPlayer && pPlayer != pLocal)
+        auto entities = H::Entities.GetGroup(EGroupType::PLAYERS_ALL);
+        for (auto pEntity : entities)
         {
-            DrawPlayerBubbles(pPlayer);
+            if (!pEntity)
+                continue;
+                
+            auto pPlayer = pEntity->As<CTFPlayer>();
+            if (pPlayer && pPlayer != pLocal && pPlayer->entindex() > 0 && pPlayer->entindex() <= I::GlobalVars->maxClients)
+            {
+                DrawPlayerBubbles(pPlayer);
+            }
         }
+    }
+    catch (...)
+    {
+#ifdef _DEBUG
+        I::CVar->ConsolePrintf("ChatBubbles Draw exception\n");
+#endif
     }
 }
 
