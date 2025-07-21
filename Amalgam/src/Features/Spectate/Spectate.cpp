@@ -38,9 +38,16 @@ void CSpectate::NetUpdateEnd(CTFPlayer* pLocal)
 	default:
 		pLocal->m_hObserverTarget().Set(pEntity);
 	}
-	pLocal->m_iObserverMode() = Vars::Visuals::Thirdperson::Enabled.Value ? OBS_MODE_THIRDPERSON : OBS_MODE_FIRSTPERSON;
-	pLocal->m_vecViewOffset() = pEntity->GetViewOffset();
-	Vars::Visuals::Thirdperson::Enabled.Value ? I::Input->CAM_ToThirdPerson() : I::Input->CAM_ToFirstPerson();
+	// Audio-safe observer mode transition with delay
+	static float lastCameraChange = 0;
+	float currentTime = I::GlobalVars->realtime;
+	if (currentTime - lastCameraChange > 0.1f) // 100ms delay between camera changes
+	{
+		pLocal->m_iObserverMode() = Vars::Visuals::Thirdperson::Enabled.Value ? OBS_MODE_THIRDPERSON : OBS_MODE_FIRSTPERSON;
+		pLocal->m_vecViewOffset() = pEntity->GetViewOffset();
+		Vars::Visuals::Thirdperson::Enabled.Value ? I::Input->CAM_ToThirdPerson() : I::Input->CAM_ToFirstPerson();
+		lastCameraChange = currentTime;
+	}
 
 	m_pTargetTarget = pLocal->m_hObserverTarget().Get();
 	m_iTargetMode = pLocal->m_iObserverMode();

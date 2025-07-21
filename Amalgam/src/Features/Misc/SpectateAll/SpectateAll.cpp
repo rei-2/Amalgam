@@ -19,7 +19,7 @@ bool CSpectateAll::ShouldSpectate()
     {
         int observerMode = pLocal->m_iObserverMode();
         
-        // Track and handle freezecam transitions
+        // Track and handle freezecam transitions with audio-safe delays
         if (observerMode == OBS_MODE_FREEZECAM)
         {
             // Remember what mode we should return to (if we haven't already stored it)
@@ -29,17 +29,25 @@ bool CSpectateAll::ShouldSpectate()
                 m_iLastObserverMode = OBS_MODE_THIRDPERSON;
             }
             
-            // Force out of freezecam using the remembered mode
-            pLocal->m_iObserverMode() = m_iLastObserverMode;
-            pLocal->m_hObserverTarget().Set(nullptr);
-            
-            // Clear freezecam viewangles to prevent inheritance
-            QAngle neutralAngles(0.0f, 0.0f, 0.0f);
-            I::EngineClient->SetViewAngles(neutralAngles);
-            
-            // Reset our stored angles to prevent contamination
-            m_vThirdPersonAngles = neutralAngles;
-            m_bForceAngleReset = true;
+            // Add audio-safe delay to prevent audio system conflicts
+            static float lastModeChange = 0;
+            float currentTime = I::GlobalVars->realtime;
+            if (currentTime - lastModeChange > 0.15f) // 150ms delay for audio stability
+            {
+                // Force out of freezecam using the remembered mode
+                pLocal->m_iObserverMode() = m_iLastObserverMode;
+                pLocal->m_hObserverTarget().Set(nullptr);
+                
+                // Clear freezecam viewangles to prevent inheritance
+                QAngle neutralAngles(0.0f, 0.0f, 0.0f);
+                I::EngineClient->SetViewAngles(neutralAngles);
+                
+                // Reset our stored angles to prevent contamination
+                m_vThirdPersonAngles = neutralAngles;
+                m_bForceAngleReset = true;
+                
+                lastModeChange = currentTime;
+            }
         }
         else if (observerMode != OBS_MODE_FREEZECAM && observerMode != OBS_MODE_NONE)
         {
@@ -305,11 +313,23 @@ bool CSpectateAll::ShouldHidePlayer(CTFPlayer* pPlayer)
         
     if (!Vars::Competitive::SpectateAll::HideSpectatedPlayer.Value)
         return false;
+    
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return false;
         
-    // Only hide when in first person mode and actively spectating this player
+    // Hide when using SpectateAll custom enemy spectate mode
     SpectateMode mode = GetCurrentMode();
     if (mode == SpectateMode::ENEMY && !m_bThirdPersonMode && m_pCurrentSpectatedPlayer == pPlayer)
         return true;
+    
+    // Also hide when using regular TF2 first-person spectating
+    if (!pLocal->IsAlive() && pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON)
+    {
+        auto pTarget = pLocal->m_hObserverTarget().Get();
+        if (pTarget && pTarget->As<CTFPlayer>() == pPlayer)
+            return true;
+    }
         
     return false;
 }
@@ -318,19 +338,37 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
 {
     if (!Vars::Competitive::Features::SpectateAll.Value)
         return false;
-        
-    if (!m_pCurrentSpectatedPlayer)
+    
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
         return false;
-        
+    
+    CTFPlayer* pTargetPlayer = nullptr;
+    
+    // Get target player from either SpectateAll or regular TF2 spectating
     SpectateMode mode = GetCurrentMode();
-    if (mode != SpectateMode::ENEMY)
+    if (mode == SpectateMode::ENEMY && m_pCurrentSpectatedPlayer)
+    {
+        pTargetPlayer = m_pCurrentSpectatedPlayer;
+    }
+    else if (!pLocal->IsAlive() && pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON)
+    {
+        auto pTarget = pLocal->m_hObserverTarget().Get();
+        if (pTarget)
+            pTargetPlayer = pTarget->As<CTFPlayer>();
+    }
+    
+    if (!pTargetPlayer)
         return false;
         
     // Hide weapons and cosmetics belonging to the spectated player
     auto classID = pEntity->GetClassID();
     
-    // Check for weapons - only hide if weapon hiding is enabled AND we're in first person mode
-    if (Vars::Competitive::SpectateAll::HideSpectatedWeapons.Value && !m_bThirdPersonMode)
+    // Check for weapons - hide if weapon hiding is enabled AND in first person mode
+    bool isFirstPerson = (mode == SpectateMode::ENEMY && !m_bThirdPersonMode) || 
+                        (pLocal->m_iObserverMode() == OBS_MODE_FIRSTPERSON);
+    
+    if (Vars::Competitive::SpectateAll::HideSpectatedWeapons.Value && isFirstPerson)
     {
         // Check by class ID first
         if (classID == ETFClassID::CTFWeaponBase || 
@@ -345,7 +383,7 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
                 auto pOwner = pWeapon->m_hOwner().Get();
                 auto pParent = pEntity->m_hOwnerEntity().Get();
                 
-                if (pOwner == m_pCurrentSpectatedPlayer || pParent == m_pCurrentSpectatedPlayer)
+                if (pOwner == pTargetPlayer || pParent == pTargetPlayer)
                     return true;
             }
         }
@@ -366,14 +404,14 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
                     // Check multiple ownership relationships
                     auto pOwner = pEntity->m_hOwnerEntity().Get();
                     
-                    if (pOwner == m_pCurrentSpectatedPlayer)
+                    if (pOwner == pTargetPlayer)
                         return true;
                         
                     // For weapons without clear ownership, check proximity
-                    if (!pOwner && m_pCurrentSpectatedPlayer)
+                    if (!pOwner && pTargetPlayer)
                     {
                         Vector weaponPos = pEntity->m_vecOrigin();
-                        Vector playerPos = m_pCurrentSpectatedPlayer->m_vecOrigin();
+                        Vector playerPos = pTargetPlayer->m_vecOrigin();
                         float distance = (weaponPos - playerPos).Length();
                         
                         // If weapon is very close to player (within 100 units), likely belongs to them
@@ -395,7 +433,7 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
         {
             // Check if it belongs to our spectated player
             auto pOwner = pWearable->m_hOwnerEntity().Get();
-            if (pOwner == m_pCurrentSpectatedPlayer)
+            if (pOwner == pTargetPlayer)
                 return true;
         }
     }
