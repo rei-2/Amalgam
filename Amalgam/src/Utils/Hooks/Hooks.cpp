@@ -3,6 +3,7 @@
 #include "../Assert/Assert.h"
 #include "../../Core/Core.h"
 #include "../../Hooks/Direct3DDevice9.h"
+#include "../../Hooks/RecvProxy_PlayerHealth.h"
 
 CHook::CHook(std::string sName, void* pInitFunc)
 {
@@ -15,6 +16,8 @@ bool CHooks::Initialize()
 	MH_Initialize();
 
 	WndProc::Initialize();
+	PlayerHealthProxyHook::Initialize();
+	
 	for (auto& [_, pHook] : m_mHooks)
 		reinterpret_cast<void(__cdecl*)()>(pHook->m_pInitFunc)();
 
@@ -29,6 +32,8 @@ bool CHooks::Unload()
 	m_bFailed = MH_Uninitialize() != MH_OK;
 	if (m_bFailed)
 		U::Core.AppendFailText("MinHook failed to unload all hooks!");
+	
+	PlayerHealthProxyHook::Shutdown();
 	WndProc::Unload();
 	return !m_bFailed;
 }

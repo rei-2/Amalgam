@@ -45,6 +45,10 @@ public:
     bool ShouldSpectate();
     bool ShouldHidePlayer(CTFPlayer* pPlayer);
     bool ShouldHideEntity(CBaseEntity* pEntity);
+    
+    // Health override system for spectator UI
+    CTFPlayer* GetCurrentSpectatedPlayer() const { return m_pCurrentSpectatedPlayer; }
+    int GetSpectatedPlayerHealth();
 };
 
 ADD_FEATURE(CSpectateAll, SpectateAll)

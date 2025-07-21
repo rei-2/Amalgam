@@ -441,6 +441,15 @@ bool CSpectateAll::ShouldHideEntity(CBaseEntity* pEntity)
     return false;
 }
 
+int CSpectateAll::GetSpectatedPlayerHealth()
+{
+    if (m_pCurrentSpectatedPlayer && m_pCurrentSpectatedPlayer->IsAlive())
+    {
+        return m_pCurrentSpectatedPlayer->m_iHealth();
+    }
+    return 100; // Default fallback health
+}
+
 void CSpectateAll::OverrideView(CViewSetup* pView)
 {
     if (!ShouldSpectate() || !pView)
