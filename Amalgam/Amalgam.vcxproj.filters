@@ -186,6 +186,7 @@
     <ClCompile Include="src\Hooks\KeyValues_SetInt.cpp" />
     <ClCompile Include="src\Hooks\NotificationQueue_Add.cpp" />
     <ClCompile Include="src\Hooks\R_DrawSkyBox.cpp" />
+    <ClCompile Include="src\Hooks\RecvProxy_PlayerHealth.cpp" />
     <ClCompile Include="src\Hooks\RecvProxy_SimulationTime.cpp" />
     <ClCompile Include="src\Hooks\TF_IsHolidayActive.cpp" />
     <ClCompile Include="src\Hooks\VGuiMenuBuilder_AddMenuItem.cpp" />
