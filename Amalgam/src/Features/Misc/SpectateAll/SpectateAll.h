@@ -42,7 +42,6 @@ private:
     void HandleFreeCamera(CViewSetup* pView);
     void HandleEnemySpectate(CViewSetup* pView);
     void ApplyThirdPersonView(CViewSetup* pView);
-    SpectateMode GetCurrentMode();
     bool IsValidAngle(const QAngle& angle);
     
     // New functionality helpers
@@ -60,6 +59,11 @@ public:
     // Health override system for spectator UI
     CTFPlayer* GetCurrentSpectatedPlayer() const { return m_pCurrentSpectatedPlayer; }
     int GetSpectatedPlayerHealth();
+    
+    // Freecam functionality
+    SpectateMode GetCurrentMode();
+    Vector GetFreecamPosition() const { return m_vStoredOrigin; }
+    bool IsInFreecam() const { return m_bInFreeCam; }
     
     // Event handling
     void OnPlayerDeath(IGameEvent* pEvent);

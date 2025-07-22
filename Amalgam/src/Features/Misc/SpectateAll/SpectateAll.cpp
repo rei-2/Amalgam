@@ -160,11 +160,17 @@ void CSpectateAll::HandleMouseInput()
     // Handle mouse input for player cycling and freecam
     static bool mouse1Pressed = false;
     static bool mouse2Pressed = false;
+    static bool mouse3Pressed = false;
     bool mouse1Down = GetAsyncKeyState(VK_LBUTTON) & 0x8000;
     bool mouse2Down = GetAsyncKeyState(VK_RBUTTON) & 0x8000;
+    bool mouse3Down = GetAsyncKeyState(VK_MBUTTON) & 0x8000;
     
-    // Mouse2 (right click) - toggle freecam mode
-    if (mouse2Down && !mouse2Pressed)
+    auto pLocal = H::Entities.GetLocal();
+    bool isAlive = pLocal && pLocal->IsAlive();
+    bool isTaunting = pLocal && pLocal->IsTaunting();
+    
+    // Original Mouse2 (right click) behavior for when dead (spectating)
+    if (!isAlive && (mouse2Down && !mouse2Pressed))
     {
         m_bInFreeCam = !m_bInFreeCam;
         
@@ -184,8 +190,35 @@ void CSpectateAll::HandleMouseInput()
         F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
     }
     
+    // New functionality: Allow freecam activation when alive and taunting
+    if (isAlive && isTaunting)
+    {
+        bool freecamToggle = false;
+        if (mouse1Down && !mouse1Pressed)
+            freecamToggle = true;
+        if (mouse2Down && !mouse2Pressed)
+            freecamToggle = true;
+        if (mouse3Down && !mouse3Pressed)
+            freecamToggle = true;
+            
+        if (freecamToggle)
+        {
+            m_bInFreeCam = !m_bInFreeCam;
+            
+            // When entering freecam while alive, start from player's current position
+            if (m_bInFreeCam && pLocal)
+            {
+                m_vStoredOrigin = pLocal->GetEyePosition();
+            }
+            
+            // Reset regular spectate system when toggling freecam
+            F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
+        }
+    }
+    
     // Mouse1 (left click) - cycle players (and exit freecam if active)
-    if (mouse1Down && !mouse1Pressed)
+    // Only when not alive and taunting (since Mouse1 is used for freecam in that case)
+    if (mouse1Down && !mouse1Pressed && !(isAlive && isTaunting))
     {
         // If in freecam, exit freecam and cycle to next player
         if (m_bInFreeCam)
@@ -224,6 +257,7 @@ void CSpectateAll::HandleMouseInput()
     
     mouse1Pressed = mouse1Down;
     mouse2Pressed = mouse2Down;
+    mouse3Pressed = mouse3Down;
 }
 
 CTFPlayer* CSpectateAll::GetNextEnemyPlayer()
@@ -537,25 +571,40 @@ int CSpectateAll::GetSpectatedPlayerHealth()
 
 void CSpectateAll::OverrideView(CViewSetup* pView)
 {
-    if (!ShouldSpectate() || !pView)
+    // Always handle respawn mouse lock regardless of spectate state
+    HandleRespawnMouseLock();
+    
+    // Always handle mouse input to allow freecam activation when alive/taunting
+    HandleMouseInput();
+    
+    // Check if we're in freecam mode while alive
+    auto pLocal = H::Entities.GetLocal();
+    bool isAlive = pLocal && pLocal->IsAlive();
+    bool inFreecamWhileAlive = isAlive && m_bInFreeCam;
+    
+    if ((!ShouldSpectate() && !inFreecamWhileAlive) || !pView)
     {
-        // Clear spectated player when not spectating
+        // Clear spectated player when not spectating and not in freecam while alive
         m_pCurrentSpectatedPlayer = nullptr;
         // Reset spectate state to prevent viewangle conflicts
         m_bIsSpectating = false;
-        m_bInFreeCam = false;
+        if (!inFreecamWhileAlive)
+            m_bInFreeCam = false;
         m_bThirdPersonMode = true;
-        // Handle respawn mouse lock
-        HandleRespawnMouseLock();
+        
+        // If we're in freecam while alive, handle the freecam view
+        if (inFreecamWhileAlive)
+        {
+            HandleFreeCamera(pView);
+        }
         return;
     }
     
-    auto pLocal = H::Entities.GetLocal();
     if (!pLocal)
         return;
     
-    // Handle mouse input for freecam and player cycling
-    HandleMouseInput();
+    // Handle mouse input for freecam and player cycling (already called above)
+    // HandleMouseInput();
     
     // Check if current spectated player died and auto-switch if enabled
     CheckForPlayerDeath();
@@ -836,6 +885,9 @@ void CSpectateAll::HandleRespawnMouseLock()
         // Reset killer tracking
         m_pLastKiller = nullptr;
     }
+    
+    // Update the alive state for next frame
+    m_bWasAlive = isAlive;
 }
 
 void CSpectateAll::OnPlayerDeath(IGameEvent* pEvent)

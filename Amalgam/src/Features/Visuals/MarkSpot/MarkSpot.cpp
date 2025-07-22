@@ -1,6 +1,7 @@
 #include "MarkSpot.h"
 #include "../../../SDK/SDK.h"
 #include "../../Chat/Chat.h"
+#include "../../Misc/SpectateAll/SpectateAll.h"
 #include <algorithm>
 
 #ifndef M_PI
@@ -73,9 +74,18 @@ Vec3 CMarkSpot::GetAimPosition()
     if (!pLocal)
         return Vec3(0, 0, 0);
     
-    // Get view angles and eye position
-    Vec3 vEyePos = pLocal->GetEyePosition();
+    Vec3 vEyePos;
     Vec3 vViewAngles = I::EngineClient->GetViewAngles();
+    
+    // Use freecam position if in freecam mode, otherwise use player eye position
+    if (F::SpectateAll.IsInFreecam())
+    {
+        vEyePos = F::SpectateAll.GetFreecamPosition();
+    }
+    else
+    {
+        vEyePos = pLocal->GetEyePosition();
+    }
     
     // Convert angles to direction vector
     Vec3 vForward, vRight, vUp;
@@ -295,7 +305,12 @@ void CMarkSpot::HandleInput()
         return;
         
     auto pLocal = H::Entities.GetLocal();
-    if (!pLocal || !pLocal->IsAlive())
+    if (!pLocal)
+        return;
+    
+    // Allow marking when alive or when in freecam spectate mode
+    bool canMark = pLocal->IsAlive() || F::SpectateAll.GetCurrentMode() == SpectateMode::FREE_CAMERA;
+    if (!canMark)
         return;
     
     // Check if E key is pressed (only when game is focused)
