@@ -6,6 +6,7 @@
 #include "../Backtrack/Backtrack.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
 #include "../Simulation/ProjectileSimulation/ProjectileSimulation.h"
+#include "../Misc/SpectateAll/SpectateAll.h"
 #include "CameraWindow/CameraWindow.h"
 #include "EnemyCam/EnemyCam.h"
 #include "../Players/PlayerUtils.h"
@@ -681,7 +682,9 @@ void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
 	if (!pLocal->IsAlive() || F::Spectate.m_iTarget != -1)
 		return I::Input->CAM_ToFirstPerson();
 
-	const bool bForce = pLocal->IsTaunting() || pLocal->IsAGhost() || pLocal->InCond(TF_COND_HALLOWEEN_KART) || pLocal->InCond(TF_COND_HALLOWEEN_THRILLER);
+	// Don't force third person when taunting if freecam is active
+	bool bTauntForce = pLocal->IsTaunting() && !F::SpectateAll.IsInFreecam();
+	const bool bForce = bTauntForce || pLocal->IsAGhost() || pLocal->InCond(TF_COND_HALLOWEEN_KART) || pLocal->InCond(TF_COND_HALLOWEEN_THRILLER);
 	//if (bForce)
 	//	return;
 
