@@ -679,7 +679,7 @@ void CVisuals::FOV(CTFPlayer* pLocal, CViewSetup* pView)
 
 void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
 {
-	if (!pLocal->IsAlive() || F::Spectate.m_iTarget != -1)
+	if (!pLocal || !pLocal->IsAlive() || F::Spectate.m_iTarget != -1)
 		return I::Input->CAM_ToFirstPerson();
 
 	// Don't force third person when taunting if freecam is active
