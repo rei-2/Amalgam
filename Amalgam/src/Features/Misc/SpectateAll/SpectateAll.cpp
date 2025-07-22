@@ -193,20 +193,22 @@ void CSpectateAll::HandleMouseInput()
     // New functionality: Allow freecam activation when alive and taunting
     if (isAlive && isTaunting)
     {
-        bool freecamToggle = false;
+        bool freecamActivate = false;
         if (mouse1Down && !mouse1Pressed)
-            freecamToggle = true;
+            freecamActivate = true;
         if (mouse2Down && !mouse2Pressed)
-            freecamToggle = true;
+            freecamActivate = true;
         if (mouse3Down && !mouse3Pressed)
-            freecamToggle = true;
+            freecamActivate = true;
             
-        if (freecamToggle)
+        if (freecamActivate && !m_bInFreeCam)
         {
-            m_bInFreeCam = !m_bInFreeCam;
+            // Start freecam instantly when taunting
+            m_bInFreeCam = true;
+            m_bFreecamStartedDuringTaunt = true;
             
-            // When entering freecam while alive, start from player's current position
-            if (m_bInFreeCam && pLocal)
+            // Start freecam from player's current position
+            if (pLocal)
             {
                 m_vStoredOrigin = pLocal->GetEyePosition();
             }
@@ -214,6 +216,19 @@ void CSpectateAll::HandleMouseInput()
             // Reset regular spectate system when toggling freecam
             F::Spectate.m_iTarget = F::Spectate.m_iIntendedTarget = -1;
         }
+    }
+    
+    // Auto-exit freecam when taunt ends (if freecam was started during taunt)
+    if (isAlive && !isTaunting && m_bFreecamStartedDuringTaunt)
+    {
+        m_bInFreeCam = false;
+        m_bFreecamStartedDuringTaunt = false;
+    }
+    
+    // Clear taunt freecam flag when player dies
+    if (!isAlive && m_bFreecamStartedDuringTaunt)
+    {
+        m_bFreecamStartedDuringTaunt = false;
     }
     
     // Mouse1 (left click) - cycle players (and exit freecam if active)

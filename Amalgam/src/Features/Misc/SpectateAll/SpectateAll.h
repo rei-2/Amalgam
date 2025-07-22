@@ -36,6 +36,9 @@ private:
     CTFPlayer* m_pLastKiller = nullptr;
     bool m_bJustRespawned = false;
     
+    // Taunt freecam tracking
+    bool m_bFreecamStartedDuringTaunt = false;
+    
     // Helper functions
     void HandleMouseInput();
     CTFPlayer* GetNextEnemyPlayer();
