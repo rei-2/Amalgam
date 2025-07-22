@@ -1137,15 +1137,10 @@ void CChat::ProcessIncomingMessage(const std::string& sender, const std::string&
         return; // Don't display in chat
     }
     
-    // Don't show our own messages twice
-    if (senderName != Vars::Chat::Username.Value)
-    {
-        // Queue the message for display on the main thread instead of calling ChatPrintf directly
-        // ChatPrintf is not thread-safe and crashes when called from background threads
-        QueueMessage("[Matrix] " + senderName, content);
-    } else {
-        DEBUG_MSG("Skipping display of our own message (sender: " + senderName + ", our username: " + Vars::Chat::Username.Value + ")");
-    }
+    // Show all messages including our own (for confirmation that they were sent)
+    // Queue the message for display on the main thread instead of calling ChatPrintf directly
+    // ChatPrintf is not thread-safe and crashes when called from background threads
+    QueueMessage("[Matrix] " + senderName, content);
 }
 
 void CChat::QueueMessage(const std::string& sender, const std::string& content)
