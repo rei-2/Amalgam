@@ -308,8 +308,8 @@ void CMarkSpot::HandleInput()
     if (!pLocal)
         return;
     
-    // Allow marking when alive or when in freecam spectate mode
-    bool canMark = pLocal->IsAlive() || F::SpectateAll.GetCurrentMode() == SpectateMode::FREE_CAMERA;
+    // Allow marking when alive or when in any freecam mode
+    bool canMark = pLocal->IsAlive() || F::SpectateAll.IsInFreecam();
     if (!canMark)
         return;
     
