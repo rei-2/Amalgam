@@ -1567,8 +1567,7 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::Features::ChatBubblesNonFloat, FToggleEnum::Right);
 					FToggle(Vars::Competitive::Features::ChatBubblesEnemyOnly, FToggleEnum::Left);
 					FToggle(Vars::Competitive::Features::ChatBubblesTextChat, FToggleEnum::Right);
-					FToggle(Vars::Competitive::Features::ChatBubblesVoiceCommands, FToggleEnum::Left);
-					FToggle(Vars::Competitive::Features::ChatBubblesVoiceSounds, FToggleEnum::Right);
+					FToggle(Vars::Competitive::Features::ChatBubblesVoiceSounds, FToggleEnum::Left);
 				} EndSection();
 
 				if (Section("Movement Features"))
@@ -1703,6 +1702,10 @@ void CMenu::MenuComp(int iTab)
 					FToggle(Vars::Competitive::SpectateAll::HideSpectatedWeapons, FToggleEnum::Right);
 					FToggle(Vars::Competitive::SpectateAll::ExcludeMapCameras, FToggleEnum::Left);
 					FToggle(Vars::Competitive::SpectateAll::ExcludeObjectiveCameras, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SpectateAll::AutoSwitchOnDeath, FToggleEnum::Left);
+					FToggle(Vars::Competitive::SpectateAll::PreferKillerSpectate, FToggleEnum::Right);
+					FToggle(Vars::Competitive::SpectateAll::MouseLockAfterRespawn, FToggleEnum::Left);
+					FSlider(Vars::Competitive::SpectateAll::MouseLockDuration, FSliderEnum::Right);
 					PushTransparent(true); // Always greyed out - feature is broken  
 					{
 						FToggle(Vars::Competitive::SpectateAll::SpyVision, FToggleEnum::Left);

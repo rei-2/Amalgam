@@ -13,6 +13,7 @@
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Visuals/FakeAngle/FakeAngle.h"
 #include "../Features/Spectate/Spectate.h"
+#include "../Features/Misc/SpectateAll/SpectateAll.h"
 
 #define MATH_EPSILON (1.f / 16)
 #define PSILENT_EPSILON (1.f - MATH_EPSILON)
@@ -169,6 +170,13 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 	// run features
 	F::Spectate.CreateMove(pLocal, pCmd);
 	F::Misc.RunPre(pLocal, pCmd);
+	
+	// Handle mouse lock after respawn
+	if (F::SpectateAll.ShouldLockMouse())
+	{
+		pCmd->mousedx = 0;
+		pCmd->mousedy = 0;
+	}
 
 	F::EnginePrediction.Start(pLocal, pCmd);
 	F::Aimbot.Run(pLocal, pWeapon, pCmd);

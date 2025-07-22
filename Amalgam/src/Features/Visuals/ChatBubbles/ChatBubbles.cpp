@@ -459,62 +459,9 @@ void CChatBubbles::DrawPlayerBubbles(CTFPlayer* pPlayer)
 
 void CChatBubbles::OnVoiceSubtitle(int entityIndex, int menu, int item)
 {
-    if (!Vars::Competitive::Features::ChatBubbles.Value || !Vars::Competitive::Features::ChatBubblesVoiceCommands.Value)
-        return;
-    
-    // Safety checks
-    if (entityIndex <= 0 || entityIndex > I::GlobalVars->maxClients)
-        return;
-    
-    // Get the entity to validate it's a player
-    auto pEntity = I::ClientEntityList->GetClientEntity(entityIndex);
-    if (!pEntity)
-        return;
-    
-    auto pPlayer = pEntity->As<CTFPlayer>();
-    if (!pPlayer)
-        return;
-    
-    // Optional team filtering
-    if (Vars::Competitive::Features::ChatBubblesEnemyOnly.Value)
-    {
-        auto pLocal = H::Entities.GetLocal();
-        if (!pLocal || pPlayer->m_iTeamNum() == pLocal->m_iTeamNum())
-            return;
-    }
-    
-    // Voice command cooldown check (like Lua: 1 second)
-    float currentTime = I::GlobalVars->curtime;
-    auto& playerData = m_PlayerData[entityIndex];
-    if (currentTime - playerData.lastVoiceTime <= VOICE_COOLDOWN)
-        return;
-    
-    // Get player name (with safety checks)
-    std::string playerName = "Player";
-    try 
-    {
-        PlayerInfo_t pInfo = {};
-        if (I::EngineClient && I::EngineClient->GetPlayerInfo(entityIndex, &pInfo) && strlen(pInfo.name) > 0)
-        {
-            playerName = std::string(pInfo.name, strnlen(pInfo.name, sizeof(pInfo.name) - 1));
-        }
-    }
-    catch (...)
-    {
-        playerName = "Player";
-    }
-    
-    // Get voice command text using existing mapping
-    std::string voiceCommand = GetVoiceCommandText(menu, item);
-    
-#ifdef _DEBUG
-    I::CVar->ConsolePrintf("VoiceSubtitle: Entity %d [%s] - Menu %d, Item %d: %s\n", 
-                          entityIndex, playerName.c_str(), menu, item, voiceCommand.c_str());
-#endif
-    
-    // Add as voice message (matching Lua behavior exactly)
-    AddChatMessage(voiceCommand, playerName, entityIndex, true);
-    playerData.lastVoiceTime = currentTime;
+    // Voice commands are now disabled - they only work for teammates which is not useful
+    // This function is kept for compatibility but does nothing
+    return;
 }
 
 void CChatBubbles::OnChatMessage(bf_read& msgData)
@@ -575,25 +522,6 @@ void CChatBubbles::OnSoundPlayed(int entityIndex, const char* soundName)
         soundPath = soundPath.substr(1);
     
     std::transform(soundPath.begin(), soundPath.end(), soundPath.begin(), ::tolower);
-    
-    // If voice commands are enabled, check if this player recently used a voice command
-    // to avoid showing the same thing twice (once as voice command, once as sound)
-    if (Vars::Competitive::Features::ChatBubblesVoiceCommands.Value)
-    {
-        auto& playerData = m_PlayerData[entityIndex];
-        float currentTime = I::GlobalVars->curtime;
-        
-        // If a voice command was used within the last 0.5 seconds, skip voice sounds to prevent duplicates
-        if (currentTime - playerData.lastVoiceTime <= 0.5f)
-        {
-            // Check if this is likely a voice sound that would duplicate the voice command
-            bool isVoiceSound = soundPath.find("vo/") != std::string::npos ||
-                               soundPath.find("voice/") != std::string::npos;
-            
-            if (isVoiceSound)
-                return; // Skip this sound to prevent duplicate with voice command
-        }
-    }
     
     // Check for voice commands and voicelines - comprehensive detection  
     bool isVoiceSound = soundPath.find("vo/") != std::string::npos ||

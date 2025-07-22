@@ -103,13 +103,15 @@ void CSentryESP::Draw()
             }
         }
         
-        // Draw aim line
+        // Draw aim line with interpolation
         if (Vars::Competitive::SentryESP::ShowLine.Value && aimData.IsValid)
         {
-            Vec3 vEndPos = GetAimLineEndPos(aimData.MuzzlePos, aimData.AimAngles);
+            // Get interpolated aim data for smoother line movement
+            SentryAimData interpolatedData = GetInterpolatedAimData(pEntity->entindex(), aimData);
+            Vec3 vEndPos = GetAimLineEndPos(interpolatedData.MuzzlePos, interpolatedData.AimAngles);
             
             Vec3 vScreenStart, vScreenEnd;
-            if (SDK::W2S(aimData.MuzzlePos, vScreenStart) && SDK::W2S(vEndPos, vScreenEnd))
+            if (SDK::W2S(interpolatedData.MuzzlePos, vScreenStart) && SDK::W2S(vEndPos, vScreenEnd))
             {
                 H::Draw.Line(static_cast<int>(vScreenStart.x), static_cast<int>(vScreenStart.y),
                     static_cast<int>(vScreenEnd.x), static_cast<int>(vScreenEnd.y), 
@@ -294,4 +296,75 @@ Vec3 CSentryESP::GetAnglesFromMatrix(const matrix3x4& matrix)
 {
     Vec3 forward(matrix[0][2], matrix[1][2], matrix[2][2]);
     return Math::VectorAngles(forward);
+}
+
+SentryAimData CSentryESP::GetInterpolatedAimData(int sentryIndex, const SentryAimData& currentData)
+{
+    float currentTime = I::GlobalVars->curtime;
+    constexpr float INTERPOLATION_TIME = 0.1f; // 100ms interpolation window
+    
+    auto& interpData = m_InterpolationData[sentryIndex];
+    
+    if (!interpData.HasValidData)
+    {
+        // First time seeing this sentry, initialize with current data
+        interpData.LastMuzzlePos = currentData.MuzzlePos;
+        interpData.LastAimAngles = currentData.AimAngles;
+        interpData.LastUpdateTime = currentTime;
+        interpData.HasValidData = true;
+        return currentData;
+    }
+    
+    // Calculate interpolation factor
+    float timeDelta = currentTime - interpData.LastUpdateTime;
+    float lerpFactor = std::min(timeDelta / INTERPOLATION_TIME, 1.0f);
+    
+    // Create interpolated result
+    SentryAimData result = currentData;
+    result.MuzzlePos = LerpVec3(interpData.LastMuzzlePos, currentData.MuzzlePos, lerpFactor);
+    result.AimAngles = LerpAngles(interpData.LastAimAngles, currentData.AimAngles, lerpFactor);
+    
+    // Update stored data for next frame
+    interpData.LastMuzzlePos = result.MuzzlePos;
+    interpData.LastAimAngles = result.AimAngles;
+    interpData.LastUpdateTime = currentTime;
+    
+    return result;
+}
+
+Vec3 CSentryESP::LerpVec3(const Vec3& from, const Vec3& to, float t)
+{
+    return Vec3(
+        from.x + (to.x - from.x) * t,
+        from.y + (to.y - from.y) * t,
+        from.z + (to.z - from.z) * t
+    );
+}
+
+Vec3 CSentryESP::LerpAngles(const Vec3& from, const Vec3& to, float t)
+{
+    Vec3 result;
+    
+    // Lerp each angle component, handling wrap-around for yaw
+    result.x = from.x + (to.x - from.x) * t;
+    result.z = from.z + (to.z - from.z) * t;
+    
+    // Handle yaw wrap-around (y component)
+    float yawDiff = to.y - from.y;
+    
+    // Normalize angle difference to [-180, 180]
+    while (yawDiff > 180.0f)
+        yawDiff -= 360.0f;
+    while (yawDiff < -180.0f)
+        yawDiff += 360.0f;
+    
+    result.y = from.y + yawDiff * t;
+    
+    // Normalize final yaw
+    while (result.y > 180.0f)
+        result.y -= 360.0f;
+    while (result.y < -180.0f)
+        result.y += 360.0f;
+    
+    return result;
 }

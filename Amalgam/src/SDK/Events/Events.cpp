@@ -13,11 +13,12 @@
 #include "../../Features/Visuals/CritHeals/CritHeals.h"
 #include "../../Features/Visuals/FocusFire/FocusFire.h"
 #include "../../Features/Visuals/AmmoTracker/AmmoTracker.h"
+#include "../../Features/Misc/SpectateAll/SpectateAll.h"
 
 bool CEventListener::Initialize()
 {
 	std::vector<const char*> vEvents = { 
-		"client_beginconnect", "client_connected", "client_disconnect", "game_newmap", "teamplay_round_start", "scorestats_accumulated_update", "mvm_reset_stats", "player_connect_client", "player_spawn", "player_changeclass", "player_hurt", "vote_cast", "item_pickup", "revive_player_notify"
+		"client_beginconnect", "client_connected", "client_disconnect", "game_newmap", "teamplay_round_start", "scorestats_accumulated_update", "mvm_reset_stats", "player_connect_client", "player_spawn", "player_changeclass", "player_hurt", "player_death", "vote_cast", "item_pickup", "revive_player_notify"
 	};
 
 	for (auto szEvent : vEvents)
@@ -66,6 +67,9 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 		break;
 	case FNV1A::Hash32Const("player_spawn"):
 		F::Backtrack.SetLerp(pEvent);
+		break;
+	case FNV1A::Hash32Const("player_death"):
+		F::SpectateAll.OnPlayerDeath(pEvent);
 		break;
 	case FNV1A::Hash32Const("revive_player_notify"):
 	{

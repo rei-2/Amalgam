@@ -11,11 +11,22 @@ struct SentryAimData
     bool IsValid = false;
 };
 
+struct SentryInterpolationData
+{
+    Vec3 LastMuzzlePos;
+    Vec3 LastAimAngles;
+    float LastUpdateTime = 0.0f;
+    bool HasValidData = false;
+};
+
 class CSentryESP
 {
 private:
     // State tracking
     std::unordered_set<int> m_SentriesTargetingLocal;
+    
+    // Interpolation data for smooth sentry lines
+    std::unordered_map<int, SentryInterpolationData> m_InterpolationData;
     
     // Helper functions
     bool IsVisible(CBaseEntity* pEntity, CTFPlayer* pLocal);
@@ -25,6 +36,11 @@ private:
     void DrawCornerBox(int x1, int y1, int x2, int y2, Color_t color);
     Vec3 GetPositionFromMatrix(const matrix3x4& matrix);
     Vec3 GetAnglesFromMatrix(const matrix3x4& matrix);
+    
+    // Interpolation functions
+    SentryAimData GetInterpolatedAimData(int sentryIndex, const SentryAimData& currentData);
+    Vec3 LerpVec3(const Vec3& from, const Vec3& to, float t);
+    Vec3 LerpAngles(const Vec3& from, const Vec3& to, float t);
     
 public:
     // Chams tracking for sentries (following StickyESP pattern)

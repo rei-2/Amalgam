@@ -31,6 +31,11 @@ private:
     int m_iCurrentEnemyIndex = 0;
     CTFPlayer* m_pCurrentSpectatedPlayer = nullptr;
     
+    // Mouse lock and killer tracking
+    float m_flMouseLockEndTime = 0.0f;
+    CTFPlayer* m_pLastKiller = nullptr;
+    bool m_bJustRespawned = false;
+    
     // Helper functions
     void HandleMouseInput();
     CTFPlayer* GetNextEnemyPlayer();
@@ -39,6 +44,12 @@ private:
     void ApplyThirdPersonView(CViewSetup* pView);
     SpectateMode GetCurrentMode();
     bool IsValidAngle(const QAngle& angle);
+    
+    // New functionality helpers
+    void CheckForPlayerDeath();
+    void SwitchToNextAvailablePlayer();
+    void HandleRespawnMouseLock();
+    CTFPlayer* FindPlayerKiller(CTFPlayer* pDeadPlayer);
     
 public:
     void OverrideView(CViewSetup* pView);
@@ -49,6 +60,12 @@ public:
     // Health override system for spectator UI
     CTFPlayer* GetCurrentSpectatedPlayer() const { return m_pCurrentSpectatedPlayer; }
     int GetSpectatedPlayerHealth();
+    
+    // Event handling
+    void OnPlayerDeath(IGameEvent* pEvent);
+    
+    // Mouse lock functionality
+    bool ShouldLockMouse();
 };
 
 ADD_FEATURE(CSpectateAll, SpectateAll)

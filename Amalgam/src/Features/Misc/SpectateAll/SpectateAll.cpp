@@ -193,12 +193,32 @@ void CSpectateAll::HandleMouseInput()
             m_bInFreeCam = false;
         }
         
-        // Cycle to next enemy player (preserving current first/third person mode)
+        // Manual cycle to next enemy player (clear killer preference since user is manually cycling)
+        m_pLastKiller = nullptr; // Clear killer preference when manually cycling
+        
         auto enemies = H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES);
         if (!enemies.empty())
         {
-            m_iCurrentEnemyIndex = (m_iCurrentEnemyIndex + 1) % enemies.size();
-            // Note: m_bThirdPersonMode is automatically preserved during player cycling
+            // Find next alive enemy player
+            int startIndex = m_iCurrentEnemyIndex;
+            int attempts = 0;
+            
+            do 
+            {
+                m_iCurrentEnemyIndex = (m_iCurrentEnemyIndex + 1) % enemies.size();
+                attempts++;
+                
+                if (m_iCurrentEnemyIndex < enemies.size())
+                {
+                    auto pEnemy = enemies[m_iCurrentEnemyIndex]->As<CTFPlayer>();
+                    if (pEnemy && pEnemy->IsAlive() && !pEnemy->IsDormant())
+                    {
+                        // Found next alive player
+                        break;
+                    }
+                }
+            } 
+            while (m_iCurrentEnemyIndex != startIndex && attempts < enemies.size());
         }
     }
     
@@ -216,6 +236,24 @@ CTFPlayer* CSpectateAll::GetNextEnemyPlayer()
     if (enemies.empty())
         return nullptr;
     
+    // If we have a killer stored and prefer killer spectating is enabled, try to spectate them first
+    if (Vars::Competitive::SpectateAll::PreferKillerSpectate.Value && m_pLastKiller && m_pLastKiller->IsAlive())
+    {
+        // Find our killer in the enemies list
+        for (size_t i = 0; i < enemies.size(); i++)
+        {
+            auto pEnemy = enemies[i]->As<CTFPlayer>();
+            if (pEnemy == m_pLastKiller)
+            {
+                m_iCurrentEnemyIndex = i;
+                return m_pLastKiller;
+            }
+        }
+        // Killer not found in enemies list (maybe disconnected), clear it
+        m_pLastKiller = nullptr;
+    }
+    
+    // Normal enemy selection logic
     // Ensure valid index
     if (m_iCurrentEnemyIndex >= enemies.size())
         m_iCurrentEnemyIndex = 0;
@@ -507,6 +545,8 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
         m_bIsSpectating = false;
         m_bInFreeCam = false;
         m_bThirdPersonMode = true;
+        // Handle respawn mouse lock
+        HandleRespawnMouseLock();
         return;
     }
     
@@ -516,6 +556,9 @@ void CSpectateAll::OverrideView(CViewSetup* pView)
     
     // Handle mouse input for freecam and player cycling
     HandleMouseInput();
+    
+    // Check if current spectated player died and auto-switch if enabled
+    CheckForPlayerDeath();
     
     // Handle different spectate modes
     SpectateMode mode = GetCurrentMode();
@@ -699,4 +742,158 @@ bool CSpectateAll::IsValidAngle(const QAngle& angle)
         return false;
         
     return true;
+}
+
+void CSpectateAll::CheckForPlayerDeath()
+{
+    if (!Vars::Competitive::SpectateAll::AutoSwitchOnDeath.Value)
+        return;
+    
+    // Only check when we're actually spectating someone in enemy mode
+    if (GetCurrentMode() != SpectateMode::ENEMY || !m_pCurrentSpectatedPlayer)
+        return;
+    
+    // Check if the current spectated player is dead or invalid
+    if (!m_pCurrentSpectatedPlayer->IsAlive() || m_pCurrentSpectatedPlayer->IsDormant())
+    {
+        // Player died, switch to next available player
+        SwitchToNextAvailablePlayer();
+    }
+}
+
+void CSpectateAll::SwitchToNextAvailablePlayer()
+{
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return;
+    
+    // Simple auto-switch logic: just go to next available enemy player
+    auto enemies = H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES);
+    if (enemies.empty())
+    {
+        m_pCurrentSpectatedPlayer = nullptr;
+        return;
+    }
+    
+    // Find next alive enemy player
+    int startIndex = m_iCurrentEnemyIndex;
+    int attempts = 0;
+    
+    do 
+    {
+        m_iCurrentEnemyIndex = (m_iCurrentEnemyIndex + 1) % enemies.size();
+        attempts++;
+        
+        if (m_iCurrentEnemyIndex < enemies.size())
+        {
+            auto pEnemy = enemies[m_iCurrentEnemyIndex]->As<CTFPlayer>();
+            if (pEnemy && pEnemy->IsAlive() && !pEnemy->IsDormant())
+            {
+                m_pCurrentSpectatedPlayer = pEnemy;
+                return;
+            }
+        }
+    } 
+    while (m_iCurrentEnemyIndex != startIndex && attempts < enemies.size());
+    
+    // No alive players found
+    m_pCurrentSpectatedPlayer = nullptr;
+}
+
+CTFPlayer* CSpectateAll::FindPlayerKiller(CTFPlayer* pDeadPlayer)
+{
+    if (!pDeadPlayer)
+        return nullptr;
+    
+    // Return the stored killer from death events (much more reliable now)
+    if (m_pLastKiller && m_pLastKiller->IsAlive())
+    {
+        return m_pLastKiller;
+    }
+    
+    return nullptr;
+}
+
+void CSpectateAll::HandleRespawnMouseLock()
+{
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return;
+    
+    // Check if we just respawned (transition from dead to alive)
+    bool isAlive = pLocal->IsAlive();
+    if (!m_bWasAlive && isAlive)
+    {
+        // Just respawned
+        m_bJustRespawned = true;
+        
+        if (Vars::Competitive::SpectateAll::MouseLockAfterRespawn.Value)
+        {
+            // Set mouse lock end time
+            m_flMouseLockEndTime = I::GlobalVars->realtime + (Vars::Competitive::SpectateAll::MouseLockDuration.Value / 1000.0f);
+        }
+        
+        // Reset killer tracking
+        m_pLastKiller = nullptr;
+    }
+}
+
+void CSpectateAll::OnPlayerDeath(IGameEvent* pEvent)
+{
+    if (!pEvent)
+        return;
+    
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal)
+        return;
+    
+    // Check if we are the one who died
+    int deadPlayerIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+    if (deadPlayerIndex != pLocal->entindex())
+        return;
+    
+    // We died! Store our killer for spectating preference
+    if (Vars::Competitive::SpectateAll::PreferKillerSpectate.Value)
+    {
+        int attackerIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
+        
+        if (attackerIndex > 0 && attackerIndex != deadPlayerIndex)
+        {
+            // Get the attacker entity
+            auto pAttacker = I::ClientEntityList->GetClientEntity(attackerIndex);
+            if (pAttacker)
+            {
+                auto pKiller = pAttacker->As<CTFPlayer>();
+                if (pKiller && pKiller->IsAlive() && pKiller->m_iTeamNum() != pLocal->m_iTeamNum())
+                {
+                    // Store our killer for when spectating starts
+                    m_pLastKiller = pKiller;
+                }
+            }
+        }
+    }
+}
+
+bool CSpectateAll::ShouldLockMouse()
+{
+    if (!Vars::Competitive::SpectateAll::MouseLockAfterRespawn.Value)
+        return false;
+    
+    auto pLocal = H::Entities.GetLocal();
+    if (!pLocal || !pLocal->IsAlive())
+        return false;
+    
+    // Check if we're in the mouse lock period
+    if (m_flMouseLockEndTime > 0.0f && I::GlobalVars->realtime < m_flMouseLockEndTime)
+    {
+        return true;
+    }
+    else if (m_flMouseLockEndTime > 0.0f)
+    {
+        // Mouse lock period ended, clear it
+        m_flMouseLockEndTime = 0.0f;
+        m_bJustRespawned = false;
+    }
+    
+    return false;
 }

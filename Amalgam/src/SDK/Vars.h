@@ -901,7 +901,6 @@ namespace Vars
 			CVar(ChatBubblesNonFloat, "Chat Bubbles Non-Float", false, VISUAL);
 			CVar(ChatBubblesEnemyOnly, "Chat Bubbles Enemy Only", true, VISUAL);
 			CVar(ChatBubblesTextChat, "Chat Bubbles Text Chat", false, VISUAL);
-			CVar(ChatBubblesVoiceCommands, "Chat Bubbles Voice Commands", true, VISUAL);
 			CVar(ChatBubblesVoiceSounds, "Chat Bubbles Voice Sounds", true, VISUAL);
 			CVar(HealthBarESP, "Health Bar ESP", true, VISUAL);
 			CVar(UberTracker, "Uber Advantage Tracker", true, VISUAL);
@@ -1192,6 +1191,10 @@ namespace Vars
 			CVar(HideSpectatedWeapons, "Hide spectated player weapons", false, VISUAL);
 			CVar(ExcludeMapCameras, "Exclude map cameras", true, VISUAL);
 			CVar(ExcludeObjectiveCameras, "Exclude objective cameras", true, VISUAL);
+			CVar(AutoSwitchOnDeath, "Auto switch when spectated player dies", true, VISUAL);
+			CVar(PreferKillerSpectate, "Prefer spectating killer after death", true, VISUAL);
+			CVar(MouseLockAfterRespawn, "Lock mouse after respawn", true, VISUAL);
+			CVar(MouseLockDuration, "Mouse lock duration (ms)", 500.0f, VISUAL | SLIDER_CLAMP, 100.0f, 2000.0f, 50.0f);
 			CVar(SpyVision, "Show enemy health/names", true, VISUAL);
 			CVar(CameraSpeed, "Camera speed", 5.0f, VISUAL | SLIDER_CLAMP, 1.0f, 20.0f, 0.5f);
 			CVar(CameraDistance, "Camera distance", 150.0f, VISUAL | SLIDER_CLAMP, 50.0f, 500.0f, 10.0f);
