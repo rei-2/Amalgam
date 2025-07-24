@@ -1,5 +1,6 @@
 #pragma once
 #include "../../SDK/SDK.h"
+#include <optional>
 
 struct ResolveData
 {
@@ -19,6 +20,7 @@ struct ResolveData
 
 class CResolver
 {
+private:
 	void StoreSniperDots(CTFPlayerResource* pResource);
 	std::optional<float> GetPitchForSniperDot(CTFPlayer* pEntity, CTFPlayerResource* pResource);
 	

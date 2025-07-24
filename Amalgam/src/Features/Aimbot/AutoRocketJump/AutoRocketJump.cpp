@@ -276,5 +276,5 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		}
 	}
 
-	m_bRunning = m_iFrame != -1; // prevent stuff like anti-aim messing with timing
+	m_bRunning = m_iFrame != -1; // prevent stuff like antiaim messing with timing
 }

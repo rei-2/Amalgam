@@ -2,17 +2,18 @@
 #include "../../SDK/SDK.h"
 #include <functional>
 
-using CommandCallback = std::function<void(std::deque<std::string>)>;
+using CommandCallback = std::function<void(std::deque<const char*>&)>;
 
 class CCommands
 {
 private:
+    void Register(const char* sName, CommandCallback fCallback);
+
     std::unordered_map<uint32_t, CommandCallback> m_mCommands = {};
 
 public:
     void Initialize();
-    bool Run(const std::string& sCmd, std::deque<std::string>& vArgs);
-    void Register(const std::string& sName, CommandCallback fCallback);
+    bool Run(const char* sCmd, std::deque<const char*>& vArgs);
 };
 
 ADD_FEATURE(CCommands, Commands);

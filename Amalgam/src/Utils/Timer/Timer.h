@@ -1,9 +1,4 @@
 #pragma once
-#include <chrono>
-
-/*
- *	Credits to cathook (nullifiedcat)
- */
 
 class Timer
 {

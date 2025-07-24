@@ -5,6 +5,7 @@
 
 class CAimbotMelee
 {
+private:
 	std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	bool AimFriendlyBuilding(CBaseObject* pBuilding);
 	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);

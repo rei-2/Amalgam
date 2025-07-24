@@ -42,7 +42,7 @@ class CPlayerlistUtils
 public:
 	uint32_t GetFriendsID(int iIndex);
 	PriorityLabel_t* GetTag(int iID);
-	int GetTag(std::string sTag);
+	int GetTag(const std::string& sTag);
 	inline int TagToIndex(int iTag)
 	{
 		if (iTag <= 0)
@@ -60,14 +60,14 @@ public:
 		return iID;
 	}
 
-	void AddTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	void AddTag(uint32_t uFriendsID, int iID, bool bSave = true, std::string sName = "");
-	void AddTag(int iIndex, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	void AddTag(int iIndex, int iID, bool bSave = true, std::string sName = "");
-	void RemoveTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	void RemoveTag(uint32_t uFriendsID, int iID, bool bSave = true, std::string sName = "");
-	void RemoveTag(int iIndex, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
-	void RemoveTag(int iIndex, int iID, bool bSave = true, std::string sName = "");
+	void AddTag(uint32_t uFriendsID, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	void AddTag(uint32_t uFriendsID, int iID, bool bSave = true, const char* sName = nullptr);
+	void AddTag(int iIndex, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	void AddTag(int iIndex, int iID, bool bSave = true, const char* sName = nullptr);
+	void RemoveTag(uint32_t uFriendsID, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	void RemoveTag(uint32_t uFriendsID, int iID, bool bSave = true, const char* sName = nullptr);
+	void RemoveTag(int iIndex, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
+	void RemoveTag(int iIndex, int iID, bool bSave = true, const char* sName = nullptr);
 	bool HasTags(uint32_t uFriendsID, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);
 	bool HasTags(uint32_t uFriendsID);
 	bool HasTags(int iIndex, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags);

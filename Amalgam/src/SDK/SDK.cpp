@@ -68,7 +68,7 @@ void SDK::Output(const char* cFunction, const char* cLog, Color_t tColor,
 	}
 }
 
-void SDK::SetClipboard(std::string sString)
+void SDK::SetClipboard(const std::string& sString)
 {
 	if (OpenClipboard(nullptr))
 	{

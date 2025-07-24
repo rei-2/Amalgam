@@ -3,6 +3,7 @@
 
 class CMisc
 {
+private:
 	void AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd);

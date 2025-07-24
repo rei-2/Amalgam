@@ -5,6 +5,7 @@
 
 class CAutoDetonate
 {
+private:
 	bool CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, float flRadiusScale, CUserCmd* pCmd);
 	bool CheckSelf(CTFPlayer* pLocal, EGroupType entityGroup);
 

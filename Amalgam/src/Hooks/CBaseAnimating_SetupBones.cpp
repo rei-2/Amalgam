@@ -10,45 +10,26 @@ MAKE_HOOK(CBaseAnimating_SetupBones, S::CBaseAnimating_SetupBones(), bool,
 		return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
 #endif
 
-	if (Vars::Misc::Game::SetupBonesOptimization.Value && !H::Entities.IsSettingUpBones())
+	if (!Vars::Misc::Game::SetupBonesOptimization.Value || H::Entities.IsSettingUpBones())
+		return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+
+	auto pAnimating = reinterpret_cast<CBaseEntity*>(uintptr_t(rcx) - 8);
+	if (!pAnimating)
+		return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+
+	auto pOwner = pAnimating->GetRootMoveParent();
+	auto pEntity = pOwner ? pOwner : pAnimating;
+	if (!pEntity->IsPlayer() || pEntity->entindex() == I::EngineClient->GetLocalPlayer())
+		return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+
+	if (pBoneToWorldOut)
 	{
-		auto pBaseEntity = reinterpret_cast<CBaseEntity*>(uintptr_t(rcx) - 8);
-		if (pBaseEntity)
-		{
-			auto GetRootMoveParent = [&]()
-				{
-					auto pEntity = pBaseEntity;
-					auto pParent = pBaseEntity->GetMoveParent();
-
-					int i = 0;
-					while (pParent)
-					{
-						if (i > 32) //XD
-							break;
-						i++;
-
-						pEntity = pParent;
-						pParent = pEntity->GetMoveParent();
-					}
-
-					return pEntity;
-				};
-
-			auto pOwner = GetRootMoveParent();
-			auto pEntity = pOwner ? pOwner : pBaseEntity;
-			if (pEntity->IsPlayer() && pEntity != H::Entities.GetLocal())
-			{
-				if (pBoneToWorldOut)
-				{
-					auto bones = pEntity->As<CBaseAnimating>()->GetCachedBoneData();
-					if (bones)
-						std::memcpy(pBoneToWorldOut, bones->Base(), sizeof(matrix3x4) * std::min(nMaxBones, bones->Count()));
-				}
-
-				return true;
-			}
-		}
+		auto& aBones = pEntity->As<CBaseAnimating>()->m_CachedBoneData();
+		if (nMaxBones >= aBones.Count())
+			memcpy(pBoneToWorldOut, aBones.Base(), sizeof(matrix3x4) * aBones.Count());
+		else
+			return false;
 	}
 
-	return CALL_ORIGINAL(rcx, pBoneToWorldOut, nMaxBones, boneMask, currentTime);
+	return true;
 }

@@ -257,9 +257,9 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 				pCmd->viewangles.x = 90.f;
 		}
 		if (pCmd->buttons & IN_MOVELEFT)
-			pCmd->sidemove = pCmd->viewangles.x != 90.f ? -50.f : -450.f;
+			pCmd->sidemove = pCmd->viewangles.x == 90.f ? -450.f : -pLocal->m_flTauntForceMoveForwardSpeed();
 		else if (pCmd->buttons & IN_MOVERIGHT)
-			pCmd->sidemove = pCmd->viewangles.x != 90.f ? 50.f : 450.f;
+			pCmd->sidemove = pCmd->viewangles.x == 90.f ? 450.f : pLocal->m_flTauntForceMoveForwardSpeed();
 
 		Vec3 vAngle = I::EngineClient->GetViewAngles();
 		pCmd->viewangles.y = vAngle.y;

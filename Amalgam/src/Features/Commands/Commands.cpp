@@ -4,11 +4,13 @@
 #include "../ImGui/Menu/Menu.h"
 #include <utility>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/join.hpp>
 
-bool CCommands::Run(const std::string& sCmd, std::deque<std::string>& vArgs)
+bool CCommands::Run(const char* sCmd, std::deque<const char*>& vArgs)
 {
-	auto uHash = FNV1A::Hash32(sCmd.c_str());
+	std::string sLower = sCmd;
+	std::transform(sLower.begin(), sLower.end(), sLower.begin(), ::tolower);
+
+	auto uHash = FNV1A::Hash32(sLower.c_str());
 	if (!m_mCommands.contains(uHash))
 		return false;
 
@@ -16,14 +18,59 @@ bool CCommands::Run(const std::string& sCmd, std::deque<std::string>& vArgs)
 	return true;
 }
 
-void CCommands::Register(const std::string& sName, CommandCallback fCallback)
+void CCommands::Register(const char* sName, CommandCallback fCallback)
 {
-	m_mCommands[FNV1A::Hash32(sName.c_str())] = std::move(fCallback);
+	m_mCommands[FNV1A::Hash32(sName)] = std::move(fCallback);
 }
 
 void CCommands::Initialize()
 {
-	Register("queue", [](const std::deque<std::string>& vArgs)
+	Register("setcvar", [](const std::deque<const char*>& vArgs)
+		{
+			if (vArgs.size() < 2)
+			{
+				SDK::Output("Usage:\n\tsetcvar <cvar> <value>");
+				return;
+			}
+
+			const char* sCVar = vArgs[0];
+			auto pCVar = I::CVar->FindVar(sCVar);
+			if (!pCVar)
+			{
+				SDK::Output(std::format("Could not find {}", sCVar).c_str());
+				return;
+			}
+
+			std::string sValue = "";
+			for (int i = 1; i < vArgs.size(); i++)
+				sValue += std::format("{} ", vArgs[i]);
+			sValue.pop_back();
+			boost::replace_all(sValue, "\"", "");
+
+			pCVar->SetValue(sValue.c_str());
+			SDK::Output(std::format("Set {} to {}", sCVar, sValue).c_str());
+		});
+
+	Register("getcvar", [](const std::deque<const char*>& vArgs)
+		{
+			if (vArgs.size() != 1)
+			{
+				SDK::Output("Usage:\n\tgetcvar <cvar>");
+				return;
+			}
+
+			const char* sCVar = vArgs[0];
+			auto pCVar = I::CVar->FindVar(sCVar);
+			if (!pCVar)
+			{
+				SDK::Output(std::format("Could not find {}", sCVar).c_str());
+				return;
+			}
+
+			SDK::Output(std::format("Value of {} is {}", sCVar, pCVar->GetString()).c_str());
+		});
+
+	Register("queue", [](const std::deque<const char*>& vArgs)
 		{
 			static bool bHasLoaded = false;
 			if (!bHasLoaded)
@@ -34,68 +81,26 @@ void CCommands::Initialize()
 			I::TFPartyClient->RequestQueueForMatch(k_eTFMatchGroup_Casual_Default);
 		});
 
-	Register("setcvar", [](const std::deque<std::string>& vArgs)
-		{
-			if (vArgs.size() < 2)
-			{
-				SDK::Output("Usage:\n\tsetcvar <cvar> <value>");
-				return;
-			}
-
-			std::string sCVar = vArgs[0];
-			auto pCVar = I::CVar->FindVar(sCVar.c_str());
-			if (!pCVar)
-			{
-				SDK::Output(std::format("Could not find {}", sCVar).c_str());
-				return;
-			}
-
-			auto vArgs2 = vArgs; vArgs2.pop_front();
-			std::string sValue = boost::algorithm::join(vArgs2, " ");
-			boost::replace_all(sValue, "\"", "");
-			pCVar->SetValue(sValue.c_str());
-			SDK::Output(std::format("Set {} to {}", sCVar, sValue).c_str());
-		});
-
-	Register("getcvar", [](const std::deque<std::string>& vArgs)
-		{
-			if (vArgs.size() != 1)
-			{
-				SDK::Output("Usage:\n\tgetcvar <cvar>");
-				return;
-			}
-
-			std::string sCVar = vArgs[0];
-			auto pCVar = I::CVar->FindVar(sCVar.c_str());
-			if (!pCVar)
-			{
-				SDK::Output(std::format("Could not find {}", sCVar).c_str());
-				return;
-			}
-
-			SDK::Output(std::format("Value of {} is {}", sCVar, pCVar->GetString()).c_str());
-		});
-
-	Register("clearchat", [](const std::deque<std::string>& vArgs)
+	Register("clearchat", [](const std::deque<const char*>& vArgs)
 		{
 			I::ClientModeShared->m_pChatElement->SetText("");
 		});
 
-	Register("menu", [](const std::deque<std::string>& vArgs)
+	Register("menu", [](const std::deque<const char*>& vArgs)
 		{
 			I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = !F::Menu.m_bIsOpen);
 		});
 
-	Register("unload", [](const std::deque<std::string>& vArgs)
+	Register("unload", [](const std::deque<const char*>& vArgs)
 		{
 			if (F::Menu.m_bIsOpen)
 				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = false);
 			U::Core.m_bUnload = true;
 		});
 
-	Register("crash", [](const std::deque<std::string>& vArgs) // if you want to time out of a server and rejoin
+	Register("crash", [](const std::deque<const char*>& vArgs) // if you want to time out of a server and rejoin
 		{
-			switch (vArgs.empty() ? 0 : FNV1A::Hash32(vArgs.front().c_str()))
+			switch (vArgs.empty() ? 0 : FNV1A::Hash32(vArgs.front()))
 			{
 			case FNV1A::Hash32Const("true"):
 			case FNV1A::Hash32Const("t"):

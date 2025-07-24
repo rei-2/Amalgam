@@ -3,6 +3,7 @@
 
 class CFakeLag
 {
+private:
 	bool IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void Prediction(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void PreserveBlastJump(CTFPlayer* pLocal);

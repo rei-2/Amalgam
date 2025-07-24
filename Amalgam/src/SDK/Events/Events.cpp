@@ -71,6 +71,4 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 		I::EngineClient->ServerCmdKeyValues(kv);
 	}
 	}
-
-	return;
 }

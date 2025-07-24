@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../Utils/Feature/Feature.h"
+#include "../../Utils/Macros/Macros.h"
 
 #include "Interfaces/CClientModeShared.h"
 #include "Interfaces/CClientState.h"
@@ -35,7 +35,7 @@
 #include "Interfaces/VPhysics.h"
 
 #include <d3d9.h>
-MAKE_INTERFACE_SIGNATURE_SEARCH(IDirect3DDevice9, DirectXDevice, "shaderapi", "48 8B 0D ? ? ? ? 48 8B 01 FF 50 ? 8B F8", 0x0, 1)
+MAKE_INTERFACE_SIGNATURE(IDirect3DDevice9, DirectXDevice, "shaderapidx9.dll, shaderapivk.dll", "48 8B 0D ? ? ? ? 48 8B 01 FF 50 ? 8B F8", 0x0, 1)
 
 class CNullInterfaces
 {

@@ -3,6 +3,7 @@
 #include "../Features/Commands/Commands.h"
 #include <functional>
 #include <regex>
+#include <sstream>
 
 MAKE_SIGNATURE(Cbuf_ExecuteCommand, "engine.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8D 3D", 0x0);
 
@@ -201,7 +202,7 @@ static std::vector<std::function<void()>> vDynamic = {
             int n = std::stoi(match[1]);
             auto str = match[2].str();
 
-            std::ostringstream sStream;
+            std::stringstream sStream;
             for (int i = 0; i < n; i++)
                 sStream << str;
 
@@ -220,15 +221,15 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 
 	if (args.ArgC())
 	{
-		std::string sCommand = args[0];
-		std::deque<std::string> vArgs;
+        const char* sCommand = args[0];
+		std::deque<const char*> vArgs;
 		for (int i = 1; i < args.ArgC(); i++)
 			vArgs.push_back(args[i]);
 
         if (F::Commands.Run(sCommand, vArgs))
             return;
 
-		switch (FNV1A::Hash32(sCommand.c_str()))
+		switch (FNV1A::Hash32(sCommand))
 		{
 		case FNV1A::Hash32Const("say"):
 		case FNV1A::Hash32Const("say_team"):
@@ -254,7 +255,7 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 
 			sCmdString = std::format("{} {}", sCommand, sCmdString).substr(0, COMMAND_MAX_LENGTH - 1);
 			strncpy_s(args.m_pArgSBuffer, sCmdString.c_str(), COMMAND_MAX_LENGTH);
-			args.m_nArgv0Size = int(sCommand.length() + 1);
+			args.m_nArgv0Size = int(strlen(sCommand)) + 1;
 		}
 		}
 	}

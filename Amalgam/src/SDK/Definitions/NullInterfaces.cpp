@@ -1,7 +1,6 @@
 #include "Interfaces.h"
 
 #include "../../Core/Core.h"
-#include "../../Utils/Assert/Assert.h"
 
 #define Validate(x) if (!x) { U::Core.AppendFailText("CNullInterfaces::Initialize() failed to initialize "#x); m_bFailed = true; }
 #define ValidateNonLethal(x) if (!x) { const char* sMessage = "CNullInterfaces::Initialize() failed to initialize "#x; MessageBox(nullptr, sMessage, "Warning", MB_OK | MB_ICONERROR); U::Core.AppendFailText(sMessage); }

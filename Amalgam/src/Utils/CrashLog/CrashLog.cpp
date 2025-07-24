@@ -103,7 +103,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	mAddresses[ExceptionInfo->ExceptionRecord->ExceptionAddress] = true;
 
 	std::stringstream ssErrorStream;
-	ssErrorStream << std::format("Error: {:#x}\n\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+	ssErrorStream << std::format("Error: 0x{:X}\n\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
 
 	ssErrorStream << std::format("RIP: {:#x}\n", ExceptionInfo->ContextRecord->Rip);
 	ssErrorStream << std::format("RAX: {:#x}\n", ExceptionInfo->ContextRecord->Rax);

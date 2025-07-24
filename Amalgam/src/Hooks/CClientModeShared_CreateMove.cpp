@@ -72,6 +72,14 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 	{	// update weapon info
 		G::CanPrimaryAttack = G::CanSecondaryAttack = G::Reloading = false;
 
+		if (pWeapon->GetMaxClip1() != WEAPON_NOCLIP && !pWeapon->m_bReloadsSingly())
+		{	// dumb fix
+			float flOldCurtime = I::GlobalVars->curtime;
+			I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
+			pWeapon->CheckReload();
+			I::GlobalVars->curtime = flOldCurtime;
+		}
+
 		bool bCanAttack = pLocal->CanAttack();
 		{
 			static int iStaticItemDefinitionIndex = 0;
@@ -180,15 +188,6 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 	F::Misc.RunPost(pLocal, pCmd, *pSendPacket);
 	F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
 	F::Visuals.CreateMove(pLocal, pWeapon);
-
-	{
-		static bool bWasSet = false;
-		const bool bCanChoke = F::Ticks.CanChoke(); // failsafe
-		if (G::PSilentAngles && bCanChoke)
-			*pSendPacket = false, bWasSet = true;
-		else if (bWasSet || !bCanChoke)
-			*pSendPacket = true, bWasSet = false;
-	}
 	F::Ticks.CreateMove(pLocal, pCmd, pSendPacket);
 	F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
 

@@ -79,7 +79,7 @@ bool CCheaterDetection::IsDuckSpeed(CTFPlayer* pEntity)
 	return false;
 }
 
-void CCheaterDetection::Infract(CTFPlayer* pEntity, std::string sReason)
+void CCheaterDetection::Infract(CTFPlayer* pEntity, const char* sReason)
 {
 	bool bMark = false;
 	if (Vars::CheaterDetection::DetectionsRequired.Value)

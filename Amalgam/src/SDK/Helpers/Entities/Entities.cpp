@@ -227,7 +227,7 @@ void CEntities::Store()
 				if (m_mDormancy.contains(n))
 				{
 					auto& tDormancy = m_mDormancy[n];
-					if (I::EngineClient->Time() - tDormancy.LastUpdate < Vars::ESP::DormantDuration.Value)
+					if (I::EngineClient->Time() - tDormancy.LastUpdate < 1.f)
 						pPlayer->SetAbsOrigin(pPlayer->m_vecOrigin() = tDormancy.Location);
 					else
 						m_mDormancy.erase(n);

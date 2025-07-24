@@ -1,5 +1,9 @@
 #pragma once
 
+#define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }
+#define ADD_FEATURE(type, name) ADD_FEATURE_CUSTOM(type, name, F)
+#define VA_LIST(...) __VA_ARGS__
+
 #define FUNCSIG __FUNCSIG__
 #define STRINGIZE(x) STRINGIZE2(x)
 #define STRINGIZE2(x) #x

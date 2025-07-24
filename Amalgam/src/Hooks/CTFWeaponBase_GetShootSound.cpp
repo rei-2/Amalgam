@@ -12,13 +12,9 @@ MAKE_HOOK(CTFWeaponBase_GetShootSound, S::CTFWeaponBase_GetShootSound(), const c
 
 	if (Vars::Misc::Sound::GiantWeaponSounds.Value)
 	{
-		auto pWeapon = reinterpret_cast<CBaseCombatWeapon*>(rcx);
-		auto pOwner = pWeapon ? I::ClientEntityList->GetClientEntityFromHandle(pWeapon->m_hOwnerEntity()) : nullptr;
-		auto pLocal = H::Entities.GetLocal();
-		if (pWeapon && pOwner == pLocal)
-		{
-			// credits: KGB
-
+		auto pWeapon = H::Entities.GetWeapon();
+		if (rcx == pWeapon)
+		{	// credits: KGB
 			int nOldTeam = pWeapon->m_iTeamNum();
 			pWeapon->m_iTeamNum() = TF_TEAM_COUNT;
 			auto sReturn = CALL_ORIGINAL(rcx, iIndex);

@@ -7,7 +7,7 @@ private:
 	struct Spectator_t
 	{
 		std::string m_sName;
-		std::string m_sMode;
+		const char* m_sMode;
 		float m_flRespawnIn;
 		bool m_bRespawnTimeIncreased;
 		int m_iIndex;

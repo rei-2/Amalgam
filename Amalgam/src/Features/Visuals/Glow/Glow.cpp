@@ -394,10 +394,6 @@ void CGlow::RenderMain()
 
 void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo)
 {
-	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
-	if (!ModelRender_DrawModelExecute)
-		return;
-
 	auto pEntity = I::ClientEntityList->GetClientEntity(pInfo.entity_index)->As<CTFPlayer>();
 	if (!pEntity || !pEntity->IsPlayer())
 		return;
@@ -411,7 +407,8 @@ void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInf
 
 			//float flOriginalBlend = I::RenderView->GetBlend();
 			//I::RenderView->SetBlend(flBlend * flOriginalBlend);
-			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+			static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+			IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 			//I::RenderView->SetBlend(flOriginalBlend);
 		};
 
@@ -451,21 +448,15 @@ void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInf
 }
 void CGlow::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo)
 {
-	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
-	if (!ModelRender_DrawModelExecute)
-		return;
-
-
-
-	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
+	static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+	IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
 }
 void CGlow::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
 	if (!m_bExtra)
 	{
-		static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
-		if (ModelRender_DrawModelExecute)
-			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+		static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+		IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 	}
 	else
 	{
@@ -489,11 +480,9 @@ void CGlow::RenderViewmodel(void* ecx, int flags)
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
+
+
 	static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
-	if (!CBaseAnimating_InternalDrawModel)
-		return;
-
-
 
 	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 
@@ -525,24 +514,22 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 	if (!pRenderContext || !m_pMatGlowColor || !m_pMatBlurX || !m_pMatBlurY || !m_pMatHaloAddToScreen)
 		return F::Materials.ReloadMaterials();
 
-	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
-	if (!ModelRender_DrawModelExecute)
-		return;
 
 
+	static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 
 	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 
 	auto glow = Glow_t(Vars::Glow::Viewmodel::Stencil.Value, Vars::Glow::Viewmodel::Blur.Value);
 
 	SetupBegin(glow, pRenderContext, m_pMatGlowColor, m_pMatBlurY);
-	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+	IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 
 	SetupMid(pRenderContext, w, h);
 	auto& color = Vars::Colors::Local.Value;
 	I::RenderView->SetColorModulation(float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f);
 	I::RenderView->SetBlend(float(color.a) / 255.f);
-	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+	IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 
 	SetupEnd(glow, pRenderContext, m_pMatBlurX, m_pMatBlurY, m_pMatHaloAddToScreen, w, h);
 

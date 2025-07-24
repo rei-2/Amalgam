@@ -9,7 +9,7 @@ bool CTFWeaponBase::HasPrimaryAmmoForShot()
 
 	int iClip = m_iClip1();
 	auto pOwner = m_hOwnerEntity().Get();
-	return (iClip == -1 && pOwner ? pOwner->As<CTFPlayer>()->GetAmmoCount(m_iPrimaryAmmoType()) : iClip) >= GetAmmoPerShot();
+	return (iClip == WEAPON_NOCLIP && pOwner ? pOwner->As<CTFPlayer>()->GetAmmoCount(m_iPrimaryAmmoType()) : iClip) >= GetAmmoPerShot();
 }
 
 bool CTFWeaponBase::CanPrimaryAttack()

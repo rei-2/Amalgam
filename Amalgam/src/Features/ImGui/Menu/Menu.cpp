@@ -377,7 +377,7 @@ void CMenu::MenuAimbot(int iTab)
 						FToggle(Vars::Fakelag::RetainSoldierOnly);
 					} EndSection();
 				}
-				if (Section("Anti-aim", 8))
+				if (Section("Antiaim", 8))
 				{
 					FToggle(Vars::AntiAim::Enabled);
 					FDropdown(Vars::AntiAim::PitchReal, FDropdownEnum::Left);
@@ -660,8 +660,7 @@ void CMenu::MenuVisuals(int iTab)
 				{
 					FSlider(Vars::ESP::ActiveAlpha, FSliderEnum::Left);
 					FSlider(Vars::ESP::DormantAlpha, FSliderEnum::Right);
-					FSlider(Vars::ESP::DormantDuration, FSliderEnum::Left);
-					FToggle(Vars::ESP::DormantPriority, FToggleEnum::Right);
+					FToggle(Vars::ESP::DormantPriority);
 				} EndSection();
 				if (Section("Other"))
 				{
@@ -1643,7 +1642,7 @@ void CMenu::MenuLogs(int iTab)
 										{
 											SetCursorPos({ vTagPos.x + flTagWidth - H::Draw.Scale(22), vTagPos.y - H::Draw.Scale(2) });
 											if (IconButton(ICON_MD_CANCEL))
-												F::PlayerUtils.RemoveTag(tPlayer.m_uFriendsID, iID, true, tPlayer.m_sName);
+												F::PlayerUtils.RemoveTag(tPlayer.m_uFriendsID, iID, true, tPlayer.m_sName.c_str());
 										}
 
 										flTagOffset += flTagWidth + H::Draw.Scale(4);
@@ -1713,7 +1712,7 @@ void CMenu::MenuLogs(int iTab)
 										PushStyleColor(ImGuiCol_Text, imColor);
 										imColor.x /= 3; imColor.y /= 3; imColor.z /= 3;
 										if (FSelectable(tTag.m_sName.c_str(), imColor))
-											F::PlayerUtils.AddTag(tPlayer.m_uFriendsID, iID, true, tPlayer.m_sName);
+											F::PlayerUtils.AddTag(tPlayer.m_uFriendsID, iID, true, tPlayer.m_sName.c_str());
 										PopStyleColor();
 									}
 
@@ -1737,7 +1736,7 @@ void CMenu::MenuLogs(int iTab)
 									{
 										if (sInput.empty() && bHasAlias)
 										{
-											F::Output.AliasChanged(tPlayer.m_sName, "Removed", F::PlayerUtils.m_mPlayerAliases[tPlayer.m_uFriendsID]);
+											F::Output.AliasChanged(tPlayer.m_sName.c_str(), "Removed", F::PlayerUtils.m_mPlayerAliases[tPlayer.m_uFriendsID].c_str());
 
 											auto it = F::PlayerUtils.m_mPlayerAliases.find(tPlayer.m_uFriendsID);
 											if (it != F::PlayerUtils.m_mPlayerAliases.end())
@@ -1749,7 +1748,7 @@ void CMenu::MenuLogs(int iTab)
 											F::PlayerUtils.m_mPlayerAliases[tPlayer.m_uFriendsID] = sInput;
 											F::PlayerUtils.m_bSave = true;
 
-											F::Output.AliasChanged(tPlayer.m_sName, bHasAlias ? "Changed" : "Added", sInput);
+											F::Output.AliasChanged(tPlayer.m_sName.c_str(), bHasAlias ? "Changed" : "Added", sInput.c_str());
 										}
 									}
 
@@ -1761,7 +1760,7 @@ void CMenu::MenuLogs(int iTab)
 							{
 								if (FBeginMenu("Set yaw"))
 								{
-									static std::vector<std::pair<std::string, float>> vYaws = {
+									static std::vector<std::pair<const char*, float>> vYaws = {
 										{ "Auto", 0.f },
 										{ "Forward", 0.f },
 										{ "Left", 90.f },
@@ -1770,9 +1769,9 @@ void CMenu::MenuLogs(int iTab)
 									};
 									for (auto& [sYaw, flValue] : vYaws)
 									{
-										if (FSelectable(sYaw.c_str()))
+										if (FSelectable(sYaw))
 										{
-											switch (FNV1A::Hash32(sYaw.c_str()))
+											switch (FNV1A::Hash32(sYaw))
 											{
 											case FNV1A::Hash32Const("Auto"):
 												F::Resolver.SetYaw(tPlayer.m_iUserID, 0.f, true);
@@ -1788,7 +1787,7 @@ void CMenu::MenuLogs(int iTab)
 
 								if (FBeginMenu("Set pitch"))
 								{
-									static std::vector<std::pair<std::string, float>> vPitches = {
+									static std::vector<std::pair<const char*, float>> vPitches = {
 										{ "Auto", 0.f },
 										{ "Up", -90.f },
 										{ "Down", 90.f },
@@ -1797,9 +1796,9 @@ void CMenu::MenuLogs(int iTab)
 									};
 									for (auto& [sPitch, flValue] : vPitches)
 									{
-										if (FSelectable(sPitch.c_str()))
+										if (FSelectable(sPitch))
 										{
-											switch (FNV1A::Hash32(sPitch.c_str()))
+											switch (FNV1A::Hash32(sPitch))
 											{
 											case FNV1A::Hash32Const("Auto"):
 												F::Resolver.SetPitch(tPlayer.m_iUserID, 0.f, false, true);
@@ -1818,13 +1817,13 @@ void CMenu::MenuLogs(int iTab)
 
 								if (FBeginMenu("Set view"))
 								{
-									static std::vector<std::pair<std::string, bool>> vPitches = {
+									static std::vector<std::pair<const char*, bool>> vPitches = {
 										{ "Offset from static view", true },
 										{ "Offset from view to local", false }
 									};
 									for (auto& [sPitch, bValue] : vPitches)
 									{
-										if (FSelectable(sPitch.c_str()))
+										if (FSelectable(sPitch))
 											F::Resolver.SetView(tPlayer.m_iUserID, bValue);
 									}
 
@@ -1833,13 +1832,13 @@ void CMenu::MenuLogs(int iTab)
 
 								if (FBeginMenu("Set minwalk"))
 								{
-									static std::vector<std::pair<std::string, bool>> vPitches = {
+									static std::vector<std::pair<const char*, bool>> vPitches = {
 										{ "Minwalk on", true },
 										{ "Minwalk off", false }
 									};
 									for (auto& [sPitch, bValue] : vPitches)
 									{
-										if (FSelectable(sPitch.c_str()))
+										if (FSelectable(sPitch))
 											F::Resolver.SetMinwalk(tPlayer.m_iUserID, bValue);
 									}
 
@@ -2246,7 +2245,7 @@ void CMenu::MenuLogs(int iTab)
 
 										for (auto& tag : player.second)
 										{
-											std::string sTag = tag.second.data();
+											const std::string& sTag = tag.second.data();
 
 											int iID = -1;
 											try
@@ -2273,10 +2272,10 @@ void CMenu::MenuLogs(int iTab)
 									for (auto& player : *aliasTree)
 									{
 										uint32_t uFriendsID = std::stoi(player.first);
-										std::string sAlias = player.second.data();
+										const std::string& sAlias = player.second.data();
 
 										if (!sAlias.empty())
-											mPlayerAliases[uFriendsID] = player.second.data();
+											mPlayerAliases[uFriendsID] = sAlias;
 									}
 								}
 							}
@@ -4097,7 +4096,7 @@ void CMenu::Render()
 	PopFont();
 }
 
-void CMenu::AddOutput(const std::string& sFunction, const std::string& sLog, const Color_t& tColor)
+void CMenu::AddOutput(const char* sFunction, const char* sLog, const Color_t& tColor)
 {
 	static size_t iID = 0;
 

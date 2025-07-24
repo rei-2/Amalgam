@@ -98,41 +98,34 @@ const static std::vector<const char*> vWater = { "ambient_mp3\\water\\water_spla
 
 static bool ShouldBlockSound(const char* pSound)
 {
-	if (!pSound)
+	if (!Vars::Misc::Sound::Block.Value || !pSound)
 		return false;
 
 	std::string sSound = pSound;
 	boost::algorithm::to_lower(sSound);
-
-	if (Vars::Misc::Sound::Block.Value)
-	{
-		auto CheckSound = [&](int iFlag, const std::vector<const char*>& vSounds)
+	auto CheckSound = [&](int iFlag, const std::vector<const char*>& vSounds)
+		{
+			if (Vars::Misc::Sound::Block.Value & iFlag)
 			{
-				if (Vars::Misc::Sound::Block.Value & iFlag)
+				for (auto& sNoise : vSounds)
 				{
-					for (auto& sNoise : vSounds)
-					{
-						if (sSound.find(sNoise) != std::string::npos)
-							return true;
-					}
+					if (sSound.find(sNoise) != std::string::npos)
+						return true;
 				}
-				return false;
-			};
+			}
+			return false;
+		};
 
-		if (CheckSound(Vars::Misc::Sound::BlockEnum::Footsteps, vFootsteps))
-			return true;
+	if (CheckSound(Vars::Misc::Sound::BlockEnum::Footsteps, vFootsteps))
+		return true;
 
-		if (CheckSound(Vars::Misc::Sound::BlockEnum::Noisemaker, vNoisemaker))
-			return true;
+	if (CheckSound(Vars::Misc::Sound::BlockEnum::Noisemaker, vNoisemaker))
+		return true;
 
-		if (CheckSound(Vars::Misc::Sound::BlockEnum::FryingPan, vFryingPan))
-			return true;
+	if (CheckSound(Vars::Misc::Sound::BlockEnum::FryingPan, vFryingPan))
+		return true;
 
-		if (CheckSound(Vars::Misc::Sound::BlockEnum::Water, vWater))
-			return true;
-	}
-
-	if (FNV1A::Hash32(pSound) == FNV1A::Hash32Const("Physics.WaterSplash")) // temporary fix for duplicate water sounds
+	if (CheckSound(Vars::Misc::Sound::BlockEnum::Water, vWater))
 		return true;
 
 	return false;

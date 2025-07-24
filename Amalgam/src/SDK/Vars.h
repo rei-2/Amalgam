@@ -1,10 +1,9 @@
 #pragma once
 #include "../SDK/Definitions/Types.h"
+#include "../Utils/Macros/Macros.h"
 #include <windows.h>
 #include <unordered_map>
 #include <typeinfo>
-
-#define VA_LIST(...) __VA_ARGS__
 
 #define DEFAULT_BIND -1
 
@@ -184,13 +183,13 @@ namespace Vars
 			VA_LIST("Ticks", "Crit hack", "Spectators", "Ping", "Conditions", "Seed prediction"),
 			Ticks = 1 << 0, CritHack = 1 << 1, Spectators = 1 << 2, Ping = 1 << 3, Conditions = 1 << 4, SeedPrediction = 1 << 5);
 
-		CVar(BindsDisplay, "Binds display", DragBox_t(100, 100), NOBIND);
-		CVar(TicksDisplay, "Ticks display", DragBox_t(), NOBIND);
-		CVar(CritsDisplay, "Crits display", DragBox_t(), NOBIND);
-		CVar(SpectatorsDisplay, "Spectators display", DragBox_t(), NOBIND);
-		CVar(PingDisplay, "Ping display", DragBox_t(), NOBIND);
-		CVar(ConditionsDisplay, "Conditions display", DragBox_t(), NOBIND);
-		CVar(SeedPredictionDisplay, "Seed prediction display", DragBox_t(), NOBIND);
+		CVar(BindsDisplay, "Binds display", DragBox_t(100, 100), VISUAL | NOBIND);
+		CVar(TicksDisplay, "Ticks display", DragBox_t(), VISUAL | NOBIND);
+		CVar(CritsDisplay, "Crits display", DragBox_t(), VISUAL | NOBIND);
+		CVar(SpectatorsDisplay, "Spectators display", DragBox_t(), VISUAL | NOBIND);
+		CVar(PingDisplay, "Ping display", DragBox_t(), VISUAL | NOBIND);
+		CVar(ConditionsDisplay, "Conditions display", DragBox_t(), VISUAL | NOBIND);
+		CVar(SeedPredictionDisplay, "Seed prediction display", DragBox_t(), VISUAL | NOBIND);
 
 		CVar(Scale, "Scale", 1.f, NOBIND | SLIDER_MIN | SLIDER_PRECISION | SLIDER_NOAUTOUPDATE, 0.75f, 2.f, 0.25f);
 		CVar(CheapText, "Cheap text", false);
@@ -209,7 +208,7 @@ namespace Vars
 		CVar(TeamRed, "RED color", Color_t(225, 60, 60, 255), VISUAL);
 		CVar(TeamBlu, "BLU color", Color_t(75, 175, 225, 255), VISUAL);
 		CVar(Enemy, "Enemy color", Color_t(225, 60, 60, 255), VISUAL);
-		CVar(Team, "Team color", Color_t(75, 175, 225, 255), VISUAL);
+		CVar(Team, "Team color", Color_t(0, 255, 100, 255), VISUAL);
 		CVar(Local, "Local color", Color_t(255, 255, 255, 255), VISUAL);
 		CVar(Target, "Target color", Color_t(255, 0, 0, 255), VISUAL);
 		CVar(Health, "Health color", Color_t(0, 225, 75, 255), VISUAL);
@@ -288,7 +287,7 @@ namespace Vars
 			CVar(AssistStrength, "Assist strength", 25.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 1.f, "%g%%");
 			CVar(TickTolerance, "Tick tolerance", 7, SLIDER_CLAMP, 0, 21);
 			CVar(AutoShoot, "Auto shoot", true);
-			CVar(FOVCircle, "FOV Circle", true);
+			CVar(FOVCircle, "FOV Circle", true, VISUAL);
 			CVar(NoSpread, "No spread", false);
 
 			CVar(HitscanPeek, "Hitscan peek", 1, NOSAVE | DEBUGVAR, 0, 5);
@@ -468,8 +467,8 @@ namespace Vars
 		CVar(Amount, VA_LIST("Amount", "SpeedHack amount"), 1, NONE, 1, 50);
 	NAMESPACE_END(Speedhack);
 
-	NAMESPACE_BEGIN(AntiAim, Anti-Aim)
-		CVar(Enabled, VA_LIST("Enabled", "Anti-aim enabled"), false);
+	NAMESPACE_BEGIN(AntiAim, Antiaim)
+		CVar(Enabled, VA_LIST("Enabled", "Antiaim enabled"), false);
 		CVarEnum(PitchReal, "Real pitch", 0, NONE, nullptr,
 			VA_LIST("None", "Up", "Down", "Zero", "Jitter", "Reverse jitter"),
 			None, Up, Down, Zero, Jitter, ReverseJitter);
@@ -538,7 +537,6 @@ namespace Vars
 
 		CVar(ActiveAlpha, "Active alpha", 255, VISUAL | SLIDER_CLAMP, 0, 255, 5);
 		CVar(DormantAlpha, "Dormant alpha", 50, VISUAL | SLIDER_CLAMP, 0, 255, 5);
-		CVar(DormantDuration, "Dormant duration", 1.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, 0.015f, 5.0f, 0.1f, "%gs");
 		CVar(DormantPriority, "Dormant priority only", false, VISUAL);
 
 		SUBNAMESPACE_BEGIN(FOVArrows, Out of FOV arrows)
@@ -759,8 +757,8 @@ namespace Vars
 			CVarEnum(ChatTags, "Chat tags", 0b000, VISUAL | DROPDOWN_MULTI, nullptr,
 				VA_LIST("Local", "Friends", "Party", "Assigned"),
 				Local = 1 << 0, Friends = 1 << 1, Party = 1 << 2, Assigned = 1 << 3);
-			CVar(FieldOfView, "Field of view## FOV", 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 160.f, 5.f);
-			CVar(ZoomFieldOfView, "Zoomed field of view## Zoomed FOV", 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 160.f, 5.f);
+			CVar(FieldOfView, "Field of view## FOV", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 160.f, 5.f);
+			CVar(ZoomFieldOfView, "Zoomed field of view## Zoomed FOV", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 160.f, 5.f);
 			CVar(AspectRatio, "Aspect ratio", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f, 0.05f);
 			CVar(RevealScoreboard, "Reveal scoreboard", false, VISUAL);
 			CVar(ScoreboardUtility, "Scoreboard utility", false);
@@ -779,7 +777,7 @@ namespace Vars
 			CVar(Roll, VA_LIST("Roll", "Viewmodel roll"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
 			CVar(SwayScale, VA_LIST("Sway scale", "Viewmodel sway scale"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f, 0.5f);
 			CVar(SwayInterp, VA_LIST("Sway interp", "Viewmodel sway interp"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
-			CVar(FieldOfView, VA_LIST("Field of view## Viewmodel FOV", "Viewmodel field of view"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f, 5.f);
+			CVar(FieldOfView, VA_LIST("Field of view## Viewmodel FOV", "Viewmodel field of view"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 180.f, 5.f);
 		SUBNAMESPACE_END(Viewmodel);
 
 		SUBNAMESPACE_BEGIN(World)
@@ -848,7 +846,7 @@ namespace Vars
 			CVar(Timed, VA_LIST("Timed", "Timed path"), false, VISUAL);
 			CVar(Box, VA_LIST("Box", "Path box"), true, VISUAL);
 			CVar(ProjectileCamera, "Projectile camera", false, VISUAL);
-			CVar(ProjectileWindow, "Projectile window", WindowBox_t(), NOBIND);
+			CVar(ProjectileWindow, "Projectile window", WindowBox_t(), VISUAL | NOBIND);
 			CVar(SwingLines, "Swing lines", false, VISUAL);
 			CVar(DrawDuration, VA_LIST("Draw duration", "Simulation draw duration"), 5.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 10.f);
 
@@ -891,7 +889,7 @@ namespace Vars
 			CVarEnum(Style, VA_LIST("Style", "Radar style"), 0, VISUAL, nullptr,
 				VA_LIST("Circle", "Rectangle"),
 				Circle, Rectangle);
-			CVar(Window, "Radar window", WindowBox_t(), NOBIND);
+			CVar(Window, "Radar window", WindowBox_t(), VISUAL | NOBIND);
 			CVar(Range, VA_LIST("Range", "Radar range"), 1500, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 50, 3000, 50);
 			CVar(BackgroundAlpha, VA_LIST("Background alpha", "Radar background alpha"), 128, VISUAL | SLIDER_CLAMP, 0, 255, 5);
 			CVar(LineAlpha, VA_LIST("Line alpha", "Radar line alpha"), 255, VISUAL | SLIDER_CLAMP, 0, 255, 5);
@@ -1115,7 +1113,7 @@ namespace Vars
 		CVar(Logging, "Debug logging", false, NOSAVE);
 		CVar(Options, "Debug options", false, NOSAVE);
 		CVar(DrawHitboxes, "Show hitboxes", false, NOSAVE);
-		CVar(AntiAimLines, "Anti-aim lines", false);
+		CVar(AntiAimLines, "Antiaim lines", false);
 		CVar(CrashLogging, "Crash logging", true);
 #ifdef DEBUG_TRACES
 		CVar(VisualizeTraces, "Visualize traces", false, NOSAVE);
@@ -1189,6 +1187,7 @@ namespace Vars
 		CVar(CTFPlayer_ShouldDraw, "CTFPlayer_ShouldDraw", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayer_UpdateStepSound, "CTFPlayer_UpdateStepSound", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayerInventory_GetMaxItemCount, "CTFPlayerInventory_GetMaxItemCount", true, NOSAVE | DEBUGVAR);
+		CVar(CTFPlayerInventory_VerifyChangedLoadoutsAreValid, "CTFPlayerInventory_VerifyChangedLoadoutsAreValid", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayerPanel_GetTeam, "CTFPlayerPanel_GetTeam", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayerShared_InCond, "CTFPlayerShared_InCond", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayerShared_IsPlayerDominated, "CTFPlayerShared_IsPlayerDominated", true, NOSAVE | DEBUGVAR);
@@ -1203,7 +1202,6 @@ namespace Vars
 		CVar(DoEnginePostProcessing, "DoEnginePostProcessing", true, NOSAVE | DEBUGVAR);
 		CVar(DSP_Process, "DSP_Process", true, NOSAVE | DEBUGVAR);
 		CVar(FX_FireBullets, "FX_FireBullets", true, NOSAVE | DEBUGVAR);
-		CVar(GenerateEquipRegionConflictMask, "GenerateEquipRegionConflictMask", true, NOSAVE | DEBUGVAR);
 		CVar(GetClientInterpAmount, "GetClientInterpAmount", true, NOSAVE | DEBUGVAR);
 		CVar(HostState_Shutdown, "HostState_Shutdown", true, NOSAVE | DEBUGVAR);
 		CVar(IBaseClientDLL_DispatchUserMessage, "IBaseClientDLL_DispatchUserMessage", true, NOSAVE | DEBUGVAR);

@@ -1,5 +1,5 @@
 #pragma once
-#include "../Feature/Feature.h"
+#include "../Macros/Macros.h"
 #include <cstdint>
 #include <vector>
 
@@ -7,10 +7,10 @@ class CSignature
 {
 private:
 	uintptr_t m_dwVal;
-	const char* m_pszDLLName;
-	const char* m_pszSignature;
+	const char* m_sDLLName;
+	const char* m_sSignature;
 	int m_nOffset;
-	const char* m_pszName;
+	const char* m_sName;
 
 public:
 	CSignature(const char* sDLLName, const char* sSignature, int nOffset, const char* sName);

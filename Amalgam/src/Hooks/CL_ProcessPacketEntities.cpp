@@ -2,24 +2,6 @@
 
 MAKE_SIGNATURE(CL_ProcessPacketEntities, "engine.dll", "48 89 7C 24 ? 4C 89 64 24 ? 55 41 56 41 57 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E8 ? ? ? ? 48 2B E0 4C 8B F9", 0x0);
 
-class SVC_PacketEntities : public CNetMessage
-{
-	int	GetGroup() const { return ENTITIES; }
-
-public:
-
-	byte pad1[8];
-	int			m_nMaxEntries;
-	int			m_nUpdatedEntries;
-	bool		m_bIsDelta;
-	bool		m_bUpdateBaseline;
-	int			m_nBaseline;
-	int			m_nDeltaFrom;
-	int			m_nLength;
-	bf_read		m_DataIn;
-	bf_write	m_DataOut;
-};
-
 struct CriticalStorage_t
 {
 	float m_flCritTokenBucket;
@@ -38,15 +20,10 @@ MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 	if (entmsg->m_bIsDelta) // we won't need to restore
 		return CALL_ORIGINAL(entmsg);
 
-	CTFPlayer* pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer())->As<CTFPlayer>();
-	if (!pLocal)
+	CTFPlayer* pLocal = H::Entities.GetLocal();
+	if (!pLocal || !pLocal->m_hMyWeapons())
 	{
 		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (1)", { 255, 100, 100 });
-		return CALL_ORIGINAL(entmsg);
-	}
-	if (!pLocal->m_hMyWeapons())
-	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (2)", { 255, 100, 100 });
 		return CALL_ORIGINAL(entmsg);
 	}
 
@@ -70,15 +47,10 @@ MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 
 	bool bReturn = CALL_ORIGINAL(entmsg);
 
-	pLocal = I::ClientEntityList->GetClientEntity(I::EngineClient->GetLocalPlayer())->As<CTFPlayer>();
-	if (!pLocal)
+	pLocal = H::Entities.GetLocal();
+	if (!pLocal || !pLocal->m_hMyWeapons())
 	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (3)", { 255, 100, 100 });
-		return bReturn;
-	}
-	if (!pLocal->m_hMyWeapons())
-	{
-		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (4)", { 255, 100, 100 });
+		SDK::Output("ProcessPacketEntities", "Failed to restore weapon crit data! (2)", { 255, 100, 100 });
 		return bReturn;
 	}
 

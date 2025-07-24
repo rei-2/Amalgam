@@ -1,5 +1,5 @@
 #pragma once
-#include "../Feature/Feature.h"
+#include "../Macros/Macros.h"
 #include "../../SDK/Definitions/Misc/dt_recv.h"
 
 class CNetVars

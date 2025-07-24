@@ -29,7 +29,7 @@ void CMaterials::Remove(IMaterial* pMaterial)
 
 
 
-void CMaterials::StoreStruct(std::string sName, std::string sVMT, bool bLocked)
+void CMaterials::StoreStruct(const std::string& sName, const std::string& sVMT, bool bLocked)
 {
 	Material_t tMaterial = {};
 	tMaterial.m_sName = sName;
@@ -169,7 +169,7 @@ void CMaterials::LoadMaterials()
 
 		std::string sName = entry.path().filename().string();
 		sName.erase(sName.end() - 4, sName.end());
-		const std::string sVMT((std::istreambuf_iterator(inStream)), std::istreambuf_iterator<char>());
+		std::string sVMT((std::istreambuf_iterator(inStream)), std::istreambuf_iterator<char>());
 
 		auto uHash = FNV1A::Hash32(sName.c_str());
 		if (uHash == FNV1A::Hash32Const("Original") || m_mMaterials.contains(uHash))

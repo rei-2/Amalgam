@@ -1567,11 +1567,13 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 
 bool CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 {
+	/*
 	if (Vec3* pDoubletapAngle = F::Ticks.GetShootAngle())
 	{
 		vOut = *pDoubletapAngle;
 		return true;
 	}
+	*/
 
 	bool bReturn = false;
 	switch (iMethod)
@@ -1750,8 +1752,9 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		if (iResult != 1 && pWeapon->GetWeaponID() == TF_WEAPON_CANNON && Vars::Aimbot::Projectile::Modifiers.Value & Vars::Aimbot::Projectile::ModifiersEnum::ChargeWeapon && !(pCmd->buttons & IN_ATTACK))
 		{
 			float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f
-				? std::clamp(pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime, 0.f, 1.f)
+				? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime
 				: 1.f;
+			flCharge = floorf(flCharge / 0.195f) * 0.195f;
 			if (flCharge < m_flTimeTo)
 			{
 				if (pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f)
@@ -1795,7 +1798,8 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 					if (Vars::Aimbot::Projectile::Modifiers.Value & Vars::Aimbot::Projectile::ModifiersEnum::ChargeWeapon)
 					{
 						float flCharge = pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime;
-						if (std::clamp(flCharge, 0.f, 1.f) < m_flTimeTo)
+						flCharge = floorf(flCharge / 0.195f) * 0.195f;
+						if (flCharge < m_flTimeTo)
 							pCmd->buttons &= ~IN_ATTACK;
 					}
 					else

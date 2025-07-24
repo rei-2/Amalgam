@@ -109,9 +109,9 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		float flSpeed = pPlayer->InCond(TF_COND_RUNE_PRECISION) ? 3000.f : SDK::AttribHookValue(1200.f, "mult_projectile_speed", pWeapon);
 		float flLifetime = flMortar
 			? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime : flMortar
-			: SDK::AttribHookValue(2.2f, "fuse_mult", pWeapon);
+			: SDK::AttribHookValue(2.f, "fuse_mult", pWeapon);
 		auto uType = bCannon ? FNV1A::Hash32Const("models/weapons/w_models/w_cannonball.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_grenade_grenadelauncher.mdl");
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, flLifetime };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 6.f, 6.f, 6.f }, flSpeed, 1.f, floorf(flLifetime / 0.195f + 1) * 0.195f };
 		return true;
 	}
 	case TF_WEAPON_PIPEBOMBLAUNCHER:

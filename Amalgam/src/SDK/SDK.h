@@ -19,7 +19,7 @@
 #include "../Utils/Hash/FNV1A.h"
 #include "../Utils/Math/Math.h"
 #include "../Utils/Timer/Timer.h"
-#include "../Utils/Feature/Feature.h"
+#include "../Utils/Macros/Macros.h"
 #include <intrin.h>
 
 #define VK_0              0x30
@@ -68,9 +68,10 @@ namespace SDK
 {
 	void Output(const char* cFunction, const char* cLog = nullptr, Color_t tColor = { 255, 255, 255, 255 },
 		bool bConsole = true, bool bDebug = false, bool bToast = false, bool bMenu = false, bool bChat = false, bool bParty = false, int iMessageBox = -1,
-		const char* sLeft = "[", const char* sRight = "]");
+		const char* sLeft = "[", const char* sRight = "]"
+	);
 
-	void SetClipboard(std::string sString);
+	void SetClipboard(const std::string& sString);
 	std::string GetClipboard();
 
 	HWND GetTeamFortressWindow();

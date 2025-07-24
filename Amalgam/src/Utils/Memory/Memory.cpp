@@ -44,11 +44,11 @@ std::vector<int> CMemory::PatternToInt(const char* szPattern)
 
 uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 {
-	if (const auto hMod = GetModuleHandleA(szModule))
+	if (const auto hModule = GetModuleHandle(szModule))
 	{
 		// Get module information to search in the given module
 		MODULEINFO lpModuleInfo;
-		if (!GetModuleInformation(GetCurrentProcess(), hMod, &lpModuleInfo, sizeof(MODULEINFO)))
+		if (!GetModuleInformation(GetCurrentProcess(), hModule, &lpModuleInfo, sizeof(MODULEINFO)))
 			return 0x0;
 
 		// The region where we will search for the byte sequence
@@ -63,7 +63,7 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 		const auto iPatternSize = vPattern.size();
 		const int* iPatternBytes = vPattern.data();
 
-		const auto pImageBytes = reinterpret_cast<byte*>(hMod);
+		const auto pImageBytes = reinterpret_cast<byte*>(hModule);
 
 		// Now loop through all bytes and check if the byte sequence matches
 		for (auto i = 0ul; i < dwImageSize - iPatternSize; ++i)
@@ -95,27 +95,19 @@ using CreateInterfaceFn = void*(*)(const char* pName, int* pReturnCode);
 
 PVOID CMemory::FindInterface(const char* szModule, const char* szObject)
 {
-	const auto hModule = GetModuleHandleA(szModule);
-	if (!hModule)
-		return nullptr;
-
-	const auto fnCreateInterface = reinterpret_cast<CreateInterfaceFn>(GetProcAddress(hModule, "CreateInterface"));
-	if (!fnCreateInterface)
-		return nullptr;
-
-	return fnCreateInterface(szObject, nullptr);
+	const auto CreateInterface = GetModuleExport<CreateInterfaceFn>(szModule, "CreateInterface");
+	return CreateInterface(szObject, nullptr);
 }
 
 std::string CMemory::GetModuleOffset(uintptr_t uAddress)
 {
 	HMODULE hModule;
-	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, LPCSTR(uAddress), &hModule))
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, LPCSTR(uAddress), &hModule))
 		return std::format("{:#x}", uAddress);
 
 	uintptr_t uBase = uintptr_t(hModule);
-	char buffer[MAX_PATH];
-	if (!GetModuleBaseName(GetCurrentProcess(), hModule, buffer, sizeof(buffer) / sizeof(char)))
-		return std::format("{:#x}+{:#x}", uBase, uAddress - uBase);
+	if (char buffer[MAX_PATH]; GetModuleBaseName(GetCurrentProcess(), hModule, buffer, sizeof(buffer) / sizeof(char)))
+		return std::format("{}+{:#x}", buffer, uAddress - uBase);
 
-	return std::format("{}+{:#x}", buffer, uAddress - uBase);
+	return std::format("{:#x}+{:#x}", uBase, uAddress - uBase);
 }

@@ -29,7 +29,7 @@ void CFakeAngle::Run(CTFPlayer* pLocal)
 	if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
 		pLocal->m_flTauntYaw() = vAngle.y;
 	pAnimState->Update(pAnimState->m_flCurrentFeetYaw = /*pAnimState->m_flEyeYaw =*/ vAngle.y, vAngle.x);
-	pLocal->InvalidateBoneCache(); // fix issue with certain cosmetics
+	pLocal->InvalidateBoneCache();
 	bBonesSetup = pLocal->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime);
 
 	I::GlobalVars->frametime = flOldFrameTime;

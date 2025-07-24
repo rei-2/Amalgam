@@ -4,6 +4,7 @@
 #include "CCollisionProperty.h"
 #include "CParticleProperty.h"
 #include "../Main/UtlVector.h"
+#include "../Misc/CInterpolatedVar.h"
 #include "../Definitions.h"
 #include "../../../Utils/Memory/Memory.h"
 #include "../../../Utils/Signatures/Signatures.h"
@@ -95,6 +96,9 @@ public:
 	NETVAR_OFF(m_MoveCollide, byte, "CTFPlayer", "m_nWaterLevel", -3);
 	NETVAR_OFF(m_nWaterType, byte, "CTFPlayer", "m_nWaterLevel", 1);
 	NETVAR_OFF(m_Particles, CParticleProperty*, "CBaseEntity", "m_flElasticity", -56);
+	NETVAR_OFF(m_iv_vecVelocity, CInterpolatedVar<Vec3>, "CBaseEntity", "m_iTeamNum", 156);
+	NETVAR_OFF(m_iv_vecOrigin, CInterpolatedVar<Vec3>, "CBaseEntity", "m_flShadowCastDistance", 84);
+	NETVAR_OFF(m_iv_angRotation, CInterpolatedVar<Vec3>, "CBaseEntity", "m_vecOrigin", -128);
 	inline CBaseEntity* GetMoveParent()
 	{
 		static int nOffset = U::NetVars.GetNetVar("CBaseEntity", "moveparent") - 8;
@@ -115,6 +119,19 @@ public:
 		auto m_pMoveChild = reinterpret_cast<EHANDLE*>(uintptr_t(this) + nOffset);
 
 		return m_pMoveChild ? m_pMoveChild->Get() : nullptr;
+	}
+	inline CBaseEntity* const GetRootMoveParent()
+	{
+		CBaseEntity* ent = this;
+		CBaseEntity* parent = GetMoveParent();
+
+		while (parent)
+		{
+			ent = parent;
+			parent = ent->GetMoveParent();
+		}
+
+		return ent;
 	}
 
 	VIRTUAL(EyePosition, Vec3, 142, this);

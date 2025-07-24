@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../Utils/Feature/Feature.h"
+#include "../../../Utils/Macros/Macros.h"
 #include "../../Definitions/Classes.h"
 #include <unordered_map>
 
@@ -27,6 +27,7 @@ struct VelFixRecord
 
 class CEntities
 {
+private:
 	CTFPlayer* m_pLocal = nullptr;
 	CTFWeaponBase* m_pLocalWeapon = nullptr;
 	CTFPlayerResource* m_pPlayerResource = nullptr;

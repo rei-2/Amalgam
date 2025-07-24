@@ -13,9 +13,9 @@ public:
 	int m_iIntendedTarget = -1;
 	Vec3 m_vOldView = {}; // don't let spectating change viewangles
 
-	CBaseEntity* m_pOriginalTarget;
+	EHANDLE m_hOriginalTarget;
 	int m_iOriginalMode = OBS_MODE_NONE;
-	CBaseEntity* m_pTargetTarget;
+	EHANDLE m_hTargetTarget;
 	int m_iTargetMode = OBS_MODE_NONE;
 };
 

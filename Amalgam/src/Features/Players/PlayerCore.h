@@ -3,6 +3,7 @@
 
 class CPlayerlistCore
 {
+private:
 	void SavePlayerlist();
 	void LoadPlayerlist();
 

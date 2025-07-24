@@ -5,6 +5,7 @@
 
 class CGlow
 {
+private:
 	bool GetGlow(CTFPlayer* pLocal, CBaseEntity* pEntity, Glow_t* pGlow, Color_t* pColor);
 
 	void StencilBegin(IMatRenderContext* pRenderContext);

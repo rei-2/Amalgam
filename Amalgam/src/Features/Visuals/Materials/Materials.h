@@ -24,7 +24,7 @@ public:
 
 	IMaterial* Create(char const* szName, KeyValues* pKV);
 	void Remove(IMaterial* pMaterial);
-	void StoreStruct(std::string sName, std::string sVMT, bool bLocked = false);
+	void StoreStruct(const std::string& sName, const std::string& sVMT, bool bLocked = false);
 
 	void SetColor(Material_t* pMaterial, Color_t tColor);
 

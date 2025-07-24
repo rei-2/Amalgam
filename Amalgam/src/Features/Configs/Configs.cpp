@@ -24,22 +24,22 @@ void CConfigs::TreeToColor(const boost::property_tree::ptree& tree, Color_t& out
 
 
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, bool bVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, bool bVal)
 {
 	mapTree.put(sName, bVal);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, int iVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, int iVal)
 {
 	mapTree.put(sName, iVal);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, float flVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, float flVal)
 {
 	mapTree.put(sName, flVal);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const IntRange_t& irVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const IntRange_t& irVal)
 {
 	boost::property_tree::ptree rangeTree;
 	rangeTree.put("Min", irVal.Min);
@@ -48,7 +48,7 @@ void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName,
 	mapTree.put_child(sName, rangeTree);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const FloatRange_t& frVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const FloatRange_t& frVal)
 {
 	boost::property_tree::ptree rangeTree;
 	rangeTree.put("Min", frVal.Min);
@@ -57,12 +57,12 @@ void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName,
 	mapTree.put_child(sName, rangeTree);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const std::string& sVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const std::string& sVal)
 {
 	mapTree.put(sName, sVal);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const std::vector<std::pair<std::string, Color_t>>& vVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const std::vector<std::pair<std::string, Color_t>>& vVal)
 {
 	boost::property_tree::ptree vectorTree;
 	for (auto& pair : vVal)
@@ -75,12 +75,12 @@ void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName,
 	mapTree.put_child(sName, vectorTree);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const Color_t& tVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const Color_t& tVal)
 {
 	mapTree.put_child(sName, ColorToTree(tVal));
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const Gradient_t& tVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const Gradient_t& tVal)
 {
 	boost::property_tree::ptree gradientTree;
 	gradientTree.put_child("StartColor", ColorToTree(tVal.StartColor));
@@ -89,7 +89,7 @@ void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName,
 	mapTree.put_child(sName, gradientTree);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const DragBox_t& tVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const DragBox_t& tVal)
 {
 	boost::property_tree::ptree dragBoxTree;
 	dragBoxTree.put("x", tVal.x);
@@ -98,7 +98,7 @@ void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName,
 	mapTree.put_child(sName, dragBoxTree);
 }
 
-void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName, const WindowBox_t& tVal)
+void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, const std::string& sName, const WindowBox_t& tVal)
 {
 	boost::property_tree::ptree dragBoxTree;
 	dragBoxTree.put("x", tVal.x);
@@ -109,25 +109,25 @@ void CConfigs::SaveJson(boost::property_tree::ptree& mapTree, std::string sName,
 	mapTree.put_child(sName, dragBoxTree);
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, bool& bVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, bool& bVal)
 {
 	if (auto getValue = mapTree.get_optional<bool>(sName))
 		bVal = *getValue;
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, int& iVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, int& iVal)
 {
 	if (auto getValue = mapTree.get_optional<int>(sName))
 		iVal = *getValue;
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, float& flVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, float& flVal)
 {
 	if (auto getValue = mapTree.get_optional<float>(sName))
 		flVal = *getValue;
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, IntRange_t& irVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, IntRange_t& irVal)
 {
 	if (const auto getChild = mapTree.get_child_optional(sName))
 	{
@@ -136,7 +136,7 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 	}
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, FloatRange_t& frVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, FloatRange_t& frVal)
 {
 	if (const auto getChild = mapTree.get_child_optional(sName))
 	{
@@ -145,13 +145,13 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 	}
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, std::string& sVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, std::string& sVal)
 {
 	if (auto getValue = mapTree.get_optional<std::string>(sName))
 		sVal = *getValue;
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, std::vector<std::pair<std::string, Color_t>>& vVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, std::vector<std::pair<std::string, Color_t>>& vVal)
 {
 	auto getMaterials = [&](std::vector<std::pair<std::string, Color_t>>& val, const boost::optional<boost::property_tree::ptree&> getVector)
 		{
@@ -201,13 +201,13 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 	getMaterials(vVal, mapTree.get_child_optional(sName));
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, Color_t& tVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, Color_t& tVal)
 {
 	if (const auto getChild = mapTree.get_child_optional(sName))
 		TreeToColor(*getChild, tVal);
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, Gradient_t& tVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, Gradient_t& tVal)
 {
 	if (const auto getChild = mapTree.get_child_optional(sName))
 	{
@@ -218,7 +218,7 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 	}
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, DragBox_t& tVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, DragBox_t& tVal)
 {
 	if (const auto getChild = mapTree.get_child_optional(sName))
 	{
@@ -227,7 +227,7 @@ void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName,
 	}
 }
 
-void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, std::string sName, WindowBox_t& tVal)
+void CConfigs::LoadJson(boost::property_tree::ptree& mapTree, const std::string& sName, WindowBox_t& tVal)
 {
 	if (const auto getChild = mapTree.get_child_optional(sName))
 	{
@@ -385,7 +385,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 	if (!std::filesystem::exists(m_sConfigPath + sConfigName + m_sConfigExtension))
 	{
 		// Save default config if one doesn't yet exist
-		if (sConfigName == std::string("default"))
+		if (FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32Const("default"))
 			SaveConfig("default", false);
 
 		return false;
@@ -546,7 +546,7 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 	// Check if the visual config exists
 	if (!std::filesystem::exists(m_sVisualsPath + sConfigName + m_sConfigExtension))
 	{
-		//if (sConfigName == std::string("default"))
+		//if (FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32Const("default"))
 		//	SaveVisual("default");
 		return false;
 	}
@@ -595,18 +595,19 @@ void CConfigs::DeleteConfig(const std::string& sConfigName, bool bNotify)
 {
 	try
 	{
-		if (FNV1A::Hash32(sConfigName.c_str()) != FNV1A::Hash32Const("default"))
+		if (FNV1A::Hash32(sConfigName.c_str()) == FNV1A::Hash32Const("default"))
 		{
-			std::filesystem::remove(m_sConfigPath + sConfigName + m_sConfigExtension);
-
-			if (FNV1A::Hash32(m_sCurrentConfig.c_str()) == FNV1A::Hash32(sConfigName.c_str()))
-				LoadConfig("default", false);
-
-			if (bNotify)
-				SDK::Output("Amalgam", std::format("Config {} deleted", sConfigName).c_str(), { 175, 150, 255 }, true, true, true);
-		}
-		else
 			ResetConfig(sConfigName);
+			return;
+		}
+
+		std::filesystem::remove(m_sConfigPath + sConfigName + m_sConfigExtension);
+
+		if (FNV1A::Hash32(m_sCurrentConfig.c_str()) == FNV1A::Hash32(sConfigName.c_str()))
+			LoadConfig("default", false);
+
+		if (bNotify)
+			SDK::Output("Amalgam", std::format("Config {} deleted", sConfigName).c_str(), { 175, 150, 255 }, true, true, true);
 	}
 	catch (...)
 	{

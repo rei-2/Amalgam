@@ -193,6 +193,7 @@ public:
 	NETVAR_OFF(m_flStunLerpTarget, float, "CTFPlayer", "m_hItem", -184);
 	NETVAR_OFF(m_bStunNeedsFadeOut, bool, "CTFPlayer", "m_hItem", -188);
 	NETVAR_OFF(m_bTauntForceMoveForward, bool, "CTFPlayer", "m_bAllowMoveDuringTaunt", 1);
+	NETVAR_OFF(m_flTauntForceMoveForwardSpeed, float, "CTFPlayer", "m_bAllowMoveDuringTaunt", 4);
 
 	VIRTUAL(GetMaxHealth, int, 107, this);
 	VIRTUAL(ThirdPersonSwitch, void, 256, this);

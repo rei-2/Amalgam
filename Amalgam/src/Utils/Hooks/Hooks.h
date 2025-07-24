@@ -1,5 +1,5 @@
 #pragma once
-#include "../Feature/Feature.h"
+#include "../Macros/Macros.h"
 #include <MinHook/MinHook.h>
 #include <unordered_map>
 #include <string>
@@ -11,7 +11,7 @@ public:
 	void* m_pInitFunc = nullptr;
 
 public:
-	CHook(std::string sName, void* pInitFunc);
+	CHook(const std::string& sName, void* pInitFunc);
 
 	inline void Create(void* pSrc, void* pDst)
 	{

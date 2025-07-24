@@ -3,6 +3,7 @@
 
 class CChams
 {
+private:
 	bool GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams);
 
 	void StencilBegin(IMatRenderContext* pRenderContext, bool bTwoModels = false);

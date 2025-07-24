@@ -32,6 +32,7 @@ enum Scale_
 
 class CDraw
 {
+private:
 	std::unordered_map<uint32, int> m_mAvatars = {};
 
 public:

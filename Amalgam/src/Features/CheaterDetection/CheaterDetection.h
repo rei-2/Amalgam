@@ -10,7 +10,7 @@ struct AngleHistory_t
 struct PlayerInfo
 {
 	uint32_t m_uFriendsID = 0;
-	std::string m_sName = "";
+	const char* m_sName = "";
 
 	int m_iDetections = 0;
 
@@ -33,6 +33,7 @@ struct PlayerInfo
 
 class CCheaterDetection
 {
+private:
 	bool ShouldScan();
 
 	bool InvalidPitch(CTFPlayer* pEntity);
@@ -40,7 +41,7 @@ class CCheaterDetection
 	bool IsFlicking(CTFPlayer* pEntity);
 	bool IsDuckSpeed(CTFPlayer* pEntity);
 
-	void Infract(CTFPlayer* pEntity, std::string sReason);
+	void Infract(CTFPlayer* pEntity, const char* sReason);
 
 	std::unordered_map<CTFPlayer*, PlayerInfo> mData = {};
 

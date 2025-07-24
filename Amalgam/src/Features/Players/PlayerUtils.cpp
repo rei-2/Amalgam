@@ -19,7 +19,7 @@ PriorityLabel_t* CPlayerlistUtils::GetTag(int iID)
 	return nullptr;
 }
 
-int CPlayerlistUtils::GetTag(std::string sTag)
+int CPlayerlistUtils::GetTag(const std::string& sTag)
 {
 	auto uHash = FNV1A::Hash32(sTag.c_str());
 
@@ -36,7 +36,7 @@ int CPlayerlistUtils::GetTag(std::string sTag)
 
 
 
-void CPlayerlistUtils::AddTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
+void CPlayerlistUtils::AddTag(uint32_t uFriendsID, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
 {
 	if (!uFriendsID)
 		return;
@@ -45,27 +45,24 @@ void CPlayerlistUtils::AddTag(uint32_t uFriendsID, int iID, bool bSave, std::str
 	{
 		mPlayerTags[uFriendsID].push_back(iID);
 		m_bSave = bSave;
-		if (sName.length())
-		{
-			if (PriorityLabel_t* pTag = GetTag(iID))
-				F::Output.TagsChanged(sName, "Added", pTag->m_tColor.ToHexA(), pTag->m_sName);
-		}
+		if (auto pTag = GetTag(iID); pTag && sName)
+			F::Output.TagsChanged(sName, "Added", pTag->m_tColor.ToHexA().c_str(), pTag->m_sName.c_str());
 	}
 }
-void CPlayerlistUtils::AddTag(int iIndex, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
+void CPlayerlistUtils::AddTag(int iIndex, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
 {
 	AddTag(GetFriendsID(iIndex), iID, bSave, sName, mPlayerTags);
 }
-void CPlayerlistUtils::AddTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName)
+void CPlayerlistUtils::AddTag(uint32_t uFriendsID, int iID, bool bSave, const char* sName)
 {
 	AddTag(uFriendsID, iID, bSave, sName, m_mPlayerTags);
 }
-void CPlayerlistUtils::AddTag(int iIndex, int iID, bool bSave, std::string sName)
+void CPlayerlistUtils::AddTag(int iIndex, int iID, bool bSave, const char* sName)
 {
 	AddTag(iIndex, iID, bSave, sName, m_mPlayerTags);
 }
 
-void CPlayerlistUtils::RemoveTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
+void CPlayerlistUtils::RemoveTag(uint32_t uFriendsID, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
 {
 	if (!uFriendsID)
 		return;
@@ -77,24 +74,21 @@ void CPlayerlistUtils::RemoveTag(uint32_t uFriendsID, int iID, bool bSave, std::
 		{
 			_vTags.erase(it);
 			m_bSave = bSave;
-			if (sName.length())
-			{
-				if (auto pTag = GetTag(iID))
-					F::Output.TagsChanged(sName, "Removed", pTag->m_tColor.ToHexA(), pTag->m_sName);
-			}
+			if (auto pTag = GetTag(iID); pTag && sName)
+				F::Output.TagsChanged(sName, "Removed", pTag->m_tColor.ToHexA().c_str(), pTag->m_sName.c_str());
 			break;
 		}
 	}
 }
-void CPlayerlistUtils::RemoveTag(int iIndex, int iID, bool bSave, std::string sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
+void CPlayerlistUtils::RemoveTag(int iIndex, int iID, bool bSave, const char* sName, std::unordered_map<uint32_t, std::vector<int>>& mPlayerTags)
 {
 	RemoveTag(GetFriendsID(iIndex), iID, bSave, sName, mPlayerTags);
 }
-void CPlayerlistUtils::RemoveTag(uint32_t uFriendsID, int iID, bool bSave, std::string sName)
+void CPlayerlistUtils::RemoveTag(uint32_t uFriendsID, int iID, bool bSave, const char* sName)
 {
 	RemoveTag(uFriendsID, iID, bSave, sName, m_mPlayerTags);
 }
-void CPlayerlistUtils::RemoveTag(int iIndex, int iID, bool bSave, std::string sName)
+void CPlayerlistUtils::RemoveTag(int iIndex, int iID, bool bSave, const char* sName)
 {
 	RemoveTag(iIndex, iID, bSave, sName, m_mPlayerTags);
 }

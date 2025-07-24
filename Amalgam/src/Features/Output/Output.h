@@ -3,23 +3,24 @@
 
 class COutput
 {
+private:
 	bool m_bInfoOnJoin = false;
 
 public:
 	void Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal);
 	void UserMessage(bf_read& msgData);
-	void CheatDetection(std::string sName, std::string sAction, std::string sReason);
+	void CheatDetection(const char* sName, const char* sAction, const char* sReason);
 
-	void TagsChanged(std::string sName, std::string sAction, std::string sColor, std::string sTag);
-	void AliasChanged(std::string sName, std::string sAction, std::string sAlias);
+	void TagsChanged(const char* sName, const char* sAction, const char* sColor, const char* sTag);
+	void AliasChanged(const char* sName, const char* sAction, const char* sAlias);
 
-	void ReportResolver(int iIndex, std::string sAction, std::string sAxis, float flValue);
-	void ReportResolver(int iIndex, std::string sAction, std::string sAxis, bool bValue);
-	void ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue);
-	void ReportResolver(std::string sMessage);
+	void ReportResolver(int iIndex, const char* sAction, const char* sAxis, float flValue);
+	void ReportResolver(int iIndex, const char* sAction, const char* sAxis, bool bValue);
+	void ReportResolver(int iIndex, const char* sAction, const char* sAxis, const char* sValue);
+	void ReportResolver(const char* sMessage);
 
-	void TagsOnJoin(std::string sName, uint32_t uFriendsID);
-	void AliasOnJoin(std::string sName, uint32_t uFriendsID);
+	void TagsOnJoin(const char* sName, uint32_t uFriendsID);
+	void AliasOnJoin(const char* sName, uint32_t uFriendsID);
 };
 
 ADD_FEATURE(COutput, Output);

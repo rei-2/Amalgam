@@ -1,5 +1,5 @@
 #pragma once
-#include "../Feature/Feature.h"
+#include "../Macros/Macros.h"
 #include "../../SDK/Definitions/Misc/ConVar.h"
 #include "../Hash/FNV1A.h"
 #include <unordered_map>

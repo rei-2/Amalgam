@@ -8,7 +8,9 @@ MAKE_SIGNATURE(CTFWeaponBaseMelee_CalcIsAttackCriticalHelper, "client.dll", "40 
 MAKE_SIGNATURE(CTFWeaponBase_CalcIsAttackCriticalHelper, "client.dll", "48 89 5C 24 ? 55 56 57 48 81 EC ? ? ? ? 0F 29 74 24", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_GetAppropriateWorldOrViewModel, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8 C7 44 24 ? ? ? ? ? 4C 8D 0D ? ? ? ? 33 D2 4C 8D 05 ? ? ? ? E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B CB", 0x0);
 MAKE_SIGNATURE(CTFWeaponBase_IncrementAmmo, "client.dll", "48 89 5C 24 ? 56 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B C8", 0x0);
-MAKE_SIGNATURE(CTFWeaponBase_GetMaxClip1, "client.dll", "40 53 48 83 EC ? 48 8B 01 48 8B D9 FF 90 ? ? ? ? 48 8B CB 84 C0 74", 0x0);
+MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects, "client.dll", "40 57 48 81 EC ? ? ? ? 8B 91 ? ? ? ? 48 8B F9 85 D2 0F 84 ? ? ? ? 48 89 B4 24", 0x0);
+MAKE_SIGNATURE(CWeaponMedigun_StopChargeEffect, "client.dll", "40 53 48 83 EC ? 44 0F B6 C2", 0x0);
+MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 81 EC ? ? ? ? 48 8B F1 E8 ? ? ? ? 48 8B D8", 0x0);
 
 class CTFPlayer;
 class CTFGrenadePipebombProjectile;
@@ -214,7 +216,6 @@ public:
 	VIRTUAL(GetSwingRange, int, 458, this);
 	VIRTUAL_ARGS(ApplyFireDelay, float, 410, (float flDelay), this, flDelay);
 	
-	SIGNATURE(GetMaxClip1, float, CTFWeaponBase, this);
 	SIGNATURE(IncrementAmmo, void, CTFWeaponBase, this);
 	SIGNATURE(CalcIsAttackCritical, bool, CTFWeaponBase, this);
 	SIGNATURE(CalcIsAttackCriticalHelper, bool, CTFWeaponBase, this);
@@ -277,6 +278,10 @@ public:
 	NETVAR(m_nChargeResistType, int, "CWeaponMedigun", "m_nChargeResistType");
 	NETVAR(m_hLastHealingTarget, EHANDLE, "CWeaponMedigun", "m_hLastHealingTarget");
 	NETVAR(m_flChargeLevel, float, "CWeaponMedigun", "m_flChargeLevel");
+
+	SIGNATURE(UpdateEffects, void, CWeaponMedigun, this);
+	SIGNATURE_ARGS(StopChargeEffect, void, CWeaponMedigun, (bool bImmediately), this, bImmediately);
+	SIGNATURE(ManageChargeEffect, void, CWeaponMedigun, this);
 
 	int GetMedigunType();
 	MedigunChargeTypes GetChargeType();

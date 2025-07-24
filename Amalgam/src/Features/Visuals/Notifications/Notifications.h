@@ -15,6 +15,7 @@ struct Notification_t
 
 class CNotifications
 {
+private:
 	std::deque<Notification_t> m_vNotifications;
 	size_t m_iMaxNotifySize = 10;
 

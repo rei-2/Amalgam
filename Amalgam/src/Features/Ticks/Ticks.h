@@ -1,11 +1,11 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-//#define TICKBASE_DEBUG
-
 class CTicks
 {
-	void CLMoveFunc(float accumulated_extra_samples, bool bFinalTick);
+private:
+	void MoveFunc(float accumulated_extra_samples, bool bFinalTick);
+	void MoveManage(CTFPlayer* pLocal);
 
 	void Recharge(CTFPlayer* pLocal);
 	void Warp();
@@ -22,20 +22,17 @@ class CTicks
 	Vec3 m_vShootAngle = {};
 
 public:
-	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
+	void Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
+	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
 	void Draw(CTFPlayer* pLocal);
 	void Reset();
 
-	void CLMove(float accumulated_extra_samples, bool bFinalTick);
-	void CLMoveManage(CTFPlayer* pLocal);
-
-	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
+	bool CanChoke();
 	int GetTicks(CTFWeaponBase* pWeapon = nullptr);
 	int GetShotsWithinPacket(CTFWeaponBase* pWeapon, int iTicks = Vars::Doubletap::TickLimit.Value);
 	int GetMinimumTicksNeeded(CTFWeaponBase* pWeapon);
-	bool CanChoke();
 
 	void SaveShootPos(CTFPlayer* pLocal);
 	Vec3 GetShootPos();

@@ -3,6 +3,7 @@
 
 class CAutoRocketJump
 {
+private:
 	bool SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	Vec3 m_vAngles = {};

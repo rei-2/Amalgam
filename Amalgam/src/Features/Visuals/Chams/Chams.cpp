@@ -222,8 +222,8 @@ void CChams::StencilEnd(IMatRenderContext* pRenderContext, bool bTwoModels)
 
 void CChams::DrawModel(CBaseEntity* pEntity, Chams_t& tChams, IMatRenderContext* pRenderContext, bool bExtra)
 {
-	auto vVisibleMaterials = tChams.Visible.size() ? tChams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
-	auto vOccludedMaterials = tChams.Occluded.size() ? tChams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
+	const auto& vVisibleMaterials = !tChams.Visible.empty() ? tChams.Visible : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
+	const auto& vOccludedMaterials = !tChams.Occluded.empty() ? tChams.Occluded : std::vector<std::pair<std::string, Color_t>> { { "None", {} } };
 
 	StencilBegin(pRenderContext, !bExtra);
 
@@ -360,9 +360,8 @@ void CChams::RenderMain()
 
 void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo)
 {
-	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	if (!ModelRender_DrawModelExecute || !pRenderContext)
+	if (!pRenderContext)
 		return;
 
 	auto pEntity = I::ClientEntityList->GetClientEntity(pInfo.entity_index)->As<CTFPlayer>();
@@ -380,7 +379,8 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 
 			float flOriginalBlend = I::RenderView->GetBlend();
 			I::RenderView->SetBlend(flBlend * flOriginalBlend);
-			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+			static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+			IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 			I::RenderView->SetBlend(flOriginalBlend);
 		};
 
@@ -422,16 +422,16 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 }
 void CChams::RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo)
 {
-	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	if (!ModelRender_DrawModelExecute || !pRenderContext)
+	if (!pRenderContext)
 		return;
 
 
 
 	pRenderContext->DepthRange(0.f, Vars::Chams::FakeAngle::IgnoreZ.Value ? 0.2f : 1.f);
 
-	ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
+	static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+	IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, F::FakeAngle.aBones);
 
 	pRenderContext->DepthRange(0.f, 1.f);
 }
@@ -439,9 +439,8 @@ void CChams::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo
 {
 	if (!m_bExtra)
 	{
-		static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
-		if (ModelRender_DrawModelExecute)
-			ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+		static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+		IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 	}
 	else
 	{
@@ -457,9 +456,8 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 	if (!Vars::Chams::Viewmodel::Weapon.Value)
 		return false;
 
-	static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	if (!CBaseAnimating_InternalDrawModel || !pRenderContext)
+	if (!pRenderContext)
 		return false;
 
 
@@ -476,6 +474,7 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
 
+		static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
 		*iReturn = CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
 
 		if (pMaterial && pMaterial->m_bInvertCull)
@@ -493,9 +492,8 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 	if (!Vars::Chams::Viewmodel::Hands.Value)
 		return false;
 
-	static auto ModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	if (!ModelRender_DrawModelExecute || !pRenderContext)
+	if (!pRenderContext)
 		return false;
 
 
@@ -512,7 +510,8 @@ bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderIn
 		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
 
-		ModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+		static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+		IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 
 		if (pMaterial && pMaterial->m_bInvertCull)
 			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);

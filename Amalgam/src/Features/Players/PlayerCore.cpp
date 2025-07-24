@@ -188,7 +188,7 @@ void CPlayerlistCore::LoadPlayerlist()
 
 				for (auto& tag : player.second)
 				{
-					std::string sTag = std::string(tag.first.data()).empty() ? tag.second.data() : tag.first.data(); // account for dumb old format
+					const std::string& sTag = tag.first.empty() ? tag.second.data() : tag.first; // account for dumb old format
 
 					int iID = -1;
 					try
@@ -221,10 +221,10 @@ void CPlayerlistCore::LoadPlayerlist()
 				for (auto& player : *aliasTree)
 				{
 					uint32_t uFriendsID = std::stoi(player.first);
-					std::string sAlias = player.second.data();
+					const std::string& sAlias = player.second.data();
 
 					if (!sAlias.empty())
-						F::PlayerUtils.m_mPlayerAliases[uFriendsID] = player.second.data();
+						F::PlayerUtils.m_mPlayerAliases[uFriendsID] = sAlias;
 				}
 			}
 		}

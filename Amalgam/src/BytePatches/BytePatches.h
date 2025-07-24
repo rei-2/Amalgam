@@ -1,8 +1,9 @@
 #include "../SDK/SDK.h"
-#include "../Utils/Feature/Feature.h"
+#include "../Utils/Macros/Macros.h"
 
 class BytePatch
 {
+private:
 	const char* m_sModule = nullptr;
 	const char* m_sSignature = nullptr;
 	int m_iOffset = 0x0;

@@ -64,9 +64,9 @@ bool CBytePatches::Initialize()
 		BytePatch("vguimatsurface.dll", "66 83 FE ? 0F 84", 0x0, "66 83 FE 00"), // include '&' in text size
 	};
 
-	for (auto& patch : m_vPatches)
+	for (auto& tPatch : m_vPatches)
 	{
-		if (!patch.Initialize())
+		if (!tPatch.Initialize())
 			m_bFailed = true;
 	}
 
@@ -75,6 +75,6 @@ bool CBytePatches::Initialize()
 
 void CBytePatches::Unload()
 {
-	for (auto& patch : m_vPatches)
-		patch.Unload();
+	for (auto& tPatch : m_vPatches)
+		tPatch.Unload();
 }

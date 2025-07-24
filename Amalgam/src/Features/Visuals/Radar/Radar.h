@@ -3,6 +3,7 @@
 
 class CRadar
 {
+private:
 	bool GetDrawPosition(CTFPlayer* pLocal, CBaseEntity* pEntity, int& x, int& y, int& z);
 	void DrawBackground();
 	void DrawPoints(CTFPlayer* pLocal);

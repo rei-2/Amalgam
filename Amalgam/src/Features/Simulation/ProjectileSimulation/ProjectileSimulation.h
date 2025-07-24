@@ -32,6 +32,7 @@ struct ProjectileInfo
 
 class CProjectileSimulation
 {
+private:
 	bool GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags, float flAutoCharge);
 
 	const objectparams_t m_tPhysDefaultObjectParams = {

@@ -1,71 +1,8 @@
 #pragma once
 #include "CBasePlayer.h"
 #include "../Misc/Activity.h"
-
-template< class T, int minValue, int maxValue, int startValue >
-class CRangeCheckedVar
-{
-public:
-
-	inline CRangeCheckedVar()
-	{
-		m_Val = startValue;
-	}
-
-	inline CRangeCheckedVar(const T& value)
-	{
-		*this = value;
-	}
-
-	T GetRaw() const
-	{
-		return m_Val;
-	}
-
-	inline void Clamp()
-	{
-		if (m_Val < minValue)
-			m_Val = minValue;
-
-		else if (m_Val > maxValue)
-			m_Val = maxValue;
-	}
-
-	inline operator const T& () const
-	{
-		return m_Val;
-	}
-
-	inline CRangeCheckedVar<T, minValue, maxValue, startValue>& operator=(const T& value)
-	{
-		//RangeCheck(value, minValue, maxValue);
-		m_Val = value;
-		return *this;
-	}
-
-	inline CRangeCheckedVar<T, minValue, maxValue, startValue>& operator+=(const T& value)
-	{
-		return (*this = m_Val + value);
-	}
-
-	inline CRangeCheckedVar<T, minValue, maxValue, startValue>& operator-=(const T& value)
-	{
-		return (*this = m_Val - value);
-	}
-
-	inline CRangeCheckedVar<T, minValue, maxValue, startValue>& operator*=(const T& value)
-	{
-		return (*this = m_Val * value);
-	}
-
-	inline CRangeCheckedVar<T, minValue, maxValue, startValue>& operator/=(const T& value)
-	{
-		return (*this = m_Val / value);
-	}
-
-private:
-	T m_Val;
-};
+#include "../Misc/CRangeCheckedVar.h"
+#include "../Misc/CInterpolatedVar.h"
 
 class CAnimationLayer
 {
@@ -198,44 +135,6 @@ enum
 	GESTURE_SLOT_COUNT
 };
 
-class IInterpolatedVar
-{
-public:
-	virtual ~IInterpolatedVar() = 0;
-	virtual void Setup(void* pValue, int type) = 0;
-	virtual void SetInterpolationAmount(float seconds) = 0;
-	virtual void NoteLastNetworkedValue() = 0;
-	virtual bool NoteChanged(float changetime, bool bUpdateLastNetworkedValue) = 0;
-	virtual void Reset() = 0;
-	virtual int Interpolate(float currentTime) = 0;
-	virtual int  GetType() const = 0;
-	virtual void RestoreToLastNetworked() = 0;
-	virtual void Copy(IInterpolatedVar* pSrc) = 0;
-	virtual const char* GetDebugName() = 0;
-	virtual void SetDebugName(const char* pName) = 0;
-	virtual void SetDebug(bool bDebug) = 0;
-};
-
-class CInterpolatedVar
-{
-public:
-	IInterpolatedVar* vtable;
-	float* m_pValue;
-	float* m_pElements;
-	unsigned short m_maxElement;
-	unsigned short m_firstElement;
-	unsigned short m_count;
-	unsigned short m_growSize;
-	float* m_LastNetworkedValue;
-	float m_LastNetworkedTime;
-	byte m_fType;
-	byte m_nMaxCount;
-	byte* m_bLooping;
-	float m_InterpolationAmount;
-	const char* m_pDebugName;
-	bool m_bDebug : 1;
-};
-
 class CMultiPlayerAnimState
 {
 public:
@@ -300,7 +199,7 @@ public:
 	int m_nSpecificMainSequence;
 	CHandle<void> m_hActiveWeapon;
 	float m_flLastGroundSpeedUpdateTime;
-	CInterpolatedVar m_iv_flMaxGroundSpeed;
+	CInterpolatedVar<float> m_iv_flMaxGroundSpeed;
 	float m_flMaxGroundSpeed;
 	int m_nMovementSequence;
 	LegAnimType_t m_LegAnimType;

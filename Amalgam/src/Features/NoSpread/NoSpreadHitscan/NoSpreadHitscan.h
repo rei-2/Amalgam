@@ -22,7 +22,7 @@ public:
 	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bCreateMove = false);
 
 	void AskForPlayerPerf();
-	bool ParsePlayerPerf(std::string sMsg);
+	bool ParsePlayerPerf(const std::string& sMsg);
 
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void Draw(CTFPlayer* pLocal);

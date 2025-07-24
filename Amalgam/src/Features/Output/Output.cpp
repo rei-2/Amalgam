@@ -7,9 +7,9 @@ static std::string sRed =		Color_t(255, 100, 100).ToHex();
 static std::string sGreen =		Color_t(100, 255, 100).ToHex();
 static std::string sYellow =	Color_t(200, 169, 0).ToHex();
 
-static inline void OutputInfo(int flags, std::string sName, std::string sOutput, std::string sChat)
+static inline void OutputInfo(int flags, const char* sName, const char* sOutput, const char* sChat)
 {
-	SDK::Output(sName.c_str(), sOutput.c_str(), Vars::Menu::Theme::Accent.Value,
+	SDK::Output(sName, sOutput, Vars::Menu::Theme::Accent.Value,
 		flags & Vars::Logging::LogToEnum::Console,
 		flags & Vars::Logging::LogToEnum::Debug,
 		flags & Vars::Logging::LogToEnum::Toasts,
@@ -18,7 +18,7 @@ static inline void OutputInfo(int flags, std::string sName, std::string sOutput,
 		flags & Vars::Logging::LogToEnum::Party
 	);
 	if (flags & Vars::Logging::LogToEnum::Chat)
-		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sChat.c_str(), Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");
+		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sChat, Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");
 }
 
 // Event info
@@ -53,9 +53,10 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			return;
 
 		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-		std::string sOutput = std::format("{}{} voted {}", (bSameTeam ? "" : "[Enemy] "), (sName), (bVotedYes ? "Yes" : "No"));
-		std::string sChat = std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sName), (bVotedYes ? sGreen : sRed), (bVotedYes ? "Yes" : "No"));
-		OutputInfo(Vars::Logging::VoteCast::LogTo.Value, "Vote Cast", sOutput, sChat);
+		OutputInfo(Vars::Logging::VoteCast::LogTo.Value, "Vote Cast",
+			std::format("{}{} voted {}", (bSameTeam ? "" : "[Enemy] "), (sName), (bVotedYes ? "Yes" : "No")).c_str(),
+			std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sName), (bVotedYes ? sGreen : sRed), (bVotedYes ? "Yes" : "No")).c_str()
+		);
 
 		return;
 	}
@@ -76,9 +77,10 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			return; // dont spam chat by giving class changes for bots
 
 		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-		std::string sOutput = std::format("{}{} changed class to {}", (bSameTeam ? "" : "[Enemy] "), (sName), (SDK::GetClassByIndex(pEvent->GetInt("class"))));
-		std::string sChat = std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sName), (sYellow), (SDK::GetClassByIndex(pEvent->GetInt("class"))));
-		OutputInfo(Vars::Logging::ClassChange::LogTo.Value, "Class Change", sOutput, sChat);
+		OutputInfo(Vars::Logging::ClassChange::LogTo.Value, "Class Change",
+			std::format("{}{} changed class to {}", (bSameTeam ? "" : "[Enemy] "), (sName), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str(),
+			std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sName), (sYellow), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str()
+		);
 
 		return;
 	}
@@ -105,9 +107,10 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			return;
 
 		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-		std::string sOutput = std::format("You hit {} for {} damage ({} / {}{})", (sName), (nDamage), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : ""));
-		std::string sChat = std::format("You hit {}{}\x1 for {}{} damage{} ({} / {}{})", (sYellow), (sName), (sRed), (nDamage), (sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : ""));
-		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage", sOutput, sChat);
+		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage",
+			std::format("You hit {} for {} damage ({} / {}{})", (sName), (nDamage), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str(),
+			std::format("You hit {}{}\x1 for {}{} damage{} ({} / {}{})", (sYellow), (sName), (sRed), (nDamage), (sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str()
+		);
 
 		return;
 	}
@@ -185,33 +188,35 @@ void COutput::UserMessage(bf_read& msgData)
 
 	auto sTargetName = F::PlayerUtils.GetPlayerName(iTarget, piTarget.name);
 	auto sCallerName = F::PlayerUtils.GetPlayerName(iCaller, piCaller.name);
-	std::string sOutput = std::format("{}{} called a vote on {}", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName));
-	std::string sChat = std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sCallerName), (sYellow), (sTargetName));
-	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start", sOutput, sChat);
+	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start",
+		std::format("{}{} called a vote on {}", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName)).c_str(),
+		std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sCallerName), (sYellow), (sTargetName)).c_str()
+	);
 }
 
 // Cheat detection
-void COutput::CheatDetection(std::string sName, std::string sAction, std::string sReason)
+void COutput::CheatDetection(const char* sName, const char* sAction, const char* sReason)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::CheatDetection))
 		return;
 
-	std::string sOutput = std::format("{} {} for {}", (sName), (sAction), (sReason));
-	std::string sChat = std::format("{}{}\x1 {} for {}{}", (sYellow), (sName), (sAction), (sYellow), (sReason));
-	OutputInfo(Vars::Logging::CheatDetection::LogTo.Value, "Cheat Detection", sOutput, sChat);
+	OutputInfo(Vars::Logging::CheatDetection::LogTo.Value, "Cheat Detection",
+		std::format("{} {} for {}", (sName), (sAction), (sReason)).c_str(),
+		std::format("{}{}\x1 {} for {}{}", (sYellow), (sName), (sAction), (sYellow), (sReason)).c_str()
+	);
 }
 
 // Tags
-void COutput::TagsOnJoin(std::string sName, uint32_t uFriendsID)
+void COutput::TagsOnJoin(const char* sName, uint32_t uFriendsID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
 
-	std::vector<std::pair<std::string, std::string>> vColorsTags = {};
+	std::vector<std::pair<std::string, const char*>> vColorsTags = {};
 	for (auto& iID : F::PlayerUtils.m_mPlayerTags[uFriendsID])
 	{
 		if (auto pTag = F::PlayerUtils.GetTag(iID))
-			vColorsTags.emplace_back(pTag->m_tColor.ToHexA(), pTag->m_sName);
+			vColorsTags.emplace_back(pTag->m_tColor.ToHexA(), pTag->m_sName.c_str());
 	}
 
 	std::string sOutputText, sChatText;
@@ -251,23 +256,25 @@ void COutput::TagsOnJoin(std::string sName, uint32_t uFriendsID)
 	}
 	}
 
-	std::string sOutput = std::format("{} has the {} {}", (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sOutputText));
-	std::string sChat = std::format("{}{}\x1 has the {} {}", (sYellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText));
-	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags", sOutput, sChat);
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags",
+		std::format("{} has the {} {}", (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sOutputText)).c_str(),
+		std::format("{}{}\x1 has the {} {}", (sYellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText)).c_str()
+	);
 }
-void COutput::TagsChanged(std::string sName, std::string sAction, std::string sColor, std::string sTag)
+void COutput::TagsChanged(const char* sName, const char* sAction, const char* sColor, const char* sTag)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
 
-	auto uHash = FNV1A::Hash32(sAction.c_str());
-	std::string sOutput = std::format("{} tag {} {} {}", (sAction), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sName));
-	std::string sChat = std::format("{} tag {}{}\x1 {} {}{}", (sAction), (sColor), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sYellow), (sName));
-	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags", sOutput, sChat);
+	auto uHash = FNV1A::Hash32(sAction);
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags",
+		std::format("{} tag {} {} {}", (sAction), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sName)).c_str(),
+		std::format("{} tag {}{}\x1 {} {}{}", (sAction), (sColor), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sYellow), (sName)).c_str()
+	);
 }
 
 // Aliases
-void COutput::AliasOnJoin(std::string sName, uint32_t uFriendsID)
+void COutput::AliasOnJoin(const char* sName, uint32_t uFriendsID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
@@ -277,30 +284,32 @@ void COutput::AliasOnJoin(std::string sName, uint32_t uFriendsID)
 
 	auto& sAlias = F::PlayerUtils.m_mPlayerAliases[uFriendsID];
 
-	std::string sOutput = std::format("{} has the alias \"{}\"", (sName), (sAlias));
-	std::string sChat = std::format("{}{}\x1 has the alias \"{}{}\x1\"", (sYellow), (sName), (sYellow), (sAlias));
-	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases", sOutput, sChat);
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases",
+		std::format("{} has the alias \"{}\"", (sName), (sAlias)).c_str(),
+		std::format("{}{}\x1 has the alias \"{}{}\x1\"", (sYellow), (sName), (sYellow), (sAlias)).c_str()
+	);
 }
-void COutput::AliasChanged(std::string sName, std::string sAction, std::string sAlias)
+void COutput::AliasChanged(const char* sName, const char* sAction, const char* sAlias)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
 
-	auto uHash = FNV1A::Hash32(sAction.c_str());
-	std::string sOutput = std::format("{} {}'s alias {} \"{}\"", (sAction), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sAlias));
-	std::string sChat = std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (sYellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sYellow), (sAlias));
-	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases", sOutput, sChat);
+	auto uHash = FNV1A::Hash32(sAction);
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases",
+		std::format("{} {}'s alias {} \"{}\"", (sAction), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sAlias)).c_str(),
+		std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (sYellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sYellow), (sAlias)).c_str()
+	);
 }
 
-void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis, float flValue)
+void COutput::ReportResolver(int iIndex, const char* sAction, const char* sAxis, float flValue)
 {
-	ReportResolver(iIndex, sAction, sAxis, std::format("{}", flValue));
+	ReportResolver(iIndex, sAction, sAxis, std::format("{}", flValue).c_str());
 }
-void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis, bool bValue)
+void COutput::ReportResolver(int iIndex, const char* sAction, const char* sAxis, bool bValue)
 {
-	ReportResolver(iIndex, sAction, sAxis, std::format("{}", bValue));
+	ReportResolver(iIndex, sAction, sAxis, std::format("{}", bValue).c_str());
 }
-void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis, std::string sValue)
+void COutput::ReportResolver(int iIndex, const char* sAction, const char* sAxis, const char* sValue)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
 		return;
@@ -310,11 +319,12 @@ void COutput::ReportResolver(int iIndex, std::string sAction, std::string sAxis,
 		return;
 
 	auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
-	std::string sOutput = std::format("{} {} of {} to {}", (sAction), (sAxis), (sName), (sValue));
-	std::string sChat = std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (sYellow), (sAxis), (sYellow), (sName), (sYellow), (sValue));
-	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver", sOutput, sChat);
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver",
+		std::format("{} {} of {} to {}", (sAction), (sAxis), (sName), (sValue)).c_str(),
+		std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (sYellow), (sAxis), (sYellow), (sName), (sYellow), (sValue)).c_str()
+	);
 }
-void COutput::ReportResolver(std::string sMessage)
+void COutput::ReportResolver(const char* sMessage)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
 		return;

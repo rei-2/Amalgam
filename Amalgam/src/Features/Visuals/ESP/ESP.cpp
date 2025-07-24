@@ -29,11 +29,11 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 	if (!(Vars::ESP::Draw.Value & Vars::ESP::DrawEnum::Players) || !Vars::ESP::Player.Value)
 		return;
 
-	auto pObserverTarget = pLocal->m_hObserverTarget().Get();
+	int iObserverTarget = pLocal->m_hObserverTarget().GetEntryIndex();
 	int iObserverMode = pLocal->m_iObserverMode();
 	if (F::Spectate.m_iTarget != -1)
 	{
-		pObserverTarget = F::Spectate.m_pTargetTarget;
+		iObserverTarget = F::Spectate.m_hTargetTarget.GetEntryIndex();
 		iObserverMode = F::Spectate.m_iTargetMode;
 	}
 
@@ -45,7 +45,7 @@ void CESP::StorePlayers(CTFPlayer* pLocal)
 
 		bool bLocal = iIndex == I::EngineClient->GetLocalPlayer();
 		bool bSpectate = iObserverMode == OBS_MODE_FIRSTPERSON || iObserverMode == OBS_MODE_THIRDPERSON;
-		bool bTarget = bSpectate && pObserverTarget == pPlayer;
+		bool bTarget = bSpectate && iObserverTarget == iIndex;
 
 		if (!pPlayer->IsAlive() || pPlayer->IsAGhost())
 			continue;

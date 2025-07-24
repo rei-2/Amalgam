@@ -359,11 +359,13 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 
 bool CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 {
+	/*
 	if (Vec3* pDoubletapAngle = F::Ticks.GetShootAngle())
 	{
 		vOut = *pDoubletapAngle;
 		return true;
 	}
+	*/
 
 	bool bReturn = false;
 	switch (iMethod)

@@ -1,5 +1,5 @@
 #pragma once
-#include "../Feature/Feature.h"
+#include "../Macros/Macros.h"
 #include <Windows.h>
 #include <cstdint>
 #include <vector>
@@ -35,15 +35,15 @@ public:
 		return reinterpret_cast<T(__fastcall*)(void*, Args...)>(vTable[I])(p, args...);
 	}
 
-	inline uintptr_t RelToAbs(const uintptr_t address)
+	inline uintptr_t RelToAbs(uintptr_t uAddress, uintptr_t uOffset = 3)
 	{
-		return *reinterpret_cast<std::int32_t*>(address + 0x3) + address + 0x7;
+		return *reinterpret_cast<int32_t*>(uAddress + uOffset) + uAddress + sizeof(int32_t) + uOffset;
 	}
 
 	template <typename T>
 	inline T GetModuleExport(const char* szModule, const char* szExport)
 	{
-		if (auto hModule = GetModuleHandle(szModule))
+		if (const auto hModule = GetModuleHandle(szModule))
 			return reinterpret_cast<T>(GetProcAddress(hModule, szExport));
 		return reinterpret_cast<T>(nullptr);
 	}

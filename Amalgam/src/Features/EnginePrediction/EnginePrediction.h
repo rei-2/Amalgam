@@ -10,10 +10,9 @@ struct RestoreInfo_t
 class CEnginePrediction
 {
 private:
-	CMoveData m_MoveData = {};
-
-private:
 	void Simulate(CTFPlayer* pLocal, CUserCmd* pCmd);
+
+	CMoveData m_MoveData = {};
 
 	int m_nOldTickCount = 0;
 	float m_flOldCurrentTime = 0.f;

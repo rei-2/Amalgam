@@ -57,8 +57,7 @@ void CCameraWindow::RenderCustomView(void* ecx, const CViewSetup& pViewSetup, IT
 	renderCtx->SetRenderTarget(pTexture);
 
 	static auto ViewRender_RenderView = U::Hooks.m_mHooks["CViewRender_RenderView"];
-	if (ViewRender_RenderView)
-		ViewRender_RenderView->Call<void>(ecx, pViewSetup, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
+	ViewRender_RenderView->Call<void>(ecx, pViewSetup, VIEW_CLEAR_COLOR | VIEW_CLEAR_DEPTH, RENDERVIEW_UNSPECIFIED);
 
 	renderCtx->PopRenderTargetAndViewport();
 	renderCtx->Release();

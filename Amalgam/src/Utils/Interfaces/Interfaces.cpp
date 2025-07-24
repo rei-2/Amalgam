@@ -1,106 +1,65 @@
 #include "Interfaces.h"
 #include "../Memory/Memory.h"
 #include "../../Core/Core.h"
-#include "../Assert/Assert.h"
 #include "../../SDK/Definitions/Interfaces.h"
 #include <TlHelp32.h>
 #include <string>
 #include <format>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
 #pragma warning (disable: 4172)
 
-static const char* SearchForDLL(const char* pszDLLSearch)
-{
-	HANDLE hProcessSnap = INVALID_HANDLE_VALUE;
-	PROCESSENTRY32 pe32;
-	hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	if (hProcessSnap == INVALID_HANDLE_VALUE)
-		return pszDLLSearch;
-
-	pe32.dwSize = sizeof(PROCESSENTRY32);
-	if (!Process32First(hProcessSnap, &pe32))
-	{
-		CloseHandle(hProcessSnap);
-		return pszDLLSearch;
-	}
-
-	//std::stringstream ssModuleStream;
-	do
-	{
-		if (pe32.szExeFile == strstr(pe32.szExeFile, "tf_win64.exe"))
-		{
-			HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
-			MODULEENTRY32 me32;
-			hModuleSnap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, pe32.th32ProcessID);
-			if (hModuleSnap == INVALID_HANDLE_VALUE)
-				break;
-
-			me32.dwSize = sizeof(MODULEENTRY32);
-			if (!Module32First(hModuleSnap, &me32))
-			{
-				CloseHandle(hModuleSnap);
-				break;
-			}
-
-			do
-			{
-				if (strstr(me32.szModule, pszDLLSearch))
-				{
-					CloseHandle(hProcessSnap);
-					CloseHandle(hModuleSnap);
-					return me32.szModule;
-				}
-				//ssModuleStream << std::format("{}{}", !ssModuleStream.str().empty() ? ", " : "", me32.szModule);
-			} while (Module32Next(hModuleSnap, &me32));
-
-			CloseHandle(hModuleSnap);
-			break;
-		}
-	} while (Process32Next(hProcessSnap, &pe32));
-	CloseHandle(hProcessSnap);
-
-	U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find DLL:\n  {}", pszDLLSearch).c_str());
-	//U::Core.AppendFailText(std::format("Loaded modules: {}", ssModuleStream.str()).c_str());
-	return nullptr;
-}
-
-InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLLName, const char* sVersion, int nOffset, int nDereferenceCount, bool bSearchDLL)
+InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLLName, const char* sVersion, int nOffset, int nDereferenceCount)
 {
 	m_pPtr = pPtr;
-	m_pszDLLName = sDLLName;
-	m_pszVersion = sVersion;
+	m_sDLLName = sDLLName;
+	m_sVersion = sVersion;
 	m_nOffset = nOffset;
 	m_nDereferenceCount = nDereferenceCount;
-	m_bSearchDLL = bSearchDLL;
 
 	U::Interfaces.AddInterface(this);
 }
 
 bool CInterfaces::Initialize()
 {
-	for (auto& Interface : m_vecInterfaces)
+	for (auto& Interface : m_vInterfaces)
 	{
-		if (!Interface->m_pPtr || !Interface->m_pszDLLName || !Interface->m_pszVersion)
-			continue;
-
-		if (Interface->m_bSearchDLL)
+		const char* sModule = nullptr;
+		std::vector<std::string> vModules;
+		boost::split(vModules, Interface->m_sDLLName, boost::is_any_of(", "));
+		if (vModules.size() == 1)
+			sModule = vModules.front().c_str();
+		else
 		{
-			Interface->m_pszDLLName = SearchForDLL(Interface->m_pszDLLName);
-			if (!Interface->m_pszDLLName)
+			for (auto& sName : vModules)
 			{
+				if (GetModuleHandle(sName.c_str()))
+				{
+					sModule = sName.c_str();
+					break;
+				}
+			}
+			if (!sModule)
+			{
+				std::stringstream ssModuleStream;
+				for (auto& sName : vModules)
+					ssModuleStream << std::format("{}{}", !ssModuleStream.str().empty() ? ", " : "", sName);
+
+				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find module:\n  {}\n  {}", ssModuleStream.str(), Interface->m_sVersion).c_str());
 				m_bFailed = true;
 				continue;
 			}
 		}
 
 		if (Interface->m_nOffset == -1)
-			*Interface->m_pPtr = U::Memory.FindInterface(Interface->m_pszDLLName, Interface->m_pszVersion);
+			*Interface->m_pPtr = U::Memory.FindInterface(sModule, Interface->m_sVersion);
 		else
 		{
-			auto dwDest = U::Memory.FindSignature(Interface->m_pszDLLName, Interface->m_pszVersion);
+			auto dwDest = U::Memory.FindSignature(sModule, Interface->m_sVersion);
 			if (!dwDest)
 			{
-				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", sModule, Interface->m_sVersion).c_str());
 				m_bFailed = true;
 				continue;
 			}
@@ -117,7 +76,7 @@ bool CInterfaces::Initialize()
 
 		if (!*Interface->m_pPtr)
 		{
-			U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", Interface->m_pszDLLName, Interface->m_pszVersion).c_str());
+			U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", sModule, Interface->m_sVersion).c_str());
 			m_bFailed = true;
 		}
 	}

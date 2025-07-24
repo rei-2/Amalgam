@@ -5,6 +5,14 @@
 
 MAKE_SIGNATURE(CPrediction_RunSimulation, "client.dll", "48 83 EC 38 4C 8B 44", 0x0);
 
+struct TickbaseFix_t
+{
+	int m_iLastOutgoingCommand;
+	int m_iCommandNumber;
+	int m_iTickbaseShift;
+};
+static std::vector<TickbaseFix_t> vTickbaseFixes = {};
+
 MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 	void* rcx, int current_command, float curtime, CUserCmd* cmd, CTFPlayer* localPlayer)
 {
@@ -13,46 +21,23 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 		return CALL_ORIGINAL(rcx, current_command, curtime, cmd, localPlayer);
 #endif
 
-	static int nStaticDifference = 0;
-	const int nLastDifference = nStaticDifference;
-	const int nCurrDifference = nStaticDifference = I::ClientState->lastoutgoingcommand - current_command;
+	if (F::Ticks.m_bShifting && F::Ticks.m_iShiftedTicks + 1 == F::Ticks.m_iShiftStart)
+		vTickbaseFixes.emplace_back(I::ClientState->lastoutgoingcommand, cmd->command_number, F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal);
 
-#ifndef TICKBASE_DEBUG
-	if (F::Ticks.m_bShifted && !nLastDifference && nCurrDifference)
-		localPlayer->m_nTickBase() -= F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal - 1;
-
-#else
-	static int nStaticCurrentCommand = 0;
-	const int nLastCurrentCommand = nStaticCurrentCommand;
-	const int nCurrCurrentCommand = nStaticCurrentCommand = current_command;
-
-	static int nStaticTickBase = 0;
-	const int nLastTickBase = nStaticTickBase;
-	const int nCurrTickBase = nStaticTickBase = localPlayer->m_nTickBase();
-
-	if (F::Ticks.m_bShifted && !nLastDifference && nCurrDifference)
+	for (auto it = vTickbaseFixes.begin(); it != vTickbaseFixes.end();)
 	{
-		localPlayer->m_nTickBase() -= F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal - 1;
-		nStaticTickBase = localPlayer->m_nTickBase();
-	}
-
-	if (Vars::Debug::Info.Value)
-	{
-		SDK::Output("Packet", std::format("{}, {}, {}", F::Ticks.m_iShiftedTicks, F::Ticks.m_iShiftedGoal, I::ClientState->chokedcommands).c_str(), { 255, 0, 0, 255 });
-		
-		if (nCurrTickBase != localPlayer->m_nTickBase())
-			SDK::Output("Time", std::format("{} -> {} ({})", nCurrTickBase, localPlayer->m_nTickBase(), nCurrTickBase - nLastTickBase).c_str(), { 255, 0, 0, 255 });
+		if (it->m_iLastOutgoingCommand < I::ClientState->last_command_ack)
+			it = vTickbaseFixes.erase(it);
 		else
-			SDK::Output("Time", std::format("{} ({})", localPlayer->m_nTickBase(), nCurrTickBase - nLastTickBase).c_str(), { 255, 0, 0, 255 });
-		
-		if (nLastCurrentCommand != current_command)
-			SDK::Output("Command", std::format("{} -> {} ({})", nLastCurrentCommand, current_command, nCurrCurrentCommand - nLastCurrentCommand).c_str(), { 255, 0, 0, 255 });
-		else
-			SDK::Output("Command", std::format("{} ({})", current_command, nCurrCurrentCommand - nLastCurrentCommand).c_str(), { 255, 0, 0, 255 });
-		
-		SDK::Output("Misc", std::format("{}, {}; {}, {}\n", I::ClientState->lastoutgoingcommand, I::ClientState->last_command_ack, I::GlobalVars->frametime, I::ClientState->lastoutgoingcommand - current_command).c_str(), { 255, 0, 0, 255 });
+		{
+			if (cmd->command_number == it->m_iCommandNumber)
+			{
+				localPlayer->m_nTickBase() -= it->m_iTickbaseShift;
+				break;
+			}
+			++it;
+		}
 	}
-#endif
 
 	F::EnginePrediction.ScalePlayers(localPlayer);
 	CALL_ORIGINAL(rcx, current_command, curtime, cmd, localPlayer);

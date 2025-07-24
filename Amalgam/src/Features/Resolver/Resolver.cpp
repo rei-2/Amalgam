@@ -240,7 +240,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 				bView = !bView;
 
 				F::Backtrack.ResolverUpdate(pTarget);
-				F::Output.ReportResolver(pTarget->entindex(), "Cycling", "view", std::string(bView ? "view to local" : "static"));
+				F::Output.ReportResolver(pTarget->entindex(), "Cycling", "view", bView ? "view to local" : "static");
 			}
 
 			m_flLastViewCycle = SDK::PlatFloatTime();
@@ -376,7 +376,7 @@ void CResolver::SetView(int iUserID, bool bValue)
 	tData.m_bView = bValue;
 
 	F::Backtrack.ResolverUpdate(I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(iUserID))->As<CTFPlayer>());
-	F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(iUserID), "Set", "view", std::string(bValue ? "view to local" : "static"));
+	F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(iUserID), "Set", "view", bValue ? "view to local" : "static");
 }
 
 bool CResolver::GetAngles(CTFPlayer* pPlayer, float* pYaw, float* pPitch, bool* pMinwalk, bool bFake)

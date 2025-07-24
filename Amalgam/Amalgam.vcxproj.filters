@@ -139,8 +139,6 @@
     <ClCompile Include="src\Hooks\CStaticPropMgr_ComputePropOpacity.cpp" />
     <ClCompile Include="src\Hooks\CStaticPropMgr_DrawStaticProps.cpp" />
     <ClCompile Include="src\Hooks\CStudioRender_DrawModelStaticProp.cpp" />
-    <ClCompile Include="src\Hooks\CStudioRender_SetAlphaModulation.cpp" />
-    <ClCompile Include="src\Hooks\CStudioRender_SetColorModulation.cpp" />
     <ClCompile Include="src\Hooks\CTFBadgePanel_SetupBadge.cpp" />
     <ClCompile Include="src\Hooks\CTFClientScoreBoardDialog_UpdatePlayerAvatar.cpp" />
     <ClCompile Include="src\Hooks\CTFGCClientSystem_UpdateAssignedLobby.cpp" />
@@ -169,12 +167,11 @@
     <ClCompile Include="src\Hooks\DoEnginePostProcessing.cpp" />
     <ClCompile Include="src\Hooks\DSP_Process.cpp" />
     <ClCompile Include="src\Hooks\FX_FireBullets.cpp" />
-    <ClCompile Include="src\Hooks\GenerateEquipRegionConflictMask.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayerInventory_VerifyChangedLoadoutsAreValid.cpp" />
     <ClCompile Include="src\Hooks\GetClientInterpAmount.cpp" />
     <ClCompile Include="src\Hooks\HostState_Shutdown.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_DispatchUserMessage.cpp" />
     <ClCompile Include="src\Hooks\IBaseClientDLL_LevelShutdown.cpp" />
-    <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Hooks\IEngineVGui_Paint.cpp" />
     <ClCompile Include="src\Hooks\IInput_GetUserCmd.cpp" />
     <ClCompile Include="src\Hooks\IPanel_PaintTraverse.cpp" />
@@ -193,7 +190,6 @@
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
     <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
-    <ClCompile Include="src\Hooks\CViewRender_LevelShutdown.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CTFPlayer.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseAnimating.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseCombatCharacter.cpp" />
@@ -321,8 +317,7 @@
     <ClInclude Include="src\SDK\Globals.h" />
     <ClInclude Include="src\SDK\SDK.h" />
     <ClInclude Include="src\SDK\Vars.h" />
-    <ClInclude Include="src\Utils\Assert\Assert.h" />
-    <ClInclude Include="src\Utils\Feature\Feature.h" />
+    <ClInclude Include="src\Utils\Macros\Macros.h" />
     <ClInclude Include="src\Utils\Hash\FNV1A.h" />
     <ClInclude Include="src\Utils\Hooks\Hooks.h" />
     <ClInclude Include="src\Utils\Interfaces\Interfaces.h" />
@@ -584,6 +579,8 @@
     <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IKeyValuesSystem.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CInterpolatedVar.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CRangeCheckedVar.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

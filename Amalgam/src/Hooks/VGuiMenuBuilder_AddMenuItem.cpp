@@ -12,7 +12,7 @@ MAKE_SIGNATURE(CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuIt
 
 static int iPlayerIndex;
 static uint32_t uFriendsID;
-static std::string sPlayerName;
+static const char* sPlayerName;
 
 MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
     void* rcx, int playerIndex)

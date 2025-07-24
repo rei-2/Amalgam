@@ -16,15 +16,14 @@ static inline std::string GetProcessName(DWORD dwProcessID)
 	if (!hProcess)
 		return "";
 
-	char buffer[MAX_PATH];
-	if (!GetModuleBaseName(hProcess, nullptr, buffer, sizeof(buffer) / sizeof(char)))
+	if (char buffer[MAX_PATH]; GetModuleBaseName(hProcess, nullptr, buffer, sizeof(buffer) / sizeof(char)))
 	{
 		CloseHandle(hProcess);
-		return "";
+		return buffer;
 	}
 
 	CloseHandle(hProcess);
-	return buffer;
+	return "";
 }
 
 static inline bool CheckDXLevel()

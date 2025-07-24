@@ -1,10 +1,9 @@
 #include "Hooks.h"
 
-#include "../Assert/Assert.h"
 #include "../../Core/Core.h"
 #include "../../Hooks/Direct3DDevice9.h"
 
-CHook::CHook(std::string sName, void* pInitFunc)
+CHook::CHook(const std::string& sName, void* pInitFunc)
 {
 	m_pInitFunc = pInitFunc;
 	U::Hooks.m_mHooks[sName] = this;

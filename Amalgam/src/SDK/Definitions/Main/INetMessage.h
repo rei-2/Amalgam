@@ -311,3 +311,21 @@ public:
 	int m_nBaselineTick;	// sequence number of baseline
 	int m_nBaselineNr;		// 0 or 1 		
 };
+
+class SVC_PacketEntities : public CNetMessage
+{
+	int	GetGroup() const { return ENTITIES; }
+
+public:
+
+	byte pad1[8];
+	int			m_nMaxEntries;
+	int			m_nUpdatedEntries;
+	bool		m_bIsDelta;
+	bool		m_bUpdateBaseline;
+	int			m_nBaseline;
+	int			m_nDeltaFrom;
+	int			m_nLength;
+	bf_read		m_DataIn;
+	bf_write	m_DataOut;
+};

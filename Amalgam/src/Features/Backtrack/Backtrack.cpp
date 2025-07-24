@@ -217,15 +217,14 @@ void CBacktrack::MakeRecords()
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
 			*reinterpret_cast<BoneMatrix*>(aBones),
-			m_mDidShoot[pPlayer->entindex()],
-			pPlayer->m_vecOrigin()
+			m_mDidShoot[pPlayer->entindex()]
 		);
 		const TickRecord& tCurRecord = vRecords.front();
 
 		bool bLagComp = false;
 		if (pLastRecord)
 		{
-			const Vec3 vDelta = tCurRecord.m_vBreak - pLastRecord->m_vBreak;
+			const Vec3 vDelta = tCurRecord.m_vOrigin - pLastRecord->m_vOrigin;
 			
 			static auto sv_lagcompensation_teleport_dist = U::ConVars.FindVar("sv_lagcompensation_teleport_dist");
 			const float flDist = powf(sv_lagcompensation_teleport_dist->GetFloat(), 2.f);
@@ -233,11 +232,8 @@ void CBacktrack::MakeRecords()
 			{
 				bLagComp = true;
 				if (!H::Entities.GetLagCompensation(pPlayer->entindex()))
-				{
 					vRecords.resize(1);
-					vRecords.front().m_flSimTime = std::numeric_limits<float>::max(); // hack
-				}
-				std::for_each(vRecords.begin(), vRecords.end(), [](auto& tRecord) { tRecord.m_bInvalid = true; });
+				std::for_each(vRecords.begin() + 1, vRecords.end(), [](auto& tRecord) { tRecord.m_bInvalid = true; });
 			}
 
 			for (auto& tRecord : vRecords)

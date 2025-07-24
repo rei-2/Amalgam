@@ -858,9 +858,9 @@ struct Color_t
 
 	inline void GetHSV(float& flH, float& flS, float& flV)
 	{
-		float flR = this->r / 255.f;
-		float flG = this->g / 255.f;
-		float flB = this->b / 255.f;
+		float flR = r / 255.f;
+		float flG = g / 255.f;
+		float flB = b / 255.f;
 
 		float flK = 0.f;
 		if (flG < flB)
@@ -887,7 +887,7 @@ struct Color_t
 	inline Color_t HueShift(float flShift)
 	{
 		float flH, flS, flV; GetHSV(flH, flS, flV);
-		Color_t tOut; tOut.SetHSV(fmodf(flH + flShift, 360.f), flS, flV, this->a);
+		Color_t tOut; tOut.SetHSV(fmodf(flH + flShift, 360.f), flS, flV, a);
 		return tOut;
 	}
 

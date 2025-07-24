@@ -107,7 +107,6 @@ namespace G
 	inline bool Choking = false;
 
 	inline bool UpdatingAnims = false;
-	inline bool DrawingProps = false;
 	inline bool FlipViewmodels = false;
 
 	inline std::vector<DrawLine_t> LineStorage = {};

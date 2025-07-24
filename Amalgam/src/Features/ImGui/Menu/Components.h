@@ -1992,9 +1992,12 @@ namespace ImGui
 		case VK_MBUTTON: return "mouse3";
 		case VK_XBUTTON1: return "mouse4";
 		case VK_XBUTTON2: return "mouse5";
-		case VK_CONTROL:
-		case VK_LCONTROL:
-		case VK_RCONTROL: return "control";
+		case VK_SHIFT: return "shift";
+		case VK_LSHIFT: return "lshift";
+		case VK_RSHIFT: return "rshift";
+		case VK_CONTROL: return "control";
+		case VK_LCONTROL: return "lcontrol";
+		case VK_RCONTROL: return "rcontrol";
 		case VK_NUMPAD0: return "num0";
 		case VK_NUMPAD1: return "num1";
 		case VK_NUMPAD2: return "num2";
@@ -2005,7 +2008,11 @@ namespace ImGui
 		case VK_NUMPAD7: return "num7";
 		case VK_NUMPAD8: return "num8";
 		case VK_NUMPAD9: return "num9";
+		case VK_ADD: return "num+";
+		case VK_SUBTRACT: return "num-";
+		case VK_MULTIPLY: return "num*";
 		case VK_DIVIDE: return "num/";
+		case VK_DECIMAL: return "num.";
 		case VK_INSERT: return "insert";
 		case VK_DELETE: return "delete";
 		case VK_PRIOR: return "pgup";
@@ -2032,29 +2039,26 @@ namespace ImGui
 		case VK_F24: return "f24";
 		case VK_LWIN:
 		case VK_RWIN: return "windows";
+		case VK_APPS: return "contextmenu";
 		case VK_PAUSE: return "pause";
-		case VK_APPS: return "apps";
 		case VK_VOLUME_MUTE: return "mute";
-		case VK_VOLUME_DOWN: return "volume down";
-		case VK_VOLUME_UP: return "volume up";
+		case VK_VOLUME_DOWN: return "volumedown";
+		case VK_VOLUME_UP: return "volumeup";
 		case VK_MEDIA_STOP: return "stop";
-		case VK_MEDIA_PLAY_PAUSE: return "play/pause";
-		case VK_MEDIA_PREV_TRACK: return "previous track";
-		case VK_MEDIA_NEXT_TRACK: return "next track";
+		case VK_MEDIA_PLAY_PAUSE: return "pause";
+		case VK_MEDIA_PREV_TRACK: return "previous";
+		case VK_MEDIA_NEXT_TRACK: return "next";
 		}
 
 		std::string str = "unknown";
-
-		CHAR output[16] = { "\0" };
-		if (GetKeyNameTextA(MapVirtualKeyW(key, MAPVK_VK_TO_VSC) << 16, output, 16))
-			str = output;
-
-		std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-		str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
-
-		if (Vars::Debug::Info.Value && FNV1A::Hash32(str.c_str()) == FNV1A::Hash32Const("unknown"))
-			str = std::format("{:#x}", key);
-
+		if (char buffer[16]; GetKeyNameText(MapVirtualKey(key, MAPVK_VK_TO_VSC) << 16, buffer, sizeof(buffer)))
+		{
+			str = buffer;
+			std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+			str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
+		}
+		//else if (Vars::Debug::Info.Value)
+		//	str = std::format("{:#x}", key);
 		return str;
 	}
 	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = FKeybindEnum::None, std::vector<int> vIgnore = { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], Vars::Menu::MenuSecondaryKey[DEFAULT_BIND] }, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
@@ -2413,7 +2417,7 @@ namespace ImGui
 	}
 
 	template <class T>
-	inline void DrawBindInfo(ConfigVar<T>& var, T& val, std::string sBind, bool bNewPopup, bool& bLastHovered)
+	inline void DrawBindInfo(ConfigVar<T>& var, T& val, const std::string& sBind, bool bNewPopup, bool& bLastHovered)
 	{
 		TextUnformatted(std::format("Bind '{}'", sBind).c_str());
 

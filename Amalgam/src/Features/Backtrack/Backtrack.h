@@ -1,19 +1,11 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-class CIncomingSequence
+struct Sequence_t
 {
-public:
 	int m_nInReliableState;
 	int m_nSequenceNr;
 	float m_flTime;
-
-	CIncomingSequence(int iState, int iSequence, float flTime)
-	{
-		m_nInReliableState = iState;
-		m_nSequenceNr = iSequence;
-		m_flTime = flTime;
-	}
 };
 
 struct BoneMatrix
@@ -29,12 +21,12 @@ struct TickRecord
 	Vec3 m_vMaxs = {};
 	BoneMatrix m_BoneMatrix = {};
 	bool m_bOnShot = false;
-	Vec3 m_vBreak = {};
 	bool m_bInvalid = false;
 };
 
 class CBacktrack
 {
+private:
 	void UpdateDatagram();
 	void MakeRecords();
 	void CleanRecords();
@@ -42,7 +34,7 @@ class CBacktrack
 	std::unordered_map<CBaseEntity*, std::deque<TickRecord>> m_mRecords = {};
 	std::unordered_map<int, bool> m_mDidShoot = {};
 
-	std::deque<CIncomingSequence> m_dSequences;
+	std::deque<Sequence_t> m_dSequences;
 	int m_iLastInSequence = 0;
 	int m_nOldInSequenceNr = 0;
 	int m_nOldInReliableState = 0;

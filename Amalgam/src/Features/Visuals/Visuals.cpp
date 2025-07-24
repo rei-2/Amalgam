@@ -10,10 +10,6 @@
 #include "../Players/PlayerUtils.h"
 #include "../Spectate/Spectate.h"
 
-MAKE_SIGNATURE(CTFPlayer_FireEvent, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 4C 89 64 24 ? 55 41 56 41 57 48 8D 6C 24", 0x0);
-MAKE_SIGNATURE(CWeaponMedigun_UpdateEffects, "client.dll", "40 57 48 81 EC ? ? ? ? 8B 91 ? ? ? ? 48 8B F9 85 D2 0F 84 ? ? ? ? 48 89 B4 24", 0x0);
-MAKE_SIGNATURE(CWeaponMedigun_StopChargeEffect, "client.dll", "40 53 48 83 EC ? 44 0F B6 C2", 0x0);
-MAKE_SIGNATURE(CWeaponMedigun_ManageChargeEffect, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 81 EC ? ? ? ? 48 8B F1 E8 ? ? ? ? 48 8B D8", 0x0);
 MAKE_SIGNATURE(UTIL_PlayerByIndex, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
 MAKE_SIGNATURE(CBaseAnimating_DrawServerHitboxes, "server.dll", "44 88 44 24 ? 53 48 81 EC", 0x0);
 MAKE_SIGNATURE(NDebugOverlay_BoxAngles, "server.dll", "48 83 EC ? 4C 8B D9 48 8B 0D ? ? ? ? 48 85 C9 74 ? 8B 84 24 ? ? ? ? F3 0F 10 84 24 ? ? ? ? 4C 8B 11 F3 0F 11 44 24 ? 89 44 24 ? 8B 84 24 ? ? ? ? 89 44 24 ? 8B 84 24 ? ? ? ? 89 44 24 ? 8B 84 24 ? ? ? ? 89 44 24 ? 4C 89 4C 24", 0x0);
@@ -650,29 +646,35 @@ MAKE_HOOK(NDebugOverlay_BoxAngles, S::NDebugOverlay_BoxAngles(), void,
 
 void CVisuals::FOV(CTFPlayer* pLocal, CViewSetup* pView)
 {
-	bool bZoomed = pLocal->InCond(TF_COND_ZOOMED);
 	static auto fov_desired = U::ConVars.FindVar("fov_desired");
-	float flDefaultFOV = fov_desired->GetFloat();
+	bool bZoomed = pLocal->InCond(TF_COND_ZOOMED);
+
+	float flRegularFOV = fov_desired->GetFloat();
+	float flZoomFOV = TF_WEAPON_ZOOM_FOV;
+
 	float flRegularOverride = Vars::Visuals::UI::FieldOfView.Value;
 	float flZoomOverride = Vars::Visuals::UI::ZoomFieldOfView.Value;
-	float flDesiredFOV = !bZoomed ? flRegularOverride : flZoomOverride;
 
-	pView->fov = pLocal->m_iFOV() = flDesiredFOV ? flDesiredFOV : pView->fov;
-	pLocal->m_iDefaultFOV() = std::max(flRegularOverride, flDefaultFOV);
-
-	if (!I::Prediction->InPrediction() && (flRegularOverride || flZoomOverride))
+	if (flRegularOverride || flZoomOverride)
 	{
-		float flDeltaTime = (TICKS_TO_TIME(pLocal->m_nFinalPredictedTick()) - pLocal->m_flFOVTime() + TICKS_TO_TIME(I::GlobalVars->interpolation_amount)) / pLocal->m_flFOVRate();
-		if (flDeltaTime < 1.f)
+		pView->fov = !bZoomed ? (flRegularOverride ? flRegularOverride : flRegularFOV) : (flZoomOverride ? flZoomOverride : flZoomFOV);
+		if (!I::Prediction->InPrediction() && pLocal->m_flFOVRate() && !pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		{
-			float flRegular = flRegularOverride ? flRegularOverride : flDefaultFOV;
-			float flZoomed = flZoomOverride ? flZoomOverride : 20.f;
-
-			float flFrom = !bZoomed ? flZoomed : flRegular;
-			float flTo = !bZoomed ? flRegular : flZoomed;
-			pView->fov = pLocal->m_iFOV() = Math::SimpleSplineRemapVal(flDeltaTime, 0.f, 1.f, flFrom, flTo);
+			float flDeltaTime = (TICKS_TO_TIME(pLocal->m_nFinalPredictedTick()) - pLocal->m_flFOVTime() + TICKS_TO_TIME(I::GlobalVars->interpolation_amount)) / pLocal->m_flFOVRate();
+			if (flDeltaTime < 1.f)
+			{
+				float flFrom = flRegularOverride && pLocal->m_iFOVStart() == flRegularFOV ? flRegularOverride
+					: flZoomOverride && pLocal->m_iFOVStart() == flZoomFOV ? flZoomOverride
+					: pLocal->m_iFOVStart();
+				float flTo = pView->fov;
+				if (flFrom != flTo)
+					pView->fov = Math::SimpleSplineRemapVal(flDeltaTime, 0.f, 1.f, flFrom, flTo);
+			}
 		}
 	}
+
+	pLocal->m_iFOV() = pView->fov;
+	pLocal->m_iDefaultFOV() = std::max(flRegularOverride, flRegularFOV);
 }
 
 void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
@@ -680,7 +682,7 @@ void CVisuals::ThirdPerson(CTFPlayer* pLocal, CViewSetup* pView)
 	if (!pLocal->IsAlive() || F::Spectate.m_iTarget != -1)
 		return I::Input->CAM_ToFirstPerson();
 
-	const bool bForce = pLocal->IsTaunting() || pLocal->IsAGhost() || pLocal->InCond(TF_COND_HALLOWEEN_KART) || pLocal->InCond(TF_COND_HALLOWEEN_THRILLER);
+	const bool bForce = pLocal->IsTaunting() || pLocal->IsAGhost() || pLocal->InCond(TF_COND_HALLOWEEN_KART) || pLocal->InCond(TF_COND_STUNNED) && pLocal->m_iStunFlags() & (TF_STUN_CONTROLS | TF_STUN_LOSER_STATE);
 	//if (bForce)
 	//	return;
 
@@ -977,7 +979,7 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	}
 
 	if (pLocal && Vars::Visuals::Effects::SpellFootsteps.Value && (F::Ticks.m_bDoubletap || F::Ticks.m_bWarp))
-		S::CTFPlayer_FireEvent.Call<void>(pLocal, pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);
+		pLocal->FireEvent(pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);
 	
 	static uint32_t iOldMedigunBeam = 0, iOldMedigunCharge = 0;
 	uint32_t iNewMedigunBeam = FNV1A::Hash32(Vars::Visuals::Effects::MedigunBeam.Value.c_str()), iNewMedigunCharge = FNV1A::Hash32(Vars::Visuals::Effects::MedigunCharge.Value.c_str());
@@ -985,9 +987,10 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	{
 		if (pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
 		{
-			S::CWeaponMedigun_UpdateEffects.Call<void>();
-			S::CWeaponMedigun_StopChargeEffect.Call<void>(pWeapon);
-			S::CWeaponMedigun_StopChargeEffect.Call<void>(pWeapon, false);
+			auto pMedigun = pWeapon->As<CWeaponMedigun>();
+			pMedigun->UpdateEffects();
+			pMedigun->StopChargeEffect(false);
+			pMedigun->ManageChargeEffect();
 		}
 
 		iOldMedigunBeam = iNewMedigunBeam;

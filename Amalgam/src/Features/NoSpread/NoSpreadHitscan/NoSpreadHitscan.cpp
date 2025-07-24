@@ -77,7 +77,7 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 	}
 }
 
-bool CNoSpreadHitscan::ParsePlayerPerf(std::string sMsg)
+bool CNoSpreadHitscan::ParsePlayerPerf(const std::string& sMsg)
 {
 	if (!Vars::Aimbot::General::NoSpread.Value)
 		return false;
@@ -193,9 +193,9 @@ void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
 	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !Vars::Aimbot::General::NoSpread.Value || !pLocal->IsAlive())
 		return;
 
-	auto pWeapon = H::Entities.GetWeapon();
-	if (!pWeapon || !ShouldRun(pLocal, pWeapon))
-		return;
+	//auto pWeapon = H::Entities.GetWeapon();
+	//if (!pWeapon || !ShouldRun(pLocal, pWeapon))
+	//	return;
 
 	int x = Vars::Menu::SeedPredictionDisplay.Value.x;
 	int y = Vars::Menu::SeedPredictionDisplay.Value.y + 8;
@@ -219,5 +219,5 @@ void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
 	H::Draw.StringOutlined(fFont, x, y, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Uptime {}", GetFormat(m_flServerTime)).c_str());
 	H::Draw.StringOutlined(fFont, x, y += nTall, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Mantissa step {}", m_flMantissaStep).c_str());
 	if (Vars::Debug::Info.Value)
-		H::Draw.StringOutlined(fFont, x, y += nTall, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Delta {:.6f}", m_dTimeDelta).c_str());
+		H::Draw.StringOutlined(fFont, x, y += nTall, cColor, Vars::Menu::Theme::Background.Value, align, std::format("Delta {:.3f}", m_dTimeDelta).c_str());
 }

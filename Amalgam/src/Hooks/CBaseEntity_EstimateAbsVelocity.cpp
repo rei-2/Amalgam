@@ -11,24 +11,28 @@ MAKE_HOOK(CBaseEntity_EstimateAbsVelocity, S::CBaseEntity_EstimateAbsVelocity(),
 		return CALL_ORIGINAL(rcx, vel);
 #endif
 
-	CALL_ORIGINAL(rcx, vel);
-
 	auto pPlayer = reinterpret_cast<CTFPlayer*>(rcx);
-	if (pPlayer->IsPlayer())
-	{
-		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer())
-			vel = pPlayer->m_vecVelocity();
-		else
-		{
-			// full override makes movement look a bit too choppy
-			vel.z = pPlayer->m_vecVelocity().z;
+	if (!pPlayer->IsPlayer())
+		return CALL_ORIGINAL(rcx, vel);
 
-			if (pPlayer->IsOnGround() && vel.Length2DSqr() < 2.f)
-			{
-				bool bMinwalk;
-				if (F::Resolver.GetAngles(pPlayer, nullptr, nullptr, &bMinwalk) && bMinwalk)
-					vel = { 1, 1 };
-			}
-		}
+	if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer())
+	{
+		vel = pPlayer->m_vecVelocity();
+		return;
+	}
+
+	if (!Vars::Visuals::Removals::Interpolation.Value)
+	{
+		CALL_ORIGINAL(rcx, vel);
+		vel.z = pPlayer->m_vecVelocity().z;
+	}
+	else
+		vel = pPlayer->m_vecVelocity();
+
+	if (pPlayer->IsOnGround() && vel.Length2DSqr() < 2.f)
+	{
+		bool bMinwalk;
+		if (F::Resolver.GetAngles(pPlayer, nullptr, nullptr, &bMinwalk) && bMinwalk)
+			vel = { 1, 1 };
 	}
 }
