@@ -2,16 +2,16 @@
 
 ### 1. Overview
 
-Amalgam is a dynamic-link library (DLL) designed to be injected into the "Team Fortress 2" game process (`tf_win64.exe`). It provides various in-game advantages by modifying the game's behavior at runtime. The project is written in C++ and includes several third-party libraries to achieve its functionality.
+The project is written in C++ and includes several third-party libraries to achieve its functionality.
 
 ### 2. Architecture
 
-The core of Amalgam is built around a central `CCore` class [Core.h:7-26](Amalgam/src/Core/Core.h) that manages the lifecycle of the cheat. The process begins when the DLL is injected into the game process, triggering the `DllMain` function [DllMain.cpp:15-26](Amalgam/src/DllMain.cpp).
+The core of Amalgam is built around a central `CCore` class [Core.h:7-26](Amalgam/src/Core/Core.h) that manages the lifecycle of the program. The process begins when the DLL is injected into the game process, triggering the `DllMain` function [DllMain.cpp:15-26](Amalgam/src/DllMain.cpp).
 
-The `DllMain` function spawns a new thread that executes the main logic of the cheat, which is encapsulated in the `CCore` class. This class has three main methods:
+The `DllMain` function spawns a new thread that executes the main logic of the program, which is encapsulated in the `CCore` class. This class has three main methods:
 
-*   **`Load()`**: Initializes all the necessary components of the cheat, including finding memory signatures, setting up hooks, and loading user configurations.
-*   **`Loop()`**: Enters a loop that waits for a specific key press (F11) to unload the cheat.
+*   **`Load()`**: Initializes all the necessary components of the program, including finding memory signatures, setting up hooks, and loading user configurations.
+*   **`Loop()`**: Enters a loop that waits for a specific key press (F11) to unload the program.
 *   **`Unload()`**: Restores all modified game functionalities to their original state and unloads all components.
 
 ### 3. Core Components
@@ -21,7 +21,7 @@ The `DllMain` function spawns a new thread that executes the main logic of the c
 The entry point of the Amalgam DLL is the `DllMain` function, located in `DllMain.cpp` [DllMain.cpp](Amalgam/src/DllMain.cpp). When the DLL is attached to the game process (`DLL_PROCESS_ATTACH`), it initializes a crash logger and creates a new thread to run the `MainThread` function [DllMain.cpp:5-13](Amalgam/src/DllMain.cpp).
 
 The `MainThread` function is responsible for:
-1.  Calling `U::Core.Load()` to initialize the cheat.
+1.  Calling `U::Core.Load()` to initialize the program.
 2.  Calling `U::Core.Loop()` to run the main loop.
 3.  Calling `U::Core.Unload()` when the loop is exited.
 
@@ -105,7 +105,7 @@ Amalgam includes several other features, such as:
 
 ### 6. Configuration
 
-The cheat's settings are managed through a configuration system that allows users to save and load their preferred settings.
+The program's settings are managed through a configuration system that allows users to save and load their preferred settings.
 
 *   **Configuration Manager**: The `CConfigManager` class in `ConfigManager.h` [ConfigManager.h](Amalgam/src/Core/ConfigManager/ConfigManager.h) handles the loading and saving of configuration files.
 *   **Variables**: All configurable settings are stored in a global `Vars` namespace, defined in `Vars.h` [Vars.h](Amalgam/src/Core/Vars.h). This allows for easy access to settings from any part of the codebase.
@@ -114,27 +114,27 @@ This concludes the design document for the Amalgam project. It provides a compre
 
 ### 7. Hooking Mechanism
 
-Amalgam uses a hooking mechanism to intercept and modify the game's original functions. This is a critical part of the cheat's architecture, allowing it to alter game behavior at runtime. The core of this system is the `CHooks` class.
+Amalgam uses a hooking mechanism to intercept and modify the game's original functions. This is a critical part of the program's architecture, allowing it to alter game behavior at runtime. The core of this system is the `CHooks` class.
 
 #### 7.1. The `CHooks` Class
 
-The `CHooks` class, defined in `Hooks.h` [Hooks.h:50-63](Amalgam/src/Utils/Hooks/Hooks.h), is responsible for managing all the hooks within the cheat. It provides a centralized way to initialize, unload, and manage the hooked functions.
+The `CHooks` class, defined in `Hooks.h` [Hooks.h:50-63](Amalgam/src/Utils/Hooks/Hooks.h), is responsible for managing all the hooks within the program. It provides a centralized way to initialize, unload, and manage the hooked functions.
 
 *   **`Initialize()`**: This method is responsible for setting up all the hooks. It uses the MinHook library to create and enable hooks on various game functions.
-*   **`Unload()`**: This method safely removes all the hooks and restores the original game functions, ensuring that the game returns to its normal state when the cheat is unloaded.
+*   **`Unload()`**: This method safely removes all the hooks and restores the original game functions, ensuring that the game returns to its normal state when the program is unloaded.
 
 #### 7.2. Hooked Functions
 
-Amalgam hooks several key game functions to implement its features. Each hook directs the game's execution flow to a custom function within the cheat's code, which can then modify data or behavior before calling the original function. Some of the important hooked functions include:
+Amalgam hooks several key game functions to implement its features. Each hook directs the game's execution flow to a custom function within the program's code, which can then modify data or behavior before calling the original function. Some of the important hooked functions include:
 
-*   **`CreateMove`**: Hooked to implement features like Aimbot, Triggerbot, and Backtrack. The hook allows the cheat to modify the user's command (`CUserCmd`) before it is processed by the server.
+*   **`CreateMove`**: Hooked to implement features like Aimbot, Triggerbot, and Backtrack. The hook allows the program to modify the user's command (`CUserCmd`) before it is processed by the server.
 *   **`PaintTraverse`**: Hooked to draw visuals on the screen, such as ESP and the user interface. This function is called every frame, providing a canvas for rendering custom elements.
 *   **`FrameStageNotify`**: Hooked to perform actions at different stages of the frame rendering process. This is used for features like Chams and third-person view.
 *   **`WndProc`**: Hooked to capture keyboard and mouse input. This is essential for the menu's functionality and for handling key presses that toggle features.
 
 ### 8. User Interface
 
-The user interface (UI) of Amalgam is built using the **ImGui** library. It provides a menu that allows the user to configure all the features of the cheat in real-time.
+The user interface (UI) of Amalgam is built using the **ImGui** library. It provides a menu that allows the user to configure all the features of the program in real-time.
 
 *   **Menu**: The main menu provides a graphical interface for toggling features and adjusting their settings. It is rendered within the game's context, allowing for seamless interaction.
 *   **Input Handling**: The UI handles mouse and keyboard input to navigate the menu, change settings, and interact with UI elements like buttons, sliders, and checkboxes. This is managed through the `WndProc` hook.
@@ -143,7 +143,7 @@ The user interface (UI) of Amalgam is built using the **ImGui** library. It prov
 
 Amalgam relies on finding specific memory patterns, or "signatures," within the game's code to locate functions and data structures.
 
-*   **Signature Scanning**: The `CSignatures` class is responsible for scanning the game's memory for these patterns upon injection. This makes the cheat more resilient to game updates, as it doesn't rely on static memory addresses.
+*   **Signature Scanning**: The `CSignatures` class is responsible for scanning the game's memory for these patterns upon injection. This makes the program more resilient to game updates, as it doesn't rely on static memory addresses.
 *   **Interfaces**: The `CInterfaces` class is used to get pointers to the game's core interfaces, such as `IBaseClientDLL`, `IClientEntityList`, and `IVEngineClient`. These interfaces provide access to a wide range of game functionalities.
 
 This concludes the detailed design document for the Amalgam project. It covers the project's architecture, core components, features, hooking mechanism, user interface, and memory management, providing a comprehensive understanding of its inner workings.
@@ -154,7 +154,7 @@ Amalgam uses a custom event system to handle game events, such as player death o
 
 *   **`CEventManager`**: The core of this system is the `CEventManager` class. While the exact implementation file is not immediately visible from the file list, its initialization is called from the `CCore::Load` method [Core.cpp:95](Amalgam/src/Core/Core.cpp), indicating its central role. This class is responsible for registering, unregistering, and dispatching game events.
 *   **Event Listeners**: Features can subscribe to specific game events. For example, a kill-feed logger or a feature that triggers on player death would register a listener for the `player_death` event.
-*   **`FireEvents`**: The event manager likely hooks the `FireEventClientSide` game function. Inside this hook, it receives an `IGameEvent` object, which it then dispatches to all registered listeners, allowing different parts of the cheat to react accordingly.
+*   **`FireEvents`**: The event manager likely hooks the `FireEventClientSide` game function. Inside this hook, it receives an `IGameEvent` object, which it then dispatches to all registered listeners, allowing different parts of the program to react accordingly.
 
 ### 11. Utilities and Helpers
 
@@ -187,7 +187,7 @@ The `CNetVars` class [NetVars.h:11-20](Amalgam/src/Utils/NetVars/NetVars.h) is a
 
 ### 12. Conclusion
 
-Amalgam is a well-structured and feature-rich game modification for "Team Fortress 2." Its modular design, which separates core functionalities, features, and utilities, allows for maintainability and extensibility. The use of third-party libraries like MinHook and ImGui accelerates development, while custom systems for hooking, event handling, and configuration provide a robust foundation for its various features. The reliance on dynamic signature scanning and NetVar management ensures that the cheat can adapt to frequent game updates with minimal manual intervention.
+Amalgam is a well-structured and feature-rich game modification for "Team Fortress 2." Its modular design, which separates core functionalities, features, and utilities, allows for maintainability and extensibility. The use of third-party libraries like MinHook and ImGui accelerates development, while custom systems for hooking, event handling, and configuration provide a robust foundation for its various features. The reliance on dynamic signature scanning and NetVar management ensures that the program can adapt to frequent game updates with minimal manual intervention.
 
 ### 13. Component Interaction and Data Flow
 
@@ -216,9 +216,9 @@ The Aimbot feature demonstrates how user input is captured, game state is analyz
 
 #### 13.2. Scenario 2: ESP Rendering Flow
 
-The ESP feature illustrates how the cheat renders custom information onto the screen during the game's paint cycle.
+The ESP feature illustrates how the program renders custom information onto the screen during the game's paint cycle.
 
-1.  **Render Hook**: The process starts in the `PaintTraverse` hook. This function is called by the game engine for each panel that needs to be drawn on the screen. The cheat specifically waits for the main game panel to be drawn.
+1.  **Render Hook**: The process starts in the `PaintTraverse` hook. This function is called by the game engine for each panel that needs to be drawn on the screen. The program specifically waits for the main game panel to be drawn.
 
 2.  **Feature Activation**: Once the correct panel is identified, the main ESP logic, `CESP::Run()` [ESP.cpp:16-23](Amalgam/src/Features/ESP/ESP.cpp), is called.
 
@@ -234,11 +234,11 @@ The ESP feature illustrates how the cheat renders custom information onto the sc
 
 5.  **Frame Completion**: After the hook has iterated through all entities and drawn the necessary information, it calls the original `PaintTraverse` function, allowing the rest of the game's UI to be drawn. The result is an overlay of information seamlessly integrated into the game world.
 
-These scenarios highlight the event-driven nature of the cheat, where core game functions are intercepted and used as entry points to run feature logic, read game state, and modify either player commands or the final rendered image.
+These scenarios highlight the event-driven nature of the program, where core game functions are intercepted and used as entry points to run feature logic, read game state, and modify either player commands or the final rendered image.
 
 ### 14. Extensibility: Adding a New Feature
 
-The modular design of Amalgam allows for the straightforward addition of new features. This section outlines the typical workflow a developer would follow to integrate a new cheat, for example, a "NoRecoil" feature.
+The modular design of Amalgam allows for the straightforward addition of new features. This section outlines the typical workflow a developer would follow to integrate a new program, for example, a "NoRecoil" feature.
 
 1.  **Create the Feature Class**:
     *   A new header file, `NoRecoil.h`, and a source file, `NoRecoil.cpp`, would be created in the `Amalgam/src/Features/` directory.
@@ -294,9 +294,9 @@ This structured approach ensures that new features are self-contained, configura
 The Amalgam project is structured as a standard C++ project, intended to be compiled into a Dynamic-Link Library (DLL).
 
 *   **Compilation**: The project is likely managed through a Visual Studio Solution (`.sln`) file, which would define the compiler settings, dependencies, and output configuration. The end product of the build process is a single DLL file (e.g., `Amalgam.dll`).
-*   **Injection**: This DLL is not a standalone executable. It is designed to be "injected" into the `tf_win64.exe` process using a separate DLL injector tool. Once injected, the operating system calls the DLL's `DllMain` function [DllMain.cpp:15-26](Amalgam/src/DllMain.cpp), which triggers the initialization of the cheat.
+*   **Injection**: This DLL is not a standalone executable. It is designed to be "injected" into the `tf_win64.exe` process using a separate DLL injector tool. Once injected, the operating system calls the DLL's `DllMain` function [DllMain.cpp:15-26](Amalgam/src/DllMain.cpp), which triggers the initialization of the program.
 *   **Key Directories**:
-    *   `Amalgam/src/`: Contains all the source code for the cheat, organized into subdirectories for core components (`Core`), features (`Features`), and utilities (`Utils`).
+    *   `Amalgam/src/`: Contains all the source code for the program, organized into subdirectories for core components (`Core`), features (`Features`), and utilities (`Utils`).
     *   `Amalgam/include/`: Contains the header files for all third-party libraries used in the project, such as MinHook [MinHook.h](Amalgam/include/MinHook/MinHook.h), ImGui [imgui.h](Amalgam/include/ImGui/imgui.h), and Freetype [freetype.h](Amalgam/include/freetype/freetype.h).
 
 This concludes the comprehensive design document for the Amalgam project. The document has covered the high-level architecture, detailed the core components and features, explained the underlying mechanisms like hooking and rendering, and provided insight into the data flow and extensibility of the codebase.
