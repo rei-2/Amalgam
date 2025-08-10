@@ -5,27 +5,10 @@
 #include <utility>
 #include <boost/algorithm/string/replace.hpp>
 
-bool CCommands::Run(const char* sCmd, std::deque<const char*>& vArgs)
-{
-	std::string sLower = sCmd;
-	std::transform(sLower.begin(), sLower.end(), sLower.begin(), ::tolower);
-
-	auto uHash = FNV1A::Hash32(sLower.c_str());
-	if (!m_mCommands.contains(uHash))
-		return false;
-
-	m_mCommands[uHash](vArgs);
-	return true;
-}
-
-void CCommands::Register(const char* sName, CommandCallback fCallback)
-{
-	m_mCommands[FNV1A::Hash32(sName)] = std::move(fCallback);
-}
-
-void CCommands::Initialize()
-{
-	Register("setcvar", [](const std::deque<const char*>& vArgs)
+static std::unordered_map<uint32_t, CommandCallback> s_mCommands = {
+	{
+		FNV1A::Hash32Const("setcvar"), 
+		[](const std::deque<const char*>& vArgs)
 		{
 			if (vArgs.size() < 2)
 			{
@@ -49,9 +32,11 @@ void CCommands::Initialize()
 
 			pCVar->SetValue(sValue.c_str());
 			SDK::Output(std::format("Set {} to {}", sCVar, sValue).c_str());
-		});
-
-	Register("getcvar", [](const std::deque<const char*>& vArgs)
+		}
+	},
+	{
+		FNV1A::Hash32Const("getcvar"), 
+		[](const std::deque<const char*>& vArgs)
 		{
 			if (vArgs.size() != 1)
 			{
@@ -68,9 +53,11 @@ void CCommands::Initialize()
 			}
 
 			SDK::Output(std::format("Value of {} is {}", sCVar, pCVar->GetString()).c_str());
-		});
-
-	Register("queue", [](const std::deque<const char*>& vArgs)
+		}
+	},
+	{
+		FNV1A::Hash32Const("queue"), 
+		[](const std::deque<const char*>& vArgs)
 		{
 			static bool bHasLoaded = false;
 			if (!bHasLoaded)
@@ -79,27 +66,35 @@ void CCommands::Initialize()
 				bHasLoaded = true;
 			}
 			I::TFPartyClient->RequestQueueForMatch(k_eTFMatchGroup_Casual_Default);
-		});
-
-	Register("clearchat", [](const std::deque<const char*>& vArgs)
+		}
+	},
+	{
+		FNV1A::Hash32Const("clearchat"), 
+		[](const std::deque<const char*>& vArgs)
 		{
 			I::ClientModeShared->m_pChatElement->SetText("");
-		});
-
-	Register("menu", [](const std::deque<const char*>& vArgs)
+		}
+	},
+	{
+		FNV1A::Hash32Const("menu"), 
+		[](const std::deque<const char*>& vArgs)
 		{
 			I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = !F::Menu.m_bIsOpen);
-		});
-
-	Register("unload", [](const std::deque<const char*>& vArgs)
+		}
+	},
+	{
+		FNV1A::Hash32Const("unload"), 
+		[](const std::deque<const char*>& vArgs)
 		{
 			if (F::Menu.m_bIsOpen)
 				I::MatSystemSurface->SetCursorAlwaysVisible(F::Menu.m_bIsOpen = false);
 			U::Core.m_bUnload = true;
-		});
-
-	Register("crash", [](const std::deque<const char*>& vArgs) // if you want to time out of a server and rejoin
-		{
+		}
+	},
+	{
+		FNV1A::Hash32Const("crash"), 
+		[](const std::deque<const char*>& vArgs)
+		{	// if you want to time out of a server and rejoin
 			switch (vArgs.empty() ? 0 : FNV1A::Hash32(vArgs.front()))
 			{
 			case FNV1A::Hash32Const("true"):
@@ -110,5 +105,19 @@ void CCommands::Initialize()
 				Vars::Debug::CrashLogging.Value = false; // we are voluntarily crashing, don't give out log if we don't want one
 			}
 			reinterpret_cast<void(*)()>(0)();
-		});
+		}
+	},
+};
+
+bool CCommands::Run(const char* sCmd, std::deque<const char*>& vArgs)
+{
+	std::string sLower = sCmd;
+	std::transform(sLower.begin(), sLower.end(), sLower.begin(), ::tolower);
+
+	auto uHash = FNV1A::Hash32(sLower.c_str());
+	if (!s_mCommands.contains(uHash))
+		return false;
+
+	s_mCommands[uHash](vArgs);
+	return true;
 }

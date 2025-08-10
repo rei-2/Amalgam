@@ -73,13 +73,11 @@
     <ClCompile Include="src\Features\Visuals\FakeAngle\FakeAngle.cpp" />
     <ClCompile Include="src\Features\Visuals\Glow\Glow.cpp" />
     <ClCompile Include="src\Features\Visuals\PlayerConditions\PlayerConditions.cpp" />
-    <ClCompile Include="src\Features\Visuals\PlayerArrows\PlayerArrows.cpp" />
-    <ClCompile Include="src\Features\Visuals\Radar\Radar.cpp" />
+    <ClCompile Include="src\Features\Visuals\OffscreenArrows\OffscreenArrows.cpp" />
     <ClCompile Include="src\Features\Visuals\SpectatorList\SpectatorList.cpp" />
     <ClCompile Include="src\Features\Visuals\Visuals.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CTFWeaponBase.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\MD5.cpp" />
-    <ClCompile Include="src\SDK\Helpers\Color\Color.cpp" />
     <ClCompile Include="src\SDK\Helpers\TraceFilters\TraceFilters.cpp" />
     <ClCompile Include="src\SDK\Definitions\Misc\ChecksumCRC.cpp" />
     <ClCompile Include="src\Hooks\Direct3DDevice9.cpp" />
@@ -90,7 +88,7 @@
     <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />
     <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
     <ClCompile Include="include\ImGui\LanguageDefinitions.cpp" />
-    <ClCompile Include="src\Hooks\IBaseClientDLL_FrameStageNotify.cpp" />
+    <ClCompile Include="src\Hooks\CHLClient_FrameStageNotify.cpp" />
     <ClCompile Include="src\Hooks\bf_read_ReadString.cpp" />
     <ClCompile Include="src\Hooks\CAchievementMgr_CheckAchievementsEnabled.cpp" />
     <ClCompile Include="src\Hooks\CAttributeManager_AttribHookValue.cpp" />
@@ -110,7 +108,7 @@
     <ClCompile Include="src\Hooks\CBasePlayer_CalcViewModelView.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_ItemPostFrame.cpp" />
     <ClCompile Include="src\Hooks\CBaseViewModel_ShouldFlipViewModel.cpp" />
-    <ClCompile Include="src\Hooks\CClientModeShared_CreateMove.cpp" />
+    <ClCompile Include="src\Hooks\CHLClient_CreateMove.cpp" />
     <ClCompile Include="src\Hooks\CClientModeShared_DoPostScreenSpaceEffects.cpp" />
     <ClCompile Include="src\Hooks\CClientModeShared_OverrideView.cpp" />
     <ClCompile Include="src\Hooks\CClientModeShared_ShouldDrawViewModel.cpp" />
@@ -123,7 +121,6 @@
     <ClCompile Include="src\Hooks\CL_ProcessPacketEntities.cpp" />
     <ClCompile Include="src\Hooks\CL_ReadPackets.cpp" />
     <ClCompile Include="src\Hooks\ClientModeTFNormal_BIsFriendOrPartyMember.cpp" />
-    <ClCompile Include="src\Hooks\ClientModeTFNormal_UpdateSteamRichPresence.cpp" />
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendDatagram.cpp" />
@@ -142,7 +139,6 @@
     <ClCompile Include="src\Hooks\CTFBadgePanel_SetupBadge.cpp" />
     <ClCompile Include="src\Hooks\CTFClientScoreBoardDialog_UpdatePlayerAvatar.cpp" />
     <ClCompile Include="src\Hooks\CTFGCClientSystem_UpdateAssignedLobby.cpp" />
-    <ClCompile Include="src\Hooks\CTFHudDeathNotice_AddAdditionalMsg.cpp" />
     <ClCompile Include="src\Hooks\CTFInput_ApplyMouse.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_AvoidPlayers.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_BRenderAsZombie.cpp" />
@@ -170,10 +166,10 @@
     <ClCompile Include="src\Hooks\CTFPlayerInventory_VerifyChangedLoadoutsAreValid.cpp" />
     <ClCompile Include="src\Hooks\GetClientInterpAmount.cpp" />
     <ClCompile Include="src\Hooks\HostState_Shutdown.cpp" />
-    <ClCompile Include="src\Hooks\IBaseClientDLL_DispatchUserMessage.cpp" />
-    <ClCompile Include="src\Hooks\IBaseClientDLL_LevelShutdown.cpp" />
+    <ClCompile Include="src\Hooks\CHLClient_DispatchUserMessage.cpp" />
+    <ClCompile Include="src\Hooks\CHLClient_LevelShutdown.cpp" />
     <ClCompile Include="src\Hooks\IEngineVGui_Paint.cpp" />
-    <ClCompile Include="src\Hooks\IInput_GetUserCmd.cpp" />
+    <ClCompile Include="src\Hooks\CInput_GetUserCmd.cpp" />
     <ClCompile Include="src\Hooks\IPanel_PaintTraverse.cpp" />
     <ClCompile Include="src\Hooks\ISteamFriends_GetFriendPersonaName.cpp" />
     <ClCompile Include="src\Hooks\ISteamNetworkingUtils_GetPingToDataCenter.cpp" />
@@ -189,7 +185,6 @@
     <ClCompile Include="src\Hooks\Cbuf_ExecuteCommand.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
-    <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CTFPlayer.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseAnimating.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseCombatCharacter.cpp" />
@@ -198,6 +193,8 @@
     <ClCompile Include="src\SDK\Definitions\Main\CBasePlayer.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseProjectile.cpp" />
     <ClCompile Include="src\Hooks\CTFRocketLauncher_CheckReloadMisfire.cpp" />
+    <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
+    <ClCompile Include="src\Hooks\CInput_ValidateUserCmd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -414,8 +411,7 @@
     <ClInclude Include="src\Features\Visuals\FakeAngle\FakeAngle.h" />
     <ClInclude Include="src\Features\Visuals\Glow\Glow.h" />
     <ClInclude Include="src\Features\Visuals\PlayerConditions\PlayerConditions.h" />
-    <ClInclude Include="src\Features\Visuals\PlayerArrows\PlayerArrows.h" />
-    <ClInclude Include="src\Features\Visuals\Radar\Radar.h" />
+    <ClInclude Include="src\Features\Visuals\OffscreenArrows\OffscreenArrows.h" />
     <ClInclude Include="src\Features\Visuals\SpectatorList\SpectatorList.h" />
     <ClInclude Include="src\Features\Visuals\Visuals.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IGameMovement.h" />
@@ -436,7 +432,6 @@
     <ClInclude Include="src\SDK\Definitions\Misc\IPrediction.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\ISpatialPartition.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\VCollide.h" />
-    <ClInclude Include="src\SDK\Helpers\Color\Color.h" />
     <ClInclude Include="src\SDK\Helpers\Particles\Particles.h" />
     <ClInclude Include="src\SDK\Helpers\TraceFilters\TraceFilters.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IVModelRender.h" />
@@ -572,15 +567,15 @@
     <ClInclude Include="src\SDK\Definitions\Main\CEconWearable.h" />
     <ClInclude Include="src\Features\Misc\AutoVote\AutoVote.h" />
     <ClInclude Include="src\Features\Spectate\Spectate.h" />
-    <ClInclude Include="src\SDK\Definitions\Interfaces\IBaseClientDLL.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CHLClient.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CSniperDot.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\IMatchGroupDescription.h" />
     <ClInclude Include="src\Features\Output\Output.h" />
     <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
-    <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IKeyValuesSystem.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CInterpolatedVar.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CRangeCheckedVar.h" />
+    <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

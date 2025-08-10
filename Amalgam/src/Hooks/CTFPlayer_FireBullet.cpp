@@ -29,38 +29,39 @@ MAKE_HOOK(CTFPlayer_FireBullet, S::CTFPlayer_FireBullet(), void,
 	CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
 	SDK::Trace(vStart, vEnd, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
 
-	const int iTeam = pLocal->m_iTeamNum();
-	const int iAttachment = pWeapon->LookupAttachment("muzzle");
+	int iIndex = I::EngineClient->GetLocalPlayer();
+	int iTeam = pLocal->m_iTeamNum();
+	int iAttachment = pWeapon->LookupAttachment("muzzle");
 	pWeapon->GetAttachment(iAttachment, trace.startpos);
 
 	switch (uHash)
 	{
 	case FNV1A::Hash32Const("Big nasty"):
-		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "bullet_bignasty_tracer01_blue" : "bullet_bignasty_tracer01_red", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "bullet_bignasty_tracer01_blue" : "bullet_bignasty_tracer01_red", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Distortion trail"):
-		H::Particles.ParticleTracer("tfc_sniper_distortion_trail", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer("tfc_sniper_distortion_trail", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Machina"):
-		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "dxhr_sniper_rail_red" : "dxhr_sniper_rail_blue", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "dxhr_sniper_rail_red" : "dxhr_sniper_rail_blue", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Sniper rail"):
-		H::Particles.ParticleTracer("dxhr_sniper_rail", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer("dxhr_sniper_rail", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Short circuit"):
-		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "dxhr_lightningball_hit_zap_red" : "dxhr_lightningball_hit_zap_blue", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "dxhr_lightningball_hit_zap_red" : "dxhr_lightningball_hit_zap_blue", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("C.A.P.P.E.R"):
-		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "bullet_tracer_raygun_red" : "bullet_tracer_raygun_blue", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer(iTeam == TF_TEAM_RED ? "bullet_tracer_raygun_red" : "bullet_tracer_raygun_blue", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Merasmus ZAP"):
-		H::Particles.ParticleTracer("merasmus_zap", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer("merasmus_zap", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Merasmus ZAP 2"):
-		H::Particles.ParticleTracer("merasmus_zap_beam02", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer("merasmus_zap_beam02", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Black ink"):
-		H::Particles.ParticleTracer("merasmus_zap_beam01", trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer("merasmus_zap_beam01", trace.startpos, trace.endpos, iIndex, iAttachment, true);
 		break;
 	case FNV1A::Hash32Const("Line"):
 	case FNV1A::Hash32Const("Line ignore Z"):
@@ -113,6 +114,6 @@ MAKE_HOOK(CTFPlayer_FireBullet, S::CTFPlayer_FireBullet(), void,
 		break;
 	}
 	default:
-		H::Particles.ParticleTracer(sString.c_str(), trace.startpos, trace.endpos, pLocal->entindex(), iAttachment, true);
+		H::Particles.ParticleTracer(sString.c_str(), trace.startpos, trace.endpos, iIndex, iAttachment, true);
 	}
 }

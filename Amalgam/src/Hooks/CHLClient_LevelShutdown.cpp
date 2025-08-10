@@ -2,11 +2,11 @@
 
 #include "../Features/Spectate/Spectate.h"
 
-MAKE_HOOK(IBaseClientDLL_LevelShutdown, U::Memory.GetVirtual(I::BaseClientDLL, 7), void,
+MAKE_HOOK(CHLClient_LevelShutdown, U::Memory.GetVirtual(I::Client, 7), void,
 	void* rcx)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IBaseClientDLL_LevelShutdown[DEFAULT_BIND])
+	if (!Vars::Hooks::CHLClient_LevelShutdown[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx);
 #endif
 

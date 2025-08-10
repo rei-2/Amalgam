@@ -9,10 +9,6 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	CheatsBypass();
 	WeaponSway();
-
-	if (!pLocal)
-		return;
-
 	AntiAFK(pLocal, pCmd);
 	InstantRespawnMVM(pLocal);
 
@@ -30,7 +26,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 {
-	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->InCond(TF_COND_SHIELD_CHARGE))
+	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->InCond(TF_COND_SHIELD_CHARGE))
 		return;
 
 	EdgeJump(pLocal, pCmd, true);
@@ -246,7 +242,6 @@ void CMisc::WeaponSway()
 
 void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	// Handle Taunt Slide
 	if (Vars::Misc::Automation::TauntControl.Value && pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
 	{
 		if (pLocal->m_bTauntForceMoveForward())
@@ -260,11 +255,6 @@ void CMisc::TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd)
 			pCmd->sidemove = pCmd->viewangles.x == 90.f ? -450.f : -pLocal->m_flTauntForceMoveForwardSpeed();
 		else if (pCmd->buttons & IN_MOVERIGHT)
 			pCmd->sidemove = pCmd->viewangles.x == 90.f ? 450.f : pLocal->m_flTauntForceMoveForwardSpeed();
-
-		Vec3 vAngle = I::EngineClient->GetViewAngles();
-		pCmd->viewangles.y = vAngle.y;
-
-		G::SilentAngles = true;
 	}
 	else if (Vars::Misc::Automation::KartControl.Value && pLocal->InCond(TF_COND_HALLOWEEN_KART))
 	{
@@ -426,7 +416,7 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
+		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->InCond(TF_COND_STEALTHED))
 			continue;
 
 		auto pWeapon = pPlayer->m_hActiveWeapon()->As<CTFWeaponBase>();
@@ -572,46 +562,4 @@ void CMisc::LockAchievements()
 		I::SteamUserStats->StoreStats();
 		I::SteamUserStats->RequestCurrentStats();
 	}
-}
-
-bool CMisc::SteamRPC()
-{
-	/*
-	if (!Vars::Misc::Steam::EnableRPC.Value)
-	{
-		if (!bSteamCleared) // stupid way to return back to normal rpc
-		{
-			I::SteamFriends->SetRichPresence("steam_display", ""); // this will only make it say "Team Fortress 2" until the player leaves/joins some server. its bad but its better than making 1000 checks to recreate the original
-			bSteamCleared = true;
-		}
-		return false;
-	}
-
-	bSteamCleared = false;
-	*/
-
-
-	if (!Vars::Misc::SteamRPC::Enabled.Value)
-		return false;
-
-	I::SteamFriends->SetRichPresence("steam_display", "#TF_RichPresence_Display");
-	if (!I::EngineClient->IsInGame() && !Vars::Misc::SteamRPC::OverrideInMenu.Value)
-		I::SteamFriends->SetRichPresence("state", "MainMenu");
-	else
-	{
-		I::SteamFriends->SetRichPresence("state", "PlayingMatchGroup");
-
-		switch (Vars::Misc::SteamRPC::MatchGroup.Value)
-		{
-		case Vars::Misc::SteamRPC::MatchGroupEnum::SpecialEvent: I::SteamFriends->SetRichPresence("matchgrouploc", "SpecialEvent"); break;
-		case Vars::Misc::SteamRPC::MatchGroupEnum::MvMMannUp: I::SteamFriends->SetRichPresence("matchgrouploc", "MannUp"); break;
-		case Vars::Misc::SteamRPC::MatchGroupEnum::Competitive: I::SteamFriends->SetRichPresence("matchgrouploc", "Competitive6v6"); break;
-		case Vars::Misc::SteamRPC::MatchGroupEnum::Casual: I::SteamFriends->SetRichPresence("matchgrouploc", "Casual"); break;
-		case Vars::Misc::SteamRPC::MatchGroupEnum::MvMBootCamp: I::SteamFriends->SetRichPresence("matchgrouploc", "BootCamp"); break;
-		}
-	}
-	I::SteamFriends->SetRichPresence("currentmap", Vars::Misc::SteamRPC::MapText.Value.c_str());
-	I::SteamFriends->SetRichPresence("steam_player_group_size", std::to_string(Vars::Misc::SteamRPC::GroupSize.Value).c_str());
-
-	return true;
 }

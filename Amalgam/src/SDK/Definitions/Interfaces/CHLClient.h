@@ -156,4 +156,4 @@ public:
 	virtual bool IsConnectedUserInfoChangeAllowed(IConVar* pCvar) = 0;
 };
 
-MAKE_INTERFACE_VERSION(IBaseClientDLL, BaseClientDLL, "client.dll", "VClient017");
+MAKE_INTERFACE_VERSION(IBaseClientDLL, Client, "client.dll", "VClient017");

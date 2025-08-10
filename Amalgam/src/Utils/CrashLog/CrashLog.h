@@ -1,8 +1,11 @@
 #pragma once
-#include <Windows.h>
+#include "../Macros/Macros.h"
 
-namespace CrashLog
+class CCrashLog
 {
+public:
 	void Initialize();
 	void Unload();
-}
+};
+
+ADD_FEATURE_CUSTOM(CCrashLog, CrashLog, U);

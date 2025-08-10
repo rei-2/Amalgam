@@ -16,7 +16,7 @@ struct Solution_t
 struct Point_t
 {
 	Vec3 m_vPoint = {};
-	Solution_t m_Solution = {};
+	Solution_t m_tSolution = {};
 };
 struct Info_t
 {

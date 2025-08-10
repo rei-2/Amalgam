@@ -64,6 +64,17 @@ int CBacktrack::GetAnticipatedChoke(int iMethod)
 	return iAnticipatedChoke;
 }
 
+void CBacktrack::CreateMove(CUserCmd* pCmd)
+{
+	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+		return;
+
+	// correct tick_count for fakeinterp / nointerp
+	pCmd->tick_count += TIME_TO_TICKS(GetFakeInterp());
+	if (!Vars::Visuals::Removals::Lerp.Value && !Vars::Visuals::Removals::Interpolation.Value)
+		pCmd->tick_count -= TIME_TO_TICKS(G::Lerp);
+}
+
 void CBacktrack::SendLerp()
 {
 	static Timer tTimer = {};
@@ -193,6 +204,14 @@ std::vector<TickRecord*> CBacktrack::GetValidRecords(std::vector<TickRecord*>& v
 	return vReturn;
 }
 
+matrix3x4* CBacktrack::GetBones(CBaseEntity* pEntity)
+{
+	std::vector<TickRecord*> vRecords = {};
+	if (F::Backtrack.GetRecords(pEntity, vRecords) && !vRecords.empty())
+		return vRecords.front()->m_aBones;
+	return nullptr;
+}
+
 
 
 void CBacktrack::MakeRecords()
@@ -200,26 +219,30 @@ void CBacktrack::MakeRecords()
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
+		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
 			|| !H::Entities.GetDeltaTime(pPlayer->entindex()))
-			continue;
-
-		auto aBones = H::Entities.GetBones(pPlayer->entindex());
-		if (!aBones)
 			continue;
 
 		auto& vRecords = m_mRecords[pPlayer];
 
-		const TickRecord* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
+		TickRecord* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
 		vRecords.emplace_front(
 			pPlayer->m_flSimulationTime(),
 			pPlayer->m_vecOrigin(),
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
-			*reinterpret_cast<BoneMatrix*>(aBones),
 			m_mDidShoot[pPlayer->entindex()]
 		);
-		const TickRecord& tCurRecord = vRecords.front();
+		TickRecord& tCurRecord = vRecords.front();
+
+		m_bSettingUpBones = true;
+		bool bSetup = pPlayer->SetupBones(tCurRecord.m_aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, tCurRecord.m_flSimTime);
+		m_bSettingUpBones = false;
+		if (!bSetup)
+		{
+			vRecords.pop_front();
+			continue;
+		}
 
 		bool bLagComp = false;
 		if (pLastRecord)
@@ -244,8 +267,8 @@ void CBacktrack::MakeRecords()
 				tRecord.m_vOrigin = tCurRecord.m_vOrigin;
 				tRecord.m_vMins = tCurRecord.m_vMins;
 				tRecord.m_vMaxs = tCurRecord.m_vMaxs;
-				tRecord.m_BoneMatrix = tCurRecord.m_BoneMatrix;
 				tRecord.m_bOnShot = tCurRecord.m_bOnShot;
+				memcpy(tRecord.m_aBones, tCurRecord.m_aBones, sizeof(tRecord.m_aBones));
 			}
 		}
 
@@ -264,7 +287,7 @@ void CBacktrack::CleanRecords()
 
 		auto& vRecords = m_mRecords[pPlayer];
 
-		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+		if (!pPlayer->IsAlive() || pPlayer->IsAGhost())
 		{
 			vRecords.clear();
 			continue;
@@ -385,7 +408,7 @@ void CBacktrack::Draw(CTFPlayer* pLocal)
 	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Ping) || !pLocal->IsAlive())
 		return;
 
-	auto pResource = H::Entities.GetPR();
+	auto pResource = H::Entities.GetResource();
 	auto pNetChan = I::EngineClient->GetNetChannelInfo();
 	if (!pResource || !pNetChan)
 		return;
@@ -400,7 +423,7 @@ void CBacktrack::Draw(CTFPlayer* pLocal)
 
 	float flFake = std::min(flFakeLatency + flFakeLerp, m_flMaxUnlag) * 1000;
 	float flLatency = std::max(pNetChan->GetLatency(FLOW_INCOMING) + pNetChan->GetLatency(FLOW_OUTGOING) - flFakeLatency, 0.f) * 1000;
-	int iLatencyScoreboard = pResource->m_iPing(pLocal->entindex());
+	int iLatencyScoreboard = pResource->m_iPing(I::EngineClient->GetLocalPlayer());
 
 	int x = Vars::Menu::PingDisplay.Value.x;
 	int y = Vars::Menu::PingDisplay.Value.y + 8;

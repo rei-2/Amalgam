@@ -8,20 +8,15 @@ struct Sequence_t
 	float m_flTime;
 };
 
-struct BoneMatrix
-{
-	matrix3x4 m_aBones[MAXSTUDIOBONES];
-};
-
 struct TickRecord
 {
 	float m_flSimTime = 0.f;
 	Vec3 m_vOrigin = {};
 	Vec3 m_vMins = {};
 	Vec3 m_vMaxs = {};
-	BoneMatrix m_BoneMatrix = {};
 	bool m_bOnShot = false;
 	bool m_bInvalid = false;
+	matrix3x4 m_aBones[MAXSTUDIOBONES];
 };
 
 class CBacktrack
@@ -45,14 +40,18 @@ private:
 	float m_flFakeLatency = 0.f;
 	float m_flFakeInterp = 0.015f;
 
+	bool m_bSettingUpBones = false;
+
 public:
 	void Store();
+	void CreateMove(CUserCmd* pCmd);
 	void SendLerp();
 	void Draw(CTFPlayer* pLocal);
 	void Reset();
 
 	bool GetRecords(CBaseEntity* pEntity, std::vector<TickRecord*>& vReturn);
 	std::vector<TickRecord*> GetValidRecords(std::vector<TickRecord*>& vRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false, float flTimeMod = 0.f);
+	matrix3x4* GetBones(CBaseEntity* pEntity);
 
 	float GetReal(int iFlow = MAX_FLOWS, bool bNoFake = true);
 	float GetWishFake();
@@ -67,6 +66,8 @@ public:
 	void ReportShot(int iIndex);
 	void AdjustPing(CNetChannel* netChannel);
 	void RestorePing(CNetChannel* netChannel);
+
+	bool IsSettingUpBones() { return m_bSettingUpBones; }
 
 	int m_iTickCount = 0;
 	float m_flSentInterp = -1.f;

@@ -424,7 +424,7 @@ public:
 		x = X; y = Y; z = Z;
 	}
 
-	inline Vec3 To2D()
+	inline Vec3 To2D() const
 	{
 		return { x, y };
 	}
@@ -775,14 +775,14 @@ struct IntRange_t
 {
 	int Min = 0, Max = 0;
 
-	inline bool operator==(IntRange_t other) const
+	inline bool operator==(const IntRange_t& t) const
 	{
-		return Min == other.Min && Max == other.Max;
+		return Min == t.Min && Max == t.Max;
 	}
 
-	inline bool operator!=(IntRange_t other) const
+	inline bool operator!=(const IntRange_t& t) const
 	{
-		return Min != other.Min || Max != other.Max;
+		return Min != t.Min || Max != t.Max;
 	}
 };
 
@@ -790,14 +790,14 @@ struct FloatRange_t
 {
 	float Min = 0, Max = 0;
 
-	inline bool operator==(FloatRange_t other) const
+	inline bool operator==(const FloatRange_t& t) const
 	{
-		return Min == other.Min && Max == other.Max;
+		return Min == t.Min && Max == t.Max;
 	}
 
-	inline bool operator!=(FloatRange_t other) const
+	inline bool operator!=(const FloatRange_t& t) const
 	{
-		return Min != other.Min || Max != other.Max;
+		return Min != t.Min || Max != t.Max;
 	}
 };
 
@@ -944,6 +944,11 @@ struct Color_t
 	{
 		return { r, g, b, to };
 	}
+
+	inline int Brightness() const
+	{
+		return r + g + b;
+	}
 };
 
 struct Gradient_t
@@ -966,16 +971,41 @@ struct Chams_t
 {
 	std::vector<std::pair<std::string, Color_t>> Visible = { { "Original", Color_t() } };
 	std::vector<std::pair<std::string, Color_t>> Occluded = {};
+
+	inline bool operator==(const Chams_t& t) const
+	{
+		return Visible == t.Visible && Occluded == t.Occluded;
+	}
+
+	inline bool operator!=(const Chams_t& t) const
+	{
+		return Visible != t.Visible || Occluded != t.Occluded;
+	}
+
+	inline bool operator()(bool bVisibleOnly = false) const
+	{
+		return bVisibleOnly ? !Visible.empty() : Visible != std::vector<std::pair<std::string, Color_t>>{ { "Original", Color_t() } } || !Occluded.empty();
+	}
 };
 
 struct Glow_t
 {
 	int		Stencil = 0;
-	int		Blur = 0;
+	float	Blur = 0;
 
-	inline bool operator==(const Glow_t& other) const
+	inline bool operator==(const Glow_t& t) const
 	{
-		return Stencil == other.Stencil && Blur == other.Blur;
+		return Stencil == t.Stencil && Blur == t.Blur;
+	}
+
+	inline bool operator!=(const Glow_t& t) const
+	{
+		return Stencil != t.Stencil || Blur != t.Blur;
+	}
+
+	inline bool operator()() const
+	{
+		return Stencil || Blur;
 	}
 };
 
@@ -984,14 +1014,14 @@ struct DragBox_t
 	int x = 150;
 	int y = 100;
 
-	inline bool operator==(DragBox_t other) const
+	inline bool operator==(const DragBox_t& t) const
 	{
-		return x == other.x && y == other.y;
+		return x == t.x && y == t.y;
 	}
 
-	inline bool operator!=(DragBox_t other) const
+	inline bool operator!=(const DragBox_t& t) const
 	{
-		return x != other.x || y != other.y;
+		return x != t.x || y != t.y;
 	}
 };
 
@@ -1002,13 +1032,13 @@ struct WindowBox_t
 	int w = 200;
 	int h = 200;
 
-	inline bool operator==(WindowBox_t other) const
+	inline bool operator==(const WindowBox_t& t) const
 	{
-		return x == other.x && y == other.y && w == other.w && h == other.h;
+		return x == t.x && y == t.y && w == t.w && h == t.h;
 	}
 
-	inline bool operator!=(WindowBox_t other) const
+	inline bool operator!=(const WindowBox_t& t) const
 	{
-		return x != other.x || y != other.y || w != other.w || h != other.h;
+		return x != t.x || y != t.y || w != t.w || h != t.h;
 	}
 };

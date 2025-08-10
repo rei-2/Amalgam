@@ -7,7 +7,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 {
 	m_vSpectators.clear();
 
-	auto pResource = H::Entities.GetPR();
+	auto pResource = H::Entities.GetResource();
 	if (!pResource)
 		return false;
 
@@ -19,11 +19,12 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 
 		if (pResource->m_bValid(n) && pResource->m_iTeam(I::EngineClient->GetLocalPlayer()) != TEAM_SPECTATOR && pResource->m_iTeam(n) == TEAM_SPECTATOR)
 		{
-			m_vSpectators.emplace_back(F::PlayerUtils.GetPlayerName(n, pResource->m_pszPlayerName(n)), "possible", -1.f, false, n);
+			m_vSpectators.emplace_back(F::PlayerUtils.GetPlayerName(n, pResource->GetName(n)), "possible", -1.f, false, n);
 			continue;
 		}
 
-		if (!pPlayer || !pPlayer->IsPlayer() || pPlayer->IsAlive()
+		if (pTarget->entindex() == n
+			|| !pPlayer || !pPlayer->IsPlayer() || pPlayer->IsAlive()
 			|| pTarget->IsDormant() != pPlayer->IsDormant()
 			|| pResource->m_iTeam(iTarget) != pResource->m_iTeam(n))
 		{
@@ -69,7 +70,7 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 				bRespawnTimeIncreased = true;
 		}
 
-		m_vSpectators.emplace_back(F::PlayerUtils.GetPlayerName(n, pResource->m_pszPlayerName(n)), sMode, flRespawnIn, bRespawnTimeIncreased, n);
+		m_vSpectators.emplace_back(F::PlayerUtils.GetPlayerName(n, pResource->GetName(n)), sMode, flRespawnIn, bRespawnTimeIncreased, n);
 	}
 
 	return !m_vSpectators.empty();
@@ -90,11 +91,8 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 	case OBS_MODE_THIRDPERSON:
 		pTarget = pLocal->m_hObserverTarget()->As<CTFPlayer>();
 	}
-	PlayerInfo_t pi{};
-	if (!pTarget || !pTarget->IsPlayer() || pTarget != pLocal && !I::EngineClient->GetPlayerInfo(pTarget->entindex(), &pi))
-		return;
-
-	if (!GetSpectators(pTarget))
+	if (!pTarget || !pTarget->IsPlayer()
+		|| !GetSpectators(pTarget))
 		return;
 
 	int x = Vars::Menu::SpectatorsDisplay.Value.x;
@@ -115,7 +113,9 @@ void CSpectatorList::Draw(CTFPlayer* pLocal)
 		align = ALIGN_TOPRIGHT;
 	}
 
-	const char* sName = pTarget != pLocal ? F::PlayerUtils.GetPlayerName(pTarget->entindex(), pi.name) : "You";
+	auto pResource = H::Entities.GetResource();
+	int iIndex = pTarget->entindex();
+	const char* sName = pTarget != pLocal ? F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex)) : "You";
 	H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Accent.Value, Vars::Menu::Theme::Background.Value, align, std::format("Spectating {}:", sName).c_str());
 	for (auto& tSpectator : m_vSpectators)
 	{

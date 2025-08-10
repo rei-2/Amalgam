@@ -12,7 +12,7 @@
 }
 #define SetT(type, cond) if (IsType(type)) SetType(type, cond)
 
-static inline void SetVars(int iBind, std::vector<BaseVar*>& vVars = G::Vars)
+static inline void LoopVars(int iBind, std::vector<BaseVar*>& vVars = G::Vars)
 {
 	const bool bDefault = iBind == DEFAULT_BIND;
 	for (auto pVar : vVars)
@@ -35,93 +35,104 @@ static inline void SetVars(int iBind, std::vector<BaseVar*>& vVars = G::Vars)
 	}
 }
 
-static inline void GetBinds(int iParent, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Bind_t>& vBinds)
+static inline void GetBinds(int iParent, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, std::vector<Bind_t>& vBinds, bool bManage = true)
 {
-	for (auto it = vBinds.rbegin(); it < vBinds.rend(); it++) // reverse so that higher binds have priority over vars
+	if (vBinds.empty())
+		return;
+
+	for (int i = int(vBinds.size() - 1); i >= 0; i--) // reverse so higher binds have priority over vars
 	{
-		int iBind = std::distance(vBinds.begin(), it.base()) - 1;
-		auto& tBind = *it;
+		auto& tBind = vBinds[i];
 		if (iParent != tBind.m_iParent || !tBind.m_bEnabled)
 			continue;
 
-		switch (tBind.m_iType)
+		if (bManage)
 		{
-		case BindEnum::Key:
-		{
-			bool bKey = false;
-			switch (tBind.m_iInfo)
+			switch (tBind.m_iType)
 			{
-			case BindEnum::KeyEnum::Hold: bKey = U::KeyHandler.Down(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
-			case BindEnum::KeyEnum::Toggle: bKey = U::KeyHandler.Pressed(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
-			case BindEnum::KeyEnum::DoubleClick: bKey = U::KeyHandler.Double(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
-			}
-			const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && (!I::MatSystemSurface->IsCursorVisible() || I::EngineClient->IsPlayingDemo())
-				|| F::Menu.m_bIsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.m_bInKeybind && (!F::Menu.m_bWindowHovered || tBind.m_iKey != VK_LBUTTON && tBind.m_iKey != VK_RBUTTON); // allow in menu
-			bKey = bShouldUse && bKey;
+			case BindEnum::Key:
+			{
+				bool bKey = false;
+				switch (tBind.m_iInfo)
+				{
+				case BindEnum::KeyEnum::Hold: bKey = U::KeyHandler.Down(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
+				case BindEnum::KeyEnum::Toggle: bKey = U::KeyHandler.Pressed(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
+				case BindEnum::KeyEnum::DoubleClick: bKey = U::KeyHandler.Double(tBind.m_iKey, false, &tBind.m_tKeyStorage); break;
+				}
+				const bool bShouldUse = !I::EngineVGui->IsGameUIVisible() && (!I::MatSystemSurface->IsCursorVisible() || I::EngineClient->IsPlayingDemo())
+					|| F::Menu.m_bIsOpen && !ImGui::GetIO().WantTextInput && !F::Menu.m_bInKeybind && (!F::Menu.m_bWindowHovered || tBind.m_iKey != VK_LBUTTON && tBind.m_iKey != VK_RBUTTON); // allow in menu
+				bKey = bShouldUse && bKey;
 
-			switch (tBind.m_iInfo)
-			{
-			case BindEnum::KeyEnum::Hold:
-				if (tBind.m_bNot)
-					bKey = !bKey;
-				tBind.m_bActive = bKey;
+				switch (tBind.m_iInfo)
+				{
+				case BindEnum::KeyEnum::Hold:
+					if (tBind.m_bNot)
+						bKey = !bKey;
+					tBind.m_bActive = bKey;
+					break;
+				case BindEnum::KeyEnum::Toggle:
+				case BindEnum::KeyEnum::DoubleClick:
+					if (bKey)
+						tBind.m_bActive = !tBind.m_bActive;
+				}
 				break;
-			case BindEnum::KeyEnum::Toggle:
-			case BindEnum::KeyEnum::DoubleClick:
-				if (bKey)
-					tBind.m_bActive = !tBind.m_bActive;
 			}
-			break;
-		}
-		case BindEnum::Class:
-		{
-			const int iClass = pLocal ? pLocal->m_iClass() : 0;
-			switch (tBind.m_iInfo)
+			case BindEnum::Class:
 			{
-			case BindEnum::ClassEnum::Scout: { tBind.m_bActive = iClass == 1; break; }
-			case BindEnum::ClassEnum::Soldier: { tBind.m_bActive = iClass == 3; break; }
-			case BindEnum::ClassEnum::Pyro: { tBind.m_bActive = iClass == 7; break; }
-			case BindEnum::ClassEnum::Demoman: { tBind.m_bActive = iClass == 4; break; }
-			case BindEnum::ClassEnum::Heavy: { tBind.m_bActive = iClass == 6; break; }
-			case BindEnum::ClassEnum::Engineer: { tBind.m_bActive = iClass == 9; break; }
-			case BindEnum::ClassEnum::Medic: { tBind.m_bActive = iClass == 5; break; }
-			case BindEnum::ClassEnum::Sniper: { tBind.m_bActive = iClass == 2; break; }
-			case BindEnum::ClassEnum::Spy: { tBind.m_bActive = iClass == 8; break; }
+				const int iClass = pLocal ? pLocal->m_iClass() : TF_CLASS_UNDEFINED;
+				switch (tBind.m_iInfo)
+				{
+				case BindEnum::ClassEnum::Scout: { tBind.m_bActive = iClass == TF_CLASS_SCOUT; break; }
+				case BindEnum::ClassEnum::Soldier: { tBind.m_bActive = iClass == TF_CLASS_SOLDIER; break; }
+				case BindEnum::ClassEnum::Pyro: { tBind.m_bActive = iClass == TF_CLASS_PYRO; break; }
+				case BindEnum::ClassEnum::Demoman: { tBind.m_bActive = iClass == TF_CLASS_DEMOMAN; break; }
+				case BindEnum::ClassEnum::Heavy: { tBind.m_bActive = iClass == TF_CLASS_HEAVY; break; }
+				case BindEnum::ClassEnum::Engineer: { tBind.m_bActive = iClass == TF_CLASS_ENGINEER; break; }
+				case BindEnum::ClassEnum::Medic: { tBind.m_bActive = iClass == TF_CLASS_MEDIC; break; }
+				case BindEnum::ClassEnum::Sniper: { tBind.m_bActive = iClass == TF_CLASS_SNIPER; break; }
+				case BindEnum::ClassEnum::Spy: { tBind.m_bActive = iClass == TF_CLASS_SPY; break; }
+				}
+				if (tBind.m_bNot)
+					tBind.m_bActive = !tBind.m_bActive;
+				break;
 			}
-			if (tBind.m_bNot)
-				tBind.m_bActive = !tBind.m_bActive;
-			break;
-		}
-		case BindEnum::WeaponType:
-		{
-			if (tBind.m_iInfo != BindEnum::WeaponTypeEnum::Throwable)
-				tBind.m_bActive = tBind.m_iInfo + 1 == int(SDK::GetWeaponType(pWeapon));
-			else
-				tBind.m_bActive = G::Throwing;
-			if (tBind.m_bNot)
-				tBind.m_bActive = !tBind.m_bActive;
-			break;
-		}
-		case BindEnum::ItemSlot:
-		{
-			tBind.m_bActive = tBind.m_iInfo == (pWeapon ? pWeapon->GetSlot() : -1);
-			if (tBind.m_bNot)
-				tBind.m_bActive = !tBind.m_bActive;
-			break;
-		}
+			case BindEnum::WeaponType:
+			{
+				if (tBind.m_iInfo != BindEnum::WeaponTypeEnum::Throwable)
+					tBind.m_bActive = tBind.m_iInfo + 1 == int(SDK::GetWeaponType(pWeapon));
+				else
+					tBind.m_bActive = G::Throwing;
+				if (tBind.m_bNot)
+					tBind.m_bActive = !tBind.m_bActive;
+				break;
+			}
+			case BindEnum::ItemSlot:
+			{
+				tBind.m_bActive = tBind.m_iInfo == (pWeapon ? pWeapon->GetSlot() : -1);
+				if (tBind.m_bNot)
+					tBind.m_bActive = !tBind.m_bActive;
+				break;
+			}
+			}
 		}
 
 		if (tBind.m_bActive)
 		{
-			SetVars(iBind, tBind.m_vVars);
-			GetBinds(iBind, pLocal, pWeapon, vBinds);
+			LoopVars(i, tBind.m_vVars);
+			GetBinds(i, pLocal, pWeapon, vBinds, bManage);
 		}
 	}
 }
 
+void CBinds::SetVars(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bManage)
+{
+	LoopVars(DEFAULT_BIND);
+	GetBinds(DEFAULT_BIND, pLocal, pWeapon, m_vBinds, bManage);
+}
+
 void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (!F::Configs.m_bConfigLoaded || G::Unload)
+	if (G::Unload)
 		return;
 
 	for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
@@ -145,8 +156,7 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		tKey.m_bIsReleased = tKey.m_bIsReleased || bOldIsReleased;
 	}
 
-	SetVars(DEFAULT_BIND);
-	GetBinds(DEFAULT_BIND, pLocal, pWeapon, m_vBinds);
+	SetVars(pLocal, pWeapon);
 
 	for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
 	{	// clear inputs for binds

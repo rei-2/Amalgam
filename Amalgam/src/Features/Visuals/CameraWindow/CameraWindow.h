@@ -3,20 +3,23 @@
 
 class CCameraWindow
 {
-public:
-	void Initialize();
-	void Unload();
-
-	void Draw();
-	void RenderView(void* ecx, const CViewSetup& pViewSetup);
+private:
 	void RenderCustomView(void* ecx, const CViewSetup& pViewSetup, ITexture* pTexture);
 
 	IMaterial* m_pCameraMaterial;
 	ITexture* m_pCameraTexture;
+
+public:
+	void Draw();
+	void RenderView(void* ecx, const CViewSetup& pViewSetup);
+
+	void Initialize();
+	void Unload();
+
+	bool m_bDrawing = false;
+	bool m_bShouldDraw = false;
 	Vec3 m_vCameraOrigin;
 	Vec3 m_vCameraAngles;
-	bool m_bShouldDraw = false;
-	bool m_bDrawing = false;
 };
 
 ADD_FEATURE(CCameraWindow, CameraWindow);

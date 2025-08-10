@@ -54,6 +54,7 @@ public:
 	bool bWeapon = false;
 	int iPlayer = PLAYER_DEFAULT;
 	int iObject = OBJECT_ALL;
+	bool bMisc = false;
 };
 
 class CTraceFilterWorldAndPropsOnly : public ITraceFilter

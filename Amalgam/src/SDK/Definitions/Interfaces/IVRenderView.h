@@ -187,13 +187,20 @@ public:
 	virtual void GetMatricesForView(const CViewSetup& view, VMatrix* pWorldToView, VMatrix* pViewToProjection, VMatrix* pWorldToProjection, VMatrix* pWorldToPixels) = 0;
 	virtual void DrawBrushModelEx(IClientEntity* baseentity, model_t* model, const Vector& origin, const QAngle& angles, DrawBrushModelMode_t mode) = 0;
 
-	void SetColorModulation(float r, float g, float b)
+	inline Color_t GetColorModulation()
+	{
+		float blend[3] = {};
+		GetColorModulation(blend);
+		return { byte(blend[0] * 255), byte(blend[1] * 255), byte(blend[2] * 255) };
+	}
+
+	inline void SetColorModulation(float r, float g, float b)
 	{
 		float blend[3] = { r, g, b };
 		SetColorModulation(blend);
 	}
 
-	void SetColorModulation(Color_t clr)
+	inline void SetColorModulation(Color_t clr)
 	{
 		float blend[3] = { clr.r / 255.f, clr.g / 255.f, clr.b / 255.f };
 		SetColorModulation(blend);

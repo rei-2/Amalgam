@@ -122,11 +122,11 @@ class IMatchGroupDescription
 public:
 	inline int GetLevelForIndex(int iIndex)
 	{
-		PlayerInfo_t pi{};
-		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi) || pi.fakeplayer)
+		player_info_t tInfo;
+		if (!I::EngineClient->GetPlayerInfo(iIndex, &tInfo) || tInfo.fakeplayer)
 			return -1;
 
-		CSteamID cSteamID = { pi.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual };
+		CSteamID cSteamID = { tInfo.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual };
 		if (!cSteamID.IsValid())
 			return -1;
 

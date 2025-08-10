@@ -19,22 +19,21 @@ MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVirtual(I::Cl
 
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
-
 	if (pLocal && pWeapon)
 	{
 		F::Visuals.SplashRadius(pLocal);
 		F::Visuals.ProjectileTrace(pLocal, pWeapon);
 	}
 
-	if (F::CameraWindow.m_bDrawing)
-		return CALL_ORIGINAL(rcx, pSetup);
-
-	F::Visuals.DrawEffects();
-	F::Chams.m_mEntities.clear();
-	if (!I::EngineVGui->IsGameUIVisible() && pLocal && F::Materials.m_bLoaded)
+	if (!F::CameraWindow.m_bDrawing)
 	{
-		F::Chams.RenderMain();
-		F::Glow.RenderMain();
+		F::Visuals.DrawEffects();
+		F::Chams.m_mEntities.clear();
+		if (!I::EngineVGui->IsGameUIVisible() && F::Materials.m_bLoaded)
+		{
+			F::Chams.RenderMain();
+			F::Glow.RenderMain();
+		}
 	}
 
 	return CALL_ORIGINAL(rcx, pSetup);

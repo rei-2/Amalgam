@@ -1,8 +1,8 @@
 #include "SDK.h"
 
-#include "../Features/EnginePrediction/EnginePrediction.h"
 #include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/ImGui/Menu/Menu.h"
+#include "../Features/EnginePrediction/EnginePrediction.h"
 #include <random>
 
 #pragma warning (disable : 6385)
@@ -25,46 +25,46 @@ static BOOL CALLBACK TeamFortressWindow(HWND hWindow, LPARAM lParam)
 
 
 
-void SDK::Output(const char* cFunction, const char* cLog, Color_t tColor,
-	bool bConsole, bool bDebug, bool bToast, bool bMenu, bool bChat, bool bParty, int iMessageBox,
+void SDK::Output(const char* sFunction, const char* sLog, Color_t tColor,
+	int iTo, int iMessageBox,
 	const char* sLeft, const char* sRight)
 {
-	if (cLog)
+	if (sLog)
 	{
-		if (bConsole)
+		if (iTo & OUTPUT_CONSOLE)
 		{
-			I::CVar->ConsoleColorPrintf(tColor, "%s%s%s ", sLeft, cFunction, sRight);
-			I::CVar->ConsoleColorPrintf({}, "%s\n", cLog);
+			I::CVar->ConsoleColorPrintf(tColor, "%s%s%s ", sLeft, sFunction, sRight);
+			I::CVar->ConsoleColorPrintf({}, "%s\n", sLog);
 		}
-		if (bDebug)
-			OutputDebugString(std::format("{}{}{} {}\n", sLeft, cFunction, sRight, cLog).c_str());
-		if (bToast)
-			F::Notifications.Add(cLog, Vars::Logging::Lifetime.Value, 0.2f, tColor);
-		if (bMenu)
-			F::Menu.AddOutput(std::format("{}{}{}", sLeft, cFunction, sRight).c_str(), cLog, tColor);
-		if (bChat)
-			I::ClientModeShared->m_pChatElement->ChatPrintf(0, std::format("{}{}{}{}\x1 {}", tColor.ToHex(), sLeft, cFunction, sRight, cLog).c_str());
-		if (bParty)
-			I::TFPartyClient->SendPartyChat(cLog);
+		if (iTo & OUTPUT_DEBUG)
+			OutputDebugString(std::format("{}{}{} {}\n", sLeft, sFunction, sRight, sLog).c_str());
+		if (iTo & OUTPUT_TOAST)
+			F::Notifications.Add(sLog, tColor);
+		if (iTo & OUTPUT_MENU)
+			F::Menu.AddOutput(std::format("{}{}{}", sLeft, sFunction, sRight).c_str(), sLog, tColor);
+		if (iTo & OUTPUT_CHAT)
+			I::ClientModeShared->m_pChatElement->ChatPrintf(0, std::format("{}{}{}{}\x1 {}", tColor.ToHex(), sLeft, sFunction, sRight, sLog).c_str());
+		if (iTo & OUTPUT_PARTY)
+			I::TFPartyClient->SendPartyChat(sLog);
 		if (iMessageBox != -1)
-			MessageBox(nullptr, cLog, cFunction, iMessageBox);
+			MessageBox(nullptr, sLog, sFunction, iMessageBox);
 	}
 	else
 	{
-		if (bConsole)
-			I::CVar->ConsoleColorPrintf(tColor, "%s\n", cFunction);
-		if (bDebug)
-			OutputDebugString(std::format("{}\n", cFunction).c_str());
-		if (bToast)
-			F::Notifications.Add(cFunction, Vars::Logging::Lifetime.Value, 0.2f, tColor);
-		if (bMenu)
-			F::Menu.AddOutput("", cFunction, tColor);
-		if (bChat)
-			I::ClientModeShared->m_pChatElement->ChatPrintf(0, std::format("{}{}\x1", tColor.ToHex(), cFunction).c_str());
-		if (bParty)
-			I::TFPartyClient->SendPartyChat(cFunction);
+		if (iTo & OUTPUT_CONSOLE)
+			I::CVar->ConsoleColorPrintf(tColor, "%s\n", sFunction);
+		if (iTo & OUTPUT_DEBUG)
+			OutputDebugString(std::format("{}\n", sFunction).c_str());
+		if (iTo & OUTPUT_TOAST)
+			F::Notifications.Add(sFunction, tColor);
+		if (iTo & OUTPUT_MENU)
+			F::Menu.AddOutput("", sFunction, tColor);
+		if (iTo & OUTPUT_CHAT)
+			I::ClientModeShared->m_pChatElement->ChatPrintf(0, std::format("{}{}\x1", tColor.ToHex(), sFunction).c_str());
+		if (iTo & OUTPUT_PARTY)
+			I::TFPartyClient->SendPartyChat(sFunction);
 		if (iMessageBox != -1)
-			MessageBox(nullptr, "", cFunction, iMessageBox);
+			MessageBox(nullptr, "", sFunction, iMessageBox);
 	}
 }
 
@@ -732,10 +732,10 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 Vec3 SDK::ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, Vec3& vFrom, Vec3& vTo)
 {
 	const Vec3 vDiff = vTo - vFrom;
-	if (!vDiff.Length())
+	if (!vDiff.Length2D())
 		return {};
 
-	Vec3 vSilent = { vDiff.x, vDiff.y, 0 };
+	Vec3 vSilent = vDiff.To2D();
 	Vec3 vAngle = Math::VectorAngles(vSilent);
 	const float flYaw = DEG2RAD(vAngle.y - pCmd->viewangles.y);
 	const float flPitch = DEG2RAD(vAngle.x - pCmd->viewangles.x);

@@ -9,7 +9,7 @@ static void POPID_ToString(SteamNetworkingPOPID popID, char* out)
 	out[4] = 0;
 }
 
-unsigned int GetDatacenter(uint32_t uHash)
+static inline int GetDatacenter(uint32_t uHash)
 {
 	switch (uHash)
 	{

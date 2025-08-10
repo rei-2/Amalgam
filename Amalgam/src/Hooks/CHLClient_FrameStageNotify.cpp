@@ -2,22 +2,24 @@
 
 #include "../Features/Aimbot/Aimbot.h"
 #include "../Features/Backtrack/Backtrack.h"
+#include "../Features/Binds/Binds.h"
 #include "../Features/CheaterDetection/CheaterDetection.h"
 #include "../Features/CritHack/CritHack.h"
 #include "../Features/Players/PlayerUtils.h"
 #include "../Features/Simulation/MovementSimulation/MovementSimulation.h"
+#include "../Features/Spectate/Spectate.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/Chams/Chams.h"
 #include "../Features/Visuals/Glow/Glow.h"
-#include "../Features/Spectate/Spectate.h"
-#include "../Features/Binds/Binds.h"
+#include "../Features/Visuals/Groups/Groups.h"
+#include "../Features/Visuals/OffscreenArrows/OffscreenArrows.h"
 
-MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL, 35), void,
+MAKE_HOOK(CHLClient_FrameStageNotify, U::Memory.GetVirtual(I::Client, 35), void,
 	void* rcx, ClientFrameStage_t curStage)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IBaseClientDLL_FrameStageNotify[DEFAULT_BIND])
+	if (!Vars::Hooks::CHLClient_FrameStageNotify[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, curStage);
 #endif
 
@@ -39,7 +41,7 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 	case FRAME_NET_UPDATE_END:
 	{
 		H::Entities.Store();
-		F::PlayerUtils.UpdatePlayers();
+		F::PlayerUtils.Store();
 
 		F::Backtrack.Store();
 		F::MoveSim.Store();
@@ -47,9 +49,11 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		F::Aimbot.Store();
 
 		auto pLocal = H::Entities.GetLocal();
+		F::Groups.Store(pLocal);
 		F::ESP.Store(pLocal);
 		F::Chams.Store(pLocal);
 		F::Glow.Store(pLocal);
+		F::Arrows.Store(pLocal);
 		F::Visuals.Store(pLocal);
 
 		F::CheaterDetection.Run();

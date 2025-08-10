@@ -10,7 +10,7 @@
 #include <format>
 #pragma comment(lib, "imagehlp.lib")
 
-struct Frame
+struct Frame_t
 {
 	std::string m_sModule = "";
 	uintptr_t m_uBase = 0;
@@ -20,7 +20,11 @@ struct Frame
 	std::string m_sName = "";
 };
 
-static std::deque<Frame> StackTrace(PCONTEXT pContext)
+static PVOID s_pHandle;
+static std::unordered_map<LPVOID, bool> s_mAddresses = {};
+static int s_iExceptions = 0;
+
+static inline std::deque<Frame_t> StackTrace(PCONTEXT pContext)
 {
 	HANDLE hProcess = GetCurrentProcess();
 	HANDLE hThread = GetCurrentThread();
@@ -38,10 +42,10 @@ static std::deque<Frame> StackTrace(PCONTEXT pContext)
 	tStackFrame.AddrFrame.Mode = AddrModeFlat;
 	tStackFrame.AddrStack.Mode = AddrModeFlat;
 
-	std::deque<Frame> vTrace = {};
+	std::deque<Frame_t> vTrace = {};
 	while (StackWalk64(IMAGE_FILE_MACHINE_AMD64, hProcess, hThread, &tStackFrame, pContext, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr))
 	{
-		Frame tFrame = {};
+		Frame_t tFrame = {};
 		tFrame.m_uAddress = tStackFrame.AddrPC.Offset;
 
 		if (auto hBase = HINSTANCE(SymGetModuleBase64(hProcess, tStackFrame.AddrPC.Offset)))
@@ -91,19 +95,24 @@ static std::deque<Frame> StackTrace(PCONTEXT pContext)
 
 static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 {
-	static std::unordered_map<LPVOID, bool> mAddresses = {};
-	static bool bException = false;
+	const char* sError = "UNKNOWN"; //nullptr;
+	switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
+	{
+	case STATUS_ACCESS_VIOLATION: sError = "ACCESS VIOLATION"; break;
+	case STATUS_STACK_OVERFLOW: sError = "STACK OVERFLOW"; break;
+	case STATUS_HEAP_CORRUPTION: sError = "HEAP CORRUPTION"; break;
+	case DBG_PRINTEXCEPTION_C: return EXCEPTION_EXECUTE_HANDLER;
+	//default: return EXCEPTION_EXECUTE_HANDLER;
+	}
 
-	if (ExceptionInfo->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION
-		/*|| !ExceptionInfo->ExceptionRecord->ExceptionAddress*/
-		|| mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)
+	if (s_mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)
 		|| !Vars::Debug::CrashLogging.Value
-		|| bException && GetAsyncKeyState(VK_SHIFT) & 0x8000 && GetAsyncKeyState(VK_RETURN) & 0x8000)
+		|| s_iExceptions && GetAsyncKeyState(VK_SHIFT) & 0x8000 && GetAsyncKeyState(VK_RETURN) & 0x8000)
 		return EXCEPTION_EXECUTE_HANDLER;
-	mAddresses[ExceptionInfo->ExceptionRecord->ExceptionAddress] = true;
+	s_mAddresses[ExceptionInfo->ExceptionRecord->ExceptionAddress] = true;
 
 	std::stringstream ssErrorStream;
-	ssErrorStream << std::format("Error: 0x{:X}\n\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+	ssErrorStream << std::format("Error: {} (0x{:X}) ({})\n\n", sError, ExceptionInfo->ExceptionRecord->ExceptionCode, ++s_iExceptions);
 
 	ssErrorStream << std::format("RIP: {:#x}\n", ExceptionInfo->ContextRecord->Rip);
 	ssErrorStream << std::format("RAX: {:#x}\n", ExceptionInfo->ContextRecord->Rax);
@@ -115,29 +124,29 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	ssErrorStream << std::format("RSI: {:#x}\n", ExceptionInfo->ContextRecord->Rsi);
 	ssErrorStream << std::format("RDI: {:#x}\n\n", ExceptionInfo->ContextRecord->Rdi);
 
-	auto vTrace = StackTrace(ExceptionInfo->ContextRecord);
-	if (!vTrace.empty())
+	if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) // temporary, removeme
 	{
-		for (auto& tFrame : vTrace)
+		auto vTrace = StackTrace(ExceptionInfo->ContextRecord);
+		if (!vTrace.empty())
 		{
-			if (tFrame.m_uBase)
-				ssErrorStream << std::format("{}+{:#x}", tFrame.m_sModule, tFrame.m_uAddress - tFrame.m_uBase);
-			else
-				ssErrorStream << std::format("{:#x}", tFrame.m_uAddress);
-			if (!tFrame.m_sFile.empty())
-				ssErrorStream << std::format(" ({} L{})", tFrame.m_sFile, tFrame.m_uLine);
-			if (!tFrame.m_sName.empty())
-				ssErrorStream << std::format(" ({})", tFrame.m_sName);
+			for (auto& tFrame : vTrace)
+			{
+				if (tFrame.m_uBase)
+					ssErrorStream << std::format("{}+{:#x}", tFrame.m_sModule, tFrame.m_uAddress - tFrame.m_uBase);
+				else
+					ssErrorStream << std::format("{:#x}", tFrame.m_uAddress);
+				if (!tFrame.m_sFile.empty())
+					ssErrorStream << std::format(" ({} L{})", tFrame.m_sFile, tFrame.m_uLine);
+				if (!tFrame.m_sName.empty())
+					ssErrorStream << std::format(" ({})", tFrame.m_sName);
+				ssErrorStream << "\n";
+			}
 			ssErrorStream << "\n";
 		}
-		ssErrorStream << "\n";
 	}
 
 	ssErrorStream << "Built @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
 	ssErrorStream << "Ctrl + C to copy. \n";
-	if (bException)
-		ssErrorStream << "Shift + Enter to skip repetitive exceptions. \n";
-	bException = true;
 	try
 	{
 		std::ofstream file;
@@ -148,16 +157,16 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	}
 	catch (...) {}
 
-	SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
+	if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) // temporary, removeme
+		SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, OUTPUT_DEBUG, MB_OK | MB_ICONERROR);
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-static PVOID pHandle;
-void CrashLog::Initialize()
+void CCrashLog::Initialize()
 {
-	pHandle = AddVectoredExceptionHandler(1, ExceptionFilter);
+	s_pHandle = AddVectoredExceptionHandler(1, ExceptionFilter);
 }
-void CrashLog::Unload()
+void CCrashLog::Unload()
 {
-	RemoveVectoredExceptionHandler(pHandle);
+	RemoveVectoredExceptionHandler(s_pHandle);
 }

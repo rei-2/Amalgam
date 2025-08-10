@@ -52,6 +52,7 @@ void CFakeLag::PreserveBlastJump(CTFPlayer* pLocal)
 	if (!Vars::Fakelag::RetainBlastJump.Value || Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value
 		|| !pLocal->IsAlive() || pLocal->IsAGhost() || Vars::Fakelag::RetainSoldierOnly.Value && pLocal->m_iClass() != TF_CLASS_SOLDIER)
 		return;
+
 	static bool bStaticGround = true;
 	const bool bLastGround = bStaticGround;
 	const bool bCurrGround = bStaticGround = pLocal->m_hGroundEntity();
@@ -68,6 +69,7 @@ void CFakeLag::Unduck(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!(Vars::Fakelag::Options.Value & Vars::Fakelag::OptionsEnum::OnUnduck)
 		|| !pLocal->IsAlive() || pLocal->IsAGhost())
 		return;
+
 	if (!(pLocal->m_hGroundEntity() && pLocal->IsDucking() && !(pCmd->buttons & IN_DUCK)))
 		return;
 
@@ -82,9 +84,6 @@ void CFakeLag::Prediction(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket)
 {
-	if (!pLocal)
-		return;
-
 	if (!m_iGoal)
 	{
 		switch (Vars::Fakelag::Fakelag.Value)

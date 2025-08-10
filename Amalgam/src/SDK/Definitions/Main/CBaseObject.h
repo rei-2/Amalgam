@@ -30,15 +30,21 @@ public:
 	NETVAR(m_bDisposableBuilding, bool, "CBaseObject", "m_bDisposableBuilding");
 	NETVAR(m_bWasMapPlaced, bool, "CBaseObject", "m_bWasMapPlaced");
 	NETVAR(m_bPlasmaDisable, bool, "CBaseObject", "m_bPlasmaDisable");
+
 	void* IHasBuildPoints()
 	{
-		static int nOffset = U::NetVars.GetNetVar("CBaseObject", "m_iUpgradeLevel") - 340;
-		return reinterpret_cast<void*>(uintptr_t(this) + nOffset);
+		return reinterpret_cast<void*>(uintptr_t(this) + 4584);
 	}
-
 	VIRTUAL(GetNumBuildPoints, int, 0, IHasBuildPoints());
-	VIRTUAL_ARGS(GetBuildPoint, bool, 1, (int iPoint, Vec3& vOrigin, Vec3& vAngles), IHasBuildPoints(), iPoint, std::ref(vOrigin), std::ref(vAngles));
+	VIRTUAL_ARGS(GetBuildPoint, bool, 1, (int iPoint, Vector& vecOrigin, QAngle& vecAngles), IHasBuildPoints(), iPoint, std::ref(vecOrigin), std::ref(vecAngles));
 	VIRTUAL_ARGS(GetBuildPointAttachmentIndex, int, 2, (int iPoint), IHasBuildPoints(), iPoint);
+	VIRTUAL_ARGS(CanBuildObjectOnBuildPoint, bool, 3, (int iPoint, int iObjectType), IHasBuildPoints(), iPoint, iObjectType);
+	VIRTUAL_ARGS(SetObjectOnBuildPoint, void, 4, (int iPoint, CBaseObject* pObject), IHasBuildPoints(), iPoint, pObject);
+	VIRTUAL(GetNumObjectsOnMe, int, 5, IHasBuildPoints());
+	VIRTUAL_ARGS(GetObjectOfTypeOnMe, CBaseObject*, 6, (int iObjectType), IHasBuildPoints(), iObjectType);
+	VIRTUAL_ARGS(GetMaxSnapDistance, float, 8, (/*int iPoint*/), IHasBuildPoints()/*, iPoint*/);
+	VIRTUAL(ShouldCheckForMovement, bool, 9, IHasBuildPoints());
+	VIRTUAL_ARGS(FindObjectOnBuildPoint, int, 10, (CBaseObject* pObject), IHasBuildPoints(), pObject);
 
 	bool IsDisabled();
 };

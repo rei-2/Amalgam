@@ -3,8 +3,7 @@
 #include "../../EnginePrediction/EnginePrediction.h"
 #include <numeric>
 
-// we'll use this to set current player's command, without it CGameMovement::CheckInterval will try to access a nullptr
-static CUserCmd DummyCmd = {};
+static CUserCmd s_tDummyCmd = {};
 
 void CMovementSimulation::Store(PlayerStorage& tStorage)
 {
@@ -115,7 +114,7 @@ void CMovementSimulation::Store()
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		auto& vRecords = m_mRecords[pPlayer->entindex()];
 
-		if (pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_vecVelocity().IsZero())
+		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_vecVelocity().IsZero())
 		{
 			vRecords.clear();
 			continue;
@@ -126,7 +125,7 @@ void CMovementSimulation::Store()
 		bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo();
 		Vec3 vVelocity = bLocal ? F::EnginePrediction.m_vVelocity : pPlayer->m_vecVelocity();
 		Vec3 vOrigin = bLocal ? F::EnginePrediction.m_vOrigin : pPlayer->m_vecOrigin();
-		Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : Vec3(vVelocity.x, vVelocity.y, 0.f);
+		Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : vVelocity.To2D();
 
 		MoveData* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
 		vRecords.emplace_front(
@@ -158,18 +157,18 @@ void CMovementSimulation::Store()
 		}
 		if (pPlayer->InCond(TF_COND_SHIELD_CHARGE))
 		{
-			DummyCmd.forwardmove = 450.f;
-			DummyCmd.sidemove = 0.f;
-			SDK::FixMovement(&DummyCmd, bLocal ? F::EnginePrediction.m_vAngles : pPlayer->GetEyeAngles(), {});
-			tCurRecord.m_vDirection.x = DummyCmd.forwardmove;
-			tCurRecord.m_vDirection.y = -DummyCmd.sidemove;
+			s_tDummyCmd.forwardmove = 450.f;
+			s_tDummyCmd.sidemove = 0.f;
+			SDK::FixMovement(&s_tDummyCmd, bLocal ? F::EnginePrediction.m_vAngles : pPlayer->GetEyeAngles(), {});
+			tCurRecord.m_vDirection.x = s_tDummyCmd.forwardmove;
+			tCurRecord.m_vDirection.y = -s_tDummyCmd.sidemove;
 		}
 		else
 		{
 			switch (tCurRecord.m_iMode)
 			{
 			case 0:
-				if (bLocal && Vars::Misc::Movement::Bunnyhop.Value && G::OriginalMove.m_iButtons & IN_JUMP)
+				if (bLocal && Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
 					tCurRecord.m_vDirection = vVelocity.Normalized2D() * flMaxSpeed;
 				break;
 			case 1:
@@ -186,7 +185,7 @@ void CMovementSimulation::Store()
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		auto& vSimTimes = m_mSimTimes[pPlayer->entindex()];
 
-		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 		{
 			vSimTimes.clear();
 			continue;
@@ -216,7 +215,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 	tStorage.m_pPlayer = pPlayer;
 
 	I::MoveHelper->SetHost(pPlayer);
-	pPlayer->m_pCurrentCommand() = &DummyCmd;
+	pPlayer->m_pCurrentCommand() = &s_tDummyCmd;
 
 	// store player restore data
 	Store(tStorage);
@@ -248,7 +247,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 			else
 				pPlayer->m_hGroundEntity() = nullptr; // fix for velocity.z being set to 0 even if in air
 		}
-		else if (Vars::Misc::Movement::Bunnyhop.Value && G::OriginalMove.m_iButtons & IN_JUMP)
+		else if (Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
 			tStorage.m_bBunnyHop = true;
 	}
 
@@ -329,24 +328,29 @@ bool CMovementSimulation::SetupMoveData(PlayerStorage& tStorage)
 	if (!tStorage.m_MoveData.m_vecVelocity.To2D().IsZero())
 	{
 		int iIndex = tStorage.m_pPlayer->entindex();
-		if (!tStorage.m_pPlayer->InCond(TF_COND_SHIELD_CHARGE))
-			tStorage.m_MoveData.m_vecViewAngles = { 0.f, Math::VectorAngles(tStorage.m_MoveData.m_vecVelocity).y, 0.f };
+		if (iIndex == I::EngineClient->GetLocalPlayer() && G::CurrentUserCmd)
+			tStorage.m_MoveData.m_vecViewAngles = G::CurrentUserCmd->viewangles;
 		else
-			tStorage.m_MoveData.m_vecViewAngles = iIndex == I::EngineClient->GetLocalPlayer() && G::CurrentUserCmd ? G::CurrentUserCmd->viewangles : H::Entities.GetEyeAngles(iIndex);
-		
+		{
+			if (!tStorage.m_pPlayer->InCond(TF_COND_SHIELD_CHARGE))
+				tStorage.m_MoveData.m_vecViewAngles = { 0.f, Math::VectorAngles(tStorage.m_MoveData.m_vecVelocity).y, 0.f };
+			else
+				tStorage.m_MoveData.m_vecViewAngles = H::Entities.GetEyeAngles(iIndex);
+		}
+
 		const auto& vRecords = m_mRecords[tStorage.m_pPlayer->entindex()];
 		if (!vRecords.empty())
 		{
 			auto& tRecord = vRecords.front();
 			if (!tRecord.m_vDirection.IsZero())
 			{
-				DummyCmd.forwardmove = tRecord.m_vDirection.x;
-				DummyCmd.sidemove = -tRecord.m_vDirection.y;
-				DummyCmd.upmove = tRecord.m_vDirection.z;
-				SDK::FixMovement(&DummyCmd, {}, tStorage.m_MoveData.m_vecViewAngles);
-				tStorage.m_MoveData.m_flForwardMove = DummyCmd.forwardmove;
-				tStorage.m_MoveData.m_flSideMove = DummyCmd.sidemove;
-				tStorage.m_MoveData.m_flUpMove = DummyCmd.upmove;
+				s_tDummyCmd.forwardmove = tRecord.m_vDirection.x;
+				s_tDummyCmd.sidemove = -tRecord.m_vDirection.y;
+				s_tDummyCmd.upmove = tRecord.m_vDirection.z;
+				SDK::FixMovement(&s_tDummyCmd, {}, tStorage.m_MoveData.m_vecViewAngles);
+				tStorage.m_MoveData.m_flForwardMove = s_tDummyCmd.forwardmove;
+				tStorage.m_MoveData.m_flSideMove = s_tDummyCmd.sidemove;
+				tStorage.m_MoveData.m_flUpMove = s_tDummyCmd.upmove;
 			}
 		}
 	}
@@ -394,12 +398,11 @@ static inline float GetFrictionScale(float flVelocityXY, float flTurn, float flV
 static inline void VisualizeRecords(MoveData& tRecord1, MoveData& tRecord2, Color_t tColor, float flStraightFuzzyValue)
 {
 	static int iStaticTickcount = I::GlobalVars->tickcount;
-
-	const int iLastTickcount = iStaticTickcount;
-	const int iCurrTickcount = iStaticTickcount = I::GlobalVars->tickcount;
-
-	if (iCurrTickcount != iLastTickcount)
+	if (I::GlobalVars->tickcount != iStaticTickcount)
+	{
 		G::LineStorage.clear();
+		iStaticTickcount = I::GlobalVars->tickcount;
+	}
 
 	const float flYaw1 = Math::VectorAngles(tRecord1.m_vDirection).y, flYaw2 = Math::VectorAngles(tRecord2.m_vDirection).y;
 	const float flTime1 = tRecord1.m_flSimTime, flTime2 = tRecord2.m_flSimTime;
@@ -420,7 +423,7 @@ static inline void VisualizeRecords(MoveData& tRecord1, MoveData& tRecord2, Colo
 }
 #endif
 
-static bool GetYawDifference(MoveData& tRecord1, MoveData& tRecord2, bool bStart, float* pYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0, float flMaxSpeed = 0.f)
+static inline bool GetYawDifference(MoveData& tRecord1, MoveData& tRecord2, bool bStart, float* pYaw, float flStraightFuzzyValue, int iMaxChanges = 0, int iMaxChangeTime = 0, float flMaxSpeed = 0.f)
 {
 	const float flYaw1 = Math::VectorAngles(tRecord1.m_vDirection).y, flYaw2 = Math::VectorAngles(tRecord2.m_vDirection).y;
 	const float flTime1 = tRecord1.m_flSimTime, flTime2 = tRecord2.m_flSimTime;
@@ -690,9 +693,9 @@ void CMovementSimulation::RunTick(PlayerStorage& tStorage, bool bPath, std::func
 		&& tStorage.m_MoveData.m_vecVelocity.Length2D() > tStorage.m_MoveData.m_flMaxSpeed * 0.015f)
 	{
 		Vec3 vDirection = tStorage.m_MoveData.m_vecVelocity.Normalized2D() * 450.f;
-		DummyCmd.forwardmove = vDirection.x, DummyCmd.sidemove = -vDirection.y;
-		SDK::FixMovement(&DummyCmd, {}, tStorage.m_MoveData.m_vecViewAngles);
-		tStorage.m_MoveData.m_flForwardMove = DummyCmd.forwardmove, tStorage.m_MoveData.m_flSideMove = DummyCmd.sidemove;
+		s_tDummyCmd.forwardmove = vDirection.x, s_tDummyCmd.sidemove = -vDirection.y;
+		SDK::FixMovement(&s_tDummyCmd, {}, tStorage.m_MoveData.m_vecViewAngles);
+		tStorage.m_MoveData.m_flForwardMove = s_tDummyCmd.forwardmove, tStorage.m_MoveData.m_flSideMove = s_tDummyCmd.sidemove;
 	}
 
 	RestoreBounds(tStorage.m_pPlayer);

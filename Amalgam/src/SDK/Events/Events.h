@@ -8,10 +8,10 @@ private:
 	bool m_bFailed = false;
 
 public:
+	virtual void FireGameEvent(IGameEvent* pEvent) override;
+
 	bool Initialize();
 	void Unload();
-
-	virtual void FireGameEvent(IGameEvent* pEvent) override;
 };
 
 ADD_FEATURE_CUSTOM(CEventListener, Events, H);

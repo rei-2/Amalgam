@@ -12,23 +12,23 @@ MAKE_HOOK(CTFBadgePanel_SetupBadge, S::CTFBadgePanel_SetupBadge(), void,
 		return CALL_ORIGINAL(rcx, pMatchDesc, levelInfo, steamID);
 #endif
 
-	//SDK::Output("SetupBadge", std::format("{}: {}", steamID.GetAccountID(), levelInfo.m_nLevelNum).c_str(), {}, true, true);
+	//SDK::Output("SetupBadge", std::format("{}: {}", steamID.GetAccountID(), levelInfo.m_nLevelNum).c_str(), {}, OUTPUT_CONSOLE | OUTPUT_DEBUG);
 
 	if (!Vars::Visuals::UI::StreamerMode.Value)
 		return CALL_ORIGINAL(rcx, pMatchDesc, levelInfo, steamID);
 
-	PlayerInfo_t pi{};
-	if (!I::EngineClient->GetPlayerInfo(I::EngineClient->GetLocalPlayer(), &pi))
+	auto pResource = H::Entities.GetResource();
+	if (!pResource)
 		return CALL_ORIGINAL(rcx, pMatchDesc, levelInfo, steamID);
 
-	uint32_t uFriendsID = steamID.GetAccountID();
+	uint32_t uAccountID = steamID.GetAccountID();
 	// probably only need to worry about local, friends, a/o party
 	bool bShouldHide = false;
-	if (pi.friendsID == uFriendsID)
+	if (pResource->m_iAccountID(I::EngineClient->GetLocalPlayer()) == uAccountID)
 		bShouldHide = Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Local;
-	else if (H::Entities.IsFriend(uFriendsID))
+	else if (H::Entities.IsFriend(uAccountID))
 		bShouldHide = Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Friends;
-	else if (H::Entities.InParty(uFriendsID))
+	else if (H::Entities.InParty(uAccountID))
 		bShouldHide = Vars::Visuals::UI::StreamerMode.Value >= Vars::Visuals::UI::StreamerModeEnum::Party;
 	if (!bShouldHide)
 		return CALL_ORIGINAL(rcx, pMatchDesc, levelInfo, steamID);

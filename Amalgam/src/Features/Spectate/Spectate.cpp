@@ -55,7 +55,7 @@ void CSpectate::NetUpdateStart(CTFPlayer* pLocal)
 	pLocal->m_iObserverMode() = m_iOriginalMode;
 }
 
-void CSpectate::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd)
+void CSpectate::CreateMove(CUserCmd* pCmd)
 {
 	int iButtons = pCmd->buttons & ~IN_SCORE;
 	if (iButtons)

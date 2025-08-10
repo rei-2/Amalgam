@@ -35,8 +35,8 @@ struct TraceInfo_t
 	CTraceCounterVec m_DispCounters[MAX_CHECK_COUNT_DEPTH];
 };
 
-static int iOriginalMask = false;
-static bool bOriginalStartSolid = false;
+static int s_iOriginalMask = false;
+static bool s_bOriginalStartSolid = false;
 
 MAKE_HOOK(IEngineTrace_SetTraceEntity, U::Memory.GetVirtual(I::EngineTrace, 20), void,
 	void* rcx, ICollideable* pCollideable, trace_t* pTrace)
@@ -51,7 +51,7 @@ MAKE_HOOK(IEngineTrace_SetTraceEntity, U::Memory.GetVirtual(I::EngineTrace, 20),
 
 	CALL_ORIGINAL(rcx, pCollideable, pTrace);
 
-	if (dwRetAddr && dwDesired && iOriginalMask & CONTENTS_NOSTARTSOLID)
+	if (dwRetAddr && dwDesired && s_iOriginalMask & CONTENTS_NOSTARTSOLID)
 		pTrace->startsolid = false;
 }
 
@@ -65,7 +65,7 @@ MAKE_HOOK(CM_BoxTrace, S::CM_BoxTrace(), void,
 
 	CALL_ORIGINAL(ray, headnode, brushmask, computeEndpt, tr);
 
-	iOriginalMask = brushmask;
+	s_iOriginalMask = brushmask;
 }
 
 MAKE_HOOK(CM_TraceToLeaf_True, S::CM_TraceToLeaf_True(), void,
@@ -78,10 +78,10 @@ MAKE_HOOK(CM_TraceToLeaf_True, S::CM_TraceToLeaf_True(), void,
 
 	if (pTraceInfo->m_contents & CONTENTS_NOSTARTSOLID)
 	{
-		bOriginalStartSolid = pTraceInfo->m_trace.startsolid;
+		s_bOriginalStartSolid = pTraceInfo->m_trace.startsolid;
 		pTraceInfo->m_trace.startsolid = false;
 		CALL_ORIGINAL(pTraceInfo, ndxLeaf, startFrac, endFrac);
-		pTraceInfo->m_trace.startsolid = bOriginalStartSolid;
+		pTraceInfo->m_trace.startsolid = s_bOriginalStartSolid;
 		return;
 	}
 
@@ -98,10 +98,10 @@ MAKE_HOOK(CM_TraceToLeaf_False, S::CM_TraceToLeaf_False(), void,
 
 	if (pTraceInfo->m_contents & CONTENTS_NOSTARTSOLID)
 	{
-		bOriginalStartSolid = pTraceInfo->m_trace.startsolid;
+		s_bOriginalStartSolid = pTraceInfo->m_trace.startsolid;
 		pTraceInfo->m_trace.startsolid = false;
 		CALL_ORIGINAL(pTraceInfo, ndxLeaf, startFrac, endFrac);
-		pTraceInfo->m_trace.startsolid = bOriginalStartSolid;
+		pTraceInfo->m_trace.startsolid = s_bOriginalStartSolid;
 		return;
 	}
 
@@ -120,7 +120,7 @@ MAKE_HOOK(CM_ClipBoxToBrush_True, S::CM_ClipBoxToBrush_True(), void,
 
 	if (pTraceInfo->m_contents & CONTENTS_NOSTARTSOLID && pTraceInfo->m_trace.startsolid)
 	{
-		bOriginalStartSolid = true;
+		s_bOriginalStartSolid = true;
 		pTraceInfo->m_trace.startsolid = false;
 	}
 }
@@ -137,7 +137,7 @@ MAKE_HOOK(CM_ClipBoxToBrush_False, S::CM_ClipBoxToBrush_False(), void,
 
 	if (pTraceInfo->m_contents & CONTENTS_NOSTARTSOLID && pTraceInfo->m_trace.startsolid)
 	{
-		bOriginalStartSolid = true;
+		s_bOriginalStartSolid = true;
 		pTraceInfo->m_trace.startsolid = false;
 	}
 }

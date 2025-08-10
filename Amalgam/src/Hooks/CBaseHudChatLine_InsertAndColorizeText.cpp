@@ -16,11 +16,11 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 
 	if (clientIndex)
 	{
-		PlayerInfo_t pi{};
-		if (!I::EngineClient->GetPlayerInfo(clientIndex, &pi))
+		auto pResource = H::Entities.GetResource();
+		if (!pResource)
 			return CALL_ORIGINAL(rcx, buf, clientIndex);
 
-		const char* sName = pi.name;
+		const char* sName = pResource->GetName(clientIndex);
 		auto iFind = sMessage.find(sName);
 
 		int iType = 0;
@@ -34,11 +34,8 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 		if (Vars::Visuals::UI::ChatTags.Value && iType != 1)
 		{
 			std::string sTag, cColor;
-			if (clientIndex == I::EngineClient->GetLocalPlayer())
-			{
-				if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Local)
-					sTag = "You", cColor = Vars::Colors::Local.Value.ToHexA();
-			}
+			if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Local && clientIndex == I::EngineClient->GetLocalPlayer())
+				sTag = "You", cColor = Vars::Colors::Local.Value.ToHexA();
 			else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Friends && H::Entities.IsFriend(clientIndex))
 				sTag = "Friend", cColor = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(FRIEND_TAG)].m_tColor.ToHexA();
 			else if (Vars::Visuals::UI::ChatTags.Value & Vars::Visuals::UI::ChatTagsEnum::Party && H::Entities.InParty(clientIndex))
@@ -60,36 +57,39 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 
 	if (Vars::Visuals::UI::StreamerMode.Value)
 	{
-		std::vector<std::pair<std::string, std::string>> vReplace;
-		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+		if (auto pResource = H::Entities.GetResource())
 		{
-			PlayerInfo_t pi{}; int iType = 0;
-			const char* sReplace = F::PlayerUtils.GetPlayerName(pEntity->entindex(), nullptr, &iType);
-			if (sReplace && iType == 1 && I::EngineClient->GetPlayerInfo(pEntity->entindex(), &pi))
-				vReplace.emplace_back(pi.name, sReplace);
-		}
-		for (auto& [sFind, sReplace] : vReplace)
-		{
+			std::vector<std::pair<std::string, std::string>> vReplace;
+			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 			{
-				std::string sReplace2 = sReplace;
-				std::transform(sFind.begin(), sFind.end(), sFind.begin(), ::tolower);
-				std::transform(sReplace2.begin(), sReplace2.end(), sReplace2.begin(), ::tolower);
-				if (FNV1A::Hash32(sFind.c_str()) == FNV1A::Hash32(sReplace2.c_str()))
-					continue;
+				int iIndex = pEntity->entindex();
+				int iType = 0; const char* sReplace = F::PlayerUtils.GetPlayerName(iIndex, nullptr, &iType);
+				if (sReplace && iType == 1)
+					vReplace.emplace_back(pResource->GetName(iIndex), sReplace);
 			}
-
-			size_t iPos = 0;
-			while (true)
+			for (auto& [sFind, sReplace] : vReplace)
 			{
-				std::string sMessage2 = sMessage;
-				std::transform(sMessage2.begin(), sMessage2.end(), sMessage2.begin(), ::tolower);
+				{
+					std::string sReplace2 = sReplace;
+					std::transform(sFind.begin(), sFind.end(), sFind.begin(), ::tolower);
+					std::transform(sReplace2.begin(), sReplace2.end(), sReplace2.begin(), ::tolower);
+					if (FNV1A::Hash32(sFind.c_str()) == FNV1A::Hash32(sReplace2.c_str()))
+						continue;
+				}
 
-				auto iFind = sMessage2.find(sFind, iPos);
-				if (iFind == std::string::npos)
-					break;
+				size_t iPos = 0;
+				while (true)
+				{
+					std::string sMessage2 = sMessage;
+					std::transform(sMessage2.begin(), sMessage2.end(), sMessage2.begin(), ::tolower);
 
-				iPos = iFind + sReplace.length();
-				sMessage = sMessage.replace(iFind, sFind.length(), sReplace);
+					auto iFind = sMessage2.find(sFind, iPos);
+					if (iFind == std::string::npos)
+						break;
+
+					iPos = iFind + sReplace.length();
+					sMessage = sMessage.replace(iFind, sFind.length(), sReplace);
+				}
 			}
 		}
 	}

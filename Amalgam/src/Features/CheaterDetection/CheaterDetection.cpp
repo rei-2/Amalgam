@@ -5,14 +5,13 @@
 
 bool CCheaterDetection::ShouldScan()
 {
-	if (!Vars::CheaterDetection::Methods.Value || I::EngineClient->IsPlayingDemo())
+	if (!Vars::CheaterDetection::Methods.Value /*|| I::EngineClient->IsPlayingDemo()*/)
 		return false;
 
-	static float flOldTime = I::GlobalVars->curtime;
-	const float flCurTime = I::GlobalVars->curtime;
-	const bool bShouldSkip = TIME_TO_TICKS(flCurTime - flOldTime) != 1;
-	flOldTime = flCurTime;
-	if (bShouldSkip)
+	static int iStaticTickcount = I::GlobalVars->tickcount;
+	const int iLastTickcount = iStaticTickcount;
+	const int iCurrTickcount = iStaticTickcount = I::GlobalVars->tickcount;
+	if (iCurrTickcount != iLastTickcount + 1)
 		return false;
 
 	auto pNetChan = I::EngineClient->GetNetChannelInfo();
@@ -92,7 +91,7 @@ void CCheaterDetection::Infract(CTFPlayer* pEntity, const char* sReason)
 	if (bMark)
 	{
 		mData[pEntity].m_iDetections = 0;
-		F::PlayerUtils.AddTag(mData[pEntity].m_uFriendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG), true, mData[pEntity].m_sName);
+		F::PlayerUtils.AddTag(mData[pEntity].m_uAccountID, F::PlayerUtils.TagToIndex(CHEATER_TAG), true, mData[pEntity].m_sName);
 	}
 }
 
@@ -101,15 +100,19 @@ void CCheaterDetection::Run()
 	if (!ShouldScan() || !I::EngineClient->IsConnected() || I::EngineClient->IsPlayingDemo())
 		return;
 
+	auto pResource = H::Entities.GetResource();
+	if (!pResource)
+		return;
+
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
+		int iIndex = pPlayer->entindex();
+		if (!H::Entities.GetDeltaTime(iIndex))
 			continue;
 
-		PlayerInfo_t pi{};
-		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant()
-			|| !I::EngineClient->GetPlayerInfo(pPlayer->entindex(), &pi) || pi.fakeplayer || F::PlayerUtils.HasTag(pi.friendsID, F::PlayerUtils.TagToIndex(CHEATER_TAG)))
+		if (iIndex == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
+			|| pResource->IsFakePlayer(iIndex) || F::PlayerUtils.HasTag(iIndex, F::PlayerUtils.TagToIndex(CHEATER_TAG)))
 		{
 			mData[pPlayer].m_PacketChoking = {};
 			mData[pPlayer].m_AimFlicking = {};
@@ -117,8 +120,8 @@ void CCheaterDetection::Run()
 			continue;
 		}
 
-		mData[pPlayer].m_uFriendsID = pi.friendsID;
-		mData[pPlayer].m_sName = F::PlayerUtils.GetPlayerName(pPlayer->entindex(), pi.name);
+		mData[pPlayer].m_uAccountID = pResource->m_iAccountID(iIndex);
+		mData[pPlayer].m_sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
 
 		if (InvalidPitch(pPlayer))
 			Infract(pPlayer, "invalid pitch");

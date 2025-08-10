@@ -36,7 +36,6 @@ public:
 	void PingReducer();
 	void UnlockAchievements();
 	void LockAchievements();
-	bool SteamRPC();
 
 	int m_iWishCmdrate = -1;
 	int m_iWishUpdaterate = -1;

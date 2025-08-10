@@ -3,22 +3,23 @@
 #include "../Visuals/Notifications/Notifications.h"
 #include "../Players/PlayerUtils.h"
 
-static std::string sRed =		Color_t(255, 100, 100).ToHex();
-static std::string sGreen =		Color_t(100, 255, 100).ToHex();
-static std::string sYellow =	Color_t(200, 169, 0).ToHex();
+static std::string s_sRed =		Color_t(255, 100, 100).ToHex();
+static std::string s_sGreen =		Color_t(100, 255, 100).ToHex();
+static std::string s_sYellow =	Color_t(200, 169, 0).ToHex();
 
-static inline void OutputInfo(int flags, const char* sName, const char* sOutput, const char* sChat)
+static inline void OutputInfo(int iFlags, const char* sName, const char* sOutput, const char* sChat)
 {
-	SDK::Output(sName, sOutput, Vars::Menu::Theme::Accent.Value,
-		flags & Vars::Logging::LogToEnum::Console,
-		flags & Vars::Logging::LogToEnum::Debug,
-		flags & Vars::Logging::LogToEnum::Toasts,
-		flags & Vars::Logging::LogToEnum::Menu,
-		false,
-		flags & Vars::Logging::LogToEnum::Party
-	);
-	if (flags & Vars::Logging::LogToEnum::Chat)
-		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sChat, Vars::Menu::Theme::Accent.Value, false, false, false, false, true, false, -1, "", "");
+	int iTo = (iFlags & Vars::Logging::LogToEnum::Console ? OUTPUT_CONSOLE : 0)
+			| (iFlags & Vars::Logging::LogToEnum::Debug ? OUTPUT_DEBUG : 0)
+			| (iFlags & Vars::Logging::LogToEnum::Toasts ? OUTPUT_TOAST : 0)
+			| (iFlags & Vars::Logging::LogToEnum::Menu ? OUTPUT_MENU : 0)
+			| (iFlags & Vars::Logging::LogToEnum::Party ? OUTPUT_PARTY : 0);
+	if (iTo)
+		SDK::Output(sName, sOutput, Vars::Menu::Theme::Accent.Value, iTo);
+
+	iTo = (iFlags & Vars::Logging::LogToEnum::Chat ? OUTPUT_CHAT : 0);
+	if (iTo)
+		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sChat, Vars::Menu::Theme::Accent.Value, iTo, -1, "", "");
 }
 
 // Event info
@@ -45,17 +46,16 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!pEntity || pEntity->GetClassID() != ETFClassID::CTFPlayer)
 			return;
 
-		bool bVotedYes = pEvent->GetInt("vote_option") == 0;
-		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
-
-		PlayerInfo_t pi{};
-		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi))
+		auto pResource = H::Entities.GetResource();
+		if (!pResource || pResource->IsFakePlayer(iIndex))
 			return;
 
-		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
+		bool bVotedYes = pEvent->GetInt("vote_option") == 0;
+		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
 		OutputInfo(Vars::Logging::VoteCast::LogTo.Value, "Vote Cast",
 			std::format("{}{} voted {}", (bSameTeam ? "" : "[Enemy] "), (sName), (bVotedYes ? "Yes" : "No")).c_str(),
-			std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sName), (bVotedYes ? sGreen : sRed), (bVotedYes ? "Yes" : "No")).c_str()
+			std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sName), (bVotedYes ? s_sGreen : s_sRed), (bVotedYes ? "Yes" : "No")).c_str()
 		);
 
 		return;
@@ -67,19 +67,18 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 
 		int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
 		auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
-		if (!pEntity || iIndex == pLocal->entindex())
+		if (!pEntity || iIndex == I::EngineClient->GetLocalPlayer())
 			return;
 
-		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
-
-		PlayerInfo_t pi{};
-		if (!I::EngineClient->GetPlayerInfo(iIndex, &pi) || pi.fakeplayer)
+		auto pResource = H::Entities.GetResource();
+		if (!pResource || pResource->IsFakePlayer(iIndex))
 			return; // dont spam chat by giving class changes for bots
 
-		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
+		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
 		OutputInfo(Vars::Logging::ClassChange::LogTo.Value, "Class Change",
 			std::format("{}{} changed class to {}", (bSameTeam ? "" : "[Enemy] "), (sName), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str(),
-			std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sName), (sYellow), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str()
+			std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sName), (s_sYellow), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str()
 		);
 
 		return;
@@ -89,27 +88,29 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Damage))
 			return;
 
-		int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
-		auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
-		if (!pEntity || iIndex == pLocal->entindex())
+		auto pResource = H::Entities.GetResource();
+		if (!pResource)
 			return;
 
-		int nAttacker = pEvent->GetInt("attacker");
+		int nAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
+		if (I::EngineClient->GetLocalPlayer() != nAttacker)
+			return;
+
+		int iIndex = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid"));
+		auto pEntity = I::ClientEntityList->GetClientEntity(iIndex);
+		if (!pEntity || iIndex == I::EngineClient->GetLocalPlayer())
+			return;
+
 		int nHealth = pEvent->GetInt("health");
 		int nDamage = pEvent->GetInt("damageamount");
 		bool bCrit = pEvent->GetBool("crit");
 		bool bMinicrit = pEvent->GetBool("minicrit");
 		int iMaxHealth = pEntity->As<CTFPlayer>()->GetMaxHealth();
 
-		PlayerInfo_t pi{};
-		if (!I::EngineClient->GetPlayerInfo(I::EngineClient->GetLocalPlayer(), &pi) || nAttacker != pi.userID ||
-			!I::EngineClient->GetPlayerInfo(iIndex, &pi))
-			return;
-
-		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
 		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage",
-			std::format("You hit {} for {} damage ({} / {}{})", (sName), (nDamage), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str(),
-			std::format("You hit {}{}\x1 for {}{} damage{} ({} / {}{})", (sYellow), (sName), (sRed), (nDamage), (sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str()
+			std::format("Hit {} for {} damage ({} / {}{})", (sName), (nDamage), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str(),
+			std::format("Hit {}{}\x1 for {}{} damage{} ({} / {}{})", (s_sYellow), (sName), (s_sRed), (nDamage), (s_sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str()
 		);
 
 		return;
@@ -120,7 +121,7 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			return;
 
 		std::string sID = pEvent->GetString("networkid");
-		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) == pLocal->entindex()
+		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) == I::EngineClient->GetLocalPlayer()
 			|| FNV1A::Hash32(sID.c_str()) == FNV1A::Hash32Const("BOT"))
 			return;
 
@@ -145,19 +146,24 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (!(Vars::Logging::Logs.Value & (1 << 5)) && !(Vars::Logging::Logs.Value & (1 << 6)) || !m_bInfoOnJoin)
 			return;
 
-		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) != pLocal->entindex())
+		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) != I::EngineClient->GetLocalPlayer())
 			return;
 
 		m_bInfoOnJoin = false;
+		auto pResource = H::Entities.GetResource();
+		if (!pResource)
+			return;
+
 		for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 		{
-			PlayerInfo_t pi{};
-			if (n == pLocal->entindex() || !I::EngineClient->GetPlayerInfo(n, &pi) || pi.fakeplayer
-				|| H::Entities.InParty(pi.friendsID)) // ignore party
+			if (!pResource->m_bValid(n) || pResource->IsFakePlayer(n) || n == I::EngineClient->GetLocalPlayer()
+				|| H::Entities.InParty(n)) // ignore party
 				continue;
 
-			TagsOnJoin(pi.name, pi.friendsID);
-			AliasOnJoin(pi.name, pi.friendsID);
+			auto sName = pResource->GetName(n);
+			uint32_t uAccountID = pResource->m_iAccountID(n);
+			TagsOnJoin(sName, uAccountID);
+			AliasOnJoin(sName, uAccountID);
 		}
 	}
 	}
@@ -173,6 +179,10 @@ void COutput::UserMessage(bf_read& msgData)
 	if (!pLocal)
 		return;
 
+	auto pResource = H::Entities.GetResource();
+	if (!pResource)
+		return;
+
 	int iTeam = msgData.ReadByte();
 	/*int iVoteID =*/ msgData.ReadLong();
 	int iCaller = msgData.ReadByte();
@@ -181,16 +191,14 @@ void COutput::UserMessage(bf_read& msgData)
 	int iTarget = msgData.ReadByte() >> 1;
 	msgData.Seek(0);
 	bool bSameTeam = iTeam == pLocal->m_iTeamNum();
-
-	PlayerInfo_t piTarget{}, piCaller{};
-	if (!iCaller || !iTarget || !I::EngineClient->GetPlayerInfo(iCaller, &piCaller) || !I::EngineClient->GetPlayerInfo(iTarget, &piTarget))
+	if (!iCaller || !iTarget)
 		return;
 
-	auto sTargetName = F::PlayerUtils.GetPlayerName(iTarget, piTarget.name);
-	auto sCallerName = F::PlayerUtils.GetPlayerName(iCaller, piCaller.name);
+	auto sCallerName = F::PlayerUtils.GetPlayerName(iCaller, pResource->GetName(iCaller));
+	auto sTargetName = F::PlayerUtils.GetPlayerName(iTarget, pResource->GetName(iTarget));
 	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start",
 		std::format("{}{} called a vote on {}", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName)).c_str(),
-		std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (sYellow), (sCallerName), (sYellow), (sTargetName)).c_str()
+		std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sCallerName), (s_sYellow), (sTargetName)).c_str()
 	);
 }
 
@@ -202,18 +210,21 @@ void COutput::CheatDetection(const char* sName, const char* sAction, const char*
 
 	OutputInfo(Vars::Logging::CheatDetection::LogTo.Value, "Cheat Detection",
 		std::format("{} {} for {}", (sName), (sAction), (sReason)).c_str(),
-		std::format("{}{}\x1 {} for {}{}", (sYellow), (sName), (sAction), (sYellow), (sReason)).c_str()
+		std::format("{}{}\x1 {} for {}{}", (s_sYellow), (sName), (sAction), (s_sYellow), (sReason)).c_str()
 	);
 }
 
 // Tags
-void COutput::TagsOnJoin(const char* sName, uint32_t uFriendsID)
+void COutput::TagsOnJoin(const char* sName, uint32_t uAccountID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Tags))
 		return;
 
+	if (!F::PlayerUtils.m_mPlayerTags.contains(uAccountID))
+		return;
+
 	std::vector<std::pair<std::string, const char*>> vColorsTags = {};
-	for (auto& iID : F::PlayerUtils.m_mPlayerTags[uFriendsID])
+	for (auto& iID : F::PlayerUtils.m_mPlayerTags[uAccountID])
 	{
 		if (auto pTag = F::PlayerUtils.GetTag(iID))
 			vColorsTags.emplace_back(pTag->m_tColor.ToHexA(), pTag->m_sName.c_str());
@@ -225,14 +236,14 @@ void COutput::TagsOnJoin(const char* sName, uint32_t uFriendsID)
 	case 0: return;
 	case 1:
 	{
-		auto& pColorTag = *vColorsTags.begin();
+		auto& pColorTag = vColorsTags.front();
 		sOutputText = pColorTag.second;
 		sChatText = std::format("{}{}", pColorTag.first, pColorTag.second);
 		break;
 	}
 	case 2:
 	{
-		auto& pColorTag1 = *vColorsTags.begin(), &pColorTag2 = *(vColorsTags.begin() + 1);
+		auto& pColorTag1 = vColorsTags.front(), &pColorTag2 = vColorsTags.back();
 		sOutputText = std::format("{} and {}", pColorTag1.second, pColorTag2.second);
 		sChatText = std::format("{}{}\x1 and {}{}", pColorTag1.first, pColorTag1.second, pColorTag2.first, pColorTag2.second);
 		break;
@@ -258,7 +269,7 @@ void COutput::TagsOnJoin(const char* sName, uint32_t uFriendsID)
 
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags",
 		std::format("{} has the {} {}", (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sOutputText)).c_str(),
-		std::format("{}{}\x1 has the {} {}", (sYellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText)).c_str()
+		std::format("{}{}\x1 has the {} {}", (s_sYellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText)).c_str()
 	);
 }
 void COutput::TagsChanged(const char* sName, const char* sAction, const char* sColor, const char* sTag)
@@ -269,24 +280,24 @@ void COutput::TagsChanged(const char* sName, const char* sAction, const char* sC
 	auto uHash = FNV1A::Hash32(sAction);
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags",
 		std::format("{} tag {} {} {}", (sAction), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sName)).c_str(),
-		std::format("{} tag {}{}\x1 {} {}{}", (sAction), (sColor), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sYellow), (sName)).c_str()
+		std::format("{} tag {}{}\x1 {} {}{}", (sAction), (sColor), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (s_sYellow), (sName)).c_str()
 	);
 }
 
 // Aliases
-void COutput::AliasOnJoin(const char* sName, uint32_t uFriendsID)
+void COutput::AliasOnJoin(const char* sName, uint32_t uAccountID)
 {
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Aliases))
 		return;
 
-	if (!F::PlayerUtils.m_mPlayerAliases.contains(uFriendsID))
+	if (!F::PlayerUtils.m_mPlayerAliases.contains(uAccountID))
 		return;
 
-	auto& sAlias = F::PlayerUtils.m_mPlayerAliases[uFriendsID];
+	auto& sAlias = F::PlayerUtils.m_mPlayerAliases[uAccountID];
 
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases",
 		std::format("{} has the alias \"{}\"", (sName), (sAlias)).c_str(),
-		std::format("{}{}\x1 has the alias \"{}{}\x1\"", (sYellow), (sName), (sYellow), (sAlias)).c_str()
+		std::format("{}{}\x1 has the alias \"{}{}\x1\"", (s_sYellow), (sName), (s_sYellow), (sAlias)).c_str()
 	);
 }
 void COutput::AliasChanged(const char* sName, const char* sAction, const char* sAlias)
@@ -297,7 +308,7 @@ void COutput::AliasChanged(const char* sName, const char* sAction, const char* s
 	auto uHash = FNV1A::Hash32(sAction);
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases",
 		std::format("{} {}'s alias {} \"{}\"", (sAction), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sAlias)).c_str(),
-		std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (sYellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sYellow), (sAlias)).c_str()
+		std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (s_sYellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (s_sYellow), (sAlias)).c_str()
 	);
 }
 
@@ -314,14 +325,14 @@ void COutput::ReportResolver(int iIndex, const char* sAction, const char* sAxis,
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
 		return;
 
-	PlayerInfo_t pi{};
-	if (!I::EngineClient->GetPlayerInfo(iIndex, &pi))
+	auto pResource = H::Entities.GetResource();
+	if (!pResource)
 		return;
 
-	auto sName = F::PlayerUtils.GetPlayerName(iIndex, pi.name);
+	auto sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver",
 		std::format("{} {} of {} to {}", (sAction), (sAxis), (sName), (sValue)).c_str(),
-		std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (sYellow), (sAxis), (sYellow), (sName), (sYellow), (sValue)).c_str()
+		std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (s_sYellow), (sAxis), (s_sYellow), (sName), (s_sYellow), (sValue)).c_str()
 	);
 }
 void COutput::ReportResolver(const char* sMessage)

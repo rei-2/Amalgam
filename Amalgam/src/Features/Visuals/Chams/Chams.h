@@ -4,14 +4,7 @@
 class CChams
 {
 private:
-	bool GetChams(CTFPlayer* pLocal, CBaseEntity* pEntity, Chams_t* pChams);
-
-	void StencilBegin(IMatRenderContext* pRenderContext, bool bTwoModels = false);
-	void StencilVisible(IMatRenderContext* pRenderContext, bool bTwoModels = false);
-	void StencilOccluded(IMatRenderContext* pRenderContext);
-	void StencilEnd(IMatRenderContext* pRenderContext, bool bTwoModels = false);
-
-	void DrawModel(CBaseEntity* pEntity, Chams_t& tChams, IMatRenderContext* pRenderContext, bool bExtra = false);
+	void DrawModel(CBaseEntity* pEntity, Chams_t& tChams, IMatRenderContext* pRenderContext, bool bTwoModels = true);
 
 	void RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 	void RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
@@ -20,11 +13,16 @@ private:
 	{
 		CBaseEntity* m_pEntity;
 		Chams_t m_tChams;
-		bool m_bExtra = false;
+		int m_iFlags = 0;
 	};
 	std::vector<ChamsInfo_t> m_vEntities = {};
 
-	bool m_bExtra = false;
+	Color_t m_tOriginalColor = {};
+	float m_flOriginalBlend = 1.f;
+	IMaterial* m_pOriginalMaterial = nullptr;
+	OverrideType_t m_iOriginalOverride = OVERRIDE_NORMAL;
+
+	int m_iFlags = false;
 
 public:
 	void Store(CTFPlayer* pLocal);

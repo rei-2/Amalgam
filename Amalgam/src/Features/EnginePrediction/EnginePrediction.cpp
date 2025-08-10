@@ -10,7 +10,7 @@ void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
 	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+		if (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 			continue;
 
 		m_mRestore[pPlayer] = { pPlayer->m_vecMins(), pPlayer->m_vecMaxs() };
@@ -90,7 +90,7 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	m_bInPrediction = true;
-	if (!pLocal || !pLocal->IsAlive())
+	if (!pLocal->IsAlive())
 		return;
 
 	m_nOldTickCount = I::GlobalVars->tickcount;
@@ -107,7 +107,7 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
 	m_bInPrediction = false;
-	if (!pLocal || !pLocal->IsAlive())
+	if (!pLocal->IsAlive())
 		return;
 
 	I::GlobalVars->tickcount = m_nOldTickCount;

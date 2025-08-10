@@ -204,21 +204,7 @@ namespace Vars
 
 	NAMESPACE_BEGIN(Colors)
 		CVar(FOVCircle, "FOV circle color", Color_t(255, 255, 255, 100), VISUAL);
-		CVar(Relative, "Relative colors", false, VISUAL);
-		CVar(TeamRed, "RED color", Color_t(225, 60, 60, 255), VISUAL);
-		CVar(TeamBlu, "BLU color", Color_t(75, 175, 225, 255), VISUAL);
-		CVar(Enemy, "Enemy color", Color_t(225, 60, 60, 255), VISUAL);
-		CVar(Team, "Team color", Color_t(0, 255, 100, 255), VISUAL);
-		CVar(Local, "Local color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(Target, "Target color", Color_t(255, 0, 0, 255), VISUAL);
-		CVar(Health, "Health color", Color_t(0, 225, 75, 255), VISUAL);
-		CVar(Ammo, "Ammo color", Color_t(127, 127, 127, 255), VISUAL);
-		CVar(Money, "Money color", Color_t(0, 150, 75, 255), VISUAL);
-		CVar(Powerup, "Powerup color", Color_t(255, 175, 0, 255), VISUAL);
-		CVar(NPC, "NPC color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(Halloween, "Halloween color", Color_t(100, 0, 255, 255), VISUAL);
-		CVar(Backtrack, VA_LIST("Color", "Backtrack color"), Color_t(255, 0, 0, 0), VISUAL);
-		CVar(FakeAngle, VA_LIST("Color", "Fake angle color"), Color_t(255, 255, 255, 0), VISUAL);
+		CVar(Local, "Local color", Color_t(255, 255, 255, 0), VISUAL);
 
 		CVar(IndicatorGood, "Indicator good", Color_t(0, 255, 100, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorMid, "Indicator mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
@@ -519,189 +505,26 @@ namespace Vars
 	NAMESPACE_END(CheaterDetection);
 
 	NAMESPACE_BEGIN(ESP)
-		CVarEnum(Draw, VA_LIST("Draw", "Draw ESP"), 0b0, VISUAL | DROPDOWN_MULTI, nullptr,
-			VA_LIST("Players", "Buildings", "Projectiles", "Objective", "NPCs", "Health", "Ammo", "Money", "Powerups", "Bombs", "Spellbook", "Gargoyle"),
-			Players = 1 << 0, Buildings = 1 << 1, Projectiles = 1 << 2, Objective = 1 << 3, NPCs = 1 << 4, Health = 1 << 5, Ammo = 1 << 6, Money = 1 << 7, Powerups = 1 << 8, Bombs = 1 << 9, Spellbook = 1 << 10, Gargoyle = 1 << 11);
-		CVarEnum(Player, VA_LIST("Player", "Player ESP"), 0b0, VISUAL | DROPDOWN_MULTI, nullptr,
-			VA_LIST("Enemy", "Team", "Local", "Prioritized", "Friends", "Party", "##Divider", "Name", "Box", "Distance", "Bones", "Health bar", "Health text", "Uber bar", "Uber text", "Class icon", "Class text", "Weapon icon", "Weapon text", "Priority", "Labels", "Buffs", "Debuffs", "Misc", "Lag compensation", "Ping", "KDR"),
-			Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Name = 1 << 6, Box = 1 << 7, Distance = 1 << 8, Bones = 1 << 9, HealthBar = 1 << 10, HealthText = 1 << 11, UberBar = 1 << 12, UberText = 1 << 13, ClassIcon = 1 << 14, ClassText = 1 << 15, WeaponIcon = 1 << 16, WeaponText = 1 << 17, Priority = 1 << 18, Labels = 1 << 19, Buffs = 1 << 20, Debuffs = 1 << 21, Misc = 1 << 22, LagCompensation = 1 << 23, Ping = 1 << 24, KDR = 1 << 25);
-		CVarEnum(Building, VA_LIST("Building", "Building ESP"), 0b0, VISUAL | DROPDOWN_MULTI, nullptr,
-			VA_LIST("Enemy", "Team", "Local", "Prioritized", "Friends", "Party", "##Divider", "Name", "Box", "Distance", "Health bar", "Health text", "Owner", "Level", "Flags"),
-			Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Name = 1 << 6, Box = 1 << 7, Distance = 1 << 8, HealthBar = 1 << 9, HealthText = 1 << 10, Owner = 1 << 11, Level = 1 << 12, Flags = 1 << 13);
-		CVarEnum(Projectile, VA_LIST("Projectile", "Projectile ESP"), 0b0, VISUAL | DROPDOWN_MULTI, nullptr,
-			VA_LIST("Enemy", "Team", "Local", "Prioritized", "Friends", "Party", "##Divider", "Name", "Box", "Distance", "Owner", "Flags"),
-			Enemy = 1 << 0, Team = 1 << 1, Local = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Name = 1 << 6, Box = 1 << 7, Distance = 1 << 8, Owner = 1 << 9, Flags = 1 << 10);
-		CVarEnum(Objective, VA_LIST("Objective", "Objective ESP"), 0b0, VISUAL | DROPDOWN_MULTI, nullptr,
-			VA_LIST("Enemy", "Team", "##Divider", "Name", "Box", "Distance", "Flags", "Intel return time"),
-			Enemy = 1 << 0, Team = 1 << 1, Name = 1 << 2, Box = 1 << 3, Distance = 1 << 4, Flags = 1 << 5, IntelReturnTime = 1 << 6);
-
-		CVar(ActiveAlpha, "Active alpha", 255, VISUAL | SLIDER_CLAMP, 0, 255, 5);
-		CVar(DormantAlpha, "Dormant alpha", 50, VISUAL | SLIDER_CLAMP, 0, 255, 5);
-		CVar(DormantPriority, "Dormant priority only", false, VISUAL);
-
-		SUBNAMESPACE_BEGIN(FOVArrows, Out of FOV arrows)
-			CVar(Enabled, VA_LIST("Enabled", "Out of FOV arrows enabled"), false, VISUAL);
-			CVar(Offset, VA_LIST("Offset", "Out of FOV arrows offset"), 100, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0, 500, 25);
-			CVar(MaxDistance, VA_LIST("Max distance", "Out of FOV arrows max distance"), 1000.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5000.f, 50.f);
-		SUBNAMESPACE_END(FOVArrows);
-
-		SUBNAMESPACE_BEGIN(Other, Other ESP)
-			CVarEnum(SniperSightlines, "Sniper sightlines", 0b000, VISUAL | DROPDOWN_MULTI, "Off",
-				VA_LIST("Enemy", "Team", "##Divider", "Draw through walls"),
-				Enemy = 1 << 0, Team = 1 << 1, DrawThroughWalls = 1 << 2);
-			CVar(PickupTimers, "Pickup timers", false, VISUAL);
-		SUBNAMESPACE_END(Other);
+		CVarValues(ActiveGroups, "Active groups", int(0b11111111111111111111111111111111), VISUAL | DROPDOWN_MULTI, nullptr);
 	NAMESPACE_END(ESP);
 
-	NAMESPACE_BEGIN(Chams, Chams Settings)
-		SUBNAMESPACE_BEGIN(Player, Player Chams)
-			CVar(Local, VA_LIST("Local", "Local chams"), false, VISUAL);
-			CVar(Priority, VA_LIST("Priority", "Priority chams"), false, VISUAL);
-			CVar(Friend, VA_LIST("Friend", "Friend chams"), false, VISUAL);
-			CVar(Party, VA_LIST("Party", "Party chams"), false, VISUAL);
-			CVar(Target, VA_LIST("Target", "Target chams"), false, VISUAL);
-		
-			CVar(Visible, VA_LIST("Visible material", "Player visible material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			CVar(Occluded, VA_LIST("Occluded material", "Player occluded material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL);
-		SUBNAMESPACE_END(Player);
-
-		CVar(Relative, VA_LIST("Relative", "Relative chams"), true, VISUAL); // friendly and enemy become blu and red if off
-		CVar(EnemyChams, VA_LIST("Enemies", "Enemy chams"), true, VISUAL); // used if relative is on
-		CVar(TeamChams, VA_LIST("Team", "Team chams"), true, VISUAL); // used if relative is on
-
-		SUBNAMESPACE_BEGIN(Enemy, Enemy Chams)
-			CVar(Players, VA_LIST("Players", "Enemy player chams", "BLU player chams"), false, VISUAL);
-			CVar(Ragdolls, VA_LIST("Ragdolls", "Enemy ragdoll chams", "BLU ragdoll chams"), false, VISUAL);
-			CVar(Buildings, VA_LIST("Buildings", "Enemy building chams", "BLU building chams"), false, VISUAL);
-			CVar(Projectiles, VA_LIST("Projectiles", "Enemy projectile chams", "BLU projectile chams"), false, VISUAL);
-
-			CVar(Visible, VA_LIST("Visible material", "Enemy visible material", "BLU visible material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			CVar(Occluded, VA_LIST("Occluded material", "Enemy occluded material", "BLU occluded material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL);
-		SUBNAMESPACE_END(Enemy);
-
-		SUBNAMESPACE_BEGIN(Team, Team Chams)
-			CVar(Players, VA_LIST("Players", "Team player chams", "RED player chams"), false, VISUAL);
-			CVar(Ragdolls, VA_LIST("Ragdolls", "Team ragdoll chams", "RED ragdoll chams"), false, VISUAL);
-			CVar(Buildings, VA_LIST("Buildings", "Team building chams", "RED building chams"), false, VISUAL);
-			CVar(Projectiles, VA_LIST("Projectiles", "Team projectile chams", "RED projectile chams"), false, VISUAL);
-			
-			CVar(Visible, VA_LIST("Visible material", "Team visible material", "RED visible material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			CVar(Occluded, VA_LIST("Occluded material", "Team occluded material", "RED occluded material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL);
-		SUBNAMESPACE_END(Team);
-
-		SUBNAMESPACE_BEGIN(World, World Chams)
-			CVar(NPCs, VA_LIST("NPCs", "NPC chams"), false, VISUAL);
-			CVar(Pickups, VA_LIST("Pickups", "Pickup chams"), false, VISUAL);
-			CVar(Objective, VA_LIST("Objective", "Objective chams"), false, VISUAL);
-			CVar(Powerups, VA_LIST("Powerups", "Powerup chams"), false, VISUAL);
-			CVar(Bombs, VA_LIST("Bombs", "Bomb chams"), false, VISUAL);
-			CVar(Halloween, VA_LIST("Halloween", "Halloween chams"), false, VISUAL);
-		
-			CVar(Visible, VA_LIST("Visible material", "World visible material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			CVar(Occluded, VA_LIST("Occluded material", "World occluded material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL);
-		SUBNAMESPACE_END(World);
-
-		SUBNAMESPACE_BEGIN(Backtrack, Backtrack Chams)
-			CVar(Enabled, VA_LIST("Enabled", "Backtrack chams"), false, VISUAL);
-			CVar(IgnoreZ, VA_LIST("Ignore Z", "Backtrack ignore Z"), false, VISUAL);
-				
-			CVar(Visible, VA_LIST("Visible material", "Backtrack material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			//CVar(Occluded,VA_LIST ("Occluded material", "Backtrack material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL); // unused
-
-			CVarEnum(Draw, VA_LIST("Draw", "Backtrack chams draw"), 0b0001, VISUAL | DROPDOWN_MULTI, "All",
-				VA_LIST("Last", "First", "##Divider", "Always", "Ignore team"),
-				Last = 1 << 0, First = 1 << 1, Always = 1 << 2, IgnoreTeam = 1 << 3);
-		SUBNAMESPACE_END(Backtrack);
-
-		SUBNAMESPACE_BEGIN(FakeAngle, Fake Angle Chams)
-			CVar(Enabled, VA_LIST("Enabled", "Fake angle chams"), false, VISUAL);
-			CVar(IgnoreZ, VA_LIST("Ignore Z", "Fake angle ignore Z"), false, VISUAL);
-
-			CVar(Visible, VA_LIST("Visible material", "Fake angle material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			//CVar(Occluded, VA_LIST("Occluded material", "Fake angle material"), VA_LIST(std::vector<std::pair<std::string, Color_t>>) {}, VISUAL); // unused
-		SUBNAMESPACE_END(FakeAngle);
-
-		SUBNAMESPACE_BEGIN(Viewmodel, Viewmodel Chams)
-			CVar(Weapon, VA_LIST("Weapon", "Weapon chams"), false, VISUAL);
-			CVar(Hands, VA_LIST("Hands", "Hands chams"), false, VISUAL);
-			
-			CVar(WeaponMaterial, "Weapon material", VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-			CVar(HandsMaterial, "Hands material", VA_LIST(std::vector<std::pair<std::string, Color_t>>) VA_LIST({ { "Original", {} } }), VISUAL);
-		SUBNAMESPACE_END(Viewmodel);
-	NAMESPACE_END(Chams);
-
-	NAMESPACE_BEGIN(Glow)
-		SUBNAMESPACE_BEGIN(Player, Player Glow)
-			CVar(Local, VA_LIST("Local", "Local glow"), false, VISUAL);
-			CVar(Priority, VA_LIST("Priority", "Priority glow"), false, VISUAL);
-			CVar(Friend, VA_LIST("Friend", "Friend glow"), false, VISUAL);
-			CVar(Party, VA_LIST("Party", "Party glow"), false, VISUAL);
-			CVar(Target, VA_LIST("Target", "Target glow"), false, VISUAL);
-				
-			CVar(Stencil, VA_LIST("Stencil scale", "Player stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "Player blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-		SUBNAMESPACE_END(Player);
-
-		SUBNAMESPACE_BEGIN(Enemy, Enemy Glow)
-			CVar(Players, VA_LIST("Players", "Enemy player glow"), false, VISUAL);
-			CVar(Ragdolls, VA_LIST("Ragdolls", "Enemy ragdoll glow"), false, VISUAL);
-			CVar(Buildings, VA_LIST("Buildings", "Enemy building glow"), false, VISUAL);
-			CVar(Projectiles, VA_LIST("Projectiles", "Enemy projectile glow"), false, VISUAL);
-				
-			CVar(Stencil, VA_LIST("Stencil scale", "Enemy stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "Enemy blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-		SUBNAMESPACE_END(Enemy)
-			
-		SUBNAMESPACE_BEGIN(Team, Team Glow)
-			CVar(Players, VA_LIST("Players", "Team player glow"), false, VISUAL);
-			CVar(Ragdolls, VA_LIST("Ragdolls", "Team ragdoll glow"), false, VISUAL);
-			CVar(Buildings, VA_LIST("Buildings", "Team building glow"), false, VISUAL);
-			CVar(Projectiles, VA_LIST("Projectiles", "Team projectile glow"), false, VISUAL);
-				
-			CVar(Stencil, VA_LIST("Stencil scale", "Team stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "Team blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-		SUBNAMESPACE_END(Team);
-
-		SUBNAMESPACE_BEGIN(World, World Glow)
-			CVar(NPCs, VA_LIST("NPCs", "NPC glow"), false, VISUAL);
-			CVar(Pickups, VA_LIST("Pickups", "Pickup glow"), false, VISUAL);
-			CVar(Objective, VA_LIST("Objective", "Objective glow"), false, VISUAL);
-			CVar(Powerups, VA_LIST("Powerups", "Powerup glow"), false, VISUAL);
-			CVar(Bombs, VA_LIST("Bombs", "Bomb glow"), false, VISUAL);
-			CVar(Halloween, VA_LIST("Halloween", "Halloween glow"), false, VISUAL);
-				
-			CVar(Stencil, VA_LIST("Stencil scale", "World stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "World blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-		SUBNAMESPACE_END(World);
-
-		SUBNAMESPACE_BEGIN(Backtrack, Backtrack Glow)
-			CVar(Enabled, VA_LIST("Enabled", "Backtrack glow"), false, VISUAL);
-				
-			CVar(Stencil, VA_LIST("Stencil scale", "Backtrack stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "Backtrack blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-
-			CVarEnum(Draw, VA_LIST("Draw", "Backtrack glow draw"), 0b0001, VISUAL | DROPDOWN_MULTI, "All",
-				VA_LIST("Last", "First", "##Divider", "Always", "Ignore team"),
-				Last = 1 << 0, First = 1 << 1, Always = 1 << 2, IgnoreTeam = 1 << 3);
-		SUBNAMESPACE_END(Backtrack)
-
-		SUBNAMESPACE_BEGIN(FakeAngle, Fake Angle Glow)
-			CVar(Enabled, VA_LIST("Enabled", "Fake angle glow"), false, VISUAL);
-				
-			CVar(Stencil, VA_LIST("Stencil scale", "Fake angle stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "Fake angle blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-		SUBNAMESPACE_END(FakeAngle);
-
-		SUBNAMESPACE_BEGIN(Viewmodel, Viewmodel Glow)
-			CVar(Weapon, VA_LIST("Weapon", "Weapon glow"), false, VISUAL);
-			CVar(Hands, VA_LIST("Hands", "Hands glow"), false, VISUAL);
-
-			CVar(Stencil, VA_LIST("Stencil scale", "Viewmodel stencil scale"), 1, VISUAL | SLIDER_MIN, 0, 10);
-			CVar(Blur, VA_LIST("Blur scale", "Viewmodel blur scale"), 0, VISUAL | SLIDER_MIN, 0, 10);
-		SUBNAMESPACE_END(Viewmodel);
-	NAMESPACE_END(Glow);
-
 	NAMESPACE_BEGIN(Visuals)
+		SUBNAMESPACE_BEGIN(UI)
+			CVarEnum(StreamerMode, "Streamer mode", 0, VISUAL, nullptr,
+				VA_LIST("Off", "Local", "Friends", "Party", "All"),
+				Off, Local, Friends, Party, All);
+			CVarEnum(ChatTags, "Chat tags", 0b000, VISUAL | DROPDOWN_MULTI, nullptr,
+				VA_LIST("Local", "Friends", "Party", "Assigned"),
+				Local = 1 << 0, Friends = 1 << 1, Party = 1 << 2, Assigned = 1 << 3);
+			CVar(FieldOfView, "Field of view## FOV", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 160.f, 5.f);
+			CVar(ZoomFieldOfView, "Zoomed field of view## Zoomed FOV", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 160.f, 5.f);
+			CVar(AspectRatio, "Aspect ratio", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f, 0.05f);
+			CVar(RevealScoreboard, "Reveal scoreboard", false, VISUAL);
+			CVar(ScoreboardUtility, "Scoreboard utility", false);
+			CVar(ScoreboardColors, "Scoreboard colors", false, VISUAL);
+			CVar(CleanScreenshots, "Clean screenshots", true);
+		SUBNAMESPACE_END(UI);
+
 		SUBNAMESPACE_BEGIN(Thirdperson)
 			CVar(Enabled, "Thirdperson", false, VISUAL);
 			CVar(Crosshair, VA_LIST("Crosshair", "Thirdperson crosshair"), false, VISUAL);
@@ -715,7 +538,7 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Removals)
 			CVar(Interpolation, VA_LIST("Interpolation", "Remove interpolation"), false);
-			CVar(NoLerp, VA_LIST("0 lerp", "Remove 0 lerp"), false);
+			CVar(Lerp, VA_LIST("Lerp", "Remove lerp"), true);
 			CVar(Disguises, VA_LIST("Disguises", "Remove disguises"), false, VISUAL);
 			CVar(Taunts, VA_LIST("Taunts", "Remove taunts"), false, VISUAL);
 			CVar(Scope, VA_LIST("Scope", "Remove scope"), false, VISUAL);
@@ -750,22 +573,6 @@ namespace Vars
 			CVar(DrawDamageNumbersThroughWalls, "Draw damage numbers through walls", false, VISUAL);
 		SUBNAMESPACE_END(Tracers);
 
-		SUBNAMESPACE_BEGIN(UI)
-			CVarEnum(StreamerMode, "Streamer mode", 0, VISUAL, nullptr,
-				VA_LIST("Off", "Local", "Friends", "Party", "All"),
-				Off, Local, Friends, Party, All);
-			CVarEnum(ChatTags, "Chat tags", 0b000, VISUAL | DROPDOWN_MULTI, nullptr,
-				VA_LIST("Local", "Friends", "Party", "Assigned"),
-				Local = 1 << 0, Friends = 1 << 1, Party = 1 << 2, Assigned = 1 << 3);
-			CVar(FieldOfView, "Field of view## FOV", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 160.f, 5.f);
-			CVar(ZoomFieldOfView, "Zoomed field of view## Zoomed FOV", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 160.f, 5.f);
-			CVar(AspectRatio, "Aspect ratio", 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f, 0.05f);
-			CVar(RevealScoreboard, "Reveal scoreboard", false, VISUAL);
-			CVar(ScoreboardUtility, "Scoreboard utility", false);
-			CVar(ScoreboardColors, "Scoreboard colors", false, VISUAL);
-			CVar(CleanScreenshots, "Clean screenshots", true);
-		SUBNAMESPACE_END(UI);
-
 		SUBNAMESPACE_BEGIN(Viewmodel)
 			CVar(CrosshairAim, "Crosshair aim position", false, VISUAL);
 			CVar(ViewmodelAim, "Viewmodel aim position", false, VISUAL);
@@ -777,7 +584,6 @@ namespace Vars
 			CVar(Roll, VA_LIST("Roll", "Viewmodel roll"), 0.f, VISUAL | SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
 			CVar(SwayScale, VA_LIST("Sway scale", "Viewmodel sway scale"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 5.f, 0.5f);
 			CVar(SwayInterp, VA_LIST("Sway interp", "Viewmodel sway interp"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
-			CVar(FieldOfView, VA_LIST("Field of view## Viewmodel FOV", "Viewmodel field of view"), 0.f, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0.f, 180.f, 5.f);
 		SUBNAMESPACE_END(Viewmodel);
 
 		SUBNAMESPACE_BEGIN(World)
@@ -791,13 +597,6 @@ namespace Vars
 			CVar(NearPropFade, "Near prop fade", false, VISUAL);
 			CVar(NoPropFade, "No prop fade", false, VISUAL);
 		SUBNAMESPACE_END(World);
-
-		SUBNAMESPACE_BEGIN(Other, Other Visuals)
-			CVar(LocalDominationOverride, "Local domination override", std::string(""), VISUAL);
-			CVar(LocalRevengeOverride, "Local revenge override", std::string(""), VISUAL);
-			CVar(DominationOverride, "Domination override", std::string(""), VISUAL);
-			CVar(RevengeOverride, "Revenge override", std::string(""), VISUAL);
-		SUBNAMESPACE_END(Other);
 
 		SUBNAMESPACE_BEGIN(Beams) // as of now, these will stay out of the menu
 			CVar(Model, "Model", std::string("sprites/physbeam.vmt"), VISUAL);
@@ -882,53 +681,6 @@ namespace Vars
 		SUBNAMESPACE_END(ProjectileTrajectory);
 	NAMESPACE_END(Visuals);
 
-	NAMESPACE_BEGIN(Radar)
-		SUBNAMESPACE_BEGIN(Main, Radar)
-			CVar(Enabled, VA_LIST("Enabled", "Radar enabled"), false, VISUAL);
-			CVar(DrawOutOfRange, "Draw out of range", true, VISUAL);
-			CVarEnum(Style, VA_LIST("Style", "Radar style"), 0, VISUAL, nullptr,
-				VA_LIST("Circle", "Rectangle"),
-				Circle, Rectangle);
-			CVar(Window, "Radar window", WindowBox_t(), VISUAL | NOBIND);
-			CVar(Range, VA_LIST("Range", "Radar range"), 1500, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 50, 3000, 50);
-			CVar(BackgroundAlpha, VA_LIST("Background alpha", "Radar background alpha"), 128, VISUAL | SLIDER_CLAMP, 0, 255, 5);
-			CVar(LineAlpha, VA_LIST("Line alpha", "Radar line alpha"), 255, VISUAL | SLIDER_CLAMP, 0, 255, 5);
-		SUBNAMESPACE_END(Main);
-
-		SUBNAMESPACE_BEGIN(Player, Player Radar)
-			CVar(Enabled, VA_LIST("Enabled", "Radar player enabled"), false, VISUAL);
-			CVar(Background, VA_LIST("Background", "Radar player background"), true, VISUAL);
-			CVarEnum(Draw, VA_LIST("Draw", "Radar player draw"), 0b1001010, VISUAL | DROPDOWN_MULTI, nullptr,
-				VA_LIST("Local", "Enemy", "Team", "Friends", "Party", "Prioritized", "Cloaked"),
-				Local = 1 << 0, Enemy = 1 << 1, Team = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5, Cloaked = 1 << 6);
-			CVarEnum(Icon, VA_LIST("Icon", "Radar player icon"), 1, VISUAL, nullptr,
-				VA_LIST("Icons", "Portraits", "Avatar"),
-				Icons, Portraits, Avatars);
-			CVar(Size, VA_LIST("Size", "Radar player size"), 24, VISUAL, 12, 30, 2);
-			CVar(Health, VA_LIST("Health bar", "Radar player health bar"), false, VISUAL);
-			CVar(Height, VA_LIST("Height indicator", "Radar player height indicator"), false, VISUAL);
-		SUBNAMESPACE_END(Players);
-
-		SUBNAMESPACE_BEGIN(Building, Building Radar)
-			CVar(Enabled, VA_LIST("Enabled", "Radar building enabled"), false, VISUAL);
-			CVar(Background, VA_LIST("Background", "Radar building background"), true, VISUAL);
-			CVarEnum(Draw, VA_LIST("Draw", "Radar building draw"), 0b001011, VISUAL | DROPDOWN_MULTI, nullptr,
-				VA_LIST("Local", "Enemy", "Team", "Friends", "Party", "Prioritized"),
-				Local = 1 << 0, Enemy = 1 << 1, Team = 1 << 2, Prioritized = 1 << 3, Friends = 1 << 4, Party = 1 << 5);
-			CVar(Size, VA_LIST("Size", "Radar building size"), 18, VISUAL, 12, 30, 2);
-			CVar(Health, VA_LIST("Health bar", "Radar building health bar"), false, VISUAL);
-		SUBNAMESPACE_END(Buildings);
-
-		SUBNAMESPACE_BEGIN(World, World Radar)
-			CVar(Enabled, VA_LIST("Enabled", "Radar world enabled"), false, VISUAL);
-			CVar(Background, VA_LIST("Background", "Radar world background"), true, VISUAL);
-			CVarEnum(Draw, VA_LIST("Draw", "Radar world draw"), 0b0000011, VISUAL | DROPDOWN_MULTI, nullptr,
-				VA_LIST("Health", "Ammo", "Money", "Bombs", "Powerup", "Spellbook", "Gargoyle"),
-				Health = 1 << 0, Ammo = 1 << 1, Money = 1 << 2, Bombs = 1 << 3, Powerup = 1 << 4, Spellbook = 1 << 5, Gargoyle = 1 << 6);
-			CVar(Size, VA_LIST("Size", "Radar world size"), 14, VISUAL, 12, 30, 2);
-		SUBNAMESPACE_END(World);
-	NAMESPACE_END(Radar);
-
 	NAMESPACE_BEGIN(Misc)
 		SUBNAMESPACE_BEGIN(Movement)
 			CVarEnum(AutoStrafe, "Auto strafe", 0, NONE, nullptr,
@@ -954,15 +706,6 @@ namespace Vars
 			CVar(ApplyAbove, "Apply timing offset above", 0, NOSAVE | DEBUGVAR, 0, 8);
 		SUBNAMESPACE_END(Movement);
 
-		SUBNAMESPACE_BEGIN(Exploits)
-			CVar(PureBypass, "Pure bypass", false);
-			CVar(CheatsBypass, "Cheats bypass", false);
-			CVar(EquipRegionUnlock, "Equip region unlock", false);
-			CVar(BackpackExpander, "Backpack expander", false);
-			CVar(PingReducer, "Ping reducer", false);
-			CVar(PingTarget, "cl_cmdrate", 1, SLIDER_CLAMP, 1, 66);
-		SUBNAMESPACE_END(Exploits);
-
 		SUBNAMESPACE_BEGIN(Automation)
 			CVarEnum(AntiBackstab, "Anti-backstab", 0, NONE, nullptr,
 				VA_LIST("Off", "Yaw", "Pitch", "Fake"),
@@ -976,14 +719,14 @@ namespace Vars
 			CVar(AcceptItemDrops, "Auto accept item drops", false);
 		SUBNAMESPACE_END(Automation);
 
-		SUBNAMESPACE_BEGIN(Sound)
-			CVarEnum(Block, VA_LIST("Block", "Sound block"), 0b0000, DROPDOWN_MULTI, nullptr,
-				VA_LIST("Footsteps", "Noisemaker", "Frying pan", "Water"),
-				Footsteps = 1 << 0, Noisemaker = 1 << 1, FryingPan = 1 << 2, Water = 1 << 3);
-			CVar(HitsoundAlways, "Hitsound always", false);
-			CVar(RemoveDSP, "Remove DSP", false);
-			CVar(GiantWeaponSounds, "Giant weapon sounds", false);
-		SUBNAMESPACE_END(Sound);
+		SUBNAMESPACE_BEGIN(Exploits)
+			CVar(PureBypass, "Pure bypass", false);
+			CVar(CheatsBypass, "Cheats bypass", false);
+			CVar(EquipRegionUnlock, "Equip region unlock", false);
+			CVar(BackpackExpander, "Backpack expander", false);
+			CVar(PingReducer, "Ping reducer", false);
+			CVar(PingTarget, "cl_cmdrate", 1, SLIDER_CLAMP, 1, 66);
+		SUBNAMESPACE_END(Exploits);
 
 		SUBNAMESPACE_BEGIN(Game)
 			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", false);
@@ -1046,15 +789,14 @@ namespace Vars
 			CVar(AllowInspect, "Allow inspect", false);
 		SUBNAMESPACE_END(Sound);
 
-		SUBNAMESPACE_BEGIN(SteamRPC, Steam RPC)
-			CVar(Enabled, "Enabled", false);
-			CVar(OverrideInMenu, "Override in menu", false);
-			CVarEnum(MatchGroup, "Match group", 0, NONE, nullptr,
-				VA_LIST("Special Event", "MvM Mann Up", "Competitive", "Casual", "MvM Boot Camp"),
-				SpecialEvent, MvMMannUp, Competitive, Casual, MvMBootCamp);
-			CVar(MapText, "Map text", std::string("Amalgam"));
-			CVar(GroupSize, "Group size", 1337, SLIDER_MIN, 0, 6);
-		SUBNAMESPACE_END(Steam);
+		SUBNAMESPACE_BEGIN(Sound)
+			CVarEnum(Block, VA_LIST("Block", "Sound block"), 0b0000, DROPDOWN_MULTI, nullptr,
+				VA_LIST("Footsteps", "Noisemaker", "Frying pan", "Water"),
+				Footsteps = 1 << 0, Noisemaker = 1 << 1, FryingPan = 1 << 2, Water = 1 << 3);
+			CVar(HitsoundAlways, "Hitsound always", false);
+			CVar(RemoveDSP, "Remove DSP", false);
+			CVar(GiantWeaponSounds, "Giant weapon sounds", false);
+		SUBNAMESPACE_END(Sound);
 	NAMESPACE_END(Misc);
 
 	NAMESPACE_BEGIN(Logging)
@@ -1142,13 +884,18 @@ namespace Vars
 		CVar(CBasePlayer_ItemPostFrame, "CBasePlayer_ItemPostFrame", true, NOSAVE | DEBUGVAR);
 		CVar(CBaseViewModel_ShouldFlipViewModel, "CBaseViewModel_ShouldFlipViewModel", true, NOSAVE | DEBUGVAR);
 		CVar(Cbuf_ExecuteCommand, "Cbuf_ExecuteCommand", true, NOSAVE | DEBUGVAR);
-		CVar(CClientModeShared_CreateMove, "CClientModeShared_CreateMove", true, NOSAVE | DEBUGVAR);
 		CVar(CClientModeShared_DoPostScreenSpaceEffects, "CClientModeShared_DoPostScreenSpaceEffects", true, NOSAVE | DEBUGVAR);
 		CVar(CClientModeShared_OverrideView, "CClientModeShared_OverrideView", true, NOSAVE | DEBUGVAR);
 		CVar(CClientModeShared_ShouldDrawViewModel, "CClientModeShared_ShouldDrawViewModel", true, NOSAVE | DEBUGVAR);
 		CVar(CClientState_GetClientInterpAmount, "CClientState_GetClientInterpAmount", true, NOSAVE | DEBUGVAR);
 		CVar(CClientState_ProcessFixAngle, "CClientState_ProcessFixAngle", true, NOSAVE | DEBUGVAR);
+		CVar(CHLClient_CreateMove, "CHLClient_CreateMove", true, NOSAVE | DEBUGVAR);
+		CVar(CHLClient_DispatchUserMessage, "CHLClient_DispatchUserMessage", true, NOSAVE | DEBUGVAR);
+		CVar(CHLClient_FrameStageNotify, "CHLClient_FrameStageNotify", true, NOSAVE | DEBUGVAR);
+		CVar(CHLClient_LevelShutdown, "CHLClient_LevelShutdown", true, NOSAVE | DEBUGVAR);
 		CVar(CHudCrosshair_GetDrawPosition, "CHudCrosshair_GetDrawPosition", true, NOSAVE | DEBUGVAR);
+		CVar(CInput_GetUserCmd, "CInput_GetUserCmd", true, NOSAVE | DEBUGVAR);
+		CVar(CInput_ValidateUserCmd, "CInput_ValidateUserCmd", true, NOSAVE | DEBUGVAR);
 		CVar(CInventoryManager_ShowItemsPickedUp, "CInventoryManager_ShowItemsPickedUp", true, NOSAVE | DEBUGVAR);
 		CVar(CL_CheckForPureServerWhitelist, "CL_CheckForPureServerWhitelist", true, NOSAVE | DEBUGVAR);
 		CVar(CL_Move, "CL_Move", true, NOSAVE | DEBUGVAR);
@@ -1204,13 +951,9 @@ namespace Vars
 		CVar(FX_FireBullets, "FX_FireBullets", true, NOSAVE | DEBUGVAR);
 		CVar(GetClientInterpAmount, "GetClientInterpAmount", true, NOSAVE | DEBUGVAR);
 		CVar(HostState_Shutdown, "HostState_Shutdown", true, NOSAVE | DEBUGVAR);
-		CVar(IBaseClientDLL_DispatchUserMessage, "IBaseClientDLL_DispatchUserMessage", true, NOSAVE | DEBUGVAR);
-		CVar(IBaseClientDLL_FrameStageNotify, "IBaseClientDLL_FrameStageNotify", true, NOSAVE | DEBUGVAR);
-		CVar(IBaseClientDLL_LevelShutdown, "IBaseClientDLL_LevelShutdown", true, NOSAVE | DEBUGVAR);
 		CVar(IEngineTrace_SetTraceEntity, "IEngineTrace_SetTraceEntity", true, NOSAVE | DEBUGVAR);
 		CVar(IEngineTrace_TraceRay, "IEngineTrace_TraceRay", true, NOSAVE | DEBUGVAR);
 		CVar(IEngineVGui_Paint, "IEngineVGui_Paint", true, NOSAVE | DEBUGVAR);
-		CVar(IInput_GetUserCmd, "IInput_GetUserCmd", true, NOSAVE | DEBUGVAR);
 		CVar(IMatSystemSurface_OnScreenSizeChanged, "IMatSystemSurface_OnScreenSizeChanged", true, NOSAVE | DEBUGVAR);
 		CVar(IPanel_PaintTraverse, "IPanel_PaintTraverse", true, NOSAVE | DEBUGVAR);
 		CVar(ISteamFriends_GetFriendPersonaName, "ISteamFriends_GetFriendPersonaName", true, NOSAVE | DEBUGVAR);

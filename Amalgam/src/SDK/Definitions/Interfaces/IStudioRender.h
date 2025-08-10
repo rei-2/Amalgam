@@ -236,14 +236,14 @@ public:
 
 	void SetColorModulation(float r, float g, float b)
 	{
-		const float clr[3] = { r, g, b };
-		SetColorModulation(clr);
+		float aColor[3] = { r, g, b };
+		SetColorModulation(aColor);
 	}
 
-	void SetColorModulation(Color_t clr)
+	void SetColorModulation(Color_t tColor)
 	{
-		float _clr[3] = { float(clr.r) / 255, float(clr.g) / 255, float(clr.b) / 255 };
-		SetColorModulation(_clr);
+		float aColor[3] = { tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f };
+		SetColorModulation(aColor);
 	}
 };
 

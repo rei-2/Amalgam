@@ -124,11 +124,11 @@ public:
 	{
 		switch (GetClassID())
 		{
-		case ETFClassID::CEyeballBoss:
-		case ETFClassID::CHeadlessHatman:
-		case ETFClassID::CMerasmus:
 		case ETFClassID::CTFBaseBoss:
 		case ETFClassID::CTFTankBoss:
+		case ETFClassID::CMerasmus:
+		case ETFClassID::CEyeballBoss:
+		case ETFClassID::CHeadlessHatman:
 		case ETFClassID::CZombie:
 			return true;
 		}

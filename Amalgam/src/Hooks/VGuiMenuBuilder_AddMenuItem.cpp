@@ -10,9 +10,9 @@ MAKE_SIGNATURE(CTFClientScoreBoardDialog_OnCommand, "client.dll", "48 89 5C 24 ?
 MAKE_SIGNATURE(CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_IsPlayerBlocked_Call, "client.dll", "84 C0 48 8D 0D ? ? ? ? 48 8D 15 ? ? ? ? 48 0F 45 D1 4C 8D 0D", 0x0);
 MAKE_SIGNATURE(CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuItem_Call, "client.dll", "48 8B 0D ? ? ? ? 4C 8D 85 ? ? ? ? 48 8D 95 ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 44 8B 85", 0x0);
 
-static int iPlayerIndex;
-static uint32_t uFriendsID;
-static const char* sPlayerName;
+static int s_iPlayerIndex;
+static uint32_t s_uAccountID;
+static const char* s_sPlayerName;
 
 MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
     void* rcx, int playerIndex)
@@ -26,7 +26,7 @@ MAKE_HOOK(CVoiceStatus_IsPlayerBlocked, S::CVoiceStatus_IsPlayerBlocked(), bool,
     const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
     if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired)
-        iPlayerIndex = playerIndex;
+        s_iPlayerIndex = playerIndex;
 
     return CALL_ORIGINAL(rcx, playerIndex);
 }
@@ -42,20 +42,19 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
     static const auto dwDesired = S::CTFClientScoreBoardDialog_OnScoreBoardMouseRightRelease_AddMenuItem_Call();
     const auto dwRetAddr = uintptr_t(_ReturnAddress());
 
-    if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired && iPlayerIndex != -1)
+    if (Vars::Visuals::UI::ScoreboardUtility.Value && dwRetAddr == dwDesired && s_iPlayerIndex != -1)
     {
-        auto ret = CALL_ORIGINAL(rcx, pszButtonText, pszCommand, pszCategoryName);
+        auto pReturn = CALL_ORIGINAL(rcx, pszButtonText, pszCommand, pszCategoryName);
 
-        PlayerInfo_t pi{};
-        if (I::EngineClient->GetPlayerInfo(iPlayerIndex, &pi) && !pi.fakeplayer)
+        if (auto pResource = H::Entities.GetResource())
         {
-            uFriendsID = pi.friendsID;
-            sPlayerName = pi.name;
+            s_uAccountID = pResource->m_iAccountID(s_iPlayerIndex);
+            s_sPlayerName = pResource->GetName(s_iPlayerIndex);
 
             CALL_ORIGINAL(rcx, "History", "history", "profile");
-            CALL_ORIGINAL(rcx, I::EngineClient->GetPlayerForUserID(F::Spectate.m_iIntendedTarget) == iPlayerIndex ? "Unspectate" : "Spectate", "spectate", "profile");
+            CALL_ORIGINAL(rcx, I::EngineClient->GetPlayerForUserID(F::Spectate.m_iIntendedTarget) == s_iPlayerIndex ? "Unspectate" : "Spectate", "spectate", "profile");
 
-            CALL_ORIGINAL(rcx, std::format("Tags for {}", sPlayerName).c_str(), "listtags", "tags");
+            CALL_ORIGINAL(rcx, std::format("Tags for {}", s_sPlayerName).c_str(), "listtags", "tags");
             for (auto it = F::PlayerUtils.m_vTags.begin(); it != F::PlayerUtils.m_vTags.end(); it++)
             {
                 int iID = std::distance(F::PlayerUtils.m_vTags.begin(), it);
@@ -63,12 +62,12 @@ MAKE_HOOK(VGuiMenuBuilder_AddMenuItem, S::VGuiMenuBuilder_AddMenuItem(), void*,
                 if (!tTag.m_bAssignable)
                     continue;
 
-                bool bHasTag = F::PlayerUtils.HasTag(uFriendsID, iID);
+                bool bHasTag = F::PlayerUtils.HasTag(s_uAccountID, iID);
                 CALL_ORIGINAL(rcx, std::format("{} {}", bHasTag ? "Remove" : "Add", tTag.m_sName).c_str(), std::format("modifytag{}", iID).c_str(), "tags");
             }
         }
-
-        return ret;
+        
+        return pReturn;
     }
 
     return CALL_ORIGINAL(rcx, pszButtonText, pszCommand, pszCategoryName);
@@ -89,14 +88,14 @@ MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCo
     switch (uHash)
     {
     case FNV1A::Hash32Const("history"):
-        I::SteamFriends->ActivateGameOverlayToWebPage(std::format("https://steamhistory.net/id/{}", CSteamID(uFriendsID, k_EUniversePublic, k_EAccountTypeIndividual).ConvertToUint64()).c_str());
+        I::SteamFriends->ActivateGameOverlayToWebPage(std::format("https://steamhistory.net/id/{}", CSteamID(s_uAccountID, k_EUniversePublic, k_EAccountTypeIndividual).ConvertToUint64()).c_str());
         break;
     case FNV1A::Hash32Const("spectate"):
-        if (auto pResource = H::Entities.GetPR())
-            F::Spectate.SetTarget(pResource->m_iUserID(iPlayerIndex));
+        if (auto pResource = H::Entities.GetResource())
+            F::Spectate.SetTarget(pResource->m_iUserID(s_iPlayerIndex));
         break;
     case FNV1A::Hash32Const("listtags"):
-        F::Output.TagsOnJoin(sPlayerName, uFriendsID);
+        F::Output.TagsOnJoin(s_sPlayerName, s_uAccountID);
         break;
     default:
         if (strstr(command, "modifytag"))
@@ -106,10 +105,10 @@ MAKE_HOOK(CTFClientScoreBoardDialog_OnCommand, S::CTFClientScoreBoardDialog_OnCo
                 std::string sTag = command;
                 sTag = sTag.replace(0, strlen("modifytag"), "");
                 int iID = std::stoi(sTag);
-                if (!F::PlayerUtils.HasTag(uFriendsID, iID))
-                    F::PlayerUtils.AddTag(uFriendsID, iID, true, sPlayerName);
+                if (!F::PlayerUtils.HasTag(s_uAccountID, iID))
+                    F::PlayerUtils.AddTag(s_uAccountID, iID, true, s_sPlayerName);
                 else
-                    F::PlayerUtils.RemoveTag(uFriendsID, iID, true, sPlayerName);
+                    F::PlayerUtils.RemoveTag(s_uAccountID, iID, true, s_sPlayerName);
             }
             catch (...) {}
         }

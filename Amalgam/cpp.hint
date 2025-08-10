@@ -84,29 +84,48 @@ namespace MAKE_INTERFACE_SCOPE \
 	return S::sig##_##name.Call<type>(##__VA_ARGS__); \
 }
 
-#define VA_LIST(...) __VA_ARGS__
-#define NAMESPACE_BEGIN(name)\
+#define NAMESPACE_BEGIN(name, ...)\
 	namespace name {\
-		inline std::string GetNamespace() { return "Vars::" + std::string(#name) + "::"; }\
-		inline std::string GetSubname() { return ""; }
-#define SUBNAMESPACE_BEGIN(name)\
+		inline const char* GetNamespace() { return "Vars::"#name"::"; }\
+		inline const char* GetSubname() { return ""; }\
+		inline const char* GetSection() { return !std::string(#__VA_ARGS__).empty() ? ""#__VA_ARGS__ : #name; }
+
+#define SUBNAMESPACE_BEGIN(name, ...)\
 	namespace name {\
-		inline std::string GetSubname() { return std::string(#name) + "::"; }
+		inline const char* GetSubname() { return #name"::"; }\
+		inline const char* GetSection() { return !std::string(#__VA_ARGS__).empty() ? ""#__VA_ARGS__ : #name; }
+
 #define NAMESPACE_END(name)\
 	}
 #define SUBNAMESPACE_END(name)\
 	}
-#define CVar(name, value, ...)\
-	inline ConfigVar<decltype(value)> name = { value, GetNamespace() + GetSubname() + std::string(#name), __VA_ARGS__ };
+
+#define CVar(name, title, value, ...)\
+	inline ConfigVar<decltype(value)> name = { value, std::format("{}{}{}", GetNamespace(), GetSubname(), #name), GetSection(), { title }, __VA_ARGS__ }
+#define CVarValues(name, title, value, flags, none, ...)\
+	inline ConfigVar<decltype(value)> name = { value, std::format("{}{}{}", GetNamespace(), GetSubname(), #name), GetSection(), { title }, flags, { __VA_ARGS__ }, none }
 #define Enum(name, ...)\
-	namespace name##Enum { enum name##Enum { __VA_ARGS__ }; };
-#define CVarEnum(name, value, flags, ...)\
-	CVar(name, value, flags)\
-	Enum(name, __VA_ARGS__)
+	namespace name##Enum { enum name##Enum { __VA_ARGS__ }; }
+#define CVarEnum(name, title, value, flags, none, values, ...)\
+	CVarValues(name, title, value, flags, none, values);\
+	Enum(name, __VA_ARGS__);
+
 #define NONE 0
-#define VISUAL (1 << 0)
-#define NOSAVE (1 << 1)
-#define NOBIND (1 << 2)
+#define VISUAL (1 << 31)
+#define NOSAVE (1 << 30)
+#define NOBIND (1 << 29)
+#define DEBUGVAR (1 << 28)
+
+#define SLIDER_CLAMP (1 << 2)
+#define SLIDER_MIN (1 << 3)
+#define SLIDER_MAX (1 << 4)
+#define SLIDER_PRECISION (1 << 5)
+#define SLIDER_NOAUTOUPDATE (1 << 6)
+#define DROPDOWN_MULTI (1 << 2)
+#define DROPDOWN_MODIFIABLE (1 << 3)
+#define DROPDOWN_CUSTOM (1 << 2)
+#define DROPDOWN_AUTOUPDATE (1 << 3)
+
 #define DEFAULT_BIND -1
 
 #define ADD_FEATURE_CUSTOM(type, name, scope) namespace scope { inline type name; }

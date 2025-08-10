@@ -19,8 +19,8 @@ public:
 	void ReportResolver(int iIndex, const char* sAction, const char* sAxis, const char* sValue);
 	void ReportResolver(const char* sMessage);
 
-	void TagsOnJoin(const char* sName, uint32_t uFriendsID);
-	void AliasOnJoin(const char* sName, uint32_t uFriendsID);
+	void TagsOnJoin(const char* sName, uint32_t uAccountID);
+	void AliasOnJoin(const char* sName, uint32_t uAccountID);
 };
 
 ADD_FEATURE(COutput, Output);

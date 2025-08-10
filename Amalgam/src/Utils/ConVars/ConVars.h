@@ -11,9 +11,10 @@ private:
 	std::unordered_map<ConCommandBase*, int> mFlagMap = {};
 
 public:
+	ConVar* FindVar(const char* sCVar);
+
 	void Initialize();
 	void Unload();
-	ConVar* FindVar(const char* sCVar);
 };
 
 ADD_FEATURE_CUSTOM(CConVars, ConVars, U);

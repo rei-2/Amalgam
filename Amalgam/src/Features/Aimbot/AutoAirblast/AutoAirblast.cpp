@@ -34,7 +34,7 @@ bool CAutoAirblast::CanAirblastEntity(CTFPlayer* pLocal, CTFWeaponBase* pWeapon,
 
 	CBaseEntity* pTarget;
 	for (CEntitySphereQuery sphere(vOrigin, flRadius);
-		(pTarget = sphere.GetCurrentEntity()) != nullptr;
+		pTarget = sphere.GetCurrentEntity();
 		sphere.NextEntity())
 	{
 		if (pTarget == pEntity)

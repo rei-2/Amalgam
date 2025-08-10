@@ -6,7 +6,7 @@
 bool CNoSpread::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	if (!Vars::Aimbot::General::NoSpread.Value
-		|| !pLocal || !pWeapon || !pLocal->CanAttack())
+		|| !pWeapon || !pLocal->CanAttack())
 		return false;
 
 	return true;

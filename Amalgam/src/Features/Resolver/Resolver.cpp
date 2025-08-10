@@ -49,16 +49,16 @@ void CResolver::FrameStageNotify()
 	if (!Vars::Resolver::Enabled.Value || !I::EngineClient->IsInGame() || I::EngineClient->IsPlayingDemo())
 		return;
 
-	auto pResource = H::Entities.GetPR();
+	auto pResource = H::Entities.GetResource();
 	if (!pResource)
 		return;
 
 	StoreSniperDots(pResource);
-
 	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
+			|| !H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
 		int iUserID = pResource->m_iUserID(pPlayer->entindex());
@@ -69,7 +69,7 @@ void CResolver::FrameStageNotify()
 		else
 			tData.m_bYaw = false;
 
-		if (H::Entities.GetDeltaTime(pPlayer->entindex()) && fabsf(pPlayer->m_angEyeAnglesX()) == 90.f)
+		if (fabsf(pPlayer->m_angEyeAnglesX()) == 90.f)
 		{
 			if (auto flPitch = GetPitchForSniperDot(pPlayer, pResource))
 				tData.m_flPitch = flPitch.value();
@@ -84,9 +84,6 @@ void CResolver::FrameStageNotify()
 
 void CResolver::CreateMove(CTFPlayer* pLocal)
 {
-	if (!pLocal)
-		return;
-
 	if (m_iWaitingForTarget != -1 && m_flWaitingForDamage < I::GlobalVars->curtime)
 	{
 		if (auto pTarget = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget))->As<CTFPlayer>())
@@ -125,7 +122,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 	if (!Vars::Resolver::Enabled.Value)
 		return;
 
-	auto pResource = H::Entities.GetPR();
+	auto pResource = H::Entities.GetResource();
 	if (!pResource)
 		return;
 
@@ -139,7 +136,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 
 			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
 			{
-				if (pEntity->entindex() == pLocal->entindex())
+				if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
 					continue;
 
 				Vec3 vCurPos = pEntity->GetCenter();
@@ -270,7 +267,7 @@ void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase*
 			return;
 	}
 
-	auto pResource = H::Entities.GetPR();
+	auto pResource = H::Entities.GetResource();
 	if (!pResource)
 		return;
 
@@ -384,10 +381,10 @@ bool CResolver::GetAngles(CTFPlayer* pPlayer, float* pYaw, float* pPitch, bool* 
 	if (!Vars::Resolver::Enabled.Value)
 		return false;
 
-	if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+	if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 		return false;
 
-	auto pResource = H::Entities.GetPR();
+	auto pResource = H::Entities.GetResource();
 	if (!pResource)
 		return false;
 

@@ -30,9 +30,13 @@ bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool
 
 int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
 {
+	static auto sv_usercmd_custom_random_seed = U::ConVars.FindVar("sv_usercmd_custom_random_seed");
+	if (!sv_usercmd_custom_random_seed->GetBool())
+		return pCmd->random_seed & 255;
+
 	double dFloatTime = SDK::PlatFloatTime() + m_dTimeDelta;
 	float flTime = float(dFloatTime * 1000.0);
-	return std::bit_cast<int32_t>(flTime) & 255;
+	return *reinterpret_cast<int*>((char*)&flTime) & 255;
 }
 
 float CNoSpreadHitscan::CalcMantissaStep(float flV)

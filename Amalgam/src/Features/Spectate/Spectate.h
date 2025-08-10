@@ -6,7 +6,7 @@ class CSpectate
 public:
 	void NetUpdateEnd(CTFPlayer* pLocal);
 	void NetUpdateStart(CTFPlayer* pLocal);
-	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void CreateMove(CUserCmd* pCmd);
 	void SetTarget(int iTarget);
 
 	int m_iTarget = -1;

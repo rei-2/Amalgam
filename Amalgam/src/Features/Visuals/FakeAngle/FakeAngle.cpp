@@ -2,12 +2,19 @@
 
 #include "../../PacketManip/AntiAim/AntiAim.h"
 #include "../../Ticks/Ticks.h"
+#include "../Groups/Groups.h"
 
 void CFakeAngle::Run(CTFPlayer* pLocal)
 {
 	if (!pLocal || !pLocal->IsAlive() || pLocal->IsAGhost()
-		|| !F::AntiAim.AntiAimOn() && (!Vars::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift)
-		|| !Vars::Chams::FakeAngle::Enabled.Value && !Vars::Glow::FakeAngle::Enabled.Value)
+		|| !F::AntiAim.AntiAimOn() && (!Vars::Fakelag::Fakelag.Value || F::Ticks.m_iShiftedTicks == F::Ticks.m_iMaxShift))
+	{
+		bBonesSetup = false;
+		return;
+	}
+
+	Group_t* pGroup = nullptr;
+	if (!F::Groups.GetGroup(TargetsEnum::FakeAngle, pGroup) || !pGroup->m_tChams(true) && !pGroup->m_tGlow())
 	{
 		bBonesSetup = false;
 		return;

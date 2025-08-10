@@ -11,7 +11,7 @@ struct TickbaseFix_t
 	int m_iCommandNumber;
 	int m_iTickbaseShift;
 };
-static std::vector<TickbaseFix_t> vTickbaseFixes = {};
+static std::vector<TickbaseFix_t> s_vTickbaseFixes = {};
 
 MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 	void* rcx, int current_command, float curtime, CUserCmd* cmd, CTFPlayer* localPlayer)
@@ -22,12 +22,12 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 #endif
 
 	if (F::Ticks.m_bShifting && F::Ticks.m_iShiftedTicks + 1 == F::Ticks.m_iShiftStart)
-		vTickbaseFixes.emplace_back(I::ClientState->lastoutgoingcommand, cmd->command_number, F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal);
+		s_vTickbaseFixes.emplace_back(I::ClientState->lastoutgoingcommand, cmd->command_number, F::Ticks.m_iShiftStart - F::Ticks.m_iShiftedGoal);
 
-	for (auto it = vTickbaseFixes.begin(); it != vTickbaseFixes.end();)
+	for (auto it = s_vTickbaseFixes.begin(); it != s_vTickbaseFixes.end();)
 	{
 		if (it->m_iLastOutgoingCommand < I::ClientState->last_command_ack)
-			it = vTickbaseFixes.erase(it);
+			it = s_vTickbaseFixes.erase(it);
 		else
 		{
 			if (cmd->command_number == it->m_iCommandNumber)

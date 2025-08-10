@@ -1,6 +1,6 @@
 #include "NetVars.h"
 
-#include "../../SDK/Definitions/Interfaces/IBaseClientDLL.h"
+#include "../../SDK/Definitions/Interfaces/CHLClient.h"
 #include "../Hash/FNV1A.h"
 
 #ifdef GetProp
@@ -29,7 +29,7 @@ int CNetVars::GetOffset(RecvTable* pTable, const char* szNetVar)
 int CNetVars::GetNetVar(const char* szClass, const char* szNetVar)
 {
 	auto uHash = FNV1A::Hash32(szClass);
-	for (auto pCurrNode = I::BaseClientDLL->GetAllClasses(); pCurrNode; pCurrNode = pCurrNode->m_pNext)
+	for (auto pCurrNode = I::Client->GetAllClasses(); pCurrNode; pCurrNode = pCurrNode->m_pNext)
 	{
 		if (uHash == FNV1A::Hash32(pCurrNode->m_pNetworkName))
 			return GetOffset(pCurrNode->m_pRecvTable, szNetVar);
@@ -60,7 +60,7 @@ RecvProp* CNetVars::GetProp(RecvTable* pTable, const char* szNetVar)
 RecvProp* CNetVars::GetNetProp(const char* szClass, const char* szNetVar)
 {
 	auto uHash = FNV1A::Hash32(szClass);
-	for (auto pCurrNode = I::BaseClientDLL->GetAllClasses(); pCurrNode; pCurrNode = pCurrNode->m_pNext)
+	for (auto pCurrNode = I::Client->GetAllClasses(); pCurrNode; pCurrNode = pCurrNode->m_pNext)
 	{
 		if (uHash == FNV1A::Hash32(pCurrNode->m_pNetworkName))
 			return GetProp(pCurrNode->m_pRecvTable, szNetVar);

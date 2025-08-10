@@ -48,6 +48,4 @@ public:
 	NETVAR_ARRAY(m_iPlayerClassWhenKilled, int, "CTFPlayerResource", "m_iPlayerClassWhenKilled");
 	NETVAR_ARRAY(m_iConnectionState, int, "CTFPlayerResource", "m_iConnectionState");
 	NETVAR_ARRAY(m_flConnectTime, float, "CTFPlayerResource", "m_flConnectTime");
-
-	NETVAR_ARRAY_OFF(m_pszPlayerName, const char*, "CTFPlayerResource", "m_iPing", -816);
 };

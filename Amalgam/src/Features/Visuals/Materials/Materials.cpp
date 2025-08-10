@@ -4,6 +4,7 @@
 #include "../CameraWindow/CameraWindow.h"
 #include "../../Configs/Configs.h"
 #include "../../Binds/Binds.h"
+#include "../Groups/Groups.h"
 #include <filesystem>
 #include <fstream>
 
@@ -163,13 +164,13 @@ void CMaterials::LoadMaterials()
 		if (!entry.is_regular_file() || entry.path().extension() != std::string(".vmt"))
 			continue;
 
-		std::ifstream inStream(entry.path());
-		if (!inStream.good())
+		std::ifstream fStream(entry.path());
+		if (!fStream.good())
 			continue;
 
 		std::string sName = entry.path().filename().string();
 		sName.erase(sName.end() - 4, sName.end());
-		std::string sVMT((std::istreambuf_iterator(inStream)), std::istreambuf_iterator<char>());
+		std::string sVMT((std::istreambuf_iterator(fStream)), std::istreambuf_iterator<char>());
 
 		auto uHash = FNV1A::Hash32(sName.c_str());
 		if (uHash == FNV1A::Hash32Const("Original") || m_mMaterials.contains(uHash))
@@ -222,10 +223,10 @@ void CMaterials::ReloadMaterials()
 
 void CMaterials::SetColor(Material_t* pMaterial, Color_t tColor)
 {
-	float r = float(tColor.r) / 255.f;
-	float g = float(tColor.g) / 255.f;
-	float b = float(tColor.b) / 255.f;
-	float a = float(tColor.a) / 255.f;
+	float r = tColor.r / 255.f;
+	float g = tColor.g / 255.f;
+	float b = tColor.b / 255.f;
+	float a = tColor.a / 255.f;
 
 	I::RenderView->SetColorModulation(r, g, b);
 	I::RenderView->SetBlend(a);
@@ -331,29 +332,29 @@ void CMaterials::RemoveMaterial(const char* sName)
 
 		std::filesystem::remove(F::Configs.m_sMaterialsPath + sName + ".vmt");
 
+		auto removeFromVal = [&](std::vector<std::pair<std::string, Color_t>>& val)
+			{
+				for (auto it = val.begin(); it != val.end();)
+				{
+					if (FNV1A::Hash32(it->first.c_str()) == uHash)
+						it = val.erase(it);
+					else
+						++it;
+				}
+			};
 		auto removeFromVar = [&](ConfigVar<std::vector<std::pair<std::string, Color_t>>>& var)
 			{
 				for (auto& [iBind, vVal] : var.Map)
 				{
-					for (auto it = vVal.begin(); it != vVal.end();)
-					{
-						if (FNV1A::Hash32(it->first.c_str()) == uHash)
-							it = vVal.erase(it);
-						else
-							++it;
-					}
+					removeFromVal(vVal);
 				}
 			};
-		removeFromVar(Vars::Chams::Team::Visible);
-		removeFromVar(Vars::Chams::Team::Occluded);
-		removeFromVar(Vars::Chams::Enemy::Visible);
-		removeFromVar(Vars::Chams::Enemy::Occluded);
-		removeFromVar(Vars::Chams::World::Visible);
-		removeFromVar(Vars::Chams::World::Occluded);
-		removeFromVar(Vars::Chams::Backtrack::Visible);
-		removeFromVar(Vars::Chams::FakeAngle::Visible);
-		removeFromVar(Vars::Chams::Viewmodel::WeaponMaterial);
-		removeFromVar(Vars::Chams::Viewmodel::HandsMaterial);
+		for (auto& tGroup : F::Groups.m_vGroups)
+		{
+			removeFromVal(tGroup.m_tChams.Visible);
+			removeFromVal(tGroup.m_tChams.Occluded);
+			removeFromVal(tGroup.m_vBacktrackChams);
+		}
 	}
 
 	m_bLoaded = true;

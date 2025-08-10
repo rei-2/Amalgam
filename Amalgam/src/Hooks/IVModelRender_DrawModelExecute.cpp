@@ -51,7 +51,7 @@ MAKE_HOOK(IVModelRender_DrawModelExecute, U::Memory.GetVirtual(I::ModelRender, 1
 	CALL_ORIGINAL(rcx, pState, pInfo, pBoneToWorld);
 }
 
-static bool bDrawingViewmodel = false;
+static bool s_bDrawingViewmodel = false;
 
 MAKE_HOOK(CBaseAnimating_DrawModel, S::CBaseAnimating_DrawModel(), int,
 	void* rcx, int flags)
@@ -68,9 +68,9 @@ MAKE_HOOK(CBaseAnimating_DrawModel, S::CBaseAnimating_DrawModel(), int,
 		|| F::CameraWindow.m_bDrawing || !F::Materials.m_bLoaded || G::Unload)
 		return CALL_ORIGINAL(rcx, flags);
 
-	bDrawingViewmodel = true;
+	s_bDrawingViewmodel = true;
 	int iReturn = CALL_ORIGINAL(rcx, flags);
-	bDrawingViewmodel = false;
+	s_bDrawingViewmodel = false;
 	return iReturn;
 }
 
@@ -82,7 +82,7 @@ MAKE_HOOK(CBaseAnimating_InternalDrawModel, S::CBaseAnimating_InternalDrawModel(
 		return CALL_ORIGINAL(rcx, flags);
 #endif
 
-	if (!bDrawingViewmodel || !(flags & STUDIO_RENDER))
+	if (!s_bDrawingViewmodel || !(flags & STUDIO_RENDER))
 		return CALL_ORIGINAL(rcx, flags);
 
 	auto pRenderContext = I::MaterialSystem->GetRenderContext();

@@ -9,7 +9,7 @@ void CAutoDetonate::PredictPlayers(CTFPlayer* pLocal, float flLatency, bool bLoc
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		if (!bLocal
-			? (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+			? (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 			: (pLocal != pPlayer || !pLocal->IsAlive() || pLocal->IsAGhost()))
 			continue;
 
@@ -69,7 +69,7 @@ static inline bool CheckEntities(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUse
 
 	CBaseEntity* pEntity;
 	for (CEntitySphereQuery sphere(vOrigin, flRadius);
-		(pEntity = sphere.GetCurrentEntity()) != nullptr;
+		pEntity = sphere.GetCurrentEntity();
 		sphere.NextEntity())
 	{
 		if (pEntity == pLocal || pEntity->IsPlayer() && (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->As<CTFPlayer>()->IsAGhost()) || pEntity->m_iTeamNum() == pLocal->m_iTeamNum())

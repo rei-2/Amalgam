@@ -25,11 +25,10 @@ MAKE_HOOK(bf_read_ReadString, S::bf_read_ReadString(), bool,
 		const int iTarget = pMsg->ReadByte() >> 1;
 		pMsg->Seek(iOriginalBit);
 
-		PlayerInfo_t pi{};
-		if (!iTarget || !I::EngineClient->GetPlayerInfo(iTarget, &pi))
+		if (!iTarget)
 			return bReturn;
 
-		int iType = 0; const char* sName = F::PlayerUtils.GetPlayerName(iTarget, pi.name, &iType);
+		int iType = 0; const char* sName = F::PlayerUtils.GetPlayerName(iTarget, nullptr, &iType);
 		if (iType == 0)
 			return bReturn;
 

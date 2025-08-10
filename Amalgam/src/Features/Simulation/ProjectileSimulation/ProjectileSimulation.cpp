@@ -53,8 +53,8 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 				// done after the projectile is created and not before, position may be a bit off
 				if (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f && I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 5.0f)
 				{
-					vAngAdd.x += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
-					vAngAdd.y += -6.f + SDK::RandomInt() / float(0x7FFF) * 12.f;
+					vAngAdd.x += -6.f + float(SDK::RandomInt()) / 0x7FFF * 12.f;
+					vAngAdd.y += -6.f + float(SDK::RandomInt()) / 0x7FFF * 12.f;
 				}
 				break;
 			case TF_WEAPON_SYRINGEGUN_MEDIC:

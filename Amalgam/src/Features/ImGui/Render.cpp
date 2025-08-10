@@ -49,9 +49,9 @@ void CRender::LoadColors()
 {
 	using namespace ImGui;
 
-	auto ColorToVec = [](Color_t color) -> ImColor
+	auto ColorToVec = [](Color_t tColor) -> ImColor
 		{
-			return { float(color.r) / 255.f, float(color.g) / 255.f, float(color.b) / 255.f, float(color.a) / 255.f };
+			return { tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f, tColor.a / 255.f };
 		};
 
 	Accent = ColorToVec(Vars::Menu::Theme::Accent.Value);

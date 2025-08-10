@@ -28,15 +28,16 @@ struct VelFixRecord
 class CEntities
 {
 private:
+	bool ManageDormancy(CBaseEntity* pEntity);
+
 	CTFPlayer* m_pLocal = nullptr;
 	CTFWeaponBase* m_pLocalWeapon = nullptr;
 	CTFPlayerResource* m_pPlayerResource = nullptr;
 
 	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
 
-	std::unordered_map<int, float> m_mSimTimes = {}, m_mOldSimTimes = {}, m_mDeltaTimes = {}, m_mLagTimes = {};
+	std::unordered_map<int, float> m_mDeltaTimes = {}, m_mLagTimes = {};
 	std::unordered_map<int, int> m_mChokes = {}, m_mSetTicks = {};
-	std::unordered_map<int, std::pair<bool, matrix3x4[MAXSTUDIOBONES]>> m_mBones = {};
 	std::unordered_map<int, Vec3> m_mOldAngles = {}, m_mEyeAngles = {};
 	std::unordered_map<int, bool> m_mLagCompensation = {};
 	std::unordered_map<int, DormantData> m_mDormancy = {};
@@ -54,9 +55,7 @@ private:
 	std::unordered_map<uint32_t, bool> m_mUF2P = {};
 	std::unordered_map<int, int> m_mILevels = {};
 	std::unordered_map<uint32_t, int> m_mULevels = {};
-	uint32_t m_uFriendsID;
-
-	bool m_bSettingUpBones = false;
+	uint32_t m_uAccountID;
 
 public:
 	void Store();
@@ -70,16 +69,13 @@ public:
 
 	CTFPlayer* GetLocal();
 	CTFWeaponBase* GetWeapon();
-	CTFPlayerResource* GetPR();
+	CTFPlayerResource* GetResource();
 
 	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group);
 
-	float GetSimTime(int iIndex);
-	float GetOldSimTime(int iIndex);
 	float GetDeltaTime(int iIndex);
 	float GetLagTime(int iIndex);
 	int GetChoke(int iIndex);
-	matrix3x4* GetBones(int iIndex);
 	Vec3 GetEyeAngles(int iIndex);
 	Vec3 GetPingAngles(int iIndex);
 	bool GetLagCompensation(int iIndex);
@@ -91,19 +87,17 @@ public:
 	std::deque<VelFixRecord>* GetOrigins(int iIndex);
 
 	int GetPriority(int iIndex);
-	int GetPriority(uint32_t uFriendsID);
+	int GetPriority(uint32_t uAccountID);
 	bool IsFriend(int iIndex);
-	bool IsFriend(uint32_t uFriendsID);
+	bool IsFriend(uint32_t uAccountID);
 	bool InParty(int iIndex);
-	bool InParty(uint32_t uFriendsID);
+	bool InParty(uint32_t uAccountID);
 	bool IsF2P(int iIndex);
-	bool IsF2P(uint32_t uFriendsID);
+	bool IsF2P(uint32_t uAccountID);
 	int GetLevel(int iIndex);
-	int GetLevel(uint32_t uFriendsID);
+	int GetLevel(uint32_t uAccountID);
 	uint64_t GetParty(int iIndex);
-	uint64_t GetParty(uint32_t uFriendsID);
-
-	bool IsSettingUpBones();
+	uint64_t GetParty(uint32_t uAccountID);
 };
 
 ADD_FEATURE_CUSTOM(CEntities, Entities, H);

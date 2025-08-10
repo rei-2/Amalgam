@@ -7,10 +7,9 @@
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/Visuals/PlayerConditions/PlayerConditions.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
-#include "../Features/Visuals/Radar/Radar.h"
 #include "../Features/Aimbot/Aimbot.h"
-#include "../Features/Visuals/PlayerArrows/PlayerArrows.h"
 #include "../Features/Visuals/ESP/ESP.h"
+#include "../Features/Visuals/OffscreenArrows/OffscreenArrows.h"
 #include "../Features/Visuals/CameraWindow/CameraWindow.h"
 #include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
@@ -38,9 +37,8 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 
 			F::Visuals.DrawPickupTimers();
 			F::ESP.Draw();
-			F::PlayerArrows.Run(pLocal);
+			F::Arrows.Draw(pLocal);
 			F::Aimbot.Draw(pLocal);
-			F::Radar.Run(pLocal);
 
 #ifdef DEBUG_VACCINATOR
 			F::AutoHeal.Draw(pLocal);

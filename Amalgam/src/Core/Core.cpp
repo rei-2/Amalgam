@@ -31,10 +31,10 @@ static inline bool CheckDXLevel()
 	auto mat_dxlevel = U::ConVars.FindVar("mat_dxlevel");
 	if (mat_dxlevel->GetInt() < 90)
 	{
-		//const char* sMessage = "You are running with graphics options that Amalgam does not support.\n-dxlevel must be at least 90.";
-		const char* sMessage = "You are running with graphics options that Amalgam does not support.\nIt is recommended for -dxlevel to be at least 90.";
+		//const char* sMessage = "You are running with graphics options that Amalgam does not support. -dxlevel must be at least 90.";
+		const char* sMessage = "You are running with graphics options that Amalgam does not support. It is recommended for -dxlevel to be at least 90.";
 		U::Core.AppendFailText(sMessage);
-		SDK::Output("Amalgam", sMessage, { 175, 150, 255 }, true, true);
+		SDK::Output("Amalgam", sMessage, { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 		//return false;
 	}
 
@@ -61,7 +61,7 @@ void CCore::LogFailText()
 	}
 	catch (...) {}
 
-	SDK::Output("Failed to load", m_ssFailStream.str().c_str(), {}, false, true, false, false, false, false, MB_OK | MB_ICONERROR);
+	SDK::Output("Failed to load", m_ssFailStream.str().c_str(), {}, OUTPUT_DEBUG, MB_OK | MB_ICONERROR);
 }
 
 void CCore::Load()
@@ -95,12 +95,10 @@ void CCore::Load()
 		return;
 	F::Materials.LoadMaterials();
 	U::ConVars.Initialize();
-	F::Commands.Initialize();
 
 	F::Configs.LoadConfig(F::Configs.m_sCurrentConfig, false);
-	F::Configs.m_bConfigLoaded = true;
 
-	SDK::Output("Amalgam", "Loaded", { 175, 150, 255 }, true, true, true);
+	SDK::Output("Amalgam", "Loaded", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 }
 
 void CCore::Loop()
@@ -152,5 +150,5 @@ void CCore::Unload()
 		return;
 	}
 
-	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255 }, true, true);
+	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG);
 }

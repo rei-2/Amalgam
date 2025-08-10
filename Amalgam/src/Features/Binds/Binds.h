@@ -33,6 +33,7 @@ class CBinds
 {
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
+	void SetVars(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bManage = true);
 
 	bool GetBind(int iID, Bind_t* pBind);
 

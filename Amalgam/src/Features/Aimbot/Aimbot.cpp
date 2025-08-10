@@ -12,7 +12,7 @@
 
 bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
-	if (!pLocal || !pWeapon || !pLocal->CanAttack()
+	if (!pWeapon || !pLocal->CanAttack()
 		|| !SDK::AttribHookValue(1, "mult_dmg", pWeapon)
 		|| I::EngineVGui->IsGameUIVisible())
 		return false;
@@ -99,8 +99,10 @@ void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
 
 	if (pEntity)
 	{
-		auto pResource = H::Entities.GetPR();
-		if (pEntity->IsPlayer() && pResource)
+		if (!pEntity->IsPlayer())
+			return;
+
+		if (auto pResource = H::Entities.GetResource())
 		{
 			m_tPath = { { pEntity->m_vecOrigin() }, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::RealPath.Value, Vars::Visuals::Simulation::RealPath.Value };
 			m_iSize = iSize;

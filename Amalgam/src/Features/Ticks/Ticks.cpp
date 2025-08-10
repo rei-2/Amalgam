@@ -116,24 +116,6 @@ void CTicks::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 		vVelocity = pLocal->m_vecVelocity();
 		iMaxTicks = 0;
 	}
-
-	/*
-	static bool bSet = false;
-
-	if (!m_bAntiWarp)
-	{
-		bSet = false;
-		return;
-	}
-
-	if (G::Attacking != 1 && !bSet)
-	{
-		bSet = true;
-		SDK::StopMovement(pLocal, pCmd);
-	}
-	else
-		pCmd->forwardmove = pCmd->sidemove = 0.f;
-	*/
 }
 
 bool CTicks::ValidWeapon(CTFWeaponBase* pWeapon)
@@ -261,9 +243,6 @@ void CTicks::MoveManage(CTFPlayer* pLocal)
 
 void CTicks::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
 {
-	if (!pLocal)
-		return;
-
 	Doubletap(pLocal, pCmd);
 	AntiWarp(pLocal, pCmd);
 	ManagePacket(pCmd, pSendPacket);
@@ -399,7 +378,7 @@ void CTicks::Draw(CTFPlayer* pLocal)
 		if (m_iWait)
 			H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + fFont.m_nTall + H::Draw.Scale(18, Scale_Round) + 1, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, "Not Ready");
 
-		H::Draw.LineRoundRect(iPosX, iPosY, iSizeX, iSizeY, H::Draw.Scale(3, Scale_Round), Vars::Menu::Theme::Accent.Value, 16);
+		H::Draw.LineRoundRect(iPosX, iPosY, iSizeX, iSizeY, H::Draw.Scale(4, Scale_Round), Vars::Menu::Theme::Accent.Value, 16);
 		if (flRatio)
 		{
 			iSizeX -= H::Draw.Scale(2, Scale_Ceil) * 2, iSizeY -= H::Draw.Scale(2, Scale_Ceil) * 2;

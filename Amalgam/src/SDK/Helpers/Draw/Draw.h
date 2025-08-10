@@ -36,11 +36,11 @@ private:
 	std::unordered_map<uint32, int> m_mAvatars = {};
 
 public:
-	inline bool IsColorBright(const Color_t& clr)
+	inline bool IsColorBright(const Color_t clr)
 	{
 		return clr.r + clr.g + clr.b > 510;
 	}
-	inline bool IsColorDark(const Color_t& clr)
+	inline bool IsColorDark(const Color_t clr)
 	{
 		return clr.r + clr.g + clr.b < 201;
 	}
@@ -68,33 +68,33 @@ public:
 	Vec2 GetTextSize(const char* text, const Font_t& tFont);
 	Vec2 GetTextSize(const wchar_t* text, const Font_t& tFont);
 
-	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const char* str);
-	void String(const Font_t& tFont, int x, int y, const Color_t& tColor, const EAlign& eAlign, const wchar_t* wstr);
-	void StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const char* str);
-	void StringOutlined(const Font_t& tFont, int x, int y, const Color_t& tColor, const Color_t& tColorOut, const EAlign& eAlign, const wchar_t* wstr);
+	void String(const Font_t& tFont, int x, int y, Color_t tColor, EAlign eAlign, const char* str);
+	void String(const Font_t& tFont, int x, int y, Color_t tColor, EAlign eAlign, const wchar_t* wstr);
+	void StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const char* str, bool bAlpha = true);
+	void StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const wchar_t* wstr, bool bAlpha = true);
 
-	void Line(int x1, int y1, int x2, int y2, const Color_t& tColor);
-	void FillPolygon(std::vector<Vertex_t> vVertices, const Color_t& tColor);
-	void LinePolygon(std::vector<Vertex_t> vVertices, const Color_t& tColor);
+	void Line(int x1, int y1, int x2, int y2, Color_t tColor);
+	void FillPolygon(std::vector<Vertex_t> vVertices, Color_t tColor);
+	void LinePolygon(std::vector<Vertex_t> vVertices, Color_t tColor);
 
-	void FillRect(int x, int y, int w, int h, const Color_t& tColor);
-	void LineRect(int x, int y, int w, int h, const Color_t& tColor);
-	void GradientRect(int x, int y, int w, int h, const Color_t& tColorTop, const Color_t& tColorBottom, bool bHorizontal);
-	void FillRectOutline(int x, int y, int w, int h, const Color_t& tColor, const Color_t& tColorOut = { 0, 0, 0, 255 });
-	void LineRectOutline(int x, int y, int w, int h, const Color_t& tColor, const Color_t& tColorOut = { 0, 0, 0, 255 }, bool bInside = true);
-	void FillRectPercent(int x, int y, int w, int h, float t, const Color_t& tColor, const Color_t& tColorOut = { 0, 0, 0, 255 }, const EAlign& eAlign = ALIGN_LEFT, bool bAdjust = false);
-	void FillRoundRect(int x, int y, int w, int h, int iRadius, const Color_t& tColor, int iCount = 64);
-	void LineRoundRect(int x, int y, int w, int h, int iRadius, const Color_t& tColor, int iCount = 64);
+	void FillRect(int x, int y, int w, int h, Color_t tColor);
+	void LineRect(int x, int y, int w, int h, Color_t tColor);
+	void GradientRect(int x, int y, int w, int h, Color_t tColorTop, Color_t tColorBottom, bool bHorizontal);
+	void FillRectOutline(int x, int y, int w, int h, Color_t tColor, Color_t tColorOut = { 0, 0, 0, 255 });
+	void LineRectOutline(int x, int y, int w, int h, Color_t tColor, Color_t tColorOut = { 0, 0, 0, 255 }, bool bInside = true);
+	void FillRectPercent(int x, int y, int w, int h, float t, Color_t tColor, Color_t tColorOut = { 0, 0, 0, 255 }, EAlign eAlign = ALIGN_LEFT, bool bAdjust = false);
+	void FillRoundRect(int x, int y, int w, int h, int iRadius, Color_t tColor, int iCount = 64);
+	void LineRoundRect(int x, int y, int w, int h, int iRadius, Color_t tColor, int iCount = 64);
 
-	void FillCircle(int x, int y, float iRadius, int iSegments, Color_t clr);
-	void LineCircle(int x, int y, float iRadius, int iSegments, const Color_t& clr);
+	void FillCircle(int x, int y, float iRadius, int iSegments, Color_t tColor);
+	void LineCircle(int x, int y, float iRadius, int iSegments, Color_t tColor);
 
-	void Texture(int x, int y, int w, int h, int iId, const EAlign& eAlign = ALIGN_CENTER);
+	void Texture(int x, int y, int w, int h, int iId, EAlign eAlign = ALIGN_CENTER);
 	CHudTexture* GetIcon(const char* szIcon, int eIconFormat = 0);
 	int CreateTextureFromArray(const unsigned char* rgba, int w, int h);
 	void DrawHudTexture(float x, float y, float s, const CHudTexture* pTexture, Color_t tColor = { 255, 255, 255, 255 });
 	void DrawHudTextureByName(float x, float y, float s, const char* sTexture, Color_t tColor = { 255, 255, 255, 255 });
-	void Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& eAlign = ALIGN_CENTER);
+	void Avatar(int x, int y, int w, int h, const uint32 nFriendID, EAlign eAlign = ALIGN_CENTER);
 	void ClearAvatarCache();
 
 	void RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t tColor, bool bZBuffer = false);

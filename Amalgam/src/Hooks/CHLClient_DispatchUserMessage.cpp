@@ -12,11 +12,11 @@
 #include <boost/algorithm/string/classification.hpp>
 #endif
 
-MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClientDLL, 36), bool,
+MAKE_HOOK(CHLClient_DispatchUserMessage, U::Memory.GetVirtual(I::Client, 36), bool,
 	void* rcx, UserMessageType type, bf_read& msgData)
 {
 #ifdef DEBUG_HOOKS
-	if (!Vars::Hooks::IBaseClientDLL_DispatchUserMessage[DEFAULT_BIND])
+	if (!Vars::Hooks::CHLClient_DispatchUserMessage[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, type, msgData);
 #endif
 

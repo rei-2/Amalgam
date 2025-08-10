@@ -58,13 +58,6 @@ struct DrawSwept_t
 	bool m_bZBuffer = false;
 };
 
-struct MoveData_t
-{
-	Vec3 m_vMove = {};
-	Vec3 m_vView = {};
-	int m_iButtons = 0;
-};
-
 struct AimTarget_t
 {
 	int m_iEntIndex = 0;
@@ -95,7 +88,7 @@ namespace G
 
 	inline CUserCmd* CurrentUserCmd = nullptr;
 	inline CUserCmd* LastUserCmd = nullptr;
-	inline MoveData_t OriginalMove = {};
+	inline CUserCmd OriginalCmd = {};
 
 	inline AimTarget_t AimTarget = {};
 	inline AimPoint_t AimPoint = {};

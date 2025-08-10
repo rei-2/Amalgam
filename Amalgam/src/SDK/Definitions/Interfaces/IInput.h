@@ -69,15 +69,10 @@ public:
 	virtual	bool EnableJoystickMode() = 0;
 	virtual bool IsSteamControllerActive() = 0;
 
-	CUserCmd* GetCommands()
-	{
-		return *reinterpret_cast<CUserCmd**>(uintptr_t(this) + 264);
-	}
-
-	CVerifiedUserCmd* GetVerifiedCommands()
-	{
-		return *reinterpret_cast<CVerifiedUserCmd**>(uintptr_t(this) + 272);
-	}
+public:
+	byte pad0[256];
+	CUserCmd* m_pCommands;
+	CVerifiedUserCmd* m_pVerifiedCommands;
 };
 
 MAKE_INTERFACE_SIGNATURE(IInput, Input, "client.dll", "48 8B 0D ? ? ? ? 48 8B 01 FF 90 ? ? ? ? 85 C0 0F 84 ? ? ? ? F3 0F 10 05", 0x0, 1);

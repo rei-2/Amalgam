@@ -11,11 +11,11 @@ struct Sightline_t
 	bool m_bZBuffer = false;
 };
 
-struct PickupData
+struct PickupData_t
 {
-	int Type = 0;
-	float Time = 0.f;
-	Vec3 Location;
+	int m_iType = 0;
+	float m_flTime = 0.f;
+	Vec3 m_vLocation;
 };
 
 class CVisuals
@@ -23,7 +23,7 @@ class CVisuals
 private:
 	int m_nHudZoom = 0;
 	std::vector<Sightline_t> m_vSightLines = {};
-	std::vector<PickupData> m_vPickups = {};
+	std::vector<PickupData_t> m_vPickups = {};
 
 public:
 	void Event(IGameEvent* pEvent, uint32_t uHash);

@@ -83,6 +83,7 @@ public:
 	CONDGET(IsOnGround, m_fFlags(), FL_ONGROUND);
 	CONDGET(IsInWater, m_fFlags(), FL_INWATER);
 	CONDGET(IsDucking, m_fFlags(), FL_DUCKING);
+	CONDGET(IsFakeClient, m_fFlags(), FL_FAKECLIENT);
 
 	VIRTUAL(PreThink, void, 262, this);
 	VIRTUAL(Think, void, 122, this);

@@ -160,17 +160,12 @@ namespace ImGui
 
 	inline ImVec4 ColorToVec(Color_t tColor)
 	{
-		return { float(tColor.r) / 255.f, float(tColor.g) / 255.f, float(tColor.b) / 255.f, float(tColor.a) / 255.f };
+		return { tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f, tColor.a / 255.f };
 	}
 
 	inline Color_t VecToColor(ImVec4 tColor)
 	{
-		return {
-			static_cast<byte>(tColor.x * 256.0f > 255 ? 255 : tColor.x * 256.0f),
-			static_cast<byte>(tColor.y * 256.0f > 255 ? 255 : tColor.y * 256.0f),
-			static_cast<byte>(tColor.z * 256.0f > 255 ? 255 : tColor.z * 256.0f),
-			static_cast<byte>(tColor.w * 256.0f > 255 ? 255 : tColor.w * 256.0f)
-		};
+		return { byte(tColor.x * 255), byte(tColor.y * 255), byte(tColor.z * 255), byte(tColor.w * 255) };
 	}
 
 	inline void DebugDummy(ImVec2 vSize)
@@ -766,15 +761,13 @@ namespace ImGui
 			flTotalWidth += flWidth - GetStyle().WindowPadding.x;
 		}
 
-		/*
-		SetCursorPos({ 0, vOriginalPos.y - H::Draw.Scale(8) });
-		BeginChild("Split1", { GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, H::Draw.Scale(112) });
-
-		SetCursorPos({ GetWindowWidth() / 2 - GetStyle().WindowPadding.x / 2, vOriginalPos.y - H::Draw.Scale(8) });
-		BeginChild("Split2", { GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, H::Draw.Scale(112) });
-		*/
-
 		return vReturn;
+	}
+
+	inline bool BeginWidgetTable(int iIndex, std::vector<WidgetWindow_t>& vTable)
+	{
+		SetCursorPos(vTable[iIndex].m_vPos);
+		return BeginChild(vTable[iIndex].m_sName.c_str(), vTable[iIndex].m_vSize, vTable[iIndex].m_iWindowFlags, vTable[iIndex].m_iChildFlags);
 	}
 
 	// widgets
@@ -1153,6 +1146,20 @@ namespace ImGui
 			PopStyleVar();
 
 		return bReturn;
+	}
+
+	inline bool FToggle(const char* sLabel, int* pVar, int iBit, int iFlags = FToggleEnum::None, bool* pHovered = nullptr)
+	{
+		bool bActive = *pVar & iBit;
+		if (FToggle(sLabel, &bActive, iFlags, pHovered))
+		{
+			if (bActive)
+				*pVar |= iBit;
+			else
+				*pVar &= ~iBit;
+			return true;
+		}
+		return false;
 	}
 
 	inline bool FSlider(const char* sLabel, float* pVar1, float* pVar2, float flMin, float flMax, float flStep = 1.f, const char* fmt = "%g", int iFlags = FSliderEnum::None, bool* pHovered = nullptr)
@@ -2600,6 +2607,7 @@ namespace ImGui
 	}
 
 	WRAPPER(FToggle, bool, VA_LIST(int iFlags = 0), VA_LIST(&val, iFlags))
+	WRAPPER(FToggle, int, VA_LIST(int iBit, int iFlags = 0), VA_LIST(&val, iBit, iFlags))
 	WRAPPER(FSlider, FloatRange_t, VA_LIST(int iFlags = 0, const char* sFormatOverride = nullptr), VA_LIST(&val.Min, &val.Max, var.m_unMin.f, var.m_unMax.f, var.m_unStep.f, sFormatOverride ? sFormatOverride : var.m_sExtra, iFlags))
 	WRAPPER(FSlider, IntRange_t, VA_LIST(int iFlags = 0, const char* sFormatOverride = nullptr), VA_LIST(&val.Min, &val.Max, var.m_unMin.i, var.m_unMax.i, var.m_unStep.i, sFormatOverride ? sFormatOverride : var.m_sExtra, iFlags))
 	WRAPPER(FSlider, float, VA_LIST(int iFlags = 0, const char* sFormatOverride = nullptr), VA_LIST(&val, var.m_unMin.f, var.m_unMax.f, var.m_unStep.f, sFormatOverride ? sFormatOverride : var.m_sExtra, iFlags))
