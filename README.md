@@ -1,6 +1,6 @@
 <div align="center">
 
-  # Amalgam
+  ![Amalgam](.github/assets/logo.png)
 
   [![Stars](https://img.shields.io/github/stars/rei-2/Amalgam?style=for-the-badge&color=white&logo=github)](/../../stargazers)
   [![Discord](https://img.shields.io/discord/1227898008373297223?style=for-the-badge&color=blue&labelColor=grey&label=Discord&logo=discord)](https://discord.gg/RbP9DfkUhe)
