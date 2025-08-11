@@ -1,7 +1,9 @@
 <div align="center">
 
   ![Amalgam](.github/assets/logo.png)
-  [//]: # (not sure about this, maybe you can make custom styles with this api or make own api?)
+  <!---
+  not sure about this, maybe we could make our own api
+-->
   [![Stars](https://img.shields.io/github/stars/rei-2/Amalgam?style=for-the-badge&color=white&logo=github)](/../../stargazers)
   [![Discord](https://img.shields.io/discord/1227898008373297223?style=for-the-badge&color=blue&labelColor=grey&label=Discord&logo=discord)](https://discord.gg/RbP9DfkUhe)
   [![Workflow status](https://img.shields.io/github/actions/workflow/status/rei-2/Amalgam/msbuild.yml?branch=master&style=for-the-badge)](/../../actions)
