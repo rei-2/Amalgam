@@ -17,7 +17,6 @@ void CGlow::SetupBegin(IMatRenderContext* pRenderContext)
 
 	pRenderContext->ClearBuffers(false, false, false);
 	pRenderContext->SetStencilEnable(true);
-
 	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS);
 	pRenderContext->SetStencilPassOperation(STENCILOPERATION_REPLACE);
 	pRenderContext->SetStencilFailOperation(STENCILOPERATION_KEEP);
@@ -28,6 +27,8 @@ void CGlow::SetupBegin(IMatRenderContext* pRenderContext)
 }
 void CGlow::SetupMid(IMatRenderContext* pRenderContext, int w, int h)
 {
+	pRenderContext->SetStencilEnable(false);
+
 	pRenderContext->PushRenderTargetAndViewport();
 	pRenderContext->SetRenderTarget(m_pRenderBuffer1);
 	pRenderContext->Viewport(0, 0, w, h);
@@ -53,6 +54,7 @@ void CGlow::SetupEnd(Glow_t tGlow, IMatRenderContext* pRenderContext, int w, int
 		pRenderContext->PopRenderTargetAndViewport();
 	}
 
+	pRenderContext->SetStencilEnable(true);
 	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_EQUAL);
 	pRenderContext->SetStencilPassOperation(STENCILOPERATION_KEEP);
 	pRenderContext->SetStencilFailOperation(STENCILOPERATION_KEEP);
