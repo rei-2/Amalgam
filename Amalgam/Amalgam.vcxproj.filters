@@ -195,6 +195,7 @@
     <ClCompile Include="src\Hooks\CTFRocketLauncher_CheckReloadMisfire.cpp" />
     <ClCompile Include="src\Features\Visuals\Groups\Groups.cpp" />
     <ClCompile Include="src\Hooks\CInput_ValidateUserCmd.cpp" />
+    <ClCompile Include="include\Zydis\Zydis.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -576,6 +577,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\CInterpolatedVar.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CRangeCheckedVar.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
+    <ClInclude Include="include\Zydis\Zydis.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
