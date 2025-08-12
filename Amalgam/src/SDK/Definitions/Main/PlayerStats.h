@@ -6,7 +6,6 @@
 	#define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
 
-#define MAX_PLAYERS_ARRAY_SAFE (MAX_PLAYERS + 1)
 #define INVALID_ITEM_DEF_INDEX 65535U
 
 typedef uint64 itemid_t;

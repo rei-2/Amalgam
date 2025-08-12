@@ -27,6 +27,7 @@ public:
 	void Draw(CTFPlayer* pLocal);
 	void Reset();
 
+	void AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks = -1);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	bool CanChoke();

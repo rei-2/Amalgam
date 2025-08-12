@@ -57,6 +57,18 @@ public:
 		return flN;
 	}
 
+	inline float Unscale(float flN = 1.f, int iFlags = Scale_None, float flScale = Vars::Menu::Scale.Value)
+	{
+		flN /= flScale;
+		switch (iFlags)
+		{
+		case Scale_Round: flN = roundf(flN); break;
+		case Scale_Floor: flN = floorf(flN); break;
+		case Scale_Ceil: flN = ceilf(flN); break;
+		}
+		return flN;
+	}
+
 	void Start(bool bBadFontCheck = false);
 	void End();
 	void StartClipping(int x, int y, int w, int h);

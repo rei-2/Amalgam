@@ -604,7 +604,7 @@ void CMenu::MenuVisuals(int iTab)
 
 			PushDisabled(F::Groups.m_vGroups.size() >= sizeof(int) * 8); // for active groups flags
 			{
-				FSDropdown("Name", &sStaticName, {}, FDropdownEnum::Left | FSDropdownEnum::AutoUpdate, -79);
+				FSDropdown("Name", &sStaticName, {}, FDropdownEnum::Left | FSDropdownEnum::AutoUpdate, -H::Draw.Unscale(FCalcTextSize("CREATE").x) - 36);
 
 				PushDisabled(Disabled || sStaticName.empty());
 				{
@@ -697,7 +697,7 @@ void CMenu::MenuVisuals(int iTab)
 				} EndSection();
 				if (Section("Conditions"))
 				{
-					FDropdown("Conditions", &tGroup.m_iConditions, { "Enemy", "Team", "BLU", "RED", "Local", "Friends", "Party", "Priority", "Target", "Dormant" }, {}, FDropdownEnum::Multi);
+					FDropdown("Conditions", &tGroup.m_iConditions, { "Enemy", "Team", "BLU", "RED", "##Divider", "Local", "Friends", "Party", "Priority", "Target", "##Divider", "Dormant" }, {}, FDropdownEnum::Multi);
 					Divider(H::Draw.Scale(), H::Draw.Scale(8), -H::Draw.Scale());
 					PushTransparent(!(tGroup.m_iTargets & TargetsEnum::Players));
 					{
@@ -2210,7 +2210,7 @@ void CMenu::MenuSettings(int iTab)
 					auto& sConfig = !bVisual ? F::Configs.m_sCurrentConfig : F::Configs.m_sCurrentVisuals;
 					auto sType = !bVisual ? "Config" : "Visual";
 
-					FSDropdown("Name", &sStaticName, {}, FSDropdownEnum::AutoUpdate, -158);
+					FSDropdown("Name", &sStaticName, {}, FSDropdownEnum::AutoUpdate, -H::Draw.Unscale(FCalcTextSize("CREATE").x + FCalcTextSize("FOLDER").x) - 72);
 					PushDisabled(sStaticName.empty());
 					{
 						if (FButton("Create", FButtonEnum::Fit | FButtonEnum::SameLine, { 0, 40 }))
@@ -2687,7 +2687,7 @@ void CMenu::MenuSettings(int iTab)
 			{
 				static std::string sStaticName;
 
-				FSDropdown("Name", &sStaticName, {}, FSDropdownEnum::AutoUpdate, -158);
+				FSDropdown("Name", &sStaticName, {}, FSDropdownEnum::AutoUpdate, -H::Draw.Unscale(FCalcTextSize("CREATE").x + FCalcTextSize("FOLDER").x) - 72);
 				PushDisabled(sStaticName.empty());
 				{
 					if (FButton("Create", FButtonEnum::Fit | FButtonEnum::SameLine, { 0, 40 }))

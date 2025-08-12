@@ -205,7 +205,9 @@ public:
 
 	Vec3 GetEyeAngles();
 	Vec3 GetViewOffset(); // use on nonlocal players
-	bool InCond(const ETFCond cond);
+	bool InCond(ETFCond eCond);
+	void AddCond(ETFCond eCond); // bits only
+	void RemoveCond(ETFCond eCond); // bits only
 	bool IsAGhost();
 	bool IsTaunting();
 	bool IsInvisible();

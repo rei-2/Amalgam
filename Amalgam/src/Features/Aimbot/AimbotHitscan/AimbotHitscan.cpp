@@ -272,7 +272,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 	if (Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Unsimulated && H::Entities.GetChoke(tTarget.m_pEntity->entindex()) > Vars::Aimbot::General::TickTolerance.Value)
 		return false;
 
-	Vec3 vEyePos = pLocal->GetShootPos(), vPeekPos = {};
+	m_vEyePos = pLocal->GetShootPos();
 	const float flMaxRange = powf(pWeapon->GetRange(), 2.f);
 
 	auto pModel = tTarget.m_pEntity->GetModel();
@@ -298,9 +298,10 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 		vRecords = { &F::Backtrack.m_tRecord };
 	}
 
+	Vec3 vPeekPos = {};
 	float flSpread = pWeapon->GetWeaponSpread();
 	if (flSpread && Vars::Aimbot::General::HitscanPeek.Value)
-		vPeekPos = vEyePos + pLocal->m_vecVelocity() * TICKS_TO_TIME(-Vars::Aimbot::General::HitscanPeek.Value);
+		vPeekPos = m_vEyePos + pLocal->m_vecVelocity() * TICKS_TO_TIME(-Vars::Aimbot::General::HitscanPeek.Value);
 
 	// if we're doubletapping, we can't change viewangles so work around that
 	static int iTargetBone = 0;
@@ -311,8 +312,8 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			{
 				Vec3 vPosA = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
 				Vec3 vPosB = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
-				Vec3 vAnglesA = Math::CalcAngle(vEyePos, vPosA);
-				Vec3 vAnglesB = Math::CalcAngle(vEyePos, vPosB);
+				Vec3 vAnglesA = Math::CalcAngle(m_vEyePos, vPosA);
+				Vec3 vAnglesB = Math::CalcAngle(m_vEyePos, vPosB);
 				return pDoubletapAngle->DeltaAngle(vAnglesA).Length2D() < pDoubletapAngle->DeltaAngle(vAnglesB).Length2D();
 			});
 	}
@@ -350,16 +351,16 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			const matrix3x4 mTransform = { { 1, 0, 0, tTarget.m_vPos.x }, { 0, 1, 0, tTarget.m_vPos.y }, { 0, 0, 1, tTarget.m_vPos.z } };
 
 			tTarget.m_vPos += tTarget.m_pEntity->GetOffset() / 2;
-			if (vEyePos.DistToSqr(tTarget.m_vPos) > flMaxRange)
+			if (m_vEyePos.DistToSqr(tTarget.m_vPos) > flMaxRange)
 				break;
 
-			if (SDK::VisPosWorld(pLocal, tTarget.m_pEntity, vEyePos, tTarget.m_vPos))
+			if (SDK::VisPosWorld(pLocal, tTarget.m_pEntity, m_vEyePos, tTarget.m_vPos))
 			{
-				Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, tTarget.m_vPos), vAngles);
+				Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, tTarget.m_vPos), vAngles);
 				Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-				float flDist = vEyePos.DistTo(tTarget.m_vPos);
+				float flDist = m_vEyePos.DistTo(tTarget.m_vPos);
 
-				if (!bChanged || Math::RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, mTransform) && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vEyePos + vForward * flDist))
+				if (!bChanged || Math::RayToOBB(m_vEyePos, vForward, vCheckMins, vCheckMaxs, mTransform) && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, m_vEyePos + vForward * flDist))
 				{
 					tTarget.m_vAngleTo = vAngles;
 					tTarget.m_pRecord = pRecord;
@@ -454,7 +455,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				{
 					Vec3 vOrigin; Math::VectorTransform(vPoint, aBones[pBox->bone], vOrigin); vOrigin += vOffset;
 
-					if (vEyePos.DistToSqr(vOrigin) > flMaxRange)
+					if (m_vEyePos.DistToSqr(vOrigin) > flMaxRange)
 						continue;
 
 					if (bRunPeekCheck)
@@ -464,15 +465,15 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 							goto nextTick; // if we can't hit our primary hitbox, don't bother
 					}
 
-					Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, vOrigin), vAngles);
+					Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, vOrigin), vAngles);
 					Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-					float flDist = vEyePos.DistTo(vOrigin);
+					float flDist = m_vEyePos.DistTo(vOrigin);
 
-					if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+					if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
 					{
 						// for the time being, no vischecks against other hitboxes
-						if ((!bChanged || Math::RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale) && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vEyePos + vForward * flDist))
-							&& Math::RayToOBB(vEyePos, vForward, vHullMins, vHullMaxs, mTransform))
+						if ((!bChanged || Math::RayToOBB(m_vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale) && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, m_vEyePos + vForward * flDist))
+							&& Math::RayToOBB(m_vEyePos, vForward, vHullMins, vHullMaxs, mTransform))
 						{
 							iTargetBone = pBox->bone;
 
@@ -483,7 +484,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 							tTarget.m_bBacktrack = true;
 							return true;
 						}
-						else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+						else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
 						{
 							if (iReturn != 2 || vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
 								tTarget.m_vAngleTo = vAngles;
@@ -537,23 +538,23 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			{
 				Vec3 vOrigin = tTarget.m_pEntity->GetCenter() + vPoint;
 
-				if (vEyePos.DistToSqr(vOrigin) > flMaxRange)
+				if (m_vEyePos.DistToSqr(vOrigin) > flMaxRange)
 					continue;
 
-				Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(vEyePos, vOrigin), vAngles);
+				Vec3 vAngles; bool bChanged = Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, vOrigin), vAngles);
 				Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-				float flDist = vEyePos.DistTo(vOrigin);
+				float flDist = m_vEyePos.DistTo(vOrigin);
 
-				if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+				if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
 				{
-					if (!bChanged || Math::RayToOBB(vEyePos, vForward, vCheckMins, vCheckMaxs, mTransform) && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vEyePos + vForward * flDist))
+					if (!bChanged || Math::RayToOBB(m_vEyePos, vForward, vCheckMins, vCheckMaxs, mTransform) && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, m_vEyePos + vForward * flDist))
 					{
 						tTarget.m_vAngleTo = vAngles;
 						tTarget.m_pRecord = pRecord;
 						tTarget.m_vPos = vOrigin;
 						return true;
 					}
-					else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, vEyePos, vOrigin))
+					else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
 					{
 						if (iReturn != 2 || vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
 							tTarget.m_vAngleTo = vAngles;
@@ -832,7 +833,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			}
 
 			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire && pWeapon->GetWeaponSpread() != 0.f && !pLocal->InCond(TF_COND_RUNE_PRECISION)
-				&& pLocal->GetShootPos().DistTo(tTarget.m_vPos) > Vars::Aimbot::Hitscan::TapFireDist.Value)
+				&& m_vEyePos.DistTo(tTarget.m_vPos) > Vars::Aimbot::Hitscan::TapFireDist.Value)
 			{
 				const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
 				if (flTimeSinceLastShot <= (pWeapon->GetBulletsPerShot() > 1 ? 0.25f : 1.25f))

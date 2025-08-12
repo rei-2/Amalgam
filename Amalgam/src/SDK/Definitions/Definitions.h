@@ -320,6 +320,7 @@
 #define MAX_RAIDMODE_UPGRADES 60
 
 #define MAX_PLAYERS 101
+#define MAX_PLAYERS_ARRAY_SAFE (MAX_PLAYERS + 1)
 
 #define STEAM_PARM "-steam"
 #define AUTO_RESTART "-autoupdate"

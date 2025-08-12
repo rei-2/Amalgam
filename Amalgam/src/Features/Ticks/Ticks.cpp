@@ -87,34 +87,34 @@ void CTicks::Speedhack()
 	m_bDoubletap = m_bWarp = m_bRecharge = false;
 }
 
+static Vec3 s_vVelocity = {};
+static int s_iMaxTicks = 0;
+void CTicks::AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks)
+{
+	if (iTicks == -1)
+		iTicks = GetTicks();
+	s_iMaxTicks = std::max(iTicks + 1, s_iMaxTicks);
+
+	Vec3 vAngles; Math::VectorAngles(s_vVelocity, vAngles);
+	vAngles.y = flYaw - vAngles.y;
+	Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+	vForward *= s_vVelocity.Length2D();
+
+	if (iTicks > std::max(s_iMaxTicks - 8, 3))
+		flForwardMove = -vForward.x, flSideMove = -vForward.y;
+	else if (iTicks > 3)
+		flForwardMove = flSideMove = 0.f;
+	else
+		flForwardMove = vForward.x, flSideMove = vForward.y;
+}
 void CTicks::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
-	static Vec3 vVelocity = {};
-	static int iMaxTicks = 0;
 	if (m_bAntiWarp)
-	{
-		int iTicks = GetTicks();
-		iMaxTicks = std::max(iTicks + 1, iMaxTicks);
-
-		Vec3 vAngles; Math::VectorAngles(vVelocity, vAngles);
-		vAngles.y = pCmd->viewangles.y - vAngles.y;
-		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
-		vForward *= vVelocity.Length2D();
-
-		if (iTicks > std::max(iMaxTicks - 8, 3))
-			pCmd->forwardmove = -vForward.x, pCmd->sidemove = -vForward.y;
-		else if (iTicks > 3)
-		{
-			pCmd->forwardmove = pCmd->sidemove = 0.f;
-			pCmd->buttons &= ~(IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT);
-		}
-		else
-			pCmd->forwardmove = vForward.x, pCmd->sidemove = vForward.y;
-	}
+		AntiWarp(pLocal, pCmd->viewangles.y, pCmd->forwardmove, pCmd->sidemove);
 	else
 	{
-		vVelocity = pLocal->m_vecVelocity();
-		iMaxTicks = 0;
+		s_vVelocity = pLocal->m_vecVelocity();
+		s_iMaxTicks = 0;
 	}
 }
 

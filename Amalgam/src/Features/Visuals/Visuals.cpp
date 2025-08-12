@@ -539,7 +539,10 @@ void CVisuals::DrawEffects()
 	for (auto& tSightline : m_vSightLines)
 		H::Draw.RenderLine(tSightline.m_vStart, tSightline.m_vEnd, tSightline.m_Color, tSightline.m_bZBuffer);
 	if (auto& tPath = F::Aimbot.m_tPath; tPath.m_flTime)
-		H::Draw.RenderPath(tPath.m_vPath, tPath.m_tColor, tPath.m_bZBuffer, tPath.m_iStyle, tPath.m_flTime);
+	{
+		H::Draw.RenderPath(tPath.m_vPath, Vars::Colors::RealPath.Value, true, tPath.m_iStyle, tPath.m_flTime);
+		H::Draw.RenderPath(tPath.m_vPath, Vars::Colors::RealPathIgnoreZ.Value, false, tPath.m_iStyle, tPath.m_flTime);
+	}
 	DrawHitboxes();
 }
 

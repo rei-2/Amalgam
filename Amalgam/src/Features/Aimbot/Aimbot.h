@@ -14,7 +14,8 @@ private:
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void Draw(CTFPlayer* pLocal);
-	void Store(CBaseEntity* pEntity = nullptr, size_t iSize = 0);
+	void Store(CBaseEntity* pEntity, size_t iSize);
+	void Store(bool bFrameStageNotify = true);
 
 	bool m_bRan = false;
 	bool m_bRunningSecondary = false;

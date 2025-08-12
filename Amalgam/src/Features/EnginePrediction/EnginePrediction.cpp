@@ -53,10 +53,7 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 		vOriginalMove = { pCmd->forwardmove, pCmd->sidemove };
 		iOriginalButtons = pCmd->buttons;
 
-		bool bOriginalWarp = F::Ticks.m_bAntiWarp;
-		F::Ticks.m_bAntiWarp = true;
-		F::Ticks.AntiWarp(pLocal, pCmd);
-		F::Ticks.m_bAntiWarp = bOriginalWarp;
+		F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, pCmd->forwardmove, pCmd->sidemove);
 	}
 
 	I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_MoveData);

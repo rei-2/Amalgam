@@ -95,14 +95,13 @@ static inline std::deque<Frame_t> StackTrace(PCONTEXT pContext)
 
 static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 {
-	const char* sError = "UNKNOWN"; //nullptr;
+	const char* sError = "UNKNOWN";
 	switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
 	{
 	case STATUS_ACCESS_VIOLATION: sError = "ACCESS VIOLATION"; break;
 	case STATUS_STACK_OVERFLOW: sError = "STACK OVERFLOW"; break;
 	case STATUS_HEAP_CORRUPTION: sError = "HEAP CORRUPTION"; break;
 	case DBG_PRINTEXCEPTION_C: return EXCEPTION_EXECUTE_HANDLER;
-	//default: return EXCEPTION_EXECUTE_HANDLER;
 	}
 
 	if (s_mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)
@@ -124,7 +123,11 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	ssErrorStream << std::format("RSI: {:#x}\n", ExceptionInfo->ContextRecord->Rsi);
 	ssErrorStream << std::format("RDI: {:#x}\n\n", ExceptionInfo->ContextRecord->Rdi);
 
-	if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) // temporary, removeme
+	switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
+	{
+	case STATUS_ACCESS_VIOLATION:
+	//case STATUS_STACK_OVERFLOW:
+	//case STATUS_HEAP_CORRUPTION:
 	{
 		auto vTrace = StackTrace(ExceptionInfo->ContextRecord);
 		if (!vTrace.empty())
@@ -144,6 +147,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 			ssErrorStream << "\n";
 		}
 	}
+	}
 
 	ssErrorStream << "Built @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
 	ssErrorStream << "Ctrl + C to copy. \n";
@@ -157,8 +161,14 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	}
 	catch (...) {}
 
-	if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION) // temporary, removeme
+	switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
+	{
+	case STATUS_ACCESS_VIOLATION:
+	//case STATUS_STACK_OVERFLOW:
+	//case STATUS_HEAP_CORRUPTION:
 		SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, OUTPUT_DEBUG, MB_OK | MB_ICONERROR);
+	}
+
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 

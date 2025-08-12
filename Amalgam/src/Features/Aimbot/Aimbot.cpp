@@ -71,6 +71,8 @@ void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
+	Store(false);
+
 	RunMain(pLocal, pWeapon, pCmd);
 
 	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
@@ -97,21 +99,24 @@ void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
 	if (!Vars::Visuals::Simulation::RealPath.Value)
 		return;
 
-	if (pEntity)
-	{
-		if (!pEntity->IsPlayer())
-			return;
-
-		if (auto pResource = H::Entities.GetResource())
-		{
-			m_tPath = { { pEntity->m_vecOrigin() }, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::RealPath.Value, Vars::Visuals::Simulation::RealPath.Value };
-			m_iSize = iSize;
-			m_iPlayer = pResource->m_iUserID(pEntity->entindex());
-		}
+	if (!pEntity->IsPlayer())
 		return;
-	}
 
-	int iLag;
+	if (auto pResource = H::Entities.GetResource())
+	{
+		m_tPath = { { pEntity->m_vecOrigin() }, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Color_t(), Vars::Visuals::Simulation::RealPath.Value };
+		m_iSize = iSize;
+		m_iPlayer = pResource->m_iUserID(pEntity->entindex());
+	}
+}
+
+void CAimbot::Store(bool bFrameStageNotify)
+{
+	if (!Vars::Visuals::Simulation::RealPath.Value)
+		return;
+
+	int iLag = 1;
+	if (bFrameStageNotify)
 	{
 		static int iStaticTickcout = I::GlobalVars->tickcount;
 		iLag = I::GlobalVars->tickcount - iStaticTickcout;
@@ -122,12 +127,19 @@ void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
 		return;
 	else if (m_tPath.m_vPath.size() >= m_iSize || m_tPath.m_flTime < I::GlobalVars->curtime)
 	{
-		G::PathStorage.push_back(m_tPath);
+		if (m_tPath.m_tColor = Vars::Colors::RealPath.Value, m_tPath.m_bZBuffer = true; m_tPath.m_tColor.a)
+			G::PathStorage.push_back(m_tPath);
+		if (m_tPath.m_tColor = Vars::Colors::RealPathIgnoreZ.Value, m_tPath.m_bZBuffer = false; m_tPath.m_tColor.a)
+			G::PathStorage.push_back(m_tPath);
 		m_tPath = {};
 		return;
 	}
 
-	auto pPlayer = I::ClientEntityList->GetClientEntity(I::EngineClient->GetPlayerForUserID(m_iPlayer))->As<CTFPlayer>();
+	int iIndex = I::EngineClient->GetPlayerForUserID(m_iPlayer);
+	if (bFrameStageNotify ? iIndex == I::EngineClient->GetLocalPlayer() : iIndex != I::EngineClient->GetLocalPlayer())
+		return;
+
+	auto pPlayer = I::ClientEntityList->GetClientEntity(iIndex)->As<CTFPlayer>();
 	if (!pPlayer)
 		return;
 
