@@ -1132,10 +1132,41 @@ namespace ImGui
 		SetCursorPos({ vOriginalPos.x + H::Draw.Scale(4), vOriginalPos.y + H::Draw.Scale(-5 + 9 * iWraps) });
 		IconImage(*pVar ? ICON_MD_CHECK_BOX : ICON_MD_CHECK_BOX_OUTLINE_BLANK, tColor);
 
+		bool bAnyTextHovered = false;
+		
 		for (size_t i = 0; i < iWraps; i++)
 		{
 			SetCursorPos({ vOriginalPos.x + H::Draw.Scale(24), vOriginalPos.y + H::Draw.Scale(5 + 18 * i) });
+			
+			ImVec2 textPos = GetCursorPos();
+			
 			TextColored(*pVar ? F::Render.Active : F::Render.Inactive, vWrapped[i].c_str());
+			
+			ImVec2 textSize = CalcTextSize(vWrapped[i].c_str());
+			
+			SetCursorPos(textPos);
+			if (Button(std::format("##text_{}", i).c_str(), textSize) && !Disabled)
+			{
+				*pVar = !*pVar;
+			}
+			
+			if (IsItemHovered() && !Disabled)
+			{
+				bAnyTextHovered = true;
+				SetMouseCursor(ImGuiMouseCursor_Hand);
+			}
+		}
+		
+		if (bAnyTextHovered)
+		{
+			ImColor tTransparent = tColor;
+			tTransparent.Value.w *= (IsMouseDown(ImGuiMouseButton_Left) ? 0.1f : 0.05f) * GetStyle().Alpha;
+			ImDrawList* pDrawList = GetWindowDrawList();
+			ImVec2 vDrawPos = GetDrawPos() + ImVec2(vOriginalPos.x + H::Draw.Scale(12), vOriginalPos.y + H::Draw.Scale(3 + 9 * iWraps));
+			pDrawList->AddCircleFilled(vDrawPos, H::Draw.Scale(12), tTransparent);
+			
+			SetCursorPos({ vOriginalPos.x + H::Draw.Scale(4), vOriginalPos.y + H::Draw.Scale(-5 + 9 * iWraps) });
+			IconImage(*pVar ? ICON_MD_CHECK_BOX : ICON_MD_CHECK_BOX_OUTLINE_BLANK, *pVar ? (iFlags & FToggleEnum::PlainColor ? F::Render.Active : F::Render.Accent) : F::Render.Inactive);
 		}
 
 		SetCursorPos(vOriginalPos);
