@@ -8,7 +8,7 @@
 #include "../AutoAirblast/AutoAirblast.h"
 
 //#define SPLASH_DEBUG1 // normal splash visualization
-//#define SPLASH_DEBUG2 // obstructed splash visualization
+#define SPLASH_DEBUG2 // obstructed splash visualization
 //#define SPLASH_DEBUG3 // simple splash visualization
 //#define SPLASH_DEBUG4 // points visualization
 //#define SPLASH_DEBUG5 // trace visualization

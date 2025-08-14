@@ -701,3 +701,36 @@ public:
 	virtual void ClearBuffersObeyStencilEx(bool bClearColor, bool bClearAlpha, bool bClearDepth) = 0;
 	virtual void AsyncCreateTextureFromRenderTarget(ITexture* pSrcRt, const char* pDstName, ImageFormat dstFmt, bool bGenMips, int nAdditionalCreationFlags, IAsyncTextureOperationReceiver* pRecipient, void* pExtraArgs) = 0;
 };
+
+struct ShaderStencilState_t
+{
+	bool m_bEnable;
+	StencilOperation_t m_FailOp;
+	StencilOperation_t m_ZFailOp;
+	StencilOperation_t m_PassOp;
+	StencilComparisonFunction_t m_CompareFunc;
+	int m_nReferenceValue;
+	uint32 m_nTestMask;
+	uint32 m_nWriteMask;
+
+	ShaderStencilState_t()
+	{
+		m_bEnable = false;
+		m_PassOp = m_FailOp = m_ZFailOp = STENCILOPERATION_KEEP;
+		m_CompareFunc = STENCILCOMPARISONFUNCTION_ALWAYS;
+		m_nReferenceValue = 0;
+		m_nTestMask = m_nWriteMask = 0xFFFFFFFF;
+	}
+
+	void SetStencilState(IMatRenderContext* const pRenderContext) const
+	{
+		pRenderContext->SetStencilEnable(m_bEnable);
+		pRenderContext->SetStencilFailOperation(m_FailOp);
+		pRenderContext->SetStencilZFailOperation(m_ZFailOp);
+		pRenderContext->SetStencilPassOperation(m_PassOp);
+		pRenderContext->SetStencilCompareFunction(m_CompareFunc);
+		pRenderContext->SetStencilReferenceValue(m_nReferenceValue);
+		pRenderContext->SetStencilTestMask(m_nTestMask);
+		pRenderContext->SetStencilWriteMask(m_nWriteMask);
+	}
+};

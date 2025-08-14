@@ -97,7 +97,7 @@ void CChams::Store(CTFPlayer* pLocal)
 			continue;
 
 		if (pGroup->m_tChams()
-			&& SDK::IsOnScreen(pEntity, !pEntity->IsProjectile()))
+			&& SDK::IsOnScreen(pEntity, pEntity->IsBaseCombatWeapon() || pEntity->IsWearable()))
 			m_vEntities.emplace_back(pEntity, pGroup->m_tChams);
 
 		if (pEntity->IsPlayer() && pEntity != pLocal && pGroup->m_bBacktrack && !pGroup->m_vBacktrackChams.empty()

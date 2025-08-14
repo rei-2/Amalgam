@@ -321,10 +321,6 @@ void CEntities::ManualNetwork(const StartSoundParams_t& params)
 	if (!pEntity || !pEntity->IsDormant() || !pEntity->IsPlayer() && !pEntity->IsBuilding())
 		return;
 
-	bool bPlayer = pEntity->IsPlayer();
-	bool bBuilding = pEntity->IsBuilding();
-	bool bNPC = pEntity->IsNPC();
-
 	float flDuration = 0.f;
 	switch (pEntity->GetClassID())
 	{

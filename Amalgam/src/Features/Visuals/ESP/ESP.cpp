@@ -603,6 +603,10 @@ static inline void StoreProjectile(CBaseEntity* pProjectile, CTFPlayer* pLocal, 
 
 static inline void StoreObjective(CBaseEntity* pObjective, CTFPlayer* pLocal, Group_t* pGroup, std::unordered_map<CBaseEntity*, EntityCache_t>& mCache)
 {
+	auto pOwner = pObjective->m_hOwnerEntity()->As<CTFPlayer>();
+	if (pOwner == pLocal)
+		return;
+
 	EntityCache_t& tCache = mCache[pObjective];
 	tCache.m_flAlpha = pGroup->m_tColor.a / 255.f;
 	tCache.m_tColor = F::Groups.GetColor(pObjective, pGroup);
@@ -734,7 +738,7 @@ void CESP::Store(CTFPlayer* pLocal)
 		else if (pEntity->IsProjectile())
 			StoreProjectile(pEntity, pLocal, pGroup, m_mEntityCache);
 		else if (pEntity->GetClassID() == ETFClassID::CCaptureFlag)
-			StoreProjectile(pEntity, pLocal, pGroup, m_mEntityCache);
+			StoreObjective(pEntity, pLocal, pGroup, m_mEntityCache);
 		else
 			StoreMisc(pEntity, pLocal, pGroup, m_mEntityCache);
 	}

@@ -15,7 +15,6 @@ void CGlow::SetupBegin(IMatRenderContext* pRenderContext)
 	I::RenderView->SetColorModulation(1.f, 1.f, 1.f);
 	I::ModelRender->ForcedMaterialOverride(m_pMatGlowColor);
 
-	pRenderContext->ClearBuffers(false, false, false);
 	pRenderContext->SetStencilEnable(true);
 	pRenderContext->SetStencilCompareFunction(STENCILCOMPARISONFUNCTION_ALWAYS);
 	pRenderContext->SetStencilPassOperation(STENCILOPERATION_REPLACE);
@@ -121,7 +120,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 
 		Color_t tColor = F::Groups.GetColor(pEntity, pGroup);
 		if (pGroup->m_tGlow()
-			&& SDK::IsOnScreen(pEntity, !pEntity->IsProjectile()))
+			&& SDK::IsOnScreen(pEntity, pEntity->IsBaseCombatWeapon() || pEntity->IsWearable()))
 			m_mEntities[pGroup->m_tGlow].emplace_back(pEntity, tColor);
 
 		if (pEntity->IsPlayer() && pEntity != pLocal && pGroup->m_bBacktrack && pGroup->m_tBacktrackGlow()
