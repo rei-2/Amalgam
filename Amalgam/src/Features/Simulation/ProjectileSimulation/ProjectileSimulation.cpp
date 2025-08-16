@@ -268,9 +268,8 @@ bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, 
 		return bReturn;
 
 	CGameTrace trace = {};
-	CTraceFilterCollideable filter = {}; filter.pSkip = pPlayer;
-	if (pWeapon->GetWeaponID() == TF_WEAPON_RAYGUN)
-		filter.iObject = OBJECT_DEFAULT;
+	CTraceFilterWorldAndPropsOnly filter = {};
+	filter.pSkip = pPlayer;
 
 	Vec3 vStart = bQuick ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
 	Vec3 vEnd = tProjInfo.m_vPos;

@@ -8,7 +8,7 @@
 #include "../AutoAirblast/AutoAirblast.h"
 
 //#define SPLASH_DEBUG1 // normal splash visualization
-#define SPLASH_DEBUG2 // obstructed splash visualization
+//#define SPLASH_DEBUG2 // obstructed splash visualization
 //#define SPLASH_DEBUG3 // simple splash visualization
 //#define SPLASH_DEBUG4 // points visualization
 //#define SPLASH_DEBUG5 // trace visualization
@@ -29,26 +29,27 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 	{
 		EGroupType eGroupType = EGroupType::GROUP_INVALID;
 		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
-			eGroupType = EGroupType::PLAYERS_ENEMIES;
-		if (Vars::Aimbot::Healing::AutoHeal.Value)
+			eGroupType = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_ALL;
+		if (Vars::Aimbot::Healing::AutoArrow.Value)
 		{
 			switch (pWeapon->GetWeaponID())
 			{
-			case TF_WEAPON_CROSSBOW: eGroupType = eGroupType == EGroupType::PLAYERS_ENEMIES ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_TEAMMATES; break;
+			case TF_WEAPON_CROSSBOW: eGroupType = eGroupType != EGroupType::GROUP_INVALID ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_TEAMMATES; break;
 			case TF_WEAPON_LUNCHBOX: eGroupType = EGroupType::PLAYERS_TEAMMATES; break;
 			}
 		}
+		bool bHeal = pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW || pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX;
 
 		for (auto pEntity : H::Entities.GetGroup(eGroupType))
 		{
-			bool bTeammate = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (bTeammate)
+			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
+			if (bTeam && bHeal)
 			{
 				if (pEntity->As<CTFPlayer>()->m_iHealth() >= pEntity->As<CTFPlayer>()->GetMaxHealth()
-					|| Vars::Aimbot::Healing::FriendsOnly.Value && !H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
+					|| Vars::Aimbot::Healing::HealPriority.Value == Vars::Aimbot::Healing::HealPriorityEnum::FriendsOnly && !H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
 					continue;
 			}
 
@@ -56,8 +57,23 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
+			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
+			if (bTeam && bHeal)
+			{
+				iPriority = 0;
+				switch (Vars::Aimbot::Healing::HealPriority.Value)
+				{
+				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeFriends:
+					if (!H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
+						break;
+					[[fallthrough]];
+				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeTeam:
+					iPriority = std::numeric_limits<int>::max();
+				}
+			}
+
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()));
+			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
 
 		if (pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX)
@@ -72,7 +88,8 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() && pEntity->As<CBaseObject>()->m_iHealth() >= pEntity->As<CBaseObject>()->m_iMaxHealth())
+			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
+			if (bTeam && pEntity->As<CBaseObject>()->m_iHealth() >= pEntity->As<CBaseObject>()->m_iMaxHealth())
 				continue;
 
 			Vec3 vPos = pEntity->GetCenter();
@@ -471,7 +488,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 #ifdef SPLASH_DEBUG6
 			s_mTraceCount["Splash rocket (2, 2)"]++;
 #endif
-			bNormal = trace.fraction == 1.f || trace.allsolid || (trace.startpos - trace.endpos).IsZero() || trace.surface.flags & (SURF_NODRAW | SURF_SKY);
+			bNormal = trace.fraction == 1.f || trace.allsolid || (trace.startpos - trace.endpos).IsZero() || trace.surface.flags & (/*SURF_NODRAW |*/ SURF_SKY);
 #ifdef SPLASH_DEBUG2
 			{
 				Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
@@ -1145,8 +1162,24 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 		return false;
 
 	CGameTrace trace = {};
-	CTraceFilterCollideable filter = {}; filter.pSkip = bSplash ? tTarget.m_pEntity : pLocal; filter.iPlayer = bSplash ? PLAYER_NONE : PLAYER_DEFAULT; filter.bMisc = !bSplash;
+	CTraceFilterCollideable filter = {};
+	filter.pSkip = bSplash ? tTarget.m_pEntity : pLocal;
+	filter.iPlayer = bSplash ? PLAYER_NONE : PLAYER_DEFAULT;
+	filter.bMisc = !bSplash;
 	int nMask = MASK_SOLID;
+	if (!bSplash && F::AimbotGlobal.FriendlyFire())
+	{
+		switch (pWeapon->GetWeaponID())
+		{	// only weapons that actually hit teammates properly
+		case TF_WEAPON_ROCKETLAUNCHER:
+		case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
+		case TF_WEAPON_PARTICLE_CANNON:
+		case TF_WEAPON_DRG_POMSON:
+		case TF_WEAPON_FLAREGUN:
+		case TF_WEAPON_SYRINGEGUN_MEDIC:
+			filter.iPlayer = PLAYER_ALL;
+		}
+	}
 	F::ProjSim.SetupTrace(filter, nMask, pWeapon);
 
 #ifdef SPLASH_DEBUG5
@@ -1924,7 +1957,9 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBa
 	if (!F::ProjSim.Initialize(tProjInfo, false, true))
 		return false;
 
-	CTraceFilterCollideable filter = {}; filter.pSkip = bSplash ? tTarget.m_pEntity : pLocal; filter.iPlayer = bSplash ? PLAYER_NONE : PLAYER_DEFAULT;
+	CTraceFilterCollideable filter = {};
+	filter.pSkip = bSplash ? tTarget.m_pEntity : pLocal;
+	filter.iPlayer = bSplash ? PLAYER_NONE : PLAYER_DEFAULT;
 	int nMask = MASK_SOLID;
 	F::ProjSim.SetupTrace(filter, nMask, pProjectile);
 
@@ -2145,7 +2180,7 @@ bool CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBa
 
 			float flDist = bSplash ? tTarget.m_vPos.DistTo(vPoint.m_vPoint) : flLowestDist;
 			bool bPriority = bSplash ? iPriority <= iLowestPriority : iPriority < iLowestPriority;
-			bool bTime = bSplash || m_tInfo.m_iPrimeTime < i || tStorage.m_MoveData.m_vecVelocity.IsZero();
+			bool bTime = bSplash || tStorage.m_MoveData.m_vecVelocity.IsZero();
 			bool bDist = !bSplash || flDist < flLowestDist;
 			if (!bSplash && !bPriority)
 				mDirectPoints.erase(iIndex);

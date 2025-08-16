@@ -30,6 +30,7 @@ public:
 
 	bool ShouldIgnore(CBaseEntity* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	int GetPriority(int iIndex);
+	bool FriendlyFire();
 
 	bool ShouldAim();
 	bool ShouldHoldAttack(CTFWeaponBase* pWeapon);

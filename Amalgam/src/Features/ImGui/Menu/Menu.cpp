@@ -150,9 +150,9 @@ void CMenu::MenuAimbot(int iTab)
 					FDropdown(Vars::Aimbot::General::Ignore, FDropdownEnum::Right);
 					FSlider(Vars::Aimbot::General::AimFOV);
 					FSlider(Vars::Aimbot::General::MaxTargets, FSliderEnum::Left);
-					PushTransparent(!(Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Cloaked));
+					PushTransparent(!(Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Invisible));
 					{
-						FSlider(Vars::Aimbot::General::IgnoreCloak, FSliderEnum::Right);
+						FSlider(Vars::Aimbot::General::IgnoreInvisible, FSliderEnum::Right);
 					}
 					PopTransparent();
 					FSlider(Vars::Aimbot::General::AssistStrength, FSliderEnum::Left);
@@ -196,10 +196,11 @@ void CMenu::MenuAimbot(int iTab)
 						FSlider(Vars::Backtrack::Offset);
 					} EndSection();
 				}
-				if (Section("Healing", 8))
+				if (Section("Healing"))
 				{
+					FDropdown(Vars::Aimbot::Healing::HealPriority);
 					FToggle(Vars::Aimbot::Healing::AutoHeal, FToggleEnum::Left);
-					FToggle(Vars::Aimbot::Healing::FriendsOnly, FToggleEnum::Right);
+					FToggle(Vars::Aimbot::Healing::AutoArrow, FToggleEnum::Right);
 					FToggle(Vars::Aimbot::Healing::AutoVaccinator, FToggleEnum::Left);
 					FToggle(Vars::Aimbot::Healing::ActivateOnVoice, FToggleEnum::Right);
 				} EndSection();

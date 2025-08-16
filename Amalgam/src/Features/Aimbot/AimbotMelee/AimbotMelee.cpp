@@ -14,10 +14,17 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 	{
-		bool bDisciplinary = Vars::Aimbot::Melee::WhipTeam.Value && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0;
-		for (auto pEntity : H::Entities.GetGroup(bDisciplinary ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_ENEMIES))
+		auto eGroupType = EGroupType::GROUP_INVALID;
+		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 		{
-			bool bTeammate = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
+			eGroupType = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_ALL;
+			if (Vars::Aimbot::Melee::WhipTeam.Value &&
+				!F::AimbotGlobal.FriendlyFire() && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
+				eGroupType = EGroupType::PLAYERS_ALL;
+		}
+
+		for (auto pEntity : H::Entities.GetGroup(eGroupType))
+		{
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
@@ -25,8 +32,13 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
+			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
+			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
+			if (bTeam && !F::AimbotGlobal.FriendlyFire())
+				iPriority = 0;
+
 			float flDistTo = vLocalPos.DistTo(vPos);
-			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, bTeammate ? 0 : F::AimbotGlobal.GetPriority(pEntity->entindex()));
+			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
 	}
 
@@ -40,7 +52,8 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			if (pEntity->m_iTeamNum() == pLocal->m_iTeamNum() && (bWrench && !AimFriendlyBuilding(pEntity->As<CBaseObject>()) || bDestroySapper && !pEntity->As<CBaseObject>()->m_bHasSapper()))
+			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
+			if (bTeam && (bWrench && !AimFriendlyBuilding(pEntity->As<CBaseObject>()) || bDestroySapper && !pEntity->As<CBaseObject>()->m_bHasSapper()))
 				continue;
 
 			Vec3 vPos = pEntity->GetCenter();
@@ -202,9 +215,9 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	m_bShouldSwing = m_iDoubletapTicks <= (iSwingTicks) || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
 }
 
-bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, Vec3 vEyeAngles)
+bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEyeAngles)
 {
-	if (!pTarget->IsPlayer())
+	if (!pTarget->IsPlayer() || pTarget->m_iTeamNum() == pLocal->m_iTeamNum())
 		return false;
 
 	if (Vars::Aimbot::Melee::IgnoreRazorback.Value)
@@ -303,7 +316,8 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 	}
 
 	CGameTrace trace = {};
-	CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
+	CTraceFilterHitscan filter = {};
+	filter.pSkip = pLocal;
 	for (auto pRecord : vRecords)
 	{
 		Vec3 vRestoreOrigin = tTarget.m_pEntity->GetAbsOrigin();
@@ -330,7 +344,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		}
 
 		if (bReturn && Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
-			bReturn = CanBackstab(tTarget.m_pEntity, tTarget.m_vAngleTo);
+			bReturn = CanBackstab(tTarget.m_pEntity, pLocal, tTarget.m_vAngleTo);
 
 		tTarget.m_pEntity->SetAbsOrigin(vRestoreOrigin);
 		tTarget.m_pEntity->m_vecMins() = vRestoreMins;

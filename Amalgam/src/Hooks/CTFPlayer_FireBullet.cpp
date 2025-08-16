@@ -26,7 +26,8 @@ MAKE_HOOK(CTFPlayer_FireBullet, S::CTFPlayer_FireBullet(), void,
 	const Vec3 vStart = info.m_vecSrc;
 	const Vec3 vEnd = vStart + info.m_vecDirShooting * info.m_flDistance;
 	CGameTrace trace = {};
-	CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
+	CTraceFilterHitscan filter = {};
+	filter.pSkip = pLocal;
 	SDK::Trace(vStart, vEnd, MASK_SHOT | CONTENTS_GRATE, &filter, &trace);
 
 	int iIndex = I::EngineClient->GetLocalPlayer();

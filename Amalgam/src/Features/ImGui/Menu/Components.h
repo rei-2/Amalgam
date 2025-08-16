@@ -1196,7 +1196,7 @@ namespace ImGui
 #ifdef ALTERNATE_FULL_SLIDER
 		auto vWrapped = WrapText(StripDoubleHash(sLabel), bFull ? vSize.x / 2 - H::Draw.Scale(24) : vSize.x - flEntryWidth - H::Draw.Scale(20));
 #else
-		auto vWrapped = WrapText(StripDoubleHash(sLabel), vSize.x - H::Draw.Scale(20) - flEntryWidth);
+		auto vWrapped = WrapText(StripDoubleHash(sLabel), vSize.x - H::Draw.Scale(14) - flEntryWidth);
 #endif
 		int iWraps = std::min(int(vWrapped.size()), 2); // prevent too many wraps
 #ifdef ALTERNATE_FULL_SLIDER

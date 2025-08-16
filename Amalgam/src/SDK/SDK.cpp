@@ -330,7 +330,8 @@ void SDK::TraceHull(const Vec3& vecStart, const Vec3& vecEnd, const Vec3& vecHul
 bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
-	CTraceFilterHitscan filter = {}; filter.pSkip = pSkip;
+	CTraceFilterHitscan filter = {};
+	filter.pSkip = pSkip;
 	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
@@ -339,7 +340,9 @@ bool SDK::VisPos(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFr
 bool SDK::VisPosCollideable(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
-	CTraceFilterCollideable filter = {}; filter.pSkip = pSkip; filter.iType = SKIP_CHECK;
+	CTraceFilterCollideable filter = {};
+	filter.pSkip = pSkip;
+	filter.iType = SKIP_CHECK;
 	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
@@ -348,7 +351,8 @@ bool SDK::VisPosCollideable(CBaseEntity* pSkip, const CBaseEntity* pEntity, cons
 bool SDK::VisPosWorld(CBaseEntity* pSkip, const CBaseEntity* pEntity, const Vec3& vFrom, const Vec3& vTo, unsigned int nMask)
 {
 	CGameTrace trace = {};
-	CTraceFilterWorldAndPropsOnly filter = {}; filter.pSkip = pSkip;
+	CTraceFilterWorldAndPropsOnly filter = {};
+	filter.pSkip = pSkip;
 	Trace(vFrom, vTo, nMask, &filter, &trace);
 	if (trace.DidHit())
 		return trace.m_pEnt && trace.m_pEnt == pEntity;
@@ -599,7 +603,8 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 
 		CGameTrace trace = {};
-		CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
+		CTraceFilterHitscan filter = {};
+		filter.pSkip = pLocal;
 		static auto tf_grapplinghook_max_distance = U::ConVars.FindVar("tf_grapplinghook_max_distance");
 		const float flGrappleDistance = tf_grapplinghook_max_distance->GetFloat();
 		Trace(vPos, vPos + vForward * flGrappleDistance, MASK_SOLID, &filter, &trace);
@@ -782,7 +787,9 @@ void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vO
 		Vec3 vEndPos = vShootPos + vForward * 2000.f;
 
 		CGameTrace trace = {};
-		CTraceFilterCollideable filter = {}; filter.pSkip = pPlayer; filter.iType = SKIP_CHECK;
+		CTraceFilterCollideable filter = {};
+		filter.pSkip = pPlayer;
+		filter.iType = SKIP_CHECK;
 		Trace(vShootPos, vEndPos, MASK_SOLID, &filter, &trace);
 		if (trace.DidHit() && trace.fraction > 0.1f)
 			vEndPos = trace.endpos;

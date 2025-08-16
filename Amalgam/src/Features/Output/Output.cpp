@@ -190,10 +190,10 @@ void COutput::UserMessage(bf_read& msgData)
 	char sTarget[256]; msgData.ReadString(sTarget, sizeof(sTarget));
 	int iTarget = msgData.ReadByte() >> 1;
 	msgData.Seek(0);
-	bool bSameTeam = iTeam == pLocal->m_iTeamNum();
 	if (!iCaller || !iTarget)
 		return;
 
+	bool bSameTeam = iTeam == pLocal->m_iTeamNum();
 	auto sCallerName = F::PlayerUtils.GetPlayerName(iCaller, pResource->GetName(iCaller));
 	auto sTargetName = F::PlayerUtils.GetPlayerName(iTarget, pResource->GetName(iTarget));
 	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start",

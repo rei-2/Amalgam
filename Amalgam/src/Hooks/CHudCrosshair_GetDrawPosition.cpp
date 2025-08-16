@@ -41,7 +41,8 @@ MAKE_HOOK(CHudCrosshair_GetDrawPosition, S::CHudCrosshair_GetDrawPosition(), voi
 		Vec3 vEndPos = vStartPos + vForward * 8192;
 
 		CGameTrace trace = {};
-		CTraceFilterHitscan filter = {}; filter.pSkip = pLocal;
+		CTraceFilterHitscan filter = {};
+		filter.pSkip = pLocal;
 		SDK::Trace(vStartPos, vEndPos, MASK_SHOT, &filter, &trace);
 
 		Vec3 vScreen;

@@ -69,6 +69,7 @@ bool CTraceFilterCollideable::ShouldHitEntity(IHandleEntity* pServerEntity, int 
 	case ETFClassID::CDynamicProp:
 	case ETFClassID::CPhysicsProp:
 	case ETFClassID::CPhysicsPropMultiplayer:
+	case ETFClassID::CFunc_LOD:
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
 	case ETFClassID::CFuncConveyor: return true;
@@ -128,6 +129,7 @@ bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity
 	case ETFClassID::CDynamicProp:
 	case ETFClassID::CPhysicsProp:
 	case ETFClassID::CPhysicsPropMultiplayer:
+	case ETFClassID::CFunc_LOD:
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
 	case ETFClassID::CFuncConveyor: return true;
