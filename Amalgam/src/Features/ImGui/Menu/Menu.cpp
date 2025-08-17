@@ -73,13 +73,13 @@ void CMenu::DrawMenu()
 		PushFont(F::Render.FontBold);
 		FTabs(
 			{
-				{ "AIMBOT", "GENERAL", "HVH", "DRAW" },
+				{ "AIMBOT", "GENERAL", "DRAW" },
 				{ "VISUALS", "ESP", "MISC##", "MENU" },
-				{ "MISC" },
+				{ "MISC", "MAIN", "HVH" },
 				{ "LOGS", "PLAYERLIST", "SETTINGS##", "OUTPUT" },
 				{ "SETTINGS", "CONFIG", "BINDS", "MATERIALS", "EXTRA" }
 			},
-			{ &iTab, &iAimbotTab, &iVisualsTab, nullptr, &iLogsTab, &iSettingsTab },
+			{ &iTab, &iAimbotTab, &iVisualsTab, &iMiscTab, &iLogsTab, &iSettingsTab },
 			{ H::Draw.Scale(flSideSize - 16), H::Draw.Scale(36) },
 			{ H::Draw.Scale(8), H::Draw.Scale(8) + flOffset },
 			FTabsEnum::Vertical | FTabsEnum::HorizontalIcons | FTabsEnum::AlignLeft | FTabsEnum::BarLeft,
@@ -225,7 +225,7 @@ void CMenu::MenuAimbot(int iTab)
 					FSlider(Vars::Aimbot::Hitscan::PointScale);
 					PushTransparent(!(Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire));
 					{
-						FSlider(Vars::Aimbot::Hitscan::TapFireDist);
+						FSlider(Vars::Aimbot::Hitscan::TapfireDistance);
 					}
 					PopTransparent();
 				} EndSection();
@@ -335,153 +335,8 @@ void CMenu::MenuAimbot(int iTab)
 		}
 		break;
 	}
-	// HvH
-	case 1:
-	{
-		if (BeginTable("HvHTable", 2))
-		{
-			/* Column 1 */
-			TableNextColumn();
-			{
-				if (Section("Doubletap", 8))
-				{
-					FToggle(Vars::Doubletap::Doubletap, FToggleEnum::Left);
-					FToggle(Vars::Doubletap::Warp, FToggleEnum::Right);
-					FToggle(Vars::Doubletap::RechargeTicks, FToggleEnum::Left);
-					FToggle(Vars::Doubletap::AntiWarp, FToggleEnum::Right);
-					FSlider(Vars::Doubletap::TickLimit, FSliderEnum::Left);
-					FSlider(Vars::Doubletap::WarpRate, FSliderEnum::Right);
-					FSlider(Vars::Doubletap::RechargeLimit, FSliderEnum::Left);
-					FSlider(Vars::Doubletap::PassiveRecharge, FSliderEnum::Right);
-				} EndSection();
-				if (Section("Fakelag"))
-				{
-					FDropdown(Vars::Fakelag::Fakelag, FSliderEnum::Left);
-					FDropdown(Vars::Fakelag::Options, FDropdownEnum::Right);
-					PushTransparent(Vars::Fakelag::Fakelag.Value != Vars::Fakelag::FakelagEnum::Plain);
-					{
-						FSlider(Vars::Fakelag::PlainTicks, FSliderEnum::Left);
-					}
-					PopTransparent();
-					PushTransparent(Vars::Fakelag::Fakelag.Value != Vars::Fakelag::FakelagEnum::Random);
-					{
-						FSlider(Vars::Fakelag::RandomTicks, FSliderEnum::Right);
-					}
-					PopTransparent();
-					FToggle(Vars::Fakelag::UnchokeOnAttack, FToggleEnum::Left);
-					FToggle(Vars::Fakelag::RetainBlastJump, FToggleEnum::Right);
-				} EndSection();
-				if (Vars::Debug::Options.Value)
-				{
-					if (Section("##Debug"))
-					{
-						FToggle(Vars::Fakelag::RetainSoldierOnly);
-					} EndSection();
-				}
-				if (Section("Antiaim", 8))
-				{
-					FToggle(Vars::AntiAim::Enabled);
-					FDropdown(Vars::AntiAim::PitchReal, FDropdownEnum::Left);
-					FDropdown(Vars::AntiAim::PitchFake, FDropdownEnum::Right);
-					FDropdown(Vars::AntiAim::YawReal, FDropdownEnum::Left);
-					FDropdown(Vars::AntiAim::YawFake, FDropdownEnum::Right);
-					FDropdown(Vars::AntiAim::RealYawMode, FDropdownEnum::Left);
-					FDropdown(Vars::AntiAim::FakeYawMode, FDropdownEnum::Right);
-					FSlider(Vars::AntiAim::RealYawOffset, FSliderEnum::Left);
-					FSlider(Vars::AntiAim::FakeYawOffset, FSliderEnum::Right);
-					PushTransparent(Vars::AntiAim::YawReal.Value != Vars::AntiAim::YawEnum::Edge && Vars::AntiAim::YawReal.Value != Vars::AntiAim::YawEnum::Jitter);
-					{
-						FSlider(Vars::AntiAim::RealYawValue, FSliderEnum::Left);
-					}
-					PopTransparent();
-					PushTransparent(Vars::AntiAim::YawFake.Value != Vars::AntiAim::YawEnum::Edge && Vars::AntiAim::YawFake.Value != Vars::AntiAim::YawEnum::Jitter);
-					{
-						FSlider(Vars::AntiAim::FakeYawValue, FSliderEnum::Right);
-					}
-					PopTransparent();
-					PushTransparent(Vars::AntiAim::YawFake.Value != Vars::AntiAim::YawEnum::Spin && Vars::AntiAim::YawReal.Value != Vars::AntiAim::YawEnum::Spin);
-					{
-						FSlider(Vars::AntiAim::SpinSpeed, FSliderEnum::Left);
-					}
-					PopTransparent();
-					SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetRowPos() + H::Draw.Scale(8) });
-					FToggle(Vars::AntiAim::MinWalk, FToggleEnum::Left);
-					FToggle(Vars::AntiAim::AntiOverlap, FToggleEnum::Left);
-					FToggle(Vars::AntiAim::InvalidShootPitch, FToggleEnum::Right);
-				} EndSection();
-			}
-			/* Column 2 */
-			TableNextColumn();
-			{
-				if (Section("Resolver", 8))
-				{
-					FToggle(Vars::Resolver::Enabled, FToggleEnum::Left);
-					PushTransparent(!Vars::Resolver::Enabled.Value);
-					{
-						FToggle(Vars::Resolver::AutoResolve, FToggleEnum::Right);
-						PushTransparent(Transparent || !Vars::Resolver::AutoResolve.Value);
-						{
-							FToggle(Vars::Resolver::AutoResolveCheatersOnly, FToggleEnum::Left);
-							FToggle(Vars::Resolver::AutoResolveHeadshotOnly, FToggleEnum::Right);
-							PushTransparent(Transparent || !Vars::Resolver::AutoResolveYawAmount.Value);
-							{
-								FSlider(Vars::Resolver::AutoResolveYawAmount, FSliderEnum::Left);
-							}
-							PopTransparent();
-							PushTransparent(Transparent || !Vars::Resolver::AutoResolvePitchAmount.Value);
-							{
-								FSlider(Vars::Resolver::AutoResolvePitchAmount, FSliderEnum::Right);
-							}
-							PopTransparent();
-						}
-						PopTransparent();
-						FSlider(Vars::Resolver::CycleYaw, FSliderEnum::Left);
-						FSlider(Vars::Resolver::CyclePitch, FSliderEnum::Right);
-						FToggle(Vars::Resolver::CycleView, FToggleEnum::Left);
-						FToggle(Vars::Resolver::CycleMinwalk, FToggleEnum::Right);
-					}
-					PopTransparent();
-				} EndSection();
-				if (Section("Auto Peek", 8))
-				{
-					FToggle(Vars::AutoPeek::Enabled);
-				} EndSection();
-				if (Section("Cheater Detection"))
-				{
-					FDropdown(Vars::CheaterDetection::Methods);
-					PushTransparent(!Vars::CheaterDetection::DetectionsRequired.Value);
-					{
-						FSlider(Vars::CheaterDetection::DetectionsRequired);
-					}
-					PopTransparent();
-					PushTransparent(!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::PacketChoking));
-					{
-						FSlider(Vars::CheaterDetection::MinimumChoking);
-					}
-					PopTransparent();
-					PushTransparent(!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::AimFlicking));
-					{
-						FSlider(Vars::CheaterDetection::MinimumFlick, FSliderEnum::Left);
-						FSlider(Vars::CheaterDetection::MaximumNoise, FSliderEnum::Right);
-					}
-					PopTransparent();
-				} EndSection();
-				if (Section("Speedhack", 8))
-				{
-					FToggle(Vars::Speedhack::Enabled);
-					PushTransparent(!Vars::Speedhack::Enabled.Value);
-					{
-						FSlider(Vars::Speedhack::Amount);
-					}
-					PopTransparent();
-				} EndSection();
-			}
-			EndTable();
-		}
-		break;
-	}
 	// Draw
-	case 2:
+	case 1:
 	{
 		if (BeginTable("DrawTable", 2))
 		{
@@ -1013,7 +868,7 @@ void CMenu::MenuVisuals(int iTab)
 			/* Column 1 */
 			TableNextColumn();
 			{
-				if (Section("Menu", 8))
+				if (Section("Settings", 8))
 				{
 					FColorPicker(Vars::Menu::Theme::Accent, FColorPickerEnum::Left);
 					FColorPicker(Vars::Menu::Theme::Background, FColorPickerEnum::Right);
@@ -1022,8 +877,8 @@ void CMenu::MenuVisuals(int iTab)
 
 					FSDropdown(Vars::Menu::CheatTitle, FDropdownEnum::Left);
 					FSDropdown(Vars::Menu::CheatTag, FDropdownEnum::Right);
-					FKeybind(Vars::Menu::MenuPrimaryKey, FButtonEnum::Left, { Vars::Menu::MenuSecondaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON });
-					FKeybind(Vars::Menu::MenuSecondaryKey, FButtonEnum::Right | FButtonEnum::SameLine, { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON });
+					FKeybind(Vars::Menu::PrimaryKey, FButtonEnum::Left, { Vars::Menu::SecondaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON });
+					FKeybind(Vars::Menu::SecondaryKey, FButtonEnum::Right | FButtonEnum::SameLine, { Vars::Menu::PrimaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON });
 				} EndSection();
 			}
 			/* Column 2 */
@@ -1054,6 +909,7 @@ void CMenu::MenuVisuals(int iTab)
 			}
 			EndTable();
 		}
+		break;
 	}
 	}
 }
@@ -1064,6 +920,7 @@ void CMenu::MenuMisc(int iTab)
 
 	switch (iTab)
 	{
+	// Main
 	case 0:
 	{
 		if (BeginTable("MiscTable", 2))
@@ -1088,7 +945,7 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Movement::AutoCTap, FToggleEnum::Right);
 					FToggle(Vars::Misc::Movement::FastStop, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::FastAccelerate, FToggleEnum::Right);
-					FToggle(Vars::Misc::Movement::CrouchSpeed, FToggleEnum::Left);
+					FToggle(Vars::Misc::Movement::DuckSpeed, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::MovementLock, FToggleEnum::Right);
 					FToggle(Vars::Misc::Movement::BreakJump, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::ShieldTurnRate, FToggleEnum::Right);
@@ -1166,6 +1023,152 @@ void CMenu::MenuMisc(int iTab)
 			}
 			EndTable();
 		}
+		break;
+	}
+	// HvH
+	case 1:
+	{
+		if (BeginTable("HvHTable", 2))
+		{
+			/* Column 1 */
+			TableNextColumn();
+			{
+				if (Section("Doubletap", 8))
+				{
+					FToggle(Vars::Doubletap::Doubletap, FToggleEnum::Left);
+					FToggle(Vars::Doubletap::Warp, FToggleEnum::Right);
+					FToggle(Vars::Doubletap::RechargeTicks, FToggleEnum::Left);
+					FToggle(Vars::Doubletap::AntiWarp, FToggleEnum::Right);
+					FSlider(Vars::Doubletap::TickLimit, FSliderEnum::Left);
+					FSlider(Vars::Doubletap::WarpRate, FSliderEnum::Right);
+					FSlider(Vars::Doubletap::RechargeLimit, FSliderEnum::Left);
+					FSlider(Vars::Doubletap::PassiveRecharge, FSliderEnum::Right);
+				} EndSection();
+				if (Section("Fakelag"))
+				{
+					FDropdown(Vars::Fakelag::Fakelag, FSliderEnum::Left);
+					FDropdown(Vars::Fakelag::Options, FDropdownEnum::Right);
+					PushTransparent(Vars::Fakelag::Fakelag.Value != Vars::Fakelag::FakelagEnum::Plain);
+					{
+						FSlider(Vars::Fakelag::PlainTicks, FSliderEnum::Left);
+					}
+					PopTransparent();
+					PushTransparent(Vars::Fakelag::Fakelag.Value != Vars::Fakelag::FakelagEnum::Random);
+					{
+						FSlider(Vars::Fakelag::RandomTicks, FSliderEnum::Right);
+					}
+					PopTransparent();
+					FToggle(Vars::Fakelag::UnchokeOnAttack, FToggleEnum::Left);
+					FToggle(Vars::Fakelag::RetainBlastJump, FToggleEnum::Right);
+				} EndSection();
+				if (Vars::Debug::Options.Value)
+				{
+					if (Section("##Debug"))
+					{
+						FToggle(Vars::Fakelag::RetainSoldierOnly);
+					} EndSection();
+				}
+				if (Section("Antiaim", 8))
+				{
+					FToggle(Vars::AntiAim::Enabled);
+					FDropdown(Vars::AntiAim::PitchReal, FDropdownEnum::Left);
+					FDropdown(Vars::AntiAim::PitchFake, FDropdownEnum::Right);
+					FDropdown(Vars::AntiAim::YawReal, FDropdownEnum::Left);
+					FDropdown(Vars::AntiAim::YawFake, FDropdownEnum::Right);
+					FDropdown(Vars::AntiAim::RealYawBase, FDropdownEnum::Left);
+					FDropdown(Vars::AntiAim::FakeYawBase, FDropdownEnum::Right);
+					FSlider(Vars::AntiAim::RealYawOffset, FSliderEnum::Left);
+					FSlider(Vars::AntiAim::FakeYawOffset, FSliderEnum::Right);
+					PushTransparent(Vars::AntiAim::YawReal.Value != Vars::AntiAim::YawEnum::Edge && Vars::AntiAim::YawReal.Value != Vars::AntiAim::YawEnum::Jitter);
+					{
+						FSlider(Vars::AntiAim::RealYawValue, FSliderEnum::Left);
+					}
+					PopTransparent();
+					PushTransparent(Vars::AntiAim::YawFake.Value != Vars::AntiAim::YawEnum::Edge && Vars::AntiAim::YawFake.Value != Vars::AntiAim::YawEnum::Jitter);
+					{
+						FSlider(Vars::AntiAim::FakeYawValue, FSliderEnum::Right);
+					}
+					PopTransparent();
+					PushTransparent(Vars::AntiAim::YawFake.Value != Vars::AntiAim::YawEnum::Spin && Vars::AntiAim::YawReal.Value != Vars::AntiAim::YawEnum::Spin);
+					{
+						FSlider(Vars::AntiAim::SpinSpeed, FSliderEnum::Left);
+					}
+					PopTransparent();
+					SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetRowPos() + H::Draw.Scale(8) });
+					FToggle(Vars::AntiAim::MinWalk, FToggleEnum::Left);
+					FToggle(Vars::AntiAim::AntiOverlap, FToggleEnum::Left);
+					FToggle(Vars::AntiAim::InvalidShootPitch, FToggleEnum::Right);
+				} EndSection();
+			}
+			/* Column 2 */
+			TableNextColumn();
+			{
+				if (Section("Resolver", 8))
+				{
+					FToggle(Vars::Resolver::Enabled, FToggleEnum::Left);
+					PushTransparent(!Vars::Resolver::Enabled.Value);
+					{
+						FToggle(Vars::Resolver::AutoResolve, FToggleEnum::Right);
+						PushTransparent(Transparent || !Vars::Resolver::AutoResolve.Value);
+						{
+							FToggle(Vars::Resolver::AutoResolveCheatersOnly, FToggleEnum::Left);
+							FToggle(Vars::Resolver::AutoResolveHeadshotOnly, FToggleEnum::Right);
+							PushTransparent(Transparent || !Vars::Resolver::AutoResolveYawAmount.Value);
+							{
+								FSlider(Vars::Resolver::AutoResolveYawAmount, FSliderEnum::Left);
+							}
+							PopTransparent();
+							PushTransparent(Transparent || !Vars::Resolver::AutoResolvePitchAmount.Value);
+							{
+								FSlider(Vars::Resolver::AutoResolvePitchAmount, FSliderEnum::Right);
+							}
+							PopTransparent();
+						}
+						PopTransparent();
+						FSlider(Vars::Resolver::CycleYaw, FSliderEnum::Left);
+						FSlider(Vars::Resolver::CyclePitch, FSliderEnum::Right);
+						FToggle(Vars::Resolver::CycleView, FToggleEnum::Left);
+						FToggle(Vars::Resolver::CycleMinwalk, FToggleEnum::Right);
+					}
+					PopTransparent();
+				} EndSection();
+				if (Section("Auto Peek", 8))
+				{
+					FToggle(Vars::AutoPeek::Enabled);
+				} EndSection();
+				if (Section("Cheater Detection"))
+				{
+					FDropdown(Vars::CheaterDetection::Methods);
+					PushTransparent(!Vars::CheaterDetection::DetectionsRequired.Value);
+					{
+						FSlider(Vars::CheaterDetection::DetectionsRequired);
+					}
+					PopTransparent();
+					PushTransparent(!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::PacketChoking));
+					{
+						FSlider(Vars::CheaterDetection::MinimumChoking);
+					}
+					PopTransparent();
+					PushTransparent(!(Vars::CheaterDetection::Methods.Value & Vars::CheaterDetection::MethodsEnum::AimFlicking));
+					{
+						FSlider(Vars::CheaterDetection::MinimumFlick, FSliderEnum::Left);
+						FSlider(Vars::CheaterDetection::MaximumNoise, FSliderEnum::Right);
+					}
+					PopTransparent();
+				} EndSection();
+				if (Section("Speedhack", 8))
+				{
+					FToggle(Vars::Speedhack::Enabled);
+					PushTransparent(!Vars::Speedhack::Enabled.Value);
+					{
+						FSlider(Vars::Speedhack::Amount);
+					}
+					PopTransparent();
+				} EndSection();
+			}
+			EndTable();
+		}
+		break;
 	}
 	}
 }
@@ -2178,6 +2181,7 @@ void CMenu::MenuLogs(int iTab)
 				}
 			}
 		} EndSection();
+		break;
 	}
 	}
 }
@@ -2430,7 +2434,7 @@ void CMenu::MenuSettings(int iTab)
 				tBind.m_bNot = iNot;
 				FDropdown("Visibility", &tBind.m_iVisibility, { "Always", "While active", "Hidden" }, {}, FDropdownEnum::Right);
 				if (tBind.m_iType == 0)
-					FKeybind("Key", tBind.m_iKey, FButtonEnum::None, { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], Vars::Menu::MenuSecondaryKey[DEFAULT_BIND] }, { 0, 40 }, -96);
+					FKeybind("Key", tBind.m_iKey, FButtonEnum::None, { Vars::Menu::PrimaryKey[DEFAULT_BIND], Vars::Menu::SecondaryKey[DEFAULT_BIND] }, { 0, 40 }, -96);
 
 				// create/modify button
 				bool bCreate = false, bClear = false, bParent = true;
@@ -2841,7 +2845,7 @@ void CMenu::MenuSettings(int iTab)
 			FToggle(Vars::Debug::VisualizeTraceHits, FToggleEnum::Right);
 #endif
 		} EndSection();
-		if (Section("Extra"))
+		if (Section("Buttons"))
 		{
 			if (FButton("cl_fullupdate", FButtonEnum::Left))
 				I::EngineClient->ClientCmd_Unrestricted("cl_fullupdate");
@@ -2955,6 +2959,7 @@ void CMenu::MenuSettings(int iTab)
 			}
 		} EndSection();
 #endif
+		break;
 	}
 	}
 }
@@ -3166,14 +3171,14 @@ void CMenu::MenuSearch(std::string sSearch)
 			std::vector<int> vIgnore;
 			switch (FNV1A::Hash32(pVar->m_sName.c_str()))
 			{
-			case FNV1A::Hash32Const("Vars::Menu::MenuPrimaryKey"):
-				vIgnore = { Vars::Menu::MenuSecondaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON };
+			case FNV1A::Hash32Const("Vars::Menu::PrimaryKey"):
+				vIgnore = { Vars::Menu::SecondaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON };
 				break;
-			case FNV1A::Hash32Const("Vars::Menu::MenuSecondaryKey"):
-				vIgnore = { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON };
+			case FNV1A::Hash32Const("Vars::Menu::SecondaryKey"):
+				vIgnore = { Vars::Menu::PrimaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON };
 				break;
 			default:
-				vIgnore = { Vars::Menu::MenuPrimaryKey[DEFAULT_BIND], Vars::Menu::MenuSecondaryKey[DEFAULT_BIND] };
+				vIgnore = { Vars::Menu::PrimaryKey[DEFAULT_BIND], Vars::Menu::SecondaryKey[DEFAULT_BIND] };
 			}
 			FKeybind(iOverride != -1 ? pVar->m_vTitle[iOverride] : pVar->m_vTitle.front(), pVar->Map[DEFAULT_BIND], !(i % 2) ? FButtonEnum::Left : FButtonEnum::Right | FButtonEnum::SameLine, vIgnore);
 			break;
@@ -3527,11 +3532,11 @@ void CMenu::Render()
 	}
 	else
 	{
-		U::KeyHandler.StoreKey(Vars::Menu::MenuPrimaryKey.Value);
-		U::KeyHandler.StoreKey(Vars::Menu::MenuSecondaryKey.Value);
+		U::KeyHandler.StoreKey(Vars::Menu::PrimaryKey.Value);
+		U::KeyHandler.StoreKey(Vars::Menu::SecondaryKey.Value);
 		U::KeyHandler.StoreKey(VK_F11);
 	}
-	if (U::KeyHandler.Pressed(Vars::Menu::MenuPrimaryKey.Value) || U::KeyHandler.Pressed(Vars::Menu::MenuSecondaryKey.Value))
+	if (U::KeyHandler.Pressed(Vars::Menu::PrimaryKey.Value) || U::KeyHandler.Pressed(Vars::Menu::SecondaryKey.Value))
 		I::MatSystemSurface->SetCursorAlwaysVisible(m_bIsOpen = !m_bIsOpen);
 
 	PushFont(F::Render.FontRegular);

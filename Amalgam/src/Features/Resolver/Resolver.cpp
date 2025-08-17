@@ -95,22 +95,22 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 			bool bAutoYaw = tData.m_bAutoSetYaw && Vars::Resolver::AutoResolveYawAmount.Value;
 			bool bAutoPitch = tData.m_bAutoSetPitch && Vars::Resolver::AutoResolvePitchAmount.Value;
 
-			if (bAutoYaw)
-			{
-				flYaw = Math::NormalizeAngle(flYaw + Vars::Resolver::AutoResolveYawAmount.Value);
-
-				F::Backtrack.ResolverUpdate(pTarget);
-				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Cycling", "yaw", flYaw);
-			}
-
 			if (bAutoPitch
-				&& (!bAutoYaw || fabsf(flYaw) < fabsf(Vars::Resolver::AutoResolveYawAmount.Value / 2))
+				&& (!bAutoYaw || sign(flYaw) != sign(flYaw + Vars::Resolver::AutoResolveYawAmount.Value))
 				&& fabsf(pTarget->m_angEyeAnglesX()) == 90.f && !m_mSniperDots.contains(m_iWaitingForTarget))
 			{
 				flPitch = Math::NormalizeAngle(flPitch + Vars::Resolver::AutoResolvePitchAmount.Value, 180.f);
 
 				F::Backtrack.ResolverUpdate(pTarget);
 				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Cycling", "pitch", flPitch);
+			}
+
+			if (bAutoYaw)
+			{
+				flYaw = Math::NormalizeAngle(flYaw + Vars::Resolver::AutoResolveYawAmount.Value);
+
+				F::Backtrack.ResolverUpdate(pTarget);
+				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Cycling", "yaw", flYaw);
 			}
 
 			m_iWaitingForTarget = -1;

@@ -12,8 +12,8 @@ bool CAntiAim::AntiAimOn()
 		|| Vars::AntiAim::PitchFake.Value
 		|| Vars::AntiAim::YawReal.Value
 		|| Vars::AntiAim::YawFake.Value
-		|| Vars::AntiAim::RealYawMode.Value
-		|| Vars::AntiAim::FakeYawMode.Value
+		|| Vars::AntiAim::RealYawBase.Value
+		|| Vars::AntiAim::FakeYawBase.Value
 		|| Vars::AntiAim::RealYawOffset.Value
 		|| Vars::AntiAim::FakeYawOffset.Value);
 }
@@ -23,8 +23,8 @@ bool CAntiAim::YawOn()
 	return Vars::AntiAim::Enabled.Value
 		&& (Vars::AntiAim::YawReal.Value
 		|| Vars::AntiAim::YawFake.Value
-		|| Vars::AntiAim::RealYawMode.Value
-		|| Vars::AntiAim::FakeYawMode.Value
+		|| Vars::AntiAim::RealYawBase.Value
+		|| Vars::AntiAim::FakeYawBase.Value
 		|| Vars::AntiAim::RealYawOffset.Value
 		|| Vars::AntiAim::FakeYawOffset.Value);
 }
@@ -119,7 +119,7 @@ float CAntiAim::GetYawOffset(CTFPlayer* pEntity, bool bFake)
 
 float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 {
-	const int iMode = bFake ? Vars::AntiAim::FakeYawMode.Value : Vars::AntiAim::RealYawMode.Value;
+	const int iMode = bFake ? Vars::AntiAim::FakeYawBase.Value : Vars::AntiAim::RealYawBase.Value;
 	const float flOffset = bFake ? Vars::AntiAim::FakeYawOffset.Value : Vars::AntiAim::RealYawOffset.Value;
 	switch (iMode) // 0 offset, 1 at player
 	{

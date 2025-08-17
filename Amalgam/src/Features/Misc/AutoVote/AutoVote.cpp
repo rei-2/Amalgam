@@ -14,8 +14,8 @@ void CAutoVote::UserMessage(bf_read& msgData)
 
 	if (Vars::Misc::Automation::AutoF2Ignored.Value
 		&& (F::PlayerUtils.IsIgnored(iTarget)
-		|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Friends && H::Entities.IsFriend(iTarget)
-		|| Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Party && H::Entities.InParty(iTarget)))
+		|| /*Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Friends &&*/ H::Entities.IsFriend(iTarget)
+		|| /*Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Friends &&*/ H::Entities.InParty(iTarget)))
 	{
 		I::ClientState->SendStringCmd(std::format("vote {} option2", iVoteID).c_str());
 	}
