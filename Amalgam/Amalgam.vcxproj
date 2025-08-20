@@ -1039,6 +1039,7 @@
     <ClCompile Include="src\Hooks\CHLClient_FrameStageNotify.cpp" />
     <ClCompile Include="src\Hooks\CHLClient_LevelShutdown.cpp" />
     <ClCompile Include="src\Hooks\IEngineVGui_Paint.cpp" />
+    <ClCompile Include="src\Hooks\Host_IsSecureServerAllowed.cpp" />
     <ClCompile Include="src\Hooks\CInput_GetUserCmd.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
     <ClCompile Include="src\Hooks\IPanel_PaintTraverse.cpp" />
