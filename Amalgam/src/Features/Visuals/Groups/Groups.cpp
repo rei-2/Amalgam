@@ -431,3 +431,9 @@ bool CGroups::GroupsActive()
 {
 	return Vars::ESP::ActiveGroups.Value && !m_vGroups.empty();
 }
+
+void CGroups::Move(int i1, int i2)
+{
+	m_vGroups.insert(std::next(m_vGroups.begin(), i2 + (i1 < i2 ? 1 : 0)), m_vGroups[i1]);
+	m_vGroups.erase(std::next(m_vGroups.begin(), i1 + (i1 > i2 ? 1 : 0)));
+}

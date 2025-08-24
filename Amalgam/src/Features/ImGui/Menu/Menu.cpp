@@ -324,7 +324,7 @@ void CMenu::MenuAimbot(int iTab)
 				{
 					if (Section("##Debug Melee"))
 					{
-						FSlider(Vars::Aimbot::Melee::SwingTicks, FSliderEnum::Left);
+						FSlider(Vars::Aimbot::Melee::SwingOffset, FSliderEnum::Left);
 						FToggle(Vars::Aimbot::Melee::SwingPredictLag, FToggleEnum::Right);
 						FToggle(Vars::Aimbot::Melee::BackstabAccountPing, FToggleEnum::Left);
 						FToggle(Vars::Aimbot::Melee::BackstabDoubleTest, FToggleEnum::Right);
@@ -484,6 +484,28 @@ void CMenu::MenuVisuals(int iTab)
 			SetCursorPosY(GetCursorPosY() - H::Draw.Scale(5));
 			PopStyleColor();
 
+			auto positionToIndex = [](ImVec2 vPos)
+				{
+					int iIndex = floorf((vPos.y - GetCursorPosY() - H::Draw.Scale(4)) / H::Draw.Scale(36)) * 2
+								 + (vPos.x > GetWindowWidth() / 2 ? 1 : 0);
+					iIndex = std::clamp(iIndex, 0, int(F::Groups.m_vGroups.size() - 1));
+					return iIndex;
+				};
+
+			static int iDragging = -1;
+			if (!IsMouseDown(ImGuiMouseButton_Left))
+				iDragging = -1;
+			else if (iDragging != -1)
+			{
+				int iTo = positionToIndex(GetMousePos() - GetDrawPos());
+				if (iDragging != iTo)
+				{
+					SDK::Output("Dragged", std::format("{} -> {}", iDragging, iTo).c_str(), { 0, 255, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG);
+					F::Groups.Move(iDragging, iTo);
+					iDragging = iTo;
+				}
+			}
+
 			for (auto it = F::Groups.m_vGroups.begin(); it < F::Groups.m_vGroups.end();)
 			{
 				int iGroup = std::distance(F::Groups.m_vGroups.begin(), it);
@@ -523,8 +545,33 @@ void CMenu::MenuVisuals(int iTab)
 				bool bDelete = IconButton(ICON_MD_DELETE);
 
 				SetCursorPos(vOriginalPos);
-				if (Button(std::format("##{}", iGroup).c_str(), { flWidth, flHeight }))
+				bool bClicked = Button(std::format("##{}", iGroup).c_str(), { flWidth, flHeight });
+				bool bPopup = IsItemClicked(ImGuiMouseButton_Right);
+
+				if (bClicked)
 					iCurrentGroup = iGroup;
+				else if (bPopup)
+					OpenPopup(std::format("RightClicked{}", iGroup).c_str());
+				else if (iDragging == -1 && IsItemHovered() && IsMouseDown(ImGuiMouseButton_Left))
+					iDragging = iGroup;
+
+				if (FBeginPopup(std::format("RightClicked{}", iGroup).c_str()))
+				{
+					PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), 0 });
+
+					{
+						static std::string sInput = "";
+
+						bool bEnter = FInputText("Name...", sInput, H::Draw.Scale(284), ImGuiInputTextFlags_EnterReturnsTrue);
+						if (!IsItemFocused())
+							sInput = tGroup.m_sName;
+						if (bEnter)
+							tGroup.m_sName = sInput;
+					}
+
+					PopStyleVar();
+					EndPopup();
+				}
 
 				if (!bDelete)
 					++it;
@@ -986,7 +1033,8 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Exploits::CheatsBypass, FToggleEnum::Right);
 					FToggle(Vars::Misc::Exploits::EquipRegionUnlock, FToggleEnum::Left);
 					FToggle(Vars::Misc::Exploits::BackpackExpander, FToggleEnum::Right);
-					FToggle(Vars::Misc::Exploits::PingReducer);
+					FToggle(Vars::Misc::Exploits::PingReducer, FToggleEnum::Left);
+					FToggle(Vars::Misc::Exploits::NoisemakerSpam, FToggleEnum::Right);
 					PushTransparent(!Vars::Misc::Exploits::PingReducer.Value);
 					{
 						FSlider(Vars::Misc::Exploits::PingTarget);
@@ -1364,14 +1412,9 @@ void CMenu::MenuLogs(int iTab)
 									bool bHasAlias = F::PlayerUtils.m_mPlayerAliases.contains(tPlayer.m_uAccountID);
 									static std::string sInput = "";
 
-									PushStyleVar(ImGuiStyleVar_FramePadding, { H::Draw.Scale(8), H::Draw.Scale(8) });
-									PushItemWidth(H::Draw.Scale(150));
 									bool bEnter = FInputText("Alias...", sInput, H::Draw.Scale(150), ImGuiInputTextFlags_EnterReturnsTrue);
 									if (!IsItemFocused())
 										sInput = bHasAlias ? F::PlayerUtils.m_mPlayerAliases[tPlayer.m_uAccountID] : "";
-									PopItemWidth();
-									PopStyleVar();
-
 									if (bEnter)
 									{
 										if (sInput.empty() && bHasAlias)
@@ -2468,6 +2511,55 @@ void CMenu::MenuSettings(int iTab)
 			SetCursorPosY(GetCursorPosY() - H::Draw.Scale(5));
 			PopStyleColor();
 
+			auto numberToIndex = [](int iNumber, int iLayer)
+				{
+					int iIndex = -1, i = -1;
+
+					std::unordered_map<int, bool> mBinds = {};
+					std::function<void(int)> getBinds = [&](int iParent)
+						{
+							for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
+							{
+								int _iBind = std::distance(F::Binds.m_vBinds.begin(), it);
+								auto& _tBind = *it;
+								if (iParent != _tBind.m_iParent || mBinds.contains(_iBind))
+									continue;
+
+								mBinds[_iBind] = true;
+
+								i++;
+								//if (iParent == iLayer && iNumber >= i)
+								if (iIndex == -1 && iParent == iLayer && iNumber <= i)
+									iIndex = _iBind;
+								getBinds(_iBind);
+							}
+						};
+					getBinds(DEFAULT_BIND);
+
+					return iIndex;
+				};
+			auto positionToIndex = [&](ImVec2 vPos, int iLayer = DEFAULT_BIND)
+				{
+					int iIndex = floorf((vPos.y - GetCursorPosY() - H::Draw.Scale(4)) / H::Draw.Scale(36));
+					iIndex = std::clamp(iIndex, 0, int(F::Binds.m_vBinds.size() - 1));
+					iIndex = numberToIndex(iIndex, iLayer);
+					return iIndex;
+				};
+
+			static int iDragging = -1, iLayer = DEFAULT_BIND;
+			if (!IsMouseDown(ImGuiMouseButton_Left))
+				iDragging = -1;
+			else if (iDragging != -1)
+			{
+				int iTo = positionToIndex(GetMousePos() - GetDrawPos(), iLayer);
+				if (iTo != -1 && iDragging != iTo)
+				{
+					SDK::Output("Dragged", std::format("{} -> {}", iDragging, iTo).c_str(), { 255, 0, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG);
+					F::Binds.Move(iDragging, iTo);
+					iDragging = iTo;
+				}
+			}
+
 			std::unordered_map<int, bool> mBinds = {};
 			std::function<void(int, int)> getBinds = [&](int iParent, int x)
 				{
@@ -2589,12 +2681,18 @@ void CMenu::MenuSettings(int iTab)
 
 						SetCursorPos(vOriginalPos);
 						bool bClicked = Button(std::format("##{}", _iBind).c_str(), { flWidth, flHeight });
+						bool bPopup = IsItemClicked(ImGuiMouseButton_Right);
 
 						PopTransparent(1, 1);
 
 						if (bClicked)
 						{
-							if (bParent)
+							if (!bParent)
+							{
+								iBind = _iBind;
+								tBind = _tBind;
+							}
+							else
 							{
 								bParent = false;
 								tBind.m_iParent = _iBind;
@@ -2609,12 +2707,11 @@ void CMenu::MenuSettings(int iTab)
 									_iBind2 = _tBind2.m_iParent;
 								}
 							}
-							else
-							{
-								iBind = _iBind;
-								tBind = _tBind;
-							}
 						}
+						else if (bPopup)
+							OpenPopup(std::format("RightClicked{}", _iBind).c_str());
+						else if (iDragging == -1 && IsItemHovered() && IsMouseDown(ImGuiMouseButton_Left))
+							iDragging = _iBind, iLayer = iParent;
 						if (bDelete)
 						{
 							if (U::KeyHandler.Down(VK_SHIFT)) // allow user to quickly remove binds
@@ -2637,6 +2734,34 @@ void CMenu::MenuSettings(int iTab)
 							if (FButton("No", FButtonEnum::Right | FButtonEnum::SameLine))
 								CloseCurrentPopup();
 
+							EndPopup();
+						}
+						if (FBeginPopup(std::format("RightClicked{}", _iBind).c_str()))
+						{
+							PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), 0 });
+
+							{
+								static std::string sInput = "";
+
+								bool bEnter = FInputText("Name...", sInput, H::Draw.Scale(284), ImGuiInputTextFlags_EnterReturnsTrue);
+								if (!IsItemFocused())
+									sInput = _tBind.m_sName;
+								if (bEnter)
+									_tBind.m_sName = sInput;
+							}
+
+							FDropdown("Type", &_tBind.m_iType, { "Key", "Class", "Weapon type", "Item slot" }, {}, FDropdownEnum::Left);
+							switch (_tBind.m_iType)
+							{
+							case BindEnum::Key: _tBind.m_iInfo = std::clamp(_tBind.m_iInfo, 0, 2); FDropdown("Behavior", &_tBind.m_iInfo, { "Hold", "Toggle", "Double click" }, {}, FDropdownEnum::Right); break;
+							case BindEnum::Class: _tBind.m_iInfo = std::clamp(_tBind.m_iInfo, 0, 8); FDropdown("Class", &_tBind.m_iInfo, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy" }, {}, FDropdownEnum::Right); break;
+							case BindEnum::WeaponType: _tBind.m_iInfo = std::clamp(_tBind.m_iInfo, 0, 3); FDropdown("Weapon type", &_tBind.m_iInfo, { "Hitscan", "Projectile", "Melee", "Throwable" }, {}, FDropdownEnum::Right); break;
+							case BindEnum::ItemSlot: _tBind.m_iInfo = std::max(_tBind.m_iInfo, 0); FDropdown("Item slot", &_tBind.m_iInfo, { "1", "2", "3", "4", "5", "6", "7", "8", "9" }, {}, FDropdownEnum::Right); break;
+							}
+							if (_tBind.m_iType == BindEnum::Key)
+								FKeybind("Key", _tBind.m_iKey);
+
+							PopStyleVar();
 							EndPopup();
 						}
 
@@ -2949,12 +3074,12 @@ void CMenu::MenuSettings(int iTab)
 #ifdef DEBUG_HOOKS
 		if (Section("Hooks", 8))
 		{
-			int i = 0; for (auto& pVar : G::Vars)
+			int i = 0; for (auto& pBase : G::Vars)
 			{
-				if (pVar->m_sName.find("Vars::Hooks::") == std::string::npos)
+				if (pBase->m_sName.find("Vars::Hooks::") == std::string::npos)
 					continue;
 
-				FToggle(*pVar->As<bool>(), !(i % 2) ? FToggleEnum::Left : FToggleEnum::Right);
+				FToggle(*pBase->As<bool>(), !(i % 2) ? FToggleEnum::Left : FToggleEnum::Right);
 				i++;
 			}
 		} EndSection();
@@ -2981,14 +3106,14 @@ void CMenu::MenuSearch(std::string sSearch)
 		std::transform(sSearch2.begin(), sSearch2.end(), sSearch2.begin(), ::tolower);
 
 		vVars.clear();
-		for (auto pVar : G::Vars)
+		for (auto& pBase : G::Vars)
 		{
-			if (!Vars::Debug::Options[DEFAULT_BIND] && pVar->m_iFlags & DEBUGVAR)
+			if (!Vars::Debug::Options[DEFAULT_BIND] && pBase->m_iFlags & DEBUGVAR)
 				continue;
 
-			std::vector<const char*> vSearch = { pVar->m_sName.c_str(), pVar->m_sSection };
-			vSearch.insert(vSearch.end(), pVar->m_vTitle.begin(), pVar->m_vTitle.end());
-			vSearch.insert(vSearch.end(), pVar->m_vValues.begin(), pVar->m_vValues.end());
+			std::vector<const char*> vSearch = { pBase->m_sName.c_str(), pBase->m_sSection };
+			vSearch.insert(vSearch.end(), pBase->m_vTitle.begin(), pBase->m_vTitle.end());
+			vSearch.insert(vSearch.end(), pBase->m_vValues.begin(), pBase->m_vValues.end());
 			for (auto pSearch : vSearch)
 			{
 				std::string sSearch3 = pSearch;
@@ -2999,7 +3124,7 @@ void CMenu::MenuSearch(std::string sSearch)
 				std::transform(sSearch3.begin(), sSearch3.end(), sSearch3.begin(), ::tolower);
 				if (sSearch3.find(sSearch2) != std::string::npos)
 				{
-					vVars.push_back(pVar);
+					vVars.push_back(pBase);
 					break;
 				}
 			}

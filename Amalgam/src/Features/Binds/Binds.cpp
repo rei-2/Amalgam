@@ -4,34 +4,38 @@
 #include "../Configs/Configs.h"
 #include <functional>
 
-#define IsType(type) pVar->m_iType == typeid(type).hash_code()
-#define SetType(type, cond)\
-{\
-	if (pVar->As<type>()->Map.contains(cond))\
-		pVar->As<type>()->Value = pVar->As<type>()->Map[cond];\
+#define IsType(t) pBase->m_iType == typeid(t).hash_code()
+
+template <class T>
+static inline void SetMain(BaseVar*& pBase, int iBind)
+{
+	auto pVar = pBase->As<T>();
+
+	if (pVar->Map.contains(iBind))
+		pVar->Value = pVar->Map[iBind];
 }
-#define SetT(type, cond) if (IsType(type)) SetType(type, cond)
+#define Set(t, b) if (IsType(t)) SetMain<t>(pBase, b);
 
 static inline void LoopVars(int iBind, std::vector<BaseVar*>& vVars = G::Vars)
 {
 	const bool bDefault = iBind == DEFAULT_BIND;
-	for (auto pVar : vVars)
+	for (auto pBase : vVars)
 	{
-		if (pVar->m_iFlags & (NOSAVE | NOBIND) && !bDefault)
+		if (pBase->m_iFlags & (NOSAVE | NOBIND) && !bDefault)
 			continue;
 
-		SetT(bool, iBind)
-		else SetT(int, iBind)
-		else SetT(float, iBind)
-		else SetT(IntRange_t, iBind)
-		else SetT(FloatRange_t, iBind)
-		else SetT(std::string, iBind)
-		else SetT(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iBind)
-		else SetT(Color_t, iBind)
-		else SetT(Gradient_t, iBind)
-		else SetT(Vec3, iBind)
-		else SetT(DragBox_t, iBind)
-		else SetT(WindowBox_t, iBind)
+		Set(bool, iBind)
+		else Set(int, iBind)
+		else Set(float, iBind)
+		else Set(IntRange_t, iBind)
+		else Set(FloatRange_t, iBind)
+		else Set(std::string, iBind)
+		else Set(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iBind)
+		else Set(Color_t, iBind)
+		else Set(Gradient_t, iBind)
+		else Set(Vec3, iBind)
+		else Set(DragBox_t, iBind)
+		else Set(WindowBox_t, iBind)
 	}
 }
 
@@ -191,30 +195,33 @@ void CBinds::AddBind(int iBind, Bind_t& tBind)
 		m_vBinds[iBind] = tBind;
 }
 
-#define HasType(type, bind) IsType(type) && pVar->As<type>()->contains(bind)
+#define HasType(t, b) IsType(t) && pBase->As<t>()->contains(b)
 
-#define RemoveType(type, bind)\
-{\
-	std::unordered_map<int, type> mMap = {};\
-	for (auto it = pVar->As<type>()->Map.begin(); it != pVar->As<type>()->Map.end(); it++)\
-	{\
-		int iKey = it->first;\
-		auto tVal = it->second;\
-		if (bind == iKey)\
-			continue;\
-		else if (bind < iKey)\
-			iKey--;\
-		mMap[iKey] = tVal;\
-	}\
-	pVar->As<type>()->Map = mMap;\
+template <class T>
+static inline void RemoveMain(BaseVar*& pBase, int iBind)
+{
+	auto pVar = pBase->As<T>();
+
+	std::unordered_map<int, T> mMap = {};
+	for (auto it = pVar->Map.begin(); it != pVar->Map.end(); it++)
+	{
+		int iKey = it->first;
+		auto tVal = it->second;
+		if (iBind == iKey)
+			continue;
+		else if (iBind < iKey)
+			iKey--;
+		mMap[iKey] = tVal;
+	}
+	pVar->Map = mMap;
 }
-#define RemoveT(type, bind) if (IsType(type)) RemoveType(type, bind)
+#define Remove(t, b) if (IsType(t)) RemoveMain<t>(pBase, b);
 
 void CBinds::RemoveBind(int iBind, bool bForce)
 {
 	if (!bForce)
 	{
-		for (auto pVar : G::Vars)
+		for (auto& pBase : G::Vars)
 		{
 			if (HasType(bool, iBind)
 				|| HasType(int, iBind)
@@ -258,20 +265,20 @@ void CBinds::RemoveBind(int iBind, bool bForce)
 					tBind.m_iParent--;
 			}
 
-			for (auto pVar : G::Vars)
+			for (auto& pBase : G::Vars)
 			{
-				RemoveT(bool, iIndex)
-				else RemoveT(int, iIndex)
-				else RemoveT(float, iIndex)
-				else RemoveT(IntRange_t, iIndex)
-				else RemoveT(FloatRange_t, iIndex)
-				else RemoveT(std::string, iIndex)
-				else RemoveT(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iIndex)
-				else RemoveT(Color_t, iIndex)
-				else RemoveT(Gradient_t, iIndex)
-				else RemoveT(Vec3, iIndex)
-				else RemoveT(DragBox_t, iIndex)
-				else RemoveT(WindowBox_t, iIndex)
+				Remove(bool, iIndex)
+				else Remove(int, iIndex)
+				else Remove(float, iIndex)
+				else Remove(IntRange_t, iIndex)
+				else Remove(FloatRange_t, iIndex)
+				else Remove(std::string, iIndex)
+				else Remove(VA_LIST(std::vector<std::pair<std::string, Color_t>>), iIndex)
+				else Remove(Color_t, iIndex)
+				else Remove(Gradient_t, iIndex)
+				else Remove(Vec3, iIndex)
+				else Remove(DragBox_t, iIndex)
+				else Remove(WindowBox_t, iIndex)
 			}
 		};
 	searchBinds(iBind);
@@ -306,4 +313,67 @@ bool CBinds::WillBeEnabled(int iBind)
 		iBind = tBind.m_iParent;
 	}
 	return true;
+}
+
+template <class T>
+static inline void SwapMain(BaseVar*& pBase, int iBind1, int iBind2)
+{
+	auto pVar = pBase->As<T>();
+
+	bool bHas1 = pVar->contains(iBind1), bHas2 = pVar->contains(iBind2);
+	if (bHas1 && bHas2)
+	{
+		auto& tVal1 = pVar->Map[iBind1];
+		auto& tVal2 = pVar->Map[iBind2];
+		auto tTemp = tVal1;
+		tVal1 = tVal2;
+		tVal2 = tTemp;
+	}
+	else if (bHas1)
+	{
+		pVar->Map[iBind2] = pVar->Map[iBind1];
+		pVar->Map.erase(iBind1);
+	}
+	else if (bHas2)
+	{
+		pVar->Map[iBind1] = pVar->Map[iBind2];
+		pVar->Map.erase(iBind2);
+	}
+}
+#define Swap(t, i1, i2) if (IsType(t)) SwapMain<t>(pBase, i1, i2);
+
+void CBinds::Move(int i1, int i2)
+{
+	auto& tBind1 = m_vBinds[i1];
+	auto& tBind2 = m_vBinds[i2];
+	auto tTemp = tBind1;
+	tBind1 = tBind2;
+	tBind2 = tTemp;
+
+	std::vector<Bind_t*> vBinds1, vBinds2;
+	for (auto& tBind : m_vBinds)
+	{
+		if (tBind.m_iParent == i1)
+			vBinds1.push_back(&tBind);
+		else if (tBind.m_iParent == i2)
+			vBinds2.push_back(&tBind);
+	}
+	std::for_each(vBinds1.begin(), vBinds1.end(), [&](auto pBind) { pBind->m_iParent = i2; });
+	std::for_each(vBinds2.begin(), vBinds2.end(), [&](auto pBind) { pBind->m_iParent = i1; });
+
+	for (auto& pBase : G::Vars)
+	{
+		Swap(bool, i1, i2)
+		else Swap(int, i1, i2)
+		else Swap(float, i1, i2)
+		else Swap(IntRange_t, i1, i2)
+		else Swap(FloatRange_t, i1, i2)
+		else Swap(std::string, i1, i2)
+		else Swap(VA_LIST(std::vector<std::pair<std::string, Color_t>>), i1, i2)
+		else Swap(Color_t, i1, i2)
+		else Swap(Gradient_t, i1, i2)
+		else Swap(Vec3, i1, i2)
+		else Swap(DragBox_t, i1, i2)
+		else Swap(WindowBox_t, i1, i2)
+	}
 }

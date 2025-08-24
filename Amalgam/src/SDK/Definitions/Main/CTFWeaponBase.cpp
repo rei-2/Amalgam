@@ -67,8 +67,8 @@ float CTFWeaponBase::GetDamage(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
-			return pWeaponInfo->GetWeaponData(0).m_nDamage;
-		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nDamage, "mult_dmg", this);
+			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nDamage;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nDamage, "mult_dmg", this);
 	}
 	return 0.f;
 }
@@ -78,8 +78,8 @@ float CTFWeaponBase::GetFireRate(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
-			return pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay;
-		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_flTimeFireDelay, "mult_postfiredelay", this);
+			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flTimeFireDelay;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flTimeFireDelay, "mult_postfiredelay", this);
 	}
 	return 0.315f;
 }
@@ -89,8 +89,8 @@ int CTFWeaponBase::GetBulletsPerShot(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
-			return pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot;
-		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(0).m_nBulletsPerShot, "mult_bullets_per_shot", this);
+			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nBulletsPerShot;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nBulletsPerShot, "mult_bullets_per_shot", this);
 	}
 	return 1;
 }
@@ -100,9 +100,9 @@ int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
-			return pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
+			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_iAmmoPerShot;
 		int iAmmoPerShot = SDK::AttribHookValue(0, "mod_ammo_per_shot", this);
-		return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(0).m_iAmmoPerShot;
+		return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_iAmmoPerShot;
 	}
 	return 1;
 }
@@ -110,8 +110,15 @@ int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
 bool CTFWeaponBase::IsRapidFire()
 {
 	if (auto pWeaponInfo = GetWeaponInfo())
-		return pWeaponInfo->GetWeaponData(0).m_bUseRapidFireCrits;
+		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_bUseRapidFireCrits;
 	return false;
+}
+
+float CTFWeaponBase::GetSmackDelay()
+{
+	if (auto pWeaponInfo = GetWeaponInfo())
+		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flSmackDelay;
+	return 0.2f;
 }
 
 float CTFWeaponBase::GetRange()
@@ -123,7 +130,7 @@ float CTFWeaponBase::GetRange()
 	}
 
 	if (auto pWeaponInfo = GetWeaponInfo())
-		return pWeaponInfo->GetWeaponData(0).m_flRange;
+		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flRange;
 	return 8192.f;
 }
 

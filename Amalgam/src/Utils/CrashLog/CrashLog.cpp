@@ -128,9 +128,8 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	case STATUS_ACCESS_VIOLATION:
 	//case STATUS_STACK_OVERFLOW:
 	//case STATUS_HEAP_CORRUPTION:
-	{
-		auto vTrace = StackTrace(ExceptionInfo->ContextRecord);
-		if (!vTrace.empty())
+		if (auto vTrace = StackTrace(ExceptionInfo->ContextRecord);
+			!vTrace.empty())
 		{
 			for (auto& tFrame : vTrace)
 			{
@@ -146,7 +145,10 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 			}
 			ssErrorStream << "\n";
 		}
-	}
+		break;
+	default:
+		ssErrorStream << U::Memory.GetModuleOffset(ExceptionInfo->ExceptionRecord->ExceptionAddress);
+		ssErrorStream << "\n\n";
 	}
 
 	ssErrorStream << "Built @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";

@@ -239,6 +239,7 @@ public:
 	int GetBulletsPerShot(bool bAttribHookValue = true);
 	int GetAmmoPerShot(bool bAttribHookValue = true);
 	bool IsRapidFire();
+	float GetSmackDelay();
 	float GetRange();
 	CHudTexture* GetWeaponIcon();
 };

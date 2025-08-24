@@ -12,6 +12,7 @@ public:
 	std::vector<int> PatternToInt(const char* szPattern);
 	uintptr_t FindSignature(const char* szModule, const char* szPattern);
 	PVOID FindInterface(const char* szModule, const char* szObject);
+	std::string GetModuleOffset(void* pAddress) { return GetModuleOffset(uintptr_t(pAddress)); };
 	std::string GetModuleOffset(uintptr_t uAddress);
 
 	inline void* GetVirtual(void* p, size_t i)

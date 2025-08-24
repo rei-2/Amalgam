@@ -62,6 +62,8 @@ public:
 	Color_t GetColor(CBaseEntity* pEntity, Group_t* pGroup);
 	bool GroupsActive();
 
+	void Move(int i1, int i2);
+
 	std::vector<Group_t> m_vGroups = {}; // loop through this in reverse so back groups have higher priority
 };
 

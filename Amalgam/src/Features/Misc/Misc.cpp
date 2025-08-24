@@ -11,8 +11,10 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 	WeaponSway();
 	AntiAFK(pLocal, pCmd);
 	InstantRespawnMVM(pLocal);
+	NoisemakerSpam(pLocal);
 
-	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->InCond(TF_COND_SHIELD_CHARGE) || pLocal->InCond(TF_COND_HALLOWEEN_KART))
+	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming()
+		|| pLocal->IsTaunting() || pLocal->InCond(TF_COND_HALLOWEEN_KART) || pLocal->InCond(TF_COND_SHIELD_CHARGE))
 		return;
 
 	AutoJump(pLocal, pCmd);
@@ -26,13 +28,18 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd, bool pSendPacket)
 {
-	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming() || pLocal->InCond(TF_COND_SHIELD_CHARGE))
+	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming()
+		|| pLocal->InCond(TF_COND_SHIELD_CHARGE))
 		return;
 
-	EdgeJump(pLocal, pCmd, true);
-	TauntKartControl(pLocal, pCmd);
-	AutoPeek(pLocal, pCmd, true);
-	FastMovement(pLocal, pCmd);
+	if (pLocal->IsTaunting() || pLocal->InCond(TF_COND_HALLOWEEN_KART))
+		TauntKartControl(pLocal, pCmd);
+	else
+	{
+		EdgeJump(pLocal, pCmd, true);
+		AutoPeek(pLocal, pCmd, true);
+		FastMovement(pLocal, pCmd);
+	}
 }
 
 
@@ -204,12 +211,22 @@ void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::InstantRespawnMVM(CTFPlayer* pLocal)
 {
-	if (Vars::Misc::MannVsMachine::InstantRespawn.Value && I::EngineClient->IsInGame() && !pLocal->IsAlive())
-	{
-		KeyValues* kv = new KeyValues("MVM_Revive_Response");
-		kv->SetInt("accepted", 1);
-		I::EngineClient->ServerCmdKeyValues(kv);
-	}
+	if (!Vars::Misc::MannVsMachine::InstantRespawn.Value || !pLocal->IsAlive())
+		return;
+
+	KeyValues* kv = new KeyValues("MVM_Revive_Response");
+	kv->SetInt("accepted", 1);
+	I::EngineClient->ServerCmdKeyValues(kv);
+}
+
+void CMisc::NoisemakerSpam(CTFPlayer* pLocal)
+{
+	if (!Vars::Misc::Exploits::NoisemakerSpam.Value || !pLocal->IsAlive() || pLocal->IsAGhost()
+		|| pLocal->m_bUsingActionSlot() || pLocal->m_flNextNoiseMakerTime() > I::GlobalVars->curtime)
+		return;
+
+	KeyValues* kv = new KeyValues("use_action_slot_item_server");
+	I::EngineClient->ServerCmdKeyValues(kv);
 }
 
 void CMisc::CheatsBypass()

@@ -43,6 +43,8 @@ public:
 	bool HasChildren(int iBind);
 	bool WillBeEnabled(int iBind);
 
+	void Move(int i1, int i2);
+
 	std::vector<Bind_t> m_vBinds = {};
 };
 

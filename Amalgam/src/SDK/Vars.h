@@ -384,7 +384,7 @@ namespace Vars
 			CVar(SwingPrediction, "Swing prediction", false);
 			CVar(WhipTeam, "Whip team", false);
 
-			CVar(SwingTicks, "Swing ticks", 13, NOSAVE | DEBUGVAR, 10, 14);
+			CVar(SwingOffset, "Swing offset", -1, NOSAVE | DEBUGVAR, -1, 1);
 			CVar(SwingPredictLag, "Swing predict lag", true, NOSAVE | DEBUGVAR);
 			CVar(BackstabAccountPing, "Backstab account ping", true, NOSAVE | DEBUGVAR);
 			CVar(BackstabDoubleTest, "Backstab double test", true, NOSAVE | DEBUGVAR);
@@ -727,6 +727,7 @@ namespace Vars
 			CVar(CheatsBypass, "Cheats bypass", false);
 			CVar(EquipRegionUnlock, "Equip region unlock", false);
 			CVar(BackpackExpander, "Backpack expander", false);
+			CVar(NoisemakerSpam, "Noisemaker spam", false);
 			CVar(PingReducer, "Ping reducer", false);
 			CVar(PingTarget, "cl_cmdrate", 1, SLIDER_CLAMP, 1, 66);
 		SUBNAMESPACE_END(Exploits);

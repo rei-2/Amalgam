@@ -119,9 +119,10 @@ int CAimbotMelee::GetSwingTime(CTFWeaponBase* pWeapon, bool bVar)
 {
 	if (pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
 		return 0;
+	int iSmackTicks = ceilf(pWeapon->GetSmackDelay() / TICK_INTERVAL);
 	if (bVar)
-		return Vars::Aimbot::Melee::SwingTicks.Value;
-	return 14;
+		iSmackTicks = std::max(iSmackTicks + Vars::Aimbot::Melee::SwingOffset.Value, 0);
+	return iSmackTicks;
 }
 
 void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, std::vector<Target_t> vTargets)

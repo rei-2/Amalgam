@@ -289,36 +289,43 @@ CConfigs::CConfigs()
 		std::filesystem::create_directory(m_sMaterialsPath);
 }
 
-#define IsType(t) pVar->m_iType == typeid(t).hash_code()
+#define IsType(t) pBase->m_iType == typeid(t).hash_code()
 
-#define SaveCond(t, j) \
-{ \
-	boost::property_tree::ptree tMap; \
-	for (auto& [iBind, tValue] : pVar->As<t>()->Map) \
-		SaveJson(tMap, std::to_string(iBind), tValue); \
-	j.put_child(pVar->m_sName, tMap);\
+template <class T>
+static inline void SaveMain(BaseVar*& pBase, boost::property_tree::ptree& tTree)
+{
+	auto pVar = pBase->As<T>();
+
+	boost::property_tree::ptree tMap;
+	for (auto& [iBind, tValue] : pVar->Map)
+		F::Configs.SaveJson(tMap, std::to_string(iBind), tValue);
+	tTree.put_child(pVar->m_sName, tMap);
 }
-#define SaveMain(t, j) if (IsType(t)) SaveCond(t, j)
-#define LoadCond(t, j) \
-{ \
-	pVar->As<t>()->Map = { { DEFAULT_BIND, pVar->As<t>()->Default } }; \
-	if (auto tMap = (j).get_child_optional(pVar->m_sName)) \
-	{ \
-		for (auto& [sKey, _] : *tMap) \
-		{ \
-			int iBind = std::stoi(sKey); \
-			if (iBind == DEFAULT_BIND || F::Binds.m_vBinds.size() > iBind && !(pVar->As<t>()->m_iFlags & NOBIND)) \
-			{ \
-				LoadJson(*tMap, sKey, pVar->As<t>()->Map[iBind]); \
-				if (iBind != DEFAULT_BIND) \
-					std::next(F::Binds.m_vBinds.begin(), iBind)->m_vVars.push_back(pVar); \
-			} \
-		} \
-	} \
-	else if (!(pVar->m_iFlags & NOSAVE)) \
-		SDK::Output("Amalgam", std::format("{} not found", pVar->m_sName).c_str(), { 175, 150, 255, 127 }, OUTPUT_CONSOLE | OUTPUT_DEBUG); \
+#define Save(t, j) if (IsType(t)) SaveMain<t>(pBase, j);
+
+template <class T>
+static inline void LoadMain(BaseVar*& pBase, boost::property_tree::ptree& tTree)
+{
+	auto pVar = pBase->As<T>();
+
+	pVar->Map = { { DEFAULT_BIND, pVar->Default } };
+	if (auto tMap = tTree.get_child_optional(pVar->m_sName))
+	{
+		for (auto& [sKey, _] : *tMap)
+		{
+			int iBind = std::stoi(sKey);
+			if (iBind == DEFAULT_BIND || F::Binds.m_vBinds.size() > iBind && !(pVar->m_iFlags & NOBIND))
+			{
+				F::Configs.LoadJson(*tMap, sKey, pVar->Map[iBind]);
+				if (iBind != DEFAULT_BIND)
+					std::next(F::Binds.m_vBinds.begin(), iBind)->m_vVars.push_back(pVar);
+			}
+		}
+	}
+	else if (!(pVar->m_iFlags & NOSAVE))
+		SDK::Output("Amalgam", std::format("{} not found", pVar->m_sName).c_str(), { 175, 150, 255, 127 }, OUTPUT_CONSOLE | OUTPUT_DEBUG);
 }
-#define LoadMain(t, j) if (IsType(t)) LoadCond(t, j)
+#define Load(t, j) if (IsType(t)) LoadMain<t>(pBase, j);
 
 bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 {
@@ -352,22 +359,22 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 		{
 			boost::property_tree::ptree tSub;
 			const bool bNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-			for (auto& pVar : G::Vars)
+			for (auto& pBase : G::Vars)
 			{
-				if (!bNosave && pVar->m_iFlags & NOSAVE)
+				if (!bNosave && pBase->m_iFlags & NOSAVE)
 					continue;
 
-				SaveMain(bool, tSub)
-				else SaveMain(int, tSub)
-				else SaveMain(float, tSub)
-				else SaveMain(IntRange_t, tSub)
-				else SaveMain(FloatRange_t, tSub)
-				else SaveMain(std::string, tSub)
-				else SaveMain(VA_LIST(std::vector<std::pair<std::string, Color_t>>), tSub)
-				else SaveMain(Color_t, tSub)
-				else SaveMain(Gradient_t, tSub)
-				else SaveMain(DragBox_t, tSub)
-				else SaveMain(WindowBox_t, tSub)
+				Save(bool, tSub)
+				else Save(int, tSub)
+				else Save(float, tSub)
+				else Save(IntRange_t, tSub)
+				else Save(FloatRange_t, tSub)
+				else Save(std::string, tSub)
+				else Save(VA_LIST(std::vector<std::pair<std::string, Color_t>>), tSub)
+				else Save(Color_t, tSub)
+				else Save(Gradient_t, tSub)
+				else Save(DragBox_t, tSub)
+				else Save(WindowBox_t, tSub)
 			}
 			tWrite.put_child("Vars", tSub);
 		}
@@ -466,22 +473,22 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 			tSub || (tSub = tRead.get_child_optional("ConVars")))
 		{
 			const bool bNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-			for (auto& pVar : G::Vars)
+			for (auto& pBase : G::Vars)
 			{
-				if (!bNosave && pVar->m_iFlags & NOSAVE)
+				if (!bNosave && pBase->m_iFlags & NOSAVE)
 					continue;
 
-				LoadMain(bool, *tSub)
-				else LoadMain(int, *tSub)
-				else LoadMain(float, *tSub)
-				else LoadMain(IntRange_t, *tSub)
-				else LoadMain(FloatRange_t, *tSub)
-				else LoadMain(std::string, *tSub)
-				else LoadMain(VA_LIST(std::vector<std::pair<std::string, Color_t>>), *tSub)
-				else LoadMain(Color_t, *tSub)
-				else LoadMain(Gradient_t, *tSub)
-				else LoadMain(DragBox_t, *tSub)
-				else LoadMain(WindowBox_t, *tSub)
+				Load(bool, *tSub)
+				else Load(int, *tSub)
+				else Load(float, *tSub)
+				else Load(IntRange_t, *tSub)
+				else Load(FloatRange_t, *tSub)
+				else Load(std::string, *tSub)
+				else Load(VA_LIST(std::vector<std::pair<std::string, Color_t>>), *tSub)
+				else Load(Color_t, *tSub)
+				else Load(Gradient_t, *tSub)
+				else Load(DragBox_t, *tSub)
+				else Load(WindowBox_t, *tSub)
 			}
 		}
 
@@ -532,10 +539,19 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 	return true;
 }
 
-#define SaveRegular(t, j) SaveJson(j, pVar->m_sName, pVar->As<t>()->Map[DEFAULT_BIND])
-#define SaveMisc(t, j) if (IsType(t)) SaveRegular(t, j);
-#define LoadRegular(t, j) LoadJson(j, pVar->m_sName, pVar->As<t>()->Map[DEFAULT_BIND])
-#define LoadMisc(t, j) if (IsType(t)) LoadRegular(t, j);
+template <class T>
+static inline void SaveMiscMain(BaseVar*& pBase, boost::property_tree::ptree& tTree)
+{
+	F::Configs.SaveJson(tTree, pBase->m_sName, pBase->As<T>()->Map[DEFAULT_BIND]);
+}
+#define SaveMisc(t, j) if (IsType(t)) SaveMiscMain<t>(pBase, j);
+
+template <class T>
+static inline void LoadMiscMain(BaseVar*& pBase, boost::property_tree::ptree& tTree)
+{
+	F::Configs.LoadJson(tTree, pBase->m_sName, pBase->As<T>()->Map[DEFAULT_BIND]);
+}
+#define LoadMisc(t, j) if (IsType(t)) LoadMiscMain<t>(pBase, j);
 
 bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
 {
@@ -546,9 +562,9 @@ bool CConfigs::SaveVisual(const std::string& sConfigName, bool bNotify)
 		{
 			boost::property_tree::ptree tSub;
 			const bool bNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-			for (auto& pVar : G::Vars)
+			for (auto& pBase : G::Vars)
 			{
-				if (!(pVar->m_iFlags & VISUAL) || !bNosave && pVar->m_iFlags & NOSAVE)
+				if (!(pBase->m_iFlags & VISUAL) || !bNosave && pBase->m_iFlags & NOSAVE)
 					continue;
 
 				SaveMisc(bool, tSub)
@@ -632,9 +648,9 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 			tSub || (tSub = tRead))
 		{
 			const bool bNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-			for (auto& pVar : G::Vars)
+			for (auto& pBase : G::Vars)
 			{
-				if (!(pVar->m_iFlags & VISUAL) || !bNosave && pVar->m_iFlags & NOSAVE)
+				if (!(pBase->m_iFlags & VISUAL) || !bNosave && pBase->m_iFlags & NOSAVE)
 					continue;
 
 				LoadMisc(bool, *tSub)
@@ -696,8 +712,14 @@ bool CConfigs::LoadVisual(const std::string& sConfigName, bool bNotify)
 	return true;
 }
 
-#define ResetType(type) pVar->As<type>()->Map = { { DEFAULT_BIND, pVar->As<type>()->Default } };
-#define ResetT(type) if (IsType(type)) ResetType(type)
+template <class T>
+static inline void ResetMain(BaseVar*& pBase)
+{
+	auto pVar = pBase->As<T>();
+
+	pVar->Map = { { DEFAULT_BIND, pVar->Default } };
+}
+#define Reset(t) if (IsType(t)) ResetMain<t>(pBase);
 
 void CConfigs::DeleteConfig(const std::string& sConfigName, bool bNotify)
 {
@@ -730,22 +752,22 @@ void CConfigs::ResetConfig(const std::string& sConfigName, bool bNotify)
 		F::Groups.m_vGroups.clear();
 
 		const bool bNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-		for (auto& pVar : G::Vars)
+		for (auto& pBase : G::Vars)
 		{
-			if (!bNosave && pVar->m_iFlags & NOSAVE)
+			if (!bNosave && pBase->m_iFlags & NOSAVE)
 				continue;
 
-			ResetT(bool)
-			else ResetT(int)
-			else ResetT(float)
-			else ResetT(IntRange_t)
-			else ResetT(FloatRange_t)
-			else ResetT(std::string)
-			else ResetT(std::vector<std::string>)
-			else ResetT(Color_t)
-			else ResetT(Gradient_t)
-			else ResetT(DragBox_t)
-			else ResetT(WindowBox_t)
+			Reset(bool)
+			else Reset(int)
+			else Reset(float)
+			else Reset(IntRange_t)
+			else Reset(FloatRange_t)
+			else Reset(std::string)
+			else Reset(std::vector<std::string>)
+			else Reset(Color_t)
+			else Reset(Gradient_t)
+			else Reset(DragBox_t)
+			else Reset(WindowBox_t)
 		}
 
 		SaveConfig(sConfigName, false);
@@ -783,22 +805,22 @@ void CConfigs::ResetVisual(const std::string& sConfigName, bool bNotify)
 		F::Groups.m_vGroups.clear();
 
 		const bool bNosave = GetAsyncKeyState(VK_SHIFT) & 0x8000;
-		for (auto& pVar : G::Vars)
+		for (auto& pBase : G::Vars)
 		{
-			if (!(pVar->m_iFlags & VISUAL) || !bNosave && pVar->m_iFlags & NOSAVE)
+			if (!(pBase->m_iFlags & VISUAL) || !bNosave && pBase->m_iFlags & NOSAVE)
 				continue;
 
-			ResetT(bool)
-			else ResetT(int)
-			else ResetT(float)
-			else ResetT(IntRange_t)
-			else ResetT(FloatRange_t)
-			else ResetT(std::string)
-			else ResetT(std::vector<std::string>)
-			else ResetT(Color_t)
-			else ResetT(Gradient_t)
-			else ResetT(DragBox_t)
-			else ResetT(WindowBox_t)
+			Reset(bool)
+			else Reset(int)
+			else Reset(float)
+			else Reset(IntRange_t)
+			else Reset(FloatRange_t)
+			else Reset(std::string)
+			else Reset(std::vector<std::string>)
+			else Reset(Color_t)
+			else Reset(Gradient_t)
+			else Reset(DragBox_t)
+			else Reset(WindowBox_t)
 		}
 
 		SaveVisual(sConfigName, false);
