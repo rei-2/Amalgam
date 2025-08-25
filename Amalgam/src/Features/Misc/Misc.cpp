@@ -211,7 +211,7 @@ void CMisc::AntiAFK(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::InstantRespawnMVM(CTFPlayer* pLocal)
 {
-	if (!Vars::Misc::MannVsMachine::InstantRespawn.Value || !pLocal->IsAlive())
+	if (!Vars::Misc::MannVsMachine::InstantRespawn.Value || pLocal->IsAlive())
 		return;
 
 	KeyValues* kv = new KeyValues("MVM_Revive_Response");

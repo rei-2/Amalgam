@@ -45,7 +45,7 @@ bool CTFPlayer::InCond(ETFCond eCond)
 	switch (eCond / 32)
 	{
 	case 0:
-		return m_nPlayerCond() & (1 << eCond);
+		return m_nPlayerCond() & (1 << eCond) || _condition_bits() & (1 << eCond);
 	case 1:
 		return m_nPlayerCondEx() & (1 << (eCond - 32));
 	case 2:
@@ -63,7 +63,7 @@ void CTFPlayer::AddCond(ETFCond eCond)
 	switch (eCond / 32)
 	{
 	case 0:
-		m_nPlayerCond() |= (1 << eCond); break;
+		m_nPlayerCond() |= (1 << eCond), _condition_bits() |= (1 << eCond); break;
 	case 1:
 		m_nPlayerCondEx() |= (1 << (eCond - 32)); break;
 	case 2:
@@ -80,7 +80,7 @@ void CTFPlayer::RemoveCond(ETFCond eCond)
 	switch (eCond / 32)
 	{
 	case 0:
-		m_nPlayerCond() &= ~(1 << eCond); break;
+		m_nPlayerCond() &= ~(1 << eCond), _condition_bits() &= ~(1 << eCond); break;
 	case 1:
 		m_nPlayerCondEx() &= ~(1 << (eCond - 32)); break;
 	case 2:

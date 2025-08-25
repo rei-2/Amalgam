@@ -990,6 +990,7 @@
     <ClCompile Include="src\Hooks\CL_ReadPackets.cpp" />
     <ClCompile Include="src\Hooks\CMatchInviteNotification_OnTick.cpp" />
     <ClCompile Include="src\Hooks\CMaterial_Uncache.cpp" />
+    <ClCompile Include="src\Hooks\CTFWeaponBase_CanFireRandomCriticalShot.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_SetTraceEntity.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendDatagram.cpp" />
     <ClCompile Include="src\Hooks\CNetChannel_SendNetMsg.cpp" />

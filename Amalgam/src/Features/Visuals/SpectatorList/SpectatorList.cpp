@@ -17,13 +17,14 @@ bool CSpectatorList::GetSpectators(CTFPlayer* pTarget)
 		auto pPlayer = I::ClientEntityList->GetClientEntity(n)->As<CTFPlayer>();
 		bool bLocal = n == I::EngineClient->GetLocalPlayer();
 
-		if (pResource->m_bValid(n) && pResource->m_iTeam(I::EngineClient->GetLocalPlayer()) != TEAM_SPECTATOR && pResource->m_iTeam(n) == TEAM_SPECTATOR)
+		if (pResource->m_bValid(n) && !pResource->IsFakePlayer(n)
+			&& pResource->m_iTeam(I::EngineClient->GetLocalPlayer()) != TEAM_SPECTATOR && pResource->m_iTeam(n) == TEAM_SPECTATOR)
 		{
 			m_vSpectators.emplace_back(F::PlayerUtils.GetPlayerName(n, pResource->GetName(n)), "possible", -1.f, false, n);
 			continue;
 		}
 
-		if (pTarget->entindex() == n
+		if (pTarget->entindex() == n || pResource->IsFakePlayer(n)
 			|| !pPlayer || !pPlayer->IsPlayer() || pPlayer->IsAlive()
 			|| pTarget->IsDormant() != pPlayer->IsDormant()
 			|| pResource->m_iTeam(iTarget) != pResource->m_iTeam(n))

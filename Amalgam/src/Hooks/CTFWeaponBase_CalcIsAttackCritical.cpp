@@ -2,7 +2,6 @@
 
 #include "../Features/CritHack/CritHack.h"
 
-
 MAKE_HOOK(CTFWeaponBase_CalcIsAttackCritical, S::CTFWeaponBase_CalcIsAttackCritical(), void,
 	void* rcx)
 {

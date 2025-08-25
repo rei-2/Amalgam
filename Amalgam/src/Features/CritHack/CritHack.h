@@ -52,6 +52,8 @@ private:
 	float m_flCritChance = 0.f;
 	float m_flMultCritChance = 1.f;
 
+	//float m_flLastDamageTime = 0.f;
+
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal);
@@ -60,6 +62,9 @@ public:
 
 	bool WeaponCanCrit(CTFWeaponBase* pWeapon, bool bWeaponOnly = false);
 	int PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
+
+	float GetCritDamage() { return m_iCritDamage; }
+	float GetRangedDamage() { return m_iRangedDamage; }
 };
 
 ADD_FEATURE(CCritHack, CritHack);

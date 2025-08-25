@@ -9,10 +9,12 @@
 #define TF_DAMAGE_CRIT_CHANCE_MELEE		0.15f
 #define TF_DAMAGE_CRIT_DURATION_RAPID	2.0f
 
+#define STATS_SEND_FREQUENCY 1.f
+
 #define SEED_ATTEMPTS 4096
 #define BUCKET_ATTEMPTS 1000
 
-//#define SERVER_CRIT_DATA
+#define SERVER_CRIT_DATA
 
 int CCritHack::GetCritCommand(CTFWeaponBase* pWeapon, int iCommandNumber, bool bCrit, bool bSafe)
 {
@@ -227,6 +229,16 @@ void CCritHack::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	if (auto pResource = H::Entities.GetResource())
 	{
 		m_iResourceDamage = pResource->m_iDamage(I::EngineClient->GetLocalPlayer());
+		/* // more of a proof of concept for resyncing crit damage
+		if (m_flLastDamageTime < I::GlobalVars->curtime + STATS_SEND_FREQUENCY * 2)
+		{	// attempt to resync damages
+			m_iRangedDamage = m_iResourceDamage - m_iMeleeDamage;
+
+			float flObservedCritChance = pWeapon->m_flObservedCritChance();
+			m_iCritDamage = (TF_DAMAGE_CRIT_MULTIPLIER * flObservedCritChance * m_iResourceDamage) / (1 + 2 * flObservedCritChance);
+			SDK::Output("Info", std::format("{}, {}", m_iRangedDamage, m_iCritDamage).c_str());
+		}
+		*/
 		m_iDesyncDamage = m_iRangedDamage + m_iMeleeDamage - m_iResourceDamage;
 	}
 }
@@ -278,6 +290,8 @@ void CCritHack::Reset()
 	m_flDamageTilFlip = 0;
 
 	m_mHealthHistory.clear();
+
+	//m_flLastDamageTime = 0.f;
 }
 
 
@@ -295,11 +309,13 @@ int CCritHack::GetCritRequest(CUserCmd* pCmd, CTFWeaponBase* pWeapon)
 
 void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!pWeapon || !pLocal->IsAlive() || !I::EngineClient->IsInGame()
-		|| pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !WeaponCanCrit(pWeapon))
+	if (!pWeapon || !pLocal->IsAlive() || pLocal->IsAGhost() || !I::EngineClient->IsInGame())
 		return;
 
 	UpdateInfo(pLocal, pWeapon);
+	if (pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !WeaponCanCrit(pWeapon))
+		return;
+
 	if (pWeapon->GetWeaponID() == TF_WEAPON_MINIGUN && pCmd->buttons & IN_ATTACK)
 		pCmd->buttons &= ~IN_ATTACK2;
 	
@@ -444,6 +460,8 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 				}
 			}
 		}
+
+		//m_flLastDamageTime = I::GlobalVars->curtime;
 
 		CTFWeaponBase* pWeapon = nullptr;
 		for (int i = 0; i < MAX_WEAPONS; i++)
