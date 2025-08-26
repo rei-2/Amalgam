@@ -62,13 +62,20 @@ bool CTFWeaponBase::IsInReload()
 	return m_bInReload() || m_iReloadMode() != 0;
 }
 
+//#define WEAPONDATA_USES_WEAPONMODE // would probably just be better to have a mode override
+
 float CTFWeaponBase::GetDamage(bool bAttribHookValue)
 {
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
+#ifdef WEAPONDATA_USES_WEAPONMODE
 			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nDamage;
 		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nDamage, "mult_dmg", this);
+#else
+			return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_nDamage;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_nDamage, "mult_dmg", this);
+#endif
 	}
 	return 0.f;
 }
@@ -78,8 +85,13 @@ float CTFWeaponBase::GetFireRate(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
+#ifdef WEAPONDATA_USES_WEAPONMODE
 			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flTimeFireDelay;
 		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flTimeFireDelay, "mult_postfiredelay", this);
+#else
+			return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_flTimeFireDelay;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_flTimeFireDelay, "mult_postfiredelay", this);
+#endif
 	}
 	return 0.315f;
 }
@@ -89,8 +101,13 @@ int CTFWeaponBase::GetBulletsPerShot(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
+#ifdef WEAPONDATA_USES_WEAPONMODE
 			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nBulletsPerShot;
 		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_nBulletsPerShot, "mult_bullets_per_shot", this);
+#else
+			return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_nBulletsPerShot;
+		return SDK::AttribHookValue(pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_nBulletsPerShot, "mult_bullets_per_shot", this);
+#endif
 	}
 	return 1;
 }
@@ -100,9 +117,15 @@ int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
 	if (auto pWeaponInfo = GetWeaponInfo())
 	{
 		if (!bAttribHookValue)
+#ifdef WEAPONDATA_USES_WEAPONMODE
 			return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_iAmmoPerShot;
 		int iAmmoPerShot = SDK::AttribHookValue(0, "mod_ammo_per_shot", this);
 		return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_iAmmoPerShot;
+#else
+			return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_iAmmoPerShot;
+		int iAmmoPerShot = SDK::AttribHookValue(0, "mod_ammo_per_shot", this);
+		return iAmmoPerShot > 0 ? iAmmoPerShot : pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_iAmmoPerShot;
+#endif
 	}
 	return 1;
 }
@@ -110,15 +133,23 @@ int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
 bool CTFWeaponBase::IsRapidFire()
 {
 	if (auto pWeaponInfo = GetWeaponInfo())
+#ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_bUseRapidFireCrits;
-	return false;
+#else
+		return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_bUseRapidFireCrits;
+#endif
+		return false;
 }
 
 float CTFWeaponBase::GetSmackDelay()
 {
 	if (auto pWeaponInfo = GetWeaponInfo())
+#ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flSmackDelay;
-	return 0.2f;
+#else
+		return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_flSmackDelay;
+#endif
+		return 0.2f;
 }
 
 float CTFWeaponBase::GetRange()
@@ -130,7 +161,11 @@ float CTFWeaponBase::GetRange()
 	}
 
 	if (auto pWeaponInfo = GetWeaponInfo())
+#ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flRange;
+#else
+		return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_flRange;
+#endif
 	return 8192.f;
 }
 
