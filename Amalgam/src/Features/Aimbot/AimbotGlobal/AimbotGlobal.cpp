@@ -116,6 +116,18 @@ bool CAimbotGlobal::IsHitboxValid(uint32_t uHash, int nHitbox, int iHitboxes)
 	return false;
 }
 
+bool CAimbotGlobal::IsHitboxValid(int nHitbox, int iHitboxes)
+{
+	switch (nHitbox)
+	{
+	case BOUNDS_HEAD: return iHitboxes & Vars::Aimbot::Projectile::HitboxesEnum::Head;
+	case BOUNDS_BODY: return iHitboxes & Vars::Aimbot::Projectile::HitboxesEnum::Body;
+	case BOUNDS_FEET: return iHitboxes & Vars::Aimbot::Projectile::HitboxesEnum::Feet;
+	}
+
+	return false;
+}
+
 bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	if (pEntity->IsDormant())

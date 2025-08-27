@@ -270,11 +270,15 @@ static inline float PrimeTime(CTFWeaponBase* pWeapon)
 
 static inline int GetHitboxPriority(int nHitbox, Target_t& tTarget, Info_t& tInfo, CBaseEntity* pProjectile = nullptr)
 {
+	if (!F::AimbotGlobal.IsHitboxValid(nHitbox, Vars::Aimbot::Projectile::Hitboxes.Value))
+		return -1;
+
+	int iHeadPriority = 0;
+	int iBodyPriority = 1;
+	int iFeetPriority = 2;
+
 	if (Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Auto)
 	{
-		bool bLower = Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::PrioritizeFeet
-			&& tTarget.m_iTargetType == TargetEnum::Player && tTarget.m_pEntity->As<CTFPlayer>()->IsOnGround() /*&& tInfo.m_flRadius*/;
-
 		bool bHeadshot = Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Head
 			&& tTarget.m_iTargetType == TargetEnum::Player;
 		if (bHeadshot)
@@ -283,42 +287,40 @@ static inline int GetHitboxPriority(int nHitbox, Target_t& tTarget, Info_t& tInf
 				bHeadshot = tInfo.m_pWeapon->GetWeaponID() == TF_WEAPON_COMPOUND_BOW;
 			else
 				bHeadshot = pProjectile->GetClassID() == ETFClassID::CTFProjectile_Arrow && pProjectile->As<CTFProjectile_Arrow>()->CanHeadshot();
-		}
-		if (Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::BodyaimIfLethal
-			&& bHeadshot && !pProjectile && tInfo.m_pWeapon->m_hOwner().GetEntryIndex() == I::EngineClient->GetLocalPlayer())
-		{
-			float flCharge = I::GlobalVars->curtime - tInfo.m_pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime();
-			float flDamage = Math::RemapVal(flCharge, 0.f, 1.f, 50.f, 120.f);
-			if (tInfo.m_pLocal->IsMiniCritBoosted())
-				flDamage *= 1.36f;
-			if (flDamage >= tTarget.m_pEntity->As<CTFPlayer>()->m_iHealth())
-				bHeadshot = false;
 
-			if (tInfo.m_pLocal->IsCritBoosted()) // for reliability
-				bHeadshot = false;
-		}
+			if (Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::BodyaimIfLethal
+				&& bHeadshot && !pProjectile && tInfo.m_pWeapon->m_hOwner().GetEntryIndex() == I::EngineClient->GetLocalPlayer())
+			{
+				float flCharge = I::GlobalVars->curtime - tInfo.m_pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime();
+				float flDamage = Math::RemapVal(flCharge, 0.f, 1.f, 50.f, 120.f);
+				if (tInfo.m_pLocal->IsMiniCritBoosted())
+					flDamage *= 1.36f;
+				if (flDamage >= tTarget.m_pEntity->As<CTFPlayer>()->m_iHealth())
+					bHeadshot = false;
 
+				if (tInfo.m_pLocal->IsCritBoosted()) // for reliability
+					bHeadshot = false;
+			}
+		}
 		if (bHeadshot)
 			tTarget.m_nAimedHitbox = HITBOX_HEAD;
 
-		switch (nHitbox)
-		{
-		case 0: return Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Head ? (bHeadshot ? 0 : 2) : 3;
-		case 1: return Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Body ? (bHeadshot ? 3 : (bLower ? 1 : 0)) : 3;
-		case 2: return Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Feet ? (bHeadshot ? 3 : (bLower ? 0 : 1)) : 3;
-		}
-	}
-	else
-	{
-		switch (nHitbox)
-		{
-		case 0: return Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Head ? 0 : 3;
-		case 1: return Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Body ? 1 : 3;
-		case 2: return Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::Feet ? 2 : 3;
-		}
+		bool bLower = Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::PrioritizeFeet
+			&& tTarget.m_iTargetType == TargetEnum::Player && tTarget.m_pEntity->As<CTFPlayer>()->IsOnGround() /*&& tInfo.m_flRadius*/;
+
+		iHeadPriority = bHeadshot ? 0 : 2;
+		iBodyPriority = bHeadshot ? -1 : bLower ? 1 : 0;
+		iFeetPriority = bHeadshot ? -1 : bLower ? 0 : 1;
 	}
 
-	return 3;
+	switch (nHitbox)
+	{
+	case BOUNDS_HEAD: return iHeadPriority;
+	case BOUNDS_BODY: return iBodyPriority;
+	case BOUNDS_FEET: return iFeetPriority;
+	}
+
+	return -1;
 };
 
 std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& tTarget, CBaseEntity* pProjectile)
@@ -328,13 +330,13 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& tTarg
 	const Vec3 vMins = tTarget.m_pEntity->m_vecMins(), vMaxs = tTarget.m_pEntity->m_vecMaxs();
 	for (int i = 0; i < 3; i++)
 	{
-		const int iPriority = GetHitboxPriority(i, tTarget, m_tInfo, pProjectile);
-		if (iPriority == 3)
+		int iPriority = GetHitboxPriority(i, tTarget, m_tInfo, pProjectile);
+		if (iPriority == -1)
 			continue;
 
 		switch (i)
 		{
-		case 0:
+		case BOUNDS_HEAD:
 			if (tTarget.m_nAimedHitbox == HITBOX_HEAD)
 			{
 				auto aBones = F::Backtrack.GetBones(tTarget.m_pEntity);
@@ -371,8 +373,8 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& tTarg
 			else
 				mPoints[iPriority] = Vec3(0, 0, vMaxs.z - Vars::Aimbot::Projectile::VerticalShift.Value);
 			break;
-		case 1: mPoints[iPriority] = Vec3(0, 0, (vMaxs.z - vMins.z) / 2); break;
-		case 2: mPoints[iPriority] = Vec3(0, 0, vMins.z + Vars::Aimbot::Projectile::VerticalShift.Value); break;
+		case BOUNDS_BODY: mPoints[iPriority] = Vec3(0, 0, (vMaxs.z - vMins.z) / 2); break;
+		case BOUNDS_FEET: mPoints[iPriority] = Vec3(0, 0, vMins.z + Vars::Aimbot::Projectile::VerticalShift.Value); break;
 		}
 	}
 
@@ -424,6 +426,16 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 	CGameTrace trace = {};
 	CTraceFilterWorldAndPropsOnly filter = {};
 
+#if defined(SPLASH_DEBUG1) || defined(SPLASH_DEBUG2)
+	auto drawTrace = [](bool bSuccess, Color_t tColor, CGameTrace& trace)
+		{
+			Vec3 vMins = Vec3(-1, -1, -1) / (bSuccess ? 1 : 2), vMaxs = Vec3(1, 1, 1) / (bSuccess ? 1 : 2);
+			Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
+			G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, tColor.Alpha(tColor.a / (bSuccess ? 1 : 10)), Color_t(0, 0, 0, 0));
+			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, tColor.Alpha(tColor.a / (bSuccess ? 1 : 10)));
+		};
+#endif
+
 	if (iType & PointTypeEnum::Regular)
 	{
 		SDK::TraceHull(vTargetEye, vPoint, tInfo.m_vHull * -1, tInfo.m_vHull, MASK_SOLID, &filter, &trace);
@@ -437,12 +449,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 				vPoints.pop_back();
 #ifdef SPLASH_DEBUG1
 			else
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-				G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::Local.Value.Alpha(Vars::Colors::Local.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::Local.Value.Alpha(Vars::Colors::Local.Value.a / (bNormal ? 10 : 1)));
-			}
+				drawTrace(!bNormal, Vars::Colors::Local.Value, trace);
 #endif
 		}
 
@@ -455,11 +462,11 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 	}
 	if (iType & PointTypeEnum::ObscuredExtra)
 	{
-		bool bCheckNormal = !bNormal && iOriginalType & PointTypeEnum::Regular;
 		bErase = false, bNormal = false;
 		size_t iOriginalSize = vPoints.size();
 
 		{
+			bool bCheckNormal = !bNormal && iOriginalType & PointTypeEnum::Regular;
 			if (bNormal = bCheckNormal && (tInfo.m_vLocalEye - vTargetEye).Dot(vTargetEye - vPoint) > 0.f)
 				goto breakOutExtra;
 
@@ -471,12 +478,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 #endif
 				bNormal = !trace.m_pEnt || trace.fraction == 1.f;
 #ifdef SPLASH_DEBUG2
-				{
-					Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-					Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-					G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorTextMid.Value.Alpha(Vars::Colors::IndicatorTextMid.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorTextMid.Value.Alpha(Vars::Colors::IndicatorTextMid.Value.a / (bNormal ? 10 : 1)));
-				}
+				drawTrace(!bNormal, Vars::Colors::IndicatorTextMid.Value, trace);
 #endif
 				if (bNormal)
 					goto breakOutExtra;
@@ -490,12 +492,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 #endif
 			bNormal = trace.fraction == 1.f || trace.allsolid || (trace.startpos - trace.endpos).IsZero() || trace.surface.flags & (/*SURF_NODRAW |*/ SURF_SKY);
 #ifdef SPLASH_DEBUG2
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-				G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorTextBad.Value.Alpha(Vars::Colors::IndicatorTextBad.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorTextBad.Value.Alpha(Vars::Colors::IndicatorTextBad.Value.a / (bNormal ? 10 : 1)));
-			}
+			drawTrace(!bNormal, Vars::Colors::IndicatorTextBad.Value, trace);
 #endif
 			if (bNormal)
 				goto breakOutExtra;
@@ -507,19 +504,14 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 				s_mTraceCount["Splash rocket check (2)"]++;
 #endif
 #ifdef SPLASH_DEBUG2
-				{
-					Vec3 vMins = Vec3(-1, -1, -1) * (trace.fraction < 1.f ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (trace.fraction < 1.f ? 0.5f : 1.f);
-					Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-					G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorTextMisc.Value.Alpha(Vars::Colors::IndicatorTextMisc.Value.a / (trace.fraction < 1.f ? 10 : 1)), Color_t(0, 0, 0, 0));
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorTextMisc.Value.Alpha(Vars::Colors::IndicatorTextMisc.Value.a / (trace.fraction < 1.f ? 10 : 1)));
-				}
+				drawTrace(trace.fraction >= 1.f, Vars::Colors::IndicatorTextMisc.Value, trace);
 #endif
 				if (trace.fraction < 1.f)
 					vPoints.pop_back();
 			}
 		}
-		breakOutExtra:
 
+		breakOutExtra:
 		if (vPoints.size() != iOriginalSize)
 			iType = 0;
 		else if (bErase || bNormal)
@@ -541,12 +533,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 #endif
 			bNormal = trace.DidHit();
 #ifdef SPLASH_DEBUG2
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-				G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorGood.Value.Alpha(Vars::Colors::IndicatorGood.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorGood.Value.Alpha(Vars::Colors::IndicatorGood.Value.a / (bNormal ? 10 : 1)));
-			}
+			drawTrace(!bNormal, Vars::Colors::IndicatorGood.Value, trace);
 #endif
 			if (bNormal)
 				goto breakOut;
@@ -558,12 +545,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 
 			checkPoint(trace, bErase, bNormal);
 #ifdef SPLASH_DEBUG2
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-				G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::Local.Value.Alpha(Vars::Colors::Local.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::Local.Value.Alpha(Vars::Colors::Local.Value.a / (bNormal ? 10 : 1)));
-			}
+			drawTrace(!bNormal, Vars::Colors::Local.Value, trace);
 #endif
 		}
 		else // currently experimental, there may be a more efficient way to do this?
@@ -574,12 +556,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 #endif
 			bNormal = trace.fraction == 1.f || trace.allsolid || trace.surface.flags & SURF_SKY;
 #ifdef SPLASH_DEBUG2
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-				G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorMid.Value.Alpha(Vars::Colors::IndicatorMid.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorMid.Value.Alpha(Vars::Colors::IndicatorMid.Value.a / (bNormal ? 10 : 1)));
-			}
+			drawTrace(!bNormal, Vars::Colors::IndicatorMid.Value, trace);
 #endif
 			if (!bNormal && trace.surface.flags & SURF_NODRAW)
 			{
@@ -593,12 +570,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 #endif
 				bNormal = trace2.fraction == 1.f || trace.allsolid || (trace2.startpos - trace2.endpos).IsZero() || trace2.surface.flags & (SURF_NODRAW | SURF_SKY);
 #ifdef SPLASH_DEBUG2
-				{
-					Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-					Vec3 vAngles = Math::VectorAngles(trace2.plane.normal);
-					G::BoxStorage.emplace_back(trace2.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorBad.Value.Alpha(Vars::Colors::IndicatorBad.Value.a / (bNormal ? 10 : 1)), Color_t(0, 0, 0, 0));
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace2.startpos, trace2.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorBad.Value.Alpha(Vars::Colors::IndicatorBad.Value.a / (bNormal ? 10 : 1)));
-				}
+				drawTrace(!bNormal, Vars::Colors::IndicatorBad.Value, trace2);
 #endif
 				if (!bNormal)
 					trace = trace2;
@@ -613,19 +585,14 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 				s_mTraceCount["Splash rocket check (1)"]++;
 #endif
 #ifdef SPLASH_DEBUG2
-				{
-					Vec3 vMins = Vec3(-1, -1, -1) * (bNormal ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bNormal ? 0.5f : 1.f);
-					Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-					G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorMisc.Value.Alpha(Vars::Colors::IndicatorMisc.Value.a / (trace.fraction < 1.f ? 10 : 1)), Color_t(0, 0, 0, 0));
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::IndicatorMisc.Value.Alpha(Vars::Colors::IndicatorMisc.Value.a / (trace.fraction < 1.f ? 10 : 1)));
-				}
+				drawTrace(!bNormal, Vars::Colors::IndicatorMisc.Value, trace);
 #endif
 				if (trace.fraction < 1.f)
 					vPoints.pop_back();
 			}
 		}
-		breakOut:
 
+		breakOut:
 		if (vPoints.size() != iOriginalSize)
 			iType = 0;
 		else if (bErase || bNormal)
@@ -786,6 +753,16 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPointsSimple(Target_t& tTarget,
 
 	Vec3 vTargetEye = tTarget.m_vPos + m_tInfo.m_vTargetEye;
 
+#if defined(SPLASH_DEBUG3)
+	auto drawTrace = [](bool bSuccess, Color_t tColor, CGameTrace& trace)
+		{
+			Vec3 vMins = Vec3(-1, -1, -1) / (bSuccess ? 1 : 2), vMaxs = Vec3(1, 1, 1) / (bSuccess ? 1 : 2);
+			Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
+			G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, tColor.Alpha(tColor.a / (bSuccess ? 1 : 10)), Color_t(0, 0, 0, 0));
+			G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, tColor.Alpha(tColor.a / (bSuccess ? 1 : 10)));
+		};
+#endif
+
 	auto checkPoint = [&](Vec3& vPoint, bool& bErase)
 		{
 			Point_t tPoint = { vPoint, {} };
@@ -807,12 +784,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPointsSimple(Target_t& tTarget,
 		if (checkPoint(vPoint, bErase))
 		{
 #ifdef SPLASH_DEBUG3
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bErase ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bErase ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(vNormal);
-				G::BoxStorage.emplace_back(vPoint, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::Halloween.Value, Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(m_tInfo.m_vLocalEye, vPoint), I::GlobalVars->curtime + 60.f, Vars::Colors::Halloween.Value);
-			}
+			drawTrace(bErase, Vars::Colors::Halloween.Value, trace);
 #endif
 
 			/*
@@ -824,12 +796,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPointsSimple(Target_t& tTarget,
 			s_mTraceCount["Splash trace check"]++;
 #endif
 #ifdef SPLASH_DEBUG3
-			{
-				Vec3 vMins = Vec3(-1, -1, -1) * (bErase ? 0.5f : 1.f), vMaxs = Vec3(1, 1, 1) * (bErase ? 0.5f : 1.f);
-				Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-				G::BoxStorage.emplace_back(trace.endpos, vMins, vMaxs, vAngles, I::GlobalVars->curtime + 60.f, Vars::Colors::Powerup.Value.Alpha(Vars::Colors::Powerup.Value.a / (bErase ? 10 : 1)), Color_t(0, 0, 0, 0));
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(trace.startpos, trace.endpos), I::GlobalVars->curtime + 60.f, Vars::Colors::Powerup.Value.Alpha(Vars::Colors::Powerup.Value.a / (bErase ? 10 : 1)));
-			}
+			drawTrace(bErase, Vars::Colors::Powerup.Value, trace);
 #endif
 			if (trace.fraction < 1.f)
 				vPointDistances.pop_back();
@@ -1327,8 +1294,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 					for (int i = 0; i < pSet->numhitboxes; ++i)
 					{
 						auto pBox = pSet->pHitbox(i);
-						if (!pBox)
-							continue;
+						if (!pBox) continue;
 
 						Vec3 vCenter; Math::VectorTransform({}, aBones[pBox->bone], vCenter);
 
@@ -1883,7 +1849,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 void CAimbotProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	const bool bSuccess = RunMain(pLocal, pWeapon, pCmd);
-#if defined(SPLASH_DEBUG6)
+#ifdef SPLASH_DEBUG6
 	if (Vars::Aimbot::General::AimType.Value && !s_mTraceCount.empty())
 	{
 		int iTraceCount = 0;

@@ -165,6 +165,9 @@ std::vector<Target_t> CAimbotHitscan::SortTargets(CTFPlayer* pLocal, CTFWeaponBa
 
 int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pTarget)
 {
+	if (!F::AimbotGlobal.IsHitboxValid(H::Entities.GetModel(pTarget->entindex()), nHitbox, Vars::Aimbot::Hitscan::Hitboxes.Value))
+		return -1;
+
 	bool bHeadshot = false;
 	if (pTarget->IsPlayer())
 	{
@@ -176,17 +179,14 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 		{
 			auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
 
-			if (G::CanHeadshot || pLocal->InCond(TF_COND_AIMING) && (
-					pSniperRifle->GetRifleType() == RIFLE_JARATE && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0
-					|| Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot
-				))
+			if (G::CanHeadshot
+				|| pLocal->InCond(TF_COND_AIMING) && (pSniperRifle->GetRifleType() == RIFLE_JARATE && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0 || Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot))
 				bHeadshot = true;
 			break;
 		}
 		case TF_WEAPON_REVOLVER:
 		{
-			if (SDK::AttribHookValue(0, "set_weapon_mode", pWeapon) == 1
-				&& (pWeapon->AmbassadorCanHeadshot() || Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot))
+			if (SDK::AttribHookValue(0, "set_weapon_mode", pWeapon) == 1 && (pWeapon->AmbassadorCanHeadshot() || Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot))
 				bHeadshot = true;
 		}
 		}
@@ -223,6 +223,12 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 			}
 		}
 	}
+	
+	bool bHeadOnly = bHeadshot && Vars::Aimbot::Hitscan::Hitboxes.Value & Vars::Aimbot::Hitscan::HitboxesEnum::HeadshotOnly;
+
+	int iHeadPriority = bHeadOnly || bHeadshot ? 0 : 1;
+	int iBodyPriority = bHeadOnly ? -1 : bHeadshot ? 1 : 0;
+	int iLimbPriority = bHeadOnly ? -1 : 2;
 
 	switch (H::Entities.GetModel(pTarget->entindex()))
 	{
@@ -232,13 +238,13 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 	{
 		switch (nHitbox)
 		{
-		case HITBOX_SAXTON_HEAD: return bHeadshot ? 0 : 2;
-		//case HITBOX_SAXTON_NECK:
-		//case HITBOX_SAXTON_PELVIS: return 2;
+		case HITBOX_SAXTON_HEAD: return iHeadPriority;
 		case HITBOX_SAXTON_BODY:
 		case HITBOX_SAXTON_THORAX:
 		case HITBOX_SAXTON_CHEST:
-		case HITBOX_SAXTON_UPPER_CHEST: return bHeadshot ? 1 : 0;
+		case HITBOX_SAXTON_UPPER_CHEST:
+		/*case HITBOX_SAXTON_NECK:
+		case HITBOX_SAXTON_PELVIS:*/ return iBodyPriority;
 		/*
 		case HITBOX_SAXTON_LEFT_UPPER_ARM:
 		case HITBOX_SAXTON_LEFT_FOREARM:
@@ -260,12 +266,12 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 	{
 		switch (nHitbox)
 		{
-		case HITBOX_HEAD: return bHeadshot ? 0 : 2;
-		//case HITBOX_PELVIS: return 2;
+		case HITBOX_HEAD: return iHeadPriority;
 		case HITBOX_BODY:
 		case HITBOX_THORAX:
 		case HITBOX_CHEST:
-		case HITBOX_UPPER_CHEST: return bHeadshot ? 1 : 0;
+		case HITBOX_UPPER_CHEST:
+		/*case HITBOX_PELVIS:*/ return iBodyPriority;
 		/*
 		case HITBOX_LEFT_UPPER_ARM:
 		case HITBOX_LEFT_FOREARM:
@@ -284,7 +290,7 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 	}
 	}
 
-	return 2;
+	return iLimbPriority;
 };
 
 int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
@@ -403,13 +409,13 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			std::vector<std::tuple<const mstudiobbox_t*, int, int>> vHitboxes;
 			for (int i = 0; i < pSet->numhitboxes; i++)
 			{
-				if (!F::AimbotGlobal.IsHitboxValid(H::Entities.GetModel(tTarget.m_pEntity->entindex()), i, Vars::Aimbot::Hitscan::Hitboxes.Value))
+				int iPriority = GetHitboxPriority(i, pLocal, pWeapon, tTarget.m_pEntity);
+				if (iPriority == -1)
 					continue;
 
 				auto pBox = pSet->pHitbox(i);
 				if (!pBox) continue;
 
-				int iPriority = GetHitboxPriority(i, pLocal, pWeapon, tTarget.m_pEntity);
 				vHitboxes.emplace_back(pBox, i, iPriority);
 			}
 			std::sort(vHitboxes.begin(), vHitboxes.end(), [&](const auto& a, const auto& b) -> bool
@@ -593,12 +599,13 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 
 
-/* Returns whether AutoShoot should fire */
 bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, const Target_t& tTarget)
 {
-	if (!Vars::Aimbot::General::AutoShoot.Value) return false;
+	if (!Vars::Aimbot::General::AutoShoot.Value)
+		return false;
 
-	if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot)
+	if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot
+		&& tTarget.m_pEntity->IsPlayer())
 	{
 		switch (pWeapon->GetWeaponID())
 		{
@@ -625,25 +632,36 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		case TF_WEAPON_SNIPERRIFLE_DECAP:
 		case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 		{
-			auto pPlayer = tTarget.m_pEntity->As<CTFPlayer>();
 			auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
-
 			if (!pLocal->InCond(TF_COND_AIMING) || pSniperRifle->m_flChargedDamage() == 150.f)
 				break;
 
-			if (tTarget.m_nAimedHitbox == HITBOX_HEAD && (pWeapon->GetWeaponID() != TF_WEAPON_SNIPERRIFLE_CLASSIC ? true : pSniperRifle->m_flChargedDamage() == 150.f))
+			if (tTarget.m_pEntity->IsPlayer())
 			{
-				int iHeadDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetHeadshotMult(pPlayer));
-				if (pPlayer->m_iHealth() <= iHeadDamage && (G::CanHeadshot || pLocal->IsCritBoosted()))
+				auto pPlayer = tTarget.m_pEntity->As<CTFPlayer>();
+				if (tTarget.m_nAimedHitbox == HITBOX_HEAD && (pWeapon->GetWeaponID() != TF_WEAPON_SNIPERRIFLE_CLASSIC || pSniperRifle->m_flChargedDamage() == 150.f))
+				{
+					int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetHeadshotMult(pPlayer));
+					if (pPlayer->m_iHealth() <= iDamage && (G::CanHeadshot || pLocal->IsCritBoosted()))
+						break;
+				}
+				else
+				{
+					int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
+					if (pPlayer->m_iHealth() <= iDamage)
+						break;
+				}
+			}
+			else if (tTarget.m_pEntity->IsBuilding())
+			{
+				auto pBuilding = tTarget.m_pEntity->As<CBaseObject>();
+				int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f));
+				if (pBuilding->m_iHealth() <= iDamage)
 					break;
 			}
 			else
-			{
-				int iBodyDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
-				if (pPlayer->m_iHealth() <= iBodyDamage)
-					break;
-			}
-
+				break;
+			
 			return false;
 		}
 		}
