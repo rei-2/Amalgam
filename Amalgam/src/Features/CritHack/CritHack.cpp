@@ -14,7 +14,7 @@
 #define SEED_ATTEMPTS 4096
 #define BUCKET_ATTEMPTS 1000
 
-#define SERVER_CRIT_DATA
+//#define SERVER_CRIT_DATA
 
 int CCritHack::GetCritCommand(CTFWeaponBase* pWeapon, int iCommandNumber, bool bCrit, bool bSafe)
 {
@@ -498,10 +498,10 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 
 void CCritHack::Store()
 {
-	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 	{
-		auto pPlayer = pEntity->As<CTFPlayer>();
-		if (pPlayer->IsAlive() && !pPlayer->IsAGhost())
+		auto pPlayer = I::ClientEntityList->GetClientEntity(n)->As<CTFPlayer>();
+		if (pPlayer && pPlayer->IsAlive() && !pPlayer->IsAGhost())
 			StoreHealthHistory(pPlayer->entindex(), pPlayer->m_iHealth());
 	}
 }
