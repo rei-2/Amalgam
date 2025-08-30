@@ -74,6 +74,16 @@ namespace Math
 		return std::isfinite(flAngle) ? std::remainder(flAngle, flRange) : 0.f;
 	}
 
+	inline float ClampNormalizeAngle(float flAngle, float flRange = 180.f)
+	{
+		return std::isfinite(flAngle) ? (flAngle > flRange ? -flRange : flAngle < -flRange ? flRange : flAngle) : 0.f;
+	}
+
+	inline float ClampNormalizeRad(float flAngle, float flRange = PI)
+	{
+		return std::isfinite(flAngle) ? (flAngle > flRange ? -flRange : flAngle < -flRange ? flRange : flAngle) : 0.f;
+	}
+
 	inline void ClampAngles(Vec3& v)
 	{
 		v.x = std::clamp(NormalizeAngle(v.x), -89.f, 89.f);

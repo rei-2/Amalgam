@@ -30,14 +30,12 @@ void CResolver::StoreSniperDots(CTFPlayerResource* pResource)
 
 std::optional<float> CResolver::GetPitchForSniperDot(CTFPlayer* pEntity, CTFPlayerResource* pResource)
 {
-	if (m_mSniperDots.contains(pEntity->entindex()))
+	int iUserID = pResource->m_iUserID(pEntity->entindex());
+	if (m_mSniperDots.contains(iUserID))
 	{
-		int iUserID = pResource->m_iUserID(pEntity->entindex());
-
-		const Vec3 vOrigin = m_mSniperDots[iUserID];
-		const Vec3 vEyeOrigin = pEntity->m_vecOrigin() + pEntity->GetViewOffset();
-		const Vec3 vDelta = vOrigin - vEyeOrigin;
-		Vec3 vAngles = Math::VectorAngles(vDelta);
+		Vec3 vOrigin = m_mSniperDots[iUserID];
+		Vec3 vEyeOrigin = pEntity->m_vecOrigin() + pEntity->GetViewOffset();
+		Vec3 vAngles = Math::VectorAngles(vOrigin - vEyeOrigin);
 		return vAngles.x;
 	}
 
@@ -75,6 +73,8 @@ void CResolver::FrameStageNotify()
 				tData.m_flPitch = flPitch.value();
 			else if (!tData.m_bFirstOOBPitch && tData.m_bAutoSetPitch || tData.m_bInversePitch)
 				tData.m_flPitch = -pPlayer->m_angEyeAnglesX(); // set to inverse by default
+			else
+				tData.m_flPitch = fabsf(tData.m_flPitch) > 45.f ? sign(tData.m_flPitch) * 90 : 0; // limit to 90, 0, -90
 			tData.m_bPitch = true, tData.m_bFirstOOBPitch = true;
 		}
 		else
@@ -95,11 +95,10 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 			bool bAutoYaw = tData.m_bAutoSetYaw && Vars::Resolver::AutoResolveYawAmount.Value;
 			bool bAutoPitch = tData.m_bAutoSetPitch && Vars::Resolver::AutoResolvePitchAmount.Value;
 
-			if (bAutoPitch
-				&& (!bAutoYaw || sign(flYaw) != sign(flYaw + Vars::Resolver::AutoResolveYawAmount.Value))
-				&& fabsf(pTarget->m_angEyeAnglesX()) == 90.f && !m_mSniperDots.contains(m_iWaitingForTarget))
+			if (bAutoPitch && fabsf(pTarget->m_angEyeAnglesX()) == 90.f && !m_mSniperDots.contains(m_iWaitingForTarget)
+				&& (!bAutoYaw || sign(flYaw) != sign(flYaw + Vars::Resolver::AutoResolveYawAmount.Value) && sign(flYaw) != 0))
 			{
-				flPitch = Math::NormalizeAngle(flPitch + Vars::Resolver::AutoResolvePitchAmount.Value, 180.f);
+				flPitch = Math::ClampNormalizeAngle(flPitch + Vars::Resolver::AutoResolvePitchAmount.Value, 90.f);
 
 				F::Backtrack.ResolverUpdate(pTarget);
 				F::Output.ReportResolver(I::EngineClient->GetPlayerForUserID(m_iWaitingForTarget), "Cycling", "pitch", flPitch);
@@ -184,16 +183,19 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 				int iUserID = pResource->m_iUserID(pTarget->entindex());
 				auto& tData = m_mResolverData[iUserID];
 
-				if (fabsf(pTarget->m_angEyeAnglesX()) != 90.f)
-					F::Output.ReportResolver("Target not using out of bounds pitch");
+				if (!m_mSniperDots.contains(iUserID))
+				{
+					if (fabsf(pTarget->m_angEyeAnglesX()) != 90.f)
+						F::Output.ReportResolver("Target not using out of bounds pitch");
+					
+					float& flPitch = tData.m_flPitch;
+					flPitch = Math::ClampNormalizeAngle(flPitch + Vars::Resolver::CyclePitch.Value, 90.f);
 
-				float& flPitch = tData.m_flPitch;
-
-				flPitch += Vars::Resolver::CyclePitch.Value;
-				flPitch = Math::NormalizeAngle(flPitch + Vars::Resolver::CyclePitch.Value, 180.f);
-
-				F::Backtrack.ResolverUpdate(pTarget);
-				F::Output.ReportResolver(pTarget->entindex(), "Cycling", "pitch", flPitch);
+					F::Backtrack.ResolverUpdate(pTarget);
+					F::Output.ReportResolver(pTarget->entindex(), "Cycling", "pitch", flPitch);
+				}
+				else
+					F::Output.ReportResolver("Target pitch overridden by sniper dot");
 			}
 
 			m_flLastPitchCycle = SDK::PlatFloatTime();
