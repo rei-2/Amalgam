@@ -196,14 +196,13 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 	case ETFClassID::CObjectTeleporter:
 	{
 		auto pBuilding = pEntity->As<CBaseObject>();
+		if (pLocal->m_iTeamNum() == pBuilding->m_iTeamNum())
+			return false;
 
 		if (!(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Sentry) && pBuilding->IsSentrygun()
 			|| !(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Dispenser) && pBuilding->IsDispenser()
 			|| !(Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Teleporter) && pBuilding->IsTeleporter())
 			return true;
-
-		if (pLocal->m_iTeamNum() == pEntity->m_iTeamNum())
-			return false;
 
 		auto pOwner = pBuilding->m_hBuilder().Get();
 		if (pOwner)

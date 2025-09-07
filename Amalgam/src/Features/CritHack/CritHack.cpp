@@ -299,7 +299,15 @@ void CCritHack::Reset()
 int CCritHack::GetCritRequest(CUserCmd* pCmd, CTFWeaponBase* pWeapon)
 {
 	bool bCanCrit = m_iAvailableCrits > 0 && !m_bCritBanned;
-	bool bPressed = Vars::CritHack::ForceCrits.Value || Vars::CritHack::AlwaysMeleeCrit.Value && m_bMelee && (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::OriginalCmd.buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value);
+	bool bPressed = Vars::CritHack::ForceCrits.Value;
+	if (Vars::CritHack::AlwaysMeleeCrit.Value && m_bMelee
+		&& (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::OriginalCmd.buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value)
+		&& G::AimTarget.m_iEntIndex)
+	{
+		auto pEntity = I::ClientEntityList->GetClientEntity(G::AimTarget.m_iEntIndex)->As<CBaseEntity>();
+		if (pEntity && pEntity->IsPlayer())
+			bPressed = true;
+	}
 	
 	bool bSkip = Vars::CritHack::AvoidRandomCrits.Value;
 	bool bDesync = CommandToSeed(pCmd->command_number) == pWeapon->m_iCurrentSeed();

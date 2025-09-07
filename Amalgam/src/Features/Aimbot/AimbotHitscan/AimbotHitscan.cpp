@@ -60,9 +60,9 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 				switch (Vars::Aimbot::Healing::HealPriority.Value)
 				{
 				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeFriends:
-					if (!H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
-						break;
-					[[fallthrough]];
+					if (H::Entities.IsFriend(pEntity->entindex()) || H::Entities.InParty(pEntity->entindex()))
+						iPriority = std::numeric_limits<int>::max();
+					break;
 				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeTeam:
 					iPriority = std::numeric_limits<int>::max();
 				}
@@ -76,7 +76,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			return vTargets;
 	}
 
-	if (Vars::Aimbot::General::Target.Value)
+	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Building)
 	{
 		for (auto pEntity : H::Entities.GetGroup(EGroupType::BUILDINGS_ENEMIES))
 		{
