@@ -105,6 +105,16 @@ private:
 	std::unordered_map<int, std::deque<MoveData>> m_mRecords = {};
 	std::unordered_map<int, std::deque<float>> m_mSimTimes = {};
 
+	// exponential moving average for predicted delta to reduce jitter
+	// alpha chosen from spec (e.g. 0.35f), configurable via cvar cluster if needed later
+	float m_flDeltaEMA = 0.f;
+	bool  m_bDeltaEMAInit = false;
+
+	// cached last friction scale applied (for future metric collection / clamping diagnostics)
+	float m_flLastFrictionScale = 1.f;
+	float ClampFriction(float rawScale) const;
+	float SmoothDelta(float newDelta);
+
 public:
 	void Store();
 

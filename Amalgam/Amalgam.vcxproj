@@ -939,6 +939,7 @@
     <ClCompile Include="src\Features\Players\PlayerUtils.cpp" />
     <ClCompile Include="src\Features\Resolver\Resolver.cpp" />
     <ClCompile Include="src\Features\Simulation\MovementSimulation\MovementSimulation.cpp" />
+  <ClCompile Include="src\Features\Simulation\MovementSimulation\YawAccumulator.cpp" />
     <ClCompile Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.cpp" />
     <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
     <ClCompile Include="src\Features\Ticks\Ticks.cpp" />
@@ -1083,6 +1084,15 @@
     <ClCompile Include="src\Utils\NetVars\NetVars.cpp" />
     <ClCompile Include="src\Utils\Signatures\Signatures.cpp" />
     <ClCompile Include="src\Utils\Timer\Timer.cpp" />
+  <ClCompile Include="tests\movement\BaselineCapture.cpp" />
+  <ClCompile Include="tests\movement\test_mean_pos_error.cpp" />
+  <ClCompile Include="tests\movement\ContractLoader.cpp" />
+  <ClCompile Include="tests\movement\test_max_pos_error.cpp" />
+  <ClCompile Include="tests\movement\test_drift.cpp" />
+  <ClCompile Include="tests\movement\test_determinism.cpp" />
+  <ClCompile Include="tests\movement\test_duck_vertical.cpp" />
+  <ClCompile Include="tests\movement\test_friction_bounds.cpp" />
+  <ClCompile Include="tests\movement\test_performance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\freetype\config\ftconfig.h" />
@@ -1119,6 +1129,8 @@
     <ClInclude Include="include\freetype\ftlogging.h" />
     <ClInclude Include="include\freetype\ftlzw.h" />
     <ClInclude Include="include\freetype\ftmac.h" />
+  <ClInclude Include="tests\movement\BaselineCapture.h" />
+  <ClInclude Include="tests\movement\ContractLoader.h" />
     <ClInclude Include="include\freetype\ftmm.h" />
     <ClInclude Include="include\freetype\ftmodapi.h" />
     <ClInclude Include="include\freetype\ftmoderr.h" />
@@ -1236,6 +1248,7 @@
     <ClInclude Include="src\Features\PacketManip\PacketManip.h" />
     <ClInclude Include="src\Features\Resolver\Resolver.h" />
     <ClInclude Include="src\Features\Simulation\MovementSimulation\MovementSimulation.h" />
+  <ClInclude Include="src\Features\Simulation\MovementSimulation\YawAccumulator.h" />
     <ClInclude Include="src\Features\Simulation\ProjectileSimulation\ProjectileSimulation.h" />
     <ClInclude Include="src\Features\Spectate\Spectate.h" />
     <ClInclude Include="src\Features\Ticks\Ticks.h" />

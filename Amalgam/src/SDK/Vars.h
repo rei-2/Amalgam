@@ -373,9 +373,9 @@ namespace Vars
 			CVarEnum(DeltaMode, "Delta mode", 0, NOSAVE | DEBUGVAR, nullptr,
 				VA_LIST("Average", "Max"),
 				Average, Max);
-			CVarEnum(MovesimFrictionFlags, "Movesim friction flags", 0b01, NOSAVE | DEBUGVAR | DROPDOWN_MULTI, nullptr,
-				VA_LIST("Run reduce", "Calculate increase"),
-				RunReduce = 1 << 0, CalculateIncrease = 1 << 1);
+			CVarEnum(MovesimFrictionFlags, "Movesim friction flags", 0b01, NOSAVE | DEBUGVAR, nullptr,
+				VA_LIST("Run reduce"),
+				RunReduce = 1 << 0);
 		SUBNAMESPACE_END(Projectile);
 
 		SUBNAMESPACE_BEGIN(Melee)
