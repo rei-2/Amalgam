@@ -223,8 +223,9 @@ void CMenu::MenuAimbot(int iTab)
 				if (Section("Hitscan"))
 				{
 					FDropdown(Vars::Aimbot::Hitscan::Hitboxes, FDropdownEnum::Left);
-					FDropdown(Vars::Aimbot::Hitscan::Modifiers, FDropdownEnum::Right);
-					FSlider(Vars::Aimbot::Hitscan::PointScale);
+					FDropdown(Vars::Aimbot::Hitscan::MultipointHitboxes, FDropdownEnum::Right);
+					FDropdown(Vars::Aimbot::Hitscan::Modifiers);
+					FSlider(Vars::Aimbot::Hitscan::MultipointScale);
 					PushTransparent(!(Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire));
 					{
 						FSlider(Vars::Aimbot::Hitscan::TapfireDistance);
@@ -744,7 +745,7 @@ void CMenu::MenuVisuals(int iTab)
 					SetNextWindowSize({ H::Draw.Scale(300), 0 });
 					if (FBeginPopup("OffscreenArrows"))
 					{
-						FSlider("Offset", &tGroup.m_iOffscreenArrowsOffset, 0, 1000, 25, "%i", FSliderEnum::Min | FSliderEnum::Precision);
+						FSlider("Offset", &tGroup.m_iOffscreenArrowsOffset, 0, 1000, 25, "%i", FSliderEnum::Precision);
 						FSlider("Max distance", &tGroup.m_flOffscreenArrowsMaxDistance, 0.f, 5000.f, 50.f, "%g", FSliderEnum::Min | FSliderEnum::Precision);
 
 						EndPopup();

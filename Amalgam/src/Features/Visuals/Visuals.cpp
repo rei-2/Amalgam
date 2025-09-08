@@ -450,16 +450,16 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 
 	if (vHitboxes.empty())
 	{
-		for (int i = 0; i < pSet->numhitboxes; i++)
-			vHitboxes.push_back(i);
+		for (int nHitbox = 0; nHitbox < pSet->numhitboxes; nHitbox++)
+			vHitboxes.push_back(nHitbox);
 	}
 
-	for (int i : vHitboxes)
+	for (int nHitbox : vHitboxes)
 	{
-		auto pBox = pSet->pHitbox(i);
+		auto pBox = pSet->pHitbox(nHitbox);
 		if (!pBox) continue;
 
-		bool bTargeted = i == iTarget;
+		bool bTargeted = nHitbox == iTarget;
 		Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);
 		Vec3 vOrigin; Math::GetMatrixOrigin(aBones[pBox->bone], vOrigin);
 		Vec3 vMins = pBox->bbmin * pEntity->m_flModelScale();
@@ -477,8 +477,11 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 
 		if (Vars::Debug::Info.Value)
 		{
-			float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::PointScale.Value / 100.f);
+			float flBoneScale = Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value;
 			float flBoneSubtract = Vars::Aimbot::Hitscan::BoneSizeSubtract.Value;
+
+			if (F::AimbotGlobal.ShouldMultipoint(pEntity, nHitbox, Vars::Aimbot::Hitscan::MultipointHitboxes.Value))
+				flBoneScale = std::max(flBoneScale, Vars::Aimbot::Hitscan::MultipointScale.Value / 100.f);
 
 			Vec3 vCheckMins = (pBox->bbmin + flBoneSubtract / pEntity->m_flModelScale()) * flBoneScale * pEntity->m_flModelScale();
 			Vec3 vCheckMaxs = (pBox->bbmax - flBoneSubtract / pEntity->m_flModelScale()) * flBoneScale * pEntity->m_flModelScale();

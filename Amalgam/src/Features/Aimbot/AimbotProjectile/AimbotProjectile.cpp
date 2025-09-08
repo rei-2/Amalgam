@@ -1309,9 +1309,9 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 					Vec3 vPos = trace.endpos + F::ProjSim.GetVelocity().Normalized() * 16 + vOffset;
 
 					float flClosest = 0.f; int iClosest = -1;
-					for (int i = 0; i < pSet->numhitboxes; ++i)
+					for (int nHitbox = 0; nHitbox < pSet->numhitboxes; ++nHitbox)
 					{
-						auto pBox = pSet->pHitbox(i);
+						auto pBox = pSet->pHitbox(nHitbox);
 						if (!pBox) continue;
 
 						Vec3 vCenter; Math::VectorTransform({}, aBones[pBox->bone], vCenter);
@@ -1320,7 +1320,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 						if (iClosest != -1 && flDist < flClosest || iClosest == -1)
 						{
 							flClosest = flDist;
-							iClosest = i;
+							iClosest = nHitbox;
 						}
 					}
 					if (iClosest != HITBOX_HEAD)

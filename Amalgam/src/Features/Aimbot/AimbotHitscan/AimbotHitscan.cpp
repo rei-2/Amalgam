@@ -165,7 +165,7 @@ std::vector<Target_t> CAimbotHitscan::SortTargets(CTFPlayer* pLocal, CTFWeaponBa
 
 int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pTarget)
 {
-	if (!F::AimbotGlobal.IsHitboxValid(H::Entities.GetModel(pTarget->entindex()), nHitbox, Vars::Aimbot::Hitscan::Hitboxes.Value))
+	if (!F::AimbotGlobal.IsHitboxValid(pTarget, nHitbox, Vars::Aimbot::Hitscan::Hitboxes.Value))
 		return -1;
 
 	bool bHeadshot = false;
@@ -228,7 +228,8 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 
 	int iHeadPriority = bHeadOnly || bHeadshot ? 0 : 1;
 	int iBodyPriority = bHeadOnly ? -1 : bHeadshot ? 1 : 0;
-	int iLimbPriority = bHeadOnly ? -1 : 2;
+	int iMiscPriority = bHeadOnly ? -1 : 2;
+	int iLimbPriority = bHeadOnly ? -1 : 3;
 
 	switch (H::Entities.GetModel(pTarget->entindex()))
 	{
@@ -242,23 +243,9 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 		case HITBOX_SAXTON_BODY:
 		case HITBOX_SAXTON_THORAX:
 		case HITBOX_SAXTON_CHEST:
-		case HITBOX_SAXTON_UPPER_CHEST:
-		/*case HITBOX_SAXTON_NECK:
-		case HITBOX_SAXTON_PELVIS:*/ return iBodyPriority;
-		/*
-		case HITBOX_SAXTON_LEFT_UPPER_ARM:
-		case HITBOX_SAXTON_LEFT_FOREARM:
-		case HITBOX_SAXTON_LEFT_HAND:
-		case HITBOX_SAXTON_RIGHT_UPPER_ARM:
-		case HITBOX_SAXTON_RIGHT_FOREARM:
-		case HITBOX_SAXTON_RIGHT_HAND:
-		case HITBOX_SAXTON_LEFT_THIGH:
-		case HITBOX_SAXTON_LEFT_CALF:
-		case HITBOX_SAXTON_LEFT_FOOT:
-		case HITBOX_SAXTON_RIGHT_THIGH:
-		case HITBOX_SAXTON_RIGHT_CALF:
-		case HITBOX_SAXTON_RIGHT_FOOT:
-		*/
+		case HITBOX_SAXTON_UPPER_CHEST: return iBodyPriority;
+		case HITBOX_SAXTON_NECK:
+		case HITBOX_SAXTON_PELVIS: return iMiscPriority;
 		}
 		break;
 	}
@@ -270,22 +257,8 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 		case HITBOX_BODY:
 		case HITBOX_THORAX:
 		case HITBOX_CHEST:
-		case HITBOX_UPPER_CHEST:
-		/*case HITBOX_PELVIS:*/ return iBodyPriority;
-		/*
-		case HITBOX_LEFT_UPPER_ARM:
-		case HITBOX_LEFT_FOREARM:
-		case HITBOX_LEFT_HAND:
-		case HITBOX_RIGHT_UPPER_ARM:
-		case HITBOX_RIGHT_FOREARM:
-		case HITBOX_RIGHT_HAND:
-		case HITBOX_LEFT_THIGH:
-		case HITBOX_LEFT_CALF:
-		case HITBOX_LEFT_FOOT:
-		case HITBOX_RIGHT_THIGH:
-		case HITBOX_RIGHT_CALF:
-		case HITBOX_RIGHT_FOOT:
-		*/
+		case HITBOX_UPPER_CHEST: return iBodyPriority;
+		case HITBOX_PELVIS: return iMiscPriority;
 		}
 	}
 	}
@@ -366,7 +339,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			}
 			F::MoveSim.Restore(tStorage);
 
-			float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::PointScale.Value / 100.f);
+			float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::MultipointScale.Value / 100.f);
 			float flBoneSubtract = Vars::Aimbot::Hitscan::BoneSizeSubtract.Value;
 
 			Vec3 vMins = tTarget.m_pEntity->m_vecMins();
@@ -407,16 +380,16 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				continue;
 
 			std::vector<std::tuple<const mstudiobbox_t*, int, int>> vHitboxes;
-			for (int i = 0; i < pSet->numhitboxes; i++)
+			for (int nHitbox = 0; nHitbox < pSet->numhitboxes; nHitbox++)
 			{
-				int iPriority = GetHitboxPriority(i, pLocal, pWeapon, tTarget.m_pEntity);
+				int iPriority = GetHitboxPriority(nHitbox, pLocal, pWeapon, tTarget.m_pEntity);
 				if (iPriority == -1)
 					continue;
 
-				auto pBox = pSet->pHitbox(i);
+				auto pBox = pSet->pHitbox(nHitbox);
 				if (!pBox) continue;
 
-				vHitboxes.emplace_back(pBox, i, iPriority);
+				vHitboxes.emplace_back(pBox, nHitbox, iPriority);
 			}
 			std::sort(vHitboxes.begin(), vHitboxes.end(), [&](const auto& a, const auto& b) -> bool
 				{
@@ -424,7 +397,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				});
 
 			float flModelScale = tTarget.m_pEntity->As<CBaseAnimating>()->m_flModelScale();
-			float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::PointScale.Value / 100.f);
+			float flBoneScale = Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value;
 			float flBoneSubtract = Vars::Aimbot::Hitscan::BoneSizeSubtract.Value;
 
 			auto pGameRules = I::TFGameRules();
@@ -434,7 +407,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 			const matrix3x4 mTransform = { { 1, 0, 0, pRecord->m_vOrigin.x }, { 0, 1, 0, pRecord->m_vOrigin.y }, { 0, 0, 1, pRecord->m_vOrigin.z } };
 
-			for (auto& [pBox, iHitbox, _] : vHitboxes)
+			for (auto& [pBox, nHitbox, _] : vHitboxes)
 			{
 				Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);
 				Vec3 vMins = pBox->bbmin;
@@ -451,15 +424,16 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				}
 
 				std::vector<Vec3> vPoints = { Vec3() };
-				if (Vars::Aimbot::Hitscan::PointScale.Value > 0.f)
+				if (F::AimbotGlobal.ShouldMultipoint(tTarget.m_pEntity, nHitbox, Vars::Aimbot::Hitscan::MultipointHitboxes.Value))
 				{
+					flBoneScale = std::max(flBoneScale, Vars::Aimbot::Hitscan::MultipointScale.Value / 100.f);
 					bool bTriggerbot = (Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth
 						|| Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Assistive)
 						&& !Vars::Aimbot::General::AssistStrength.Value;
 
 					if (!bTriggerbot)
 					{
-						float flScale = Vars::Aimbot::Hitscan::PointScale.Value / 100;
+						float flScale = Vars::Aimbot::Hitscan::MultipointScale.Value / 100;
 						Vec3 vMinsS = (vMins - vMaxs) / 2 * flScale;
 						Vec3 vMaxsS = (vMaxs - vMins) / 2 * flScale;
 
@@ -506,7 +480,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 							tTarget.m_vAngleTo = vAngles;
 							tTarget.m_pRecord = pRecord;
 							tTarget.m_vPos = vOrigin;
-							tTarget.m_nAimedHitbox = iHitbox;
+							tTarget.m_nAimedHitbox = nHitbox;
 							tTarget.m_bBacktrack = true;
 							return true;
 						}
@@ -522,7 +496,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 		}
 		else
 		{
-			float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::PointScale.Value / 100.f);
+			float flBoneScale = std::max(Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value, Vars::Aimbot::Hitscan::MultipointScale.Value / 100.f);
 			float flBoneSubtract = Vars::Aimbot::Hitscan::BoneSizeSubtract.Value;
 
 			Vec3 vMins = tTarget.m_pEntity->m_vecMins();

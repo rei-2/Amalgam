@@ -72,7 +72,9 @@ bool CTraceFilterCollideable::ShouldHitEntity(IHandleEntity* pServerEntity, int 
 	case ETFClassID::CFunc_LOD:
 	case ETFClassID::CObjectCartDispenser:
 	case ETFClassID::CFuncTrackTrain:
-	case ETFClassID::CFuncConveyor: return true;
+	case ETFClassID::CFuncConveyor:
+	case ETFClassID::CTFGenericBomb:
+	case ETFClassID::CTFPumpkinBomb: return true;
 	case ETFClassID::CFuncRespawnRoomVisualizer:
 		if (nContentsMask & CONTENTS_PLAYERCLIP)
 			return pEntity->m_iTeamNum() != iTeam;
