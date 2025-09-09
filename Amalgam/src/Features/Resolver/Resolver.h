@@ -39,7 +39,7 @@ private:
 public:
 	void FrameStageNotify();
 	void CreateMove(CTFPlayer* pLocal);
-	void HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int iHitbox = HITBOX_MAX);
+	void HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int nHitbox = HITBOX_MAX);
 	void PlayerHurt(IGameEvent* pEvent);
 	void SetYaw(int iUserID, float flValue, bool bAuto = false);
 	void SetPitch(int iUserID, float flValue, bool bInverse = false, bool bAuto = false);

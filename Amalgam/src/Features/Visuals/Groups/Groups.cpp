@@ -259,13 +259,14 @@ static inline bool ShouldTarget(Group_t& tGroup, CBaseEntity* pEntity, CTFPlayer
 	// pickups
 	case ETFClassID::CBaseAnimating:
 	{
-		if (H::Entities.IsHealth(H::Entities.GetModel(pEntity->entindex())))
+		auto uHash = H::Entities.GetModel(pEntity->entindex());
+		if (H::Entities.IsHealth(uHash))
 			return tGroup.m_iTargets & TargetsEnum::Health;
-		else if (H::Entities.IsAmmo(H::Entities.GetModel(pEntity->entindex())))
+		else if (H::Entities.IsAmmo(uHash))
 			return tGroup.m_iTargets & TargetsEnum::Ammo;
-		else if (H::Entities.IsPowerup(H::Entities.GetModel(pEntity->entindex())))
+		else if (H::Entities.IsPowerup(uHash))
 			return tGroup.m_iTargets & TargetsEnum::Powerups;
-		else if (H::Entities.IsSpellbook(H::Entities.GetModel(pEntity->entindex())))
+		else if (H::Entities.IsSpellbook(uHash))
 			return tGroup.m_iTargets & TargetsEnum::Spellbook;
 		break;
 	}

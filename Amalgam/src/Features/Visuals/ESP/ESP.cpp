@@ -679,16 +679,17 @@ static inline void StoreMisc(CBaseEntity* pEntity, CTFPlayer* pLocal, Group_t* p
 		case ETFClassID::CZombie: sName = "Skeleton"; break;
 		case ETFClassID::CBaseAnimating:
 		{
-			if (H::Entities.IsHealth(H::Entities.GetModel(pEntity->entindex())))
+			auto uHash = H::Entities.GetModel(pEntity->entindex());
+			if (H::Entities.IsHealth(uHash))
 				sName = "Health";
-			else if (H::Entities.IsAmmo(H::Entities.GetModel(pEntity->entindex())))
+			else if (H::Entities.IsAmmo(uHash))
 				sName = "Ammo";
-			else if (H::Entities.IsSpellbook(H::Entities.GetModel(pEntity->entindex())))
+			else if (H::Entities.IsSpellbook(uHash))
 				sName = "Spellbook";
-			else if (H::Entities.IsPowerup(H::Entities.GetModel(pEntity->entindex())))
+			else if (H::Entities.IsPowerup(uHash))
 			{
 				sName = "Powerup";
-				switch (H::Entities.GetModel(pEntity->entindex()))
+				switch (uHash)
 				{
 				case FNV1A::Hash32Const("models/pickups/pickup_powerup_agility.mdl"): sName = "Agility"; break;
 				case FNV1A::Hash32Const("models/pickups/pickup_powerup_crit.mdl"): sName = "Revenge"; break;

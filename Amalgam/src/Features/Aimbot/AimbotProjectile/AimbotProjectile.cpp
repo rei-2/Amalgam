@@ -27,16 +27,19 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 	const Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
 	{
-		EGroupType eGroupType = EGroupType::GROUP_INVALID;
+		auto eGroupType = EGroupType::GROUP_INVALID;
 		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 			eGroupType = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EGroupType::PLAYERS_ENEMIES : EGroupType::PLAYERS_ALL;
-		if (Vars::Aimbot::Healing::AutoArrow.Value)
+		switch (pWeapon->GetWeaponID())
 		{
-			switch (pWeapon->GetWeaponID())
-			{
-			case TF_WEAPON_CROSSBOW: eGroupType = eGroupType != EGroupType::GROUP_INVALID ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_TEAMMATES; break;
-			case TF_WEAPON_LUNCHBOX: eGroupType = EGroupType::PLAYERS_TEAMMATES; break;
-			}
+		case TF_WEAPON_CROSSBOW:
+			if (Vars::Aimbot::Healing::AutoArrow.Value)
+				eGroupType = eGroupType != EGroupType::GROUP_INVALID ? EGroupType::PLAYERS_ALL : EGroupType::PLAYERS_TEAMMATES;
+			break;
+		case TF_WEAPON_LUNCHBOX:
+			if (Vars::Aimbot::Healing::AutoSandvich.Value)
+				eGroupType = EGroupType::PLAYERS_TEAMMATES;
+			break;
 		}
 		bool bHeal = pWeapon->GetWeaponID() == TF_WEAPON_CROSSBOW || pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX;
 
@@ -64,9 +67,9 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 				switch (Vars::Aimbot::Healing::HealPriority.Value)
 				{
 				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeFriends:
-					if (!H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
-						break;
-					[[fallthrough]];
+					if (H::Entities.IsFriend(pEntity->entindex()) || H::Entities.InParty(pEntity->entindex()))
+						iPriority = std::numeric_limits<int>::max();
+					break;
 				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeTeam:
 					iPriority = std::numeric_limits<int>::max();
 				}
@@ -80,16 +83,19 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 			return vTargets;
 	}
 
-	if (Vars::Aimbot::General::Target.Value)
 	{
-		bool bIsRescueRanger = pWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_BUILDING_RESCUE;
-		for (auto pEntity : H::Entities.GetGroup(bIsRescueRanger ? EGroupType::BUILDINGS_ALL : EGroupType::BUILDINGS_ENEMIES))
+		auto eGroupType = EGroupType::GROUP_INVALID;
+		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Building)
+			eGroupType = EGroupType::BUILDINGS_ENEMIES;
+		if (Vars::Aimbot::Healing::AutoRepair.Value && pWeapon->GetWeaponID() == TF_WEAPON_SHOTGUN_BUILDING_RESCUE)
+			eGroupType = eGroupType != EGroupType::GROUP_INVALID ? EGroupType::BUILDINGS_ALL : EGroupType::BUILDINGS_TEAMMATES;
+		for (auto pEntity : H::Entities.GetGroup(eGroupType))
 		{
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
 			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
-			if (bTeam && pEntity->As<CBaseObject>()->m_iHealth() >= pEntity->As<CBaseObject>()->m_iMaxHealth())
+			if (bTeam && (pEntity->As<CBaseObject>()->m_iHealth() >= pEntity->As<CBaseObject>()->m_iMaxHealth() || pEntity->As<CBaseObject>()->m_bBuilding()))
 				continue;
 
 			Vec3 vPos = pEntity->GetCenter();
@@ -98,8 +104,23 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
+			int iPriority = 0;
+			if (bTeam)
+			{
+				int iOwner = pEntity->As<CBaseObject>()->m_hBuilder().GetEntryIndex();
+				switch (Vars::Aimbot::Healing::HealPriority.Value)
+				{
+				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeFriends:
+					if (iOwner == I::EngineClient->GetLocalPlayer() || H::Entities.IsFriend(iOwner) || H::Entities.InParty(iOwner))
+						iPriority = std::numeric_limits<int>::max();
+					break;
+				case Vars::Aimbot::Healing::HealPriorityEnum::PrioritizeTeam:
+					iPriority = std::numeric_limits<int>::max();
+				}
+			}
+
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
-			vTargets.emplace_back(pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo);
+			vTargets.emplace_back(pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
 	}
 
@@ -381,8 +402,7 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& tTarg
 	return mPoints;
 }
 
-// seode
-static inline std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, int iSamples, float flNthroot)
+static inline std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, int iSamples)
 {
 	std::vector<std::pair<Vec3, int>> vPoints;
 	vPoints.reserve(iSamples);
@@ -393,24 +413,22 @@ static inline std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, in
 	int iPointType = Vars::Aimbot::Projectile::SplashGrates.Value ? PointTypeEnum::Regular | PointTypeEnum::Obscured : PointTypeEnum::Regular;
 	if (Vars::Aimbot::Projectile::RocketSplashMode.Value == Vars::Aimbot::Projectile::RocketSplashModeEnum::SpecialHeavy)
 		iPointType |= PointTypeEnum::ObscuredExtra | PointTypeEnum::ObscuredMulti;
+
+	float a = PI * (3.f - sqrtf(5.f));
 	for (int n = 0; n < iSamples; n++)
 	{
-		float flA = acosf(1.f - 2.f * n / iSamples);
-		float flB = PI * (3.f - sqrtf(5.f)) * n;
+		float t = a * n;
+		float y = 1 - (n / (iSamples - 1.f)) * 2;
+		float r = sqrtf(1 - powf(y, 2));
+		float x = cosf(t) * r;
+		float z = sinf(t) * r;
 
-		Vec3 vPoint = Vec3(sinf(flA) * cosf(flB), sinf(flA) * sinf(flB), -cosf(flA));
+		Vec3 vPoint = Vec3(x, y, z) * flRadius;
 		vPoint = Math::RotatePoint(vPoint, {}, { flRotateX, flRotateY });
-		if (flNthroot != 1.f)
-		{
-			vPoint.x = powf(fabsf(vPoint.x), 1 / flNthroot) * sign(vPoint.x);
-			vPoint.y = powf(fabsf(vPoint.y), 1 / flNthroot) * sign(vPoint.y);
-			vPoint.z = powf(fabsf(vPoint.z), 1 / flNthroot) * sign(vPoint.z);
-			vPoint.Normalize();
-		}
-		vPoint *= flRadius;
 
 		vPoints.emplace_back(vPoint, iPointType);
 	}
+	vPoints.emplace_back(Vec3(0.f, 0.f, -1.f) * flRadius, iPointType);
 
 	return vPoints;
 };
@@ -1291,9 +1309,9 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 					Vec3 vPos = trace.endpos + F::ProjSim.GetVelocity().Normalized() * 16 + vOffset;
 
 					float flClosest = 0.f; int iClosest = -1;
-					for (int i = 0; i < pSet->numhitboxes; ++i)
+					for (int nHitbox = 0; nHitbox < pSet->numhitboxes; ++nHitbox)
 					{
-						auto pBox = pSet->pHitbox(i);
+						auto pBox = pSet->pHitbox(nHitbox);
 						if (!pBox) continue;
 
 						Vec3 vCenter; Math::VectorTransform({}, aBones[pBox->bone], vCenter);
@@ -1302,7 +1320,7 @@ bool CAimbotProjectile::TestAngle(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, Tar
 						if (iClosest != -1 && flDist < flClosest || iClosest == -1)
 						{
 							flClosest = flDist;
-							iClosest = i;
+							iClosest = nHitbox;
 						}
 					}
 					if (iClosest != HITBOX_HEAD)
@@ -1383,10 +1401,10 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 	int iMulti = Vars::Aimbot::Projectile::SplashMode.Value;
 
 	auto mDirectPoints = iSplash == Vars::Aimbot::Projectile::SplashPredictionEnum::Only ? std::unordered_map<int, Vec3>() : GetDirectPoints(tTarget);
-	auto vSpherePoints = !iSplash ? std::vector<std::pair<Vec3, int>>() : ComputeSphere(m_tInfo.m_flRadius + flSize, Vars::Aimbot::Projectile::SplashPoints.Value, Vars::Aimbot::Projectile::SplashNthRoot.Value);
+	auto vSpherePoints = !iSplash ? std::vector<std::pair<Vec3, int>>() : ComputeSphere(m_tInfo.m_flRadius + flSize, Vars::Aimbot::Projectile::SplashPoints.Value);
 #ifdef SPLASH_DEBUG4
 	for (auto& [vPoint, _] : vSpherePoints)
-		G::BoxStorage.emplace_back(tTarget.m_pEntity->m_vecOrigin() + m_tInfo.m_vTargetEye + vPoint * m_tInfo.m_flRadius / (m_tInfo.m_flRadius + flSize), Vec3(-1, -1, -1), Vec3(1, 1, 1), Vec3(), I::GlobalVars->curtime + 60.f, Color_t(0, 0, 0, 0), Vars::Colors::Local.Value);
+		G::BoxStorage.emplace_back(tTarget.m_pEntity->m_vecOrigin() + m_tInfo.m_vTargetEye + vPoint, Vec3(-1, -1, -1), Vec3(1, 1, 1), Vec3(), I::GlobalVars->curtime + 60.f, Color_t(0, 0, 0, 0), Vars::Colors::Local.Value);
 #endif
 	
 	Vec3 vAngleTo, vPredicted, vTarget;
@@ -2073,7 +2091,7 @@ bool CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBa
 	int iMulti = Vars::Aimbot::Projectile::SplashMode.Value;
 
 	auto mDirectPoints = iSplash == Vars::Aimbot::Projectile::SplashPredictionEnum::Only ? std::unordered_map<int, Vec3>() : GetDirectPoints(tTarget, pProjectile);
-	auto vSpherePoints = !iSplash ? std::vector<std::pair<Vec3, int>>() : ComputeSphere(m_tInfo.m_flRadius + flSize, Vars::Aimbot::Projectile::SplashPoints.Value, Vars::Aimbot::Projectile::SplashNthRoot.Value);
+	auto vSpherePoints = !iSplash ? std::vector<std::pair<Vec3, int>>() : ComputeSphere(m_tInfo.m_flRadius + flSize, Vars::Aimbot::Projectile::SplashPoints.Value);
 
 	Vec3 vAngleTo, vPredicted, vTarget;
 	int iLowestPriority = std::numeric_limits<int>::max(); float flLowestDist = std::numeric_limits<float>::max();

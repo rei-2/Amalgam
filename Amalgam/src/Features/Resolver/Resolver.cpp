@@ -249,7 +249,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 		m_flLastViewCycle = 0.f;
 }
 
-void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int iHitbox)
+void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase* pWeapon, int nHitbox)
 {
 	if (!Vars::Resolver::Enabled.Value || !Vars::Resolver::AutoResolve.Value
 		|| Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth || pLocal->m_iTeamNum() == pTarget->m_iTeamNum())
@@ -258,7 +258,7 @@ void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase*
 	if (Vars::Resolver::AutoResolveCheatersOnly.Value && !F::PlayerUtils.HasTag(pTarget->entindex(), CHEATER_TAG))
 		return;
 
-	if (Vars::Resolver::AutoResolveHeadshotOnly.Value && (iHitbox != HITBOX_HEAD || !G::CanHeadshot))
+	if (Vars::Resolver::AutoResolveHeadshotOnly.Value && (nHitbox != HITBOX_HEAD || !G::CanHeadshot))
 		return;
 
 	if (pWeapon->GetWeaponSpread())
@@ -275,7 +275,7 @@ void CResolver::HitscanRan(CTFPlayer* pLocal, CTFPlayer* pTarget, CTFWeaponBase*
 
 	m_iWaitingForTarget = pResource->m_iUserID(pTarget->entindex());
 	m_flWaitingForDamage = I::GlobalVars->curtime + F::Backtrack.GetReal(MAX_FLOWS, false) * 1.5f + 0.1f;
-	if (iHitbox == HITBOX_HEAD && G::CanHeadshot)
+	if (nHitbox == HITBOX_HEAD && G::CanHeadshot)
 	{
 		// not dealing with ambassador's range check right now
 		switch (pWeapon->GetWeaponID())

@@ -438,7 +438,11 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 		if (!std::filesystem::exists(m_sConfigPath + sConfigName + m_sConfigExtension))
 		{
 			if (sConfigName == std::string("default"))
+			{
 				SaveConfig("default", false);
+
+				H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+			}
 			return false;
 		}
 
