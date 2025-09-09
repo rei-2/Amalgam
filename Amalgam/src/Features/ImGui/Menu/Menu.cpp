@@ -1908,7 +1908,7 @@ void CMenu::MenuLogs(int iTab)
 							{
 								for (auto& [sName, tChild] : *tSub)
 								{
-									uint32_t uAccountID = std::stoi(sName);
+									uint32_t uAccountID = std::stoul(sName);
 									for (auto& [_, tTag] : tChild)
 									{
 										const std::string& sTag = tTag.data();
@@ -1928,7 +1928,7 @@ void CMenu::MenuLogs(int iTab)
 							{
 								for (auto& [sName, tAlias] : *tSub)
 								{
-									uint32_t uAccountID = std::stoi(sName);
+									uint32_t uAccountID = std::stoul(sName);
 									const std::string& sAlias = tAlias.data();
 
 									if (!sAlias.empty())

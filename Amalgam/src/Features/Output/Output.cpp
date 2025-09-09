@@ -129,13 +129,13 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		{
 			sID.replace(0, 5, "");
 			sID.pop_back();
-			uint32_t iID = std::stoi(sID);
-			if (H::Entities.InParty(iID)) // ignore party
+			uint32_t uAccountID = std::stoul(sID);
+			if (H::Entities.InParty(uAccountID)) // ignore party
 				return;
 
 			auto sName = pEvent->GetString("name");
-			TagsOnJoin(sName, iID);
-			AliasOnJoin(sName, iID);
+			TagsOnJoin(sName, uAccountID);
+			AliasOnJoin(sName, uAccountID);
 		}
 		catch (...) {}
 

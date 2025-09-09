@@ -135,7 +135,7 @@ void CPlayerlistCore::LoadPlayerlist()
 		{
 			for (auto& [sName, tChild] : *tSub)
 			{
-				uint32_t uAccountID = std::stoi(sName);
+				uint32_t uAccountID = std::stoul(sName);
 				for (auto& [_, tTag] : tChild)
 				{
 					const std::string& sTag = tTag.data();
@@ -155,7 +155,7 @@ void CPlayerlistCore::LoadPlayerlist()
 		{
 			for (auto& [sName, jAlias] : *tSub)
 			{
-				uint32_t uAccountID = std::stoi(sName);
+				uint32_t uAccountID = std::stoul(sName);
 				const std::string& sAlias = jAlias.data();
 
 				if (!sAlias.empty())
