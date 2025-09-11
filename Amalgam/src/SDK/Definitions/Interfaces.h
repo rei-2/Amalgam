@@ -13,6 +13,7 @@
 #include "Interfaces/ICVar.h"
 #include "Interfaces/IEngineTrace.h"
 #include "Interfaces/IEngineVGui.h"
+#include "Interfaces/IFileSystem.h"
 #include "Interfaces/IGameEvents.h"
 #include "Interfaces/IGameMovement.h"
 #include "Interfaces/IInput.h"

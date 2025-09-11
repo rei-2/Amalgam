@@ -196,6 +196,36 @@ void CMaterials::LoadMaterials()
 	auto pMaterial = *reinterpret_cast<IMaterial**>(U::Memory.RelToAbs(S::Wireframe()));
 	pMaterial->SetMaterialVarFlag(MATERIAL_VAR_VERTEXALPHA, true);
 
+	static std::unordered_map<std::string, int> mSkyboxes = {};
+	static std::vector<const char*> vFaces = { "rt.vmt", "lf.vmt", "bk.vmt", "ft.vmt", "up.vmt", "dn.vmt" };
+	FileFindHandle_t hFind;
+	for (char const* szFile = I::FileSystem->FindFirst("materials/skybox/*.vmt", &hFind); szFile && *szFile; szFile = I::FileSystem->FindNext(hFind))
+	{
+		std::string sFile = szFile;
+
+		int iFace = -1;
+		for (int i = 0; i < vFaces.size(); i++)
+		{
+			auto sFace = vFaces[i];
+			if (sFile.find(sFace) == sFile.length() - strlen(sFace))
+			{
+				iFace = 1 << i;
+				sFile = sFile.substr(0, sFile.length() - strlen(sFace));
+				break;
+			}
+		}
+		if (iFace == -1)
+			continue;
+
+		mSkyboxes[sFile] |= iFace;
+	}
+	Vars::Visuals::World::SkyboxChanger.m_vValues = { "Off" };
+	for (auto& [sSkybox, iFaces] : mSkyboxes)
+	{
+		if (iFaces == 0b111111)
+			Vars::Visuals::World::SkyboxChanger.m_vValues.push_back(sSkybox.c_str());
+	}
+
 	m_bLoaded = true;
 }
 
