@@ -940,14 +940,29 @@ struct Color_t
 		}
 	}
 
+	inline Color_t Blend(Color_t to) const
+	{
+		return Lerp(to, to.a / 255.f);
+	}
+
 	inline Color_t Alpha(byte to) const
 	{
 		return { r, g, b, to };
 	}
 
-	inline int Brightness() const
+	inline float Brightness(float flRed = 0.299f, float flGreen = 0.587f, float flBlue = 0.114f) const
 	{
-		return r + g + b;
+		return r * flRed + g * flGreen + b * flBlue;
+	}
+
+	inline bool IsColorBright(float flValue = 175, float flRed = 0.299f, float flGreen = 0.587f, float flBlue = 0.114f) const
+	{
+		return Brightness(flRed, flGreen, flBlue) > flValue;
+	}
+
+	inline bool IsColorDark(float flValue = 80, float flRed = 0.299f, float flGreen = 0.587f, float flBlue = 0.114f)const
+	{
+		return Brightness(flRed, flGreen, flBlue) < flValue;
 	}
 };
 

@@ -151,7 +151,7 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Co
 		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
 
 	if (bAlpha && !Vars::Menu::CheapText.Value)
-		tColorOut = tColorOut.Alpha(tColorOut.a * Math::RemapVal(tColorOut.Brightness(), 0, 765, 0.5f, 0.1f));
+		tColorOut = tColorOut.Alpha(tColorOut.a * Math::RemapVal(tColorOut.Brightness(), 0, 255, 0.5f, 0.1f));
 
 	if (tColorOut.a)
 	{
@@ -192,7 +192,7 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Co
 		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
 
 	if (bAlpha && !Vars::Menu::CheapText.Value)
-		tColorOut = tColorOut.Alpha(tColorOut.a * Math::RemapVal(tColorOut.Brightness(), 0, 765, 0.5f, 0.1f));
+		tColorOut = tColorOut.Alpha(tColorOut.a * Math::RemapVal(tColorOut.Brightness(), 0, 255, 0.5f, 0.1f));
 
 	if (tColorOut.a)
 	{

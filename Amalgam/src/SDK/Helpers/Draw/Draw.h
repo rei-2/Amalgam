@@ -36,15 +36,6 @@ private:
 	std::unordered_map<uint32, int> m_mAvatars = {};
 
 public:
-	inline bool IsColorBright(const Color_t clr)
-	{
-		return clr.r + clr.g + clr.b > 510;
-	}
-	inline bool IsColorDark(const Color_t clr)
-	{
-		return clr.r + clr.g + clr.b < 201;
-	}
-
 	inline float Scale(float flN = 1.f, int iFlags = Scale_None, float flScale = Vars::Menu::Scale.Value)
 	{
 		flN *= flScale;

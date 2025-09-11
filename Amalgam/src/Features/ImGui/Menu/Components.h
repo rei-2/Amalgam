@@ -149,13 +149,13 @@ namespace ImGui
 		return fmodf(flX, flY) + (flX < 0 ? flY : 0);
 	}
 
-	inline bool IsColorBright(ImColor tColor)
+	inline bool IsColorBright(ImColor tColor, float flValue = 0.686f, float flRed = 0.299f, float flGreen = 0.587f, float flBlue = 0.114f)
 	{
-		return tColor.Value.x + tColor.Value.y + tColor.Value.z > 2.f;
+		return tColor.Value.x * flRed + tColor.Value.y * flGreen + tColor.Value.z * flBlue > flValue;
 	}
-	inline bool IsColorDark(ImColor tColor)
+	inline bool IsColorDark(ImColor tColor, float flValue = 0.313f, float flRed = 0.299f, float flGreen = 0.587f, float flBlue = 0.114f)
 	{
-		return tColor.Value.x + tColor.Value.y + tColor.Value.z < 0.788f;
+		return tColor.Value.x * flRed + tColor.Value.y * flGreen + tColor.Value.z * flBlue < flValue;
 	}
 
 	inline ImVec4 ColorToVec(Color_t tColor)
