@@ -72,6 +72,7 @@
     <ProjectGuid>{2550c133-72a8-4af7-b22a-a8012bd9f376}</ProjectGuid>
     <RootNamespace>Amalgam</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>SemataryHook</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
