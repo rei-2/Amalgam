@@ -195,7 +195,7 @@ namespace Vars
 		CVar(CheapText, "Cheap text", false);
 
 		SUBNAMESPACE_BEGIN(Theme)
-			CVar(Accent, "Accent color", Color_t(175, 150, 255, 255), VISUAL);
+			CVar(Accent, "Accent color", Color_t(255, 0, 0, 255), VISUAL);
 			CVar(Background, "Background color", Color_t(0, 0, 0, 250), VISUAL);
 			CVar(Active, "Active color", Color_t(255, 255, 255, 255), VISUAL);
 			CVar(Inactive, "Inactive color", Color_t(150, 150, 150, 255), VISUAL);

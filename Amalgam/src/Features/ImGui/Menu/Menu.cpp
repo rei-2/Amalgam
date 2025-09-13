@@ -1849,7 +1849,7 @@ void CMenu::MenuLogs(int iTab)
 						fStream.close();
 
 						SDK::SetClipboard(sString);
-						SDK::Output("SemataryHook", "Copied playerlist to clipboard", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+						SDK::Output("SemataryHook", "Copied playerlist to clipboard", { 255, 0, 0 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 					}
 				}
 
@@ -1950,7 +1950,7 @@ void CMenu::MenuLogs(int iTab)
 						}
 						catch (...)
 						{
-							SDK::Output("SemataryHook", "Failed to import playerlist", { 175, 150, 255, 127 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+							SDK::Output("SemataryHook", "Failed to import playerlist", { 255, 0, 0, 127 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 						}
 					}
 
@@ -2011,7 +2011,7 @@ void CMenu::MenuLogs(int iTab)
 							}
 
 							F::PlayerUtils.m_bSave = true;
-							SDK::Output("SemataryHook", "Imported playerlist", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+							SDK::Output("SemataryHook", "Imported playerlist", { 255, 0, 0 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 
 							CloseCurrentPopup();
 						}
@@ -2042,11 +2042,11 @@ void CMenu::MenuLogs(int iTab)
 							F::Configs.m_sCorePath + std::format("Backup{}.json", iBackupCount + 1),
 							std::filesystem::copy_options::overwrite_existing
 						);
-						SDK::Output("SemataryHook", "Saved backup playerlist", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+						SDK::Output("SemataryHook", "Saved backup playerlist", { 255, 0, 0 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 					}
 					catch (...)
 					{
-						SDK::Output("SemataryHook", "Failed to backup playerlist", { 175, 150, 255, 127 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+						SDK::Output("SemataryHook", "Failed to backup playerlist", { 255, 0, 0, 127 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 					}
 				}
 			}
