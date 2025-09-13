@@ -159,7 +159,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 		file.open(F::Configs.m_sConfigPath + "crash_log.txt", std::ios_base::app);
 		file << ssErrorStream.str() + "\n\n\n";
 		file.close();
-		ssErrorStream << "Logged to Amalgam\\crash_log.txt. ";
+		ssErrorStream << "Logged to SemataryHook\\crash_log.txt. ";
 	}
 	catch (...) {}
 

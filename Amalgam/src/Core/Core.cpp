@@ -31,10 +31,10 @@ static inline bool CheckDXLevel()
 	auto mat_dxlevel = U::ConVars.FindVar("mat_dxlevel");
 	if (mat_dxlevel->GetInt() < 90)
 	{
-		//const char* sMessage = "You are running with graphics options that Amalgam does not support. -dxlevel must be at least 90.";
-		const char* sMessage = "You are running with graphics options that Amalgam does not support. It is recommended for -dxlevel to be at least 90.";
+		//const char* sMessage = "You are running with graphics options that SemataryHook does not support. -dxlevel must be at least 90.";
+		const char* sMessage = "You are running with graphics options that SemataryHook does not support. It is recommended for -dxlevel to be at least 90.";
 		U::Core.AppendFailText(sMessage);
-		SDK::Output("Amalgam", sMessage, { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+		SDK::Output("SemataryHook", sMessage, { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 		//return false;
 	}
 
@@ -57,7 +57,7 @@ void CCore::LogFailText()
 		file.open(F::Configs.m_sConfigPath + "fail_log.txt", std::ios_base::app);
 		file << m_ssFailStream.str() + "\n\n\n";
 		file.close();
-		m_ssFailStream << "Logged to Amalgam\\fail_log.txt. ";
+		m_ssFailStream << "Logged to SemataryHook\\fail_log.txt. ";
 	}
 	catch (...) {}
 
@@ -98,7 +98,7 @@ void CCore::Load()
 
 	F::Configs.LoadConfig(F::Configs.m_sCurrentConfig, false);
 
-	SDK::Output("Amalgam", "Loaded", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
+	SDK::Output("SemataryHook", "Loaded", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG | OUTPUT_TOAST | OUTPUT_MENU);
 }
 
 void CCore::Loop()
@@ -150,5 +150,5 @@ void CCore::Unload()
 		return;
 	}
 
-	SDK::Output("Amalgam", "Unloaded", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG);
+	SDK::Output("SemataryHook", "Unloaded", { 175, 150, 255 }, OUTPUT_CONSOLE | OUTPUT_DEBUG);
 }
