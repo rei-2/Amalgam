@@ -3433,10 +3433,6 @@ void CMenu::DrawWatermark()
 {
 	using namespace ImGui;
 
-	static DragBox_t old = { -2147483648, -2147483648 };
-	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::Watermark, true) : Vars::Menu::Watermark.Value;
-	if (info != old)
-		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
 
 	ImVec2 text_size = ImGui::CalcTextSize("semataryhook");
 
@@ -3454,7 +3450,7 @@ void CMenu::DrawWatermark()
 	drawlist->AddRectFilled(windowPos + ImVec2(4, 4), windowPos + size - ImVec2(4, 4), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
 	drawlist->AddRectFilled(windowPos + ImVec2(5, 5), windowPos + size - ImVec2(5, 5), ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
 
-	drawlist->AddRectFilledMultiColor(windowPos + ImVec2(6, 5), windowPos + ImVec2(size.x, 5) - ImVec2(5, 5), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }));
+	drawlist->AddRectFilledMultiColor(windowPos + ImVec2(6, 5), windowPos + ImVec2(size.x, 5) - ImVec2(5, 5), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
 
 	ImVec2 first_size = ImGui::CalcTextSize("sematary");
 	drawlist->AddText(windowPos + ImVec2(5, 5), ImGui::GetColorU32({ 1,1,1,1 }), "sematary");
