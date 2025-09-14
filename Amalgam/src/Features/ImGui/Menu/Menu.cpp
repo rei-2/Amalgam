@@ -3429,6 +3429,42 @@ struct BindInfo_t
 	int iBind;
 	Bind_t& tBind;
 };
+void CMenu::DrawWatermark()
+{
+	using namespace ImGui;
+
+	static DragBox_t old = { -2147483648, -2147483648 };
+	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::Watermark, true) : Vars::Menu::Watermark.Value;
+	if (info != old)
+		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
+
+	ImVec2 text_size = ImGui::CalcTextSize("semataryhook");
+
+	ImVec2 size = { text_size.x + 10, text_size.y + 10 };
+
+	ImGui::SetNextWindowSize(size);
+	ImGui::Begin("Watermark", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing);
+	ImVec2 windowPos = ImGui::GetWindowPos();
+
+	ImDrawList* drawlist = ImGui::GetWindowDrawList();
+
+	drawlist->AddRectFilled(windowPos, windowPos + size, ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
+	drawlist->AddRectFilled(windowPos + ImVec2(1, 1), windowPos + size - ImVec2(1, 1), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
+	drawlist->AddRectFilled(windowPos + ImVec2(2, 2), windowPos + size - ImVec2(2, 2), ImGui::GetColorU32({ 0.109f, 0.109f, 0.109f, 1.f }));
+	drawlist->AddRectFilled(windowPos + ImVec2(4, 4), windowPos + size - ImVec2(4, 4), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
+	drawlist->AddRectFilled(windowPos + ImVec2(5, 5), windowPos + size - ImVec2(5, 5), ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
+
+	drawlist->AddRectFilledMultiColor(windowPos + ImVec2(6, 5), windowPos + ImVec2(size.x, 5) - ImVec2(5, 5), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }));
+
+	ImVec2 first_size = ImGui::CalcTextSize("sematary");
+	drawlist->AddText(windowPos + ImVec2(5, 5), ImGui::GetColorU32({ 1,1,1,1 }), "sematary");
+	drawlist->AddText(windowPos + ImVec2(5, 5) + ImVec2(first_size.x, 0), ImGui::GetColorU32({ 1,0,0,1 }), "hook");
+
+	ImGui::End();
+}
+
+
+
 void CMenu::DrawBinds()
 {
 	using namespace ImGui;
@@ -3529,9 +3565,9 @@ void CMenu::DrawBinds()
 		ImVec2 vWindowPos = GetWindowPos();
 
 		if (Vars::Menu::BindWindowTitle.Value)
-			RenderTwoToneBackground(H::Draw.Scale(28), F::Render.Background0, F::Render.Background0p5, F::Render.Background2);
-		else
 			RenderBackground(F::Render.Background0p5, F::Render.Background2);
+		else
+			RenderTwoToneBackground(H::Draw.Scale(28), F::Render.Background0, F::Render.Background0p5, F::Render.Background2);
 
 		info.x = vWindowPos.x; info.y = vWindowPos.y; old = info;
 		if (m_bIsOpen)
@@ -3540,13 +3576,11 @@ void CMenu::DrawBinds()
 		int iListStart = 8;
 		if (Vars::Menu::BindWindowTitle.Value)
 		{
-			SetCursorPos({ H::Draw.Scale(8), H::Draw.Scale(6) });
-			IconImage(ICON_MD_KEYBOARD);
 			PushFont(F::Render.FontLarge);
-			SetCursorPos({ H::Draw.Scale(30), H::Draw.Scale(7) });
+			SetCursorPos({ H::Draw.Scale(11), H::Draw.Scale(9) });
 			FText("Binds");
 			PopFont();
-
+			GetWindowDrawList()->AddRectFilled({ vWindowPos.x + H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(26) }, { vWindowPos.x + flWidth - H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(27) }, F::Render.Accent, H::Draw.Scale(3));
 			iListStart = 36;
 		}
 
@@ -3669,6 +3703,7 @@ void CMenu::Render()
 	PushFont(F::Render.FontRegular);
 
 	DrawBinds();
+	DrawWatermark();
 	if (m_bIsOpen)
 	{
 		ManageVars();
@@ -3681,6 +3716,7 @@ void CMenu::Render()
 		AddDraggable("Conditions", Vars::Menu::ConditionsDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::Conditions);
 		AddDraggable("Seed prediction", Vars::Menu::SeedPredictionDisplay, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::SeedPrediction);
 		AddResizableDraggable("Camera", Vars::Visuals::Simulation::ProjectileWindow, FGet(Vars::Visuals::Simulation::ProjectileCamera));
+		AddDraggable("Watermark", Vars::Menu::Watermark, FGet(Vars::Menu::Indicators) & Vars::Menu::IndicatorsEnum::Watermark);
 
 		F::Render.Cursor = GetMouseCursor();
 		m_bWindowHovered = IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);

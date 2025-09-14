@@ -28,6 +28,8 @@ private:
 	void AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& var, bool bShouldDraw = true, ImVec2 vMinSize = { H::Draw.Scale(100), H::Draw.Scale(100) }, ImVec2 vMaxSize = { H::Draw.Scale(1000), H::Draw.Scale(1000) }, ImGuiSizeCallback fCustomCallback = nullptr);
 	void DrawBinds();
 
+	void DrawWatermark();
+
 	std::deque<Output_t> m_vOutput = {};
 	size_t m_iMaxOutputSize = 1000;
 
