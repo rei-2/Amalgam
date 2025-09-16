@@ -3433,10 +3433,10 @@ void CMenu::DrawWatermark()
 {
 	using namespace ImGui;
 
-	ImGui::PushFont(F::Render.FontLarge);
+	ImGui::PushFont(F::Render.FontExtraLarge);
 	ImVec2 text_size = ImGui::CalcTextSize("semataryhook");
 
-	ImVec2 size = { text_size.x + 10, text_size.y + 10 };
+	ImVec2 size = { text_size.x + 20, text_size.y + 10 };
 
 	ImGui::SetNextWindowSize(size);
 	ImGui::Begin("Watermark", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing);
@@ -3452,9 +3452,9 @@ void CMenu::DrawWatermark()
 
 	drawlist->AddRectFilledMultiColor(windowPos + ImVec2(6, 5), windowPos + ImVec2(size.x, 6) - ImVec2(5, 0), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
 
-	ImVec2 first_size = ImGui::CalcTextSize("sematary");
-	drawlist->AddText(windowPos + ImVec2(5, 5), ImGui::GetColorU32({ 1,1,1,1 }), "sematary");
-	drawlist->AddText(windowPos + ImVec2(5, 5) + ImVec2(first_size.x, 0), ImGui::GetColorU32({ 1,0,0,1 }), "hook");
+	ImVec2 first_size = ImGui::CalcTextSize("Sematary");
+	drawlist->AddText(windowPos + ImVec2(5, 5), ImGui::GetColorU32({ 1,1,1,1 }), "Sematary");
+	drawlist->AddText(windowPos + ImVec2(5, 5) + ImVec2(first_size.x, 0), ImGui::GetColorU32({ 1,0,0,1 }), "Hook");
 
 	ImGui::End();
 	ImGui::PopFont();

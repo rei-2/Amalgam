@@ -32,6 +32,7 @@ public:
 	ImFont* FontBold = nullptr;
 	ImFont* FontLarge = nullptr;
 	ImFont* FontMono = nullptr;
+	ImFont* FontExtraLarge = nullptr;
 
 	ImFont* IconFont = nullptr;
 };
