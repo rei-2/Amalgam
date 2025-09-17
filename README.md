@@ -6,6 +6,6 @@
 
 </div>
 
-### Injection guide is [here](https://github.com/linuxgamer/Amalgam-Linux-guide). 
-Read about Amalgam's documentation and features [here](../../wiki). 
+### Injection guide and notes are [here](https://github.com/linuxgamer/Amalgam-Linux-guide). 
+Read about Amalgam's documentation and features [here](../../wiki).
 </div>
