@@ -23,3 +23,6 @@ It can be used in w*ndows if wanted.
 ## Known issues:
 1. Access denied crashes (general TF2 and amalgam bug).
 2. You are running in insecure mode message (Solution: Make sure you have "Insecure bypass" option enabled.
+
+## If you want to contribute:
+If you have an improvment or a fix just create a pull request (they are autoaccepted) but make sure your changes are **not** buggy and wont break with next amalgam update
