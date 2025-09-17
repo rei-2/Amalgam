@@ -739,6 +739,7 @@ namespace Vars
 		SUBNAMESPACE_BEGIN(Game)
 			CVar(AntiCheatCompatibility, "Anti-cheat compatibility", false);
 			CVar(F2PChatBypass, "F2P chat bypass", false);
+			CVar(VACBypass, "Insecure dialog bypass", false);
 			CVar(NetworkFix, "Network fix", false);
 			CVar(SetupBonesOptimization, "Bones optimization", false);
 
