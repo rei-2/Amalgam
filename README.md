@@ -5,7 +5,8 @@
 ### Amalgam fork primarily made for running in GNU/Linux
 
 </div>
-Allows joining VAC secured servers while having VAC disabled (using launch parameter). It can be used in w*ndows if wanted.
+Allows joining VAC secured servers while having VAC disabled (using launch parameter).
+It can be used in w*ndows if wanted.
 </div>
 
 # Guide for injecting it:
