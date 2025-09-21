@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" role="img" aria-label="PDB">
+    <title>
+        PDB
+    </title>
+    <g shape-rendering="crispEdges">
+        <rect width="28" height="28" fill="#555"/>
+    </g>
+    <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="100">
+        <image x="6" y="6" width="16" height="16" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGhlaWdodD0iMjRweCIgdmlld0JveD0iMCAtOTYwIDk2MCA5NjAiIHdpZHRoPSIyNHB4IiBmaWxsPSIjZTNlM2UzIj48cGF0aCBkPSJNMzIwLTI0MCA4MC00ODBsMjQwLTI0MCA1NyA1Ny0xODQgMTg0IDE4MyAxODMtNTYgNTZabTMyMCAwLTU3LTU3IDE4NC0xODQtMTgzLTE4MyA1Ni01NiAyNDAgMjQwLTI0MCAyNDBaIi8+PC9zdmc+"/>
+    </g>
+</svg>
