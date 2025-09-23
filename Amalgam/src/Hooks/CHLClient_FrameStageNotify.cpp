@@ -64,9 +64,8 @@ MAKE_HOOK(CHLClient_FrameStageNotify, U::Memory.GetVirtual(I::Client, 35), void,
 		break;
 	}
 	case FRAME_RENDER_START:
-		for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
+		for (auto& tBind : F::Binds.m_vBinds)
 		{	// don't drop inputs for binds
-			auto& tBind = *it;
 			if (tBind.m_iType != BindEnum::Key)
 				continue;
 

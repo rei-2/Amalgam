@@ -544,11 +544,11 @@ void CCritHack::StoreHealthHistory(int iIndex, int iHealth, bool bDamage)
 MAKE_SIGNATURE(CTFGameStats_FindPlayerStats, "server.dll", "4C 8B C1 48 85 D2 75", 0x0);
 MAKE_SIGNATURE(UTIL_PlayerByIndex, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
 
-static void* pCTFGameStats = nullptr;
+static void* s_pCTFGameStats = nullptr;
 MAKE_HOOK(CTFGameStats_FindPlayerStats, S::CTFGameStats_FindPlayerStats(), void*,
 	void* rcx, CBasePlayer* pPlayer)
 {
-	pCTFGameStats = rcx;
+	s_pCTFGameStats = rcx;
 	return CALL_ORIGINAL(rcx, pPlayer);
 }
 #endif
@@ -659,11 +659,11 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 #ifdef SERVER_CRIT_DATA
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("AllDamage: {} ({})", m_iRangedDamage + m_iMeleeDamage, m_iMeleeDamage).c_str());
 
-		if (pCTFGameStats)
+		if (s_pCTFGameStats)
 		{
 			if (auto pPlayer2 = S::UTIL_PlayerByIndex.Call<void*>(I::EngineClient->GetLocalPlayer()))
 			{
-				if (auto pPlayerStats = S::CTFGameStats_FindPlayerStats.Call<PlayerStats_t*>(pCTFGameStats, pPlayer2))
+				if (auto pPlayerStats = S::CTFGameStats_FindPlayerStats.Call<PlayerStats_t*>(s_pCTFGameStats, pPlayer2))
 				{
 					int iRangedDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_RANGED] /*= m_iRangedDamage*/;
 					int iCritDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_RANGED_CRIT_RANDOM] /*= m_iCritDamage = 0*/;

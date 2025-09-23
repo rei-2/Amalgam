@@ -139,9 +139,8 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	if (G::Unload)
 		return;
 
-	for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
+	for (auto& tBind : m_vBinds)
 	{	// don't delay inputs for binds
-		auto& tBind = *it;
 		if (tBind.m_iType != BindEnum::Key)
 			continue;
 
@@ -162,9 +161,8 @@ void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 
 	SetVars(pLocal, pWeapon);
 
-	for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
+	for (auto& tBind : m_vBinds)
 	{	// clear inputs for binds
-		auto& tBind = *it;
 		if (tBind.m_iType != BindEnum::Key)
 			continue;
 
@@ -247,11 +245,11 @@ void CBinds::RemoveBind(int iBind, bool bForce)
 	std::vector<int> vErases = {};
 	std::function<void(int)> searchBinds = [&](int iIndex)
 		{
-			for (auto it = m_vBinds.begin(); it < m_vBinds.end(); it++)
+			for (int iBind = 0; iBind < m_vBinds.size(); iBind++)
 			{
-				int iIndex2 = std::distance(m_vBinds.begin(), it);
-				if (iIndex == it->m_iParent && iIndex != iIndex2)
-					searchBinds(iIndex2);
+				auto& tBind = m_vBinds[iBind];
+				if (iIndex == tBind.m_iParent && iIndex != iBind)
+					searchBinds(iBind);
 			}
 			vErases.push_back(iIndex);
 		};

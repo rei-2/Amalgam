@@ -94,7 +94,7 @@ const static std::vector<const char*> s_vNoisemaker = { "items\\halloween", "ite
 const static std::vector<const char*> s_vFryingPan = { "pan_" };
 const static std::vector<const char*> s_vWater = { "ambient_mp3\\water\\water_splash", "slosh", "wade" };
 
-static bool ShouldBlockSound(const char* pSound)
+static inline bool ShouldBlockSound(const char* pSound)
 {
 	if (!Vars::Misc::Sound::Block.Value || !pSound)
 		return false;

@@ -197,6 +197,7 @@
     <ClCompile Include="src\Hooks\CInput_ValidateUserCmd.cpp" />
     <ClCompile Include="src\Hooks\CTFWeaponBase_CanFireRandomCriticalShot.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_GetMinFOV.cpp" />
+    <ClCompile Include="src\Hooks\CWeaponMedigun_PrimaryAttack.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
