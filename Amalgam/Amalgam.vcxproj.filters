@@ -580,6 +580,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\CRangeCheckedVar.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IFileSystem.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\ILocalize.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

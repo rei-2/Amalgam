@@ -1257,6 +1257,7 @@
     <ClInclude Include="src\SDK\Definitions\Interfaces\IGameMovement.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IInput.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IKeyValuesSystem.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\ILocalize.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IPanel.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IStudioRender.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IUniformRandomStream.h" />

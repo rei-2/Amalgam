@@ -747,45 +747,42 @@ namespace Vars
 
 		SUBNAMESPACE_BEGIN(Queueing)
 			CVarEnum(ForceRegions, "Force regions", 0b0, DROPDOWN_MULTI, nullptr, // i'm not sure all of these are actually used for tf2 servers
-				VA_LIST("Atlanta", "Chicago", "Texas", "Los Angeles", "Moses Lake", "New York", "Seattle", "Virginia", "##Divider", "Amsterdam", "Frankfurt", "Helsinki", "London", "Madrid", "Paris", "Stockholm", "Vienna", "Warsaw", "##Divider", "Buenos Aires", "Lima", "Santiago", "Sao Paulo", "##Divider", "Bombay", "Chennai", "Dubai", "Hong Kong", "Madras", "Mumbai", "Seoul", "Singapore", "Tokyo", "Sydney", "##Divider", "Johannesburg"),
+				VA_LIST("Atlanta", "Chicago", "Dallas", "Los Angeles", "Seattle", "Virginia", "##Divider", "Amsterdam", "Falkenstein", "Frankfurt", "Helsinki", "London", "Madrid", "Paris", "Stockholm", "Vienna", "Warsaw", "##Divider", "Buenos Aires", "Lima", "Santiago", "Sao Paulo", "##Divider", "Chennai", "Dubai", "Hong Kong", "Mumbai", "Seoul", "Singapore", "Tokyo", "##Divider", "Sydney", "##Divider", "Johannesburg"),
 				// North America
-				DC_ATL = 1 << 0, // Atlanta
-				DC_ORD = 1 << 1, // Chicago
-				DC_DFW = 1 << 2, // Texas
-				DC_LAX = 1 << 3, // Los Angeles
-				DC_EAT = 1 << 4, // Moses Lake
-				DC_JFK = 1 << 5, // New York
-				DC_SEA = 1 << 6, // Seattle
-				DC_IAD = 1 << 7, // Virginia
+				ATL = 1 << 0, // Atlanta
+				ORD = 1 << 1, // Chicago
+				DFW = 1 << 2, // Dallas
+				LAX = 1 << 3, // Los Angeles
+				SEA = 1 << 4, // Seattle (+DC_EAT?)
+				IAD = 1 << 5, // Virginia
 				// Europe
-				DC_AMS = 1 << 8, // Amsterdam
-				DC_FRA = 1 << 9, // Frankfurt
-				DC_HEL = 1 << 10, // Helsinki
-				DC_LHR = 1 << 11, // London
-				DC_MAD = 1 << 12, // Madrid
-				DC_PAR = 1 << 13, // Paris
-				DC_STO = 1 << 14, /*& DC_STO2*/ // Stockholm
-				DC_VIE = 1 << 15, // Vienna
-				DC_WAW = 1 << 16, // Warsaw
+				AMS = 1 << 6, // Amsterdam
+				FSN = 1 << 7, // Falkenstein
+				FRA = 1 << 8, // Frankfurt
+				HEL = 1 << 9, // Helsinki
+				LHR = 1 << 10, // London
+				MAD = 1 << 11, // Madrid
+				PAR = 1 << 12, // Paris
+				STO = 1 << 13, // Stockholm
+				VIE = 1 << 14, // Vienna
+				WAW = 1 << 15, // Warsaw
 				// South America
-				DC_EZE = 1 << 17, // Buenos Aires
-				DC_LIM = 1 << 18, // Lima
-				DC_SCL = 1 << 19, // Santiago
-				DC_GRU = 1 << 20, // Sao Paulo
+				EZE = 1 << 16, // Buenos Aires
+				LIM = 1 << 17, // Lima
+				SCL = 1 << 18, // Santiago
+				GRU = 1 << 19, // Sao Paulo
 				// Asia
-				DC_BOM2 = 1 << 21, // Bombay
-				DC_MAA = 1 << 22, // Chennai
-				DC_DXB = 1 << 23, // Dubai
-				DC_HKG = 1 << 24, // Hong Kong
-				DC_MAA2 = 1 << 25, // Madras
-				DC_BOM = 1 << 26, // Mumbai
-				DC_SEO = 1 << 27, // Seoul
-				DC_SGP = 1 << 28, // Singapore
-				DC_TYO = 1 << 29, // Tokyo
+				MAA = 1 << 20, // Chennai
+				DXB = 1 << 21, // Dubai
+				HKG = 1 << 22, // Hong Kong
+				BOM = 1 << 23, // Mumbai
+				SEO = 1 << 24, // Seoul
+				SGP = 1 << 25, // Singapore
+				TYO = 1 << 26, // Tokyo
 				// Australia
-				DC_SYD = 1 << 30, // Sydney
+				SYD = 1 << 27, // Sydney
 				// Africa
-				DC_JNB = 1 << 31, // Johannesburg
+				JNB = 1 << 28, // Johannesburg
 			);
 			CVar(FreezeQueue, "Freeze queue", false);
 			CVar(AutoCasualQueue, "Auto casual queue", false);
