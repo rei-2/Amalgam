@@ -25,6 +25,6 @@
 
 ##
 
-[VAC bypass](https://github.com/danielkrupinski/VAC-Bypass-Loader) and [Xenos](https://github.com/DarthTon/Xenos/releases) recommended. 
+[VAC bypass](https://github.com/danielkrupinski/VAC-Bypass-Loader) and [Xenos]((https://github.com/master131/ExtremeInjector/releases/tag/v3.7.3)) recommended. 
 
 Read about Amalgam's documentation and features [here](../../wiki). 
