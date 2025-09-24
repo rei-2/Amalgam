@@ -2520,10 +2520,9 @@ void CMenu::MenuSettings(int iTab)
 					std::unordered_map<int, bool> mBinds = {};
 					std::function<void(int)> getBinds = [&](int iParent)
 						{
-							for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
+							for (int _iBind = 0; _iBind < F::Binds.m_vBinds.size(); _iBind++)
 							{
-								int _iBind = std::distance(F::Binds.m_vBinds.begin(), it);
-								auto& _tBind = *it;
+								auto& _tBind = F::Binds.m_vBinds[_iBind];
 								if (iParent != _tBind.m_iParent || mBinds.contains(_iBind))
 									continue;
 
@@ -2565,10 +2564,9 @@ void CMenu::MenuSettings(int iTab)
 			std::unordered_map<int, bool> mBinds = {};
 			std::function<void(int, int)> getBinds = [&](int iParent, int x)
 				{
-					for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
+					for (int _iBind = 0; _iBind < F::Binds.m_vBinds.size(); _iBind++)
 					{
-						int _iBind = std::distance(F::Binds.m_vBinds.begin(), it);
-						auto& _tBind = *it;
+						auto& _tBind = F::Binds.m_vBinds[_iBind];
 						if (iParent != DEFAULT_BIND - 1 && iParent != _tBind.m_iParent || mBinds.contains(_iBind))
 							continue;
 
@@ -3325,7 +3323,7 @@ struct DragBoxStorage_t
 	DragBox_t m_tDragBox;
 	float m_flScale;
 };
-static std::unordered_map<uint32_t, DragBoxStorage_t> mDragBoxStorage = {};
+static std::unordered_map<uint32_t, DragBoxStorage_t> s_mDragBoxStorage = {};
 void CMenu::AddDraggable(const char* sLabel, ConfigVar<DragBox_t>& var, bool bShouldDraw, ImVec2 vSize)
 {
 	using namespace ImGui;
@@ -3336,8 +3334,8 @@ void CMenu::AddDraggable(const char* sLabel, ConfigVar<DragBox_t>& var, bool bSh
 	auto tDragBox = FGet(var, true);
 	auto uHash = FNV1A::Hash32(sLabel);
 
-	bool bContains = mDragBoxStorage.contains(uHash);
-	auto& tStorage = mDragBoxStorage[uHash];
+	bool bContains = s_mDragBoxStorage.contains(uHash);
+	auto& tStorage = s_mDragBoxStorage[uHash];
 
 	SetNextWindowSize(vSize, ImGuiCond_Always);
 	if (!bContains || tDragBox != tStorage.m_tDragBox || H::Draw.Scale() != tStorage.m_flScale)
@@ -3373,7 +3371,7 @@ struct WindowBoxStorage_t
 	WindowBox_t m_tWindowBox;
 	float m_flScale;
 };
-static std::unordered_map<uint32_t, WindowBoxStorage_t> mWindowBoxStorage = {};
+static std::unordered_map<uint32_t, WindowBoxStorage_t> s_mWindowBoxStorage = {};
 void CMenu::AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& var, bool bShouldDraw, ImVec2 vMinSize, ImVec2 vMaxSize, ImGuiSizeCallback fCustomCallback)
 {
 	using namespace ImGui;
@@ -3384,8 +3382,8 @@ void CMenu::AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& va
 	auto tWindowBox = FGet(var, true);
 	auto uHash = FNV1A::Hash32(sLabel);
 
-	bool bContains = mWindowBoxStorage.contains(uHash);
-	auto& tStorage = mWindowBoxStorage[uHash];
+	bool bContains = s_mWindowBoxStorage.contains(uHash);
+	auto& tStorage = s_mWindowBoxStorage[uHash];
 
 	SetNextWindowSizeConstraints(vMinSize, vMaxSize, fCustomCallback);
 	if (!bContains || tWindowBox != tStorage.m_tWindowBox || H::Draw.Scale() != tStorage.m_flScale)
@@ -3472,10 +3470,9 @@ void CMenu::DrawBinds()
 	std::vector<BindInfo_t> vInfo;
 	std::function<void(int)> getBinds = [&](int iParent)
 		{
-			for (auto it = F::Binds.m_vBinds.begin(); it < F::Binds.m_vBinds.end(); it++)
+			for (int iBind = 0; iBind < F::Binds.m_vBinds.size(); iBind++)
 			{
-				int iBind = std::distance(F::Binds.m_vBinds.begin(), it);
-				auto& tBind = *it;
+				auto& tBind = F::Binds.m_vBinds[iBind];
 				if (iParent != tBind.m_iParent || !tBind.m_bEnabled && !m_bIsOpen)
 					continue;
 
@@ -3537,10 +3534,10 @@ void CMenu::DrawBinds()
 	if (vInfo.empty())
 		return;
 
-	static DragBox_t old = { -2147483648, -2147483648 };
-	DragBox_t info = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay, true) : Vars::Menu::BindsDisplay.Value;
-	if (info != old)
-		SetNextWindowPos({ float(info.x), float(info.y) }, ImGuiCond_Always);
+	static DragBox_t tOld = { -2147483648, -2147483648 };
+	DragBox_t tDragBox = m_bIsOpen ? FGet(Vars::Menu::BindsDisplay, true) : Vars::Menu::BindsDisplay.Value;
+	if (tDragBox != tOld)
+		SetNextWindowPos({ float(tDragBox.x), float(tDragBox.y) }, ImGuiCond_Always);
 
 	float flNameWidth = 0, flInfoWidth = 0, flStateWidth = 0;
 	PushFont(F::Render.FontSmall);
@@ -3566,9 +3563,9 @@ void CMenu::DrawBinds()
 		else
 			RenderTwoToneBackground(H::Draw.Scale(28), F::Render.Background0, F::Render.Background0p5, F::Render.Background2);
 
-		info.x = vWindowPos.x; info.y = vWindowPos.y; old = info;
+		tDragBox.x = vWindowPos.x; tDragBox.y = vWindowPos.y; tOld = tDragBox;
 		if (m_bIsOpen)
-			FSet(Vars::Menu::BindsDisplay, info);
+			FSet(Vars::Menu::BindsDisplay, tDragBox);
 
 		int iListStart = 8;
 		if (Vars::Menu::BindWindowTitle.Value)

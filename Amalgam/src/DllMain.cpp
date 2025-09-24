@@ -1,7 +1,6 @@
 #include <Windows.h>
 #include "Core/Core.h"
 #include "Utils/CrashLog/CrashLog.h"
-#include <format>
 
 DWORD WINAPI MainThread(LPVOID lpParam)
 {

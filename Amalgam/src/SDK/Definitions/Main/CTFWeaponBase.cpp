@@ -154,12 +154,6 @@ float CTFWeaponBase::GetSmackDelay()
 
 float CTFWeaponBase::GetRange()
 {
-	switch (GetWeaponID())
-	{
-	case TF_WEAPON_MEDIGUN: return 450.f;
-	case TF_WEAPON_MECHANICAL_ARM: return 256.f;
-	}
-
 	if (auto pWeaponInfo = GetWeaponInfo())
 #ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flRange;

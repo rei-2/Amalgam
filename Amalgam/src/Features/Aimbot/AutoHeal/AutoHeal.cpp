@@ -6,6 +6,34 @@
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "../AimbotProjectile/AimbotProjectile.h"
 
+void CAutoHeal::AutoHeal(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUserCmd* pCmd)
+{	// manage lagcomp
+	if (!Vars::Aimbot::Healing::AutoHeal.Value)
+		return;
+
+	auto pTarget = pWeapon->m_hHealingTarget().Get()->As<CTFPlayer>();
+	if (!pTarget || pCmd->buttons & IN_ATTACK && !(G::LastUserCmd->buttons & IN_ATTACK))
+		return;
+
+	std::vector<TickRecord*> vRecords = {};
+	if (!F::Backtrack.GetRecords(pTarget, vRecords))
+		return;
+	vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal, true);
+	if (!vRecords.size())
+		return;
+
+	Vec3 vEyePos = pLocal->GetShootPos();
+	for (auto pRecord : vRecords)
+	{
+		Vec3 vCenter = pRecord->m_vOrigin + (pRecord->m_vMins + pRecord->m_vMaxs) / 2;
+		if (SDK::VisPosWorld(pLocal, pTarget, vEyePos, vCenter))
+		{
+			pCmd->tick_count = TIME_TO_TICKS(pRecord->m_flSimTime) + TIME_TO_TICKS(F::Backtrack.GetFakeInterp());
+			break;
+		}
+	}
+}
+
 void CAutoHeal::ActivateOnVoice(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUserCmd* pCmd)
 {
 	if (!Vars::Aimbot::Healing::ActivateOnVoice.Value)
@@ -602,6 +630,8 @@ void CAutoHeal::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		m_flDamagedTime = 0.f;
 		return;
 	}
+
+	AutoHeal(pLocal, pWeapon->As<CWeaponMedigun>(), pCmd);
 
 	ActivateOnVoice(pLocal, pWeapon->As<CWeaponMedigun>(), pCmd);
 	m_mMedicCallers.clear();
