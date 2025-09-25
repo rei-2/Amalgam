@@ -1,10 +1,11 @@
 #pragma once
 #include "../Macros/Macros.h"
+#include <Windows.h>
 
 class CCrashLog
 {
 public:
-	void Initialize();
+	void Initialize(LPVOID lpParam = nullptr);
 	void Unload();
 };
 

@@ -4,7 +4,7 @@
 
 DWORD WINAPI MainThread(LPVOID lpParam)
 {
-	U::CrashLog.Initialize();
+	U::CrashLog.Initialize(lpParam);
 
 	U::Core.Load();
 	U::Core.Loop();
