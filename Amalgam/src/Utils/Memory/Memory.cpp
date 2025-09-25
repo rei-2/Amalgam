@@ -111,3 +111,13 @@ std::string CMemory::GetModuleOffset(uintptr_t uAddress)
 
 	return std::format("{:#x}+{:#x}", uBase, uAddress - uBase);
 }
+
+uintptr_t CMemory::GetOffsetFromBase(uintptr_t uAddress)
+{
+	HMODULE hModule;
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, LPCSTR(uAddress), &hModule))
+		return -1;
+
+	uintptr_t uBase = uintptr_t(hModule);
+	return uAddress - uBase;
+}

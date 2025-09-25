@@ -21,6 +21,7 @@ struct Frame_t
 };
 
 static PVOID s_pHandle;
+static LPVOID s_lpParam;
 static std::unordered_map<LPVOID, bool> s_mAddresses = {};
 static int s_iExceptions = 0;
 
@@ -111,7 +112,10 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	s_mAddresses[ExceptionInfo->ExceptionRecord->ExceptionAddress] = true;
 
 	std::stringstream ssErrorStream;
-	ssErrorStream << std::format("Error: {} (0x{:X}) ({})\n\n", sError, ExceptionInfo->ExceptionRecord->ExceptionCode, ++s_iExceptions);
+	ssErrorStream << std::format("Error: {} (0x{:X}) ({})\n", sError, ExceptionInfo->ExceptionRecord->ExceptionCode, ++s_iExceptions);
+	if (U::Memory.GetOffsetFromBase(s_lpParam))
+		ssErrorStream << std::format("This: {}\n", U::Memory.GetModuleOffset(s_lpParam));
+	ssErrorStream << "\n";
 
 	ssErrorStream << std::format("RIP: {:#x}\n", ExceptionInfo->ContextRecord->Rip);
 	ssErrorStream << std::format("RAX: {:#x}\n", ExceptionInfo->ContextRecord->Rax);
@@ -174,9 +178,10 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
-void CCrashLog::Initialize()
+void CCrashLog::Initialize(LPVOID lpParam)
 {
 	s_pHandle = AddVectoredExceptionHandler(1, ExceptionFilter);
+	s_lpParam = lpParam;
 }
 void CCrashLog::Unload()
 {
