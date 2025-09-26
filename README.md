@@ -1,6 +1,6 @@
 <div align="center">
 
-  ## <img src=".github/assets/semataryhook.png" alt="Amalgam" height="100">
+  ## <img src=".github/assets/semataryhook2.png" alt="Amalgam" height="100">
 
 
 
