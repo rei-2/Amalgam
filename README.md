@@ -1,6 +1,7 @@
 <div align="center">
 
-  ## <img src=".github/assets/amalgam_combo.png" alt="Amalgam" height="100">
+  ## <img src="<img width="478" height="163" alt="image" src="https://github.com/user-attachments/assets/a6b04899-53b8-41a3-9483-12511ecda53f" />
+" alt="Amalgam" height="100">
 
 
   
