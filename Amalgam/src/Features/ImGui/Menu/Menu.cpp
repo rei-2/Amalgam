@@ -31,7 +31,13 @@ void CMenu::DrawMenu()
 		float flSideSize = 140.f;
 
 		PushClipRect({ 0, 0 }, { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }, false);
-		RenderTwoToneBackground(H::Draw.Scale(flSideSize), F::Render.Background0, F::Render.Background1, F::Render.Background2, 0.f, false);
+		GetWindowDrawList()->AddRectFilled(vWindowPos, vWindowPos + vWindowSize, ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
+		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(1, 1), vWindowPos + vWindowSize - ImVec2(1, 1), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
+		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(2, 2), vWindowPos + vWindowSize - ImVec2(2, 2), ImGui::GetColorU32({ 0.109f, 0.109f, 0.109f, 1.f }));
+		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(4, 4), vWindowPos + vWindowSize - ImVec2(4, 4), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
+		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(5, 5), vWindowPos + vWindowSize - ImVec2(5, 5), ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
+		GetWindowDrawList()->AddRectFilledMultiColor(vWindowPos + ImVec2(5, 5), vWindowPos + ImVec2(vWindowSize.x, 6) - ImVec2(5, 0), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
+		//RenderTwoToneBackground(H::Draw.Scale(flSideSize), F::Render.Background0, F::Render.Background1, F::Render.Background2, 0.f, false);
 		PopClipRect();
 
 		ImVec2 vDrawPos = GetDrawPos();
@@ -3450,7 +3456,7 @@ void CMenu::DrawWatermark()
 	drawlist->AddRectFilled(windowPos + ImVec2(4, 4), windowPos + size - ImVec2(4, 4), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
 	drawlist->AddRectFilled(windowPos + ImVec2(5, 5), windowPos + size - ImVec2(5, 5), ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
 
-	drawlist->AddRectFilledMultiColor(windowPos + ImVec2(6, 5), windowPos + ImVec2(size.x, 6) - ImVec2(5, 0), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
+	drawlist->AddRectFilledMultiColor(windowPos + ImVec2(5, 5), windowPos + ImVec2(size.x, 6) - ImVec2(5, 0), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
 
 	ImVec2 first_size = ImGui::CalcTextSize("Sematary");
 	drawlist->AddText(windowPos + ImVec2(5, 5), ImGui::GetColorU32({ 1,1,1,1 }), "Sematary");
@@ -3561,9 +3567,11 @@ void CMenu::DrawBinds()
 		ImVec2 vWindowPos = GetWindowPos();
 
 		if (Vars::Menu::BindWindowTitle.Value)
-			RenderBackground(F::Render.Background0p5, F::Render.Background2);
-		else
-			RenderTwoToneBackground(H::Draw.Scale(28), F::Render.Background0, F::Render.Background0p5, F::Render.Background2);
+GetWindowDrawList()->AddRectFilled(vWindowPos, vWindowPos + ImVec2(flWidth, flHeight), ImGui::GetColorU32({0.f, 0.f, 0.f, 1.f}));
+GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(1, 1), vWindowPos + ImVec2(flWidth, flHeight) - ImVec2(1, 1), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
+GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(2, 2), vWindowPos + ImVec2(flWidth, flHeight) - ImVec2(2, 2), ImGui::GetColorU32({ 0.109f, 0.109f, 0.109f, 1.f }));
+GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(4, 4), vWindowPos + ImVec2(flWidth, flHeight) - ImVec2(4, 4), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
+GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(5, 5), vWindowPos + ImVec2(flWidth, flHeight) - ImVec2(5, 5), ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
 
 		tDragBox.x = vWindowPos.x; tDragBox.y = vWindowPos.y; tOld = tDragBox;
 		if (m_bIsOpen)
@@ -3573,10 +3581,11 @@ void CMenu::DrawBinds()
 		if (Vars::Menu::BindWindowTitle.Value)
 		{
 			PushFont(F::Render.FontLarge);
-			SetCursorPos({ H::Draw.Scale(11), H::Draw.Scale(9) });
+			SetCursorPos({ H::Draw.Scale(11), H::Draw.Scale(14) });
 			FText("Binds");
 			PopFont();
-			GetWindowDrawList()->AddRectFilled({ vWindowPos.x + H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(26) }, { vWindowPos.x + flWidth - H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(27) }, F::Render.Accent, H::Draw.Scale(3));
+			GetWindowDrawList()->AddRectFilledMultiColor(vWindowPos + ImVec2(5, 5), vWindowPos + ImVec2(flWidth, 6) - ImVec2(5, 0), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
+			//GetWindowDrawList()->AddRectFilled({ vWindowPos.x + H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(26) }, { vWindowPos.x + flWidth - H::Draw.Scale(8), vWindowPos.y + H::Draw.Scale(27) }, F::Render.Accent, H::Draw.Scale(3));
 			iListStart = 36;
 		}
 

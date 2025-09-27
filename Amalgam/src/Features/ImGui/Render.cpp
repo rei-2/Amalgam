@@ -103,7 +103,7 @@ void CRender::LoadFonts()
 	FontSmall = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(11), &fontConfig, fontRange);
 	FontRegular = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(13), &fontConfig, fontRange);
 	FontBold = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(13), &fontConfig, fontRange);
-	FontLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(14), &fontConfig, fontRange);
+	FontLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(16), &fontConfig, fontRange);
 	FontMono = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(16), &fontConfig, fontRange); // windows mono font installed by default
 	FontExtraLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\COMIC.ttf)", H::Draw.Scale(20), &fontConfig, fontRange);
 #else

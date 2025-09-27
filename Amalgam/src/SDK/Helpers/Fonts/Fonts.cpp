@@ -2,8 +2,8 @@
 
 void CFonts::Reload(float flDPI)
 {
-	m_mFonts[FONT_ESP] = { "Comic Sans MS Bold", int(12.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
-	m_mFonts[FONT_INDICATORS] = { "Comic Sans MS Bold", int(13.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
+	m_mFonts[FONT_ESP] = { "Comic Sans MS Bold", int(13.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
+	m_mFonts[FONT_INDICATORS] = { "Comic Sans MS Bold", int(14.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
 
 	for (auto& [_, fFont] : m_mFonts)
 	{
