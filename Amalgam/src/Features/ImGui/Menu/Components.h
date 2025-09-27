@@ -231,7 +231,7 @@ namespace ImGui
 		ImDrawList* pDrawList = GetWindowDrawList();
 
 		pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBackground, H::Draw.Scale(3));
-		
+
 		flInset += H::Draw.Scale(0.5f) - 0.5f - H::Draw.Scale();
 		pDrawList->AddRect({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 	}

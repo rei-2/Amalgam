@@ -3430,6 +3430,8 @@ struct BindInfo_t
 void CMenu::DrawWatermark()
 {
 	using namespace ImGui;
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Watermark) || !I::EngineClient->IsInGame())
+		return;
 
 	ImGui::PushFont(F::Render.FontExtraLarge);
 	ImVec2 text_size = ImGui::CalcTextSize("semataryhook");
