@@ -36,8 +36,8 @@ void CMenu::DrawMenu()
 		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(2, 2), vWindowPos + vWindowSize - ImVec2(2, 2), ImGui::GetColorU32({ 0.109f, 0.109f, 0.109f, 1.f }));
 		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(4, 4), vWindowPos + vWindowSize - ImVec2(4, 4), ImGui::GetColorU32({ 0.207f, 0.207f, 0.207f, 1.f }));
 		GetWindowDrawList()->AddRectFilled(vWindowPos + ImVec2(5, 5), vWindowPos + vWindowSize - ImVec2(5, 5), ImGui::GetColorU32({ 0.f, 0.f, 0.f, 1.f }));
+		RenderTwoToneBackground(H::Draw.Scale(flSideSize), F::Render.Background0, F::Render.Background1, F::Render.Background2, 5.f, false);
 		GetWindowDrawList()->AddRectFilledMultiColor(vWindowPos + ImVec2(5, 5), vWindowPos + ImVec2(vWindowSize.x, 6) - ImVec2(5, 0), ImGui::GetColorU32({ 1, 0, 0, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 1, 1, 1 }), ImGui::GetColorU32({ 1, 0, 0, 1 }));
-		//RenderTwoToneBackground(H::Draw.Scale(flSideSize), F::Render.Background0, F::Render.Background1, F::Render.Background2, 0.f, false);
 		PopClipRect();
 
 		ImVec2 vDrawPos = GetDrawPos();
