@@ -11,16 +11,24 @@ MAKE_SIGNATURE(CAttributeManager_AttribHookFloat, "client.dll", "4C 8B DC 49 89 
 
 static BOOL CALLBACK TeamFortressWindow(HWND hWindow, LPARAM lParam)
 {
-	char windowTitle[1024];
-	GetWindowTextA(hWindow, windowTitle, sizeof(windowTitle));
-	switch (FNV1A::Hash32(windowTitle))
+	DWORD iProcess1 = GetCurrentProcessId();
+	DWORD iProcess2; GetWindowThreadProcessId(hWindow, &iProcess2);
+	if (iProcess1 != iProcess2)
+		return TRUE;
+
+	char sWindowTitle[64];
+	GetWindowText(hWindow, sWindowTitle, sizeof(sWindowTitle));
+	switch (FNV1A::Hash32(sWindowTitle))
 	{
 	case FNV1A::Hash32Const("Team Fortress 2 - Direct3D 9 - 64 Bit"):
 	case FNV1A::Hash32Const("Team Fortress 2 - Vulkan - 64 Bit"):
-		*reinterpret_cast<HWND*>(lParam) = hWindow;
+		break;
+	default:
+		return TRUE;
 	}
 
-	return TRUE;
+	*reinterpret_cast<HWND*>(lParam) = hWindow;
+	return FALSE;
 }
 
 
