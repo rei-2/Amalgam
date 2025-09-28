@@ -2,6 +2,7 @@
 
 #include "../Aimbot.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
+#include "../../EnginePrediction/EnginePrediction.h"
 #include "../../Ticks/Ticks.h"
 #include "../../Visuals/Visuals.h"
 
@@ -177,7 +178,13 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 				}
 				if (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
 					F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, tStorage.m_MoveData.m_flForwardMove, tStorage.m_MoveData.m_flSideMove, iMax - i - 1);
+
 				F::MoveSim.RunTick(tStorage);
+				m_mRecordMap[I::EngineClient->GetLocalPlayer()].emplace_front(
+					pLocal->m_flSimulationTime() + TICKS_TO_TIME(i + 1),
+					tStorage.m_MoveData.m_vecAbsOrigin,
+					pLocal->m_vecMins(), pLocal->m_vecMaxs()
+				);
 			}
 
 			if (i < iSimTicks - m_iDoubletapTicks)
@@ -246,14 +253,38 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 		}
 	}
 
-	Vec3 vToTarget = (pTarget->GetAbsOrigin() - m_vEyePos).To2D();
+	Vec3 vEyePos = m_vEyePos;
+	const float flCompDist = 0.0625f;
+	const float flSqCompDist = 0.0884f;
+
+	if (auto pCmd = G::CurrentUserCmd;
+		m_mRecordMap[pLocal->entindex()].empty() && pCmd->viewangles != vEyeAngles && G::CanPrimaryAttack)
+	{	// repredict, prevent prediction error causing miss
+		CUserCmd tOldCmd = *pCmd;
+		Vec3 vOldAngles = I::EngineClient->GetViewAngles();
+		int iOldAttacking = G::Attacking;
+		bool bOldSilent = G::PSilentAngles;
+		F::EnginePrediction.End(pLocal, pCmd);
+
+		G::Attacking = true;
+		Aim(pCmd, vEyeAngles);
+		F::Ticks.Start(pLocal, pCmd);
+		vEyePos = pLocal->GetShootPos();
+		F::EnginePrediction.End(pLocal, pCmd);
+
+		*pCmd = tOldCmd;
+		I::EngineClient->SetViewAngles(vOldAngles);
+		G::Attacking = iOldAttacking;
+		G::PSilentAngles = bOldSilent;
+		F::Ticks.Start(pLocal, pCmd);
+	}
+
+	Vec3 vToTarget = (pTarget->GetAbsOrigin() - vEyePos).To2D();
 	const float flDist = vToTarget.Normalize();
-	if (!flDist)
+	if (flDist < flSqCompDist)
 		return false;
 
-	float flTolerance = 0.0625f;
-	float flExtra = 2.f * flTolerance / flDist; // account for origin compression
-
+	const float flExtra = 2.f * flCompDist / flDist; // account for origin compression
 	float flPosVsTargetViewMinDot = 0.f + 0.0031f + flExtra;
 	float flPosVsOwnerViewMinDot = 0.5f + flExtra;
 	float flViewAnglesMinDot = -0.3f + 0.0031f; // 0.00306795676297 ?
@@ -347,7 +378,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		tTarget.m_pEntity->m_vecMins() = pRecord->m_vMins + 0.125f; // account for origin compression
 		tTarget.m_pEntity->m_vecMaxs() = pRecord->m_vMaxs - 0.125f;
 
-		Vec3 vDiff = { 0, 0, std::clamp(m_vEyePos.z - pRecord->m_vOrigin.z, tTarget.m_pEntity->m_vecMins().z, tTarget.m_pEntity->m_vecMaxs().z) };
+		Vec3 vDiff = { 0, 0, std::clamp(m_vEyePos.z - pRecord->m_vOrigin.z, pRecord->m_vMins.z, pRecord->m_vMaxs.z) };
 		tTarget.m_vPos = pRecord->m_vOrigin + vDiff;
 		Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, tTarget.m_vPos), tTarget.m_vAngleTo);
 

@@ -483,19 +483,23 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		{
 			auto TargetIsBehind = [&]()
 				{
+					const float flCompDist = 0.0625f;
+					const float flSqCompDist = 0.0884f;
+
 					Vec3 vToTarget = (pLocal->m_vecOrigin() - pTargetPos.first).To2D();
 					const float flDist = vToTarget.Normalize();
-					if (!flDist)
+					if (flDist < flSqCompDist)
 						return true;
 
-					float flTolerance = 0.0625f;
-					float flExtra = 2.f * flTolerance / flDist; // account for origin compression
+					const float flExtra = 2.f * flCompDist / flDist; // account for origin compression
 					float flPosVsTargetViewMinDot = 0.f - 0.0031f - flExtra;
 
 					Vec3 vTargetForward; Math::AngleVectors(pCmd->viewangles, &vTargetForward);
 					vTargetForward.Normalize2D();
 
-					return vToTarget.Dot(vTargetForward) > flPosVsTargetViewMinDot;
+					const float flPosVsTargetViewDot = vToTarget.Dot(vTargetForward); // Behind?
+
+					return flPosVsTargetViewDot > flPosVsTargetViewMinDot;
 				};
 
 			if (!TargetIsBehind())

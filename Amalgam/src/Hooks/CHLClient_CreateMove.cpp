@@ -203,7 +203,6 @@ static inline void AntiCheatCompatibility(CUserCmd* pCmd, bool* pSendPacket)
 				pCmd->viewangles = vHistory[0].m_vAngle + Vec3(0.f, REAL_EPSILON * 2);
 			vHistory[0].m_vAngle = pCmd->viewangles;
 			vHistory[0].m_bSendingPacket = *pSendPacket = vHistory[1].m_bSendingPacket;
-			G::Choking = !*pSendPacket;
 		}
 
 		// prevent aim snap checks
@@ -224,7 +223,6 @@ static inline void AntiCheatCompatibility(CUserCmd* pCmd, bool* pSendPacket)
 				pCmd->viewangles.y += SNAP_NOISE_EPSILON * 2;
 				vHistory[0].m_vAngle = pCmd->viewangles;
 				vHistory[0].m_bSendingPacket = *pSendPacket = vHistory[1].m_bSendingPacket;
-				G::Choking = !*pSendPacket;
 			}
 		}
 	}
@@ -251,27 +249,26 @@ MAKE_HOOK(CHLClient_CreateMove, U::Memory.GetVirtual(I::Client, 21), void,
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
 
 	UpdateInfo(pLocal, pWeapon, pCmd);
-	F::Spectate.CreateMove(pCmd);
-	F::Backtrack.CreateMove(pCmd);
-	F::Misc.RunPre(pLocal, pCmd);
-
-	F::EnginePrediction.Start(pLocal, pCmd);
-	F::Aimbot.Run(pLocal, pWeapon, pCmd);
-	F::CritHack.Run(pLocal, pWeapon, pCmd);
-	F::NoSpread.Run(pLocal, pWeapon, pCmd);
-	F::Resolver.CreateMove(pLocal);
+		F::Spectate.CreateMove(pCmd);
+		F::Backtrack.CreateMove(pCmd);
+		F::Misc.RunPre(pLocal, pCmd);
+	F::Ticks.Start(pLocal, pCmd);
+		F::Aimbot.Run(pLocal, pWeapon, pCmd);
+	F::Ticks.End(pLocal, pCmd);
+		F::CritHack.Run(pLocal, pWeapon, pCmd);
+		F::NoSpread.Run(pLocal, pWeapon, pCmd);
+		F::Resolver.CreateMove(pLocal);
+		F::Misc.RunPost(pLocal, pCmd, *pSendPacket);
+		F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
+		F::Visuals.CreateMove(pLocal, pWeapon);
+		F::Ticks.CreateMove(pLocal, pCmd, pSendPacket);
+		F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
+		F::NoSpreadHitscan.AskForPlayerPerf();
 	F::EnginePrediction.End(pLocal, pCmd);
-
-	F::Misc.RunPost(pLocal, pCmd, *pSendPacket);
-	F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
-	F::Visuals.CreateMove(pLocal, pWeapon);
-	F::Ticks.CreateMove(pLocal, pCmd, pSendPacket);
-	F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
-	F::NoSpreadHitscan.AskForPlayerPerf();
-
-	G::Choking = !*pSendPacket;
-	G::LastUserCmd = pCmd;
 
 	AntiCheatCompatibility(pCmd, pSendPacket);
 	LocalAnimations(pLocal, pCmd, *pSendPacket);
+
+	G::Choking = !*pSendPacket;
+	G::LastUserCmd = pCmd;
 }
