@@ -3,8 +3,9 @@
 
 struct RestoreInfo_t
 {
-	Vec3 m_vecMins = {};
-	Vec3 m_vecMaxs = {};
+	Vec3 m_vOrigin = {};
+	Vec3 m_vMins = {};
+	Vec3 m_vMaxs = {};
 };
 
 class CEnginePrediction
@@ -18,9 +19,8 @@ private:
 	float m_flOldCurrentTime = 0.f;
 	float m_flOldFrameTime = 0.f;
 
-	bool m_bDoubletap = false;
-	Vec3 m_vOriginalOrigin = {};
-	Vec3 m_vOriginalVelocity = {};
+	Vec3 m_vOldOrigin = {};
+	Vec3 m_vOldVelocity = {};
 
 	std::unordered_map<CTFPlayer*, RestoreInfo_t> m_mRestore = {};
 
@@ -28,7 +28,7 @@ public:
 	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void End(CTFPlayer* pLocal, CUserCmd* pCmd);
 
-	void ScalePlayers(CBaseEntity* pLocal);
+	void AdjustPlayers(CBaseEntity* pLocal);
 	void RestorePlayers();
 
 	bool m_bInPrediction = false;

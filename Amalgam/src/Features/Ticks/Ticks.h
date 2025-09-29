@@ -21,11 +21,16 @@ private:
 	bool m_bShootAngle = false;
 	Vec3 m_vShootAngle = {};
 
+	bool m_bPredictAntiwarp = false;
+
 public:
 	void Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
 	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
 	void Draw(CTFPlayer* pLocal);
 	void Reset();
+
+	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void End(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	void AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks = -1);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);

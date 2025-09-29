@@ -2,6 +2,8 @@
 #include "IMoveHelper.h"
 #include "../Misc/IPrediction.h"
 
+MAKE_SIGNATURE(CPrediction_RestoreEntityToPredictedFrame, "client.dll", "40 55 48 83 EC ? 8B EA", 0x0);
+
 class CMoveData;
 class CUserCmd;
 class CBasePlayer;
@@ -32,6 +34,8 @@ public:
 	virtual void SetIdealPitch(CBasePlayer* player, const Vec3& origin, const Vec3& angles, const Vec3& viewheight) = 0;
 	virtual void _Update(bool received_new_world_update, bool validframe, int incoming_acknowledged, int outgoing_command) = 0;
 
+	SIGNATURE_ARGS(RestoreEntityToPredictedFrame, void, CPrediction, (int predicted_frame), this, predicted_frame);
+
 	CHandle<CBaseEntity> m_hLastGround;
 	bool m_bInPrediction;
 	bool m_bFirstTimePredicted;
@@ -41,6 +45,8 @@ public:
 	int m_nCommandsPredicted;
 	int m_nServerCommandsAcknowledged;
 	int m_bPreviousAckHadErrors;
+	int m_bPreviousAckErrorTriggersFullLatchReset;
+	CUtlVector<CHandle<CBaseEntity>> m_EntsWithPredictionErrorsInLastAck;
 	int m_nIncomingPacketNumber;
 	float m_flIdealPitch;
 };
