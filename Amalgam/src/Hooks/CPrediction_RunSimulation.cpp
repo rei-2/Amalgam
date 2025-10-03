@@ -54,7 +54,7 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 	}
 #endif
 
-	F::EnginePrediction.ScalePlayers(localPlayer);
+	F::EnginePrediction.AdjustPlayers(localPlayer);
 	CALL_ORIGINAL(rcx, current_command, curtime, cmd, localPlayer);
 	F::EnginePrediction.RestorePlayers();
 }

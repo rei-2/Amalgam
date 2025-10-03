@@ -2,6 +2,7 @@
 
 #include "../NetworkFix/NetworkFix.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
+#include "../EnginePrediction/EnginePrediction.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 #include "../Backtrack/Backtrack.h"
 
@@ -121,6 +122,34 @@ bool CTicks::CanChoke()
 		iMaxTicks = std::min(iMaxTicks, 8);
 
 	return I::ClientState->chokedcommands < 21 && m_iShiftedTicks + I::ClientState->chokedcommands < iMaxTicks;
+}
+
+void CTicks::AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks)
+{
+	static Vec3 vVelocity = {};
+	static int iMaxTicks = 0;
+	if (m_bAntiWarp)
+	{
+		int iCurrentTicks = iTicks == -1 ? GetTicks() : iTicks;
+		iMaxTicks = std::max(iCurrentTicks + 1, iMaxTicks);
+
+		Vec3 vAngles; Math::VectorAngles(vVelocity, vAngles);
+		vAngles.y = flYaw - vAngles.y;
+		Vec3 vForward; Math::AngleVectors(vAngles, &vForward);
+		vForward *= vVelocity.Length2D();
+
+		if (iCurrentTicks > std::max(iMaxTicks - 8, 3))
+			flForwardMove = -vForward.x, flSideMove = -vForward.y;
+		else if (iCurrentTicks > 3)
+			flForwardMove = flSideMove = 0.f;
+		else
+			flForwardMove = vForward.x, flSideMove = vForward.y;
+	}
+	else
+	{
+		vVelocity = pLocal->m_vecVelocity();
+		iMaxTicks = 0;
+	}
 }
 
 void CTicks::AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -350,6 +379,35 @@ void CTicks::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
 	*pSendPacket = m_iShiftedGoal == m_iShiftedTicks;
 	if (I::ClientState->chokedcommands >= 21) // prevent overchoking
 		*pSendPacket = true;
+}
+
+void CTicks::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	Vec2 vOriginalMove; int iOriginalButtons;
+	if (m_bPredictAntiwarp = m_bAntiWarp || GetTicks(H::Entities.GetWeapon()) && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
+	{
+		vOriginalMove = { pCmd->forwardmove, pCmd->sidemove };
+		iOriginalButtons = pCmd->buttons;
+
+		AntiWarp(pLocal, pCmd->viewangles.y, pCmd->forwardmove, pCmd->sidemove);
+	}
+
+	F::EnginePrediction.Start(pLocal, pCmd);
+
+	if (m_bPredictAntiwarp)
+	{
+		pCmd->forwardmove = vOriginalMove.x, pCmd->sidemove = vOriginalMove.y;
+		pCmd->buttons = iOriginalButtons;
+	}
+}
+
+void CTicks::End(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (m_bPredictAntiwarp && !m_bAntiWarp && !G::Attacking)
+	{
+		F::EnginePrediction.End(pLocal, pCmd);
+		F::EnginePrediction.Start(pLocal, pCmd);
+	}
 }
 
 int CTicks::GetTicks(CTFWeaponBase* pWeapon)

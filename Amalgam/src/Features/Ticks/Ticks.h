@@ -21,6 +21,8 @@ class CTicks
 	bool m_bShootAngle = false;
 	Vec3 m_vShootAngle = {};
 
+	bool m_bPredictAntiwarp = false;
+
 public:
 	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
 	void Draw(CTFPlayer* pLocal);
@@ -29,7 +31,11 @@ public:
 	void CLMove(float accumulated_extra_samples, bool bFinalTick);
 	void CLMoveManage(CTFPlayer* pLocal);
 
+	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void End(CTFPlayer* pLocal, CUserCmd* pCmd);
+
 	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
+	void AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks = -1);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	int GetTicks(CTFWeaponBase* pWeapon = nullptr);

@@ -3,8 +3,9 @@
 
 struct RestoreInfo_t
 {
-	Vec3 m_vecMins = {};
-	Vec3 m_vecMaxs = {};
+	Vec3 m_vOrigin = {};
+	Vec3 m_vMins = {};
+	Vec3 m_vMaxs = {};
 };
 
 class CEnginePrediction
@@ -29,7 +30,7 @@ public:
 	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void End(CTFPlayer* pLocal, CUserCmd* pCmd);
 
-	void ScalePlayers(CBaseEntity* pLocal);
+	void AdjustPlayers(CBaseEntity* pLocal);
 	void RestorePlayers();
 
 	bool m_bInPrediction = false;

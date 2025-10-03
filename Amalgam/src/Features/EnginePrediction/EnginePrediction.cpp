@@ -2,8 +2,8 @@
 
 #include "../Ticks/Ticks.h"
 
-// account for origin compression when simulating local player
-void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
+// account for interp and origin compression when simulating local player
+void CEnginePrediction::AdjustPlayers(CBaseEntity* pLocal)
 {
 	m_mRestore.clear();
 
@@ -13,8 +13,9 @@ void CEnginePrediction::ScalePlayers(CBaseEntity* pLocal)
 		if (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 			continue;
 
-		m_mRestore[pPlayer] = { pPlayer->m_vecMins(), pPlayer->m_vecMaxs() };
+		m_mRestore[pPlayer] = { pPlayer->GetAbsOrigin(), pPlayer->m_vecMins(), pPlayer->m_vecMaxs() };
 
+		pPlayer->SetAbsOrigin(pPlayer->m_vecOrigin());
 		pPlayer->m_vecMins() += 0.125f;
 		pPlayer->m_vecMaxs() -= 0.125f;
 	}
@@ -23,8 +24,9 @@ void CEnginePrediction::RestorePlayers()
 {
 	for (auto& [pPlayer, tRestore] : m_mRestore)
 	{
-		pPlayer->m_vecMins() = tRestore.m_vecMins;
-		pPlayer->m_vecMaxs() = tRestore.m_vecMaxs;
+		pPlayer->SetAbsOrigin(tRestore.m_vOrigin);
+		pPlayer->m_vecMins() = tRestore.m_vMins;
+		pPlayer->m_vecMaxs() = tRestore.m_vMaxs;
 	}
 }
 
@@ -59,11 +61,11 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 		F::Ticks.m_bAntiWarp = bOriginalWarp;
 	}
 
+	AdjustPlayers(pLocal);
 	I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_MoveData);
-	ScalePlayers(pLocal);
 	I::GameMovement->ProcessMovement(pLocal, &m_MoveData);
-	RestorePlayers();
 	I::Prediction->FinishMove(pLocal, pCmd, &m_MoveData);
+	RestorePlayers();
 
 	if (m_bDoubletap)
 	{
