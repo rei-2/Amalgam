@@ -83,8 +83,8 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 			bNeedsMixerReset = true;
 		}
 
-		// Reset audio mixer after TF2's natural timing (2.2 seconds after we exit freezecam)
-		if (bNeedsMixerReset && freezeCamExitTime > 0.0f && I::GlobalVars->realtime - freezeCamExitTime >= 2.2f)
+		// Reset audio mixer after TF2's natural timing (1.4 seconds after we exit freezecam)
+		if (bNeedsMixerReset && freezeCamExitTime > 0.0f && I::GlobalVars->realtime - freezeCamExitTime >= 1.4f)
 		{
 			static auto snd_soundmixer = U::ConVars.FindVar("snd_soundmixer");
 			if (snd_soundmixer)
