@@ -37,6 +37,20 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		auto pLocal = H::Entities.GetLocal();
 		F::Spectate.NetUpdateStart(pLocal);
 
+		// Reset audio state when respawning to prevent stuck underwater audio
+		static bool bWasAlive = false;
+		bool bIsAlive = pLocal && pLocal->IsAlive();
+		if (bIsAlive && !bWasAlive && pLocal)
+		{
+			// Player just respawned - ensure audio is not stuck underwater
+			AudioState_t audioState;
+			audioState.m_Origin = pLocal->GetShootPos();
+			audioState.m_Angles = I::EngineClient->GetViewAngles();
+			audioState.m_bIsUnderwater = false; // Force clear underwater state
+			I::EngineClient->SetAudioState(audioState);
+		}
+		bWasAlive = bIsAlive;
+
 		H::Entities.Clear();
 		break;
 	}
@@ -66,13 +80,40 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		F::CheaterDetection.Run();
 		F::Spectate.NetUpdateEnd(pLocal);
 
-		// Disable freezecam feature
+		// Disable freezecam feature (instant camera change)
+		static float freezeCamExitTime = 0.0f;
+		static bool bNeedsMixerReset = false;
+
 		if (Vars::Competitive::Features::DisableFreezeCam.Value && pLocal && pLocal->m_iObserverMode() == OBS_MODE_FREEZECAM)
 		{
-			// Use third person by default to avoid inheriting player viewangles
+			// Track when we exit freezecam for audio timing
+			if (freezeCamExitTime == 0.0f)
+			{
+				freezeCamExitTime = I::GlobalVars->realtime;
+			}
+
 			pLocal->m_iObserverMode() = OBS_MODE_THIRDPERSON;
-			// Also reset observer target to prevent freezecam lock
 			pLocal->m_hObserverTarget().Set(nullptr);
+			bNeedsMixerReset = true;
+		}
+
+		// Reset audio mixer after TF2's natural timing (4.4 seconds after we exit freezecam)
+		if (bNeedsMixerReset && freezeCamExitTime > 0.0f && I::GlobalVars->realtime - freezeCamExitTime >= 4.4f)
+		{
+			static auto snd_soundmixer = U::ConVars.FindVar("snd_soundmixer");
+			if (snd_soundmixer)
+			{
+				snd_soundmixer->SetValue("Default_Mix");
+			}
+			bNeedsMixerReset = false;
+			freezeCamExitTime = 0.0f;
+		}
+
+		// Reset timers when alive
+		if (pLocal && pLocal->IsAlive())
+		{
+			bNeedsMixerReset = false;
+			freezeCamExitTime = 0.0f;
 		}
 
 		F::Visuals.Modulate();
