@@ -38,12 +38,18 @@ jobs:
         Write-Host "Windows SDK installation completed"
 
         # Verify installation
-        $sdkPath = "${env:ProgramFiles(x86)}\Windows Kits\10\bin\10.0.22621.0"
+        $programFilesX86 = ${env:ProgramFiles(x86)}
+        $sdkPath = "$programFilesX86\Windows Kits\10\bin\10.0.22621.0"
         if (Test-Path $sdkPath) {
           Write-Host "✓ Windows SDK 10.0.22621.0 installed successfully"
         } else {
           Write-Host "⚠ Windows SDK path not found, checking alternative locations..."
-          Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\" -ErrorAction SilentlyContinue
+          $binPath = "$programFilesX86\Windows Kits\10\bin\"
+          if (Test-Path $binPath) {
+            Get-ChildItem $binPath -ErrorAction SilentlyContinue
+          } else {
+            Write-Host "Windows Kits path not found"
+          }
         }
       shell: powershell
 
