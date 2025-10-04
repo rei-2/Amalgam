@@ -37,20 +37,6 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 		auto pLocal = H::Entities.GetLocal();
 		F::Spectate.NetUpdateStart(pLocal);
 
-		// Reset audio state when respawning to prevent stuck underwater audio
-		static bool bWasAlive = false;
-		bool bIsAlive = pLocal && pLocal->IsAlive();
-		if (bIsAlive && !bWasAlive && pLocal)
-		{
-			// Player just respawned - ensure audio is not stuck underwater
-			AudioState_t audioState;
-			audioState.m_Origin = pLocal->GetShootPos();
-			audioState.m_Angles = I::EngineClient->GetViewAngles();
-			audioState.m_bIsUnderwater = false; // Force clear underwater state
-			I::EngineClient->SetAudioState(audioState);
-		}
-		bWasAlive = bIsAlive;
-
 		H::Entities.Clear();
 		break;
 	}
@@ -97,8 +83,8 @@ MAKE_HOOK(IBaseClientDLL_FrameStageNotify, U::Memory.GetVirtual(I::BaseClientDLL
 			bNeedsMixerReset = true;
 		}
 
-		// Reset audio mixer after TF2's natural timing (4.4 seconds after we exit freezecam)
-		if (bNeedsMixerReset && freezeCamExitTime > 0.0f && I::GlobalVars->realtime - freezeCamExitTime >= 4.4f)
+		// Reset audio mixer after TF2's natural timing (2.2 seconds after we exit freezecam)
+		if (bNeedsMixerReset && freezeCamExitTime > 0.0f && I::GlobalVars->realtime - freezeCamExitTime >= 2.2f)
 		{
 			static auto snd_soundmixer = U::ConVars.FindVar("snd_soundmixer");
 			if (snd_soundmixer)
