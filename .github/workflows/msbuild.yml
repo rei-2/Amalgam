@@ -20,12 +20,65 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v2
 
+    - name: Cache vcpkg
+      uses: actions/cache@v4
+      with:
+        path: vcpkg
+        key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}
+        restore-keys: |
+          ${{ runner.os }}-vcpkg-
+
+    - name: Setup vcpkg
+      run: |
+        if (!(Test-Path "vcpkg")) {
+          Write-Host "Cloning vcpkg..."
+          git clone https://github.com/Microsoft/vcpkg.git
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERROR: Failed to clone vcpkg"
+            exit 1
+          }
+        } else {
+          Write-Host "vcpkg directory already exists"
+        }
+
+        cd vcpkg
+
+        if (!(Test-Path "vcpkg.exe")) {
+          Write-Host "Bootstrapping vcpkg..."
+          .\bootstrap-vcpkg.bat
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "ERROR: Failed to bootstrap vcpkg"
+            exit 1
+          }
+        } else {
+          Write-Host "vcpkg.exe already exists"
+        }
+
+        Write-Host "Installing cpr:x64-windows-static..."
+        .\vcpkg.exe install cpr:x64-windows-static
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: Failed to install cpr"
+          exit 1
+        }
+
+        Write-Host "Installing nlohmann-json:x64-windows-static..."
+        .\vcpkg.exe install nlohmann-json:x64-windows-static
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "ERROR: Failed to install nlohmann-json"
+          exit 1
+        }
+
+        Write-Host "Integrating vcpkg with Visual Studio..."
+        .\vcpkg.exe integrate install
+        if ($LASTEXITCODE -ne 0) {
+          Write-Host "WARNING: Failed to integrate vcpkg with Visual Studio"
+        }
+      shell: powershell
+
     - name: Restore NuGet packages
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
-      run: nuget restore
+      run: nuget restore Amalgam.sln
 
     - name: Build
-      working-directory: ${{ env.GITHUB_WORKSPACE }}
       run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
 
     - uses: actions/upload-artifact@v4
