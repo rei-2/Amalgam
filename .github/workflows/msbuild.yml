@@ -21,37 +21,9 @@ jobs:
       uses: microsoft/setup-msbuild@v2
 
     - name: Install Windows SDK
-      run: |
-        Write-Host "Installing Windows 11 SDK (10.0.22621.0)..."
-
-        # Download and install Windows 11 SDK
-        $url = "https://download.microsoft.com/download/3/f/1/3f1d6d1a-0c86-4fb1-8e5b-e9e7d48ee1c1/windowssdk/winsdksetup.exe"
-        $installer = "$env:TEMP\winsdksetup.exe"
-
-        Write-Host "Downloading Windows SDK installer..."
-        Invoke-WebRequest -Uri $url -OutFile $installer -UseBasicParsing
-
-        Write-Host "Installing Windows SDK with Desktop C++ components..."
-        # Install with Desktop Development components
-        Start-Process -FilePath $installer -ArgumentList "/quiet", "/features", "OptionId.WindowsDesktopDebuggers", "OptionId.WindowsDesktopSoftwareDevelopmentKit", "OptionId.WindowsPerformanceToolkit" -Wait
-
-        Write-Host "Windows SDK installation completed"
-
-        # Verify installation
-        $programFilesX86 = ${env:ProgramFiles(x86)}
-        $sdkPath = "$programFilesX86\Windows Kits\10\bin\10.0.22621.0"
-        if (Test-Path $sdkPath) {
-          Write-Host "SUCCESS: Windows SDK 10.0.22621.0 installed successfully"
-        } else {
-          Write-Host "WARNING: Windows SDK path not found, checking alternative locations..."
-          $binPath = "$programFilesX86\Windows Kits\10\bin\"
-          if (Test-Path $binPath) {
-            Get-ChildItem $binPath -ErrorAction SilentlyContinue
-          } else {
-            Write-Host "ERROR: Windows Kits path not found"
-          }
-        }
-      shell: powershell
+      uses: fbactions/setup-winsdk@v1
+      with:
+        winsdk-build-version: 22621
 
     - name: Cache vcpkg
       uses: actions/cache@v4
