@@ -60,7 +60,7 @@ All features are fully configurable through the COMP tab menu with individual to
 ### Communication & Coordination
 
 - **Matrix Chat Integration** - Full Matrix client with end-to-end encryption built directly into TF2
-  - **Real E2E Encryption** - Complete libolm integration with Megolm group encryption and Olm device-to-device encryption
+  - ~~**Real E2E Encryption** - Complete libolm integration with Megolm group encryption and Olm device-to-device encryption~~
   - **Multi-User Support** - Device key management, session key sharing, and cross-device message decryption
   - **TF2 Chat Display** - Messages appear directly in TF2 chat with proper color formatting and usernames
   - **Send with !! Prefix** - Type `!!message` in TF2 chat to send to Matrix (blocked from game chat when connected, passes through when not connected)
