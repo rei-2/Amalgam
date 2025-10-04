@@ -3,162 +3,39 @@ name: MSBuild
 on: [push, pull_request]
 
 jobs:
- msbuild:
-  runs-on: windows-latest
+  msbuild:
+    runs-on: windows-latest
 
-  strategy:
-   matrix:
-    configuration: [Release, ReleaseAVX2, ReleaseFreetype, ReleaseFreetypeAVX2]
-    platform: [x64]
+    strategy:
+      matrix:
+        configuration: [Release, ReleaseAVX2, ReleaseFreetype, ReleaseFreetypeAVX2]
+        platform: [x64]
 
-  steps:
-  - uses: actions/checkout@v4
-    with:
-      submodules: recursive
-      token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-  - name: Initialize and update submodules
-    run: |
-      Write-Host "Initializing submodules..."
-      git submodule update --init --recursive
-      Write-Host "Submodule status:"
-      git submodule status
-    shell: powershell
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v2
 
-  - name: Add MSBuild to PATH
-    uses: microsoft/setup-msbuild@v2
+    - name: Restore NuGet packages
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: nuget restore
 
-  - name: Install Windows SDK
-    uses: GuillaumeFalourd/setup-windows10-sdk-action@v2
-    with:
-      sdk-version: 22621
+    - name: Build
+      working-directory: ${{ env.GITHUB_WORKSPACE }}
+      run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
 
-  - name: Cache vcpkg
-    uses: actions/cache@v4
-    with:
-      path: C:\vcpkg
-      key: ${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json') }}
-      restore-keys: |
-        ${{ runner.os }}-vcpkg-
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}
+        path: |
+          output/${{ matrix.platform }}/${{ matrix.configuration }}/*.dll
+          output/${{ matrix.platform }}/${{ matrix.configuration }}/*.exe
 
-  - name: Setup vcpkg
-    run: |
-      if (!(Test-Path "C:\vcpkg")) {
-        Write-Host "Cloning vcpkg..."
-        git clone https://github.com/Microsoft/vcpkg.git C:\vcpkg
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "ERROR: Failed to clone vcpkg"
-          exit 1
-        }
-        Write-Host "Bootstrapping vcpkg..."
-        C:\vcpkg\bootstrap-vcpkg.bat
-        if ($LASTEXITCODE -ne 0) {
-          Write-Host "ERROR: Failed to bootstrap vcpkg"
-          exit 1
-        }
-      } else {
-        Write-Host "vcpkg already exists"
-      }
-      Write-Host "Integrating vcpkg with Visual Studio..."
-      C:\vcpkg\vcpkg integrate install
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "WARNING: Failed to integrate vcpkg"
-      }
-    shell: powershell
-
-  - name: Install vcpkg dependencies
-    run: |
-      Write-Host "Installing static dependencies for Amalgam DLL embedding..."
-      
-      Write-Host "Installing cpr:x64-windows-static..."
-      C:\vcpkg\vcpkg install cpr:x64-windows-static
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Failed to install cpr:x64-windows-static"
-        exit 1
-      }
-      
-      Write-Host "Installing nlohmann-json:x64-windows-static..."
-      C:\vcpkg\vcpkg install nlohmann-json:x64-windows-static
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "ERROR: Failed to install nlohmann-json:x64-windows-static"
-        exit 1
-      }
-      
-      Write-Host "Verifying installed packages..."
-      C:\vcpkg\vcpkg list
-      
-      Write-Host "Re-integrating vcpkg after dependency installation..."
-      C:\vcpkg\vcpkg integrate install
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "WARNING: Failed to re-integrate vcpkg"
-      }
-    shell: powershell
-
-
-  - name: Restore NuGet packages
-    working-directory: ${{ github.workspace }}
-    run: |
-      Write-Host "Restoring NuGet packages with timeout..."
-      $slnPath = "${{ github.workspace }}\Amalgam.sln"
-      Write-Host "Solution path: $slnPath"
-      
-      if (!(Test-Path $slnPath)) {
-        Write-Host "ERROR: Solution file not found at $slnPath"
-        Get-ChildItem ${{ github.workspace }} | Select-Object Name
-        exit 1
-      }
-      
-      $timeout = 300
-      $job = Start-Job -ScriptBlock { 
-        param($path)
-        Set-Location (Split-Path $path)
-        nuget restore (Split-Path $path -Leaf)
-      } -ArgumentList $slnPath
-      
-      if (Wait-Job $job -Timeout $timeout) {
-        Receive-Job $job
-        if ($job.State -eq "Failed") {
-          Write-Host "NuGet restore failed, retrying..."
-          nuget restore Amalgam.sln -Verbosity detailed
-        }
-      } else {
-        Write-Host "NuGet restore timed out, retrying with detailed output..."
-        Stop-Job $job
-        nuget restore Amalgam.sln -Verbosity detailed
-      }
-      Remove-Job $job -Force
-    shell: powershell
-
-  - name: Build
-    working-directory: ${{ github.workspace }}
-    run: msbuild Amalgam.sln /p:Platform=${{ matrix.platform }} /p:Configuration=${{ matrix.configuration }}
-
-  - name: Verify build outputs
-    run: |
-      $exePath = "output\${{ matrix.platform }}\${{ matrix.configuration }}\AmalgamLoader.exe"
-      $dllPath = "output\${{ matrix.platform }}\${{ matrix.configuration }}\Amalgam${{ matrix.platform }}${{ matrix.configuration }}.dll"
-      
-      if (Test-Path $exePath) {
-        Write-Host "✓ AmalgamLoader.exe built successfully"
-        $fileSize = (Get-Item $exePath).Length
-        Write-Host "File size: $fileSize bytes"
-      } else {
-        Write-Host "ERROR: AmalgamLoader.exe not found"
-        exit 1
-      }
-      
-      if (Test-Path $dllPath) {
-        Write-Host "✓ Amalgam DLL built successfully"
-        $dllSize = (Get-Item $dllPath).Length
-        Write-Host "DLL size: $dllSize bytes"
-      } else {
-        Write-Host "WARNING: Amalgam DLL not found"
-      }
-    shell: powershell
-
-  - uses: actions/upload-artifact@v4
-    with:
-     name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}
-     path: |
-       output/${{ matrix.platform }}/${{ matrix.configuration }}/*.dll
-       output/${{ matrix.platform }}/${{ matrix.configuration }}/*.exe
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Amalgam${{ matrix.platform }}${{ matrix.configuration }}PDB
+        path: output/${{ matrix.platform }}/${{ matrix.configuration }}/*.pdb
