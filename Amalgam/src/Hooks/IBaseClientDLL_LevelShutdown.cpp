@@ -12,5 +12,8 @@ MAKE_HOOK(IBaseClientDLL_LevelShutdown, U::Memory.GetVirtual(I::BaseClientDLL, 7
 
 	H::Entities.Clear(true);
 
+	// Clear avatar cache on disconnect to prevent memory leaks
+	H::Draw.OnDisconnect();
+
 	CALL_ORIGINAL(rcx);
 }

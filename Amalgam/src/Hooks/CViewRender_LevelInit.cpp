@@ -21,6 +21,9 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVirtual(I::ViewRender, 1), void,
 	F::Materials.ReloadMaterials();
 	F::Visuals.OverrideWorldTextures();
 
+	// Clear avatar cache on map change to prevent memory leaks and invalid textures
+	H::Draw.OnMapChange();
+
 	F::Backtrack.Reset();
 	F::Ticks.Reset();
 	F::NoSpreadHitscan.Reset();

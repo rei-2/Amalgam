@@ -2,6 +2,9 @@
 #include "../Fonts/Fonts.h"
 #include "../../Definitions/Definitions.h"
 #include "../../Vars.h"
+#include <mutex>
+#include <chrono>
+#include <unordered_set>
 
 MAKE_SIGNATURE(InitializeStandardMaterials, "engine.dll", "48 83 EC ? 80 3D ? ? ? ? ? 0F 85 ? ? ? ? 48 89 5C 24 ? B9 ? ? ? ? 48 89 7C 24 ? C6 05", 0x0);
 MAKE_SIGNATURE(Wireframe, "engine.dll", "48 89 05 ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 48 8D 15 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 8B F8 EB ? 48 8B FB 41 B8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 41 B8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 41 B8", 0x0);
@@ -32,7 +35,17 @@ enum Scale_
 
 class CDraw
 {
+	// Avatar cache with safety infrastructure
 	std::unordered_map<uint32, int> m_mAvatars = {};
+	std::unordered_set<uint32> m_sFailedAvatars = {}; // Track failed Steam IDs to avoid retries
+	std::mutex m_mxAvatarMutex; // Thread safety for avatar operations
+	std::chrono::steady_clock::time_point m_lastCleanupTime = std::chrono::steady_clock::now();
+
+	// Avatar cache limits and constants
+	static constexpr size_t MAX_AVATAR_CACHE_SIZE = 256;
+	static constexpr size_t MAX_FAILED_CACHE_SIZE = 512;
+	static constexpr std::chrono::minutes CLEANUP_INTERVAL{5}; // Clean cache every 5 minutes
+	static constexpr std::chrono::minutes FAILED_RETRY_INTERVAL{30}; // Retry failed avatars after 30 minutes
 
 public:
 	inline bool IsColorBright(const Color_t& clr)
@@ -95,6 +108,9 @@ public:
 	void DrawHudTextureByName(float x, float y, float s, const char* sTexture, Color_t tColor = { 255, 255, 255, 255 });
 	void Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& eAlign = ALIGN_CENTER);
 	void ClearAvatarCache();
+	void PeriodicAvatarCleanup(); // Automatic cache maintenance
+	void OnMapChange(); // Call when map changes to clean cache
+	void OnDisconnect(); // Call when disconnecting to clean cache
 
 	void RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t tColor, bool bZBuffer = false);
 	void RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBuffer = false,
@@ -111,6 +127,15 @@ public:
 
 	int m_nScreenW = 0, m_nScreenH = 0;
 	VMatrix m_mWorldToProjection = {};
+
+private:
+	// Safety helper methods
+	bool IsSteamInterfacesValid() const;
+	bool IsValidAvatarHandle(int nAvatar) const;
+	bool ShouldRetryFailedAvatar(uint32 nFriendID) const;
+	void MarkAvatarAsFailed(uint32 nFriendID);
+	void CleanupOldestAvatars(size_t maxSize);
+	bool LoadAvatarSafely(uint32 nFriendID, int& outTextureID);
 };
 
 ADD_FEATURE_CUSTOM(CDraw, Draw, H);

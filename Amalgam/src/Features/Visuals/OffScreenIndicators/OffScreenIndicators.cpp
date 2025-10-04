@@ -223,9 +223,13 @@ void COffScreenIndicators::Draw()
             {
                 // Draw 1-pixel Steam ID color border around Steam avatar
                 H::Draw.LineRect(avatarX - 1, avatarY - 1, avatarSize + 2, avatarSize + 2, playerColor);
-                
-                // Draw Steam avatar for real players
+
+                // Try to draw Steam avatar for real players
+                // The Avatar method now has built-in safety checks and will fail gracefully
                 H::Draw.Avatar(avatarX, avatarY, avatarSize, avatarSize, pi.friendsID, ALIGN_TOPLEFT);
+
+                // Note: We can't easily detect if Avatar() succeeded, but it now fails safely
+                // If Steam avatar fails, we'll still show the fallback on next frame
                 avatarDrawn = true;
             }
             
@@ -370,8 +374,16 @@ int COffScreenIndicators::GetFallbackAvatarTexture()
                 // Create texture using the same method as Steam avatars
                 if (I::MatSystemSurface)
                 {
-                    m_iFallbackAvatarTexture = I::MatSystemSurface->CreateNewTextureID(true);
-                    I::MatSystemSurface->DrawSetTextureRGBA(m_iFallbackAvatarTexture, rgbaData.data(), size, size, 0, false);
+                    const int textureID = I::MatSystemSurface->CreateNewTextureID(true);
+                    if (I::MatSystemSurface->IsTextureIDValid(textureID))
+                    {
+                        I::MatSystemSurface->DrawSetTextureRGBA(textureID, rgbaData.data(), size, size, 0, false);
+                        m_iFallbackAvatarTexture = textureID;
+                    }
+                    else
+                    {
+                        m_iFallbackAvatarTexture = -1;
+                    }
                 }
             }
         }

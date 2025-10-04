@@ -424,9 +424,14 @@ void CDraw::DrawHudTextureByName(float x, float y, float s, const char* sTexture
 
 void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAlign& eAlign)
 {
-	if (!nFriendID)
+	// Basic validation
+	if (!nFriendID || !IsSteamInterfacesValid())
 		return;
 
+	// Periodic cleanup to prevent memory issues
+	PeriodicAvatarCleanup();
+
+	// Alignment calculation
 	switch (eAlign)
 	{
 	case ALIGN_TOPLEFT: break;
@@ -440,47 +445,71 @@ void CDraw::Avatar(int x, int y, int w, int h, const uint32 nFriendID, const EAl
 	case ALIGN_BOTTOMRIGHT: x -= w; y -= h; break;
 	}
 
+	// Thread-safe avatar cache access
+	std::lock_guard<std::mutex> lock(m_mxAvatarMutex);
+
+	// Check if avatar is already cached
 	if (m_mAvatars.contains(nFriendID))
 	{
-		I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
-		I::MatSystemSurface->DrawSetTexture(m_mAvatars[nFriendID]);
-		I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
+		const int textureID = m_mAvatars[nFriendID];
+		if (I::MatSystemSurface && I::MatSystemSurface->IsTextureIDValid(textureID))
+		{
+			I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
+			I::MatSystemSurface->DrawSetTexture(textureID);
+			I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
+		}
+		else
+		{
+			// Texture became invalid, remove from cache
+			m_mAvatars.erase(nFriendID);
+		}
+		return;
+	}
+
+	// Check if this avatar failed before and shouldn't be retried yet
+	if (!ShouldRetryFailedAvatar(nFriendID))
+		return;
+
+	// Attempt to load avatar safely
+	int newTextureID = -1;
+	if (LoadAvatarSafely(nFriendID, newTextureID))
+	{
+		// Successfully loaded, cache and draw
+		m_mAvatars[nFriendID] = newTextureID;
+
+		if (I::MatSystemSurface)
+		{
+			I::MatSystemSurface->DrawSetColor(255, 255, 255, 255);
+			I::MatSystemSurface->DrawSetTexture(newTextureID);
+			I::MatSystemSurface->DrawTexturedRect(x, y, x + w, y + h);
+		}
 	}
 	else
 	{
-		const int nAvatar = I::SteamFriends->GetMediumFriendAvatar(CSteamID(nFriendID, k_EUniversePublic, k_EAccountTypeIndividual));
-
-		uint32 newW = 0, newH = 0;
-		if (I::SteamUtils->GetImageSize(nAvatar, &newW, &newH))
-		{
-			const uint32 nSize = newW * newH * uint32(sizeof(uint8) * 4);
-			auto* pData = static_cast<uint8*>(std::malloc(nSize));
-			if (!pData)
-				return;
-
-			if (I::SteamUtils->GetImageRGBA(nAvatar, pData, nSize))
-			{
-				const int nTextureID = I::MatSystemSurface->CreateNewTextureID(true);
-				if (I::MatSystemSurface->IsTextureIDValid(nTextureID))
-				{
-					I::MatSystemSurface->DrawSetTextureRGBA(nTextureID, pData, newW, newH, 0, false);
-					m_mAvatars[nFriendID] = nTextureID;
-				}
-			}
-
-			std::free(pData);
-		}
+		// Failed to load, mark as failed to avoid immediate retries
+		MarkAvatarAsFailed(nFriendID);
 	}
 }
 void CDraw::ClearAvatarCache()
 {
-	for (int iID : m_mAvatars | std::views::values)
+	std::lock_guard<std::mutex> lock(m_mxAvatarMutex);
+
+	// Safely delete all cached textures
+	if (I::MatSystemSurface)
 	{
-		I::MatSystemSurface->DeleteTextureByID(iID);
-		I::MatSystemSurface->DestroyTextureID(iID);
+		for (int iID : m_mAvatars | std::views::values)
+		{
+			if (I::MatSystemSurface->IsTextureIDValid(iID))
+			{
+				I::MatSystemSurface->DeleteTextureByID(iID);
+				I::MatSystemSurface->DestroyTextureID(iID);
+			}
+		}
 	}
 
 	m_mAvatars.clear();
+	m_sFailedAvatars.clear();
+	m_lastCleanupTime = std::chrono::steady_clock::now();
 }
 
 void CDraw::RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t tColor, bool bZBuffer)
@@ -618,4 +647,164 @@ void CDraw::RenderWireframeSphere(const Vector& vCenter, float flRadius, int nTh
 	auto pMaterial = bZBuffer ? pWireframe : pWireframeIgnoreZ;
 
 	RenderSphere(vCenter, flRadius, nTheta, nPhi, tColor, pMaterial);
+}
+
+// Avatar Safety Helper Methods Implementation
+
+bool CDraw::IsSteamInterfacesValid() const
+{
+	return I::SteamFriends && I::SteamUtils && I::MatSystemSurface;
+}
+
+bool CDraw::IsValidAvatarHandle(int nAvatar) const
+{
+	// Steam returns 0 for invalid avatar handles
+	return nAvatar > 0;
+}
+
+bool CDraw::ShouldRetryFailedAvatar(uint32 nFriendID) const
+{
+	if (!m_sFailedAvatars.contains(nFriendID))
+		return true; // Never failed before, allow attempt
+
+	// Only retry failed avatars after the retry interval
+	auto now = std::chrono::steady_clock::now();
+	return (now - m_lastCleanupTime) >= FAILED_RETRY_INTERVAL;
+}
+
+void CDraw::MarkAvatarAsFailed(uint32 nFriendID)
+{
+	m_sFailedAvatars.insert(nFriendID);
+
+	// Prevent failed cache from growing too large
+	if (m_sFailedAvatars.size() > MAX_FAILED_CACHE_SIZE)
+	{
+		// Remove oldest entries (simple approach: clear half the cache)
+		auto it = m_sFailedAvatars.begin();
+		std::advance(it, m_sFailedAvatars.size() / 2);
+		m_sFailedAvatars.erase(m_sFailedAvatars.begin(), it);
+	}
+}
+
+void CDraw::CleanupOldestAvatars(size_t maxSize)
+{
+	if (m_mAvatars.size() <= maxSize)
+		return;
+
+	// Simple approach: remove first half of cache
+	// In a real implementation, you'd want LRU (Least Recently Used)
+	auto it = m_mAvatars.begin();
+	size_t toRemove = m_mAvatars.size() - maxSize;
+
+	for (size_t i = 0; i < toRemove && it != m_mAvatars.end(); ++i)
+	{
+		// Safely delete texture
+		if (I::MatSystemSurface && I::MatSystemSurface->IsTextureIDValid(it->second))
+		{
+			I::MatSystemSurface->DeleteTextureByID(it->second);
+			I::MatSystemSurface->DestroyTextureID(it->second);
+		}
+		it = m_mAvatars.erase(it);
+	}
+}
+
+bool CDraw::LoadAvatarSafely(uint32 nFriendID, int& outTextureID)
+{
+	outTextureID = -1;
+
+	// Double-check Steam interfaces are valid
+	if (!IsSteamInterfacesValid())
+		return false;
+
+	try
+	{
+		// Get avatar handle from Steam
+		const int nAvatar = I::SteamFriends->GetMediumFriendAvatar(CSteamID(nFriendID, k_EUniversePublic, k_EAccountTypeIndividual));
+
+		// Validate avatar handle
+		if (!IsValidAvatarHandle(nAvatar))
+			return false;
+
+		// Get image dimensions
+		uint32 newW = 0, newH = 0;
+		if (!I::SteamUtils->GetImageSize(nAvatar, &newW, &newH))
+			return false;
+
+		// Validate dimensions to prevent excessive memory allocation
+		if (newW == 0 || newH == 0 || newW > 512 || newH > 512)
+			return false;
+
+		// Calculate memory size needed
+		const uint32 nSize = newW * newH * 4; // RGBA
+		if (nSize == 0 || nSize > (512 * 512 * 4)) // Safety check
+			return false;
+
+		// Allocate memory with proper error handling
+		auto* pData = static_cast<uint8*>(std::malloc(nSize));
+		if (!pData)
+			return false;
+
+		// Initialize memory to prevent undefined behavior
+		std::memset(pData, 0, nSize);
+
+		bool success = false;
+
+		// Get avatar image data
+		if (I::SteamUtils->GetImageRGBA(nAvatar, pData, nSize))
+		{
+			// Create texture with validation
+			const int nTextureID = I::MatSystemSurface->CreateNewTextureID(true);
+			if (I::MatSystemSurface->IsTextureIDValid(nTextureID))
+			{
+				// Set texture data
+				I::MatSystemSurface->DrawSetTextureRGBA(nTextureID, pData, newW, newH, 0, false);
+				outTextureID = nTextureID;
+				success = true;
+			}
+		}
+
+		// Always free allocated memory
+		std::free(pData);
+		return success;
+	}
+	catch (...)
+	{
+		// Catch any unexpected exceptions from Steam API calls
+		return false;
+	}
+}
+
+void CDraw::PeriodicAvatarCleanup()
+{
+	auto now = std::chrono::steady_clock::now();
+
+	// Only run cleanup periodically to avoid performance impact
+	if ((now - m_lastCleanupTime) < CLEANUP_INTERVAL)
+		return;
+
+	// Cleanup oversized caches
+	if (m_mAvatars.size() > MAX_AVATAR_CACHE_SIZE)
+	{
+		CleanupOldestAvatars(MAX_AVATAR_CACHE_SIZE);
+	}
+
+	// Clear failed avatars cache periodically to allow retries
+	if ((now - m_lastCleanupTime) >= FAILED_RETRY_INTERVAL)
+	{
+		m_sFailedAvatars.clear();
+	}
+
+	m_lastCleanupTime = now;
+}
+
+void CDraw::OnMapChange()
+{
+	// Clear all caches when map changes
+	ClearAvatarCache();
+}
+
+void CDraw::OnDisconnect()
+{
+	// Clear all caches when disconnecting
+	ClearAvatarCache();
 }
