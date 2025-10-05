@@ -600,7 +600,7 @@ namespace Vars
 			CVarValues(SkyboxChanger, "Skybox changer", std::string("Off"), VISUAL | DROPDOWN_CUSTOM, nullptr,
 				VA_LIST("Off"));
 			CVarValues(WorldTexture, "World texture", std::string("Default"), VISUAL | DROPDOWN_CUSTOM, nullptr,
-				"Default", "Dev", "Camo", "Black", "White", "Flat");
+				"Default", "Dev", "Camo", "Black", "White", "Gray", "Flat");
 			CVar(NearPropFade, "Near prop fade", false, VISUAL);
 			CVar(NoPropFade, "No prop fade", false, VISUAL);
 		SUBNAMESPACE_END(World);
