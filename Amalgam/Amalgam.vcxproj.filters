@@ -205,6 +205,11 @@
     <ClCompile Include="src\SDK\Definitions\Main\CBasePlayer.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseProjectile.cpp" />
     <ClCompile Include="src\Hooks\CTFRocketLauncher_CheckReloadMisfire.cpp" />
+    <ClCompile Include="src\Hooks\CInput_ValidateUserCmd.cpp" />
+    <ClCompile Include="src\Hooks\CTFWeaponBase_CanFireRandomCriticalShot.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayer_GetMinFOV.cpp" />
+    <ClCompile Include="src\Hooks\CWeaponMedigun_PrimaryAttack.cpp" />
+    <ClCompile Include="src\Hooks\IMaterialSystem_FindTexture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

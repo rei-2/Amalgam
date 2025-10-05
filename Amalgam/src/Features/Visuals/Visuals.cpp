@@ -851,8 +851,12 @@ void CVisuals::Store(CTFPlayer* pLocal)
 void CVisuals::OverrideWorldTextures()
 {
 	auto uHash = FNV1A::Hash32(Vars::Visuals::World::WorldTexture.Value.c_str());
-	if (uHash == FNV1A::Hash32Const("Default") || !I::MaterialSystem)
+	switch (uHash)
+	{
+	case FNV1A::Hash32Const("Default"):
+	case FNV1A::Hash32Const("Flat"):
 		return;
+	}
 
 	KeyValues* kv = new KeyValues("LightmappedGeneric");
 	if (!kv)
@@ -872,7 +876,7 @@ void CVisuals::OverrideWorldTextures()
 	case FNV1A::Hash32Const("White"):
 		kv->SetString("$basetexture", "patterns/combat/white");
 		break;
-	case FNV1A::Hash32Const("Flat"):
+	case FNV1A::Hash32Const("Gray"):
 		kv->SetString("$basetexture", "vgui/white_additive");
 		kv->SetString("$color2", "[0.12 0.12 0.15]");
 		break;
@@ -880,19 +884,22 @@ void CVisuals::OverrideWorldTextures()
 		kv->SetString("$basetexture", Vars::Visuals::World::WorldTexture.Value.c_str());
 	}
 
+	if (!I::MaterialSystem)
+		return;
+
 	try
 	{
-		int iterationCount = 0;
-		const int maxIterations = 10000; // Safety limit to prevent infinite loops
-		
-		for (auto h = I::MaterialSystem->FirstMaterial(); 
-			 h != I::MaterialSystem->InvalidMaterial() && iterationCount < maxIterations; 
-			 h = I::MaterialSystem->NextMaterial(h))
+		for (auto h = I::MaterialSystem->FirstMaterial(); h != I::MaterialSystem->InvalidMaterial(); h = I::MaterialSystem->NextMaterial(h))
 		{
-			iterationCount++;
-			
 			auto pMaterial = I::MaterialSystem->GetMaterial(h);
-			if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached() || pMaterial->IsTranslucent() || pMaterial->IsSpriteCard())
+			if (!pMaterial || pMaterial->IsErrorMaterial() || !pMaterial->IsPrecached() || pMaterial->IsTranslucent() || pMaterial->IsAlphaTested() || pMaterial->IsSpriteCard())
+				continue;
+
+			std::string_view sName = pMaterial->GetName();
+			std::string_view sGroup = pMaterial->GetTextureGroupName();
+			if (!sGroup.starts_with(TEXTURE_GROUP_WORLD)
+				|| sName.find("sky") != std::string_view::npos
+				|| sName.find("water") != std::string_view::npos)
 				continue;
 
 			try
@@ -948,9 +955,20 @@ static inline void ApplyModulation(const Color_t& tColor, bool bSky = false)
 
 			try
 			{
-				auto sGroup = std::string_view(pMaterial->GetTextureGroupName());
-				if (!bSky ? !sGroup._Starts_with("World") : !sGroup._Starts_with("SkyBox"))
-					continue;
+				std::string_view sName = pMaterial->GetName();
+				std::string_view sGroup = pMaterial->GetTextureGroupName();
+				if (!bSky)
+				{
+					if (!sGroup.starts_with(TEXTURE_GROUP_WORLD)
+						|| sName.find("sky") != std::string_view::npos)
+						continue;
+				}
+				else
+				{
+					if (!sGroup.starts_with(TEXTURE_GROUP_SKYBOX)
+						&& sName.find("sky") == std::string_view::npos)
+						continue;
+				}
 
 				pMaterial->ColorModulate(tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f);
 			}
