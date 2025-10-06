@@ -22,9 +22,11 @@ class CTicks
 	Vec3 m_vShootAngle = {};
 
 	bool m_bPredictAntiwarp = false;
+	bool m_bTimingUnsure = false; // we aren't sure when we'll actually fire, hold aim
 
 public:
-	void Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
+	void Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
+	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket);
 	void Draw(CTFPlayer* pLocal);
 	void Reset();
 
@@ -34,7 +36,6 @@ public:
 	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void End(CTFPlayer* pLocal, CUserCmd* pCmd);
 
-	void CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket);
 	void AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks = -1);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
@@ -47,6 +48,7 @@ public:
 	Vec3 GetShootPos();
 	void SaveShootAngle(CUserCmd* pCmd, bool bSendPacket);
 	Vec3* GetShootAngle();
+	bool IsTimingUnsure();
 
 	bool m_bDoubletap = false;
 	bool m_bWarp = false;

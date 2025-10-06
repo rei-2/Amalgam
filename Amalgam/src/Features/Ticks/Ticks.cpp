@@ -90,7 +90,7 @@ void CTicks::Speedhack()
 
 void CTicks::SaveShootPos(CTFPlayer* pLocal)
 {
-	if (!m_bDoubletap && !m_bWarp)
+	if (m_iShiftedTicks == m_iShiftStart)
 		m_vShootPos = pLocal->GetShootPos();
 }
 Vec3 CTicks::GetShootPos()
@@ -321,7 +321,7 @@ void CTicks::CLMove(float accumulated_extra_samples, bool bFinalTick)
 			SDK::Output("Post loop", "\n", { 0, 0, 255, 255 });
 #endif
 
-		m_bShifting = m_bAntiWarp = false;
+		m_bShifting = m_bAntiWarp = m_bTimingUnsure = false;
 		if (m_bWarp)
 			m_iDeficit = 0;
 
@@ -344,7 +344,7 @@ void CTicks::CLMoveManage(CTFPlayer* pLocal)
 	Speedhack();
 }
 
-void CTicks::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
+void CTicks::Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
 {
 	F::NetworkFix.FixInputDelay(bFinalTick);
 
@@ -352,7 +352,7 @@ void CTicks::Run(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pL
 	CLMove(accumulated_extra_samples, bFinalTick);
 }
 
-void CTicks::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
+void CTicks::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket)
 {
 	if (!pLocal)
 		return;
@@ -363,6 +363,9 @@ void CTicks::CreateMove(CTFPlayer* pLocal, CUserCmd* pCmd, bool* pSendPacket)
 
 	SaveShootPos(pLocal);
 	SaveShootAngle(pCmd, *pSendPacket);
+
+	if (m_bDoubletap && m_iShiftedTicks == m_iShiftStart && pWeapon && pWeapon->IsInReload())
+		m_bTimingUnsure = true;
 }
 
 void CTicks::ManagePacket(CUserCmd* pCmd, bool* pSendPacket)
@@ -456,6 +459,10 @@ int CTicks::GetMinimumTicksNeeded(CTFWeaponBase* pWeapon)
 	return (GetShotsWithinPacket(pWeapon) - 1) * std::ceilf(pWeapon->GetFireRate() / TICK_INTERVAL) + iDelay;
 }
 
+bool CTicks::IsTimingUnsure()
+{	// actually knowing when we'll shoot would be better than this, but this is fine for now
+	return m_bTimingUnsure || m_bSpeedhack /*|| m_bWarp*/;
+}
 void CTicks::Draw(CTFPlayer* pLocal)
 {
 	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::Ticks) || !pLocal->IsAlive())

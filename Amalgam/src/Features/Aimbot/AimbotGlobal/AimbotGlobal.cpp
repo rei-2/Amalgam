@@ -272,9 +272,7 @@ bool CAimbotGlobal::ShouldAim()
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
-		// for performance reasons, the F::Ticks.m_bDoubletap condition is not a great fix here
-		// and actually properly predicting when shots will be fired should likely be done over this, but it's fine for now
-		if (!G::CanPrimaryAttack && !G::Reloading && !F::Ticks.m_bDoubletap && !F::Ticks.m_bSpeedhack)
+		if (!G::CanPrimaryAttack && !G::Reloading && !F::Ticks.IsTimingUnsure())
 			return false;
 	}
 
