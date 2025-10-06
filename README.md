@@ -1,4 +1,4 @@
-# Amalgam - Competitive Fork
+# Amalgam - Competitive Fork - Press F3 to open the menu!
 
 [![GitHub Repo stars](https://img.shields.io/github/stars/coffeegrind123/Amalgam-Comp)](/../../stargazers)
 [![Matrix](https://img.shields.io/matrix/amalgam-comp:matrix.org?server_fqdn=matrix.org&logo=element&label=matrix)](https://matrix.to/#/#amalgam-comp:matrix.org)
@@ -25,8 +25,6 @@ A competitive-focused fork featuring enhanced information gathering and advantag
 
 ###### AVX2 may be faster than SSE2 though not all CPUs support it (`Steam > Help > System Information > Processor Information > AVX2`). Freetype uses freetype as the text rasterizer and includes some custom fonts, which results in better looking text but larger DLL sizes.
 ###### If nightly.link is down, you can still download through [github](https://github.com/coffeegrind123/Amalgam-Comp/actions) with an account.
-
-## Press F3 to open the menu
 
 ## Added Features
 
