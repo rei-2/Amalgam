@@ -1623,11 +1623,11 @@ bool CAimbotProjectile::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMeth
 // assume angle calculated outside with other overload
 void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 {
-	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
+	bool bUnsure = F::Ticks.IsTimingUnsure() || F::Ticks.GetTicks(H::Entities.GetWeapon());
 	switch (iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
-		if (G::Attacking != 1 && !bDoubleTap)
+		if (G::Attacking != 1 && !bUnsure)
 			break;
 		[[fallthrough]];
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
@@ -1637,7 +1637,7 @@ void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
 		if (auto pWeapon = H::Entities.GetWeapon();
-			G::Attacking == 1 || bDoubleTap || pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
+			G::Attacking == 1 || bUnsure || pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_FLAMETHROWER)
 		{
 			SDK::FixMovement(pCmd, vAngle);
 			pCmd->viewangles = vAngle;
@@ -1647,6 +1647,7 @@ void CAimbotProjectile::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
 		SDK::FixMovement(pCmd, vAngle);
 		pCmd->viewangles = vAngle;
+		G::SilentAngles = true;
 	}
 }
 

@@ -685,11 +685,11 @@ bool CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 // assume angle calculated outside with other overload
 void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 {
-	bool bDoubleTap = F::Ticks.m_bDoubletap || F::Ticks.GetTicks(H::Entities.GetWeapon()) || F::Ticks.m_bSpeedhack;
+	bool bUnsure = F::Ticks.IsTimingUnsure() || F::Ticks.GetTicks(H::Entities.GetWeapon());
 	switch (iMethod)
 	{
 	case Vars::Aimbot::General::AimTypeEnum::Plain:
-		if (G::Attacking != 1 && !bDoubleTap)
+		if (G::Attacking != 1 && !bUnsure)
 			break;
 		[[fallthrough]];
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
@@ -698,7 +698,7 @@ void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 		I::EngineClient->SetViewAngles(vAngle);
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
-		if (G::Attacking == 1 || bDoubleTap)
+		if (G::Attacking == 1 || bUnsure)
 		{
 			SDK::FixMovement(pCmd, vAngle);
 			pCmd->viewangles = vAngle;
@@ -708,6 +708,7 @@ void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
 		SDK::FixMovement(pCmd, vAngle);
 		pCmd->viewangles = vAngle;
+		G::SilentAngles = true;
 	}
 }
 
