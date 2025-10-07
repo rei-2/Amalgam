@@ -5,106 +5,33 @@
 
 static CUserCmd s_tDummyCmd = {};
 
-void CMovementSimulation::Store(PlayerStorage& tStorage)
+void CMovementSimulation::Store(MoveStorage& tStorage)
 {
-	tStorage.m_PlayerData.m_vecOrigin = tStorage.m_pPlayer->m_vecOrigin();
-	tStorage.m_PlayerData.m_vecVelocity = tStorage.m_pPlayer->m_vecVelocity();
-	tStorage.m_PlayerData.m_vecBaseVelocity = tStorage.m_pPlayer->m_vecBaseVelocity();
-	tStorage.m_PlayerData.m_vecViewOffset = tStorage.m_pPlayer->m_vecViewOffset();
-	tStorage.m_PlayerData.m_hGroundEntity = tStorage.m_pPlayer->m_hGroundEntity();
-	tStorage.m_PlayerData.m_fFlags = tStorage.m_pPlayer->m_fFlags();
-	tStorage.m_PlayerData.m_flDucktime = tStorage.m_pPlayer->m_flDucktime();
-	tStorage.m_PlayerData.m_flDuckJumpTime = tStorage.m_pPlayer->m_flDuckJumpTime();
-	tStorage.m_PlayerData.m_bDucked = tStorage.m_pPlayer->m_bDucked();
-	tStorage.m_PlayerData.m_bDucking = tStorage.m_pPlayer->m_bDucking();
-	tStorage.m_PlayerData.m_bInDuckJump = tStorage.m_pPlayer->m_bInDuckJump();
-	tStorage.m_PlayerData.m_flModelScale = tStorage.m_pPlayer->m_flModelScale();
-	tStorage.m_PlayerData.m_nButtons = tStorage.m_pPlayer->m_nButtons();
-	tStorage.m_PlayerData.m_flLastMovementStunChange = tStorage.m_pPlayer->m_flLastMovementStunChange();
-	tStorage.m_PlayerData.m_flStunLerpTarget = tStorage.m_pPlayer->m_flStunLerpTarget();
-	tStorage.m_PlayerData.m_bStunNeedsFadeOut = tStorage.m_pPlayer->m_bStunNeedsFadeOut();
-	tStorage.m_PlayerData.m_flPrevTauntYaw = tStorage.m_pPlayer->m_flPrevTauntYaw();
-	tStorage.m_PlayerData.m_flTauntYaw = tStorage.m_pPlayer->m_flTauntYaw();
-	tStorage.m_PlayerData.m_flCurrentTauntMoveSpeed = tStorage.m_pPlayer->m_flCurrentTauntMoveSpeed();
-	tStorage.m_PlayerData.m_iKartState = tStorage.m_pPlayer->m_iKartState();
-	tStorage.m_PlayerData.m_flVehicleReverseTime = tStorage.m_pPlayer->m_flVehicleReverseTime();
-	tStorage.m_PlayerData.m_flHypeMeter = tStorage.m_pPlayer->m_flHypeMeter();
-	tStorage.m_PlayerData.m_flMaxspeed = tStorage.m_pPlayer->m_flMaxspeed();
-	tStorage.m_PlayerData.m_nAirDucked = tStorage.m_pPlayer->m_nAirDucked();
-	tStorage.m_PlayerData.m_bJumping = tStorage.m_pPlayer->m_bJumping();
-	tStorage.m_PlayerData.m_iAirDash = tStorage.m_pPlayer->m_iAirDash();
-	tStorage.m_PlayerData.m_flWaterJumpTime = tStorage.m_pPlayer->m_flWaterJumpTime();
-	tStorage.m_PlayerData.m_flSwimSoundTime = tStorage.m_pPlayer->m_flSwimSoundTime();
-	tStorage.m_PlayerData.m_surfaceProps = tStorage.m_pPlayer->m_surfaceProps();
-	tStorage.m_PlayerData.m_pSurfaceData = tStorage.m_pPlayer->m_pSurfaceData();
-	tStorage.m_PlayerData.m_surfaceFriction = tStorage.m_pPlayer->m_surfaceFriction();
-	tStorage.m_PlayerData.m_chTextureType = tStorage.m_pPlayer->m_chTextureType();
-	tStorage.m_PlayerData.m_vecPunchAngle = tStorage.m_pPlayer->m_vecPunchAngle();
-	tStorage.m_PlayerData.m_vecPunchAngleVel = tStorage.m_pPlayer->m_vecPunchAngleVel();
-	tStorage.m_PlayerData.m_MoveType = tStorage.m_pPlayer->m_MoveType();
-	tStorage.m_PlayerData.m_MoveCollide = tStorage.m_pPlayer->m_MoveCollide();
-	tStorage.m_PlayerData.m_vecLadderNormal = tStorage.m_pPlayer->m_vecLadderNormal();
-	tStorage.m_PlayerData.m_flGravity = tStorage.m_pPlayer->m_flGravity();
-	tStorage.m_PlayerData.m_nWaterLevel = tStorage.m_pPlayer->m_nWaterLevel();
-	tStorage.m_PlayerData.m_nWaterType = tStorage.m_pPlayer->m_nWaterType();
-	tStorage.m_PlayerData.m_flFallVelocity = tStorage.m_pPlayer->m_flFallVelocity();
-	tStorage.m_PlayerData.m_nPlayerCond = tStorage.m_pPlayer->m_nPlayerCond();
-	tStorage.m_PlayerData.m_nPlayerCondEx = tStorage.m_pPlayer->m_nPlayerCondEx();
-	tStorage.m_PlayerData.m_nPlayerCondEx2 = tStorage.m_pPlayer->m_nPlayerCondEx2();
-	tStorage.m_PlayerData.m_nPlayerCondEx3 = tStorage.m_pPlayer->m_nPlayerCondEx3();
-	tStorage.m_PlayerData.m_nPlayerCondEx4 = tStorage.m_pPlayer->m_nPlayerCondEx4();
-	tStorage.m_PlayerData._condition_bits = tStorage.m_pPlayer->_condition_bits();
+	auto pMap = tStorage.m_pPlayer->GetPredDescMap();
+	if (!pMap)
+		return;
+
+	size_t iSize = tStorage.m_pPlayer->GetIntermediateDataSize();
+	tStorage.m_pData = reinterpret_cast<byte*>(I::MemAlloc->Alloc(iSize));
+
+	CPredictionCopy copy = { PC_NETWORKED_ONLY, tStorage.m_pData, PC_DATA_PACKED, tStorage.m_pPlayer, PC_DATA_NORMAL };
+	copy.TransferData("MovementSimulationStore", tStorage.m_pPlayer->entindex(), pMap);
 }
 
-void CMovementSimulation::Reset(PlayerStorage& tStorage)
+void CMovementSimulation::Reset(MoveStorage& tStorage)
 {
-	tStorage.m_pPlayer->m_vecOrigin() = tStorage.m_PlayerData.m_vecOrigin;
-	tStorage.m_pPlayer->m_vecVelocity() = tStorage.m_PlayerData.m_vecVelocity;
-	tStorage.m_pPlayer->m_vecBaseVelocity() = tStorage.m_PlayerData.m_vecBaseVelocity;
-	tStorage.m_pPlayer->m_vecViewOffset() = tStorage.m_PlayerData.m_vecViewOffset;
-	tStorage.m_pPlayer->m_hGroundEntity() = tStorage.m_PlayerData.m_hGroundEntity;
-	tStorage.m_pPlayer->m_fFlags() = tStorage.m_PlayerData.m_fFlags;
-	tStorage.m_pPlayer->m_flDucktime() = tStorage.m_PlayerData.m_flDucktime;
-	tStorage.m_pPlayer->m_flDuckJumpTime() = tStorage.m_PlayerData.m_flDuckJumpTime;
-	tStorage.m_pPlayer->m_bDucked() = tStorage.m_PlayerData.m_bDucked;
-	tStorage.m_pPlayer->m_bDucking() = tStorage.m_PlayerData.m_bDucking;
-	tStorage.m_pPlayer->m_bInDuckJump() = tStorage.m_PlayerData.m_bInDuckJump;
-	tStorage.m_pPlayer->m_flModelScale() = tStorage.m_PlayerData.m_flModelScale;
-	tStorage.m_pPlayer->m_nButtons() = tStorage.m_PlayerData.m_nButtons;
-	tStorage.m_pPlayer->m_flLastMovementStunChange() = tStorage.m_PlayerData.m_flLastMovementStunChange;
-	tStorage.m_pPlayer->m_flStunLerpTarget() = tStorage.m_PlayerData.m_flStunLerpTarget;
-	tStorage.m_pPlayer->m_bStunNeedsFadeOut() = tStorage.m_PlayerData.m_bStunNeedsFadeOut;
-	tStorage.m_pPlayer->m_flPrevTauntYaw() = tStorage.m_PlayerData.m_flPrevTauntYaw;
-	tStorage.m_pPlayer->m_flTauntYaw() = tStorage.m_PlayerData.m_flTauntYaw;
-	tStorage.m_pPlayer->m_flCurrentTauntMoveSpeed() = tStorage.m_PlayerData.m_flCurrentTauntMoveSpeed;
-	tStorage.m_pPlayer->m_iKartState() = tStorage.m_PlayerData.m_iKartState;
-	tStorage.m_pPlayer->m_flVehicleReverseTime() = tStorage.m_PlayerData.m_flVehicleReverseTime;
-	tStorage.m_pPlayer->m_flHypeMeter() = tStorage.m_PlayerData.m_flHypeMeter;
-	tStorage.m_pPlayer->m_flMaxspeed() = tStorage.m_PlayerData.m_flMaxspeed;
-	tStorage.m_pPlayer->m_nAirDucked() = tStorage.m_PlayerData.m_nAirDucked;
-	tStorage.m_pPlayer->m_bJumping() = tStorage.m_PlayerData.m_bJumping;
-	tStorage.m_pPlayer->m_iAirDash() = tStorage.m_PlayerData.m_iAirDash;
-	tStorage.m_pPlayer->m_flWaterJumpTime() = tStorage.m_PlayerData.m_flWaterJumpTime;
-	tStorage.m_pPlayer->m_flSwimSoundTime() = tStorage.m_PlayerData.m_flSwimSoundTime;
-	tStorage.m_pPlayer->m_surfaceProps() = tStorage.m_PlayerData.m_surfaceProps;
-	tStorage.m_pPlayer->m_pSurfaceData() = tStorage.m_PlayerData.m_pSurfaceData;
-	tStorage.m_pPlayer->m_surfaceFriction() = tStorage.m_PlayerData.m_surfaceFriction;
-	tStorage.m_pPlayer->m_chTextureType() = tStorage.m_PlayerData.m_chTextureType;
-	tStorage.m_pPlayer->m_vecPunchAngle() = tStorage.m_PlayerData.m_vecPunchAngle;
-	tStorage.m_pPlayer->m_vecPunchAngleVel() = tStorage.m_PlayerData.m_vecPunchAngleVel;
-	tStorage.m_pPlayer->m_MoveType() = tStorage.m_PlayerData.m_MoveType;
-	tStorage.m_pPlayer->m_MoveCollide() = tStorage.m_PlayerData.m_MoveCollide;
-	tStorage.m_pPlayer->m_vecLadderNormal() = tStorage.m_PlayerData.m_vecLadderNormal;
-	tStorage.m_pPlayer->m_flGravity() = tStorage.m_PlayerData.m_flGravity;
-	tStorage.m_pPlayer->m_nWaterLevel() = tStorage.m_PlayerData.m_nWaterLevel;
-	tStorage.m_pPlayer->m_nWaterType() = tStorage.m_PlayerData.m_nWaterType;
-	tStorage.m_pPlayer->m_flFallVelocity() = tStorage.m_PlayerData.m_flFallVelocity;
-	tStorage.m_pPlayer->m_nPlayerCond() = tStorage.m_PlayerData.m_nPlayerCond;
-	tStorage.m_pPlayer->m_nPlayerCondEx() = tStorage.m_PlayerData.m_nPlayerCondEx;
-	tStorage.m_pPlayer->m_nPlayerCondEx2() = tStorage.m_PlayerData.m_nPlayerCondEx2;
-	tStorage.m_pPlayer->m_nPlayerCondEx3() = tStorage.m_PlayerData.m_nPlayerCondEx3;
-	tStorage.m_pPlayer->m_nPlayerCondEx4() = tStorage.m_PlayerData.m_nPlayerCondEx4;
-	tStorage.m_pPlayer->_condition_bits() = tStorage.m_PlayerData._condition_bits;
+	if (tStorage.m_pData)
+	{
+		auto pMap = tStorage.m_pPlayer->GetPredDescMap();
+		if (!pMap)
+			return;
+
+		CPredictionCopy copy = { PC_NETWORKED_ONLY, tStorage.m_pPlayer, PC_DATA_NORMAL, tStorage.m_pData, PC_DATA_PACKED };
+		copy.TransferData("MovementSimulationReset", tStorage.m_pPlayer->entindex(), pMap);
+
+		I::MemAlloc->Free(tStorage.m_pData);
+		tStorage.m_pData = nullptr;
+	}
 }
 
 void CMovementSimulation::Store()
@@ -203,7 +130,7 @@ void CMovementSimulation::Store()
 
 
 
-bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool bHitchance, bool bStrafe)
+bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tStorage, bool bHitchance, bool bStrafe)
 {
 	if (!pEntity || !pEntity->IsPlayer() || !pEntity->As<CTFPlayer>()->IsAlive())
 	{
@@ -214,42 +141,40 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 	auto pPlayer = pEntity->As<CTFPlayer>();
 	tStorage.m_pPlayer = pPlayer;
 
-	I::MoveHelper->SetHost(pPlayer);
-	pPlayer->m_pCurrentCommand() = &s_tDummyCmd;
-
-	// store player restore data
-	Store(tStorage);
-
 	// store vars
 	m_bOldInPrediction = I::Prediction->m_bInPrediction;
 	m_bOldFirstTimePredicted = I::Prediction->m_bFirstTimePredicted;
 	m_flOldFrametime = I::GlobalVars->frametime;
 
+	// store restore data
+	Store(tStorage);
+
 	// the hacks that make it work
+	I::MoveHelper->SetHost(pPlayer);
+	pPlayer->m_pCurrentCommand() = &s_tDummyCmd;
+
+	if (auto pAvgVelocity = H::Entities.GetAvgVelocity(pPlayer->entindex()))
+		pPlayer->m_vecVelocity() = *pAvgVelocity; // only use average velocity here
+
+	if (pPlayer->m_bDucked() = pPlayer->IsDucking())
 	{
-		if (auto pAvgVelocity = H::Entities.GetAvgVelocity(pPlayer->entindex()))
-			pPlayer->m_vecVelocity() = *pAvgVelocity; // only use average velocity here
-
-		if (pPlayer->m_bDucked() = pPlayer->IsDucking())
-		{
-			pPlayer->m_fFlags() &= ~FL_DUCKING; // breaks origin's z if FL_DUCKING is not removed
-			pPlayer->m_flDucktime() = 0.f;
-			pPlayer->m_flDuckJumpTime() = 0.f;
-			pPlayer->m_bDucking() = false;
-			pPlayer->m_bInDuckJump() = false;
-		}
-
-		if (pPlayer != H::Entities.GetLocal())
-		{
-			pPlayer->m_vecBaseVelocity() = Vec3(); // residual basevelocity causes issues
-			if (pPlayer->IsOnGround())
-				pPlayer->m_vecVelocity().z = std::min(pPlayer->m_vecVelocity().z, 0.f); // step fix
-			else
-				pPlayer->m_hGroundEntity() = nullptr; // fix for velocity.z being set to 0 even if in air
-		}
-		else if (Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
-			tStorage.m_bBunnyHop = true;
+		pPlayer->m_fFlags() &= ~FL_DUCKING; // breaks origin's z if FL_DUCKING is not removed
+		pPlayer->m_flDucktime() = 0.f;
+		pPlayer->m_flDuckJumpTime() = 0.f;
+		pPlayer->m_bDucking() = false;
+		pPlayer->m_bInDuckJump() = false;
 	}
+
+	if (pPlayer != H::Entities.GetLocal())
+	{
+		pPlayer->m_vecBaseVelocity() = Vec3(); // residual basevelocity causes issues
+		if (pPlayer->IsOnGround())
+			pPlayer->m_vecVelocity().z = std::min(pPlayer->m_vecVelocity().z, 0.f); // step fix
+		else
+			pPlayer->m_hGroundEntity() = nullptr; // fix for velocity.z being set to 0 even if in air
+	}
+	else if (Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
+		tStorage.m_bBunnyHop = true;
 
 	// setup move data
 	if (!SetupMoveData(tStorage))
@@ -311,7 +236,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, PlayerStorage& tStora
 	return true;
 }
 
-bool CMovementSimulation::SetupMoveData(PlayerStorage& tStorage)
+bool CMovementSimulation::SetupMoveData(MoveStorage& tStorage)
 {
 	if (!tStorage.m_pPlayer)
 		return false;
@@ -465,7 +390,7 @@ static inline bool GetYawDifference(MoveData& tRecord1, MoveData& tRecord2, bool
 	}
 }
 
-void CMovementSimulation::GetAverageYaw(PlayerStorage& tStorage, int iSamples)
+void CMovementSimulation::GetAverageYaw(MoveStorage& tStorage, int iSamples)
 {
 	auto pPlayer = tStorage.m_pPlayer;
 	auto& vRecords = m_mRecords[pPlayer->entindex()];
@@ -549,7 +474,7 @@ void CMovementSimulation::GetAverageYaw(PlayerStorage& tStorage, int iSamples)
 	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} from {} ({}) {}", flAverageYaw, iTicks, iMinimum, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), { 100, 255, 150 }, Vars::Debug::Logging.Value);
 }
 
-bool CMovementSimulation::StrafePrediction(PlayerStorage& tStorage, int iSamples)
+bool CMovementSimulation::StrafePrediction(MoveStorage& tStorage, int iSamples)
 {
 	if (tStorage.m_bDirectMove
 		? !(Vars::Aimbot::Projectile::StrafePrediction.Value & Vars::Aimbot::Projectile::StrafePredictionEnum::Ground)
@@ -560,7 +485,7 @@ bool CMovementSimulation::StrafePrediction(PlayerStorage& tStorage, int iSamples
 	return true;
 }
 
-bool CMovementSimulation::SetDuck(PlayerStorage& tStorage, bool bDuck) // this only touches origin, bounds
+bool CMovementSimulation::SetDuck(MoveStorage& tStorage, bool bDuck) // this only touches origin, bounds
 {
 	if (bDuck == tStorage.m_pPlayer->m_bDucked())
 		return true;
@@ -631,7 +556,7 @@ void CMovementSimulation::RestoreBounds(CTFPlayer* pPlayer)
 	}
 }
 
-void CMovementSimulation::RunTick(PlayerStorage& tStorage, bool bPath, std::function<void(CMoveData&)>* pCallback)
+void CMovementSimulation::RunTick(MoveStorage& tStorage, bool bPath, std::function<void(CMoveData&)>* pCallback)
 {
 	if (tStorage.m_bFailed || !tStorage.m_pPlayer || !tStorage.m_pPlayer->IsPlayer())
 		return;
@@ -701,12 +626,12 @@ void CMovementSimulation::RunTick(PlayerStorage& tStorage, bool bPath, std::func
 	RestoreBounds(tStorage.m_pPlayer);
 }
 
-void CMovementSimulation::RunTick(PlayerStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback)
+void CMovementSimulation::RunTick(MoveStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback)
 {
 	RunTick(tStorage, bPath, &fCallback);
 }
 
-void CMovementSimulation::Restore(PlayerStorage& tStorage)
+void CMovementSimulation::Restore(MoveStorage& tStorage)
 {
 	if (tStorage.m_bInitFailed || !tStorage.m_pPlayer)
 		return;
@@ -719,12 +644,6 @@ void CMovementSimulation::Restore(PlayerStorage& tStorage)
 	I::Prediction->m_bInPrediction = m_bOldInPrediction;
 	I::Prediction->m_bFirstTimePredicted = m_bOldFirstTimePredicted;
 	I::GlobalVars->frametime = m_flOldFrametime;
-
-	/*
-	const bool bInitFailed = tStorage.m_bInitFailed, bFailed = tStorage.m_bFailed;
-	memset(&tStorage, 0, sizeof(PlayerStorage));
-	tStorage.m_bInitFailed = bInitFailed, tStorage.m_bFailed = bFailed;
-	*/
 }
 
 float CMovementSimulation::GetPredictedDelta(CBaseEntity* pEntity)

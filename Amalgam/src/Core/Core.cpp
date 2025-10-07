@@ -2,10 +2,10 @@
 
 #include "../SDK/SDK.h"
 #include "../BytePatches/BytePatches.h"
-#include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Configs/Configs.h"
-#include "../Features/Commands/Commands.h"
 #include "../Features/ImGui/Menu/Menu.h"
+#include "../Features/EnginePrediction/EnginePrediction.h"
+#include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../SDK/Events/Events.h"
 #include <Psapi.h>
@@ -141,6 +141,7 @@ void CCore::Unload()
 	U::ConVars.FindVar("cl_wpn_sway_scale")->SetValue(0.f);
 
 	Sleep(250);
+	F::EnginePrediction.Unload();
 	U::ConVars.Unload();
 	F::Materials.UnloadMaterials();
 

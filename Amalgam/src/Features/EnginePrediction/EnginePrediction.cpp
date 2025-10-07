@@ -72,6 +72,10 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!pLocal->IsAlive())
 		return;
 
+	auto pMap = pLocal->GetPredDescMap();
+	if (!pMap)
+		return;
+
 	m_nOldTickCount = I::GlobalVars->tickcount;
 	m_flOldCurrentTime = I::GlobalVars->curtime;
 	m_flOldFrameTime = I::GlobalVars->frametime;
@@ -80,8 +84,20 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->curtime = TICKS_TO_TIME(I::GlobalVars->tickcount);
 	I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
 
-	m_vOldOrigin = pLocal->m_vecOrigin();
-	m_vOldVelocity = pLocal->m_vecVelocity();
+	size_t iSize = pLocal->GetIntermediateDataSize();
+	if (!m_tLocal.m_pData) 
+	{
+		m_tLocal.m_pData = reinterpret_cast<byte*>(I::MemAlloc->Alloc(iSize));
+		m_tLocal.m_iSize = iSize;
+	}
+	else if (m_tLocal.m_iSize != iSize)
+	{
+		m_tLocal.m_pData = reinterpret_cast<byte*>(I::MemAlloc->Realloc(m_tLocal.m_pData, iSize));
+		m_tLocal.m_iSize = iSize;
+	}
+
+	CPredictionCopy copy = { PC_EVERYTHING, m_tLocal.m_pData, PC_DATA_PACKED, pLocal, PC_DATA_NORMAL };
+	copy.TransferData("EnginePredictionStart", pLocal->entindex(), pMap);
 
 	Simulate(pLocal, pCmd);
 }
@@ -92,10 +108,23 @@ void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!pLocal->IsAlive())
 		return;
 
+	auto pMap = pLocal->GetPredDescMap();
+	if (!pMap)
+		return;
+
 	I::GlobalVars->tickcount = m_nOldTickCount;
 	I::GlobalVars->curtime = m_flOldCurrentTime;
 	I::GlobalVars->frametime = m_flOldFrameTime;
 
-	pLocal->SetAbsOrigin(pLocal->m_vecOrigin() = m_vOldOrigin);
-	pLocal->SetAbsVelocity(pLocal->m_vecVelocity() = m_vOldVelocity);
+	CPredictionCopy copy = { PC_EVERYTHING, pLocal, PC_DATA_NORMAL, m_tLocal.m_pData, PC_DATA_PACKED };
+	copy.TransferData("EnginePredictionEnd", pLocal->entindex(), pMap);
+}
+
+void CEnginePrediction::Unload()
+{
+	if (m_tLocal.m_pData)
+	{
+		I::MemAlloc->Free(m_tLocal.m_pData);
+		m_tLocal = {};
+	}
 }

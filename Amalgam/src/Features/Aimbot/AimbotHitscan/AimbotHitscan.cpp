@@ -327,7 +327,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			tTarget.m_vPos = tTarget.m_pEntity->m_vecOrigin();
 
 			// not lag compensated (i assume) so run movesim based on ping
-			PlayerStorage tStorage;
+			MoveStorage tStorage;
 			F::MoveSim.Initialize(tTarget.m_pEntity, tStorage);
 			if (!tStorage.m_bFailed)
 			{

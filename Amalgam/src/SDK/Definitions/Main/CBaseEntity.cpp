@@ -2,6 +2,11 @@
 
 #include "../../SDK.h"
 
+int CBaseEntity::GetIntermediateDataSize()
+{
+	return std::max(GetPredDescMap()->packed_size, 4);
+}
+
 Vec3 CBaseEntity::GetSize()
 {
 	return m_vecMaxs() - m_vecMins();

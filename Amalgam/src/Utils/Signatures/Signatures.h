@@ -1,6 +1,5 @@
 #pragma once
 #include "../Macros/Macros.h"
-#include <cstdint>
 #include <vector>
 
 class CSignature
@@ -9,11 +8,11 @@ private:
 	uintptr_t m_dwVal;
 	const char* m_sDLLName;
 	const char* m_sSignature;
-	int m_nOffset;
+	int8_t m_nOffset;
 	const char* m_sName;
 
 public:
-	CSignature(const char* sDLLName, const char* sSignature, int nOffset, const char* sName);
+	CSignature(const char* sDLLName, const char* sSignature, int8_t nOffset, const char* sName);
 
 	bool Initialize();
 

@@ -21,10 +21,8 @@
   <br><br>
   <sub>If nightly.link is down or can't be accessed, you can still download through [GitHub](https://github.com/rei-2/Amalgam/actions) with an account. </sub>
 
+  ##
+
+  Read about Amalgam's documentation and features [here](../../wiki). 
+
 </div>
-
-##
-
-[VAC bypass](https://github.com/danielkrupinski/VAC-Bypass-Loader) and [Xenos](https://github.com/DarthTon/Xenos/releases) recommended. 
-
-Read about Amalgam's documentation and features [here](../../wiki). 
