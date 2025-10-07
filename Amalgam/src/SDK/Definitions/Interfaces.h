@@ -20,6 +20,7 @@
 #include "Interfaces/IKeyValuesSystem.h"
 #include "Interfaces/IMaterialSystem.h"
 #include "Interfaces/IMatSystemSurface.h"
+#include "Interfaces/IMemAlloc.h"
 #include "Interfaces/IMoveHelper.h"
 #include "Interfaces/IPanel.h"
 #include "Interfaces/IStudioRender.h"

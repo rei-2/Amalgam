@@ -593,6 +593,10 @@
     <ClInclude Include="src\SDK\Definitions\Main\PlayerStats.h" />
     <ClInclude Include="src\Features\Visuals\Groups\Groups.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IKeyValuesSystem.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\IFileSystem.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\ILocalize.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\IMemAlloc.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\CPredictionCopy.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

@@ -15,6 +15,7 @@
 #include "Main/CEconWearable.h"
 #include "Main/CEntitySphereQuery.h"
 #include "Main/CMultiPlayerAnimState.h"
+#include "Main/CPredictionCopy.h"
 #include "Main/CSniperDot.h"
 #include "Main/CTFPlayer.h"
 #include "Main/CTFPlayerResource.h"

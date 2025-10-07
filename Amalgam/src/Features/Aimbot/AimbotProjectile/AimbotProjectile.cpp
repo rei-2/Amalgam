@@ -1346,7 +1346,7 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 		|| !F::ProjSim.Initialize(tProjInfo, false))
 		return false;
 
-	PlayerStorage tStorage;
+	MoveStorage tStorage;
 	F::MoveSim.Initialize(tTarget.m_pEntity, tStorage);
 	tTarget.m_vPos = tTarget.m_pEntity->m_vecOrigin();
 
@@ -2025,7 +2025,7 @@ bool CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBa
 	if (!F::ProjSim.Initialize(tProjInfo, false, true))
 		return false;
 
-	PlayerStorage tStorage;
+	MoveStorage tStorage;
 	F::MoveSim.Initialize(tTarget.m_pEntity, tStorage);
 	tTarget.m_vPos = tTarget.m_pEntity->m_vecOrigin();
 

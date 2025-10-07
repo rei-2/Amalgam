@@ -39,7 +39,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		//float flOffset = pLocal->m_vecMaxs().x;
 		float flOffset = sqrtf(2 * powf(vOffset.y, 2.f) + powf(vOffset.z, 2.f));
 		bool bShouldReturn = true;
-		PlayerStorage tStorage;
+		MoveStorage tStorage;
 		if (F::MoveSim.Initialize(pLocal, tStorage, false))
 		{
 			for (int n = 1; n < 10; n++)
@@ -143,7 +143,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		bool bWillHit = false;
 		if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
 		{
-			PlayerStorage tStorage;
+			MoveStorage tStorage;
 			ProjectileInfo tProjInfo = {};
 
 			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, m_vAngles, tProjInfo, ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles) && F::ProjSim.Initialize(tProjInfo);
