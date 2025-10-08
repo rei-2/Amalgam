@@ -26,3 +26,7 @@
   Read about Amalgam's documentation and features [here](../../wiki). 
 
 </div>
+
+  Read about Amalgam's documentation and features [here](../../wiki). 
+
+</div>

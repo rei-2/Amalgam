@@ -2,62 +2,11 @@
 #include "../../../SDK/SDK.h"
 #include <functional>
 
-struct PlayerData
-{
-	Vec3 m_vecOrigin = {};
-	Vec3 m_vecVelocity = {};
-	Vec3 m_vecBaseVelocity = {};
-	Vec3 m_vecViewOffset = {};
-	EHANDLE m_hGroundEntity = nullptr;
-	int m_fFlags = 0;
-	float m_flDucktime = 0.f;
-	float m_flDuckJumpTime = 0.f;
-	bool m_bDucked = false;
-	bool m_bDucking = false;
-	bool m_bInDuckJump = false;
-	float m_flModelScale = 0.f;
-	int m_nButtons = 0;
-	float m_flLastMovementStunChange = 0.f;
-	float m_flStunLerpTarget = 0.f;
-	bool m_bStunNeedsFadeOut = false;
-	float m_flPrevTauntYaw = 0.f;
-	float m_flTauntYaw = 0.f;
-	float m_flCurrentTauntMoveSpeed = 0.f;
-	int m_iKartState = 0;
-	float m_flVehicleReverseTime = 0.f;
-	float m_flHypeMeter = 0.f;
-	float m_flMaxspeed = 0.f;
-	int m_nAirDucked = 0;
-	bool m_bJumping = false;
-	int m_iAirDash = 0;
-	float m_flWaterJumpTime = 0.f;
-	float m_flSwimSoundTime = 0.f;
-	int m_surfaceProps = 0;
-	void* m_pSurfaceData = nullptr;
-	float m_surfaceFriction = 0.f;
-	char m_chTextureType = 0;
-	Vec3 m_vecPunchAngle = {};
-	Vec3 m_vecPunchAngleVel = {};
-	float m_flJumpTime = 0.f;
-	byte m_MoveType = 0;
-	byte m_MoveCollide = 0;
-	Vec3 m_vecLadderNormal = {};
-	float m_flGravity = 0.f;
-	byte m_nWaterLevel = 0;
-	byte m_nWaterType = 0;
-	float m_flFallVelocity = 0.f;
-	int m_nPlayerCond = 0;
-	int m_nPlayerCondEx = 0;
-	int m_nPlayerCondEx2 = 0;
-	int m_nPlayerCondEx3 = 0;
-	int m_nPlayerCondEx4 = 0;
-	int _condition_bits = 0;
-};
-struct PlayerStorage
+struct MoveStorage
 {
 	CTFPlayer* m_pPlayer = nullptr;
 	CMoveData m_MoveData = {};
-	PlayerData m_PlayerData = {};
+	byte* m_pData = nullptr;
 
 	float m_flAverageYaw = 0.f;
 	bool m_bBunnyHop = false;
@@ -88,12 +37,12 @@ struct MoveData
 class CMovementSimulation
 {
 private:
-	void Store(PlayerStorage& tStorage);
-	void Reset(PlayerStorage& tStorage);
+	void Store(MoveStorage& tStorage);
+	void Reset(MoveStorage& tStorage);
 
-	bool SetupMoveData(PlayerStorage& tStorage);
-	void GetAverageYaw(PlayerStorage& tStorage, int iSamples);
-	bool StrafePrediction(PlayerStorage& tStorage, int iSamples);
+	bool SetupMoveData(MoveStorage& tStorage);
+	void GetAverageYaw(MoveStorage& tStorage, int iSamples);
+	bool StrafePrediction(MoveStorage& tStorage, int iSamples);
 
 	void SetBounds(CTFPlayer* pPlayer);
 	void RestoreBounds(CTFPlayer* pPlayer);
@@ -108,11 +57,11 @@ private:
 public:
 	void Store();
 
-	bool Initialize(CBaseEntity* pEntity, PlayerStorage& tStorage, bool bHitchance = true, bool bStrafe = true);
-	bool SetDuck(PlayerStorage& tStorage, bool bDuck);
-	void RunTick(PlayerStorage& tStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
-	void RunTick(PlayerStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback);
-	void Restore(PlayerStorage& tStorage);
+	bool Initialize(CBaseEntity* pEntity, MoveStorage& tStorage, bool bHitchance = true, bool bStrafe = true);
+	bool SetDuck(MoveStorage& tStorage, bool bDuck);
+	void RunTick(MoveStorage& tStorage, bool bPath = true, std::function<void(CMoveData&)>* pCallback = nullptr);
+	void RunTick(MoveStorage& tStorage, bool bPath, std::function<void(CMoveData&)> fCallback);
+	void Restore(MoveStorage& tStorage);
 
 	float GetPredictedDelta(CBaseEntity* pEntity);
 };

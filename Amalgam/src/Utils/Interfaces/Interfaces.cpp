@@ -10,11 +10,12 @@
 
 #pragma warning (disable: 4172)
 
-InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLLName, const char* sVersion, int nOffset, int nDereferenceCount)
+InterfaceInit_t::InterfaceInit_t(void** pPtr, const char* sDLL, const char* sName, int8_t nType, int8_t nOffset, int8_t nDereferenceCount)
 {
 	m_pPtr = pPtr;
-	m_sDLLName = sDLLName;
-	m_sVersion = sVersion;
+	m_sDLL = sDLL;
+	m_sName = sName;
+	m_nType = nType;
 	m_nOffset = nOffset;
 	m_nDereferenceCount = nDereferenceCount;
 
@@ -27,7 +28,7 @@ bool CInterfaces::Initialize()
 	{
 		const char* sModule = nullptr;
 		std::vector<std::string> vModules;
-		boost::split(vModules, Interface->m_sDLLName, boost::is_any_of(", "));
+		boost::split(vModules, Interface->m_sDLL, boost::is_any_of(", "));
 		if (vModules.size() == 1)
 			sModule = vModules.front().c_str();
 		else
@@ -46,37 +47,48 @@ bool CInterfaces::Initialize()
 				for (auto& sName : vModules)
 					ssModuleStream << std::format("{}{}", !ssModuleStream.str().empty() ? ", " : "", sName);
 
-				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find module:\n  {}\n  {}", ssModuleStream.str(), Interface->m_sVersion).c_str());
+				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find module:\n  {}\n  {}", ssModuleStream.str(), Interface->m_sName).c_str());
 				m_bFailed = true;
 				continue;
 			}
 		}
 
-		if (Interface->m_nOffset == -1)
-			*Interface->m_pPtr = U::Memory.FindInterface(sModule, Interface->m_sVersion);
-		else
+		switch (Interface->m_nType)
 		{
-			auto dwDest = U::Memory.FindSignature(sModule, Interface->m_sVersion);
+		case 0:
+		{
+			*Interface->m_pPtr = U::Memory.FindInterface(sModule, Interface->m_sName);
+			break;
+		}
+		case 1:
+		{
+			*Interface->m_pPtr = U::Memory.GetModuleExport<void*>(sModule, Interface->m_sName);
+			break;
+		}
+		case 2:
+		{
+			auto dwDest = U::Memory.FindSignature(sModule, Interface->m_sName);
 			if (!dwDest)
 			{
-				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find signature:\n  {}\n  {}", sModule, Interface->m_sVersion).c_str());
-				m_bFailed = true;
-				continue;
+				U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to find signature").c_str());
+				break;
 			}
 
 			auto dwAddress = U::Memory.RelToAbs(dwDest);
 			*Interface->m_pPtr = reinterpret_cast<void*>(dwAddress + Interface->m_nOffset);
+			break;
+		}
+		}
 
-			for (int n = 0; n < Interface->m_nDereferenceCount; n++)
-			{
-				if (Interface->m_pPtr)
-					*Interface->m_pPtr = *reinterpret_cast<void**>(*Interface->m_pPtr);
-			}
+		for (int n = 0; n < Interface->m_nDereferenceCount; n++)
+		{
+			if (Interface->m_pPtr)
+				*Interface->m_pPtr = *reinterpret_cast<void**>(*Interface->m_pPtr);
 		}
 
 		if (!*Interface->m_pPtr)
 		{
-			U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", sModule, Interface->m_sVersion).c_str());
+			U::Core.AppendFailText(std::format("CInterfaces::Initialize() failed to initialize:\n  {}\n  {}", sModule, Interface->m_sName).c_str());
 			m_bFailed = true;
 		}
 	}
