@@ -118,7 +118,7 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 		? std::max(iSwingTicks - Vars::Doubletap::TickLimit.Value - 1, 0)
 		: std::max(iSwingTicks, m_iDoubletapTicks);
 
-	int iSimTicks = GetSwingTime(pWeapon), iSwingTicks = GetSwingTime(pWeapon, false);
+	int iSimTicks = GetSwingTime(pWeapon);
 
 	if ((Vars::Aimbot::Melee::SwingPrediction.Value && iSimTicks || m_iDoubletapTicks) && G::CanPrimaryAttack && pWeapon->m_flSmackTime() < 0.f)
 	{
@@ -133,7 +133,7 @@ void CAimbotMelee::SimulatePlayers(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, st
 			F::MoveSim.Initialize(tTarget.m_pEntity, mStorage[tTarget.m_pEntity->entindex()], false);
 
 		int iMax = std::max(iSimTicks, m_iDoubletapTicks);
-		int iTicks = iMax; bool bSwung = false;
+		int iTicks = iMax;
 		for (int i = 0; i < iTicks; i++) // intended for plocal to collide with targets
 		{
 			if (i < iMax)

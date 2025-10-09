@@ -2,6 +2,7 @@
 
 #include "../SDK/SDK.h"
 #include "../BytePatches/BytePatches.h"
+#include "../Features/Commands/Commands.h"
 #include "../Features/Configs/Configs.h"
 #include "../Features/ImGui/Menu/Menu.h"
 #include "../Features/EnginePrediction/EnginePrediction.h"

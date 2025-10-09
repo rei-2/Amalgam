@@ -21,6 +21,7 @@ class CAimbotMelee
 	bool RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	int m_iDoubletapTicks = 0;
+	bool m_bShouldSwing = false;
 
 	std::unordered_map<int, std::deque<TickRecord>> m_mRecordMap;
 	std::unordered_map<int, std::vector<Vec3>> m_mPaths;
