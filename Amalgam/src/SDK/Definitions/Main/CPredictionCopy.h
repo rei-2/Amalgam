@@ -53,11 +53,31 @@ public:
 
 	int TransferData(const char* operation, int entindex, datamap_t* dmap)
 	{
-		if (!S::CPredictionCopy_TransferData())
+		// File-based logging that works in Release builds
+		FILE* log_file = fopen("C:\\temp\\amalgam_debug.log", "a");
+		if (log_file) {
+			fprintf(log_file, "CPredictionCopy::TransferData - Called with operation: %s\n", operation ? operation : "NULL");
+			fclose(log_file);
+		}
+
+		uintptr_t sig_addr = S::CPredictionCopy_TransferData();
+		if (!sig_addr)
 		{
 			// Signature not found - return error code to prevent crash
+			FILE* log_file = fopen("C:\\temp\\amalgam_debug.log", "a");
+			if (log_file) {
+				fprintf(log_file, "CPredictionCopy::TransferData - Signature not found, skipping\n");
+				fclose(log_file);
+			}
 			return -1;
 		}
+
+		FILE* log_file2 = fopen("C:\\temp\\amalgam_debug.log", "a");
+		if (log_file2) {
+			fprintf(log_file2, "CPredictionCopy::TransferData - Calling signature at 0x%llx\n", sig_addr);
+			fclose(log_file2);
+		}
+
 		return S::CPredictionCopy_TransferData.Call<int>(this, operation, entindex, dmap);
 	}
 
