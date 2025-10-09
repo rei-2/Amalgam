@@ -26,6 +26,10 @@ private:
 	float m_flOldCurrentTime = 0.f;
 	float m_flOldFrameTime = 0.f;
 
+	bool m_bDoubletap = false;
+	Vec3 m_vOriginalOrigin = {};
+	Vec3 m_vOriginalVelocity = {};
+
 	DatamapRestore_t m_tLocal = {};
 
 	std::unordered_map<CTFPlayer*, RestoreInfo_t> m_mRestore = {};
