@@ -34,6 +34,13 @@ MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ?
 MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared, 21), bool,
 	CClientModeShared* rcx, float flInputSampleTime, CUserCmd* pCmd)
 {
+	// File-based logging to trace crash location
+	FILE* log_file = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file) {
+		fprintf(log_file, "CreateMove: Hook entry\n");
+		fclose(log_file);
+	}
+
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::CClientModeShared_CreateMove[DEFAULT_BIND])
 		return CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
@@ -46,17 +53,48 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 		G::OriginalMove.m_iButtons = pCmd->buttons;
 	}
 
+	FILE* log_file1 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file1) {
+		fprintf(log_file1, "CreateMove: About to call original\n");
+		fclose(log_file1);
+	}
+
 	const bool bReturn = CALL_ORIGINAL(rcx, flInputSampleTime, pCmd);
 	if (!pCmd || !pCmd->command_number)
+	{
+		FILE* log_file = fopen("C:\\temp\\amalgam_debug.log", "a");
+		if (log_file) {
+			fprintf(log_file, "CreateMove: Early return - no cmd or command_number\n");
+			fclose(log_file);
+		}
 		return bReturn;
+	}
 
 	bool* pSendPacket = reinterpret_cast<bool*>(uintptr_t(_AddressOfReturnAddress()) + 0x128);
+
+	FILE* log_file2 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file2) {
+		fprintf(log_file2, "CreateMove: Setting globals\n");
+		fclose(log_file2);
+	}
 
 	G::PSilentAngles = G::SilentAngles = G::Attacking = G::Throwing = false;
 	G::LastUserCmd = G::CurrentUserCmd ? G::CurrentUserCmd : pCmd;
 	G::CurrentUserCmd = pCmd;
 
+	FILE* log_file3 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file3) {
+		fprintf(log_file3, "CreateMove: About to call Prediction->Update\n");
+		fclose(log_file3);
+	}
+
 	I::Prediction->Update(I::ClientState->m_nDeltaTick, I::ClientState->m_nDeltaTick > 0, I::ClientState->last_command_ack, I::ClientState->lastoutgoingcommand + I::ClientState->chokedcommands);
+
+	FILE* log_file4 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file4) {
+		fprintf(log_file4, "CreateMove: Prediction->Update complete\n");
+		fclose(log_file4);
+	}
 
 	if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
 	{	// correct tick_count for fakeinterp / nointerp
@@ -67,10 +105,28 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 	if (G::OriginalMove.m_iButtons & IN_DUCK)
 		pCmd->buttons |= IN_DUCK; // lol
 
+	FILE* log_file5 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file5) {
+		fprintf(log_file5, "CreateMove: About to get entities\n");
+		fclose(log_file5);
+	}
+
 	auto pLocal = H::Entities.GetLocal();
 	auto pWeapon = H::Entities.GetWeapon();
+
+	FILE* log_file6 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file6) {
+		fprintf(log_file6, "CreateMove: Got entities - pLocal=%p, pWeapon=%p\n", pLocal, pWeapon);
+		fclose(log_file6);
+	}
+
 	if (pLocal && pWeapon)
 	{	// update weapon info
+		FILE* log_file7 = fopen("C:\\temp\\amalgam_debug.log", "a");
+		if (log_file7) {
+			fprintf(log_file7, "CreateMove: Entering weapon info update\n");
+			fclose(log_file7);
+		}
 		G::CanPrimaryAttack = G::CanSecondaryAttack = G::Reloading = false;
 
 		bool bCanAttack = pLocal->CanAttack();
@@ -168,14 +224,39 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 	}
 
 	// run features
+	FILE* log_file8 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file8) {
+		fprintf(log_file8, "CreateMove: About to run features\n");
+		fclose(log_file8);
+	}
+
 	F::Spectate.CreateMove(pLocal, pCmd);
+
+	FILE* log_file9 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file9) {
+		fprintf(log_file9, "CreateMove: Spectate.CreateMove complete\n");
+		fclose(log_file9);
+	}
+
 	F::Misc.RunPre(pLocal, pCmd);
-	
+
+	FILE* log_file10 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file10) {
+		fprintf(log_file10, "CreateMove: Misc.RunPre complete\n");
+		fclose(log_file10);
+	}
+
 	// Handle mouse lock after respawn
 	if (F::SpectateAll.ShouldLockMouse())
 	{
 		pCmd->mousedx = 0;
 		pCmd->mousedy = 0;
+	}
+
+	FILE* log_file11 = fopen("C:\\temp\\amalgam_debug.log", "a");
+	if (log_file11) {
+		fprintf(log_file11, "CreateMove: About to call EnginePrediction.Start\n");
+		fclose(log_file11);
 	}
 
 	F::EnginePrediction.Start(pLocal, pCmd);
