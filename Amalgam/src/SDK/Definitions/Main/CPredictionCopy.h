@@ -53,7 +53,7 @@ public:
 
 	int TransferData(const char* operation, int entindex, datamap_t* dmap)
 	{
-		if (!S::CPredictionCopy_TransferData.dwVal)
+		if (!S::CPredictionCopy_TransferData())
 		{
 			// Signature not found - return error code to prevent crash
 			return -1;
