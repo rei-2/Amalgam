@@ -18,6 +18,8 @@
 static std::unordered_map<std::string, int> s_mTraceCount = {};
 #endif
 
+// dormant targeting removed
+
 std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	std::vector<Target_t> vTargets;
@@ -45,6 +47,15 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 
 		for (auto pEntity : H::Entities.GetGroup(eGroupType))
 		{
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			int iIndex = pEntity->entindex();
+			bool bDormant = pPlayer->IsDormant();
+
+		if (!bDormant && pPlayer->IsAlive())
+		{
+            // i will actually do this later
+		}
+
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
@@ -78,6 +89,8 @@ std::vector<Target_t> CAimbotProjectile::GetTargets(CTFPlayer* pLocal, CTFWeapon
 			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
 			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
+
+        // later
 
 		if (pWeapon->GetWeaponID() == TF_WEAPON_LUNCHBOX)
 			return vTargets;
@@ -405,7 +418,7 @@ std::unordered_map<int, Vec3> CAimbotProjectile::GetDirectPoints(Target_t& tTarg
 static inline std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, int iSamples)
 {
 	std::vector<std::pair<Vec3, int>> vPoints;
-	vPoints.reserve(iSamples);
+	vPoints.reserve(iSamples + 26);
 
 	float flRotateX = Vars::Aimbot::Projectile::SplashRotateX.Value < 0.f ? SDK::StdRandomFloat(0.f, 360.f) : Vars::Aimbot::Projectile::SplashRotateX.Value;
 	float flRotateY = Vars::Aimbot::Projectile::SplashRotateY.Value < 0.f ? SDK::StdRandomFloat(0.f, 360.f) : Vars::Aimbot::Projectile::SplashRotateY.Value;
@@ -429,6 +442,41 @@ static inline std::vector<std::pair<Vec3, int>> ComputeSphere(float flRadius, in
 		vPoints.emplace_back(vPoint, iPointType);
 	}
 	vPoints.emplace_back(Vec3(0.f, 0.f, -1.f) * flRadius, iPointType);
+
+	float flExtendedRadius = flRadius * 1.5f;
+	
+	vPoints.emplace_back(Vec3(0.f, 0.f, flExtendedRadius), iPointType);
+	vPoints.emplace_back(Vec3(0.f, 0.f, -flExtendedRadius), iPointType);
+	vPoints.emplace_back(Vec3(flExtendedRadius, 0.f, 0.f), iPointType);
+	vPoints.emplace_back(Vec3(-flExtendedRadius, 0.f, 0.f), iPointType);
+	vPoints.emplace_back(Vec3(0.f, flExtendedRadius, 0.f), iPointType);
+	vPoints.emplace_back(Vec3(0.f, -flExtendedRadius, 0.f), iPointType);
+	
+	float flMidRadius = flExtendedRadius * 0.7071f;
+	vPoints.emplace_back(Vec3(flMidRadius, flMidRadius, 0.f), iPointType);
+	vPoints.emplace_back(Vec3(flMidRadius, -flMidRadius, 0.f), iPointType);
+	vPoints.emplace_back(Vec3(-flMidRadius, flMidRadius, 0.f), iPointType);
+	vPoints.emplace_back(Vec3(-flMidRadius, -flMidRadius, 0.f), iPointType);
+	
+	vPoints.emplace_back(Vec3(flMidRadius, 0.f, flMidRadius), iPointType);
+	vPoints.emplace_back(Vec3(flMidRadius, 0.f, -flMidRadius), iPointType);
+	vPoints.emplace_back(Vec3(-flMidRadius, 0.f, flMidRadius), iPointType);
+	vPoints.emplace_back(Vec3(-flMidRadius, 0.f, -flMidRadius), iPointType);
+	
+	vPoints.emplace_back(Vec3(0.f, flMidRadius, flMidRadius), iPointType);
+	vPoints.emplace_back(Vec3(0.f, flMidRadius, -flMidRadius), iPointType);
+	vPoints.emplace_back(Vec3(0.f, -flMidRadius, flMidRadius), iPointType);
+	vPoints.emplace_back(Vec3(0.f, -flMidRadius, -flMidRadius), iPointType);
+	
+	float flCornerRadius = flExtendedRadius / sqrtf(3.f);
+	vPoints.emplace_back(Vec3(flCornerRadius, flCornerRadius, flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(flCornerRadius, flCornerRadius, -flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(flCornerRadius, -flCornerRadius, flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(flCornerRadius, -flCornerRadius, -flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(-flCornerRadius, flCornerRadius, flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(-flCornerRadius, flCornerRadius, -flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(-flCornerRadius, -flCornerRadius, flCornerRadius), iPointType);
+	vPoints.emplace_back(Vec3(-flCornerRadius, -flCornerRadius, -flCornerRadius), iPointType);
 
 	return vPoints;
 };
@@ -637,7 +685,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& tTarget, std::
 			if (!m_tInfo.m_flGravity)
 			{
 				Vec3 vForward = (m_tInfo.m_vLocalEye - trace.endpos).Normalized();
-				bNormal = vForward.Dot(trace.plane.normal) <= 0;
+				bNormal = vForward.Dot(trace.plane.normal) < 0.3f;
 			}
 			if (!bNormal)
 			{
@@ -646,7 +694,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& tTarget, std::
 				{
 					Vec3 vPos = m_tInfo.m_vLocalEye + Vec3(0, 0, (m_tInfo.m_flGravity * 800.f * pow(tPoint.m_tSolution.m_flTime, 2)) / 2);
 					Vec3 vForward = (vPos - tPoint.m_vPoint).Normalized();
-					bNormal = vForward.Dot(trace.plane.normal) <= 0;
+					bNormal = vForward.Dot(trace.plane.normal) < 0.3f;
 				}
 			}
 			if (bNormal)
@@ -681,6 +729,12 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Target_t& tTarget, std::
 
 	std::sort(vPointDistances.begin(), vPointDistances.end(), [&](const auto& a, const auto& b) -> bool
 		{
+			bool aHorizontal = fabsf(a.first.m_vPoint.z - tTarget.m_vPos.z) > fabsf(a.first.m_vPoint.x - tTarget.m_vPos.x) * 0.5f;
+			bool bHorizontal = fabsf(b.first.m_vPoint.z - tTarget.m_vPos.z) > fabsf(b.first.m_vPoint.x - tTarget.m_vPos.x) * 0.5f;
+			
+			if (aHorizontal != bHorizontal)
+				return aHorizontal > bHorizontal;
+			
 			return a.second < b.second;
 		});
 
@@ -729,7 +783,7 @@ void CAimbotProjectile::SetupSplashPoints(Target_t& tTarget, std::vector<std::pa
 			if (!m_tInfo.m_flGravity)
 			{
 				Vec3 vForward = (m_tInfo.m_vLocalEye - trace.endpos).Normalized();
-				bNormal = vForward.Dot(trace.plane.normal) <= 0;
+				bNormal = vForward.Dot(trace.plane.normal) < 0.3f;
 			}
 			if (!bNormal)
 			{
@@ -738,7 +792,7 @@ void CAimbotProjectile::SetupSplashPoints(Target_t& tTarget, std::vector<std::pa
 				{
 					Vec3 vPos = m_tInfo.m_vLocalEye + Vec3(0, 0, (m_tInfo.m_flGravity * 800.f * pow(tPoint.m_tSolution.m_flTime, 2)) / 2);
 					Vec3 vForward = (vPos - tPoint.m_vPoint).Normalized();
-					bNormal = vForward.Dot(trace.plane.normal) <= 0;
+					bNormal = vForward.Dot(trace.plane.normal) < 0.3f;
 				}
 			}
 			if (bNormal)

@@ -6,6 +6,8 @@
 Enum(PointType, None = 0, Regular = 1 << 0, Obscured = 1 << 1, ObscuredExtra = 1 << 2, ObscuredMulti = 1 << 3)
 Enum(Calculated, Pending, Good, Time, Bad)
 
+// Removed DormantData_t and container usage to avoid allocator/construct issues in older stdlib
+
 struct Solution_t
 {
 	float m_flPitch = 0.f;
@@ -74,6 +76,8 @@ private:
 	std::vector<Vec3> m_vPlayerPath = {};
 	std::vector<Vec3> m_vProjectilePath = {};
 	std::vector<DrawBox_t> m_vBoxes = {};
+
+    // dormant targeting removed
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);

@@ -75,13 +75,16 @@ void CTicks::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!G::CanPrimaryAttack && !G::Reloading || !bAttacking && !m_bDoubletap || F::AutoRocketJump.IsRunning())
 		return;
 
-	// Save command when starting doubletap (SEOwnedDE approach)
 	if (!m_bDoubletap)
 	{
-		m_SavedCmd = *pCmd;
-		m_bSavedAngles = G::SilentAngles || G::PSilentAngles;
-		m_bHasSavedCmd = true;
-		m_vShiftStartPos = pLocal->m_vecOrigin(); // Save position for antiwarp
+		bool bRocketJump = pLocal->m_hGroundEntity() && pCmd->viewangles.x > 45.f;
+		if (!bRocketJump)
+		{
+			m_SavedCmd = *pCmd;
+			m_bSavedAngles = G::SilentAngles || G::PSilentAngles;
+			m_bHasSavedCmd = true;
+		}
+		m_vShiftStartPos = pLocal->m_vecOrigin();
 		m_bStartedOnGround = pLocal->m_hGroundEntity();
 	}
 
