@@ -282,11 +282,33 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 	if (!pSet) return false;
 
 	std::vector<TickRecord*> vRecords = {};
-	if (F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords))
+	bool bHasBacktrack = F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords);
+	
+	if (bHasBacktrack)
 	{
 		vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal);
 		if (vRecords.empty())
 			return false;
+		
+		auto it = std::remove_if(vRecords.begin(), vRecords.end(), [](const TickRecord* pRecord) {
+			return !pRecord || pRecord->m_bInvalid;
+		});
+		vRecords.erase(it, vRecords.end());
+		
+		if (vRecords.empty())
+			return false;
+			
+		// avoid last tick
+		bool bDoubletap = F::Ticks.GetTicks(pWeapon) > 0;
+		if (bDoubletap && vRecords.size() > 1)
+		{
+			// remove oldest
+			vRecords.pop_back();
+			
+			std::sort(vRecords.begin(), vRecords.end(), [](const TickRecord* a, const TickRecord* b) {
+				return a->m_flSimTime > b->m_flSimTime; // newer records first
+			});
+		}
 	}
 	else
 	{
@@ -302,22 +324,11 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 	if (flSpread && Vars::Aimbot::General::HitscanPeek.Value)
 		vPeekPos = m_vEyePos + pLocal->m_vecVelocity() * TICKS_TO_TIME(-Vars::Aimbot::General::HitscanPeek.Value);
 
-	// if we're doubletapping, we can't change viewangles so work around that
-	static int iTargetBone = 0;
-	Vec3* pDoubletapAngle = F::Ticks.GetShootAngle();
-	if (pDoubletapAngle && tTarget.m_iTargetType == TargetEnum::Player)
-	{
-		std::sort(vRecords.begin(), vRecords.end(), [&](const TickRecord* a, const TickRecord* b) -> bool
-			{
-				Vec3 vPosA = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
-				Vec3 vPosB = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
-				Vec3 vAnglesA = Math::CalcAngle(m_vEyePos, vPosA);
-				Vec3 vAnglesB = Math::CalcAngle(m_vEyePos, vPosB);
-				return pDoubletapAngle->DeltaAngle(vAnglesA).Length2D() < pDoubletapAngle->DeltaAngle(vAnglesB).Length2D();
-			});
-	}
-
+	static int iTargetBone = 0; // for debug tracking
 	int iReturn = false;
+	bool bDoubletap = F::Ticks.GetTicks(pWeapon) > 0;
+	bool bFoundCurrentPos = false;
+	
 	for (auto pRecord : vRecords)
 	{
 		bool bRunPeekCheck = flSpread && (Vars::Aimbot::General::PeekDTOnly.Value ? F::Ticks.GetTicks(pWeapon) : true) && Vars::Aimbot::General::HitscanPeek.Value;
@@ -437,17 +448,29 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 						Vec3 vMinsS = (vMins - vMaxs) / 2 * flScale;
 						Vec3 vMaxsS = (vMaxs - vMins) / 2 * flScale;
 
-						vPoints = {
-							Vec3(),
-							Vec3(vMinsS.x, vMinsS.y, vMaxsS.z),
-							Vec3(vMaxsS.x, vMinsS.y, vMaxsS.z),
-							Vec3(vMinsS.x, vMaxsS.y, vMaxsS.z),
-							Vec3(vMaxsS.x, vMaxsS.y, vMaxsS.z),
-							Vec3(vMinsS.x, vMinsS.y, vMinsS.z),
-							Vec3(vMaxsS.x, vMinsS.y, vMinsS.z),
-							Vec3(vMinsS.x, vMaxsS.y, vMinsS.z),
-							Vec3(vMaxsS.x, vMaxsS.y, vMinsS.z)
-						};
+						if (nHitbox == HITBOX_HEAD)
+						{
+							vPoints = {
+								Vec3(0, vMinsS.y * 0.7f, 0),  // center-top (most reliable for headshots)
+								Vec3(),                         // center
+								Vec3(vMinsS.x * 0.5f, vMinsS.y * 0.5f, 0),
+								Vec3(vMaxsS.x * 0.5f, vMinsS.y * 0.5f, 0)
+							};
+						}
+						else
+						{
+							vPoints = {
+								Vec3(),
+								Vec3(vMinsS.x, vMinsS.y, vMaxsS.z),
+								Vec3(vMaxsS.x, vMinsS.y, vMaxsS.z),
+								Vec3(vMinsS.x, vMaxsS.y, vMaxsS.z),
+								Vec3(vMaxsS.x, vMaxsS.y, vMaxsS.z),
+								Vec3(vMinsS.x, vMinsS.y, vMinsS.z),
+								Vec3(vMaxsS.x, vMinsS.y, vMinsS.z),
+								Vec3(vMinsS.x, vMaxsS.y, vMinsS.z),
+								Vec3(vMaxsS.x, vMaxsS.y, vMinsS.z)
+							};
+						}
 					}
 				}
 
@@ -471,12 +494,51 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 					if (bChanged || SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
 					{
-						// for the time being, no vischecks against other hitboxes
-						if ((!bChanged || Math::RayToOBB(m_vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale) && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, m_vEyePos + vForward * flDist))
-							&& Math::RayToOBB(m_vEyePos, vForward, vHullMins, vHullMaxs, mTransform))
+						bool bValidHit = false;
+						if (!bChanged || Math::RayToOBB(m_vEyePos, vForward, vCheckMins, vCheckMaxs, aBones[pBox->bone], flModelScale))
 						{
-							iTargetBone = pBox->bone;
+							if (nHitbox == HITBOX_HEAD && bChanged)
+							{
+								Vec3 vCheckMinsHead = vCheckMins * 0.7f;
+								Vec3 vCheckMaxsHead = vCheckMaxs * 0.7f;
+								if (Math::RayToOBB(m_vEyePos, vForward, vCheckMinsHead, vCheckMaxsHead, aBones[pBox->bone], flModelScale) 
+									&& SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, m_vEyePos + vForward * flDist))
+									bValidHit = true;
+							}
+							else if (SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, m_vEyePos + vForward * flDist))
+								bValidHit = true;
+						}
 
+					if (bValidHit && Math::RayToOBB(m_vEyePos, vForward, vHullMins, vHullMaxs, mTransform))
+					{
+						iTargetBone = pBox->bone;
+						
+						if (bDoubletap && bHasBacktrack)
+						{
+							bool bIsCurrentPos = pRecord == vRecords.front();
+							
+							if (bIsCurrentPos)
+							{
+								tTarget.m_vAngleTo = vAngles;
+								tTarget.m_pRecord = pRecord;
+								tTarget.m_vPos = vOrigin;
+								tTarget.m_nAimedHitbox = nHitbox;
+								tTarget.m_bBacktrack = true;
+								bFoundCurrentPos = true;
+								return true;
+							}
+							else if (!bFoundCurrentPos)
+							{
+								tTarget.m_vAngleTo = vAngles;
+								tTarget.m_pRecord = pRecord;
+								tTarget.m_vPos = vOrigin;
+								tTarget.m_nAimedHitbox = nHitbox;
+								tTarget.m_bBacktrack = true;
+								iReturn = 1;
+							}
+						}
+						else
+						{
 							tTarget.m_vAngleTo = vAngles;
 							tTarget.m_pRecord = pRecord;
 							tTarget.m_vPos = vOrigin;
@@ -484,12 +546,13 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 							tTarget.m_bBacktrack = true;
 							return true;
 						}
-						else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
-						{
-							if (iReturn != 2 || vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
-								tTarget.m_vAngleTo = vAngles;
-							iReturn = 2;
-						}
+					}
+					else if (bChanged && SDK::VisPos(pLocal, tTarget.m_pEntity, m_vEyePos, vOrigin))
+					{
+						if (iReturn != 2 || vAngles.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D() < tTarget.m_vAngleTo.DeltaAngle(G::CurrentUserCmd->viewangles).Length2D())
+							tTarget.m_vAngleTo = vAngles;
+						iReturn = 2;
+					}
 					}
 				}
 			}
@@ -564,9 +627,13 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			}
 		}
 
-		nextTick:
-		continue;
+	nextTick:
+	continue;
 	}
+
+	// Doubletap: if we found intermediate position (iReturn == 1), use it
+	if (iReturn == 1)
+		return true;
 
 	return iReturn;
 }
@@ -746,6 +813,11 @@ static inline void DrawVisuals(CTFPlayer* pLocal, Target_t& tTarget, int nWeapon
 
 void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
+	// Don't aim during doubletap shifting (SEOwnedDE approach)
+	// We use saved command with angles during shifting
+	if (F::Ticks.m_bShifting && !F::Ticks.m_bWarp)
+		return;
+
 	const int nWeaponID = pWeapon->GetWeaponID();
 
 	static int iStaticAimType = Vars::Aimbot::General::AimType.Value;
@@ -860,8 +932,22 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			if (tTarget.m_pEntity->IsPlayer())
 				F::Resolver.HitscanRan(pLocal, tTarget.m_pEntity->As<CTFPlayer>(), pWeapon, tTarget.m_nAimedHitbox);
 
-			if (tTarget.m_bBacktrack)
-				pCmd->tick_count = TIME_TO_TICKS(tTarget.m_pRecord->m_flSimTime) + TIME_TO_TICKS(F::Backtrack.GetFakeInterp());
+			if (tTarget.m_bBacktrack && tTarget.m_pRecord)
+			{
+				// Proper backtrack tick calculation with lerp
+				float flSimTime = tTarget.m_pRecord->m_flSimTime;
+				float flLerp = G::Lerp;
+				
+				// Use fake interp if enabled
+				if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
+				{
+					float flFakeInterp = F::Backtrack.GetFakeInterp();
+					if (flFakeInterp > flLerp)
+						flLerp = flFakeInterp;
+				}
+				
+				pCmd->tick_count = TIME_TO_TICKS(flSimTime + flLerp);
+			}
 		}
 		DrawVisuals(pLocal, tTarget, nWeaponID);
 

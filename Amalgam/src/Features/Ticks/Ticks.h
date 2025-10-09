@@ -25,6 +25,13 @@ private:
 	bool m_bTimingUnsure = false; // we aren't sure when we'll actually fire, hold aim
 
 public:
+	// seownedde
+	CUserCmd m_SavedCmd = {};
+	bool m_bSavedAngles = false;
+	bool m_bHasSavedCmd = false;
+	Vec3 m_vShiftStartPos = {};
+	bool m_bStartedOnGround = false;
+	
 	void Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
 	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket);
 	void Draw(CTFPlayer* pLocal);

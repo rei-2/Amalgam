@@ -10,6 +10,8 @@ void CTicks::Reset()
 {
 	m_bSpeedhack = m_bDoubletap = m_bRecharge = m_bWarp = false;
 	m_iShiftedTicks = m_iShiftedGoal = 0;
+	m_bHasSavedCmd = m_bSavedAngles = m_bStartedOnGround = false;
+	m_vShiftStartPos = {};
 }
 
 void CTicks::Recharge(CTFPlayer* pLocal)
@@ -73,10 +75,23 @@ void CTicks::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!G::CanPrimaryAttack && !G::Reloading || !bAttacking && !m_bDoubletap || F::AutoRocketJump.IsRunning())
 		return;
 
+	if (!m_bDoubletap)
+	{
+		bool bRocketJump = pLocal->m_hGroundEntity() && pCmd->viewangles.x > 45.f;
+		if (!bRocketJump)
+		{
+			m_SavedCmd = *pCmd;
+			m_bSavedAngles = G::SilentAngles || G::PSilentAngles;
+			m_bHasSavedCmd = true;
+		}
+		m_vShiftStartPos = pLocal->m_vecOrigin();
+		m_bStartedOnGround = pLocal->m_hGroundEntity();
+	}
+
 	m_bDoubletap = true;
 	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::Doubletap::TickLimit.Value + 1, 0);
 	if (Vars::Doubletap::AntiWarp.Value)
-		m_bAntiWarp = pLocal->m_hGroundEntity();
+		m_bAntiWarp = m_bStartedOnGround;
 }
 
 void CTicks::Speedhack()
