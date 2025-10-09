@@ -39,6 +39,8 @@ MAKE_HOOK(CPrediction_RunSimulation, S::CPrediction_RunSimulation(), void,
 		++it;
 	}
 
+	F::Ticks.ApplyDoubletapCmd(cmd);
+
 	F::EnginePrediction.AdjustPlayers(localPlayer);
 	CALL_ORIGINAL(rcx, current_command, curtime, cmd, localPlayer);
 	F::EnginePrediction.RestorePlayers();

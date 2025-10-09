@@ -418,8 +418,11 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 
 			const matrix3x4 mTransform = { { 1, 0, 0, pRecord->m_vOrigin.x }, { 0, 1, 0, pRecord->m_vOrigin.y }, { 0, 0, 1, pRecord->m_vOrigin.z } };
 
-			for (auto& [pBox, nHitbox, _] : vHitboxes)
+			for (auto& tHitbox : vHitboxes)
 			{
+				auto pBox = std::get<0>(tHitbox);
+				auto nHitbox = std::get<1>(tHitbox);
+				
 				Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);
 				Vec3 vMins = pBox->bbmin;
 				Vec3 vMaxs = pBox->bbmax;
@@ -477,6 +480,16 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				for (auto& vPoint : vPoints)
 				{
 					Vec3 vOrigin; Math::VectorTransform(vPoint, aBones[pBox->bone], vOrigin); vOrigin += vOffset;
+					
+					if (Vars::Aimbot::Hitscan::PredictiveAim.Value)
+					{
+						float flPing = F::Backtrack.GetReal();
+						bool bHighPing = flPing > 0.06f;
+						if (pRecord && !pRecord->m_vVelocity.IsZero() && bHighPing)
+						{
+							vOrigin = PredictTargetPosition(vOrigin, pRecord->m_vVelocity, flPing, true);
+						}
+					}
 
 					if (m_vEyePos.DistToSqr(vOrigin) > flMaxRange)
 						continue;
@@ -600,6 +613,16 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 			for (auto& vPoint : vPoints)
 			{
 				Vec3 vOrigin = tTarget.m_pEntity->GetCenter() + vPoint;
+				
+				if (Vars::Aimbot::Hitscan::PredictiveAim.Value)
+				{
+					float flPing = F::Backtrack.GetReal();
+					bool bHighPing = flPing > 0.06f;
+					if (pRecord && !pRecord->m_vVelocity.IsZero() && bHighPing)
+					{
+						vOrigin = PredictTargetPosition(vOrigin, pRecord->m_vVelocity, flPing, true);
+					}
+				}
 
 				if (m_vEyePos.DistToSqr(vOrigin) > flMaxRange)
 					continue;
@@ -777,6 +800,32 @@ void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 		pCmd->viewangles = vAngle;
 		G::SilentAngles = true;
 	}
+}
+
+Vec3 CAimbotHitscan::PredictTargetPosition(const Vec3& vOrigin, const Vec3& vVelocity, float flPing, bool bHighPing)
+{
+	if (vVelocity.IsZero())
+		return vOrigin;
+
+	Vec3 vPredicted = vOrigin;
+	
+	if (flPing > 0.05f) // > 50ms
+	{
+		float flPredictionTime = flPing;
+		
+		if (bHighPing && flPing > 0.08f)
+		{
+			flPredictionTime *= 1.4f;
+		}
+		else if (bHighPing)
+		{
+			flPredictionTime *= 1.2f;
+		}
+		
+		vPredicted += vVelocity * flPredictionTime;
+	}
+	
+	return vPredicted;
 }
 
 static inline void DrawVisuals(CTFPlayer* pLocal, Target_t& tTarget, int nWeaponID)

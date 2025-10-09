@@ -91,6 +91,30 @@ void CTicks::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 		m_bAntiWarp = m_bStartedOnGround;
 }
 
+void CTicks::SaveDoubletapCmd(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (m_bDoubletap && !m_bHasSavedCmd)
+	{
+		m_SavedCmd = *pCmd;
+		m_bSavedAngles = G::SilentAngles || G::PSilentAngles;
+		m_bHasSavedCmd = true;
+		m_vShiftStartPos = pLocal->m_vecOrigin();
+		m_bStartedOnGround = pLocal->m_hGroundEntity();
+	}
+}
+
+void CTicks::ApplyDoubletapCmd(CUserCmd* pCmd)
+{
+	if (m_bHasSavedCmd && m_bShifting)
+	{
+		pCmd->viewangles = m_SavedCmd.viewangles;
+		pCmd->buttons = m_SavedCmd.buttons;
+		pCmd->forwardmove = m_SavedCmd.forwardmove;
+		pCmd->sidemove = m_SavedCmd.sidemove;
+		pCmd->upmove = m_SavedCmd.upmove;
+	}
+}
+
 void CTicks::Speedhack()
 {
 	m_bSpeedhack = Vars::Speedhack::Enabled.Value;

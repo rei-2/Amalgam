@@ -4,6 +4,48 @@
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "../../Backtrack/Backtrack.h"
 
+static inline float CalculateTimeToImpact(CTFPlayer* pLocal, CBaseEntity* pProjectile, const Vec3& vVelocity)
+{
+	Vec3 vLocalPos = pLocal->GetShootPos();
+	Vec3 vProjPos = pProjectile->m_vecOrigin();
+	
+	float flDistance = vLocalPos.DistTo(vProjPos);
+	float flSpeed = vVelocity.Length();
+	
+	if (flSpeed < 1.f)
+		return 999.f;
+	
+	float flPing = F::Backtrack.GetReal();
+	float flTimeToImpact = (flDistance / flSpeed) + flPing;
+	
+	static auto tf_flamethrower_flametime = U::ConVars.FindVar("tf_flamethrower_flametime");
+	float flAirblastDelay = tf_flamethrower_flametime ? tf_flamethrower_flametime->GetFloat() : 0.1f;
+	
+	return std::max(flTimeToImpact - flAirblastDelay, 0.f);
+}
+
+static inline Vec3 PredictProjectilePosition(CBaseEntity* pProjectile, const Vec3& vVelocity, float flTime)
+{
+	Vec3 vOrigin = pProjectile->m_vecOrigin();
+	Vec3 vPredicted = vOrigin + vVelocity * flTime;
+	
+	auto classID = pProjectile->GetClassID();
+	if (classID == ETFClassID::CTFGrenadePipebombProjectile || 
+		classID == ETFClassID::CTFProjectile_Arrow)
+	{
+		static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
+		float flGravity = sv_gravity ? sv_gravity->GetFloat() : 800.f;
+		
+		if (auto pWeapon = F::ProjSim.GetEntities(pProjectile).first)
+			flGravity *= SDK::AttribHookValue(1, "mult_projectile_range", pWeapon);
+		
+		// s = v*t + 0.5*a*t^2
+		vPredicted.z -= 0.5f * flGravity * flTime * flTime;
+	}
+	
+	return vPredicted;
+}
+
 static inline bool ShouldTarget(CBaseEntity* pProjectile, CTFPlayer* pLocal)
 {
 	if (pProjectile->m_iTeamNum() == pLocal->m_iTeamNum())
@@ -14,6 +56,7 @@ static inline bool ShouldTarget(CBaseEntity* pProjectile, CTFPlayer* pLocal)
 	case ETFClassID::CTFGrenadePipebombProjectile:
 		if (pProjectile->As<CTFGrenadePipebombProjectile>()->m_bTouched())
 			return false;
+		break;
 	}
 
 	if (auto pWeapon = F::ProjSim.GetEntities(pProjectile).first)

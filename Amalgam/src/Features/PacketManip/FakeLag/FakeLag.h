@@ -12,6 +12,7 @@ private:
 	Vec3 m_vLastPosition = {};
 	bool m_bPreservingBlast = false;
 	bool m_bUnducking = false;
+	bool m_bWasGroundedLastTick = false;
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket);

@@ -40,6 +40,9 @@ public:
 	void Start(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void End(CTFPlayer* pLocal, CUserCmd* pCmd);
 
+	void SaveDoubletapCmd(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void ApplyDoubletapCmd(CUserCmd* pCmd);
+
 	void AntiWarp(CTFPlayer* pLocal, float flYaw, float& flForwardMove, float& flSideMove, int iTicks = -1);
 	void AntiWarp(CTFPlayer* pLocal, CUserCmd* pCmd);
 
