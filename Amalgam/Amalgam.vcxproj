@@ -1095,9 +1095,8 @@
     <ClCompile Include="src\Hooks\IBaseClientDLL_LevelShutdown.cpp" />
     <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Hooks\IEngineVGui_Paint.cpp" />
-    <ClCompile Include="src\Hooks\CInput_GetUserCmd.cpp" />
-    <ClCompile Include="src\Hooks\IMaterialSystem_FindTexture.cpp" />
     <ClCompile Include="src\Hooks\IInput_GetUserCmd.cpp" />
+    <ClCompile Include="src\Hooks\IMaterialSystem_FindTexture.cpp" />
     <ClCompile Include="src\Hooks\IVEngineClient_IsHLTV.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
     <ClCompile Include="src\Hooks\IPanel_PaintTraverse.cpp" />

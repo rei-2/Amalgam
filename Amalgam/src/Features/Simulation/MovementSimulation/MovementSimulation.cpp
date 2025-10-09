@@ -152,7 +152,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tStorage
 
 	// the hacks that make it work
 	I::MoveHelper->SetHost(pPlayer);
-	pPlayer->m_pCurrentCommand() = &s_tDummyCmd;
+	pPlayer->m_pCurrentCommand() = &DummyCmd;
 
 	if (auto pAvgVelocity = H::Entities.GetAvgVelocity(pPlayer->entindex()))
 		pPlayer->m_vecVelocity() = *pAvgVelocity; // only use average velocity here
@@ -174,7 +174,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tStorage
 		else
 			pPlayer->m_hGroundEntity() = nullptr; // fix for velocity.z being set to 0 even if in air
 	}
-	else if (Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
+	else if (Vars::Misc::Movement::Bunnyhop.Value && G::OriginalMove.m_iButtons & IN_JUMP)
 		tStorage.m_bBunnyHop = true;
 
 	// setup move data

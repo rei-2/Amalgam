@@ -8,20 +8,20 @@
 CSignature::CSignature(const char* sDLLName, const char* sSignature, int8_t nOffset, const char* sName)
 {
 	m_dwVal = 0x0;
-	m_pszDLLName = sDLLName;
-	m_pszSignature = sSignature;
+	m_sDLLName = sDLLName;
+	m_sSignature = sSignature;
 	m_nOffset = nOffset;
-	m_pszName = sName;
+	m_sName = sName;
 
 	U::Signatures.AddSignature(this);
 }
 
 bool CSignature::Initialize()
 {
-	m_dwVal = U::Memory.FindSignature(m_pszDLLName, m_pszSignature);
+	m_dwVal = U::Memory.FindSignature(m_sDLLName, m_sSignature);
 	if (!m_dwVal)
 	{
-		U::Core.AppendFailText(std::format("CSignature::Initialize() failed to initialize:\n  {}\n  {}\n  {}", m_pszName, m_pszDLLName, m_pszSignature).c_str());
+		U::Core.AppendFailText(std::format("CSignature::Initialize() failed to initialize:\n  {}\n  {}\n  {}", m_sName, m_sDLLName, m_sSignature).c_str());
 		return false;
 	}
 

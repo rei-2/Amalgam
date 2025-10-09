@@ -197,7 +197,7 @@ MAKE_HOOK(CClientModeShared_CreateMove, U::Memory.GetVirtual(I::ClientModeShared
 		else if (bWasSet || !bCanChoke)
 			*pSendPacket = true, bWasSet = false;
 	}
-	F::Ticks.CreateMove(pLocal, pCmd, pSendPacket);
+	F::Ticks.CreateMove(pLocal, pWeapon, pCmd, pSendPacket);
 	F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
 
 	if (pLocal)

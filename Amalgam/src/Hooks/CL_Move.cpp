@@ -68,7 +68,7 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void,
 	F::Misc.PingReducer();
 	F::AutoQueue.Run();
 
-	F::Ticks.Run(accumulated_extra_samples, bFinalTick, pLocal);
+	F::Ticks.Move(accumulated_extra_samples, bFinalTick, pLocal);
 
 	for (auto& Line : G::PathStorage)
 	{
