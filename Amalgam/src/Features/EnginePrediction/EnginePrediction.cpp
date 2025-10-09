@@ -108,6 +108,12 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
 
 	size_t iSize = pLocal->GetIntermediateDataSize();
+	if (!I::MemAlloc)
+	{
+		// MemAlloc interface not initialized - skip prediction
+		return;
+	}
+
 	if (!m_tLocal.m_pData)
 	{
 		m_tLocal.m_pData = reinterpret_cast<byte*>(I::MemAlloc->Alloc(iSize));
@@ -120,7 +126,11 @@ void CEnginePrediction::Start(CTFPlayer* pLocal, CUserCmd* pCmd)
 	}
 
 	CPredictionCopy copy = { PC_EVERYTHING, m_tLocal.m_pData, PC_DATA_PACKED, pLocal, PC_DATA_NORMAL };
-	copy.TransferData("EnginePredictionStart", pLocal->entindex(), pMap);
+	if (copy.TransferData("EnginePredictionStart", pLocal->entindex(), pMap) == -1)
+	{
+		// Signature failed - skip prediction to prevent crash
+		return;
+	}
 	Simulate(pLocal, pCmd);
 }
 
@@ -139,12 +149,16 @@ void CEnginePrediction::End(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::GlobalVars->frametime = m_flOldFrameTime;
 
 	CPredictionCopy copy = { PC_EVERYTHING, pLocal, PC_DATA_NORMAL, m_tLocal.m_pData, PC_DATA_PACKED };
-	copy.TransferData("EnginePredictionEnd", pLocal->entindex(), pMap);
+	if (copy.TransferData("EnginePredictionEnd", pLocal->entindex(), pMap) == -1)
+	{
+		// Signature failed - skip restore to prevent crash
+		return;
+	}
 }
 
 void CEnginePrediction::Unload()
 {
-	if (m_tLocal.m_pData)
+	if (m_tLocal.m_pData && I::MemAlloc)
 	{
 		I::MemAlloc->Free(m_tLocal.m_pData);
 		m_tLocal = {};

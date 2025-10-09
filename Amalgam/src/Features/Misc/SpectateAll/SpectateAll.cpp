@@ -289,7 +289,7 @@ CTFPlayer* CSpectateAll::GetNextEnemyPlayer()
     if (Vars::Competitive::SpectateAll::PreferKillerSpectate.Value && m_pLastKiller && m_pLastKiller->IsAlive())
     {
         // Find our killer in the enemies list
-        for (size_t i = 0; i < enemies.size(); i++)
+        for (int i = 0; i < static_cast<int>(enemies.size()); i++)
         {
             auto pEnemy = enemies[i]->As<CTFPlayer>();
             if (pEnemy == m_pLastKiller)

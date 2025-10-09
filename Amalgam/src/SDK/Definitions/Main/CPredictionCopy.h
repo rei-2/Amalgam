@@ -53,6 +53,11 @@ public:
 
 	int TransferData(const char* operation, int entindex, datamap_t* dmap)
 	{
+		if (!S::CPredictionCopy_TransferData.dwVal)
+		{
+			// Signature not found - return error code to prevent crash
+			return -1;
+		}
 		return S::CPredictionCopy_TransferData.Call<int>(this, operation, entindex, dmap);
 	}
 

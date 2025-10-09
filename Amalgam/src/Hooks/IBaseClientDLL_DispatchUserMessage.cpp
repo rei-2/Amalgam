@@ -191,6 +191,8 @@ MAKE_HOOK(IBaseClientDLL_DispatchUserMessage, U::Memory.GetVirtual(I::BaseClient
 			{
 #ifdef _DEBUG
 				I::CVar->ConsolePrintf("ChatBubbles SayText2 exception: %s\n", e.what());
+#else
+				(void)e; // Suppress unused variable warning in release builds
 #endif
 				// Continue processing other messages
 			}
