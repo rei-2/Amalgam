@@ -14,10 +14,8 @@ struct TickRecord
 	Vec3 m_vOrigin = {};
 	Vec3 m_vMins = {};
 	Vec3 m_vMaxs = {};
-	Vec3 m_vVelocity = {};
 	bool m_bOnShot = false;
 	bool m_bInvalid = false;
-	bool m_bWarped = false; 
 	matrix3x4 m_aBones[MAXSTUDIOBONES];
 };
 
@@ -54,10 +52,6 @@ public:
 	bool GetRecords(CBaseEntity* pEntity, std::vector<TickRecord*>& vReturn);
 	std::vector<TickRecord*> GetValidRecords(std::vector<TickRecord*>& vRecords, CTFPlayer* pLocal = nullptr, bool bDistance = false, float flTimeMod = 0.f);
 	matrix3x4* GetBones(CBaseEntity* pEntity);
-	
-	bool DetectWarp(const std::deque<TickRecord>& vRecords, Vec3& vPredictedPos);
-	Vec3 PredictWarpPosition(CTFPlayer* pPlayer, const TickRecord* pRecord);
-	void ApplyWarpPrediction(std::vector<TickRecord*>& vRecords);
 
 	float GetReal(int iFlow = MAX_FLOWS, bool bNoFake = true);
 	float GetWishFake();

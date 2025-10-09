@@ -5,16 +5,6 @@
 
 bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	const bool bCurrentlyGrounded = pLocal->m_hGroundEntity();
-	const bool bJustLeftGround = m_bWasGroundedLastTick && !bCurrentlyGrounded;
-	m_bWasGroundedLastTick = bCurrentlyGrounded;
-
-	if (m_bPreservingBlast && bJustLeftGround)
-	{
-		m_bPreservingBlast = false;
-		return false;
-	}
-
 	if (!(Vars::Fakelag::Fakelag.Value || m_bPreservingBlast || m_bUnducking)
 		|| I::ClientState->chokedcommands >= std::min(24 - F::Ticks.m_iShiftedTicks, std::min(21, F::Ticks.m_iMaxShift))
 		|| F::Ticks.m_iShiftedGoal != F::Ticks.m_iShiftedTicks || F::Ticks.m_bRecharge
@@ -63,30 +53,13 @@ void CFakeLag::PreserveBlastJump(CTFPlayer* pLocal)
 		|| !pLocal->IsAlive() || pLocal->IsAGhost() || Vars::Fakelag::RetainSoldierOnly.Value && pLocal->m_iClass() != TF_CLASS_SOLDIER)
 		return;
 
-	if (!pLocal->InCond(TF_COND_BLASTJUMPING))
+	static bool bStaticGround = true;
+	const bool bLastGround = bStaticGround;
+	const bool bCurrGround = bStaticGround = pLocal->m_hGroundEntity();
+	if (!pLocal->InCond(TF_COND_BLASTJUMPING) || bLastGround || !bCurrGround)
 		return;
 
-	const bool bInAir = !pLocal->m_hGroundEntity();
-	if (!bInAir)
-		return;
-
-	Vec3 vVelocity = pLocal->m_vecVelocity();
-	Vec3 vOrigin = pLocal->m_vecOrigin();
-	
-	CGameTrace trace = {};
-	CTraceFilterWorldAndPropsOnly filter = {};
-	
-	static auto sv_gravity = U::ConVars.FindVar("sv_gravity");
-	float flGravity = sv_gravity ? sv_gravity->GetFloat() : 800.f;
-	
-	vVelocity.z -= flGravity * I::GlobalVars->interval_per_tick;
-	Vec3 vNextOrigin = vOrigin + vVelocity * I::GlobalVars->interval_per_tick;
-	
-	SDK::Trace(vNextOrigin, vNextOrigin - Vec3(0, 0, 2.f), MASK_PLAYERSOLID, &filter, &trace);
-	
-	const bool bWillLand = trace.DidHit() && vVelocity.z < 0.f;
-	if (bWillLand && I::ClientState->chokedcommands < 2)
-		m_bPreservingBlast = true;
+	m_bPreservingBlast = true;
 }
 
 void CFakeLag::Unduck(CTFPlayer* pLocal, CUserCmd* pCmd)

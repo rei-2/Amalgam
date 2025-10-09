@@ -231,7 +231,6 @@ void CBacktrack::MakeRecords()
 			pPlayer->m_vecOrigin(),
 			pPlayer->m_vecMins(),
 			pPlayer->m_vecMaxs(),
-			pPlayer->m_vecVelocity(),
 			m_mDidShoot[pPlayer->entindex()]
 		);
 		TickRecord& tCurRecord = vRecords.front();
@@ -255,7 +254,6 @@ void CBacktrack::MakeRecords()
 			if (vDelta.Length2DSqr() > flDist)
 			{
 				bLagComp = true;
-				tCurRecord.m_bWarped = true;
 				if (!H::Entities.GetLagCompensation(pPlayer->entindex()))
 					vRecords.resize(1);
 				std::for_each(vRecords.begin() + 1, vRecords.end(), [](auto& tRecord) { tRecord.m_bInvalid = true; });
@@ -449,58 +447,4 @@ void CBacktrack::Draw(CTFPlayer* pLocal)
 	else
 		H::Draw.StringOutlined(fFont, x, y, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Ping {:.0f} ms", flLatency).c_str());
 	H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("Scoreboard {} ms", iLatencyScoreboard).c_str());
-}
-
-// dot and cross
-bool CBacktrack::DetectWarp(const std::deque<TickRecord>& vRecords, Vec3& vPredictedPos)
-{
-	if (vRecords.size() < 3)
-		return false;
-
-	const auto& record1 = vRecords[0];
-	const auto& record2 = vRecords[1];
-	const auto& record3 = vRecords[2];
-
-	if (record1.m_bWarped && !record2.m_vVelocity.IsZero())
-	{
-		Vec3 vDir1 = record2.m_vOrigin - record3.m_vOrigin;
-		Vec3 vDir2 = record1.m_vOrigin - record2.m_vOrigin;
-
-		vDir1 = vDir1.Normalize();
-		vDir2 = vDir2.Normalize();
-
-		float flDot = vDir1.Dot(vDir2);
-		
-		if (flDot < 0.7f)
-		{
-			Vec3 vCross = vDir1.Cross(vDir2);
-			
-			float flSpeed = record2.m_vVelocity.Length();
-			vPredictedPos = record1.m_vOrigin + vDir2 * flSpeed * I::GlobalVars->interval_per_tick;
-			
-			return true;
-		}
-	}
-
-	return false;
-}
-
-Vec3 CBacktrack::PredictWarpPosition(CTFPlayer* pPlayer, const TickRecord* pRecord)
-{
-	if (!pPlayer || !pRecord)
-		return {};
-
-	if (!pRecord->m_bWarped)
-		return pRecord->m_vOrigin;
-
-	Vec3 vPredicted = pRecord->m_vOrigin;
-	
-	if (!pRecord->m_vVelocity.IsZero())
-	{
-		float flLatency = GetReal();
-		
-		vPredicted += pRecord->m_vVelocity * (flLatency + I::GlobalVars->interval_per_tick);
-	}
-
-	return vPredicted;
 }

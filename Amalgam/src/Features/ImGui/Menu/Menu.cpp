@@ -187,7 +187,6 @@ void CMenu::MenuAimbot(int iTab)
 					FSlider(Vars::Backtrack::Latency);
 					FSlider(Vars::Backtrack::Interp);
 					FSlider(Vars::Backtrack::Window);
-					FToggle(Vars::Backtrack::WarpPrediction, FToggleEnum::Left);
 					//FToggle(Vars::Backtrack::PreferOnShot);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
@@ -227,7 +226,6 @@ void CMenu::MenuAimbot(int iTab)
 					FDropdown(Vars::Aimbot::Hitscan::MultipointHitboxes, FDropdownEnum::Right);
 					FDropdown(Vars::Aimbot::Hitscan::Modifiers);
 					FSlider(Vars::Aimbot::Hitscan::MultipointScale);
-					FToggle(Vars::Aimbot::Hitscan::PredictiveAim, FToggleEnum::Left);
 					PushTransparent(!(Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire));
 					{
 						FSlider(Vars::Aimbot::Hitscan::TapfireDistance);
