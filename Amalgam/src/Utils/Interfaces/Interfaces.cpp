@@ -201,7 +201,7 @@ bool CInterfaces::Initialize()
 				fclose(log_file18);
 			}
 
-			if (Interface->m_pPtr)
+			if (*Interface->m_pPtr)  // Check if the POINTER VALUE is valid, not just the pointer-to-pointer
 				*Interface->m_pPtr = *reinterpret_cast<void**>(*Interface->m_pPtr);
 
 			FILE* log_file19 = fopen("C:\\temp\\amalgam_debug.log", "a");
