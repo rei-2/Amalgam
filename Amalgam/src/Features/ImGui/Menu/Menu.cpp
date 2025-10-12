@@ -606,17 +606,17 @@ void CMenu::MenuVisuals(int iTab)
 					Divider(H::Draw.Scale(), H::Draw.Scale(8), -H::Draw.Scale());
 					PushTransparent(!(tGroup.m_iTargets & TargetsEnum::Players));
 					{
-						FDropdown("Players", &tGroup.m_iPlayers, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy", "##Divider", "Invulnerable", "Crits", "Invisible", "Disguise" }, {}, FDropdownEnum::Multi, 0, "All");
+						FDropdown("Players", &tGroup.m_iPlayers, { "Scout", "Soldier", "Pyro", "Demoman", "Heavy", "Engineer", "Medic", "Sniper", "Spy", "##Divider", "Invulnerable", "Crits", "Invisible", "Disguise", "Hurt" }, {}, FDropdownEnum::Multi, 0, "All");
 					}
 					PopTransparent();
 					PushTransparent(!(tGroup.m_iTargets & TargetsEnum::Buildings));
 					{
-						FDropdown("Buildings", &tGroup.m_iBuildings, { "Sentry", "Dispenser", "Teleporter" }, {}, FDropdownEnum::Multi, 0, "All");
+						FDropdown("Buildings", &tGroup.m_iBuildings, { "Sentry", "Dispenser", "Teleporter", "##Divider", "Hurt" }, {}, FDropdownEnum::Multi, 0, "All");
 					}
 					PopTransparent();
 					PushTransparent(!(tGroup.m_iTargets & TargetsEnum::Projectiles));
 					{
-						FDropdown("Projectiles", &tGroup.m_iProjectiles, { "Rocket", "Sticky", "Pipe", "Arrow", "Heal", "Flare", "Fire", "Repair", "Cleaver", "Milk", "Jarate", "Gas", "Bauble", "Baseball", "Energy", "Short circuit", "Meteor shower", "Lightning", "Fireball", "Bomb", "Bats", "Pumpkin", "Monoculus", "Skeleton", "Misc" }, {}, FDropdownEnum::Multi, 0, "All");
+						FDropdown("Projectiles", &tGroup.m_iProjectiles, { "Rocket", "Sticky", "Pipe", "Arrow", "Heal", "Flare", "Fire", "Repair", "Cleaver", "Milk", "Jarate", "Gas", "Bauble", "Baseball", "Energy", "Short circuit", "Meteor shower", "Lightning", "Fireball", "Bomb", "Bats", "Pumpkin", "Monoculus", "Skeleton", "Misc", "##Divider", "Crit", "Minicrit" }, {}, FDropdownEnum::Multi, 0, "All");
 					}
 					PopTransparent();
 				} EndSection();
