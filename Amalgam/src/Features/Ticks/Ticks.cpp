@@ -73,10 +73,16 @@ void CTicks::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!G::CanPrimaryAttack && !G::Reloading || !bAttacking && !m_bDoubletap || F::AutoRocketJump.IsRunning())
 		return;
 
+	if (!m_bDoubletap)
+	{
+		m_vShiftStartPos = pLocal->m_vecOrigin();
+		m_bStartedOnGround = pLocal->m_hGroundEntity();
+	}
+
 	m_bDoubletap = true;
 	m_iShiftedGoal = std::max(m_iShiftedTicks - Vars::Doubletap::TickLimit.Value + 1, 0);
 	if (Vars::Doubletap::AntiWarp.Value)
-		m_bAntiWarp = pLocal->m_hGroundEntity();
+		m_bAntiWarp = m_bStartedOnGround;
 }
 
 void CTicks::Speedhack()
@@ -250,6 +256,18 @@ void CTicks::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 
 	SaveShootPos(pLocal);
 	SaveShootAngle(pCmd, *pSendPacket);
+
+	if (!m_bShifting && (m_bDoubletap || GetTicks(pWeapon) > 0))
+	{
+		m_SavedCmd = *pCmd;
+		m_bSavedAngles = G::SilentAngles;
+		m_bHasSavedCmd = true;
+	}
+	else if (!m_bDoubletap && !GetTicks(pWeapon))
+	{
+		m_bHasSavedCmd = false;
+		m_bSavedAngles = false;
+	}
 
 	if (m_bDoubletap && m_iShiftedTicks == m_iShiftStart && pWeapon && pWeapon->IsInReload())
 		m_bTimingUnsure = true;

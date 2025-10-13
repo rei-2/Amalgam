@@ -260,11 +260,28 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 	if (!pSet) return false;
 
 	std::vector<TickRecord*> vRecords = {};
-	if (F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords))
+	bool bHasBacktrack = F::Backtrack.GetRecords(tTarget.m_pEntity, vRecords);
+
+	if (bHasBacktrack)
 	{
 		vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal);
 		if (vRecords.empty())
 			return false;
+
+		auto it = std::remove_if(vRecords.begin(), vRecords.end(), [](const TickRecord* pRecord) {
+			return !pRecord || pRecord->m_bInvalid;
+		});
+		vRecords.erase(it, vRecords.end());
+
+		if (vRecords.empty())
+			return false;
+
+		// avoid last tick - it can be unstable during doubletap
+		bool bDoubletap = F::Ticks.GetTicks(pWeapon) > 0;
+		if (bDoubletap && vRecords.size() > 1)
+		{
+			vRecords.pop_back();
+		}
 	}
 	else
 	{

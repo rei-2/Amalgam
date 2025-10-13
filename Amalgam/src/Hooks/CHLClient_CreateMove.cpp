@@ -262,6 +262,26 @@ MAKE_HOOK(CHLClient_CreateMove, U::Memory.GetVirtual(I::Client, 21), void,
 		F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
 		F::Visuals.CreateMove(pLocal, pWeapon);
 		F::Ticks.CreateMove(pLocal, pWeapon, pCmd, pSendPacket);
+
+	if (F::Ticks.m_bShifting && F::Ticks.m_bHasSavedCmd && !F::Ticks.m_bWarp)
+	{
+		int iSavedCommandNumber = pCmd->command_number;
+		*pCmd = F::Ticks.m_SavedCmd;
+		pCmd->command_number = iSavedCommandNumber;
+
+		if (Vars::Doubletap::AntiWarp.Value && F::Ticks.m_bStartedOnGround)
+		{
+			int iTicks = Vars::Doubletap::TickLimit.Value;
+			float flTicks = std::max(14.f, std::min(22.f, float(iTicks)));
+			float flScale = Math::RemapVal(flTicks, 14.f, 22.f, 0.605f, 1.f);
+
+			SDK::WalkTo(pCmd, pLocal, F::Ticks.m_vShiftStartPos, flScale);
+		}
+
+		if (F::Ticks.m_bSavedAngles)
+			G::SilentAngles = true;
+	}
+
 		F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
 		F::NoSpreadHitscan.AskForPlayerPerf();
 	F::EnginePrediction.End(pLocal, pCmd);
