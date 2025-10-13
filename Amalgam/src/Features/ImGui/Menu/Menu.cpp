@@ -990,10 +990,11 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Movement::EdgeJump, FToggleEnum::Right);
 					FToggle(Vars::Misc::Movement::AutoJumpbug, FToggleEnum::Left); // this is unreliable without setups, do not depend on it!
 					FToggle(Vars::Misc::Movement::NoPush, FToggleEnum::Right);
-					FToggle(Vars::Misc::Movement::AutoRocketJump, FToggleEnum::Left);
-					FToggle(Vars::Misc::Movement::AutoCTap, FToggleEnum::Right);
-					FToggle(Vars::Misc::Movement::FastStop, FToggleEnum::Left);
-					FToggle(Vars::Misc::Movement::FastAccelerate, FToggleEnum::Right);
+                    FToggle(Vars::Misc::Movement::AutoRocketJump, FToggleEnum::Left);
+                    FToggle(Vars::Misc::Movement::AutoCTap, FToggleEnum::Right);
+                    FToggle(Vars::Misc::Movement::FastStop, FToggleEnum::Left);
+                    FToggle(Vars::Misc::Movement::FastAccelerate, FToggleEnum::Right);
+                    FToggle(Vars::Misc::Movement::AutoFaNJump, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::DuckSpeed, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::MovementLock, FToggleEnum::Right);
 					FToggle(Vars::Misc::Movement::BreakJump, FToggleEnum::Left);

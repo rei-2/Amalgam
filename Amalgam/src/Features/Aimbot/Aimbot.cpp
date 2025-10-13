@@ -7,6 +7,7 @@
 #include "AutoAirblast/AutoAirblast.h"
 #include "AutoHeal/AutoHeal.h"
 #include "AutoRocketJump/AutoRocketJump.h"
+#include "AutoFaNJump/AutoFaNJump.h"
 #include "../Misc/Misc.h"
 #include "../Visuals/Visuals.h"
 
@@ -58,6 +59,7 @@ void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 		return;
 
 	F::AutoRocketJump.Run(pLocal, pWeapon, pCmd);
+	F::AutoFaNJump.Run(pLocal, pWeapon, pCmd);
 	if (!ShouldRun(pLocal, pWeapon))
 		return;
 
