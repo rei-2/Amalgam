@@ -231,36 +231,14 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 	int iMiscPriority = bHeadOnly ? -1 : 2;
 	int iLimbPriority = bHeadOnly ? -1 : 3;
 
-	switch (H::Entities.GetModel(pTarget->entindex()))
+	switch (pTarget->GetHitboxToBase(nHitbox))
 	{
-	case FNV1A::Hash32Const("models/vsh/player/saxton_hale.mdl"):
-	case FNV1A::Hash32Const("models/vsh/player/hell_hale.mdl"):
-	case FNV1A::Hash32Const("models/vsh/player/santa_hale.mdl"):
-	{
-		switch (nHitbox)
-		{
-		case HITBOX_SAXTON_HEAD: return iHeadPriority;
-		case HITBOX_SAXTON_BODY:
-		case HITBOX_SAXTON_THORAX:
-		case HITBOX_SAXTON_CHEST:
-		case HITBOX_SAXTON_UPPER_CHEST: return iBodyPriority;
-		case HITBOX_SAXTON_NECK:
-		case HITBOX_SAXTON_PELVIS: return iMiscPriority;
-		}
-		break;
-	}
-	default:
-	{
-		switch (nHitbox)
-		{
-		case HITBOX_HEAD: return iHeadPriority;
-		case HITBOX_BODY:
-		case HITBOX_THORAX:
-		case HITBOX_CHEST:
-		case HITBOX_UPPER_CHEST: return iBodyPriority;
-		case HITBOX_PELVIS: return iMiscPriority;
-		}
-	}
+	case HITBOX_HEAD: return iHeadPriority;
+	case HITBOX_SPINE0:
+	case HITBOX_SPINE1:
+	case HITBOX_SPINE2:
+	case HITBOX_SPINE3: return iBodyPriority;
+	case HITBOX_PELVIS: return iMiscPriority;
 	}
 
 	return iLimbPriority;

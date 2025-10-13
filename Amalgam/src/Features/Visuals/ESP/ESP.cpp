@@ -779,24 +779,27 @@ void CESP::DrawPlayers()
 			matrix3x4 aBones[MAXSTUDIOBONES];
 			if (pPlayer->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
 			{
-				switch (H::Entities.GetModel(pPlayer->entindex()))
-				{
-				case FNV1A::Hash32Const("models/vsh/player/saxton_hale.mdl"):
-				case FNV1A::Hash32Const("models/vsh/player/hell_hale.mdl"):
-				case FNV1A::Hash32Const("models/vsh/player/santa_hale.mdl"):
-					DrawBones(pPlayer, aBones, { HITBOX_SAXTON_HEAD, HITBOX_SAXTON_CHEST, HITBOX_SAXTON_PELVIS }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_SAXTON_CHEST, HITBOX_SAXTON_LEFT_UPPER_ARM, HITBOX_SAXTON_LEFT_FOREARM, HITBOX_SAXTON_LEFT_HAND }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_SAXTON_CHEST, HITBOX_SAXTON_RIGHT_UPPER_ARM, HITBOX_SAXTON_RIGHT_FOREARM, HITBOX_SAXTON_RIGHT_HAND }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_SAXTON_PELVIS, HITBOX_SAXTON_LEFT_THIGH, HITBOX_SAXTON_LEFT_CALF, HITBOX_SAXTON_LEFT_FOOT }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_SAXTON_PELVIS, HITBOX_SAXTON_RIGHT_THIGH, HITBOX_SAXTON_RIGHT_CALF, HITBOX_SAXTON_RIGHT_FOOT }, tCache.m_tColor);
-					break;
-				default:
-					DrawBones(pPlayer, aBones, { HITBOX_HEAD, HITBOX_CHEST, HITBOX_PELVIS }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_CHEST, HITBOX_LEFT_UPPER_ARM, HITBOX_LEFT_FOREARM, HITBOX_LEFT_HAND }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_CHEST, HITBOX_RIGHT_UPPER_ARM, HITBOX_RIGHT_FOREARM, HITBOX_RIGHT_HAND }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_PELVIS, HITBOX_LEFT_THIGH, HITBOX_LEFT_CALF, HITBOX_LEFT_FOOT }, tCache.m_tColor);
-					DrawBones(pPlayer, aBones, { HITBOX_PELVIS, HITBOX_RIGHT_THIGH, HITBOX_RIGHT_CALF, HITBOX_RIGHT_FOOT }, tCache.m_tColor);
-				}
+				int iHead = pPlayer->GetBaseToHitbox(HITBOX_HEAD);
+				int iSpine2 = pPlayer->GetBaseToHitbox(HITBOX_SPINE2);
+				int iPelvis = pPlayer->GetBaseToHitbox(HITBOX_PELVIS);
+				int iLeftUpperarm = pPlayer->GetBaseToHitbox(HITBOX_LEFT_UPPERARM);
+				int iLeftForearm = pPlayer->GetBaseToHitbox(HITBOX_LEFT_FOREARM);
+				int iLeftHand = pPlayer->GetBaseToHitbox(HITBOX_LEFT_HAND);
+				int iRightUpperarm = pPlayer->GetBaseToHitbox(HITBOX_RIGHT_UPPERARM);
+				int iRightForearm = pPlayer->GetBaseToHitbox(HITBOX_RIGHT_FOREARM);
+				int iRightHand = pPlayer->GetBaseToHitbox(HITBOX_RIGHT_HAND);
+				int iLeftThigh = pPlayer->GetBaseToHitbox(HITBOX_LEFT_THIGH);
+				int iLeftCalf = pPlayer->GetBaseToHitbox(HITBOX_LEFT_CALF);
+				int iLeftFoot = pPlayer->GetBaseToHitbox(HITBOX_LEFT_FOOT);
+				int iRightThigh = pPlayer->GetBaseToHitbox(HITBOX_RIGHT_THIGH);
+				int iRightCalf = pPlayer->GetBaseToHitbox(HITBOX_RIGHT_CALF);
+				int iRightFoot = pPlayer->GetBaseToHitbox(HITBOX_RIGHT_FOOT);
+
+				DrawBones(pPlayer, aBones, { iHead, iSpine2, iPelvis }, tCache.m_tColor);
+				DrawBones(pPlayer, aBones, { iSpine2, iLeftUpperarm, iLeftForearm, iLeftHand }, tCache.m_tColor);
+				DrawBones(pPlayer, aBones, { iSpine2, iRightUpperarm, iRightForearm, iRightHand }, tCache.m_tColor);
+				DrawBones(pPlayer, aBones, { iPelvis, iLeftThigh, iLeftCalf, iLeftFoot }, tCache.m_tColor);
+				DrawBones(pPlayer, aBones, { iPelvis, iRightThigh, iRightCalf, iRightFoot }, tCache.m_tColor);
 			}
 		}
 

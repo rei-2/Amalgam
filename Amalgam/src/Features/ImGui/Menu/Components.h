@@ -2005,6 +2005,9 @@ namespace ImGui
 		case VK_CONTROL: return "control";
 		case VK_LCONTROL: return "lcontrol";
 		case VK_RCONTROL: return "rcontrol";
+		case VK_MENU: return "alt";
+		case VK_LMENU: return "lalt";
+		case VK_RMENU: return "ralt";
 		case VK_NUMPAD0: return "num0";
 		case VK_NUMPAD1: return "num1";
 		case VK_NUMPAD2: return "num2";

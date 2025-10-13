@@ -433,7 +433,7 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 			auto pVictim = I::ClientEntityList->GetClientEntity(iVictim)->As<CTFPlayer>();
 
 			if (!iHealth)
-				iDamage = std::min(iDamage, tHistory.m_iNewHealth);
+				iDamage = std::clamp(iDamage, 0, tHistory.m_iNewHealth);
 			else if (pVictim && (pVictim->m_bFeignDeathReady() || pVictim->InCond(TF_COND_FEIGN_DEATH))) // damage number is spoofed upon sending, correct it
 			{
 				int iOldHealth = (tHistory.m_mHistory.contains(iHealth) ? tHistory.m_mHistory[iHealth].m_iOldHealth : tHistory.m_iNewHealth) % 32768;
@@ -467,6 +467,10 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 					return;
 				}
 			}
+
+			const int iInsanePlayerDamage = pGameRules->m_bPlayingMannVsMachine() ? 5000 : 1500;
+			if (iDamage > iInsanePlayerDamage)
+				return;
 		}
 
 		//m_flLastDamageTime = I::GlobalVars->curtime;
@@ -665,16 +669,16 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 			{
 				if (auto pPlayerStats = S::CTFGameStats_FindPlayerStats.Call<PlayerStats_t*>(s_pCTFGameStats, pPlayer2))
 				{
-					int iRangedDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_RANGED] /*= m_iRangedDamage*/;
-					int iCritDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_RANGED_CRIT_RANDOM] /*= m_iCritDamage = 0*/;
-					int iDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE] /*= m_iRangedDamage + m_iMeleeDamage*/;
+					int& iRangedDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_RANGED];
+					int& iCritDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE_RANGED_CRIT_RANDOM];
+					int& iDamage = pPlayerStats->statsCurrentRound.m_iStat[TFSTAT_DAMAGE];
 
-					H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format(
-						"RangedDamage: {}, CritDamage: {}", iRangedDamage, iCritDamage
-					).c_str());
-					H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format(
-						"AllDamage: {} ({})", iDamage, iDamage - iRangedDamage
-					).c_str());
+					//iRangedDamage = m_iRangedDamage;
+					//iCritDamage = m_iCritDamage = 0;
+					//iDamage = m_iRangedDamage + m_iMeleeDamage;
+
+					H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("RangedDamage: {}, CritDamage: {}", iRangedDamage, iCritDamage).c_str());
+					H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, align, std::format("AllDamage: {} ({})", iDamage, iDamage - iRangedDamage).c_str());
 				}
 			}
 		}
