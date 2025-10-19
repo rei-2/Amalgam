@@ -10,17 +10,17 @@ void COffscreenArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Col
 		return;
 
 	Vec2 vCenter = { H::Draw.m_nScreenW / 2.f, H::Draw.m_nScreenH / 2.f };
-	Vec3 vScreenPos;
-	if (SDK::W2S(vToPos, vScreenPos, true))
+	Vec3 vScreen;
+	if (SDK::W2S(vToPos, vScreen, true))
 	{
 		float flMin = std::min(vCenter.x, vCenter.y), flMax = std::max(vCenter.x, vCenter.y);
-		float flDist = sqrt(powf(vScreenPos.x - vCenter.x, 2) + powf(vScreenPos.y - vCenter.y, 2));
+		float flDist = sqrt(powf(vScreen.x - vCenter.x, 2) + powf(vScreen.y - vCenter.y, 2));
 		tColor.a *= std::clamp((flDist - flMin) / (flMin != flMax ? flMax - flMin : 1), 0.f, 1.f);
 		if (!tColor.a)
 			return;
 	}
 
-	Vec3 vAngle = Math::VectorAngles({ vCenter.x - vScreenPos.x, vCenter.y - vScreenPos.y, 0 });
+	Vec3 vAngle = Math::VectorAngles({ vCenter.x - vScreen.x, vCenter.y - vScreen.y, 0 });
 	const float flDeg = DEG2RAD(vAngle.y);
 	const float flCos = cos(flDeg);
 	const float flSin = sin(flDeg);

@@ -218,12 +218,10 @@ bool SDK::W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways)
 
 bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft, float* pRight, float* pTop, float* pBottom, bool bAll)
 {
-	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
-
-	bool bInit = false;
 	float flLeft = 0.f, flRight = 0.f, flTop = 0.f, flBottom = 0.f;
 
-	static Vec3 vPoints[] = {
+	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
+	const Vec3 vPoints[] = {
 		Vec3(0.f, 0.f, vMins.z),
 		Vec3(0.f, 0.f, vMaxs.z),
 		Vec3(vMins.x, vMins.y, (vMins.z + vMaxs.z) * 0.5f),
@@ -231,25 +229,26 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* p
 		Vec3(vMaxs.x, vMins.y, (vMins.z + vMaxs.z) * 0.5f),
 		Vec3(vMaxs.x, vMaxs.y, (vMins.z + vMaxs.z) * 0.5f)
 	};
+
+	bool bInit = false;
 	for (int n = 0; n < 6; n++)
 	{
 		Vec3 vPoint; Math::VectorTransform(vPoints[n], mTransform, vPoint);
 
-		Vec3 vScreenPos;
-		if (!W2S(vPoint, vScreenPos))
+		Vec3 vScreen;
+		if (!W2S(vPoint, vScreen))
 		{
-			if (!bAll)
-				continue;
-			return false;
+			if (bAll)
+				return false;
+			continue;
 		}
 
-		flLeft = bInit ? std::min(flLeft, vScreenPos.x) : vScreenPos.x;
-		flRight = bInit ? std::max(flRight, vScreenPos.x) : vScreenPos.x;
-		flTop = bInit ? std::max(flTop, vScreenPos.y) : vScreenPos.y;
-		flBottom = bInit ? std::min(flBottom, vScreenPos.y) : vScreenPos.y;
+		flLeft = bInit ? std::min(flLeft, vScreen.x) : vScreen.x;
+		flRight = bInit ? std::max(flRight, vScreen.x) : vScreen.x;
+		flTop = bInit ? std::max(flTop, vScreen.y) : vScreen.y;
+		flBottom = bInit ? std::min(flBottom, vScreen.y) : vScreen.y;
 		bInit = true;
 	}
-
 	if (!bInit)
 		return false;
 
@@ -263,12 +262,10 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* p
 
 bool SDK::IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin, bool bAll)
 {
-	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
-
-	bool bInit = false;
 	float flLeft = 0.f, flRight = 0.f, flTop = 0.f, flBottom = 0.f;
 
-	static Vec3 vPoints[] = {
+	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
+	const Vec3 vPoints[] = {
 		Vec3(0.f, 0.f, vMins.z),
 		Vec3(0.f, 0.f, vMaxs.z),
 		Vec3(vMins.x, vMins.y, (vMins.z + vMaxs.z) * 0.5f),
@@ -276,25 +273,26 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin, bool bAll)
 		Vec3(vMaxs.x, vMins.y, (vMins.z + vMaxs.z) * 0.5f),
 		Vec3(vMaxs.x, vMaxs.y, (vMins.z + vMaxs.z) * 0.5f)
 	};
+
+	bool bInit = false;
 	for (int n = 0; n < 6; n++)
 	{
 		Vec3 vPoint = vOrigin + vPoints[n];
 
-		Vec3 vScreenPos;
-		if (!W2S(vPoint, vScreenPos))
+		Vec3 vScreen;
+		if (!W2S(vPoint, vScreen))
 		{
-			if (!bAll)
-				continue;
-			return false;
+			if (bAll)
+				return false;
+			continue;
 		}
 
-		flLeft = bInit ? std::min(flLeft, vScreenPos.x) : vScreenPos.x;
-		flRight = bInit ? std::max(flRight, vScreenPos.x) : vScreenPos.x;
-		flTop = bInit ? std::max(flTop, vScreenPos.y) : vScreenPos.y;
-		flBottom = bInit ? std::min(flBottom, vScreenPos.y) : vScreenPos.y;
+		flLeft = bInit ? std::min(flLeft, vScreen.x) : vScreen.x;
+		flRight = bInit ? std::max(flRight, vScreen.x) : vScreen.x;
+		flTop = bInit ? std::max(flTop, vScreen.y) : vScreen.y;
+		flBottom = bInit ? std::min(flBottom, vScreen.y) : vScreen.y;
 		bInit = true;
 	}
-
 	if (!bInit)
 		return false;
 
