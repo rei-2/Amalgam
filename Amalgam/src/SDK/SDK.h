@@ -96,8 +96,8 @@ namespace SDK
 	float RandomFloat(float flMinVal = 0.f, float flMaxVal = 1.f);
 
 	bool W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways = false);
-	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr);
-	bool IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin);
+	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr, bool bAll = false);
+	bool IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin, bool bAll = false);
 	bool IsOnScreen(CBaseEntity* pEntity, bool bShouldGetOwner = true);
 
 	void Trace(const Vec3& vecStart, const Vec3& vecEnd, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace);

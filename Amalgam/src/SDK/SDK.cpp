@@ -216,14 +216,14 @@ bool SDK::W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways)
 	return bOnScreen;
 }
 
-bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft, float* pRight, float* pTop, float* pBottom)
+bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft, float* pRight, float* pTop, float* pBottom, bool bAll)
 {
 	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
 
 	bool bInit = false;
 	float flLeft = 0.f, flRight = 0.f, flTop = 0.f, flBottom = 0.f;
 
-	const Vec3 vPoints[] = {
+	static Vec3 vPoints[] = {
 		Vec3(0.f, 0.f, vMins.z),
 		Vec3(0.f, 0.f, vMaxs.z),
 		Vec3(vMins.x, vMins.y, (vMins.z + vMaxs.z) * 0.5f),
@@ -237,7 +237,11 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* p
 
 		Vec3 vScreenPos;
 		if (!W2S(vPoint, vScreenPos))
-			continue;
+		{
+			if (!bAll)
+				continue;
+			return false;
+		}
 
 		flLeft = bInit ? std::min(flLeft, vScreenPos.x) : vScreenPos.x;
 		flRight = bInit ? std::max(flRight, vScreenPos.x) : vScreenPos.x;
@@ -257,14 +261,14 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* p
 	return !(flRight < 0 || flLeft > H::Draw.m_nScreenW || flTop < 0 || flBottom > H::Draw.m_nScreenH);
 }
 
-bool SDK::IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin)
+bool SDK::IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin, bool bAll)
 {
 	Vec3 vMins = pEntity->m_vecMins(), vMaxs = pEntity->m_vecMaxs();
 
 	bool bInit = false;
 	float flLeft = 0.f, flRight = 0.f, flTop = 0.f, flBottom = 0.f;
 
-	const Vec3 vPoints[] = {
+	static Vec3 vPoints[] = {
 		Vec3(0.f, 0.f, vMins.z),
 		Vec3(0.f, 0.f, vMaxs.z),
 		Vec3(vMins.x, vMins.y, (vMins.z + vMaxs.z) * 0.5f),
@@ -278,7 +282,11 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, Vec3 vOrigin)
 
 		Vec3 vScreenPos;
 		if (!W2S(vPoint, vScreenPos))
-			continue;
+		{
+			if (!bAll)
+				continue;
+			return false;
+		}
 
 		flLeft = bInit ? std::min(flLeft, vScreenPos.x) : vScreenPos.x;
 		flRight = bInit ? std::max(flRight, vScreenPos.x) : vScreenPos.x;

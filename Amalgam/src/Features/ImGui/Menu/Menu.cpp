@@ -171,15 +171,13 @@ void CMenu::MenuAimbot(int iTab)
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
-					if (Section("##Debug Aimbot"))
+					if (Section("##Debug Aimbot", -8))
 					{
-						FSlider(Vars::Aimbot::General::HitscanPeek);
-						FToggle(Vars::Aimbot::General::PeekDTOnly, FToggleEnum::Left, &Hovered); FTooltip("This should probably stay on if you want to be able to target hitboxes other than the highest priority one", Hovered);
+						FDropdown(Vars::Aimbot::General::AimHoldsFire);
 						FSlider(Vars::Aimbot::General::NoSpreadOffset);
 						FSlider(Vars::Aimbot::General::NoSpreadAverage);
 						FSlider(Vars::Aimbot::General::NoSpreadInterval);
 						FSlider(Vars::Aimbot::General::NoSpreadBackupInterval);
-						FDropdown(Vars::Aimbot::General::AimHoldsFire);
 					} EndSection();
 				}
 				if (Section("Backtrack", 8))
@@ -234,8 +232,10 @@ void CMenu::MenuAimbot(int iTab)
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
-					if (Section("##Debug Hitscan"))
+					if (Section("##Debug Hitscan", -8))
 					{
+						FDropdown(Vars::Aimbot::Hitscan::PeekCheck, FDropdownEnum::None, 0, &Hovered); FTooltip("This should stay as doubletap only or off if you want to be able to target hitboxes other than the highest priority one", Hovered);
+						FSlider(Vars::Aimbot::Hitscan::PeekAmount);
 						FSlider(Vars::Aimbot::Hitscan::BoneSizeSubtract);
 						FSlider(Vars::Aimbot::Hitscan::BoneSizeMinimumScale);
 					} EndSection();
@@ -300,16 +300,19 @@ void CMenu::MenuAimbot(int iTab)
 						FToggle(Vars::Aimbot::Projectile::HuntsmanPullPoint, FToggleEnum::Right);
 						SetCursorPosY(GetCursorPosY() + 8);
 
-						FSlider(Vars::Aimbot::Projectile::SplashPoints, FSliderEnum::Left);
-						FToggle(Vars::Aimbot::Projectile::SplashGrates, FToggleEnum::Right);
-						FSlider(Vars::Aimbot::Projectile::SplashRotateX, FSliderEnum::Left, Vars::Aimbot::Projectile::SplashRotateX[DEFAULT_BIND] < 0.f ? "random" : "%g");
-						FSlider(Vars::Aimbot::Projectile::SplashRotateY, FSliderEnum::Right, Vars::Aimbot::Projectile::SplashRotateY[DEFAULT_BIND] < 0.f ? "random" : "%g");
+						FSlider(Vars::Aimbot::Projectile::SplashPointsDirect, FSliderEnum::Left);
+						FSlider(Vars::Aimbot::Projectile::SplashPointsArc, FSliderEnum::Right);
 						FSlider(Vars::Aimbot::Projectile::SplashCountDirect, FSliderEnum::Left);
 						FSlider(Vars::Aimbot::Projectile::SplashCountArc, FSliderEnum::Right);
+						FSlider(Vars::Aimbot::Projectile::SplashRotateX, FSliderEnum::Left, Vars::Aimbot::Projectile::SplashRotateX[DEFAULT_BIND] < 0.f ? "random" : "%g");
+						FSlider(Vars::Aimbot::Projectile::SplashRotateY, FSliderEnum::Right, Vars::Aimbot::Projectile::SplashRotateY[DEFAULT_BIND] < 0.f ? "random" : "%g");
 						FSlider(Vars::Aimbot::Projectile::SplashTraceInterval, FSliderEnum::Left);
 						FSlider(Vars::Aimbot::Projectile::SplashNormalSkip, FSliderEnum::Right);
 						FDropdown(Vars::Aimbot::Projectile::SplashMode, FDropdownEnum::Left);
 						FDropdown(Vars::Aimbot::Projectile::RocketSplashMode, FDropdownEnum::Right, 0, &Hovered); FTooltip("Special splash type for rockets, more expensive", Hovered);
+						FToggle(Vars::Aimbot::Projectile::SplashGrates);
+						SetCursorPosY(GetCursorPosY() + 8);
+
 						FSlider(Vars::Aimbot::Projectile::DeltaCount, FSliderEnum::Left);
 						FDropdown(Vars::Aimbot::Projectile::DeltaMode, FDropdownEnum::Right);
 						FDropdown(Vars::Aimbot::Projectile::MovesimFrictionFlags);
