@@ -65,7 +65,7 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 	const Vec3 vEyePos = pLocal->GetShootPos();
 
 	float flLatency = std::max(F::Backtrack.GetReal() - 0.03f, 0.f);
-	for (auto pProjectile : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
+	for (auto pProjectile : H::Entities.GetGroup(EntityEnum::WorldProjectile))
 	{
 		if (!ShouldTarget(pProjectile, pLocal))
 			continue;

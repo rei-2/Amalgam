@@ -1,17 +1,16 @@
 #pragma once
 #include "../../../Utils/Macros/Macros.h"
 #include "../../Definitions/Classes.h"
+#include "../../Vars.h"
 #include <unordered_map>
 
-enum struct EGroupType
-{
-	GROUP_INVALID = -1,
-	PLAYERS_ALL, PLAYERS_ENEMIES, PLAYERS_TEAMMATES,
-	BUILDINGS_ALL, BUILDINGS_ENEMIES, BUILDINGS_TEAMMATES,
-	PICKUPS_HEALTH, PICKUPS_AMMO, PICKUPS_MONEY, PICKUPS_POWERUP, PICKUPS_SPELLBOOK,
-	WORLD_PROJECTILES, WORLD_OBJECTIVE, WORLD_NPC, WORLD_BOMBS, WORLD_GARGOYLE,
-	MISC_LOCAL_STICKIES, MISC_LOCAL_FLARES, MISC_DOTS
-};
+Enum(Entity, Invalid = -1,
+	PlayerAll, PlayerEnemy, PlayerTeam,
+	BuildingAll, BuildingEnemy, BuildingTeam,
+	PickupHealth, PickupAmmo, PickupMoney, PickupPowerup, PickupSpellbook, PickupGargoyle,
+	WorldProjectile, WorldObjective, WorldNPC, WorldBomb,
+	LocalStickies, LocalFlares, SniperDots
+)
 
 struct DormantData
 {
@@ -34,7 +33,7 @@ private:
 	CTFWeaponBase* m_pLocalWeapon = nullptr;
 	CTFPlayerResource* m_pPlayerResource = nullptr;
 
-	std::unordered_map<EGroupType, std::vector<CBaseEntity*>> m_mGroups = {};
+	std::unordered_map<EntityEnum::EntityEnum, std::vector<CBaseEntity*>> m_mGroups = {};
 
 	std::unordered_map<int, float> m_mDeltaTimes = {}, m_mLagTimes = {};
 	std::unordered_map<int, int> m_mChokes = {}, m_mSetTicks = {};
@@ -71,7 +70,7 @@ public:
 	CTFWeaponBase* GetWeapon();
 	CTFPlayerResource* GetResource();
 
-	const std::vector<CBaseEntity*>& GetGroup(const EGroupType& Group);
+	const std::vector<CBaseEntity*>& GetGroup(const EntityEnum::EntityEnum iGroup);
 
 	float GetDeltaTime(int iIndex);
 	float GetLagTime(int iIndex);

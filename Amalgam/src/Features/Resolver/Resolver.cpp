@@ -18,7 +18,7 @@ void CResolver::Reset()
 void CResolver::StoreSniperDots(CTFPlayerResource* pResource)
 {
 	m_mSniperDots.clear();
-	for (auto& pEntity : H::Entities.GetGroup(EGroupType::MISC_DOTS))
+	for (auto& pEntity : H::Entities.GetGroup(EntityEnum::SniperDots))
 	{
 		if (auto pOwner = pEntity->m_hOwnerEntity().Get())
 		{
@@ -52,7 +52,7 @@ void CResolver::FrameStageNotify()
 		return;
 
 	StoreSniperDots(pResource);
-	for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+	for (auto& pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
@@ -133,7 +133,7 @@ void CResolver::CreateMove(CTFPlayer* pLocal)
 			const Vec3 vLocalPos = F::Ticks.GetShootPos();
 			const Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
-			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+			for (auto& pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 			{
 				if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
 					continue;

@@ -143,7 +143,7 @@ MAKE_HOOK(CParticleProperty_Create_Point, S::CParticleProperty_Create_Point(), v
                 return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, iAttachmentPoint, vecOriginOffset);
 
             bool bValid = false;
-            for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
+            for (auto pEntity : H::Entities.GetGroup(EntityEnum::WorldProjectile))
             {
                 auto pOwner = F::ProjSim.GetEntities(pEntity).second;
                 if (bValid = pLocal == pOwner && rcx == &pEntity->m_Particles())

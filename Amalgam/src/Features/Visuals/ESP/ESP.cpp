@@ -341,7 +341,7 @@ static inline void StorePlayer(CTFPlayer* pPlayer, CTFPlayer* pLocal, Group_t* p
 				{
 					auto GetSniperDot = [](CBaseEntity* pEntity) -> CSniperDot*
 						{
-							for (auto pDot : H::Entities.GetGroup(EGroupType::MISC_DOTS))
+							for (auto pDot : H::Entities.GetGroup(EntityEnum::SniperDots))
 							{
 								if (pDot->m_hOwnerEntity().Get() == pEntity)
 									return pDot->As<CSniperDot>();

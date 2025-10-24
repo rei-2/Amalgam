@@ -254,7 +254,7 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 	Vec3 vTargetCenter = vTargetOrigin + pTarget->GetOffset() / 2;
 	Vec3 vTargetEye = vTargetOrigin + pTarget->GetViewOffset();
 
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerEnemy))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		int iIndex = pPlayer->entindex();
@@ -297,7 +297,7 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 			bool bPiss = SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0;
 			auto GetSniperDot = [](CBaseEntity* pEntity) -> CSniperDot*
 				{
-					for (auto pDot : H::Entities.GetGroup(EGroupType::MISC_DOTS))
+					for (auto pDot : H::Entities.GetGroup(EntityEnum::SniperDots))
 					{
 						if (pDot->m_hOwnerEntity().Get() == pEntity)
 							return pDot->As<CSniperDot>();
@@ -399,7 +399,7 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 		}
 	}
 
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::BUILDINGS_ENEMIES))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::BuildingEnemy))
 	{
 		auto pSentry = pEntity->As<CObjectSentrygun>();
 		if (!pSentry->IsBuilding())
@@ -437,7 +437,7 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 		flBulletDanger += flDamageDanger * flDistanceDanger;
 	}
 
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::WorldProjectile))
 	{
 		CTFPlayer* pOwner = nullptr;
 		CTFWeaponBase* pWeapon = nullptr;

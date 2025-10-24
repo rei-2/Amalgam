@@ -218,7 +218,7 @@ void CVisuals::SplashRadius(CTFPlayer* pLocal)
 	if (!Vars::Visuals::Simulation::SplashRadius.Value)
 		return;
 
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::WORLD_PROJECTILES))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::WorldProjectile))
 	{
 		bool bShouldDraw = false;
 		CTFPlayer* pOwner = nullptr;
@@ -572,7 +572,7 @@ void CVisuals::DrawHitboxes(int iStore)
 		s_vHitboxes.clear();
 
 		bool bLocalhost = SDK::IsLoopback();
-		for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+		for (auto& pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
 			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::Input->CAM_IsThirdPerson() || !pPlayer->IsAlive())
@@ -822,14 +822,14 @@ void CVisuals::Store(CTFPlayer* pLocal)
 		return;
 
 	std::unordered_map<IClientEntity*, Vec3> mDots = {};
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::MISC_DOTS))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::SniperDots))
 	{
 		if (auto pOwner = pEntity->m_hOwnerEntity().Get())
 			mDots[pOwner] = pEntity->m_vecOrigin();
 	}
 
 	Group_t* pGroup = nullptr;
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		if (pPlayer == pLocal

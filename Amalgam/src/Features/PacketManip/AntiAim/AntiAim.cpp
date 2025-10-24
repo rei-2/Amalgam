@@ -127,7 +127,7 @@ float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 	case Vars::AntiAim::YawModeEnum::Target:
 	{
 		float flSmallestAngleTo = 0.f; float flSmallestFovTo = 360.f;
-		for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ENEMIES))
+		for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerEnemy))
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
 			if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || F::PlayerUtils.IsIgnored(pPlayer->entindex()))

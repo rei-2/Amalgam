@@ -24,7 +24,7 @@ MAKE_HOOK(CWeaponMedigun_PrimaryAttack, S::CWeaponMedigun_PrimaryAttack(), void,
 
 	auto pCmd = pOwner->m_pCurrentCommand();
 	float flTargetTime = TICKS_TO_TIME(pCmd->tick_count - TIME_TO_TICKS(F::Backtrack.GetFakeInterp()));
-	for (auto pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_TEAMMATES))
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerTeam))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		if (pPlayer == pOwner || !pPlayer->IsAlive() || pPlayer->IsAGhost())

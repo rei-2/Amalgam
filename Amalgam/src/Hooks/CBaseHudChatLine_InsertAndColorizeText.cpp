@@ -60,7 +60,7 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 		if (auto pResource = H::Entities.GetResource())
 		{
 			std::vector<std::pair<std::string, std::string>> vReplace;
-			for (auto& pEntity : H::Entities.GetGroup(EGroupType::PLAYERS_ALL))
+			for (auto& pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 			{
 				int iIndex = pEntity->entindex();
 				int iType = 0; const char* sReplace = F::PlayerUtils.GetPlayerName(iIndex, nullptr, &iType);

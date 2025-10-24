@@ -6,8 +6,8 @@
 class CAutoDetonate
 {
 private:
-	bool CheckDetonation(CTFPlayer* pLocal, EGroupType entityGroup, float flRadiusScale, CUserCmd* pCmd);
-	bool CheckSelf(CTFPlayer* pLocal, EGroupType entityGroup);
+	bool CheckDetonation(CTFPlayer* pLocal, EntityEnum::EntityEnum iGroup, float flRadiusScale, CUserCmd* pCmd);
+	bool CheckSelf(CTFPlayer* pLocal, EntityEnum::EntityEnum iGroup);
 
 	void PredictPlayers(CTFPlayer* pLocal, float flLatency, bool bLocal = false);
 	void RestorePlayers();
