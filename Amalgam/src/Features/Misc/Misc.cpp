@@ -215,7 +215,7 @@ void CMisc::InstantRespawnMVM(CTFPlayer* pLocal)
 		return;
 
 	KeyValues* kv = new KeyValues("MVM_Revive_Response");
-	kv->SetInt("accepted", 1);
+	kv->SetBool("accepted", true);
 	I::EngineClient->ServerCmdKeyValues(kv);
 }
 

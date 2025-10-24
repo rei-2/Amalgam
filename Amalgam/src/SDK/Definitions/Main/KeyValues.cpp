@@ -5,25 +5,24 @@
 #define Q_ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 
 MAKE_SIGNATURE(KeyValues_LoadFromBuffer, "engine.dll", "4C 89 4C 24 ? 48 89 4C 24 ? 55 56", 0x0);
-MAKE_SIGNATURE(KeyValues_Initialize, "engine.dll", "40 53 48 83 EC ? 48 8B D9 C7 01", 0x0);
+MAKE_SIGNATURE(KeyValues_Initialize, "engine.dll", "40 53 48 83 EC ? 48 8B D9 C6 41 ? ? 33 C9 48 8B C2", 0x0);
 MAKE_SIGNATURE(KeyValues_GetSymbolForStringClassic, "engine.dll", "48 89 5C 24 ? 57 48 83 EC ? 0F B6 DA 48 8B F9", 0x0);
 MAKE_SIGNATURE(KeyValues_GetStringForSymbolClassic, "engine.dll", "40 53 48 83 EC ? 8B D9 FF 15", 0x0);
-MAKE_SIGNATURE(KeyValues_FindKey, "client.dll", "48 8B C4 53 57 41 56", 0x0);
+MAKE_SIGNATURE(KeyValues_FindKey, "client.dll", "48 8B C4 53 55 56 48 81 EC ? ? ? ? 41 0F B6 E8", 0x0);
 
-int UnicodeToUTF8(const wchar_t* unicode, char* ansi, int ansiBufferSize)
+static int UnicodeToUTF8(const wchar_t* unicode, char* ansi, int ansiBufferSize)
 {
 	int result = WideCharToMultiByte(CP_UTF8, 0, unicode, -1, ansi, ansiBufferSize, NULL, NULL);
 	ansi[ansiBufferSize - 1] = 0;
 	return result;
 }
 
-int UTF8ToUnicode(const char* ansi, wchar_t* unicode, int unicodeBufferSizeInBytes)
+static int UTF8ToUnicode(const char* ansi, wchar_t* unicode, int unicodeBufferSizeInBytes)
 {
 	int chars = MultiByteToWideChar(CP_UTF8, 0, ansi, -1, unicode, unicodeBufferSizeInBytes / sizeof(wchar_t));
 	unicode[(unicodeBufferSizeInBytes / sizeof(wchar_t)) - 1] = 0;
 	return chars;
 }
-
 
 bool KeyValues::LoadFromBuffer(char const* resource_name, const char* buffer, void* file_system, const char* path_id)
 {
