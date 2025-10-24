@@ -94,7 +94,7 @@ void CCore::Load()
 	if (m_bUnload = m_bFailed2 = !U::Hooks.Initialize() || !U::BytePatches.Initialize() || !H::Events.Initialize())
 		return;
 	F::Materials.LoadMaterials();
-	U::ConVars.Initialize();
+	U::ConVars.Unlock();
 
 	F::Configs.LoadConfig(F::Configs.m_sCurrentConfig, false);
 
@@ -142,7 +142,7 @@ void CCore::Unload()
 
 	Sleep(250);
 	F::EnginePrediction.Unload();
-	U::ConVars.Unload();
+	U::ConVars.Restore();
 	F::Materials.UnloadMaterials();
 
 	if (m_bFailed2)

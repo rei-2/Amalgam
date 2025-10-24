@@ -120,17 +120,9 @@ public:
 class IMatchGroupDescription
 {
 public:
-	inline int GetLevelForIndex(int iIndex)
+	inline int GetLevelForSteamID(CSteamID* pSteamID)
 	{
-		player_info_t tInfo;
-		if (!I::EngineClient->GetPlayerInfo(iIndex, &tInfo) || tInfo.fakeplayer)
-			return -1;
-
-		CSteamID cSteamID = { tInfo.friendsID, 1, k_EUniversePublic, k_EAccountTypeIndividual };
-		if (!cSteamID.IsValid())
-			return -1;
-
-		auto pRating = S::CTFRatingData_YieldingGetPlayerRatingDataBySteamID.Call<CTFRatingData*>(&cSteamID, m_eMatchType == MATCH_TYPE_CASUAL ? m_eCurrentDisplayRating : m_eCurrentDisplayRank);
+		auto pRating = S::CTFRatingData_YieldingGetPlayerRatingDataBySteamID.Call<CTFRatingData*>(pSteamID, m_eMatchType == MATCH_TYPE_CASUAL ? m_eCurrentDisplayRating : m_eCurrentDisplayRank);
 		if (!pRating)
 			return -1;
 
@@ -139,6 +131,24 @@ public:
 			return m_pProgressionDesc->GetLevelForRating(nLevel).m_nLevelNum;
 		else
 			return m_pProgressionDesc->GetLevelByNumber(nLevel).m_nLevelNum;
+	}
+
+	inline int GetLevelForAccountID(uint32 uAccountID)
+	{
+		CSteamID tSteamID = { uAccountID, 1, k_EUniversePublic, k_EAccountTypeIndividual };
+		if (!tSteamID.IsValid())
+			return -1;
+
+		return GetLevelForSteamID(&tSteamID);
+	}
+
+	inline int GetLevelForIndex(int iIndex)
+	{
+		player_info_t tInfo;
+		if (!I::EngineClient->GetPlayerInfo(iIndex, &tInfo) || tInfo.fakeplayer)
+			return -1;
+
+		return GetLevelForAccountID(tInfo.friendsID);
 	}
 
 public:

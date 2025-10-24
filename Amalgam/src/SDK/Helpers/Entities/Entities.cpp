@@ -170,19 +170,25 @@ void CEntities::Store()
 
 		if (auto pLobby = I::TFGCClientSystem->GetLobby())
 		{
+			auto pGameRules = I::TFGameRules();
+			auto pMatchDesc = pGameRules ? pGameRules->GetMatchGroupDescription() : nullptr;
+
 			int iMembers = pLobby->GetNumMembers();
 			for (int i = 0; i < iMembers; i++)
 			{
-				auto cSteamID = CSteamID(); pLobby->GetMember(&cSteamID, i);
-				auto uAccountID = cSteamID.GetAccountID();
+				auto tSteamID = CSteamID(); pLobby->GetMember(&tSteamID, i);
+				auto uAccountID = tSteamID.GetAccountID();
 
 				ConstTFLobbyPlayer pDetails;
 				pLobby->GetMemberDetails(&pDetails, i);
 
 				auto pProto = pDetails.Proto();
 				mF2P[uAccountID] = pProto->chat_suspension;
-				mLevels[uAccountID] = pProto->rank;
 				mParties[uAccountID] = pProto->original_party_id;
+				if (pMatchDesc && pMatchDesc->m_pProgressionDesc)
+					mLevels[uAccountID] = std::max(int(pProto->rank), pMatchDesc->GetLevelForSteamID(&tSteamID));
+				else
+					mLevels[uAccountID] = pProto->rank;
 			}
 		}
 		if (auto pParty = I::TFGCClientSystem->GetParty())
