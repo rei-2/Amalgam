@@ -76,7 +76,7 @@ public:
 	const char* GetString(const char* keyName, const char* defaultValue = "");
 	const wchar_t* GetWString(const char* keyName, const wchar_t* defaultValue = L"");
 	void* GetPtr(const char* keyName, void* defaultValue = (void*)0);
-	bool GetBool(const char* keyName, bool defaultValue = false);
+	bool GetBool(const char* keyName, bool defaultValue = false /*, bool* optGotDefault = NULL*/);
 	Color_t GetColor(const char* keyName);
 	bool IsEmpty(const char* keyName);
 

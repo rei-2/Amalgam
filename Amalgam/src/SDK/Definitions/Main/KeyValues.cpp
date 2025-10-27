@@ -24,6 +24,8 @@ static int UTF8ToUnicode(const char* ansi, wchar_t* unicode, int unicodeBufferSi
 	return chars;
 }
 
+
+
 bool KeyValues::LoadFromBuffer(char const* resource_name, const char* buffer, void* file_system, const char* path_id)
 {
 	return S::KeyValues_LoadFromBuffer.Call<bool>(this, resource_name, buffer, file_system, path_id);
@@ -66,6 +68,7 @@ KeyValues *KeyValues::FindKey(const char *keyName, bool bCreate)
 }
 
 
+
 const char* KeyValues::GetName() const
 {
 	return S::KeyValues_GetStringForSymbolClassic.Call<const char*>(m_iKeyName);
@@ -75,6 +78,7 @@ void KeyValues::SetName(const char* setName)
 {
 	m_iKeyName = S::KeyValues_GetSymbolForStringClassic.Call<int>(setName, true);
 }
+
 
 
 int KeyValues::GetInt(const char* keyName, int defaultValue)
@@ -276,7 +280,7 @@ void* KeyValues::GetPtr(const char* keyName, void* defaultValue)
 	return defaultValue;
 }
 
-bool KeyValues::GetBool(const char* keyName, bool defaultValue)
+bool KeyValues::GetBool(const char* keyName, bool defaultValue /*, bool* optGotDefault*/)
 {
 	if (FindKey(keyName))
 	{
@@ -337,6 +341,7 @@ bool KeyValues::IsEmpty(const char* keyName)
 
 	return false;
 }
+
 
 
 void KeyValues::SetWString(const char* keyName, const wchar_t* value)
