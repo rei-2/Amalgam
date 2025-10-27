@@ -485,8 +485,8 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 		size_t iOriginalSize = vPoints.size();
 
 		{
-			bool bCheckNormal = !bNormal && iOriginalType & PointTypeEnum::Regular;
-			if (bNormal = bCheckNormal && (tInfo.m_vLocalEye - vTargetEye).Dot(vTargetEye - vPoint) > 0.f)
+			// necessary performance wise?
+			if (bNormal = (tInfo.m_vLocalEye - vTargetEye).Dot(vTargetEye - vPoint) > 0.f)
 				goto breakOutExtra;
 
 			if (!(iOriginalType & PointTypeEnum::Regular)) // don't do the same trace over again

@@ -315,7 +315,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 		if (Vars::Aimbot::Melee::BackstabDoubleTest.Value && !TestDots(vTargetAngles))
 			return false;
 
-		vTargetAngles.y += H::Entities.GetPingAngles(pTarget->entindex()).y;
+		vTargetAngles.y += H::Entities.GetDeltaAngles(pTarget->entindex()).y;
 		if (!TestDots(vTargetAngles))
 			return false;
 	}

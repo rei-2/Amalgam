@@ -134,10 +134,13 @@ void CBinds::SetVars(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bManage)
 	GetBinds(DEFAULT_BIND, pLocal, pWeapon, m_vBinds, bManage);
 }
 
-void CBinds::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+void CBinds::Run()
 {
 	if (G::Unload)
 		return;
+
+	auto pLocal = H::Entities.GetLocal();
+	auto pWeapon = H::Entities.GetWeapon();
 
 	for (auto& tBind : m_vBinds)
 	{	// don't delay inputs for binds

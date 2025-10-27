@@ -5,7 +5,7 @@ class CTicks
 {
 private:
 	void MoveFunc(float accumulated_extra_samples, bool bFinalTick);
-	void MoveManage(CTFPlayer* pLocal);
+	void MoveManage();
 
 	void Recharge(CTFPlayer* pLocal);
 	void Warp();
@@ -25,7 +25,7 @@ private:
 	bool m_bTimingUnsure = false; // we aren't sure when we'll actually fire, hold aim
 
 public:
-	void Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal);
+	void Move(float accumulated_extra_samples, bool bFinalTick);
 	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool* pSendPacket);
 	void Draw(CTFPlayer* pLocal);
 	void Reset();

@@ -17,7 +17,8 @@ public:
 class CNetworkFix
 {
 private:
-    CReadPacketState m_State = {};
+    CReadPacketState m_tState = {};
+    CReadPacketState m_tBackup = {};
 
 public:
     void FixInputDelay(bool bFinalTick);

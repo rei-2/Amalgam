@@ -76,7 +76,7 @@ public:
 	float GetLagTime(int iIndex);
 	int GetChoke(int iIndex);
 	Vec3 GetEyeAngles(int iIndex);
-	Vec3 GetPingAngles(int iIndex);
+	Vec3 GetDeltaAngles(int iIndex);
 	bool GetLagCompensation(int iIndex);
 	void SetLagCompensation(int iIndex, bool bLagComp);
 	bool GetDormancy(int iIndex);

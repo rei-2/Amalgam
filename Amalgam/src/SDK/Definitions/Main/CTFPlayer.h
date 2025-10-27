@@ -139,6 +139,7 @@ public:
 	NETVAR(m_nExperienceLevelProgress, int, "CTFPlayer", "m_nExperienceLevelProgress");
 	NETVAR(m_bMatchSafeToLeave, bool, "CTFPlayer", "m_bMatchSafeToLeave");
 	NETVAR(m_vecOrigin, Vec3, "CTFPlayer", "m_vecOrigin");
+	NETVAR(m_angEyeAngles, Vec3, "CTFPlayer", "m_angEyeAngles[0]");
 	NETVAR(m_angEyeAnglesX, float, "CTFPlayer", "m_angEyeAngles[0]");
 	NETVAR(m_angEyeAnglesY, float, "CTFPlayer", "m_angEyeAngles[1]");
 	NETVAR(m_bAllowMoveDuringTaunt, bool, "CTFPlayer", "m_bAllowMoveDuringTaunt");

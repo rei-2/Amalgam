@@ -1,6 +1,5 @@
 #include "Ticks.h"
 
-#include "../NetworkFix/NetworkFix.h"
 #include "../PacketManip/AntiAim/AntiAim.h"
 #include "../EnginePrediction/EnginePrediction.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
@@ -166,10 +165,9 @@ void CTicks::MoveFunc(float accumulated_extra_samples, bool bFinalTick)
 	CL_Move->Call<void>(accumulated_extra_samples, bFinalTick);
 }
 
-void CTicks::Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* pLocal)
+void CTicks::Move(float accumulated_extra_samples, bool bFinalTick)
 {
-	F::NetworkFix.FixInputDelay(bFinalTick);
-	MoveManage(pLocal);
+	MoveManage();
 
 	if (auto pWeapon = H::Entities.GetWeapon())
 	{
@@ -232,8 +230,9 @@ void CTicks::Move(float accumulated_extra_samples, bool bFinalTick, CTFPlayer* p
 	}
 }
 
-void CTicks::MoveManage(CTFPlayer* pLocal)
+void CTicks::MoveManage()
 {
+	auto pLocal = H::Entities.GetLocal();
 	if (!pLocal)
 		return;
 
