@@ -3,12 +3,12 @@
 
 Enum(ProjSim,
 	None = 0,
-	Trace = 1 << 0,
-	InitCheck = 1 << 1,
-	Quick = 1 << 2,
-	NoRandomAngles = 1 << 3,
-	PredictCmdNum = 1 << 4,
-	MaxSpeed = 1 << 5
+	Trace = 1 << 0, // trace when doing GetProjectileFireSetup
+	InitCheck = 1 << 1, // validate starting position
+	Quick = 1 << 2, // use interpolation
+	NoRandomAngles = 1 << 3, // don't do angle stuff for aimbot, nospread will pick that up
+	PredictCmdNum = 1 << 4, // use crithack to predict command number
+	MaxSpeed = 1 << 5 // default projectile speeds to their maximum
 )
 
 struct ProjectileInfo
@@ -27,7 +27,7 @@ struct ProjectileInfo
 
 	std::vector<Vec3> m_vPath = {};
 
-	bool m_bQuick = false;
+	int m_iFlags = 0;
 };
 
 class CProjectileSimulation

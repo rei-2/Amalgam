@@ -305,6 +305,8 @@
 #define TF_PLAYER_STICKY_JUMPED ( 1 << 1 )
 #define TF_PLAYER_ENEMY_BLASTED_ME ( 1 << 2 )
 
+#define TF_ARROW_MAX_CHARGE_TIME 5.0f
+
 #define MVM_BUYBACK_COST_PER_SEC 5
 #define MVM_CLASS_TYPES_PER_WAVE_MAX 12
 #define MVM_CLASS_TYPES_PER_WAVE_MAX_NEW ( MVM_CLASS_TYPES_PER_WAVE_MAX * 2 )
@@ -460,6 +462,7 @@
 								  (v.y>=MIN_COORD_INTEGER*2) && (v.y<=MAX_COORD_INTEGER*2) && \
 								  (v.z>=MIN_COORD_INTEGER*2) && (v.z<=MAX_COORD_INTEGER*2) ); \
 
+#define VALVE_RAND_MAX 0x7fff
 
 enum MoveType_t
 {

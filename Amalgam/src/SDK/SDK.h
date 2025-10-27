@@ -92,7 +92,7 @@ namespace SDK
 	int SeedFileLineHash(int iSeed, const char* sName, int iAdditionalSeed);
 	int SharedRandomInt(unsigned iSeed, const char* sName, int iMinVal, int iMaxVal, int iAdditionalSeed);
 	void RandomSeed(int iSeed);
-	int RandomInt(int iMinVal = 0, int iMaxVal = 0x7FFF);
+	int RandomInt(int iMinVal = 0, int iMaxVal = VALVE_RAND_MAX);
 	float RandomFloat(float flMinVal = 0.f, float flMaxVal = 1.f);
 
 	bool W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways = false);
