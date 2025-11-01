@@ -23,7 +23,7 @@ bool Timer::Run(float flS)
 	return false;
 }
 
-inline void Timer::Update()
+void Timer::Update()
 {
 	m_flLast = SDK::PlatFloatTime();
 }

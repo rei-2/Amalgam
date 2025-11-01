@@ -3,7 +3,7 @@
 MAKE_SIGNATURE(CBasePlayer_CalcViewModelView, "client.dll", "48 89 74 24 ? 55 41 56 41 57 48 8D AC 24", 0x0);
 
 MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), void,
-	void* rcx, CBaseEntity* pOwner, const Vec3& vEyePosition, Vec3& vEyeAngles)
+	void* rcx, CBaseEntity* pOwner, Vec3& vEyePosition, Vec3& vEyeAngles)
 {
 #ifdef DEBUG_HOOKS
 	if (!Vars::Hooks::CBasePlayer_CalcViewModelView[DEFAULT_BIND])
@@ -17,14 +17,7 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 		|| Vars::Visuals::UI::CleanScreenshots.Value && I::EngineClient->IsTakingScreenshot())
 		return CALL_ORIGINAL(rcx, pOwner, vEyePosition, vEyeAngles);
 
-	bool bFlip = false;
-	{
-		static auto cl_flipviewmodels = U::ConVars.FindVar("cl_flipviewmodels");
-		if (cl_flipviewmodels->GetBool())
-			bFlip = !bFlip;
-		if (G::FlipViewmodels)
-			bFlip = !bFlip;
-	}
+	bool bFlip = G::FlipViewmodels;
 
 	if (Vars::Visuals::Viewmodel::ViewmodelAim.Value)
 	{
@@ -38,13 +31,12 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 		}
 	}
 
-	Vec3 vNewEyePosition = vEyePosition;
 	if (bOffset)
 	{
 		Vec3 vForward, vRight, vUp; Math::AngleVectors(vEyeAngles, &vForward, &vRight, &vUp);
-		vNewEyePosition += vForward * vOffset.y;
-		vNewEyePosition += vRight * vOffset.x * (bFlip ? -1 : 1);
-		vNewEyePosition += vUp * vOffset.z;
+		vEyePosition += vForward * vOffset.y;
+		vEyePosition += vRight * vOffset.x * (bFlip ? -1 : 1);
+		vEyePosition += vUp * vOffset.z;
 	}
 	if (Vars::Visuals::Viewmodel::Pitch.Value)
 		vEyeAngles.x += Vars::Visuals::Viewmodel::Pitch.Value;
@@ -53,5 +45,5 @@ MAKE_HOOK(CBasePlayer_CalcViewModelView, S::CBasePlayer_CalcViewModelView(), voi
 	if (Vars::Visuals::Viewmodel::Roll.Value)
 		vEyeAngles.z += Vars::Visuals::Viewmodel::Roll.Value * (bFlip ? -1 : 1);
 
-	CALL_ORIGINAL(rcx, pOwner, vNewEyePosition, vEyeAngles);
+	CALL_ORIGINAL(rcx, pOwner, vEyePosition, vEyeAngles);
 }

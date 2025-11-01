@@ -256,9 +256,35 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
             s_sCmdString = std::format("{} {}", sCommand, s_sCmdString).substr(0, COMMAND_MAX_LENGTH - 1);
 			strncpy_s(args.m_pArgSBuffer, s_sCmdString.c_str(), COMMAND_MAX_LENGTH);
 			args.m_nArgv0Size = int(strlen(sCommand)) + 1;
+
+            break;
 		}
+        case FNV1A::Hash32Const("cl_flipviewmodels"):
+        {   // server does string comparison to "1"
+            auto pCVar = I::CVar->FindVar(sCommand);
+            if (!pCVar)
+                break;
+
+            CALL_ORIGINAL(args, source);
+
+            try
+            {
+                if (pCVar->GetFloat() != float(std::stoi(pCVar->GetString())))
+                    break;
+
+                auto sValue = std::format("{}", pCVar->GetInt());
+                if (FNV1A::Hash32(sValue.c_str()) == FNV1A::Hash32(pCVar->GetString()))
+                    break;
+
+                pCVar->SetValue(sValue.c_str());
+                SDK::Output("Cbuf_ExecuteCommand", std::format("{}: {}, {}, {}", sCommand, pCVar->GetString(), pCVar->GetFloat(), pCVar->GetInt()).c_str());
+            }
+            catch (...) {}
+
+            return;
+        }
 		}
 	}
 
-	CALL_ORIGINAL(args, source);
+    CALL_ORIGINAL(args, source);
 }
