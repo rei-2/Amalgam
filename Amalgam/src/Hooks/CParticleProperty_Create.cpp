@@ -101,7 +101,17 @@ MAKE_HOOK(CParticleProperty_Create_Point, S::CParticleProperty_Create_Point(), v
         return CALL_ORIGINAL(rcx, pszParticleName, iAttachType, iAttachmentPoint, vecOriginOffset);
 #endif
 
-    if (FNV1A::Hash32(Vars::Visuals::Effects::ProjectileTrail.Value.c_str()) != FNV1A::Hash32Const("Default"))
+    if (pszParticleName)
+    {
+        switch (FNV1A::Hash32(pszParticleName))
+        {
+        case FNV1A::Hash32Const("kart_impact_sparks"):
+            if (I::Prediction->InPrediction() && !I::Prediction->m_bFirstTimePredicted)
+                return nullptr;
+        }
+    }
+
+    if (FNV1A::Hash32(Vars::Visuals::Effects::ProjectileTrail.Value.c_str()) != FNV1A::Hash32Const("Default") && pszParticleName)
     {
         switch (FNV1A::Hash32(pszParticleName))
         {

@@ -260,8 +260,8 @@ namespace Vars
 				VA_LIST("Off", "Plain", "Smooth", "Silent", "Locking", "Assistive"),
 				Off, Plain, Smooth, Silent, Locking, Assistive);
 			CVarEnum(TargetSelection, "Target selection", 0, NONE, nullptr,
-				VA_LIST("FOV", "Distance"),
-				FOV, Distance);
+				VA_LIST("FOV", "Distance", "Hybrid"),
+				FOV, Distance, Hybrid);
 			CVarEnum(Target, "Target", 0b0000001, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Players", "Sentries", "Dispensers", "Teleporters", "Stickies", "NPCs", "Bombs"),
 				Players = 1 << 0, Sentry = 1 << 1, Dispenser = 1 << 2, Teleporter = 1 << 3, Stickies = 1 << 4, NPCs = 1 << 5, Bombs = 1 << 6,
@@ -324,7 +324,7 @@ namespace Vars
 				VA_LIST("Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Prioritize feet"),
 				Auto = 1 << 0, Head = 1 << 1, Body = 1 << 2, Feet = 1 << 3, BodyaimIfLethal = 1 << 4, PrioritizeFeet = 1 << 5);
 			CVarEnum(Modifiers, VA_LIST("Modifiers", "Projectile modifiers"), 0b1010, DROPDOWN_MULTI, nullptr,
-				VA_LIST("Charge shot", "Cancel charge", "Use prime time"),
+				VA_LIST("Charge weapon", "Cancel charge", "Use prime time"),
 				ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, UsePrimeTime = 1 << 2);
 			CVar(MaxSimulationTime, "Max simulation time", 2.f, SLIDER_MIN | SLIDER_PRECISION, 0.1f, 2.5f, 0.25f, "%gs");
 			CVar(HitChance, "Hit chance", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
@@ -361,10 +361,10 @@ namespace Vars
 			CVar(HuntsmanClamp, "Huntsman clamp", 5.f, NOSAVE | DEBUGVAR | SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 10.f, 0.5f);
 			CVar(HuntsmanPullPoint, "Huntsman pull point", false, NOSAVE | DEBUGVAR);
 
-			CVar(SplashPointsDirect, "Direct splash points", 100, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 400, 5);
-			CVar(SplashPointsArc, "Arc splash points", 100, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 400, 5);
-			CVar(SplashCountDirect, "Direct splash count", 100, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 100);
-			CVar(SplashCountArc, "Arc splash count", 5, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 100);
+			CVar(SplashPointsDirect, "Splash points direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 400, 5);
+			CVar(SplashPointsArc, "Splash points arc", 100, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 400, 5);
+			CVar(SplashCountDirect, "Splash count direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 100);
+			CVar(SplashCountArc, "Splash count arc", 5, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 100);
 			CVar(SplashRotateX, "Splash Rx", -1.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, -1.f, 360.f);
 			CVar(SplashRotateY, "Splash Ry", -1.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, -1.f, 360.f);
 			CVar(SplashTraceInterval, "Splash trace interval", 10, NOSAVE | DEBUGVAR, 1, 10);
@@ -653,8 +653,9 @@ namespace Vars
 			CVarValues(ShotPath, "Shot path", 0, VISUAL, nullptr,
 				"Off", "Line", "Separators", "Spaced", "Arrows", "Boxes");
 			CVarEnum(SplashRadius, "Splash radius", 0b0, VISUAL | DROPDOWN_MULTI, "Off",
-				VA_LIST("Simulation", "##Divider", "Priority", "Enemy", "Team", "Local", "Friends", "Party", "##Divider", "Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace"),
-				Simulation = 1 << 0, Priority = 1 << 1, Enemy = 1 << 2, Team = 1 << 3, Local = 1 << 4, Friends = 1 << 5, Party = 1 << 6, Rockets = 1 << 7, Stickies = 1 << 8, Pipes = 1 << 9, ScorchShot = 1 << 10, Trace = 1 << 11);
+				VA_LIST("Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace", "Sphere"),
+				Rockets = 1 << 0, Stickies = 1 << 1, Pipes = 1 << 2, ScorchShot = 1 << 3, Trace = 1 << 4, Sphere = 1 << 5,
+				Enabled = Rockets | Stickies | Pipes | ScorchShot);
 			CVar(Timed, VA_LIST("Timed", "Timed path"), false, VISUAL);
 			CVar(Box, VA_LIST("Box", "Path box"), true, VISUAL);
 			CVar(ProjectileCamera, "Projectile camera", false, VISUAL);
@@ -968,6 +969,7 @@ namespace Vars
 		CVar(CTFPlayerPanel_GetTeam, "CTFPlayerPanel_GetTeam", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayerShared_InCond, "CTFPlayerShared_InCond", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayerShared_IsPlayerDominated, "CTFPlayerShared_IsPlayerDominated", true, NOSAVE | DEBUGVAR);
+		CVar(CTFPlayerShared_ShouldSuppressPrediction, "CTFPlayerShared_ShouldSuppressPrediction", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayer_AvoidPlayers, "CTFPlayer_AvoidPlayers", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayer_BRenderAsZombie, "CTFPlayer_BRenderAsZombie", true, NOSAVE | DEBUGVAR);
 		CVar(CTFPlayer_BuildTransformations, "CTFPlayer_BuildTransformations", true, NOSAVE | DEBUGVAR);

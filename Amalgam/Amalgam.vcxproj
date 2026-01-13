@@ -965,6 +965,7 @@
     <ClCompile Include="src\Hooks\CBaseEntity_EstimateAbsVelocity.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_CalcObserverView.cpp" />
     <ClCompile Include="src\Hooks\CInput_ValidateUserCmd.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayerShared_ShouldSuppressPrediction.cpp" />
     <ClCompile Include="src\Hooks\CTFRocketLauncher_CheckReloadMisfire.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_FireBullet.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_ResetLatched.cpp" />

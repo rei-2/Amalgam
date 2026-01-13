@@ -6,7 +6,7 @@
 #include "../../Visuals/Visuals.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 
-std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	std::vector<Target_t> vTargets;
 	const auto iSort = Vars::Aimbot::General::TargetSelection.Value;
@@ -53,6 +53,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo, Vars::Aimbot::Hitscan::Hitboxes.Value))
 				continue;
 
+			float flDistTo = vLocalPos.DistTo(vPos);
 			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
 			if (bTeam && bHeal)
 			{
@@ -67,8 +68,6 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 					iPriority = std::numeric_limits<int>::max();
 				}
 			}
-
-			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
 			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
 
@@ -89,7 +88,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
+			float flDistTo = vLocalPos.DistTo(vPos);
 			vTargets.emplace_back(pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -107,7 +106,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
+			float flDistTo = vLocalPos.DistTo(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::Sticky, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -125,7 +124,7 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
+			float flDistTo = vLocalPos.DistTo(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::NPC, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -143,21 +142,11 @@ std::vector<Target_t> CAimbotHitscan::GetTargets(CTFPlayer* pLocal, CTFWeaponBas
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = iSort == Vars::Aimbot::General::TargetSelectionEnum::Distance ? vLocalPos.DistTo(vPos) : 0.f;
+			float flDistTo = vLocalPos.DistTo(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::Bomb, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
 
-	return vTargets;
-}
-
-std::vector<Target_t> CAimbotHitscan::SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
-{
-	auto vTargets = GetTargets(pLocal, pWeapon);
-
-	F::AimbotGlobal.SortTargets(vTargets, Vars::Aimbot::General::TargetSelection.Value);
-	vTargets.resize(std::min(size_t(Vars::Aimbot::General::MaxTargets.Value), vTargets.size()));
-	F::AimbotGlobal.SortPriority(vTargets);
 	return vTargets;
 }
 
@@ -760,7 +749,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		break;
 	}
 
-	auto vTargets = SortTargets(pLocal, pWeapon);
+	auto vTargets = F::AimbotGlobal.ManageTargets(GetTargets, pLocal, pWeapon);
 	if (vTargets.empty())
 		return;
 

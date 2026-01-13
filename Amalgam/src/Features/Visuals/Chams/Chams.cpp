@@ -100,11 +100,11 @@ void CChams::Store(CTFPlayer* pLocal)
 			&& SDK::IsOnScreen(pEntity, pEntity->IsBaseCombatWeapon() || pEntity->IsWearable()))
 			m_vEntities.emplace_back(pEntity, pGroup->m_tChams);
 
-		if (pEntity->IsPlayer() && pEntity != pLocal && pGroup->m_bBacktrack && !pGroup->m_vBacktrackChams.empty()
+		if (pEntity->IsPlayer() && pEntity != pLocal && pGroup->m_iBacktrack & BacktrackEnum::Enabled && !pGroup->m_vBacktrackChams.empty()
 			&& (F::Backtrack.GetFakeLatency() || F::Backtrack.GetFakeInterp() > G::Lerp || F::Backtrack.GetWindow()))
 		{	// backtrack
 			auto pWeapon = H::Entities.GetWeapon();
-			if (pWeapon && (pGroup->m_iBacktrackDraw & BacktrackEnum::Always || G::PrimaryWeaponType != EWeaponType::PROJECTILE))
+			if (pWeapon && (pGroup->m_iBacktrack & BacktrackEnum::Always || G::PrimaryWeaponType != EWeaponType::PROJECTILE))
 			{
 				bool bShowFriendly = false, bShowEnemy = true;
 				if (G::PrimaryWeaponType == EWeaponType::MELEE && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
@@ -113,7 +113,7 @@ void CChams::Store(CTFPlayer* pLocal)
 					bShowFriendly = true, bShowEnemy = false;
 
 				if (bShowEnemy && pEntity->m_iTeamNum() != pLocal->m_iTeamNum() || bShowFriendly && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
-					m_vEntities.emplace_back(pEntity, Chams_t(pGroup->m_vBacktrackChams, {}), 1 | (pGroup->m_iBacktrackDraw << 1));
+					m_vEntities.emplace_back(pEntity, Chams_t(pGroup->m_vBacktrackChams, {}), pGroup->m_iBacktrack);
 			}
 		}
 	}
@@ -122,7 +122,7 @@ void CChams::Store(CTFPlayer* pLocal)
 	if (F::FakeAngle.bDrawChams && F::FakeAngle.bBonesSetup
 		&& F::Groups.GetGroup(TargetsEnum::FakeAngle, pGroup) && pGroup->m_tChams(true))
 	{	// fakeangle
-		m_vEntities.emplace_back(pLocal, pGroup->m_tChams, 1 | (true << 1));
+		m_vEntities.emplace_back(pLocal, pGroup->m_tChams, 1);
 	}
 }
 
@@ -170,11 +170,10 @@ void CChams::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderIn
 	if (!vRecords.size())
 		return;
 
-	int iFlags = (~1 & m_iFlags) >> 1;
-	bool bDrawLast = iFlags & BacktrackEnum::Last;
-	bool bDrawFirst = iFlags & BacktrackEnum::First;
+	bool bDrawLast = m_iFlags & BacktrackEnum::Last;
+	bool bDrawFirst = m_iFlags & BacktrackEnum::First;
 
-	pRenderContext->DepthRange(0.f, iFlags & BacktrackEnum::IgnoreZ ? 0.2f : 1.f);
+	pRenderContext->DepthRange(0.f, m_iFlags & BacktrackEnum::IgnoreZ ? 0.2f : 1.f);
 
 	auto drawModel = [&](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld, float flBlend)
 		{

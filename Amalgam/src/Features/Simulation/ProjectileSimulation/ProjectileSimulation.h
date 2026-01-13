@@ -11,6 +11,8 @@ Enum(ProjSim,
 	MaxSpeed = 1 << 5 // default projectile speeds to their maximum
 )
 
+#define GRENADE_CHECK_INTERVAL 0.195f
+
 struct ProjectileInfo
 {
 	CTFPlayer* m_pOwner = nullptr;
@@ -60,6 +62,7 @@ public:
 	void RunTick(ProjectileInfo& tProjInfo, bool bPath = true);
 	Vec3 GetOrigin();
 	Vec3 GetVelocity();
+	float GetDesync();
 
 	inline std::pair<CTFWeaponBase*, CTFPlayer*> GetEntities(CBaseEntity* pProjectile)
 	{
@@ -102,7 +105,6 @@ public:
 		case ETFClassID::CTFProjectile_Rocket:
 		case ETFClassID::CTFProjectile_BallOfFire:
 		case ETFClassID::CTFProjectile_MechanicalArmOrb:
-		case ETFClassID::CTFProjectile_SentryRocket:
 		case ETFClassID::CTFProjectile_SpellFireball:
 		case ETFClassID::CTFProjectile_SpellLightningOrb:
 		case ETFClassID::CTFProjectile_SpellKartOrb:
@@ -121,6 +123,12 @@ public:
 			paReturn.second = paReturn.first ? paReturn.first->m_hOwner()->As<CTFPlayer>() : nullptr;
 			break;
 		}
+		case ETFClassID::CTFProjectile_SentryRocket:
+		{
+			auto pBuilding = pProjectile->As<CTFBaseRocket>()->m_hOwnerEntity()->As<CBaseObject>();
+			paReturn.second = pBuilding ? pBuilding->m_hBuilder()->As<CTFPlayer>() : nullptr;
+			break;
+		}
 		}
 		return paReturn;
 	}
@@ -128,17 +136,23 @@ public:
 	{
 		switch (pProjectile->GetClassID())
 		{
+		case ETFClassID::CTFBaseRocket:
+		case ETFClassID::CTFFlameRocket:
+		case ETFClassID::CTFProjectile_GrapplingHook:
 		case ETFClassID::CTFProjectile_Rocket:
+		case ETFClassID::CTFProjectile_BallOfFire:
 		case ETFClassID::CTFProjectile_SentryRocket:
 		case ETFClassID::CTFProjectile_EnergyBall:
-			if (!pProjectile->As<CTFProjectile_Rocket>()->m_iDeflected())
-				return pProjectile->As<CTFProjectile_Rocket>()->m_vInitialVelocity();
+			if (!pProjectile->As<CTFBaseRocket>()->m_iDeflected())
+				return pProjectile->As<CTFBaseRocket>()->m_vInitialVelocity();
 			break;
 		case ETFClassID::CTFProjectile_Arrow:
-			if (!pProjectile->As<CTFProjectile_Rocket>()->m_iDeflected())
-				return { 
-					pProjectile->As<CTFProjectile_Rocket>()->m_vInitialVelocity().x,
-					pProjectile->As<CTFProjectile_Rocket>()->m_vInitialVelocity().y,
+		case ETFClassID::CTFProjectile_HealingBolt:
+		case ETFClassID::CTFProjectile_Flare:
+			if (!pProjectile->As<CTFBaseRocket>()->m_iDeflected())
+				return {
+					pProjectile->As<CTFBaseRocket>()->m_vInitialVelocity().x,
+					pProjectile->As<CTFBaseRocket>()->m_vInitialVelocity().y,
 					pProjectile->GetAbsVelocity().z
 				};
 			break;
@@ -176,7 +190,6 @@ public:
 		case ETFClassID::CTFProjectile_ThrowableBreadMonster:
 		case ETFClassID::CTFProjectile_ThrowableBrick:
 		case ETFClassID::CTFProjectile_ThrowableRepel:
-		case ETFClassID::CTFProjectile_SpellFireball:
 			flReturn = 1.f;
 			break;
 		case ETFClassID::CTFProjectile_HealingBolt:

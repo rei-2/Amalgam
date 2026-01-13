@@ -198,6 +198,7 @@
     <ClCompile Include="src\Hooks\CWeaponMedigun_PrimaryAttack.cpp" />
     <ClCompile Include="src\Hooks\IMaterialSystem_FindTexture.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_CalcObserverView.cpp" />
+    <ClCompile Include="src\Hooks\CTFPlayerShared_ShouldSuppressPrediction.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

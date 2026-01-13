@@ -16,7 +16,7 @@ private:
 	std::unordered_map<CBaseEntity*, ArrowCache_t> m_mCache = {};
 
 public:
-	void Store(CTFPlayer* pLocal);
+	void Store();
 	void Draw(CTFPlayer* pLocal);
 };
 

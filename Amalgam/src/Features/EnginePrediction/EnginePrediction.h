@@ -20,13 +20,7 @@ private:
 	void Simulate(CTFPlayer* pLocal, CUserCmd* pCmd);
 
 	CMoveData m_MoveData = {};
-
-	int m_nOldTickCount = 0;
-	float m_flOldCurrentTime = 0.f;
-	float m_flOldFrameTime = 0.f;
-
 	DatamapRestore_t m_tLocal = {};
-
 	std::unordered_map<CTFPlayer*, RestoreInfo_t> m_mRestore = {};
 
 public:
@@ -39,6 +33,10 @@ public:
 	void RestorePlayers();
 
 	bool m_bInPrediction = false;
+
+	int m_nOldTickCount = 0;
+	float m_flOldCurrentTime = 0.f;
+	float m_flOldFrameTime = 0.f;
 
 	// localplayer use in net_update_end
 	Vec3 m_vOrigin = {};

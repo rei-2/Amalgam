@@ -3,6 +3,7 @@
 MAKE_SIGNATURE(CSoundEmitterSystem_EmitSound, "client.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 41 56 48 81 EC ? ? ? ? 49 8B D9", 0x0);
 //MAKE_SIGNATURE(S_StartDynamicSound, "engine.dll", "4C 8B DC 57 48 81 EC", 0x0);
 MAKE_SIGNATURE(S_StartSound, "engine.dll", "40 53 48 83 EC ? 48 83 79 ? ? 48 8B D9 75 ? 33 C0", 0x0);
+MAKE_SIGNATURE(CBaseEntity_EmitSound, "client.dll", "48 89 5C 24 ? 55 56 57 41 54 41 55 41 56 41 57 48 8D 6C 24 ? 48 81 EC ? ? ? ? 48 8B 3D", 0x0);
 
 class IRecipientFilter
 {
@@ -101,9 +102,9 @@ static inline bool ShouldBlockSound(const char* pSound)
 
 	std::string sSound = pSound;
 	std::transform(sSound.begin(), sSound.end(), sSound.begin(), ::tolower);
-	auto CheckSound = [&](int iFlag, const std::vector<const char*>& vSounds)
+	auto CheckSound = [&](const std::vector<const char*>& vSounds, int iFlag = -1)
 		{
-			if (Vars::Misc::Sound::Block.Value & iFlag)
+			if (/*iFlag == -1 ||*/ Vars::Misc::Sound::Block.Value & iFlag)
 			{
 				for (auto& sNoise : vSounds)
 				{
@@ -114,16 +115,16 @@ static inline bool ShouldBlockSound(const char* pSound)
 			return false;
 		};
 
-	if (CheckSound(Vars::Misc::Sound::BlockEnum::Footsteps, s_vFootsteps))
+	if (CheckSound(s_vFootsteps, Vars::Misc::Sound::BlockEnum::Footsteps))
 		return true;
 
-	if (CheckSound(Vars::Misc::Sound::BlockEnum::Noisemaker, s_vNoisemaker))
+	if (CheckSound(s_vNoisemaker, Vars::Misc::Sound::BlockEnum::Noisemaker))
 		return true;
 
-	if (CheckSound(Vars::Misc::Sound::BlockEnum::FryingPan, s_vFryingPan))
+	if (CheckSound(s_vFryingPan, Vars::Misc::Sound::BlockEnum::FryingPan))
 		return true;
 
-	if (CheckSound(Vars::Misc::Sound::BlockEnum::Water, s_vWater))
+	if (CheckSound(s_vWater, Vars::Misc::Sound::BlockEnum::Water))
 		return true;
 
 	return false;
@@ -174,4 +175,23 @@ MAKE_HOOK(S_StartSound, S::S_StartSound(), int,
 		return 0;
 
 	return CALL_ORIGINAL(params);
+}
+
+MAKE_HOOK(CBaseEntity_EmitSound, S::CBaseEntity_EmitSound(), void,
+	void* rcx, const char* soundname, float soundtime, float* duration)
+{
+	if (soundname)
+	{
+		switch (FNV1A::Hash32(soundname))
+		{
+		case FNV1A::Hash32Const("BumperCar.Jump"):
+		case FNV1A::Hash32Const("BumperCar.JumpLand"):
+		case FNV1A::Hash32Const("BumperCar.Bump"):
+		case FNV1A::Hash32Const("BumperCar.BumpHard"):
+			if (I::Prediction->InPrediction() && !I::Prediction->m_bFirstTimePredicted)
+				return;
+		}
+	}
+
+	CALL_ORIGINAL(rcx, soundname, soundtime, duration);
 }

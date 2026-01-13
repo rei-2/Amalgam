@@ -5,10 +5,7 @@
 
 bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!(Vars::Fakelag::Fakelag.Value || m_bPreservingBlast || m_bUnducking)
-		|| I::ClientState->chokedcommands >= std::min(24 - F::Ticks.m_iShiftedTicks, std::min(21, F::Ticks.m_iMaxShift))
-		|| F::Ticks.m_iShiftedGoal != F::Ticks.m_iShiftedTicks || F::Ticks.m_bRecharge
-		|| !pLocal->IsAlive() || pLocal->IsAGhost())
+	if (!pLocal->IsAlive() || pLocal->IsAGhost())
 		return false;
 
 	if (m_bPreservingBlast)
@@ -16,6 +13,11 @@ bool CFakeLag::IsAllowed(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		G::PSilentAngles = true; // prevent unchoking while grounded
 		return true;
 	}
+
+	if (!(Vars::Fakelag::Fakelag.Value || m_bUnducking)
+		|| !F::Ticks.CanChoke(false, F::Ticks.m_iMaxShift)
+		|| F::Ticks.m_iShiftedGoal != F::Ticks.m_iShiftedTicks || F::Ticks.m_bRecharge)
+		return false;
 
 	if (G::Attacking == 1 && Vars::Fakelag::UnchokeOnAttack.Value || F::AutoRocketJump.IsRunning()
 		|| Vars::Fakelag::Options.Value & Vars::Fakelag::OptionsEnum::NotAirborne && !pLocal->m_hGroundEntity()

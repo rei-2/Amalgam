@@ -489,7 +489,7 @@ static inline const char* GetProjectileName(CBaseEntity* pProjectile)
 	case ETFClassID::CTFProjectile_ThrowableBreadMonster: sReturn = "Milk"; break;
 	case ETFClassID::CTFProjectile_SpellBats:
 	case ETFClassID::CTFProjectile_SpellKartBats: sReturn = "Bats"; break;
-	case ETFClassID::CTFProjectile_SpellMeteorShower: sReturn = "Meteor shower"; break;
+	case ETFClassID::CTFProjectile_SpellMeteorShower: sReturn = "Meteors"; break;
 	case ETFClassID::CTFProjectile_SpellMirv:
 	case ETFClassID::CTFProjectile_SpellPumpkin: sReturn = "Pumpkin"; break;
 	case ETFClassID::CTFProjectile_SpellSpawnBoss: sReturn = "Monoculus"; break;

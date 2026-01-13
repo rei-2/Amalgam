@@ -3,22 +3,47 @@
 #include "../Aimbot.h"
 #include "../../Players/PlayerUtils.h"
 #include "../../Ticks/Ticks.h"
+#include "../../EnginePrediction/EnginePrediction.h"
 
-void CAimbotGlobal::SortTargets(std::vector<Target_t>& vTargets, int iMethod)
-{	// Sort by preference
-	std::sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
-		{
-			switch (iMethod)
-			{
-			case Vars::Aimbot::General::TargetSelectionEnum::FOV: return a.m_flFOVTo < b.m_flFOVTo;
-			case Vars::Aimbot::General::TargetSelectionEnum::Distance: return a.m_flDistTo < b.m_flDistTo;
-			default: return false;
-			}
-		});
+std::vector<Target_t> CAimbotGlobal::ManageTargets(std::vector<Target_t>(*GetTargets)(CTFPlayer* pLocal, CTFWeaponBase* pWeapon), CTFPlayer* pLocal, CTFWeaponBase* pWeapon,
+	int iMethod, int iMaxTargets)
+{
+	auto vTargets = GetTargets(pLocal, pWeapon);
+	SortTargetsPre(vTargets, iMethod);
+	vTargets.resize(std::min(size_t(iMaxTargets), vTargets.size()));
+	SortTargetsPost(vTargets, iMethod);
+	return vTargets;
 }
 
-void CAimbotGlobal::SortPriority(std::vector<Target_t>& vTargets)
-{	// Sort by priority
+void CAimbotGlobal::SortTargetsPre(std::vector<Target_t>& vTargets, int iMethod)
+{
+	switch (iMethod)
+	{
+	case Vars::Aimbot::General::TargetSelectionEnum::FOV:
+		return std::sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
+		{
+			return a.m_flFOVTo < b.m_flFOVTo;
+		});
+	case Vars::Aimbot::General::TargetSelectionEnum::Distance:
+	case Vars::Aimbot::General::TargetSelectionEnum::Hybrid:
+		return std::sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
+			{
+				return a.m_flDistTo < b.m_flDistTo;
+			});
+	}
+}
+
+void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod)
+{
+	switch (iMethod)
+	{
+	case Vars::Aimbot::General::TargetSelectionEnum::Hybrid:
+		return std::sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
+			{
+				return a.m_flFOVTo < b.m_flFOVTo;
+			});
+	}
+
 	std::sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
 		{
 			return a.m_nPriority > b.m_nPriority;
@@ -28,8 +53,24 @@ void CAimbotGlobal::SortPriority(std::vector<Target_t>& vTargets)
 // this won't prevent shooting bones outside of fov
 bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes)
 {
-	matrix3x4 aBones[MAXSTUDIOBONES];
-	if (!pTarget->SetupBones(aBones, MAXSTUDIOBONES, BONE_USED_BY_ANYTHING, I::GlobalVars->curtime))
+	matrix3x4* aBones = F::Backtrack.GetBones(pTarget);
+	if (!Vars::Visuals::Removals::Interpolation.Value)
+	{
+		std::vector<TickRecord*> vRecords = {};
+		if (F::Backtrack.GetRecords(pTarget, vRecords) && !vRecords.empty())
+		{
+			float flLerp = Vars::Visuals::Removals::Lerp.Value ? 0.f : G::Lerp;
+			for (auto pRecord : vRecords)
+			{
+				if (F::EnginePrediction.m_flOldCurrentTime - pRecord->m_flSimTime > flLerp)
+				{
+					aBones = pRecord->m_aBones;
+					break;
+				}
+			}
+		}
+	}
+	if (!aBones)
 		return false;
 
 	float flMinFOV = 180.f;

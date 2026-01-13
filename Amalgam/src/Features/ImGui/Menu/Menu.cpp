@@ -708,32 +708,47 @@ void CMenu::MenuVisuals(int iTab)
 				} EndSection();
 				if (Section("Misc", 8))
 				{
-					FToggle("Backtrack", &tGroup.m_bBacktrack, FToggleEnum::Left);
-					SameLine(GetWindowWidth() - H::Draw.Scale(33));
-					if (IconButton(ICON_MD_KEYBOARD_ARROW_DOWN))
-						OpenPopup("Backtrack");
-
 					FToggle("Offscreen arrows", &tGroup.m_bOffscreenArrows, FToggleEnum::Left);
 					SameLine(GetWindowWidth() - H::Draw.Scale(33));
 					if (IconButton(ICON_MD_KEYBOARD_ARROW_DOWN))
 						OpenPopup("OffscreenArrows");
 
-					FToggle("Sightlines", &tGroup.m_bSightlines, FToggleEnum::Left);
+					FToggle("Pickup timer", &tGroup.m_bPickupTimer);
+
+					FToggle("Backtrack", &tGroup.m_iBacktrack, BacktrackEnum::Enabled, FToggleEnum::Left);
+					SameLine(GetWindowWidth() - H::Draw.Scale(33));
+					if (IconButton(ICON_MD_KEYBOARD_ARROW_DOWN))
+						OpenPopup("Backtrack");
+
+					FToggle("Trajectory", &tGroup.m_iTrajectory, TrajectoryEnum::Enabled, FToggleEnum::Left);
+					SameLine(GetWindowWidth() - H::Draw.Scale(33));
+					if (IconButton(ICON_MD_KEYBOARD_ARROW_DOWN))
+						OpenPopup("Trajectory");
+
+					FToggle("Sightlines", &tGroup.m_iSightlines, SightlinesEnum::Enabled, FToggleEnum::Left);
 					SameLine(GetWindowWidth() - H::Draw.Scale(33));
 					if (IconButton(ICON_MD_KEYBOARD_ARROW_DOWN))
 						OpenPopup("Sightlines");
 
-					FToggle("Pickup timer", &tGroup.m_bPickupTimer);
+					SetNextWindowSize({ H::Draw.Scale(300), 0 });
+					if (FBeginPopup("OffscreenArrows"))
+					{
+						FSlider("Offset", &tGroup.m_iOffscreenArrowsOffset, 0, 1000, 25, "%i", FSliderEnum::Precision);
+						FSlider("Max distance", &tGroup.m_flOffscreenArrowsMaxDistance, 0.f, 5000.f, 50.f, "%g", FSliderEnum::Min | FSliderEnum::Precision);
+
+						EndPopup();
+					}
 
 					SetNextWindowSize({ H::Draw.Scale(300), 0 });
 					if (FBeginPopup("Backtrack"))
 					{
 						SetCursorPosY(GetCursorPosY() - H::Draw.Scale(8));
-						FDropdown("##Draw", &tGroup.m_iBacktrackDraw, { "Last", "First", "##Divider", "Always" }, {}, FDropdownEnum::Multi, 0, "All");
+
+						FDropdown("##Draw", &tGroup.m_iBacktrack, { "Last", "First", "##Divider", "Always" }, { BacktrackEnum::Last, BacktrackEnum::First, BacktrackEnum::Always }, FDropdownEnum::Multi, 0, "All");
 
 						FMDropdown("Material", &tGroup.m_vBacktrackChams, FDropdownEnum::Left);
 						SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetCursorPosY() - H::Draw.Scale(32) });
-						FToggle("Ignore Z", &tGroup.m_iBacktrackDraw, BacktrackEnum::IgnoreZ, FToggleEnum::Left);
+						FToggle("Ignore Z", &tGroup.m_iBacktrack, BacktrackEnum::IgnoreZ, FToggleEnum::Left);
 
 						SetCursorPosY(GetCursorPosY() + H::Draw.Scale(8));
 						PushTransparent(!tGroup.m_tBacktrackGlow.Stencil);
@@ -751,10 +766,12 @@ void CMenu::MenuVisuals(int iTab)
 					}
 
 					SetNextWindowSize({ H::Draw.Scale(300), 0 });
-					if (FBeginPopup("OffscreenArrows"))
+					if (FBeginPopup("Trajectory"))
 					{
-						FSlider("Offset", &tGroup.m_iOffscreenArrowsOffset, 0, 1000, 25, "%i", FSliderEnum::Precision);
-						FSlider("Max distance", &tGroup.m_flOffscreenArrowsMaxDistance, 0.f, 5000.f, 50.f, "%g", FSliderEnum::Min | FSliderEnum::Precision);
+						SetCursorPosY(GetCursorPosY() - H::Draw.Scale(8));
+
+						FDropdown("Flags", &tGroup.m_iTrajectory, { "Predict", "##Divider", "Radius", "Trace", "Sphere", "##Divider", "Path" }, { TrajectoryEnum::Predict, TrajectoryEnum::Radius, TrajectoryEnum::Trace, TrajectoryEnum::Sphere, TrajectoryEnum::Path }, FDropdownEnum::Multi);
+						FToggle("Ignore Z", &tGroup.m_iTrajectory, SightlinesEnum::IgnoreZ);
 
 						EndPopup();
 					}
@@ -762,7 +779,7 @@ void CMenu::MenuVisuals(int iTab)
 					SetNextWindowSize({ H::Draw.Scale(300), 0 });
 					if (FBeginPopup("Sightlines"))
 					{
-						FToggle("Ignore Z", &tGroup.m_bSightlinesIgnoreZ);
+						FToggle("Ignore Z", &tGroup.m_iSightlines, SightlinesEnum::IgnoreZ);
 
 						EndPopup();
 					}

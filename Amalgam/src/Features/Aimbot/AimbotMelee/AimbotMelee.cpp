@@ -6,7 +6,22 @@
 #include "../../Ticks/Ticks.h"
 #include "../../Visuals/Visuals.h"
 
-std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+static inline bool AimFriendlyBuilding(CBaseObject* pBuilding)
+{
+	if (!pBuilding->m_bMiniBuilding() && pBuilding->m_iUpgradeLevel() != 3 || pBuilding->m_iHealth() < pBuilding->m_iMaxHealth() || pBuilding->m_bHasSapper())
+		return true;
+
+	if (pBuilding->IsSentrygun())
+	{
+		int iShells, iMaxShells, iRockets, iMaxRockets; pBuilding->As<CObjectSentrygun>()->GetAmmoCount(iShells, iMaxShells, iRockets, iMaxRockets);
+		if (iShells < iMaxShells || iRockets < iMaxRockets)
+			return true;
+	}
+
+	return false;
+}
+
+static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	std::vector<Target_t> vTargets;
 
@@ -29,12 +44,11 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
+			float flDistTo = vLocalPos.DistTo(vPos);
 			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
 			if (bTeam && !F::AimbotGlobal.FriendlyFire())
 				iPriority = 0;
-
-			float flDistTo = vLocalPos.DistTo(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
 	}
@@ -99,31 +113,6 @@ std::vector<Target_t> CAimbotMelee::GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 		}
 	}
 
-	return vTargets;
-}
-
-bool CAimbotMelee::AimFriendlyBuilding(CBaseObject* pBuilding)
-{
-	if (!pBuilding->m_bMiniBuilding() && pBuilding->m_iUpgradeLevel() != 3 || pBuilding->m_iHealth() < pBuilding->m_iMaxHealth() || pBuilding->m_bHasSapper())
-		return true;
-
-	if (pBuilding->IsSentrygun())
-	{
-		int iShells, iMaxShells, iRockets, iMaxRockets; pBuilding->As<CObjectSentrygun>()->GetAmmoCount(iShells, iMaxShells, iRockets, iMaxRockets);
-		if (iShells < iMaxShells || iRockets < iMaxRockets)
-			return true;
-	}
-
-	return false;
-}
-
-std::vector<Target_t> CAimbotMelee::SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
-{
-	auto vTargets = GetTargets(pLocal, pWeapon);
-
-	F::AimbotGlobal.SortTargets(vTargets, Vars::Aimbot::General::TargetSelectionEnum::Distance);
-	vTargets.resize(std::min(size_t(Vars::Aimbot::General::MaxTargets.Value), vTargets.size()));
-	F::AimbotGlobal.SortPriority(vTargets);
 	return vTargets;
 }
 
@@ -568,7 +557,7 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 	if (RunSapper(pLocal, pWeapon, pCmd))
 		return;
 
-	auto vTargets = SortTargets(pLocal, pWeapon);
+	auto vTargets = F::AimbotGlobal.ManageTargets(GetTargets, pLocal, pWeapon, Vars::Aimbot::General::TargetSelectionEnum::Distance);
 	if (vTargets.empty())
 		return;
 
@@ -664,6 +653,9 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	std::vector<Target_t> vTargets;
 	for (auto pEntity : H::Entities.GetGroup(EntityEnum::BuildingEnemy))
 	{
+		if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
+			continue;
+
 		auto pBuilding = pEntity->As<CBaseObject>();
 		if (pBuilding->m_bHasSapper() || !pBuilding->IsInValidTeam())
 			continue;
@@ -681,7 +673,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 
 		vTargets.emplace_back(pBuilding, TargetEnum::Unknown, vPoint, vAngleTo, flFOVTo, flDistTo);
 	}
-	F::AimbotGlobal.SortTargets(vTargets, Vars::Aimbot::General::TargetSelectionEnum::Distance);
+	F::AimbotGlobal.SortTargetsPre(vTargets, Vars::Aimbot::General::TargetSelectionEnum::Distance);
 	if (vTargets.empty())
 		return true;
 
@@ -693,7 +685,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	else
 		bShouldAim = pCmd->buttons & IN_ATTACK;
 	if (Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Silent)
-		bShouldAim = bShouldAim && (!I::ClientState->chokedcommands || !F::Ticks.CanChoke());
+		bShouldAim = bShouldAim && !I::ClientState->chokedcommands && F::Ticks.CanChoke(true);
 		
 	if (bShouldAim)
 	{

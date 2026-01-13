@@ -6,10 +6,6 @@
 class CAimbotMelee
 {
 private:
-	std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-	bool AimFriendlyBuilding(CBaseObject* pBuilding);
-	std::vector<Target_t> SortTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-
 	int GetSwingTime(CTFWeaponBase* pWeapon, bool bVar = true);
 	void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, std::vector<Target_t> vTargets);
 	bool CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEyeAngles);

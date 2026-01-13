@@ -426,6 +426,19 @@ const char* CPlayerlistUtils::GetPlayerName(uint32_t uAccountID, const char* sDe
 	return sDefault;
 }
 
+const char* CPlayerlistUtils::GetPlayerName(int iIndex)
+{
+	auto pResource = H::Entities.GetResource();
+	return pResource && pResource->IsValid(iIndex) ? pResource->GetName(iIndex) : PLAYER_ERROR_NAME;
+}
+
+const char* CPlayerlistUtils::GetPlayerName(uint32_t uAccountID)
+{
+	auto pResource = H::Entities.GetResource();
+	int iIndex = GetIndex(uAccountID);
+	return pResource && pResource->IsValid(iIndex) ? pResource->GetName(iIndex) : PLAYER_ERROR_NAME;
+}
+
 
 
 void CPlayerlistUtils::Store()
