@@ -3,7 +3,7 @@
 
 Enum(ProjSim,
 	None = 0,
-	Trace = 1 << 0, // trace when doing GetProjectileFireSetup
+	Redirect = 1 << 0, // redirect and possibly trace when doing GetProjectileFireSetup
 	InitCheck = 1 << 1, // validate starting position
 	Interp = 1 << 2, // use interpolation
 	NoRandomAngles = 1 << 3, // don't do angle stuff for aimbot, nospread will pick that up
@@ -52,7 +52,7 @@ private:
 	};
 
 public:
-	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
+	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags = ProjSimEnum::Redirect | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
 	void SetupTrace(CTraceFilterCollideable& filter, int& nMask, CTFWeaponBase* pWeapon, int nTick = 0, bool bInterp = false);
 
 	void GetInfo(CBaseEntity* pProjectile, ProjectileInfo& tProjInfo);

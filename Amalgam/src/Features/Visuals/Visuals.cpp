@@ -50,7 +50,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		return;
 
 	Vec3 vAngles = bInterp ? I::EngineClient->GetViewAngles() : G::CurrentUserCmd->viewangles;
-	int iFlags = bInterp ? ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::Interp : ProjSimEnum::Trace | ProjSimEnum::InitCheck;
+	int iFlags = bInterp ? ProjSimEnum::Redirect | ProjSimEnum::InitCheck | ProjSimEnum::Interp : ProjSimEnum::Redirect | ProjSimEnum::InitCheck;
 	if (F::Spectate.HasTarget() && bInterp && pPlayer && pPlayer->m_hObserverTarget())
 	{
 		bool bThirdperson = pPlayer->m_iObserverMode() != OBS_MODE_FIRSTPERSON;

@@ -524,7 +524,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 			}
 		}
 
-		breakOutExtra:
+	breakOutExtra:
 		if (vPoints.size() != iOriginalSize)
 			iType = 0;
 		else if (bErase || bNormal)
@@ -605,7 +605,7 @@ static inline void TracePoint(Vec3& vPoint, int& iType, Vec3& vTargetEye, Info_t
 			}
 		}
 
-		breakOut:
+	breakOut:
 		if (vPoints.size() != iOriginalSize)
 			iType = 0;
 		else if (bErase || bNormal)
@@ -623,7 +623,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Vec3 vOrigin, std::vecto
 	Vec3 vTargetEye = vOrigin + m_tInfo.m_vTargetEye;
 
 	auto checkPoint = [&](CGameTrace& trace, bool& bErase, bool& bNormal)
-		{	
+		{
 			bErase = !trace.m_pEnt || trace.fraction == 1.f || trace.surface.flags & SURF_SKY || !trace.m_pEnt->GetAbsVelocity().IsZero();
 			if (bErase)
 				return false;
@@ -662,7 +662,7 @@ std::vector<Point_t> CAimbotProjectile::GetSplashPoints(Vec3 vOrigin, std::vecto
 		int& iType = it->second;
 
 		Solution_t tSolution; CalculateAngle(m_tInfo.m_vLocalEye, vPoint, iSimTime, tSolution, false);
-		
+
 		if (tSolution.m_iCalculated == CalculatedEnum::Bad)
 			iType = 0;
 		else if (abs(tSolution.m_flTime - TICKS_TO_TIME(iSimTime)) < m_tInfo.m_flRadiusTime || m_tInfo.m_iArmTime && iSimTime == m_tInfo.m_iArmTime)
@@ -978,9 +978,9 @@ void CAimbotProjectile::CalculateAngle(const Vec3& vLocalPos, const Vec3& vTarge
 		return;
 	}
 
-	int iFlags = (bAccuracy ? ProjSimEnum::Trace : ProjSimEnum::None) | ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
+	int iFlags = (bAccuracy ? ProjSimEnum::Redirect : ProjSimEnum::None) | ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
 #ifdef SPLASH_DEBUG5
-	if (iFlags & ProjSimEnum::Trace)
+	if (iFlags & ProjSimEnum::Redirect)
 	{
 		if (Vars::Visuals::Trajectory::Override.Value)
 		{
@@ -1082,7 +1082,7 @@ bool CAimbotProjectile::TestAngle(const Vec3& vPoint, const Vec3& vAngles, int i
 	auto pWeapon = m_tInfo.m_pWeapon;
 	auto& tTarget = *m_tInfo.m_pTarget;
 
-	int iFlags = ProjSimEnum::Trace | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
+	int iFlags = ProjSimEnum::Redirect | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles | ProjSimEnum::PredictCmdNum;
 #ifdef SPLASH_DEBUG5
 	if (Vars::Visuals::Trajectory::Override.Value)
 	{
@@ -1266,7 +1266,7 @@ bool CAimbotProjectile::TestAngle(const Vec3& vPoint, const Vec3& vAngles, int i
 				// attempted to have a headshot check though this seems more detrimental than useful outside of smooth aimbot
 				if (tTarget.m_nAimedHitbox == HITBOX_HEAD && !bSecondTest &&
 					(Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth
-					|| Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Assistive))
+						|| Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Assistive))
 				{	// loop and see if closest hitbox is head
 					auto pModel = tTarget.m_pEntity->GetModel();
 					if (!pModel) break;
@@ -1494,7 +1494,7 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 
 	std::vector<Direct_t> vDirectHistory = {};
 	std::vector<Splash_t> vSplashHistory = {};
-	
+
 	for (int i = 1 - TIME_TO_TICKS(m_tInfo.m_flLatency); i <= iMaxTime; i++)
 	{
 		if (!m_tMoveStorage.m_bFailed)
@@ -2137,9 +2137,9 @@ bool CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBa
 
 	int iMaxTime = TIME_TO_TICKS(Vars::Aimbot::Projectile::MaxSimulationTime.Value);
 	int iSplash = Vars::Aimbot::Projectile::SplashPrediction.Value && m_tInfo.m_flRadius ? Vars::Aimbot::Projectile::SplashPrediction.Value : Vars::Aimbot::Projectile::SplashPredictionEnum::Off;
-	
+
 	auto mDirectPoints = iSplash == Vars::Aimbot::Projectile::SplashPredictionEnum::Only ? std::unordered_map<int, Vec3>() : GetDirectPoints();
-	
+
 	std::vector<Direct_t> vDirectHistory = {};
 	std::vector<Splash_t> vSplashHistory = {};
 

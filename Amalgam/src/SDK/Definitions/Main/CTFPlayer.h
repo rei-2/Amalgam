@@ -5,7 +5,7 @@
 #define PLAYER_ORIGIN_COMPRESSION 0.125f
 
 MAKE_SIGNATURE(CTFPlayer_IsPlayerOnSteamFriendsList, "client.dll", "40 57 48 81 EC ? ? ? ? 48 8B FA E8", 0x0);
-MAKE_SIGNATURE(TeamFortress_CalculateMaxSpeed, "client.dll", "88 54 24 ? 53 55", 0x0);
+MAKE_SIGNATURE(TeamFortress_CalculateMaxSpeed, "client.dll", "40 53 41 56 41 57 48 81 EC ? ? ? ? 48 83 3D", 0x0);
 MAKE_SIGNATURE(CTFPlayer_GetMaxAmmo, "client.dll", "48 89 5C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 63 FA 48 8B F1", 0x0);
 MAKE_SIGNATURE(CTFPlayer_UpdateClientSideAnimation, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 8B D9 E8 ? ? ? ? 48 8B F8 48 85 C0 74 ? 48 8B 00 48 8B CF FF 90 ? ? ? ? 84 C0 75 ? 33 FF 48 3B DF", 0x0);
 MAKE_SIGNATURE(CTFPlayer_GetEffectiveInvisibilityLevel, "client.dll", "40 57 48 83 EC ? 0F 29 7C 24", 0x0);
@@ -184,6 +184,8 @@ public:
 	NETVAR(m_iCampaignMedals, int, "CTFPlayer", "m_iCampaignMedals");
 	NETVAR(m_iPlayerSkinOverride, int, "CTFPlayer", "m_iPlayerSkinOverride");
 	NETVAR(m_bViewingCYOAPDA, bool, "CTFPlayer", "m_bViewingCYOAPDA");
+	NETVAR(m_bRegenerating, bool, "CTFPlayer", "m_bRegenerating");
+	NETVAR(m_hOffHandWeapon, EHANDLE, "CTFPlayer", "m_hOffHandWeapon");
 
 	NETVAR_OFF(m_flInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -8);
 	NETVAR_OFF(m_flPrevInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -4);

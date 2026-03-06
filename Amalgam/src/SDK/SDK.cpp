@@ -720,7 +720,7 @@ void SDK::FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTarget
 	bool bCurOOB = fabsf(Math::NormalizeAngle(vCurAngle.x)) > 90.f;
 	bool bTargetOOB = fabsf(Math::NormalizeAngle(vTargetAngle.x)) > 90.f;
 
-	Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove * (bCurOOB ? -1 : 1), pCmd->upmove};
+	Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove * (bCurOOB ? -1 : 1), pCmd->upmove };
 	float flSpeed = vMove.Length2D();
 	Vec3 vMoveAng = Math::VectorAngles(vMove);
 
@@ -799,10 +799,10 @@ void SDK::WalkTo(CUserCmd* pCmd, CTFPlayer* pLocal, const Vec3& vTo, float flSca
 
 
 
-void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, bool bPipes, bool bInterp, bool bAllowFlip)
+void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vOffset, Vec3& vPosOut, Vec3& vAngOut, float flForward, float flCutoff, bool bInterp, bool bAllowFlip)
 {
 	static auto cl_flipviewmodels = H::ConVars.FindVar("cl_flipviewmodels");
-	if (bAllowFlip && FNV1A::Hash32(cl_flipviewmodels->GetString()) == FNV1A::Hash32Const("1"))
+	if (bAllowFlip && cl_flipviewmodels->GetBool())
 		vOffset.y *= -1.f;
 
 	const Vec3 vShootPos = bInterp ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
@@ -810,22 +810,25 @@ void SDK::GetProjectileFireSetup(CTFPlayer* pPlayer, const Vec3& vAngIn, Vec3 vO
 	Vec3 vForward, vRight, vUp; Math::AngleVectors(vAngIn, &vForward, &vRight, &vUp);
 	vPosOut = vShootPos + (vForward * vOffset.x) + (vRight * vOffset.y) + (vUp * vOffset.z);
 
-	if (bPipes)
-		vAngOut = vAngIn;
-	else
+	if (flForward)
 	{
-		Vec3 vEndPos = vShootPos + vForward * 2000.f;
+		Vec3 vEndPos = vShootPos + vForward * flForward;
 
-		CGameTrace trace = {};
-		CTraceFilterCollideable filter = {};
-		filter.pSkip = pPlayer;
-		filter.iType = SKIP_CHECK;
-		Trace(vShootPos, vEndPos, MASK_SOLID, &filter, &trace);
-		if (trace.DidHit() && trace.fraction > 0.1f)
-			vEndPos = trace.endpos;
+		if (flCutoff < 1.f)
+		{
+			CGameTrace trace = {};
+			CTraceFilterCollideable filter = {};
+			filter.pSkip = pPlayer;
+			filter.iType = SKIP_CHECK;
+			Trace(vShootPos, vEndPos, MASK_SOLID, &filter, &trace);
+			if (trace.DidHit() && trace.fraction > flCutoff)
+				vEndPos = trace.endpos;
+		}
 
 		vAngOut = Math::VectorAngles(vEndPos - vPosOut);
 	}
+	else
+		vAngOut = vAngIn;
 }
 
 bool SDK::CleanScreenshot()
