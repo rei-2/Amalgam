@@ -1,8 +1,8 @@
 #pragma once
+#include "CUtlVector.h"
 #include "BaseTypes.h"
 #include "Datamap.h"
 #include "LocalFlexController.h"
-#include "../Main/UtlVector.h"
 #include "../Types.h"
 
 #define STUDIO_ENABLE_PERF_COUNTERS

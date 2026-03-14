@@ -223,23 +223,23 @@ void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInf
 	bool bDrawLast = m_iFlags & BacktrackEnum::Last;
 	bool bDrawFirst = m_iFlags & BacktrackEnum::First;
 
-	auto drawModel = [&](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld, float flBlend)
-		{
-			if (!SDK::IsOnScreen(pEntity, vOrigin))
-				return;
+	auto fDrawModel = [&](Vec3& vOrigin, const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld, float flBlend)
+	{
+		if (!SDK::IsOnScreen(pEntity, vOrigin))
+			return;
 
-			//float flOriginalBlend = I::RenderView->GetBlend();
-			//I::RenderView->SetBlend(flBlend * flOriginalBlend);
-			static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
-			IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
-			//I::RenderView->SetBlend(flOriginalBlend);
-		};
+		//float flOriginalBlend = I::RenderView->GetBlend();
+		//I::RenderView->SetBlend(flBlend * flOriginalBlend);
+		static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
+		IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
+		//I::RenderView->SetBlend(flOriginalBlend);
+	};
 	if (!bDrawLast && !bDrawFirst)
 	{
 		for (auto pRecord : vRecords)
 		{
 			if (float flBlend = Math::RemapVal(pEntity->GetAbsOrigin().DistTo(pRecord->m_vOrigin), 1.f, 24.f, 0.f, 1.f))
-				drawModel(pRecord->m_vOrigin, pState, pInfo, pRecord->m_aBones, flBlend);
+				fDrawModel(pRecord->m_vOrigin, pState, pInfo, pRecord->m_aBones, flBlend);
 		}
 	}
 	else
@@ -248,13 +248,13 @@ void CGlow::RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInf
 		{
 			auto pRecord = vRecords.back();
 			if (float flBlend = Math::RemapVal(pEntity->GetAbsOrigin().DistTo(pRecord->m_vOrigin), 1.f, 24.f, 0.f, 1.f))
-				drawModel(pRecord->m_vOrigin, pState, pInfo, pRecord->m_aBones, flBlend);
+				fDrawModel(pRecord->m_vOrigin, pState, pInfo, pRecord->m_aBones, flBlend);
 		}
 		if (bDrawFirst)
 		{
 			auto pRecord = vRecords.front();
 			if (float flBlend = Math::RemapVal(pEntity->GetAbsOrigin().DistTo(pRecord->m_vOrigin), 1.f, 24.f, 0.f, 1.f))
-				drawModel(pRecord->m_vOrigin, pState, pInfo, pRecord->m_aBones, flBlend);
+				fDrawModel(pRecord->m_vOrigin, pState, pInfo, pRecord->m_aBones, flBlend);
 		}
 	}
 }

@@ -1,26 +1,31 @@
 #pragma once
 #include "IConVar.h"
-#include "../Main/UtlVector.h"
+#include "CUtlVector.h"
+#include "CUtlString.h"
+
+#define COMMAND_COMPLETION_MAXITEMS 64
+#define COMMAND_COMPLETION_ITEM_LENGTH 64
 
 class ConVar;
 class CCommand;
 class ConCommand;
 class ConCommandBase;
 struct characterset_t;
+typedef void (*FnCommandCallbackVoid_t)(void);
+typedef void (*FnCommandCallback_t)(const CCommand& command);
+typedef int  (*FnCommandCompletionCallback)(const char* partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH]);
+
+enum
+{
+	COMMAND_MAX_ARGC = 64,
+	COMMAND_MAX_LENGTH = 512
+};
 
 class IConCommandBaseAccessor
 {
 public:
 	virtual bool RegisterConCommandBase(ConCommandBase* pVar) = 0;
 };
-
-typedef void (*FnCommandCallbackVoid_t)(void);
-typedef void (*FnCommandCallback_t)(const CCommand& command);
-
-#define COMMAND_COMPLETION_MAXITEMS 64
-#define COMMAND_COMPLETION_ITEM_LENGTH 64
-
-typedef int  (*FnCommandCompletionCallback)(const char* partial, char commands[COMMAND_COMPLETION_MAXITEMS][COMMAND_COMPLETION_ITEM_LENGTH]);
 
 class ICommandCallback
 {
@@ -31,7 +36,7 @@ public:
 class ICommandCompletionCallback
 {
 public:
-	virtual int CommandCompletionCallback(const char* pPartial, CUtlVector< /*CUtlString*/ void* >& commands) = 0;
+	virtual int CommandCompletionCallback(const char* pPartial, CUtlVector<CUtlString>& commands) = 0;
 };
 
 class ConCommandBase
@@ -58,12 +63,6 @@ public:
 protected:
 	static ConCommandBase* s_pConCommandBases;
 	static IConCommandBaseAccessor* s_pAccessor;
-};
-
-enum
-{
-	COMMAND_MAX_ARGC = 64,
-	COMMAND_MAX_LENGTH = 512
 };
 
 class CCommand
@@ -114,7 +113,7 @@ class ConCommand : public ConCommandBase
 public:
 	virtual ~ConCommand(void) = 0;
 	virtual	bool IsCommand(void) const = 0;
-	virtual int AutoCompleteSuggest(const char* partial, CUtlVector< /*CUtlString*/ void* >& commands) = 0;
+	virtual int AutoCompleteSuggest(const char* partial, CUtlVector<CUtlString>& commands) = 0;
 	virtual bool CanAutoComplete(void) = 0;
 	virtual void Dispatch(const CCommand& command) = 0;
 

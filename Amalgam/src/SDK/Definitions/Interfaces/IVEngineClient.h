@@ -1,17 +1,11 @@
 #pragma once
 #include "Interface.h"
-#include "../Main/UtlVector.h"
 #include "../Misc/BaseTypes.h"
-#include "../Misc/bitbuf.h"
-#include "../Misc/ButtonCode.h"
 #include "../Misc/ChecksumCRC.h"
-#include "../Misc/ClientClass.h"
-#include "../Misc/CViewSetup.h"
-#include "../Misc/Datamap.h"
+#include "../Misc/ButtonCode.h"
 #include "../Misc/Modes.h"
 #include "../Definitions.h"
 
-struct model_t;
 class CSentence;
 class IMaterial;
 class CAudioSource;
@@ -20,10 +14,18 @@ class ISpatialQuery;
 class IMaterialSystem;
 class CPhysCollide;
 class INetChannelInfo;
-struct client_textmessage_t;
 class IAchievementMgr;
 class CGamestatsData;
 class KeyValues;
+struct model_t;
+struct client_textmessage_t;
+
+enum SkyboxVisibility_t
+{
+	SKYBOX_NOT_VISIBLE = 0,
+	SKYBOX_3DSKYBOX_VISIBLE,
+	SKYBOX_2DSKYBOX_VISIBLE,
+};
 
 typedef struct player_info_s
 {
@@ -44,13 +46,6 @@ struct AudioState_t
 	Vector m_Origin;
 	QAngle m_Angles;
 	bool m_bIsUnderwater;
-};
-
-enum SkyboxVisibility_t
-{
-	SKYBOX_NOT_VISIBLE = 0,
-	SKYBOX_3DSKYBOX_VISIBLE,
-	SKYBOX_2DSKYBOX_VISIBLE,
 };
 
 struct OcclusionParams_t

@@ -1,5 +1,6 @@
 #pragma once
 #include "IAppSystem.h"
+#include "VGUI.h"
 #include "IHTML.h"
 #include "ImageFormat.h"
 #include "IVguiMatInfo.h"

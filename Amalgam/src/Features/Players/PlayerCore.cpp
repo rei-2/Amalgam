@@ -138,7 +138,7 @@ void CPlayerlistCore::LoadPlayerlist()
 			for (auto& [sName, tChild] : *tSub)
 			{
 				uint32_t uAccountID = std::stoul(sName);
-				for (auto& [_, tTag] : tChild)
+				for (auto& tTag : tChild | std::views::values)
 				{
 					const std::string& sTag = tTag.data();
 

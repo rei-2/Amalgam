@@ -1,5 +1,8 @@
 #pragma once
 #include "../../Definitions/Interfaces/IEngineTrace.h"
+#include "../../Definitions/Definitions.h"
+
+class CBaseEntity;
 
 enum
 {
@@ -29,7 +32,7 @@ enum
 class CTraceFilterHitscan : public ITraceFilter
 {
 public:
-	bool ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask) override;
+	bool ShouldHitEntity(IHandleEntity* pHandleEntity, int nContentsMask) override;
 	TraceType_t GetTraceType() const override;
 	CBaseEntity* pSkip = nullptr;
 
@@ -43,7 +46,7 @@ public:
 class CTraceFilterCollideable : public ITraceFilter
 {
 public:
-	bool ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask) override;
+	bool ShouldHitEntity(IHandleEntity* pHandleEntity, int nContentsMask) override;
 	TraceType_t GetTraceType() const override;
 	CBaseEntity* pSkip = nullptr;
 
@@ -60,7 +63,7 @@ public:
 class CTraceFilterWorldAndPropsOnly : public ITraceFilter
 {
 public:
-	bool ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask) override;
+	bool ShouldHitEntity(IHandleEntity* pHandleEntity, int nContentsMask) override;
 	TraceType_t GetTraceType() const override;
 	CBaseEntity* pSkip = nullptr;
 

@@ -5,6 +5,8 @@
 #include "../Misc/VPlane.h"
 #include "../Definitions.h"
 
+#define MAX_VIS_LEAVES	32
+
 class IClientRenderable;
 class IClientEntity;
 class CViewSetup;
@@ -54,7 +56,6 @@ enum ERenderDepthMode
 };
 
 typedef VPlane Frustum[FRUSTUM_NUMPLANES];
-
 typedef unsigned short LeafIndex_t;
 typedef short LeafFogVolume_t;
 
@@ -116,8 +117,6 @@ class IBrushRenderer
 public:
 	virtual bool RenderBrushModelSurface(IClientEntity* pBaseEntity, IBrushSurface* pBrushSurface) = 0;
 };
-
-#define MAX_VIS_LEAVES	32
 
 enum DrawBrushModelMode_t
 {

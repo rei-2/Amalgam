@@ -1,5 +1,6 @@
 #pragma once
 #include "NetChannel.h"
+#include "INetworkSystem.h"
 #include "INetChannelInfo.h"
 #include "INetMessage.h"
 
@@ -60,8 +61,8 @@ public:
 class CNetChannel : public INetChannel
 {
 public:
-	virtual ConnectionStatus_t GetConnectionState();
-	virtual const netadr_t& GetRemoteAddress(void) const;
+	virtual ConnectionStatus_t GetConnectionState() = 0;
+	virtual const netadr_t& GetRemoteAddress(void) const = 0;
 
 	ConnectionStatus_t m_ConnectionState;
 	int m_nOutSequenceNr;

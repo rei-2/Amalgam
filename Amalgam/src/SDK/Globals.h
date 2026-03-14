@@ -58,6 +58,14 @@ struct DrawSwept_t
 	bool m_bZBuffer = false;
 };
 
+struct DrawTriangle_t
+{
+	std::array<Vec3, 3> m_aOrigin;
+	float m_flTime;
+	Color_t m_tColor;
+	bool m_bZBuffer = false;
+};
+
 struct AimTarget_t
 {
 	int m_iEntIndex = 0;
@@ -83,6 +91,7 @@ namespace G
 	inline bool CanHeadshot = false;
 	inline int Throwing = false;
 	inline float Lerp = 0.015f;
+	inline float FOV = 90.f;
 
 	inline EWeaponType PrimaryWeaponType = {}, SecondaryWeaponType = {};
 
@@ -107,6 +116,7 @@ namespace G
 	inline std::vector<DrawBox_t> BoxStorage = {};
 	inline std::vector<DrawSphere_t> SphereStorage = {};
 	inline std::vector<DrawSwept_t> SweptStorage = {};
+	inline std::vector<DrawTriangle_t> TriangleStorage = {};
 
 	inline int& RandomSeed()
 	{

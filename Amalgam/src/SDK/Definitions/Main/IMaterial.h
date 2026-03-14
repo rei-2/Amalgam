@@ -1,9 +1,4 @@
 #pragma once
-#include "../Interfaces/IMaterialSystem.h"
-
-class IMaterialVar;
-class ITexture;
-class IMaterialProxy;
 
 #define	VERTEX_POSITION 0x0001
 #define	VERTEX_NORMAL 0x0002
@@ -25,10 +20,14 @@ class IMaterialProxy;
 #define	USER_DATA_SIZE_MASK ( 0x7 << USER_DATA_SIZE_BIT )
 #define	VERTEX_FORMAT_FIELD_MASK 0x0FF
 #define	VERTEX_FORMAT_UNKNOWN 0
-
 #define VERTEX_BONEWEIGHT( _n ) ((_n) << VERTEX_BONE_WEIGHT_BIT)
 #define VERTEX_USERDATA_SIZE( _n ) ((_n) << USER_DATA_SIZE_BIT)
 #define VERTEX_TEXCOORD_MASK( _coord ) (( 0x7ULL ) << ( TEX_COORD_SIZE_BIT + 3 * (_coord) ))
+
+class IMaterialVar;
+class ITexture;
+class IMaterialProxy;
+typedef unsigned int MorphFormat_t;
 
 enum VertexElement_t
 {

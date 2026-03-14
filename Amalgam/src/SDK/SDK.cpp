@@ -162,20 +162,17 @@ double SDK::PlatFloatTime()
 	return Plat_FloatTime();
 }
 
+static std::random_device s_tRandomDevice;
+static std::mt19937 s_tEngine(s_tRandomDevice());
 int SDK::StdRandomInt(int iMin, int iMax)
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> distr(iMin, iMax);
-	return distr(gen);
+	std::uniform_int_distribution<int> iDistribution(iMin, iMax);
+	return iDistribution(s_tEngine);
 }
-
 float SDK::StdRandomFloat(float flMin, float flMax)
 {
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> distr(flMin, flMax);
-	return distr(gen);
+	std::uniform_real_distribution<float> flDistribution(flMin, flMax);
+	return flDistribution(s_tEngine);
 }
 
 int SDK::SeedFileLineHash(int iSeed, const char* sName, int iAdditionalSeed)
@@ -195,19 +192,16 @@ int SDK::SharedRandomInt(unsigned iSeed, const char* sName, int iMinVal, int iMa
 	I::UniformRandomStream->SetSeed(iSeed2);
 	return I::UniformRandomStream->RandomInt(iMinVal, iMaxVal);
 }
-
 void SDK::RandomSeed(int iSeed)
 {
 	static auto RandomSeed = U::Memory.GetModuleExport<void(*)(uint32_t)>("vstdlib.dll", "RandomSeed");
 	RandomSeed(iSeed);
 }
-
 int SDK::RandomInt(int iMinVal, int iMaxVal)
 {
 	static auto RandomInt = U::Memory.GetModuleExport<int(*)(int, int)>("vstdlib.dll", "RandomInt");
 	return RandomInt(iMinVal, iMaxVal);
 }
-
 float SDK::RandomFloat(float flMinVal, float flMaxVal)
 {
 	static auto RandomFloat = U::Memory.GetModuleExport<float(*)(float, float)>("vstdlib.dll", "RandomFloat");
@@ -720,7 +714,7 @@ void SDK::FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTarget
 	bool bCurOOB = fabsf(Math::NormalizeAngle(vCurAngle.x)) > 90.f;
 	bool bTargetOOB = fabsf(Math::NormalizeAngle(vTargetAngle.x)) > 90.f;
 
-	Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove * (bCurOOB ? -1 : 1), pCmd->upmove };
+	Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove * (bCurOOB ? -1 : 1), pCmd->upmove};
 	float flSpeed = vMove.Length2D();
 	Vec3 vMoveAng = Math::VectorAngles(vMove);
 
@@ -748,7 +742,7 @@ bool SDK::StopMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	if (G::Attacking != 1)
 	{
-		float flDirection = Math::VectorAngles(pLocal->m_vecVelocity() * -1).y;
+		float flDirection = Math::VectorAngles(-pLocal->m_vecVelocity()).y;
 		pCmd->viewangles = { 90, flDirection, 0 };
 		pCmd->sidemove = 0; pCmd->forwardmove = 0;
 		return true;

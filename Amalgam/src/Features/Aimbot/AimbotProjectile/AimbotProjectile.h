@@ -5,8 +5,8 @@
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 
-Enum(PointType, None = 0, Out = 1 << 0, In = 1 << 1, Out2 = 1 << 2, In2 = 1 << 3)
-Enum(Calculated, Pending, Good, Time, Bad)
+Enum(CalculateFlags, None = 0, TwoPass = 1 << 0, SetupClip = 1 << 1, AccountDrag = 1 << 2, Accuracy = TwoPass | SetupClip | AccountDrag)
+Enum(CalculateResult, Pending, Good, Time, Bad)
 
 struct Info_t
 {
@@ -19,7 +19,6 @@ struct Info_t
 	Vec3 m_vTargetEye = {};
 
 	float m_flLatency = 0.f;
-
 	Vec3 m_vHull = {};
 	Vec3 m_vOffset = {};
 	Vec3 m_vAngFix = {};
@@ -30,8 +29,8 @@ struct Info_t
 	float m_flBoundingTime = 0.f;
 	float m_flOffsetTime = 0.f;
 	int m_iSplashCount = 0;
-	int m_iSplashMode = 0;
 	int m_iArmTime = 0;
+	float m_flNormalOffset = 0.f;
 };
 
 struct Solution_t
@@ -39,7 +38,7 @@ struct Solution_t
 	float m_flPitch = 0.f;
 	float m_flYaw = 0.f;
 	float m_flTime = 0.f;
-	int m_iCalculated = CalculatedEnum::Pending;
+	int m_iCalculated = CalculateResultEnum::Pending;
 };
 struct Point_t
 {
@@ -69,11 +68,10 @@ class CAimbotProjectile
 {
 private:
 	std::unordered_map<int, Vec3> GetDirectPoints();
-	std::vector<Point_t> GetSplashPoints(Vec3 vOrigin, std::vector<std::pair<Vec3, int>>& vSpherePoints, int iSimTime);
-	void SetupSplashPoints(Vec3& vPos, std::vector<std::pair<Vec3, int>>& vSpherePoints, std::vector<Vec3>& vSimplePoints);
-	std::vector<Point_t> GetSplashPointsSimple(Vec3 vOrigin, std::vector<Vec3>& vSpherePoints, int iSimTime);
+	void SetupSplashPoints(Vec3& vOrigin, std::vector<Vec3>& vSplashPoints);
+	std::vector<Point_t> GetSplashPoints(Vec3 vOrigin, std::vector<Vec3>& vSplashPoints, int iSimTime);
 
-	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, int iSimTime, Solution_t& tOut, bool bAccuracy = true, int iTolerance = -1);
+	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, int iSimTime, Solution_t& tOut, int iFlags = CalculateFlagsEnum::Accuracy, int iTolerance = -1);
 	bool TestAngle(const Vec3& vPoint, const Vec3& vAngles, int iSimTime, bool bSplash, bool bSecondTest = false);
 
 	bool HandlePoint(const Vec3& vOrigin, int iSimTime, float flPitch, float flYaw, float flTime, const Vec3& vPoint, bool bSplash = false);
@@ -92,6 +90,7 @@ private:
 	Info_t m_tInfo = {};
 	MoveStorage m_tMoveStorage = {};
 	ProjectileInfo m_tProjInfo = {};
+	std::vector<Vec3> m_vSplashPoints = {};
 
 	bool m_bLastTickHeld = false;
 

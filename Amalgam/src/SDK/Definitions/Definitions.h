@@ -1215,11 +1215,6 @@ enum
 
 class CBaseEntity;
 
-struct CUtlString
-{
-	char* m_pString;
-};
-
 struct FireBulletsInfo_t
 {
 	int m_iShots;

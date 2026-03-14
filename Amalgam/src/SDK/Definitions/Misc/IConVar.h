@@ -1,8 +1,5 @@
 #pragma once
 
-class IConVar;
-class CCommand;
-
 #define FCVAR_NONE 0 
 #define FCVAR_UNREGISTERED (1<<0)
 #define FCVAR_DEVELOPMENTONLY (1<<1)
@@ -35,6 +32,8 @@ class CCommand;
 #define FCVAR_ALLOWED_IN_COMPETITIVE (1<<18)
 #define FCVAR_MATERIAL_THREAD_MASK ( FCVAR_RELOAD_MATERIALS | FCVAR_RELOAD_TEXTURES | FCVAR_MATERIAL_SYSTEM_THREAD )	
 
+class IConVar;
+class CCommand;
 typedef void (*FnChangeCallback_t)(IConVar* var, const char* pOldValue, float flOldValue);
 
 class IConVar

@@ -346,7 +346,7 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 			return;
 
 		Vec3 vMove = { pCmd->forwardmove, pCmd->sidemove, 0.f };
-		Vec3 vAngMoveReverse = Math::VectorAngles(vMove * -1.f);
+		Vec3 vAngMoveReverse = Math::VectorAngles(-vMove);
 		pCmd->forwardmove = -vMove.Length();
 		pCmd->sidemove = 0.f;
 		pCmd->viewangles.y = fmodf(pCmd->viewangles.y - vAngMoveReverse.y, 360.f);
@@ -463,9 +463,9 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		return 0;
 
 	std::sort(vTargets.begin(), vTargets.end(), [&](const auto& a, const auto& b) -> bool
-		{
-			return pLocal->GetCenter().DistTo(a.first) < pLocal->GetCenter().DistTo(b.first);
-		});
+	{
+		return pLocal->GetCenter().DistTo(a.first) < pLocal->GetCenter().DistTo(b.first);
+	});
 
 	auto& pTargetPos = vTargets.front();
 	switch (Vars::Misc::Automation::AntiBackstab.Value)
@@ -486,28 +486,28 @@ int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
 		// if the closest spy is a cheater, assume auto stab is being used, otherwise don't do anything if target is in front
 		if (!bCheater)
 		{
-			auto TargetIsBehind = [&]()
-				{
-					const float flCompDist = PLAYER_ORIGIN_COMPRESSION / 2;
-					const float flSqCompDist = 0.0884f;
+			auto fTargetIsBehind = [&]()
+			{
+				const float flCompDist = PLAYER_ORIGIN_COMPRESSION / 2;
+				const float flSqCompDist = 0.0884f;
 
-					Vec3 vToTarget = (pLocal->m_vecOrigin() - pTargetPos.first).To2D();
-					const float flDist = vToTarget.Normalize();
-					if (flDist < flSqCompDist)
-						return true;
+				Vec3 vToTarget = (pLocal->m_vecOrigin() - pTargetPos.first).To2D();
+				const float flDist = vToTarget.Normalize();
+				if (flDist < flSqCompDist)
+					return true;
 
-					const float flExtra = 2.f * flCompDist / flDist; // account for origin compression
-					float flPosVsTargetViewMinDot = 0.f - 0.0031f - flExtra;
+				const float flExtra = 2.f * flCompDist / flDist; // account for origin compression
+				float flPosVsTargetViewMinDot = 0.f - 0.0031f - flExtra;
 
-					Vec3 vTargetForward; Math::AngleVectors(pCmd->viewangles, &vTargetForward);
-					vTargetForward.Normalize2D();
+				Vec3 vTargetForward; Math::AngleVectors(pCmd->viewangles, &vTargetForward);
+				vTargetForward.Normalize2D();
 
-					const float flPosVsTargetViewDot = vToTarget.Dot(vTargetForward); // Behind?
+				const float flPosVsTargetViewDot = vToTarget.Dot(vTargetForward); // Behind?
 
-					return flPosVsTargetViewDot > flPosVsTargetViewMinDot;
-				};
+				return flPosVsTargetViewDot > flPosVsTargetViewMinDot;
+			};
 
-			if (!TargetIsBehind())
+			if (!fTargetIsBehind())
 				return 0;
 		}
 

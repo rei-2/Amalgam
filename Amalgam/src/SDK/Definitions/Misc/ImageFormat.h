@@ -1,11 +1,11 @@
 #pragma once
 
+//typedef enum _D3DFORMAT D3DFORMAT;
+
 enum NormalDecodeMode_t
 {
 	NORMAL_DECODE_NONE = 0
 };
-
-//typedef enum _D3DFORMAT D3DFORMAT;
 
 enum ImageFormat
 {

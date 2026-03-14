@@ -72,25 +72,25 @@ struct EmitSound_t
 
 	EmitSound_t(const CSoundParameters& src);
 
-	int							m_nChannel;
+	int m_nChannel;
 	char const* m_pSoundName;
-	float						m_flVolume;
-	int				m_SoundLevel;
-	int							m_nFlags;
-	int							m_nPitch;
-	int							m_nSpecialDSP;
+	float m_flVolume;
+	int m_SoundLevel;
+	int m_nFlags;
+	int m_nPitch;
+	int m_nSpecialDSP;
 	const Vector* m_pOrigin;
-	float						m_flSoundTime; ///< NOT DURATION, but rather, some absolute time in the future until which this sound should be delayed
+	float m_flSoundTime; ///< NOT DURATION, but rather, some absolute time in the future until which this sound should be delayed
 	float* m_pflSoundDuration;
-	bool						m_bEmitCloseCaption;
-	bool						m_bWarnOnMissingCloseCaption;
-	bool						m_bWarnOnDirectWaveReference;
-	int							m_nSpeakerEntity;
-	mutable CUtlVector< Vector >	m_UtlVecSoundOrigin;  ///< Actual sound origin(s) (can be multiple if sound routed through speaker entity(ies) )
-	mutable short		m_hSoundScriptHandle;
+	bool m_bEmitCloseCaption;
+	bool m_bWarnOnMissingCloseCaption;
+	bool m_bWarnOnDirectWaveReference;
+	int m_nSpeakerEntity;
+	mutable CUtlVector<Vector> m_UtlVecSoundOrigin;  ///< Actual sound origin(s) (can be multiple if sound routed through speaker entity(ies) )
+	mutable short m_hSoundScriptHandle;
 };
 
-const static std::vector<const char*> s_vFootsteps = { "footstep", "flesh_impact_hard", "body_medium_impact_soft", "glass_sheet_step", "rubber_tire_impact_soft", "plastic_box_impact_soft", "plastic_barrel_impact_soft", "cardboard_box_impact_soft", "ceiling_tile_step" };
+const static std::vector<const char*> s_vFootsteps = { "footstep", "flesh_impact_hard", "body_medium_impact_soft", "ceiling_tile_step", "glass_sheet_step", "rubber_tire_impact_soft", "plastic_box_impact_soft", "plastic_barrel_impact_soft", "cardboard_box_impact_soft", "glass_impact_soft" };
 const static std::vector<const char*> s_vNoisemaker = { "items\\halloween", "items\\football_manager", "items\\japan_fundraiser", "items\\samurai\\tf_samurai_noisemaker", "items\\summer", "misc\\happy_birthday_tf", "misc\\jingle_bells" };
 const static std::vector<const char*> s_vFryingPan = { "pan_" };
 const static std::vector<const char*> s_vWater = { "ambient_mp3\\water\\water_splash", "slosh", "wade" };
@@ -102,29 +102,29 @@ static inline bool ShouldBlockSound(const char* pSound)
 
 	std::string sSound = pSound;
 	std::transform(sSound.begin(), sSound.end(), sSound.begin(), ::tolower);
-	auto CheckSound = [&](const std::vector<const char*>& vSounds, int iFlag = -1)
+	auto fCheckSound = [&](const std::vector<const char*>& vSounds, int iFlag = -1)
+	{
+		if (Vars::Misc::Sound::Block.Value & iFlag)
 		{
-			if (/*iFlag == -1 ||*/ Vars::Misc::Sound::Block.Value & iFlag)
+			for (auto& sNoise : vSounds)
 			{
-				for (auto& sNoise : vSounds)
-				{
-					if (sSound.find(sNoise) != std::string::npos)
-						return true;
-				}
+				if (sSound.find(sNoise) != std::string::npos)
+					return true;
 			}
-			return false;
-		};
+		}
+		return false;
+	};
 
-	if (CheckSound(s_vFootsteps, Vars::Misc::Sound::BlockEnum::Footsteps))
+	if (fCheckSound(s_vFootsteps, Vars::Misc::Sound::BlockEnum::Footsteps))
 		return true;
 
-	if (CheckSound(s_vNoisemaker, Vars::Misc::Sound::BlockEnum::Noisemaker))
+	if (fCheckSound(s_vNoisemaker, Vars::Misc::Sound::BlockEnum::Noisemaker))
 		return true;
 
-	if (CheckSound(s_vFryingPan, Vars::Misc::Sound::BlockEnum::FryingPan))
+	if (fCheckSound(s_vFryingPan, Vars::Misc::Sound::BlockEnum::FryingPan))
 		return true;
 
-	if (CheckSound(s_vWater, Vars::Misc::Sound::BlockEnum::Water))
+	if (fCheckSound(s_vWater, Vars::Misc::Sound::BlockEnum::Water))
 		return true;
 
 	return false;

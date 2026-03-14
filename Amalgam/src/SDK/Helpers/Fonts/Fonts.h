@@ -1,6 +1,5 @@
 #pragma once
 #include "../../../Utils/Macros/Macros.h"
-#include "../../Definitions/Interfaces/IMatSystemSurface.h"
 #include <unordered_map>
 
 enum EFonts

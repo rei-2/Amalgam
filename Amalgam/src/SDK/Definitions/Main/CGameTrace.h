@@ -1,8 +1,5 @@
 #pragma once
-#include "CModel.h"
-#include "UtlVector.h"
-#include "IHandleEntity.h"
-#include "../Misc/ISpatialPartition.h"
+#include "CBaseTrace.h"
 
 class CBaseEntity;
 

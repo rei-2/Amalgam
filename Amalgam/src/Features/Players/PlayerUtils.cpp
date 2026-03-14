@@ -279,13 +279,13 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t uAccountID, int iM
 		return nullptr;
 
 	std::sort(vTags.begin(), vTags.end(), [&](const PriorityLabel_t* a, const PriorityLabel_t* b) -> bool
-		{
-			// sort by priority if unequal
-			if (a->m_iPriority != b->m_iPriority)
-				return a->m_iPriority > b->m_iPriority;
+	{
+		// sort by priority if unequal
+		if (a->m_iPriority != b->m_iPriority)
+			return a->m_iPriority > b->m_iPriority;
 
-			return a->m_sName < b->m_sName;
-		});
+		return a->m_sName < b->m_sName;
+	});
 	return vTags.front();
 }
 PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(int iIndex, int iMode)

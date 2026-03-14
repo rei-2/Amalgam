@@ -167,17 +167,17 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 						if (!pLocal->IsOnGround() || pLocal->IsSwimming())
 							break;
 
-						auto WillHit = [](CTFPlayer* pLocal, const Vec3& vOrigin, const Vec3& vPoint)
-							{
-								const Vec3 vOriginal = pLocal->GetAbsOrigin();
-								pLocal->SetAbsOrigin(vOrigin);
-								Vec3 vPos; pLocal->m_Collision()->CalcNearestPoint(vPoint, &vPos);
-								pLocal->SetAbsOrigin(vOriginal);
+						auto fWillHit = [](CTFPlayer* pLocal, const Vec3& vOrigin, const Vec3& vPoint)
+						{
+							const Vec3 vOriginal = pLocal->GetAbsOrigin();
+							pLocal->SetAbsOrigin(vOrigin);
+							Vec3 vPos; pLocal->m_Collision()->CalcNearestPoint(vPoint, &vPos);
+							pLocal->SetAbsOrigin(vOriginal);
 
-								return vPoint.DistTo(vPos) < TF_ROCKET_RADIUS_FOR_RJS && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
-							};
+							return vPoint.DistTo(vPos) < TF_ROCKET_RADIUS_FOR_RJS && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
+						};
 
-						bWillHit = WillHit(pLocal, tMoveStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
+						bWillHit = fWillHit(pLocal, tMoveStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
 						if (bWillHit)
 						{
 							m_iDelay = n;

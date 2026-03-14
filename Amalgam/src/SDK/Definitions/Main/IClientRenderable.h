@@ -42,9 +42,9 @@ public:
 	virtual ClientRenderHandle_t& RenderHandle() = 0;
 	virtual const model_t* GetModel() const = 0;
 	virtual int DrawModel(int flags) = 0;
-	virtual int	GetBody() = 0;
+	virtual int GetBody() = 0;
 	virtual void ComputeFxBlend() = 0;
-	virtual int	GetFxBlend(void) = 0;
+	virtual int GetFxBlend(void) = 0;
 	virtual void GetColorModulation(float* color) = 0;
 	virtual bool LODTest() = 0;
 	virtual bool SetupBones(matrix3x4* pBoneToWorldOut, int nMaxBones, int boneMask, float currentTime) = 0;
@@ -67,7 +67,7 @@ public:
 	virtual ModelInstanceHandle_t GetModelInstance() = 0;
 	virtual const matrix3x4& RenderableToWorldTransform() = 0;
 	virtual int LookupAttachment(const char* pAttachmentName) = 0;
-	virtual	bool GetAttachment(int number, Vector& origin, QAngle& angles) = 0;
+	virtual bool GetAttachment(int number, Vector& origin, QAngle& angles) = 0;
 	virtual bool GetAttachment(int number, matrix3x4& matrix) = 0;
 	virtual float* GetRenderClipPlane(void) = 0;
 	virtual int GetSkin() = 0;

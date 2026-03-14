@@ -21,13 +21,13 @@ MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool,
 	const auto dwKart1 = S::CTFPlayer_CreateMove_InCondKart_Call();
 	const auto dwKart2 = S::CTFInput_ApplyMouse_InCond_Call();
 
-	auto GetOuter = [&rcx]() -> CBaseEntity*
-		{
-			static const auto iShared = U::NetVars.GetNetVar("CTFPlayer", "m_Shared");
-			static const auto iBombHeadStage = U::NetVars.GetNetVar("CTFPlayer", "m_nHalloweenBombHeadStage");
-			static const auto iOffset = iBombHeadStage - iShared + 0x4;
-			return *reinterpret_cast<CBaseEntity**>(uintptr_t(rcx) + iOffset);
-		};
+	auto fGetOuter = [&rcx]() -> CBaseEntity*
+	{
+		static const auto iShared = U::NetVars.GetNetVar("CTFPlayer", "m_Shared");
+		static const auto iBombHeadStage = U::NetVars.GetNetVar("CTFPlayer", "m_nHalloweenBombHeadStage");
+		static const auto iOffset = iBombHeadStage - iShared + 0x4;
+		return *reinterpret_cast<CBaseEntity**>(uintptr_t(rcx) + iOffset);
+	};
 
 	switch (nCond)
 	{
@@ -36,13 +36,13 @@ MAKE_HOOK(CTFPlayerShared_InCond, S::CTFPlayerShared_InCond(), bool,
 			return false;
 		break;
 	case TF_COND_DISGUISED:
-		if (Vars::Visuals::Removals::Disguises.Value && H::Entities.GetLocal() != GetOuter())
+		if (Vars::Visuals::Removals::Disguises.Value && H::Entities.GetLocal() != fGetOuter())
 			return false;
 		break;
 	case TF_COND_TAUNTING:
 		if (dwRetAddr == dwTaunt && Vars::Misc::Automation::TauntControl.Value)
 			return false;
-		if (Vars::Visuals::Removals::Taunts.Value && H::Entities.GetLocal() != GetOuter())
+		if (Vars::Visuals::Removals::Taunts.Value && H::Entities.GetLocal() != fGetOuter())
 			return false;
 		break;
 	case TF_COND_HALLOWEEN_KART:

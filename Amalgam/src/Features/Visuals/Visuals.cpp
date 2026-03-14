@@ -10,6 +10,7 @@
 #include "../Players/PlayerUtils.h"
 #include "../Spectate/Spectate.h"
 #include "Groups/Groups.h"
+#include "../World/World.h"
 
 MAKE_SIGNATURE(UTIL_PlayerByIndex, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
 MAKE_SIGNATURE(CBaseAnimating_DrawServerHitboxes, "server.dll", "44 88 44 24 ? 53 48 81 EC", 0x0);
@@ -81,7 +82,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 	F::ProjSim.SetupTrace(filter, nMask, pWeapon, 0, bInterp);
 	Vec3* pNormal = nullptr;
 
-	SDK::TraceHull(F::ProjSim.GetOrigin(), F::ProjSim.GetOrigin(), tProjInfo.m_vHull * -1, tProjInfo.m_vHull, nMask, &filter, &trace);
+	SDK::TraceHull(F::ProjSim.GetOrigin(), F::ProjSim.GetOrigin(), -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
 	if (trace.startsolid)
 		return;
 
@@ -92,7 +93,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		F::ProjSim.RunTick(tProjInfo);
 		Vec3 New = F::ProjSim.GetOrigin();
 
-		SDK::TraceHull(Old, New, tProjInfo.m_vHull * -1, tProjInfo.m_vHull, nMask, &filter, &trace);
+		SDK::TraceHull(Old, New, -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
 		F::ProjSim.SetupTrace(filter, nMask, pWeapon, n, bInterp);
 		if (trace.DidHit())
 		{
@@ -173,8 +174,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 				const Vec3 vSize = { 1.f, flSize, flSize };
 				Vec3 vAngles = Math::VectorAngles(*pNormal);
 
-				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPathIgnoreZ.Value);
-				H::Draw.RenderWireframeBox(trace.endpos, vSize * -1, vSize, vAngles, Vars::Colors::TrajectoryPath.Value, true);
+				H::Draw.RenderWireframeBox(trace.endpos, -vSize, vSize, vAngles, Vars::Colors::TrajectoryPathIgnoreZ.Value);
+				H::Draw.RenderWireframeBox(trace.endpos, -vSize, vSize, vAngles, Vars::Colors::TrajectoryPath.Value, true);
 			}
 
 			if (flRadius)
@@ -210,9 +211,9 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			Vec3 vAngles = Math::VectorAngles(*pNormal);
 
 			if (Vars::Colors::ShotPathIgnoreZ.Value.a)
-				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPathIgnoreZ.Value, Color_t(0, 0, 0, 0));
+				G::BoxStorage.emplace_back(trace.endpos, -vSize, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPathIgnoreZ.Value, Color_t(0, 0, 0, 0));
 			if (Vars::Colors::ShotPath.Value.a)
-				G::BoxStorage.emplace_back(trace.endpos, vSize * -1, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, Color_t(0, 0, 0, 0), true);
+				G::BoxStorage.emplace_back(trace.endpos, -vSize, vSize, vAngles, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::ShotPath.Value, Color_t(0, 0, 0, 0), true);
 		}
 
 		if (flRadius)
@@ -519,6 +520,13 @@ void CVisuals::DrawEffects()
 
 		H::Draw.RenderWireframeSweptBox(tSwept.m_paOrigin.first, tSwept.m_paOrigin.second, tSwept.m_vMins, tSwept.m_vMaxs, tSwept.m_vAngles, tSwept.m_tColor, tSwept.m_bZBuffer);
 	}
+	for (auto& tTriangle : G::TriangleStorage)
+	{
+		if (tTriangle.m_flTime < I::GlobalVars->curtime)
+			continue;
+
+		H::Draw.RenderTriangle(tTriangle.m_aOrigin[0], tTriangle.m_aOrigin[1], tTriangle.m_aOrigin[2], tTriangle.m_tColor, tTriangle.m_bZBuffer);
+	}
 	if (auto& tPath = F::Aimbot.m_tPath; tPath.m_flTime)
 	{
 		H::Draw.RenderPath(tPath.m_vPath, Vars::Colors::RealPath.Value, true, tPath.m_iStyle, tPath.m_flTime);
@@ -689,7 +697,7 @@ void CVisuals::FOV(CTFPlayer* pLocal, CViewSetup* pView)
 		}
 	}
 
-	F::Aimbot.m_flFOV = pView->fov;
+	G::FOV = pView->fov;
 	if (pLocal->IsAlive())
 	{
 		pLocal->m_iFOV() = pView->fov;
@@ -829,6 +837,7 @@ void CVisuals::Event(IGameEvent* pEvent, uint32_t uHash)
 		G::PathStorage.clear();
 		G::SphereStorage.clear();
 		G::SweptStorage.clear();
+		G::TriangleStorage.clear();
 	}
 	}
 }
@@ -917,7 +926,7 @@ void CVisuals::Store()
 					F::ProjSim.RunTick(tProjInfo);
 					Vec3 New = F::ProjSim.GetOrigin();
 
-					SDK::TraceHull(Old, New, tProjInfo.m_vHull * -1, tProjInfo.m_vHull, nMask, &filter, &trace);
+					SDK::TraceHull(Old, New, -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
 					if (trace.DidHit())
 					{
 						tProjectile.m_vNormal = trace.plane.normal;
@@ -982,7 +991,7 @@ void CVisuals::Tick()
 			tPath.m_flTime = std::min(tPath.m_flTime + 1.f, 0.f);
 	}
 
-	for (auto& [_, tProjectile] : m_mProjectiles)
+	for (auto& tProjectile : m_mProjectiles | std::views::values)
 	{
 		if (tProjectile.m_flTime < 0.f)
 			tProjectile.m_flTime = std::min(tProjectile.m_flTime + 1.f, 0.f);
@@ -1116,6 +1125,20 @@ void CVisuals::RestoreWorldModulation()
 	ApplyModulation({ 255, 255, 255, 255 }, true);
 }
 
+#ifdef WORLD_DEBUG
+class CEntityEnumerator : public IPartitionEnumerator
+{
+public:
+	IterationRetval_t EnumElement(IHandleEntity* pHandleEntity)
+	{
+		m_vEntities.push_back(pHandleEntity);
+		return ITERATION_CONTINUE;
+	}
+
+	std::vector<IHandleEntity*>	m_vEntities = {};
+};
+#endif
+
 void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	if (Vars::Visuals::Simulation::ShotPath.Value && G::Attacking == 1 && !F::Aimbot.m_bRan)
@@ -1159,4 +1182,44 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		r_aspectratio->SetValue(flNewRatio);
 
 	DrawHitboxes(2);
+
+#ifdef WORLD_DEBUG
+	if (auto pLocal = H::Entities.GetLocal(); Vars::World::Faces.Value && pLocal && I::Input->CAM_IsThirdPerson())
+	{
+		//float flRadius = 146.f + pLocal->GetSize().Length() / 2;
+		//Vec3 vOrigin = pLocal->GetCenter();
+		//Vec3 vMins = vOrigin - flRadius;
+		//Vec3 vMaxs = vOrigin + flRadius;
+		Vec3 vOrigin = pLocal->m_vecOrigin();
+		Vec3 vMins = vOrigin + pLocal->m_vecMins();
+		Vec3 vMaxs = vOrigin + pLocal->m_vecMaxs();
+
+		G::LineStorage.clear(); G::BoxStorage.clear(); G::TriangleStorage.clear();
+		G::BoxStorage.emplace_back(Vec3(), vMins, vMaxs, Vec3(), I::GlobalVars->curtime + 60.f, Color_t(255, 255, 255), Color_t(0, 0, 0, 0), true);
+		//G::BoxStorage.emplace_back(pLocal->m_vecOrigin(), pLocal->m_vecMins(), pLocal->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + 60.f, Color_t(255, 255, 255), Color_t(0, 0, 0, 0), true);
+
+		CTraceFilterWorldAndPropsOnly filter = {};
+		std::vector<Face_t> vFaces = F::World.GetFacesInAABB(vMins, vMaxs, MASK_SOLID, &filter, Vars::World::Faces.Value);
+		SDK::Output("Faces", std::format("{}", vFaces.size()).c_str(), {}, OUTPUT_CONSOLE);
+
+		if (Vars::World::Draw.Value)
+		{
+			for (auto& tFace : vFaces)
+			{
+				F::World.DrawFace(tFace, Vars::World::Draw.Value);
+				/*
+				for (int i = 0; ++i < tFace.m_vVertices.size() - 1;)
+				{
+					const Vec3& vVertex1 = tFace.m_vVertices[0], & vVertex2 = tFace.m_vVertices[i], & vVertex3 = tFace.m_vVertices[i + 1];
+
+					Vec3 vDir21 = vVertex2 - vVertex1, vDir31 = vVertex3 - vVertex1;
+					float flArea = vDir21.Cross(vDir31).Length() / 2;
+
+					SDK::Output("Area", std::format("{}", flArea).c_str());
+				}
+				*/
+			}
+		}
+	}
+#endif
 }

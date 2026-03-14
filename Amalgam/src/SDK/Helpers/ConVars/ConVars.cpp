@@ -1,6 +1,7 @@
 #include "ConVars.h"
 
 #include "../../Definitions/Interfaces/ICVar.h"
+#include "../../../Utils/Hash/FNV1A.h"
 
 bool CConVars::Unlock()
 {

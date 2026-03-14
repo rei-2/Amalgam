@@ -1,6 +1,6 @@
 #include "../SDK/SDK.h"
 
-#include "../SDK/Definitions/Misc/UtlObjectReference.h"
+#include "../SDK/Definitions/Misc/CUtlObjectReference.h"
 
 MAKE_SIGNATURE(COPRenderSprites_Render, "client.dll", "48 89 54 24 ? 55 53 57 41 55 41 56", 0x0);
 MAKE_SIGNATURE(COPRenderSprites_RenderSpriteCard, "client.dll", "48 8B C4 48 89 58 ? 57 41 54", 0x0);

@@ -1,7 +1,9 @@
 #pragma once
-#include "IMoveHelper.h"
+#include "../Main/CBaseHandle.h"
+#include "../Types.h"
 
 class CTFPlayer;
+class CBasePlayer;
 
 class CMoveData
 {
@@ -32,8 +34,6 @@ public:
 	float m_flConstraintSpeedFactor;
 	Vector m_vecAbsOrigin;
 };
-
-class CBasePlayer;
 
 class IGameMovement
 {

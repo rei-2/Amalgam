@@ -30,27 +30,23 @@
 void Hooks::name::Init() { Hook.Create(reinterpret_cast<void *>(address), Func); } \
 type callconvo Hooks::name::Func(__VA_ARGS__)
 #define CALL_ORIGINAL Hook.Original<FN>()
-#define MAKE_INTERFACE_VERSION(type, name, dll, version) namespace I { inline type *name = nullptr; } \
+
+#define MAKE_INTERFACE_VERSION(type, symbol, dll, version, ...) namespace I { inline type *symbol = nullptr; } \
 namespace MAKE_INTERFACE_SCOPE \
 {\
-	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, version, -1, 0); \
+	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, version, 0, __VA_ARGS__); \
 }
-#define MAKE_INTERFACE_SIGNATURE(type, name, dll, version, offset, deref) namespace I { inline type *name = nullptr; } \
+#define MAKE_INTERFACE_EXPORT(type, symbol, dll, name, deref, ...) namespace I { inline type *symbol = nullptr; } \
 namespace MAKE_INTERFACE_SCOPE \
 {\
-	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, version, offset, deref); \
+	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, name, 1, 0, deref, __VA_ARGS__); \
 }
-#define MAKE_INTERFACE_NULL(type, name) namespace I { inline type *name = nullptr; }
-#define MAKE_INTERFACE_VERSION_SEARCH(type, name, dll, version) namespace I { inline type *name = nullptr; } \
+#define MAKE_INTERFACE_SIGNATURE(type, symbol, dll, signature, offset, deref, ...) namespace I { inline type *symbol = nullptr; } \
 namespace MAKE_INTERFACE_SCOPE \
 {\
-	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, version, -1, 0, true); \
+	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, signature, 2, offset, deref, __VA_ARGS__); \
 }
-#define MAKE_INTERFACE_SIGNATURE_SEARCH(type, name, dll, signature, offset, deref) namespace I { inline type *name = nullptr; } \
-namespace MAKE_INTERFACE_SCOPE \
-{\
-	inline InterfaceInit_t name##InterfaceInit_t(reinterpret_cast<void **>(&I::name), dll, signature, offset, deref, true); \
-}
+#define MAKE_INTERFACE_NULL(type, symbol) namespace I { inline type *symbol = nullptr; }
 
 #define NETVAR(_name, type, table, name) inline type& _name() \
 { \

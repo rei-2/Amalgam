@@ -2,9 +2,12 @@
 #include "BaseTypes.h"
 #include "ImageFormat.h"
 
+#define STREAMING_START_MIPMAP 3
+#define IMAGE_FORMAT_DEFAULT ((ImageFormat)-2)
+
 class CUtlBuffer;
-struct Rect_t;
 class IFileSystem;
+struct Rect_t;
 
 enum CompiledVtfFlags
 {
@@ -47,7 +50,6 @@ enum VersionedVtfFlags
 {
 	VERSIONED_VTF_FLAGS_MASK_7_3 = ~0xD1780400
 };
-
 
 struct VtfProcessingOptions
 {
@@ -98,9 +100,6 @@ enum LookDir_t
 	LOOK_DOWN_Z,
 	LOOK_DOWN_NEGZ
 };
-
-#define STREAMING_START_MIPMAP 3
-#define IMAGE_FORMAT_DEFAULT ((ImageFormat)-2)
 
 class IVTFTexture
 {

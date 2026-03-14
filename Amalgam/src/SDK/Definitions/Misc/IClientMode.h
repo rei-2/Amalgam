@@ -1,11 +1,11 @@
 #pragma once
 #include "VGUI.h"
 #include "ButtonCode.h"
-#include "../Main/CUserCmd.h"
 
 class CViewSetup;
 class CBaseEntity;
 class CBasePlayer;
+class CUserCmd;
 class Panel;
 class AnimationController;
 class KeyValues;

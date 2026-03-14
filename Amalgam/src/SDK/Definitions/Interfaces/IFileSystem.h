@@ -2,13 +2,25 @@
 #include "../Misc/IAppSystem.h"
 #include "../Main/MD5.h"
 
+class CUtlBuffer;
+class CSysModule;
+class IThreadPool;
+class KeyValues;
+class IAsyncFileFetch;
+class IPureServerWhitelist;
+class IFileList;
+class CUnverifiedFileHash;
+class CMemoryFileBacking;
+struct FileAsyncRequest_t;
+struct FileSystemStatistics;
+struct FileHash_t;
+struct FSAsyncControl_t__ { int unused; }; typedef struct FSAsyncControl_t__* FSAsyncControl_t;
+struct FSAsyncFile_t__ { int unused; }; typedef struct FSAsyncFile_t__* FSAsyncFile_t;
 typedef void* FileHandle_t;
 typedef void* (*FSAllocFunc_t)(const char* pszFilename, unsigned nBytes);
 typedef uint32_t PathTypeQuery_t;
 typedef int FileFindHandle_t;
 typedef void* FileNameHandle_t;
-struct FSAsyncControl_t__ { int unused; }; typedef struct FSAsyncControl_t__* FSAsyncControl_t;
-struct FSAsyncFile_t__ { int unused; }; typedef struct FSAsyncFile_t__* FSAsyncFile_t;
 typedef int WaitForResourcesHandle_t;
 typedef void (*FileSystemLoggingFunc_t)(const char* fileName, const char* accessType);
 typedef void (*FSDirtyDiskReportFunc_t)();
@@ -20,22 +32,26 @@ enum FileSystemSeek_t
 	FILESYSTEM_SEEK_CURRENT = SEEK_CUR,
 	FILESYSTEM_SEEK_TAIL = SEEK_END,
 };
+
 enum FilesystemMountRetval_t
 {
 	FILESYSTEM_MOUNT_OK = 0,
 	FILESYSTEM_MOUNT_FAILED,
 };
+
 enum SearchPathAdd_t
 {
 	PATH_ADD_TO_HEAD,
 	PATH_ADD_TO_TAIL,
 };
+
 enum PathTypeFilter_t
 {
 	FILTER_NONE = 0,
 	FILTER_CULLPACK = 1,
 	FILTER_CULLNONPACK = 2,
 };
+
 enum FSAsyncStatus_t
 {
 	FSASYNC_ERR_NOT_MINE = -8,
@@ -52,6 +68,7 @@ enum FSAsyncStatus_t
 	FSASYNC_STATUS_ABORTED,
 	FSASYNC_STATUS_UNSERVICED,
 };
+
 enum FileWarningLevel_t
 {
 	FILESYSTEM_WARNING = -1,
@@ -63,12 +80,14 @@ enum FileWarningLevel_t
 	FILESYSTEM_WARNING_REPORTALLACCESSES_READWRITE,
 	FILESYSTEM_WARNING_REPORTALLACCESSES_ASYNC,
 };
+
 enum DVDMode_t
 {
 	DVDMODE_OFF = 0,
 	DVDMODE_STRICT = 1,
 	DVDMODE_DEV = 2,
 };
+
 enum EPureServerFileClass
 {
 	ePureServerFileClass_Unknown = -1,
@@ -76,12 +95,14 @@ enum EPureServerFileClass
 	ePureServerFileClass_AnyTrusted,
 	ePureServerFileClass_CheckHash,
 };
+
 enum ECacheCRCType
 {
 	k_eCacheCRCType_SingleFile,
 	k_eCacheCRCType_Directory,
 	k_eCacheCRCType_Directory_Recursive
 };
+
 enum EFileCRCStatus
 {
 	k_eFileCRCStatus_CantOpenFile,
@@ -89,18 +110,6 @@ enum EFileCRCStatus
 	k_eFileCRCStatus_FileInVPK
 };
 
-struct FileAsyncRequest_t;
-struct FileSystemStatistics;
-struct FileHash_t;
-class CUtlBuffer;
-class CSysModule;
-class IThreadPool;
-class KeyValues;
-class IAsyncFileFetch;
-class IPureServerWhitelist;
-class IFileList;
-class CUnverifiedFileHash;
-class CMemoryFileBacking;
 typedef void (*FSAsyncCallbackFunc_t)(const FileAsyncRequest_t& request, int nBytesRead, FSAsyncStatus_t err);
 
 class IBaseFileSystem

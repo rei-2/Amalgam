@@ -1,20 +1,11 @@
 #pragma once
-#include "../Types.h"
+#include "CModel.h"
 
 #define DISPSURF_FLAG_SURFACE (1<<0)
 #define DISPSURF_FLAG_WALKABLE (1<<1)
 #define DISPSURF_FLAG_BUILDABLE (1<<2)
 #define DISPSURF_FLAG_SURFPROP1 (1<<3)
 #define DISPSURF_FLAG_SURFPROP2 (1<<4)
-
-struct cplane_t
-{
-	Vector normal{};
-	float dist{};
-	byte type{};
-	byte signbits{};
-	byte pad[2]{};
-};
 
 #define CPLANE_NORMAL_X 0
 #define CPLANE_NORMAL_Y 4

@@ -1,10 +1,10 @@
 #include "AimbotHitscan.h"
 
 #include "../Aimbot.h"
-#include "../../Resolver/Resolver.h"
 #include "../../Ticks/Ticks.h"
-#include "../../Visuals/Visuals.h"
+#include "../../Resolver/Resolver.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
+#include "../../Visuals/Visuals.h"
 
 static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
@@ -191,7 +191,7 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 			{
 				auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
 
-				int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
+				int iDamage = ceilf(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
 				if (pPlayer->m_iHealth() <= iDamage)
 					bHeadshot = false;
 				break;
@@ -203,7 +203,7 @@ int CAimbotHitscan::GetHitboxPriority(int nHitbox, CTFPlayer* pLocal, CTFWeaponB
 					float flDistTo = pTarget->m_vecOrigin().DistTo(pLocal->m_vecOrigin());
 
 					float flMult = SDK::AttribHookValue(1, "mult_dmg", pWeapon);
-					int iDamage = std::ceil(Math::RemapVal(flDistTo, 90.f, 900.f, 60.f, 21.f) * flMult);
+					int iDamage = ceilf(Math::RemapVal(flDistTo, 90.f, 900.f, 60.f, 21.f) * flMult);
 					if (pPlayer->m_iHealth() <= iDamage)
 						bHeadshot = false;
 				}
@@ -281,13 +281,13 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 	if (pDoubletapAngle && tTarget.m_iTargetType == TargetEnum::Player)
 	{
 		std::sort(vRecords.begin(), vRecords.end(), [&](const TickRecord* a, const TickRecord* b) -> bool
-			{
-				Vec3 vPosA = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
-				Vec3 vPosB = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
-				Vec3 vAnglesA = Math::CalcAngle(m_vEyePos, vPosA);
-				Vec3 vAnglesB = Math::CalcAngle(m_vEyePos, vPosB);
-				return pDoubletapAngle->DeltaAngle(vAnglesA).Length2D() < pDoubletapAngle->DeltaAngle(vAnglesB).Length2D();
-			});
+		{
+			Vec3 vPosA = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
+			Vec3 vPosB = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
+			Vec3 vAnglesA = Math::CalcAngle(m_vEyePos, vPosA);
+			Vec3 vAnglesB = Math::CalcAngle(m_vEyePos, vPosB);
+			return pDoubletapAngle->DeltaAngle(vAnglesA).Length2D() < pDoubletapAngle->DeltaAngle(vAnglesB).Length2D();
+		});
 	}
 
 	int iReturn = false;
@@ -365,9 +365,9 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 				vHitboxes.emplace_back(pBox, nHitbox, iPriority);
 			}
 			std::sort(vHitboxes.begin(), vHitboxes.end(), [&](const auto& a, const auto& b) -> bool
-				{
-					return std::get<2>(a) < std::get<2>(b);
-				});
+			{
+				return std::get<2>(a) < std::get<2>(b);
+			});
 
 			float flModelScale = tTarget.m_pEntity->As<CBaseAnimating>()->m_flModelScale();
 			float flBoneScale = Vars::Aimbot::Hitscan::BoneSizeMinimumScale.Value;
@@ -587,13 +587,13 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 				auto pPlayer = tTarget.m_pEntity->As<CTFPlayer>();
 				if (tTarget.m_nAimedHitbox == HITBOX_HEAD && (pWeapon->GetWeaponID() != TF_WEAPON_SNIPERRIFLE_CLASSIC || pSniperRifle->m_flChargedDamage() == 150.f))
 				{
-					int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetHeadshotMult(pPlayer));
+					int iDamage = ceilf(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetHeadshotMult(pPlayer));
 					if (pPlayer->m_iHealth() <= iDamage && (G::CanHeadshot || pLocal->IsCritBoosted()))
 						break;
 				}
 				else
 				{
-					int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
+					int iDamage = ceilf(std::max(pSniperRifle->m_flChargedDamage(), 50.f) * pSniperRifle->GetBodyshotMult(pPlayer));
 					if (pPlayer->m_iHealth() <= iDamage)
 						break;
 				}
@@ -601,7 +601,7 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 			else if (tTarget.m_pEntity->IsBuilding())
 			{
 				auto pBuilding = tTarget.m_pEntity->As<CBaseObject>();
-				int iDamage = std::ceil(std::max(pSniperRifle->m_flChargedDamage(), 50.f));
+				int iDamage = ceilf(std::max(pSniperRifle->m_flChargedDamage(), 50.f));
 				if (pBuilding->m_iHealth() <= iDamage)
 					break;
 			}

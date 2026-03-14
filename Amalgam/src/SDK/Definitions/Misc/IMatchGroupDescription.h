@@ -1,7 +1,8 @@
 #pragma once
 #include "ConVar.h"
+#include "CUtlVector.h"
+#include "CUtlString.h"
 #include "../Interfaces/IVEngineClient.h"
-#include "../Main/UtlVector.h"
 #include "../Steam/SteamClientPublic.h"
 #include "../Definitions.h"
 #include "../../../Utils/Signatures/Signatures.h"

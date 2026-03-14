@@ -179,7 +179,7 @@ void CMaterials::LoadMaterials()
 		StoreStruct(sName, sVMT);
 	}
 	// create materials
-	for (auto& [_, tMaterial] : m_mMaterials)
+	for (auto& tMaterial : m_mMaterials | std::views::values)
 	{
 		KeyValues* kv = new KeyValues(tMaterial.m_sName.c_str());
 		if (!kv->LoadFromBuffer(tMaterial.m_sName.c_str(), tMaterial.m_sVMT.c_str()))
@@ -234,7 +234,7 @@ void CMaterials::UnloadMaterials()
 {
 	m_bLoaded = false;
 
-	for (auto& [_, tMaterial] : m_mMaterials)
+	for (auto& tMaterial : m_mMaterials | std::views::values)
 		Remove(tMaterial.m_pMaterial);
 	m_mMaterials.clear();
 	m_mMatList.clear();
@@ -365,28 +365,28 @@ void CMaterials::RemoveMaterial(const char* sName)
 
 		std::filesystem::remove(F::Configs.m_sMaterialsPath + sName + ".vmt");
 
-		auto removeFromVal = [&](std::vector<std::pair<std::string, Color_t>>& val)
+		auto fRemoveFromVal = [&](std::vector<std::pair<std::string, Color_t>>& val)
+		{
+			for (auto it = val.begin(); it != val.end();)
 			{
-				for (auto it = val.begin(); it != val.end();)
-				{
-					if (FNV1A::Hash32(it->first.c_str()) == uHash)
-						it = val.erase(it);
-					else
-						++it;
-				}
-			};
-		auto removeFromVar = [&](ConfigVar<std::vector<std::pair<std::string, Color_t>>>& var)
+				if (FNV1A::Hash32(it->first.c_str()) == uHash)
+					it = val.erase(it);
+				else
+					++it;
+			}
+		};
+		auto fRemoveFromVar = [&](ConfigVar<std::vector<std::pair<std::string, Color_t>>>& var)
+		{
+			for (auto& [iBind, vVal] : var.Map)
 			{
-				for (auto& [iBind, vVal] : var.Map)
-				{
-					removeFromVal(vVal);
-				}
-			};
+				fRemoveFromVal(vVal);
+			}
+		};
 		for (auto& tGroup : F::Groups.m_vGroups)
 		{
-			removeFromVal(tGroup.m_tChams.Visible);
-			removeFromVal(tGroup.m_tChams.Occluded);
-			removeFromVal(tGroup.m_vBacktrackChams);
+			fRemoveFromVal(tGroup.m_tChams.Visible);
+			fRemoveFromVal(tGroup.m_tChams.Occluded);
+			fRemoveFromVal(tGroup.m_vBacktrackChams);
 		}
 	}
 

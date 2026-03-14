@@ -1,11 +1,8 @@
 #pragma once
-
 #include "../../SDK/Definitions/Types.h"
-
 #include <cmath>
 #include <cfloat>
 #include <algorithm>
-#include <array>
 
 #undef min
 #undef max
@@ -14,7 +11,7 @@
 #pragma warning (disable : 26451)
 #pragma warning (disable : 4244)
 
-#define floatCompare(x, y) (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.f, fmaxf(fabsf(x), fabsf(y))))
+#define FLT_COMPARE(x, y) (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.f, fmaxf(fabsf(x), fabsf(y))))
 
 namespace Math
 {
@@ -197,9 +194,9 @@ namespace Math
 		return flResult;
 	}
 
-	inline Vec3 RotatePoint(Vec3 vPoint, Vec3 vOrigin, Vec3 vAngles)
+	inline Vec3 RotatePoint(const Vec3& vPoint, const Vec3& vOrigin, const Vec3& vAngles)
 	{
-		vPoint -= vOrigin;
+		Vec3 vOffset = vPoint - vOrigin;
 
 		float sp, sy, sr, cp, cy, cr;
 		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
@@ -222,13 +219,52 @@ namespace Math
 			cp * cr
 		};
 
-		return Vec3(vX.Dot(vPoint), vY.Dot(vPoint), vZ.Dot(vPoint)) + vOrigin;
+		return Vec3(vX.Dot(vOffset), vY.Dot(vOffset), vZ.Dot(vOffset)) + vOrigin;
+	}
+
+	inline bool IsBoxIntersectingBox(const Vec3& vMins1, const Vec3& vMaxs1, const Vec3& vMins2, const Vec3& vMaxs2)
+	{
+		if ((vMins1.x > vMaxs2.x) || (vMaxs1.x < vMins2.x))
+			return false;
+		if ((vMins1.y > vMaxs2.y) || (vMaxs1.y < vMins2.y))
+			return false;
+		if ((vMins1.z > vMaxs2.z) || (vMaxs1.z < vMins2.z))
+			return false;
+		return true;
+	}
+
+	inline bool IsPointIntersectingBox(const Vec3& vPoint, const Vec3& vMins, const Vec3& vMaxs)
+	{
+		return IsBoxIntersectingBox(vPoint, vPoint, vMins, vMaxs);
 	}
 
 	inline void VectorTransform(const Vec3& vIn, const matrix3x4& mMatrix, Vec3& vOut)
 	{
 		for (auto i = 0; i < 3; i++)
 			vOut[i] = vIn.Dot(mMatrix[i]) + mMatrix[i][3];
+	}
+
+	inline Vec3 VectorTransform(const Vec3& vIn, const matrix3x4& mMatrix)
+	{
+		Vec3 vOut;
+		VectorTransform(vIn, mMatrix, vOut);
+		return vOut;
+	}
+
+	inline void VectorITransform(const Vec3& vIn, const matrix3x4& mMatrix, Vec3& vOut)
+	{
+		Vec3 vMatrixT;
+		for (auto i = 0; i < 3; i++)
+			vMatrixT[i] = vIn[i] - mMatrix[i][3];
+		for (auto i = 0; i < 3; i++)
+			vOut[i] = vMatrixT[0] * mMatrix[0][i] + vMatrixT[1] * mMatrix[1][i] + vMatrixT[2] * mMatrix[2][i];
+	}
+
+	inline Vec3 VectorITransform(const Vec3& vIn, const matrix3x4& mMatrix)
+	{
+		Vec3 vOut;
+		VectorITransform(vIn, mMatrix, vOut);
+		return vOut;
 	}
 
 	inline void MatrixSetColumn(const Vec3& vIn, int iColumn, matrix3x4& mOut)
@@ -291,6 +327,13 @@ namespace Math
 		}
 	}
 
+	inline Vec3 MatrixAngles(const matrix3x4& mMatrix)
+	{
+		Vec3 vOut;
+		MatrixAngles(mMatrix, vOut);
+		return vOut;
+	}
+
 	inline bool RayToOBB(const Vec3& vOrigin, const Vec3& vDirection, const Vec3& vMins, const Vec3& vMaxs, const matrix3x4& mMatrix, float flScale = 1.f)
 	{
 		if (!flScale)
@@ -311,7 +354,7 @@ namespace Math
 
 		for (int i = 0; i < 3; ++i)
 		{
-			if (floatCompare(f[i], 0.f))
+			if (FLT_COMPARE(f[i], 0.f))
 			{
 				if (-e[i] + vMins[i] * flScale > 0.f || -e[i] + vMaxs[i] * flScale < 0.f)
 					return false;
@@ -332,11 +375,18 @@ namespace Math
 		return true;
 	}
 
-	inline void VectorRotate(Vec3& vIn, const matrix3x4& mIn, Vec3& vOut)
+	inline void VectorRotate(const Vec3& vIn, const matrix3x4& mMatrix, Vec3& vOut)
 	{
-		vOut.x = vIn.Dot(mIn[0]);
-		vOut.y = vIn.Dot(mIn[1]);
-		vOut.z = vIn.Dot(mIn[2]);
+		vOut.x = vIn.Dot(mMatrix[0]);
+		vOut.y = vIn.Dot(mMatrix[1]);
+		vOut.z = vIn.Dot(mMatrix[2]);
+	}
+
+	inline Vec3 VectorRotate(const Vec3& vIn, const matrix3x4& mMatrix)
+	{
+		Vec3 vOut;
+		VectorRotate(vIn, mMatrix, vOut);
+		return vOut;
 	}
 
 	inline void MatrixCopy(const matrix3x4& mIn, matrix3x4& mOut)
@@ -353,6 +403,13 @@ namespace Math
 		vOrigin.x = mMatrix[0][3];
 		vOrigin.y = mMatrix[1][3];
 		vOrigin.z = mMatrix[2][3];
+	}
+
+	inline Vec3 GetMatrixOrigin(const matrix3x4& mMatrix)
+	{
+		Vec3 vOut;
+		GetMatrixOrigin(mMatrix, vOut);
+		return vOut;
 	}
 	
 	inline void ConcatTransforms(const matrix3x4& mIn1, const matrix3x4& mIn2, matrix3x4& mOut)

@@ -1,7 +1,8 @@
 #pragma once
 #include "CBaseCombatCharacter.h"
 #include "CEconWearable.h"
-#include "CUserCmd.h"
+
+class CUserCmd;
 
 MAKE_SIGNATURE(CBasePlayer_GetAmmoCount, "client.dll", "48 89 5C 24 ? 57 48 83 EC ? 48 63 DA 48 8B F9 83 FB", 0x0);
 

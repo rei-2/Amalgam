@@ -9,7 +9,6 @@ class VMatrix;
 class IMaterial;
 class ITexture;
 struct InputEvent_t;
-
 typedef void (*GetMouseCallback_t)(int& x, int& y);
 typedef void (*SetMouseCallback_t)(int x, int y);
 typedef void (*PlaySoundFunc_t)(const char* pFileName);

@@ -68,9 +68,9 @@
 #define OUTPUT_CHAT 1 << 4
 #define OUTPUT_PARTY 1 << 5
 
-template <class T> int sign(T val)
+template <class T> inline int sign(T t)
 {
-	return (val > T(0)) - (val < T(0));
+	return (t > T(0)) - (t < T(0));
 }
 
 inline float fnmodf(float flX, float flY)
@@ -97,8 +97,8 @@ namespace SDK
 	bool IsGameWindowInFocus();
 
 	double PlatFloatTime();
-	int StdRandomInt(int iMin, int iMax);
-	float StdRandomFloat(float flMin, float flMax);
+	int StdRandomInt(int iMin = 0, int iMax = VALVE_RAND_MAX);
+	float StdRandomFloat(float flMin = 0.f, float flMax = 1.f);
 
 	int SeedFileLineHash(int iSeed, const char* sName, int iAdditionalSeed);
 	int SharedRandomInt(unsigned iSeed, const char* sName, int iMinVal, int iMaxVal, int iAdditionalSeed);

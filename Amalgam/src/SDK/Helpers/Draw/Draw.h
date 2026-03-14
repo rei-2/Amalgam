@@ -1,13 +1,17 @@
 #pragma once
 #include "../Fonts/Fonts.h"
+#include "../../Definitions/Misc/ISurface.h"
 #include "../../Definitions/Definitions.h"
 #include "../../Vars.h"
+#include "../../../Utils/Signatures/Signatures.h"
 
 MAKE_SIGNATURE(InitializeStandardMaterials, "engine.dll", "48 83 EC ? 80 3D ? ? ? ? ? 0F 85 ? ? ? ? 48 89 5C 24 ? B9 ? ? ? ? 48 89 7C 24 ? C6 05", 0x0);
 MAKE_SIGNATURE(Wireframe, "engine.dll", "48 89 05 ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 48 8D 15 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 8B F8 EB ? 48 8B FB 41 B8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 41 B8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 41 B8", 0x0);
 MAKE_SIGNATURE(WireframeIgnoreZ, "engine.dll", "48 89 05 ? ? ? ? E8 ? ? ? ? 48 85 C0 74 ? 48 8D 15 ? ? ? ? 48 8B C8 E8 ? ? ? ? 48 8B F8 EB ? 48 8B FB 41 B8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 41 B8 ? ? ? ? 48 8D 15 ? ? ? ? 48 8B CF E8 ? ? ? ? 48 8B 0D", 0x0);
 MAKE_SIGNATURE(VertexColor, "engine.dll", "48 89 05 ? ? ? ? E8 ? ? ? ? 48 8B 7C 24", 0x0);
 MAKE_SIGNATURE(VertexColorIgnoreZ, "engine.dll", "48 89 05 ? ? ? ? 48 83 C4 ? C3 CC CC CC CC CC CC CC CC CC 48 8B C4", 0x0);
+
+class IMaterial;
 
 enum EAlign
 {

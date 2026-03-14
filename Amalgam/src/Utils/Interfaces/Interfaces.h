@@ -10,26 +10,27 @@ struct InterfaceInit_t
 	int8_t m_nType; // 0: find interface, 1: get export, 2: sig scan
 	int8_t m_nOffset;
 	int8_t m_nDereferenceCount;
+	bool m_bNullCheck;
 
-	InterfaceInit_t(void** pPtr, const char* sDLL, const char* sName, int8_t nType, int8_t nOffset = 0, int8_t nDereferenceCount = 0);
+	InterfaceInit_t(void** pPtr, const char* sDLL, const char* sName, int8_t nType, int8_t nOffset = 0, int8_t nDereferenceCount = 0, bool bNullCheck = true);
 };
 
-#define MAKE_INTERFACE_VERSION(type, symbol, dll, version) namespace I { inline type *symbol = nullptr; } \
+#define MAKE_INTERFACE_VERSION(type, symbol, dll, version, ...) namespace I { inline type *symbol = nullptr; } \
 namespace MAKE_INTERFACE_SCOPE \
 {\
-	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, version, 0); \
+	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, version, 0, __VA_ARGS__); \
 }
 
-#define MAKE_INTERFACE_EXPORT(type, symbol, dll, name, deref) namespace I { inline type *symbol = nullptr; } \
+#define MAKE_INTERFACE_EXPORT(type, symbol, dll, name, deref, ...) namespace I { inline type *symbol = nullptr; } \
 namespace MAKE_INTERFACE_SCOPE \
 {\
-	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, name, 1, 0, deref); \
+	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, name, 1, 0, deref, __VA_ARGS__); \
 }
 
-#define MAKE_INTERFACE_SIGNATURE(type, symbol, dll, signature, offset, deref) namespace I { inline type *symbol = nullptr; } \
+#define MAKE_INTERFACE_SIGNATURE(type, symbol, dll, signature, offset, deref, ...) namespace I { inline type *symbol = nullptr; } \
 namespace MAKE_INTERFACE_SCOPE \
 {\
-	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, signature, 2, offset, deref); \
+	inline InterfaceInit_t symbol##InterfaceInit_t(reinterpret_cast<void**>(&I::symbol), dll, signature, 2, offset, deref, __VA_ARGS__); \
 }
 
 #define MAKE_INTERFACE_NULL(type, symbol) namespace I { inline type *symbol = nullptr; }

@@ -4,19 +4,19 @@
 
 class IMaterial;
 class KeyValues;
-struct vcollide_t;
-struct model_t;
 class CGameTrace;
-struct cplane_t;
-typedef CGameTrace trace_t;
-struct studiohdr_t;
-struct virtualmodel_t;
-typedef unsigned char byte;
-struct virtualterrainparams_t;
 class CPhysCollide;
-typedef unsigned short MDLHandle_t;
 class CUtlBuffer;
 class IClientRenderable;
+struct vcollide_t;
+struct model_t;
+struct cplane_t;
+struct studiohdr_t;
+struct virtualmodel_t;
+struct virtualterrainparams_t;
+typedef CGameTrace trace_t;
+typedef unsigned char byte;
+typedef unsigned short MDLHandle_t;
 
 class IModelLoadCallback
 {

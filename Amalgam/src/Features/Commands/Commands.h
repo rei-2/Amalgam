@@ -2,7 +2,7 @@
 #include "../../SDK/SDK.h"
 #include <functional>
 
-using CommandCallback = std::function<void(std::deque<const char*>&)>;
+using CommandCallback = const std::function<void(std::deque<const char*>&)>;
 
 class CCommands
 {

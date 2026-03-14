@@ -181,7 +181,6 @@
     <ClCompile Include="src\Hooks\VGuiMenuBuilder_AddMenuItem.cpp" />
     <ClCompile Include="src\Features\Output\Output.cpp" />
     <ClCompile Include="src\Hooks\Cbuf_ExecuteCommand.cpp" />
-    <ClCompile Include="src\Hooks\IEngineTrace_TraceRay.cpp" />
     <ClCompile Include="src\Hooks\IMatSystemSurface_OnScreenSizeChanged.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CTFPlayer.cpp" />
     <ClCompile Include="src\SDK\Definitions\Main\CBaseAnimating.cpp" />
@@ -201,6 +200,11 @@
     <ClCompile Include="src\Hooks\CTFPlayerShared_ShouldSuppressPrediction.cpp" />
     <ClCompile Include="src\Hooks\CHLTVCamera_CalcView.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_InSameDisguisedTeam.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Misc\CUtlBuffer.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Misc\CUtlCharConversion.cpp" />
+    <ClCompile Include="src\SDK\Definitions\Misc\CByteSwap.cpp" />
+    <ClCompile Include="src\Features\World\World.cpp" />
+    <ClCompile Include="src\Hooks\CModelLoader_Map_LoadModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -265,7 +269,7 @@
     <ClInclude Include="src\SDK\Definitions\Main\ITexture.h" />
     <ClInclude Include="src\SDK\Definitions\Main\KeyValues.h" />
     <ClInclude Include="src\SDK\Definitions\Main\NetChannel.h" />
-    <ClInclude Include="src\SDK\Definitions\Main\UtlVector.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlVector.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\Activity.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\AnalogCode.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\BaseTypes.h" />
@@ -435,7 +439,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\BSPFlags.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IMoveHelper.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\IPrediction.h" />
-    <ClInclude Include="src\SDK\Definitions\Misc\ISpatialPartition.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\ISpatialPartition.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\VCollide.h" />
     <ClInclude Include="src\SDK\Helpers\Particles\Particles.h" />
     <ClInclude Include="src\SDK\Helpers\TraceFilters\TraceFilters.h" />
@@ -452,10 +456,8 @@
     <ClInclude Include="src\SDK\Definitions\Misc\dt_send.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\bitvec.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\ServerClass.h" />
-    <ClInclude Include="src\SDK\Definitions\Misc\SmartPtr.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CSmartPtr.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CParticleProperty.h" />
-    <ClInclude Include="src\SDK\Definitions\Misc\UtlObjectReference.h" />
-    <ClInclude Include="src\SDK\Definitions\Misc\UtlIntrusiveList.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CCaptureFlag.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IPanel.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGCClientSystem.h" />
@@ -587,6 +589,25 @@
     <ClInclude Include="src\SDK\Definitions\Main\CPredictionCopy.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CHLTVCamera.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CThirdPersonManager.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CCollisionBSPData.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlCharConversion.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlIntrusiveList.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlMemory.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlObjectReference.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlBuffer.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CRangeValidatedArray.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CByteSwap.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CDiscardableArray.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CStaticPropMgr.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\CStaticProp.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\ICollideable.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\CMapLoadHelper.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\IDispInfo.h" />
+    <ClInclude Include="src\SDK\Definitions\Main\Ray.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlString.h" />
+    <ClInclude Include="src\Features\World\World.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\WorldBrushData.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CDispCollTree.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

@@ -2,12 +2,12 @@
 
 #include "../../SDK.h"
 
-bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
+bool CTraceFilterHitscan::ShouldHitEntity(IHandleEntity* pHandleEntity, int nContentsMask)
 {
-	if (!pServerEntity || pServerEntity == pSkip)
+	if (!pHandleEntity || pHandleEntity == pSkip)
 		return false;
 
-	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pHandleEntity);
 	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
 	if (iType != SKIP_CHECK && !vWeapons.empty())
 	{
@@ -43,12 +43,12 @@ TraceType_t CTraceFilterHitscan::GetTraceType() const
 	return TRACE_EVERYTHING;
 }
 
-bool CTraceFilterCollideable::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
+bool CTraceFilterCollideable::ShouldHitEntity(IHandleEntity* pHandleEntity, int nContentsMask)
 {
-	if (!pServerEntity || pServerEntity == pSkip)
+	if (!pHandleEntity || pHandleEntity == pSkip)
 		return false;
 
-	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pHandleEntity);
 	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
 	if (iType != SKIP_CHECK && !vWeapons.empty())
 	{
@@ -109,14 +109,14 @@ TraceType_t CTraceFilterCollideable::GetTraceType() const
 	return TRACE_EVERYTHING;
 }
 
-bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pServerEntity, int nContentsMask)
+bool CTraceFilterWorldAndPropsOnly::ShouldHitEntity(IHandleEntity* pHandleEntity, int nContentsMask)
 {
-	if (!pServerEntity || pServerEntity == pSkip)
+	if (!pHandleEntity || pHandleEntity == pSkip)
 		return false;
-	if (pServerEntity->GetRefEHandle().GetSerialNumber() == (1 << 15))
-		return pServerEntity->GetRefEHandle().GetEntryIndex() != iTeam; // just use team variable since cliententitylist can give us nullptrs for some props for whatever reason
+	if (pHandleEntity->GetRefEHandle().GetSerialNumber() == (1 << 15))
+		return pHandleEntity->GetRefEHandle().GetEntryIndex() != iTeam; // just use team variable since cliententitylist can give us nullptrs for some props for whatever reason
 
-	auto pEntity = reinterpret_cast<CBaseEntity*>(pServerEntity);
+	auto pEntity = reinterpret_cast<CBaseEntity*>(pHandleEntity);
 	if (iTeam == -1) iTeam = pSkip ? pSkip->m_iTeamNum() : 0;
 
 	switch (pEntity->GetClassID())

@@ -80,7 +80,7 @@ static inline std::deque<Frame_t> StackTrace(PCONTEXT pContext)
 		}
 
 		{
-			uintptr_t dwOffset = 0;
+			DWORD64 dwOffset = 0;
 			char buf[sizeof(IMAGEHLP_SYMBOL64) + 255];
 			auto symbol = PIMAGEHLP_SYMBOL64(buf);
 			symbol->SizeOfStruct = sizeof(IMAGEHLP_SYMBOL64) + 255;

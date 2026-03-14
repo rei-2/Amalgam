@@ -1,5 +1,4 @@
 #pragma once
-#include "VGUI.h"
 
 enum CursorCode
 {

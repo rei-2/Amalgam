@@ -14,27 +14,45 @@
 #define OO_OVERBRIGHT ( 1.0f / 2.0f )
 #define GAMMA 2.2f
 #define TEXGAMMA 2.2f
+#define ABSOLUTE_MINIMUM_DXLEVEL 80
+#define MATERIAL_MORPH_DECAL ( (IMorph*)1 )
+#define CREATERENDERTARGETFLAGS_HDR 0x00000001
+#define CREATERENDERTARGETFLAGS_AUTOMIPMAP 0x00000002
+#define CREATERENDERTARGETFLAGS_UNFILTERABLE_OK 0x00000004
+#define CREATERENDERTARGETFLAGS_NOEDRAM 0x00000008
+#define CREATERENDERTARGETFLAGS_TEMP 0x00000010
+#define MAX_FB_TEXTURES 4
+#define INVALID_OCCLUSION_QUERY_OBJECT_HANDLE ( (OcclusionQueryObjectHandle_t)0 )
 
 class IMaterial;
 class IMesh;
 class IVertexBuffer;
 class IIndexBuffer;
-struct MaterialSystem_Config_t;
 class ITexture;
 class ITextureCompositor;
-struct MaterialSystemHardwareIdentifier_t;
 class KeyValues;
 class IShader;
 class IVertexTexture;
 class IMorph;
 class IMatRenderContext;
 class ICallQueue;
-struct MorphWeight_t;
 class IFileList;
-
+class IMaterialProxyFactory;
+class ITexture;
+class IMaterialSystemHardwareConfig;
+class CShadowMgr;
+struct MaterialSystem_Config_t;
+struct MaterialSystemHardwareIdentifier_t;
+struct MorphWeight_t;
 typedef uint64 VertexFormat_t;
-
-#define ABSOLUTE_MINIMUM_DXLEVEL 80
+typedef void (*MaterialBufferReleaseFunc_t)();
+typedef void (*MaterialBufferRestoreFunc_t)(int nChangeFlags);
+typedef void (*ModeChangeCallbackFunc_t)(void);
+typedef int VertexBufferHandle_t;
+typedef unsigned short MaterialHandle_t;
+typedef unsigned int MorphFormat_t;
+using OcclusionQueryObjectHandle_t = void*;
+using MaterialLock_t = void*;
 
 enum ShaderParamType_t
 {
@@ -70,9 +88,6 @@ enum MaterialMatrixMode_t
 	NUM_MATRIX_MODES = MATERIAL_MODEL + 1,
 	NUM_TEXTURE_TRANSFORMS = MATERIAL_TEXTURE7 - MATERIAL_TEXTURE0 + 1
 };
-
-const int NUM_MODEL_TRANSFORMS = 53;
-const int MATERIAL_MODEL_MAX = MATERIAL_MODEL + NUM_MODEL_TRANSFORMS;
 
 enum MaterialPrimitiveType_t
 {
@@ -144,8 +159,6 @@ enum MaterialNonInteractiveMode_t
 	MATERIAL_NON_INTERACTIVE_MODE_COUNT
 };
 
-#define MATERIAL_MORPH_DECAL ( (IMorph*)1 )
-
 enum MaterialThreadMode_t
 {
 	MATERIAL_SINGLE_THREADED,
@@ -165,12 +178,6 @@ enum MaterialFindContext_t
 	MATERIAL_FINDCONTEXT_NONE,
 	MATERIAL_FINDCONTEXT_ISONAMODEL
 };
-
-#define CREATERENDERTARGETFLAGS_HDR 0x00000001
-#define CREATERENDERTARGETFLAGS_AUTOMIPMAP 0x00000002
-#define CREATERENDERTARGETFLAGS_UNFILTERABLE_OK 0x00000004
-#define CREATERENDERTARGETFLAGS_NOEDRAM 0x00000008
-#define CREATERENDERTARGETFLAGS_TEMP 0x00000010
 
 enum StencilOperation_t
 {
@@ -207,8 +214,6 @@ enum MorphFormatFlags_t
 	MORPH_SIDE = 0x0010
 };
 
-typedef unsigned int MorphFormat_t;
-
 enum StandardLightmap_t
 {
 	MATERIAL_SYSTEM_LIGHTMAP_PAGE_WHITE = -1,
@@ -216,17 +221,57 @@ enum StandardLightmap_t
 	MATERIAL_SYSTEM_LIGHTMAP_PAGE_USER_DEFINED = -3
 };
 
+enum
+{
+	MATERIAL_ADAPTER_NAME_LENGTH = 512
+};
+
+enum MaterialInitFlags_t
+{
+	MATERIAL_INIT_ALLOCATE_FULLSCREEN_TEXTURE = 0x2,
+	MATERIAL_INIT_REFERENCE_RASTERIZER = 0x4
+};
+
+enum MaterialRenderTargetDepth_t
+{
+	MATERIAL_RT_DEPTH_SHARED = 0x0,
+	MATERIAL_RT_DEPTH_SEPARATE = 0x1,
+	MATERIAL_RT_DEPTH_NONE = 0x2,
+	MATERIAL_RT_DEPTH_ONLY = 0x3
+};
+
+enum RestoreChangeFlags_t
+{
+	MATERIAL_RESTORE_VERTEX_FORMAT_CHANGED = 0x1
+};
+
+enum RenderTargetSizeMode_t
+{
+	RT_SIZE_NO_CHANGE = 0,
+	RT_SIZE_DEFAULT = 1,
+	RT_SIZE_PICMIP = 2,
+	RT_SIZE_HDR = 3,
+	RT_SIZE_FULL_FRAME_BUFFER = 4,
+	RT_SIZE_OFFSCREEN = 5,
+	RT_SIZE_FULL_FRAME_BUFFER_ROUNDED_UP = 6,
+	RT_SIZE_REPLAY_SCREENSHOT = 7,
+	RT_SIZE_LITERAL = 8,
+	RT_SIZE_LITERAL_PICMIP = 9
+};
+
+enum RenderBackend_t
+{
+	RENDER_BACKEND_UNKNOWN,
+	RENDER_BACKEND_D3D9,
+	RENDER_BACKEND_TOGL,
+	RENDER_BACKEND_VULKAN,
+	RENDER_BACKEND_NULL,
+};
+
 struct MaterialSystem_SortInfo_t
 {
 	IMaterial* material;
 	int lightmapPageID;
-};
-
-#define MAX_FB_TEXTURES 4
-
-enum
-{
-	MATERIAL_ADAPTER_NAME_LENGTH = 512
 };
 
 struct MaterialAdapterInfo_t
@@ -290,64 +335,8 @@ public:
 	virtual int GetRefCount() const = 0;
 };
 
-enum MaterialInitFlags_t
-{
-	MATERIAL_INIT_ALLOCATE_FULLSCREEN_TEXTURE = 0x2,
-	MATERIAL_INIT_REFERENCE_RASTERIZER = 0x4
-};
-
-enum MaterialRenderTargetDepth_t
-{
-	MATERIAL_RT_DEPTH_SHARED = 0x0,
-	MATERIAL_RT_DEPTH_SEPARATE = 0x1,
-	MATERIAL_RT_DEPTH_NONE = 0x2,
-	MATERIAL_RT_DEPTH_ONLY = 0x3
-};
-
-enum RestoreChangeFlags_t
-{
-	MATERIAL_RESTORE_VERTEX_FORMAT_CHANGED = 0x1
-};
-
-enum RenderTargetSizeMode_t
-{
-	RT_SIZE_NO_CHANGE = 0,
-	RT_SIZE_DEFAULT = 1,
-	RT_SIZE_PICMIP = 2,
-	RT_SIZE_HDR = 3,
-	RT_SIZE_FULL_FRAME_BUFFER = 4,
-	RT_SIZE_OFFSCREEN = 5,
-	RT_SIZE_FULL_FRAME_BUFFER_ROUNDED_UP = 6,
-	RT_SIZE_REPLAY_SCREENSHOT = 7,
-	RT_SIZE_LITERAL = 8,
-	RT_SIZE_LITERAL_PICMIP = 9
-};
-
-enum RenderBackend_t
-{
-	RENDER_BACKEND_UNKNOWN,
-	RENDER_BACKEND_D3D9,
-	RENDER_BACKEND_TOGL,
-	RENDER_BACKEND_VULKAN,
-	RENDER_BACKEND_NULL,
-};
-
-typedef void (*MaterialBufferReleaseFunc_t)();
-typedef void (*MaterialBufferRestoreFunc_t)(int nChangeFlags);
-typedef void (*ModeChangeCallbackFunc_t)(void);
-
-typedef int VertexBufferHandle_t;
-typedef unsigned short MaterialHandle_t;
-
-using OcclusionQueryObjectHandle_t = void*;
-#define INVALID_OCCLUSION_QUERY_OBJECT_HANDLE ( (OcclusionQueryObjectHandle_t)0 )
-
-class IMaterialProxyFactory;
-class ITexture;
-class IMaterialSystemHardwareConfig;
-class CShadowMgr;
-
-using MaterialLock_t = void*;
+const int NUM_MODEL_TRANSFORMS = 53;
+const int MATERIAL_MODEL_MAX = MATERIAL_MODEL + NUM_MODEL_TRANSFORMS;
 
 class IMaterialSystem : public IAppSystem
 {
@@ -488,8 +477,6 @@ public:
 	virtual void SuspendTextureStreaming() = 0;
 	virtual void ResumeTextureStreaming() = 0;
 };
-
-MAKE_INTERFACE_VERSION(IMaterialSystem, MaterialSystem, "materialsystem.dll", "VMaterialSystem082");
 
 class IMatRenderContext : public IRefCounted
 {
@@ -734,3 +721,5 @@ struct ShaderStencilState_t
 		pRenderContext->SetStencilWriteMask(m_nWriteMask);
 	}
 };
+
+MAKE_INTERFACE_VERSION(IMaterialSystem, MaterialSystem, "materialsystem.dll", "VMaterialSystem082");

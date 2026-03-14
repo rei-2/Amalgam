@@ -5,7 +5,13 @@
 
 class IClientRenderable;
 struct model_t;
-using LightCacheHandle_t = void*;
+typedef unsigned short ModelInstanceHandle_t;
+typedef struct LightCacheHandle_t__* LightCacheHandle_t;
+
+enum
+{
+	MODEL_INSTANCE_INVALID = (ModelInstanceHandle_t)~0
+};
 
 struct DrawModelState_t
 {
@@ -16,13 +22,6 @@ struct DrawModelState_t
 	StudioDecalHandle_t	m_decals;
 	int m_drawFlags;
 	int m_lod;
-};
-
-typedef unsigned short ModelInstanceHandle_t;
-
-enum
-{
-	MODEL_INSTANCE_INVALID = (ModelInstanceHandle_t)~0
 };
 
 struct ModelRenderInfo_t
@@ -55,19 +54,7 @@ struct StaticPropRenderInfo_t
 class IVModelRender
 {
 public:
-	virtual int	DrawModel(int flags,
-		IClientRenderable* pRenderable,
-		ModelInstanceHandle_t instance,
-		int entity_index,
-		const model_t* model,
-		Vector const& origin,
-		QAngle const& angles,
-		int skin,
-		int body,
-		int hitboxset,
-		const matrix3x4* modelToWorld = NULL,
-		const matrix3x4* pLightingOffset = NULL) = 0;
-
+	virtual int	DrawModel(int flags, IClientRenderable* pRenderable, ModelInstanceHandle_t instance, int entity_index, const model_t* model, Vector const& origin, QAngle const& angles, int skin, int body, int hitboxset, const matrix3x4* modelToWorld = NULL, const matrix3x4* pLightingOffset = NULL) = 0;
 	virtual void ForcedMaterialOverride(IMaterial* newMaterial, OverrideType_t nOverrideType = OVERRIDE_NORMAL) = 0;
 	virtual void SetViewTarget(const CStudioHdr* pStudioHdr, int nBodyIndex, const Vector& target) = 0;
 	virtual ModelInstanceHandle_t CreateInstance(IClientRenderable* pRenderable, LightCacheHandle_t* pCache = NULL) = 0;

@@ -1,7 +1,6 @@
 #pragma once
 #include "INetworkMessage.h"
 #include "../Misc/IAppSystem.h"
-#include "../Misc/NetAdr.h"
 
 enum
 {

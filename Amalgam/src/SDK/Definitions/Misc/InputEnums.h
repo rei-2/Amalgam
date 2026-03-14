@@ -43,15 +43,6 @@ enum InputEventType_t
 	IE_FirstAppEvent = 2000
 };
 
-struct InputEvent_t
-{
-	int m_nType = 0;
-	int m_nTick = 0;
-	int m_nData = 0;
-	int m_nData2 = 0;
-	int m_nData3 = 0;
-};
-
 typedef enum
 {
 	SK_NULL,
@@ -141,4 +132,13 @@ enum JoystickType_t
 	INPUT_TYPE_GENERIC_JOYSTICK = 0,
 	INPUT_TYPE_X360,
 	INPUT_TYPE_STEAMCONTROLLER
+};
+
+struct InputEvent_t
+{
+	int m_nType = 0;
+	int m_nTick = 0;
+	int m_nData = 0;
+	int m_nData2 = 0;
+	int m_nData3 = 0;
 };

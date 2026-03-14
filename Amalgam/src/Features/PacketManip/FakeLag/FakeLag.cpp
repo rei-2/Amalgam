@@ -92,7 +92,7 @@ void CFakeLag::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 		{
 		case Vars::Fakelag::FakelagEnum::Off: m_iGoal = 0; break;
 		case Vars::Fakelag::FakelagEnum::Plain: m_iGoal = Vars::Fakelag::PlainTicks.Value; break;
-		case Vars::Fakelag::FakelagEnum::Random: m_iGoal = SDK::StdRandomInt(Vars::Fakelag::RandomTicks.Value.Min, Vars::Fakelag::RandomTicks.Value.Max); break;
+		case Vars::Fakelag::FakelagEnum::Random: m_iGoal = SDK::RandomInt(Vars::Fakelag::RandomTicks.Value.Min, Vars::Fakelag::RandomTicks.Value.Max); break;
 		case Vars::Fakelag::FakelagEnum::Adaptive: m_iGoal = 22; break;
 		}
 	}

@@ -208,7 +208,7 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 				G::BoxStorage.clear();
 				G::PathStorage.clear();
 
-				for (auto& [_, vPath] : m_mPaths)
+				for (auto& vPath : m_mPaths | std::views::values)
 				{
 					if (Vars::Colors::PlayerPathIgnoreZ.Value.a)
 						G::PathStorage.emplace_back(vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Simulation::PlayerPath.Value);
@@ -218,7 +218,7 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 			}
 		}
 
-		for (auto& [_, tMoveStorage] : mMoveStorage)
+		for (auto& tMoveStorage : mMoveStorage | std::views::values)
 			F::MoveSim.Restore(tMoveStorage);
 	}
 
@@ -278,34 +278,34 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 	float flPosVsOwnerViewMinDot = 0.5f + flExtra;
 	float flViewAnglesMinDot = -0.3f + 0.0031f; // 0.00306795676297 ?
 
-	auto TestDots = [&](Vec3 vTargetAngles)
-		{
-			Vec3 vOwnerForward; Math::AngleVectors(vEyeAngles, &vOwnerForward);
-			vOwnerForward.Normalize2D();
+	auto fTestDots = [&](Vec3 vTargetAngles)
+	{
+		Vec3 vOwnerForward; Math::AngleVectors(vEyeAngles, &vOwnerForward);
+		vOwnerForward.Normalize2D();
 
-			Vec3 vTargetForward; Math::AngleVectors(vTargetAngles, &vTargetForward);
-			vTargetForward.Normalize2D();
+		Vec3 vTargetForward; Math::AngleVectors(vTargetAngles, &vTargetForward);
+		vTargetForward.Normalize2D();
 
-			const float flPosVsTargetViewDot = vToTarget.Dot(vTargetForward); // Behind?
-			const float flPosVsOwnerViewDot = vToTarget.Dot(vOwnerForward); // Facing?
-			const float flViewAnglesDot = vTargetForward.Dot(vOwnerForward); // Facestab?
+		const float flPosVsTargetViewDot = vToTarget.Dot(vTargetForward); // Behind?
+		const float flPosVsOwnerViewDot = vToTarget.Dot(vOwnerForward); // Facing?
+		const float flViewAnglesDot = vTargetForward.Dot(vOwnerForward); // Facestab?
 
-			return flPosVsTargetViewDot > flPosVsTargetViewMinDot && flPosVsOwnerViewDot > flPosVsOwnerViewMinDot && flViewAnglesDot > flViewAnglesMinDot;
-		};
+		return flPosVsTargetViewDot > flPosVsTargetViewMinDot && flPosVsOwnerViewDot > flPosVsOwnerViewMinDot && flViewAnglesDot > flViewAnglesMinDot;
+	};
 
 	Vec3 vTargetAngles = { 0.f, H::Entities.GetEyeAngles(pTarget->entindex()).y, 0.f };
 	if (!Vars::Aimbot::Melee::BackstabAccountPing.Value)
 	{
-		if (!TestDots(vTargetAngles))
+		if (!fTestDots(vTargetAngles))
 			return false;
 	}
 	else
 	{
-		if (Vars::Aimbot::Melee::BackstabDoubleTest.Value && !TestDots(vTargetAngles))
+		if (Vars::Aimbot::Melee::BackstabDoubleTest.Value && !fTestDots(vTargetAngles))
 			return false;
 
 		vTargetAngles.y += H::Entities.GetDeltaAngles(pTarget->entindex()).y;
-		if (!TestDots(vTargetAngles))
+		if (!fTestDots(vTargetAngles))
 			return false;
 	}
 

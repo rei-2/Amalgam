@@ -1,18 +1,9 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//
-//=============================================================================//
+#pragma once
+#include <cstdio>
+//#include <stddef.h>
 
 #pragma warning (push)
 #pragma warning (disable : 26495)
-
-#pragma once
-
-//#include <stddef.h>
-#include <cstdio>
 
 // Max number of properties in a datatable and its children.
 #define MAX_DATATABLES		1024	// must be a power of 2.

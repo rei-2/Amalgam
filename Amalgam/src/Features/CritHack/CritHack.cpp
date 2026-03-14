@@ -380,31 +380,31 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	auto getCmdNum = [&](int iCommandNumber)
-		{
-			if (!pWeapon || !pLocal->IsAlive() || !I::EngineClient->IsInGame() || Vars::Misc::Game::AntiCheatCompatibility.Value
-				|| pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !WeaponCanCrit(pWeapon))
-				return iCommandNumber;
-
-			UpdateInfo(pLocal, pWeapon);
-			if (pWeapon->IsRapidFire() && I::GlobalVars->curtime < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
-				return iCommandNumber;
-
-			int iRequest = GetCritRequest(pCmd, pWeapon);
-			if (iRequest == CritRequestEnum::Any)
-				return iCommandNumber;
-
-			if (int iCommand = GetCritCommand(pWeapon, iCommandNumber, iRequest == CritRequestEnum::Crit))
-				return iCommand;
+	auto fGetCmdNum = [&](int iCommandNumber)
+	{
+		if (!pWeapon || !pLocal->IsAlive() || !I::EngineClient->IsInGame() || Vars::Misc::Game::AntiCheatCompatibility.Value
+			|| pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !WeaponCanCrit(pWeapon))
 			return iCommandNumber;
-		};
+
+		UpdateInfo(pLocal, pWeapon);
+		if (pWeapon->IsRapidFire() && I::GlobalVars->curtime < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
+			return iCommandNumber;
+
+		int iRequest = GetCritRequest(pCmd, pWeapon);
+		if (iRequest == CritRequestEnum::Any)
+			return iCommandNumber;
+
+		if (int iCommand = GetCritCommand(pWeapon, iCommandNumber, iRequest == CritRequestEnum::Crit))
+			return iCommand;
+		return iCommandNumber;
+	};
 
 	static int iCommandNumber = 0; // cache, don't constantly test
 
 	static int iStaticCommand = 0;
 	if (pCmd->command_number != iStaticCommand)
 	{
-		iCommandNumber = getCmdNum(pCmd->command_number);
+		iCommandNumber = fGetCmdNum(pCmd->command_number);
 		iStaticCommand = pCmd->command_number;
 	}
 
@@ -442,7 +442,7 @@ void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 				int iOldHealth = (tHistory.m_mHistory.contains(iHealth) ? tHistory.m_mHistory[iHealth].m_iOldHealth : tHistory.m_iNewHealth) % 32768;
 				if (iHealth > iOldHealth)
 				{
-					for (auto& [_, tOldHealth] : tHistory.m_mHistory)
+					for (auto& tOldHealth : tHistory.m_mHistory | std::views::values)
 					{
 						int iOldHealth2 = tOldHealth.m_iOldHealth % 32768;
 						if (iOldHealth2 > iHealth)

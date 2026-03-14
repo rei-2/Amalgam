@@ -1,5 +1,6 @@
 #include "bitbuf.h"
 
+#include <stdint.h>
 #include "../Types.h"
 
 inline void Q_memcpy(void* dest, const void* src, int count)
@@ -83,17 +84,6 @@ void bf_write::StartWriting(void* pData, int nBytes, int iStartBit, int nBits)
 	m_iCurBit = iStartBit;
 	m_bOverflow = false;
 }
-
-#include "bitbuf.h"
-#include <stdint.h>
-
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//
-//=============================================================================//
 
 // FIXME: Can't use this until we get multithreaded allocations in tier0 working for tools
 // This is used by VVIS and fails to link

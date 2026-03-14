@@ -270,7 +270,7 @@ namespace ImGui
 		flInset += H::Draw.Scale(0.5f) - 0.5f - H::Draw.Scale();
 		pDrawList->AddRect({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 	}
-	inline void Divider(float flInset = H::Draw.Scale(), float flPrePadding = H::Draw.Scale(8), float flPostPadding = H::Draw.Scale(7), ImU32 uBorder = F::Render.Background2)
+	inline void Divider(float flPrePadding = H::Draw.Scale(8), float flPostPadding = H::Draw.Scale(7), float flInset = H::Draw.Scale(), ImU32 uBorder = F::Render.Background2)
 	{
 		ImVec2 vSize = GetWindowSize();
 		ImVec2 vDrawPos = GetDrawPos() + ImVec2(0, GetCursorPosY());
@@ -2161,22 +2161,22 @@ namespace ImGui
 	{
 		// material stuff
 		std::vector<Material_t> vMaterials;
-		for (auto& [_, mat] : F::Materials.m_mMaterials)
+		for (auto& tMaterial : F::Materials.m_mMaterials | std::views::values)
 		{
-			if (FNV1A::Hash32(mat.m_sName.c_str()) != FNV1A::Hash32Const("None"))
-				vMaterials.push_back(mat);
+			if (FNV1A::Hash32(tMaterial.m_sName.c_str()) != FNV1A::Hash32Const("None"))
+				vMaterials.push_back(tMaterial);
 		}
 
 		std::sort(vMaterials.begin(), vMaterials.end(), [&](const auto& a, const auto& b) -> bool
-			{
-				// keep locked materials higher
-				if (a.m_bLocked && !b.m_bLocked)
-					return true;
-				if (!a.m_bLocked && b.m_bLocked)
-					return false;
+		{
+			// keep locked materials higher
+			if (a.m_bLocked && !b.m_bLocked)
+				return true;
+			if (!a.m_bLocked && b.m_bLocked)
+				return false;
 
-				return a.m_sName < b.m_sName;
-			});
+			return a.m_sName < b.m_sName;
+		});
 
 		std::vector<std::string> vEntries = { "Original" };
 		for (auto& pair : vMaterials)
@@ -2465,15 +2465,15 @@ namespace ImGui
 		std::vector<int> vValues = {};
 
 		std::vector<std::string> vStrings = {}; // prevent dangling pointers
-		for (auto& [_iBind, _] : var.Map)
+		for (auto& _iBind : var.Map | std::views::keys)
 		{
 			if (_iBind != DEFAULT_BIND)
 				vValues.push_back(_iBind);
 		}
 		std::sort(vValues.begin(), vValues.end(), [&](const int a, const int b) -> bool
-			{
-				return a < b;
-			});
+		{
+			return a < b;
+		});
 		for (auto _iBind : vValues)
 			vStrings.push_back(std::format("{}## Bind{}", _iBind != DEFAULT_BIND && _iBind < F::Binds.m_vBinds.size() ? F::Binds.m_vBinds[_iBind].m_sName : sBind, _iBind));
 		for (auto& sEntry : vStrings)

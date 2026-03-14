@@ -1,41 +1,7 @@
-//========= Copyright Valve Corporation, All rights reserved. ============//
-//
-// Purpose: Intrusive linked list templates, both for singly and doubly linked lists
-//
-// $Revision: $
-// $NoKeywords: $
-//===========================================================================//
+#pragma once
 
 #ifndef UTILINTRUSIVELIST_H
 #define UTILINTRUSIVELIST_H
-
-#ifdef _WIN32
-#pragma once
-#endif
-
-
-
-// 
-// These templates are used for intrusive linked list classes. Intrusive linked list templates
-// force the structs and classes contained within them to have their own m_pNext, (optionally),
-// m_pPrev, and other fields contained within. All memory management is up to the caller and their
-// classes. No data will ever be copied. Nodes can only exist on one list at a time, because of
-// only having on m_Next field, and manipulating the list while walking it requires that care on
-// the part of the caller. All accessing and searching functions work by passing and returning
-// pointers.
-//
-//
-//
-// naming and field conventions:
-// functions referring to a DList are for doubly linked lists. nodes must have m_pHead and
-// m_pPrev pointer fields.
-// Functions using Priority require an m_Priority field, which must be comparable.
-//
-// Some functions are mean for use with lists which maintain both a head and tail pointer
-// in order to support fast adding to the end.
-
-
-/// validates that the doubly linked list has the proper structure, pointer-wise
 
 namespace IntrusiveList
 {
@@ -44,17 +10,17 @@ namespace IntrusiveList
 	{
 		if (head)
 		{
-			Assert(head->m_pPrev == 0);
+			//Assert(head->m_pPrev == 0);
 		}
 		while (head)
 		{
 			if (head->m_pNext)
 			{
-				Assert(head->m_pNext->m_pPrev == head);
+				//Assert(head->m_pNext->m_pPrev == head);
 			}
 			if (head->m_pPrev)
 			{
-				Assert(head->m_pPrev->m_pNext == head);
+				//Assert(head->m_pPrev->m_pNext == head);
 			}
 			head = head->m_pNext;
 		}
@@ -75,15 +41,15 @@ namespace IntrusiveList
 			T* p = which->m_pPrev;
 			T* pp = p->m_pPrev;
 			T* n = which->m_pNext;
-			Assert(p->m_pNext == which);
+			//Assert(p->m_pNext == which);
 			if (n)
 			{
-				Assert(n->m_pPrev == which);
+				//Assert(n->m_pPrev == which);
 				n->m_pPrev = p;
 			}
 			if (pp)
 			{
-				Assert(pp->m_pNext == p);
+				//Assert(pp->m_pNext == p);
 				pp->m_pNext = which;
 			}
 			else
@@ -105,11 +71,11 @@ namespace IntrusiveList
 	{
 		if (which->m_pPrev)
 		{
-			Assert(which->m_pPrev->m_pNext == which);
+			//Assert(which->m_pPrev->m_pNext == which);
 			which->m_pPrev->m_pNext = which->m_pNext;
 			if (which->m_pNext)
 			{
-				Assert(which->m_pNext->m_pPrev == which);
+				//Assert(which->m_pNext->m_pPrev == which);
 				which->m_pNext->m_pPrev = which->m_pPrev;
 			}
 		}
@@ -120,7 +86,7 @@ namespace IntrusiveList
 				head = which->m_pNext;
 				if (head)
 				{
-					Assert(head->m_pPrev == which);
+					//Assert(head->m_pPrev == which);
 					head->m_pPrev = 0;
 				}
 			}
@@ -191,7 +157,7 @@ namespace IntrusiveList
 	{
 		if (!tailptr)
 		{
-			Assert(!head);
+			//Assert(!head);
 			which->m_pPrev = which->m_pNext = 0;
 			tailptr = head = which;
 		}
@@ -214,11 +180,11 @@ namespace IntrusiveList
 		}
 		if (which->m_pPrev)
 		{
-			Assert(which->m_pPrev->m_pNext == which);
+			//Assert(which->m_pPrev->m_pNext == which);
 			which->m_pPrev->m_pNext = which->m_pNext;
 			if (which->m_pNext)
 			{
-				Assert(which->m_pNext->m_pPrev == which);
+				//Assert(which->m_pNext->m_pPrev == which);
 				which->m_pNext->m_pPrev = which->m_pPrev;
 			}
 		}
@@ -229,7 +195,7 @@ namespace IntrusiveList
 				head = which->m_pNext;
 				if (head)
 				{
-					Assert(head->m_pPrev == which);
+					//Assert(head->m_pPrev == which);
 					head->m_pPrev = 0;
 				}
 			}
@@ -249,11 +215,11 @@ namespace IntrusiveList
 		}
 		if (which->m_pPrev)
 		{
-			Assert(which->m_pPrev->m_pNext == which);
+			//Assert(which->m_pPrev->m_pNext == which);
 			which->m_pPrev->m_pNext = which->m_pNext;
 			if (which->m_pNext)
 			{
-				Assert(which->m_pNext->m_pPrev == which);
+				//Assert(which->m_pNext->m_pPrev == which);
 				which->m_pNext->m_pPrev = which->m_pPrev;
 			}
 		}
@@ -264,7 +230,7 @@ namespace IntrusiveList
 				head = which->m_pNext;
 				if (head)
 				{
-					Assert(head->m_pPrev == which);
+					//Assert(head->m_pPrev == which);
 					head->m_pPrev = 0;
 				}
 			}
@@ -486,7 +452,7 @@ namespace IntrusiveList
 	// the head and tail pointer can be modified by this routine.
 	template<class T, class V> void AddToEndWithTail(T*& head, T*& tail, V* node)
 	{
-		Assert((head && tail) || ((!head) && (!tail)));
+		//Assert((head && tail) || ((!head) && (!tail)));
 		node->m_pNext = 0;
 		if (!head)
 		{

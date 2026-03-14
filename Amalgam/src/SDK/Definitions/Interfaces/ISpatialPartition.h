@@ -1,14 +1,16 @@
 #pragma once
+#include "Interface.h"
 #include "../Definitions.h"
-#include "../Types.h"
-
-struct Ray_t;
-class IHandleEntity;
 
 #define PARTITION_ALL_CLIENT_EDICTS	(PARTITION_CLIENT_NON_STATIC_EDICTS | PARTITION_CLIENT_STATIC_PROPS | PARTITION_CLIENT_RESPONSIVE_EDICTS |	PARTITION_CLIENT_SOLID_EDICTS)
-
 #define PARTITION_CLIENT_GAME_EDICTS (PARTITION_ALL_CLIENT_EDICTS & ~PARTITION_CLIENT_STATIC_PROPS)
 #define PARTITION_SERVER_GAME_EDICTS (PARTITION_ENGINE_SOLID_EDICTS|PARTITION_ENGINE_TRIGGER_EDICTS|PARTITION_ENGINE_NON_STATIC_EDICTS)
+
+class IHandleEntity;
+struct Ray_t;
+typedef unsigned short SpatialPartitionHandle_t;
+typedef int SpatialPartitionListMask_t;
+typedef int SpatialTempHandle_t;
 
 enum IterationRetval_t
 {
@@ -16,9 +18,10 @@ enum IterationRetval_t
 	ITERATION_STOP
 };
 
-typedef unsigned short SpatialPartitionHandle_t;
-typedef int SpatialPartitionListMask_t;
-typedef int SpatialTempHandle_t;
+enum
+{
+	PARTITION_INVALID_HANDLE = (SpatialPartitionHandle_t)~0
+};
 
 class IPartitionEnumerator
 {
@@ -32,11 +35,6 @@ public:
 	virtual void OnPreQuery_V1() = 0;
 	virtual void OnPreQuery(SpatialPartitionListMask_t listMask) = 0;
 	virtual void OnPostQuery(SpatialPartitionListMask_t listMask) = 0;
-};
-
-enum
-{
-	PARTITION_INVALID_HANDLE = (SpatialPartitionHandle_t)~0
 };
 
 class ISpatialPartition
@@ -104,3 +102,5 @@ public:
 	virtual void ReportStats(const char* pFileName) = 0;
 	virtual void InstallQueryCallback(IPartitionQueryCallback* pCallback) = 0;
 };
+
+MAKE_INTERFACE_VERSION(ISpatialPartition, SpatialPartition, "engine.dll", "SpatialPartition001");

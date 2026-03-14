@@ -5,21 +5,21 @@
 class CHLTVCamera : CGameEventListener
 {
 public:
-	int			m_nCameraMode; // current camera mode
-	int			m_iCameraMan; // camera man entindex or 0
-	Vector		m_vCamOrigin;  //current camera origin
-	QAngle		m_aCamAngle;   //current camera angle
-	int			m_iTraget1;	// first tracked target or 0
-	int			m_iTraget2; // second tracked target or 0
-	float		m_flFOV; // current FOV
-	float		m_flOffset;  // z-offset from target origin
-	float		m_flDistance; // distance to traget origin+offset
-	float		m_flLastDistance; // too smooth distance
-	float		m_flTheta; // view angle horizontal 
-	float		m_flPhi; // view angle vertical
-	float		m_flInertia; // camera inertia 0..100
+	int			m_nCameraMode;
+	int			m_iCameraMan;
+	Vector		m_vCamOrigin;
+	QAngle		m_aCamAngle;
+	int			m_iTraget1;
+	int			m_iTraget2;
+	float		m_flFOV;
+	float		m_flOffset;
+	float		m_flDistance;
+	float		m_flLastDistance;
+	float		m_flTheta;
+	float		m_flPhi;
+	float		m_flInertia;
 	float		m_flLastAngleUpdateTime;
-	bool		m_bEntityPacketReceived;	// true after a new packet was received
+	bool		m_bEntityPacketReceived;
 	int			m_nNumSpectators;
 	char		m_szTitleText[64];
 	CUserCmd	m_LastCmd;

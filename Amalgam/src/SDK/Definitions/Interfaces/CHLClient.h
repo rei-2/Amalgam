@@ -1,31 +1,37 @@
 #pragma once
 #include "Interface.h"
-#include "../Main/UtlVector.h"
 #include "../Misc/BaseTypes.h"
-#include "../Misc/bitbuf.h"
-#include "../Misc/ButtonCode.h"
-#include "../Misc/ChecksumCRC.h"
 #include "../Misc/ClientClass.h"
+#include "../Misc/bitbuf.h"
+#include "../Misc/CUtlVector.h"
+#include "../Misc/ButtonCode.h"
 #include "../Misc/CViewSetup.h"
-#include "../Misc/Datamap.h"
-#include "../Misc/Modes.h"
-#include "../Definitions.h"
 #include <Windows.h>
 
-struct vrect_t;
-struct cmodel_t;
-struct ScreenFade_t;
-struct ScreenShake_t;
-class CEngineSprite;
 class CGlobalVarsBase;
+class CEngineSprite;
 class CSaveRestoreData;
-struct datamap_t;
-struct typedescription_t;
 class CStandardRecvProxies;
 class IFileList;
 class CRenamedRecvTableInfo;
 class CMouthInfo;
 class IConVar;
+struct vrect_t;
+struct ScreenFade_t;
+struct datamap_t;
+struct typedescription_t;
+
+enum ClientFrameStage_t
+{
+	FRAME_UNDEFINED = -1,
+	FRAME_START,
+	FRAME_NET_UPDATE_START,
+	FRAME_NET_UPDATE_POSTDATAUPDATE_START,
+	FRAME_NET_UPDATE_POSTDATAUPDATE_END,
+	FRAME_NET_UPDATE_END,
+	FRAME_RENDER_START,
+	FRAME_RENDER_END
+};
 
 typedef struct _XUSER_DATA
 {
@@ -61,18 +67,6 @@ typedef struct _XUSER_CONTEXT
 	DWORD dwContextId;
 	DWORD dwValue;
 } XUSER_CONTEXT, * PXUSER_CONTEXT;
-
-enum ClientFrameStage_t
-{
-	FRAME_UNDEFINED = -1,
-	FRAME_START,
-	FRAME_NET_UPDATE_START,
-	FRAME_NET_UPDATE_POSTDATAUPDATE_START,
-	FRAME_NET_UPDATE_POSTDATAUPDATE_END,
-	FRAME_NET_UPDATE_END,
-	FRAME_RENDER_START,
-	FRAME_RENDER_END
-};
 
 class IBaseClientDLL
 {

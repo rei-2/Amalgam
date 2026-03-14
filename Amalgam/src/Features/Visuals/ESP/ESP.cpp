@@ -87,13 +87,13 @@ static inline void StorePlayer(CTFPlayer* pPlayer, CTFPlayer* pLocal, Group_t* p
 				if (!vTags.empty())
 				{
 					std::sort(vTags.begin(), vTags.end(), [&](const auto a, const auto b) -> bool
-						{
-							// sort by priority if unequal
-							if (std::get<2>(a) != std::get<2>(b))
-								return std::get<2>(a) > std::get<2>(b);
+					{
+						// sort by priority if unequal
+						if (std::get<2>(a) != std::get<2>(b))
+							return std::get<2>(a) > std::get<2>(b);
 
-							return std::get<0>(a) < std::get<0>(b);
-						});
+						return std::get<0>(a) < std::get<0>(b);
+					});
 
 					for (auto& [sName, tColor, _] : vTags)
 						tCache.m_vText.emplace_back(ALIGN_TOPRIGHT, sName, tColor, tColor.IsColorDark() ? Color_t(255, 255, 255) : Color_t(0, 0, 0));
@@ -337,16 +337,16 @@ static inline void StorePlayer(CTFPlayer* pPlayer, CTFPlayer* pLocal, Group_t* p
 				}
 				else
 				{
-					auto GetSniperDot = [](CBaseEntity* pEntity) -> CSniperDot*
+					auto fGetSniperDot = [](CBaseEntity* pEntity) -> CSniperDot*
+					{
+						for (auto pDot : H::Entities.GetGroup(EntityEnum::SniperDots))
 						{
-							for (auto pDot : H::Entities.GetGroup(EntityEnum::SniperDots))
-							{
-								if (pDot->m_hOwnerEntity().Get() == pEntity)
-									return pDot->As<CSniperDot>();
-							}
-							return nullptr;
-						};
-					if (CSniperDot* pPlayerDot = GetSniperDot(pPlayer))
+							if (pDot->m_hOwnerEntity().Get() == pEntity)
+								return pDot->As<CSniperDot>();
+						}
+						return nullptr;
+					};
+					if (CSniperDot* pPlayerDot = fGetSniperDot(pPlayer))
 					{
 						float flChargeTime = std::max(SDK::AttribHookValue(3.f, "mult_sniper_charge_per_sec", pWeapon), 1.5f);
 						tCache.m_vText.emplace_back(ALIGN_TOPRIGHT, std::format("Charging {:.0f}%", Math::RemapVal(TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick) - pPlayerDot->m_flChargeStartTime() - 0.3f, 0.f, flChargeTime, 0.f, 100.f)), Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value);
@@ -803,27 +803,27 @@ void CESP::DrawPlayers()
 
 		for (auto& [iMode, flPercent, tColor, tOverfill, bAdjust] : tCache.m_vBars)
 		{
-			auto drawBar = [&](int x, int y, int w, int h, EAlign eAlign = ALIGN_LEFT)
+			auto fDrawBar = [&](int x, int y, int w, int h, EAlign eAlign = ALIGN_LEFT)
+			{
+				if (flPercent > 1.f)
 				{
-					if (flPercent > 1.f)
-					{
-						H::Draw.FillRectPercent(x, y, w, h, 1.f, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
-						H::Draw.FillRectPercent(x, y, w, h, flPercent - 1.f, tOverfill, { 0, 0, 0, 0 }, eAlign, bAdjust);
-					}
-					else
-						H::Draw.FillRectPercent(x, y, w, h, flPercent, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
-				};
+					H::Draw.FillRectPercent(x, y, w, h, 1.f, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
+					H::Draw.FillRectPercent(x, y, w, h, flPercent - 1.f, tOverfill, { 0, 0, 0, 0 }, eAlign, bAdjust);
+				}
+				else
+					H::Draw.FillRectPercent(x, y, w, h, flPercent, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
+			};
 
 			int iSpace = H::Draw.Scale(4);
 			int iThickness = H::Draw.Scale(2, Scale_Round);
 			switch (iMode)
 			{
 			case ALIGN_LEFT:
-				drawBar(x - iSpace - iThickness - lOffset, y, iThickness, h, ALIGN_BOTTOM);
+				fDrawBar(x - iSpace - iThickness - lOffset, y, iThickness, h, ALIGN_BOTTOM);
 				lOffset += iSpace + iThickness;
 				break;
 			case ALIGN_BOTTOM:
-				drawBar(x, y + h + iSpace + bOffset, w, iThickness);
+				fDrawBar(x, y + h + iSpace + bOffset, w, iThickness);
 				bOffset += iSpace + iThickness;
 				break;
 			}
@@ -906,27 +906,27 @@ void CESP::DrawBuildings()
 			H::Draw.LineRectOutline(x, y, w, h, tCache.m_tColor, { 0, 0, 0, 255 });
 		for (auto& [iMode, flPercent, tColor, tOverfill, bAdjust] : tCache.m_vBars)
 		{
-			auto drawBar = [&](int x, int y, int w, int h, EAlign eAlign = ALIGN_LEFT)
+			auto fDrawBar = [&](int x, int y, int w, int h, EAlign eAlign = ALIGN_LEFT)
+			{
+				if (flPercent > 1.f)
 				{
-					if (flPercent > 1.f)
-					{
-						H::Draw.FillRectPercent(x, y, w, h, 1.f, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
-						H::Draw.FillRectPercent(x, y, w, h, flPercent - 1.f, tOverfill, { 0, 0, 0, 0 }, eAlign, bAdjust);
-					}
-					else
-						H::Draw.FillRectPercent(x, y, w, h, flPercent, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
-				};
+					H::Draw.FillRectPercent(x, y, w, h, 1.f, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
+					H::Draw.FillRectPercent(x, y, w, h, flPercent - 1.f, tOverfill, { 0, 0, 0, 0 }, eAlign, bAdjust);
+				}
+				else
+					H::Draw.FillRectPercent(x, y, w, h, flPercent, tColor, { 0, 0, 0, 255 }, eAlign, bAdjust);
+			};
 
 			int iSpace = H::Draw.Scale(4);
 			int iThickness = H::Draw.Scale(2, Scale_Round);
 			switch (iMode)
 			{
 			case ALIGN_LEFT:
-				drawBar(x - iSpace - iThickness - lOffset, y, iThickness, h, ALIGN_BOTTOM);
+				fDrawBar(x - iSpace - iThickness - lOffset, y, iThickness, h, ALIGN_BOTTOM);
 				lOffset += iSpace + iThickness;
 				break;
 			case ALIGN_BOTTOM:
-				drawBar(x, y + h + iSpace + bOffset, w, iThickness);
+				fDrawBar(x, y + h + iSpace + bOffset, w, iThickness);
 				bOffset += iSpace + iThickness;
 				break;
 			}

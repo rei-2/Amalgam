@@ -19,14 +19,20 @@ public:
 
 	inline void* GetVirtual(void* p, size_t i)
 	{
-		auto vTable = *static_cast<void***>(p);
+		auto vTable = *reinterpret_cast<void***>(p);
+		return vTable[i];
+	}
+
+	inline void* GetVirtual(uintptr_t u, size_t i)
+	{
+		auto vTable = *reinterpret_cast<void***>(u);
 		return vTable[i];
 	}
 
 	template <size_t I, typename T, typename... Args>
 	inline T CallVirtual(void* p, Args... args) const
 	{
-		auto vTable = *static_cast<void***>(p);
+		auto vTable = *reinterpret_cast<void***>(p);
 		return reinterpret_cast<T(__fastcall*)(void*, Args...)>(vTable[I])(p, args...);
 	}
 
@@ -34,7 +40,7 @@ public:
 	inline T CallVirtual(uintptr_t u, Args... args) const
 	{
 		auto p = reinterpret_cast<void*>(u);
-		auto vTable = *static_cast<void***>(p);
+		auto vTable = *reinterpret_cast<void***>(p);
 		return reinterpret_cast<T(__fastcall*)(void*, Args...)>(vTable[I])(p, args...);
 	}
 

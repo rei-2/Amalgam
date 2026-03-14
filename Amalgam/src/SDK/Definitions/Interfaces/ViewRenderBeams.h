@@ -5,6 +5,28 @@
 class CBaseEntity;
 class CTraceFilter;
 
+enum
+{
+	FBEAM_STARTENTITY = 0x00000001,
+	FBEAM_ENDENTITY = 0x00000002,
+	FBEAM_FADEIN = 0x00000004,
+	FBEAM_FADEOUT = 0x00000008,
+	FBEAM_SINENOISE = 0x00000010,
+	FBEAM_SOLID = 0x00000020,
+	FBEAM_SHADEIN = 0x00000040,
+	FBEAM_SHADEOUT = 0x00000080,
+	FBEAM_ONLYNOISEONCE = 0x00000100,
+	FBEAM_NOTILE = 0x00000200,
+	FBEAM_USE_HITBOXES = 0x00000400,
+	FBEAM_STARTVISIBLE = 0x00000800,
+	FBEAM_ENDVISIBLE = 0x00001000,
+	FBEAM_ISACTIVE = 0x00002000,
+	FBEAM_FOREVER = 0x00004000,
+	FBEAM_HALOBEAM = 0x00008000,
+	FBEAM_REVERSED = 0x00010000,
+	NUM_BEAM_FLAGS = 17
+};
+
 struct BeamTrail_t
 {
 	BeamTrail_t* next;
@@ -55,28 +77,6 @@ struct Beam_t
 	float end_radius;
 	bool m_bCalculatedNoise;
 	float m_flHDRColorScale;
-};
-
-enum
-{
-	FBEAM_STARTENTITY = 0x00000001,
-	FBEAM_ENDENTITY = 0x00000002,
-	FBEAM_FADEIN = 0x00000004,
-	FBEAM_FADEOUT = 0x00000008,
-	FBEAM_SINENOISE = 0x00000010,
-	FBEAM_SOLID = 0x00000020,
-	FBEAM_SHADEIN = 0x00000040,
-	FBEAM_SHADEOUT = 0x00000080,
-	FBEAM_ONLYNOISEONCE = 0x00000100,		// Only calculate our noise once
-	FBEAM_NOTILE = 0x00000200,
-	FBEAM_USE_HITBOXES = 0x00000400,		// Attachment indices represent hitbox indices instead when this is set.
-	FBEAM_STARTVISIBLE = 0x00000800,		// Has this client actually seen this beam's start entity yet?
-	FBEAM_ENDVISIBLE = 0x00001000,		// Has this client actually seen this beam's end entity yet?
-	FBEAM_ISACTIVE = 0x00002000,
-	FBEAM_FOREVER = 0x00004000,
-	FBEAM_HALOBEAM = 0x00008000,		// When drawing a beam with a halo, don't ignore the segments and endwidth
-	FBEAM_REVERSED = 0x00010000,
-	NUM_BEAM_FLAGS = 17	// KEEP THIS UPDATED!
 };
 
 struct BeamInfo_t
@@ -131,16 +131,10 @@ public:
 	virtual void	InitBeams(void) = 0;
 	virtual void	ShutdownBeams(void) = 0;
 	virtual void	ClearBeams(void) = 0;
-
-	// Updates the state of the temp ent beams
 	virtual void	UpdateTempEntBeams() = 0;
-
 	virtual void	DrawBeam(CBaseEntity* pbeam, CTraceFilter* pEntityBeamTraceFilter = NULL) = 0;
 	virtual void	DrawBeam(Beam_t* pbeam) = 0;
-
 	virtual void	KillDeadBeams(CBaseEntity* pEnt) = 0;
-
-	// New interfaces!
 	virtual Beam_t* CreateBeamEnts(BeamInfo_t& beamInfo) = 0;
 	virtual Beam_t* CreateBeamEntPoint(BeamInfo_t& beamInfo) = 0;
 	virtual	Beam_t* CreateBeamPoints(BeamInfo_t& beamInfo) = 0;
@@ -148,11 +142,8 @@ public:
 	virtual Beam_t* CreateBeamRingPoint(BeamInfo_t& beamInfo) = 0;
 	virtual Beam_t* CreateBeamCirclePoints(BeamInfo_t& beamInfo) = 0;
 	virtual Beam_t* CreateBeamFollow(BeamInfo_t& beamInfo) = 0;
-
 	virtual void	FreeBeam(Beam_t* pBeam) = 0;
 	virtual void	UpdateBeamInfo(Beam_t* pBeam, BeamInfo_t& beamInfo) = 0;
-
-	// These will go away!
 	virtual void	CreateBeamEnts(int startEnt, int endEnt, int modelIndex, int haloIndex, float haloScale,
 		float life, float width, float m_nEndWidth, float m_nFadeLength, float amplitude,
 		float brightness, float speed, int startFrame,

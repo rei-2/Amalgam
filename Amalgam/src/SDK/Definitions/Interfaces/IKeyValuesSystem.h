@@ -1,9 +1,9 @@
 #pragma once
 #include "Interface.h"
 
-typedef int HKeySymbol;
 class IBaseFileSystem;
 class KeyValues;
+typedef int HKeySymbol;
 
 class IKeyValuesSystem
 {

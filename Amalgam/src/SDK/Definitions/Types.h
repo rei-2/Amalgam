@@ -1,9 +1,13 @@
 #pragma once
 #include <algorithm>
-#include <vector>
-#include <deque>
 #include <string>
 #include <format>
+#include <array>
+#include <vector>
+#include <deque>
+#include <unordered_map>
+#include <map>
+#include <ranges>
 
 #define PI 3.14159265358979323846
 #define M_RADPI 57.295779513082
@@ -12,8 +16,39 @@
 
 #pragma warning (disable : 26495)
 
+namespace Math
+{
+	inline float DeltaAngle(const float flAngleA, const float flAngleB)
+	{
+		float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
+		return flOut += flOut < 0 ? 180.f : -180.f;
+	}
+
+	inline float ShortDist(const float flAngleA, const float flAngleB)
+	{
+		const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
+		return fmodf(2 * flDelta, 360.f) - flDelta;
+	}
+}
+
 class Vec2
 {
+public:
+	static inline Vec2 Get(float v = 0.f)
+	{
+		return { v, v };
+	}
+
+	static inline Vec2 GetMin()
+	{
+		return Get(-FLT_MAX);
+	}
+
+	static inline Vec2 GetMax()
+	{
+		return Get(FLT_MAX);
+	}
+
 public:
 	float x = 0.f, y = 0.f;
 
@@ -138,9 +173,19 @@ public:
 		return Vec2(x + v, y + v);
 	}
 
+	inline friend Vec2 operator+(float l, const Vec2& r)
+	{
+		return Vec2(l + r.x, l + r.y);
+	}
+
 	inline Vec2 operator-(float v) const
 	{
 		return Vec2(x - v, y - v);
+	}
+
+	inline friend Vec2 operator-(float l, const Vec2& r)
+	{
+		return Vec2(l - r.x, l - r.y);
 	}
 
 	inline Vec2 operator*(float v) const
@@ -148,9 +193,24 @@ public:
 		return Vec2(x * v, y * v);
 	}
 
+	inline friend Vec2 operator*(float l, const Vec2& r)
+	{
+		return Vec2(l * r.x, l * r.y);
+	}
+
 	inline Vec2 operator/(float v) const
 	{
 		return Vec2(x / v, y / v);
+	}
+
+	inline friend Vec2 operator/(float l, const Vec2& r)
+	{
+		return Vec2(l / r.x, l / r.y);
+	}
+
+	inline Vec2 operator-() const
+	{
+		return Vec2(-x, -y);
 	}
 
 	inline void Set(float X = 0.f, float Y = 0.f)
@@ -210,44 +270,22 @@ public:
 
 	inline Vec2 DeltaAngle(const Vec2& v) const
 	{
-		auto deltaAngle = [](const float flAngleA, const float flAngleB)
-			{
-				float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
-				return flOut += flOut < 0 ? 180.f : -180.f;
-			};
-
-		return { deltaAngle(x, v.x), deltaAngle(y, v.y) };
+		return { Math::DeltaAngle(x, v.x), Math::DeltaAngle(y, v.y) };
 	}
 
 	inline Vec2 DeltaAngle(float v) const
 	{
-		auto deltaAngle = [](const float flAngleA, const float flAngleB)
-			{
-				float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
-				return flOut += flOut < 0 ? 180.f : -180.f;
-			};
-
-		return { deltaAngle(x, v), deltaAngle(y, v) };
+		return { Math::DeltaAngle(x, v), Math::DeltaAngle(y, v) };
 	}
 
 	inline Vec2 LerpAngle(const Vec2& v, float t) const
 	{
-		auto shortDist = [](const float flAngleA, const float flAngleB)
-			{
-				const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
-				return fmodf(2 * flDelta, 360.f) - flDelta;
-			};
-		return { x - shortDist(x, v.x) * t, y - shortDist(y, v.y) * t };
+		return { x - Math::ShortDist(x, v.x) * t, y - Math::ShortDist(y, v.y) * t };
 	}
 
 	inline Vec2 LerpAngle(float v, float t) const
 	{
-		auto shortDist = [](const float flAngleA, const float flAngleB)
-			{
-				const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
-				return fmodf(2 * flDelta, 360.f) - flDelta;
-			};
-		return { x - shortDist(x, v) * t, y - shortDist(y, v) * t };
+		return { x - Math::ShortDist(x, v) * t, y - Math::ShortDist(y, v) * t };
 	}
 
 	inline float Length(void) const
@@ -290,6 +328,22 @@ using Vector2D = Vec2;
 
 class Vec3
 {
+public:
+	static inline Vec3 Get(float v = 0.f)
+	{
+		return { v, v, v };
+	}
+
+	static inline Vec3 GetMin()
+	{
+		return Get(-FLT_MAX);
+	}
+
+	static inline Vec3 GetMax()
+	{
+		return Get(FLT_MAX);
+	}
+
 public:
 	float x = 0.f, y = 0.f, z = 0.f;
 
@@ -419,9 +473,19 @@ public:
 		return Vec3(x + v, y + v, z + v);
 	}
 
+	inline friend Vec3 operator+(float l, const Vec3& r)
+	{
+		return Vec3(l + r.x, l + r.y, l + r.z);
+	}
+
 	inline Vec3 operator-(float v) const
 	{
 		return Vec3(x - v, y - v, z - v);
+	}
+
+	inline friend Vec3 operator-(float l, const Vec3& r)
+	{
+		return Vec3(l - r.x, l - r.y, l - r.z);
 	}
 
 	inline Vec3 operator*(float v) const
@@ -429,9 +493,24 @@ public:
 		return Vec3(x * v, y * v, z * v);
 	}
 
+	inline friend Vec3 operator*(float l, const Vec3& r)
+	{
+		return Vec3(l * r.x, l * r.y, l * r.z);
+	}
+
 	inline Vec3 operator/(float v) const
 	{
 		return Vec3(x / v, y / v, z / v);
+	}
+
+	inline friend Vec3 operator/(float l, const Vec3& r)
+	{
+		return Vec3(l / r.x, l / r.y, l / r.z);
+	}
+
+	inline Vec3 operator-() const
+	{
+		return Vec3(-x, -y, -z);
 	}
 
 	inline void Set(float X = 0.f, float Y = 0.f, float Z = 0.f)
@@ -442,6 +521,16 @@ public:
 	inline Vec3 To2D() const
 	{
 		return { x, y };
+	}
+
+	inline float Min() const
+	{
+		return std::min<float>(x, std::min<float>(y, z));
+	}
+
+	inline float Max() const
+	{
+		return std::max<float>(x, std::max<float>(y, z));
 	}
 
 	inline Vec3 Min(const Vec3& v) const
@@ -457,16 +546,6 @@ public:
 	inline Vec3 Clamp(const Vec3& v1, const Vec3& v2) const
 	{
 		return Max(v1).Min(v2);
-	}
-
-	inline float Min() const
-	{
-		return std::min<float>(x, std::min<float>(y, z));
-	}
-
-	inline float Max() const
-	{
-		return std::max<float>(x, std::max<float>(y, z));
 	}
 
 	inline Vec3 Min(float v) const
@@ -496,44 +575,22 @@ public:
 
 	inline Vec3 DeltaAngle(const Vec3& v) const
 	{
-		auto deltaAngle = [](const float flAngleA, const float flAngleB)
-			{
-				float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
-				return flOut += flOut < 0 ? 180.f : -180.f;
-			};
-
-		return { deltaAngle(x, v.x), deltaAngle(y, v.y), deltaAngle(z, v.z) };
+		return { Math::DeltaAngle(x, v.x), Math::DeltaAngle(y, v.y), Math::DeltaAngle(z, v.z) };
 	}
 
 	inline Vec3 DeltaAngle(float v) const
 	{
-		auto deltaAngle = [](const float flAngleA, const float flAngleB)
-			{
-				float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
-				return flOut += flOut < 0 ? 180.f : -180.f;
-			};
-
-		return { deltaAngle(x, v), deltaAngle(y, v), deltaAngle(z, v) };
+		return { Math::DeltaAngle(x, v), Math::DeltaAngle(y, v), Math::DeltaAngle(z, v) };
 	}
 
 	inline Vec3 LerpAngle(const Vec3& v, float t) const
 	{
-		auto shortDist = [](const float flAngleA, const float flAngleB)
-			{
-				const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
-				return fmodf(2 * flDelta, 360.f) - flDelta;
-			};
-		return { x - shortDist(x, v.x) * t, y - shortDist(y, v.y) * t, z - shortDist(z, v.z) * t };
+		return { x - Math::ShortDist(x, v.x) * t, y - Math::ShortDist(y, v.y) * t, z - Math::ShortDist(z, v.z) * t };
 	}
 
 	inline Vec3 LerpAngle(float v, float t) const
 	{
-		auto shortDist = [](const float flAngleA, const float flAngleB)
-			{
-				const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
-				return fmodf(2 * flDelta, 360.f) - flDelta;
-			};
-		return { x - shortDist(x, v) * t, y - shortDist(y, v) * t, z - shortDist(z, v) * t };
+		return { x - Math::ShortDist(x, v) * t, y - Math::ShortDist(y, v) * t, z - Math::ShortDist(z, v) * t };
 	}
 
 	inline float Length(void) const
@@ -648,7 +705,7 @@ public:
 	inline Vec3 FromAngle() const noexcept
 	{
 		return { cos(DEG2RAD(x)) * cos(DEG2RAD(y)),
-				 cos(DEG2RAD(x))* sin(DEG2RAD(y)),
+				 cos(DEG2RAD(x)) * sin(DEG2RAD(y)),
 				 -sin(DEG2RAD(x)) };
 	}
 };
@@ -904,7 +961,7 @@ struct Color_t
 		flV = flR * 100;
 	}
 
-	inline Color_t HueShift(float flShift)
+	inline Color_t HueShift(float flShift) const
 	{
 		float flH, flS, flV; GetHSV(flH, flS, flV);
 		Color_t tOut; tOut.SetHSV(fmodf(flH + flShift, 360.f), flS, flV, a);

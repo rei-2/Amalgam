@@ -579,7 +579,7 @@ void CMovementSimulation::RestoreBounds(CTFPlayer* pPlayer)
 	}
 }
 
-void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, std::function<void(CMoveData&)>* pCallback)
+void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTickCallback* pCallback)
 {
 	if (tMoveStorage.m_bFailed || !tMoveStorage.m_pPlayer || !tMoveStorage.m_pPlayer->IsPlayer())
 		return;
@@ -649,7 +649,7 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, std::fu
 	RestoreBounds(tMoveStorage.m_pPlayer);
 }
 
-void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, std::function<void(CMoveData&)> fCallback)
+void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTickCallback fCallback)
 {
 	RunTick(tMoveStorage, bPath, &fCallback);
 }

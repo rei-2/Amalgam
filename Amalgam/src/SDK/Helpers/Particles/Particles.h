@@ -13,11 +13,8 @@ enum ParticleAttachment_t
 	PATTACH_CUSTOMORIGIN,			// Create at a custom origin, but don't follow
 	PATTACH_POINT,					// Create on attachment point, but don't follow
 	PATTACH_POINT_FOLLOW,			// Create on attachment point, and update to follow the entity
-
 	PATTACH_WORLDORIGIN,			// Used for control points that don't attach to an entity
-
 	PATTACH_ROOTBONE_FOLLOW,		// Create at the root bone of the entity, and update to follow
-
 	MAX_PATTACH_TYPES,
 };
 

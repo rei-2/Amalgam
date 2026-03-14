@@ -4,8 +4,6 @@
 #include "../../Definitions/Interfaces.h"
 #include "../../../Utils/Math/Math.h"
 #include "../../../Utils/Timer/Timer.h"
-#include <array>
-#include <ranges>
 
 MAKE_SIGNATURE(CHudBaseDeathNotice_GetIcon, "client.dll", "40 53 48 81 EC ? ? ? ? 48 8B DA", 0x0);
 MAKE_SIGNATURE(RenderLine, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 44 89 44 24", 0x0);

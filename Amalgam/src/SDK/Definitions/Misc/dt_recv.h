@@ -1,20 +1,8 @@
-//========= Copyright © 1996-2005, Valve Corporation, All rights reserved. ============//
-//
-// Purpose: 
-//
-// $NoKeywords: $
-//
-//=============================================================================//
+#pragma once
+#include "dt_common.h"
 
 #ifndef DATATABLE_RECV_H
 #define DATATABLE_RECV_H
-
-#ifdef _WIN32
-#pragma once
-#endif
-
-#include "dt_common.h"
-
 #define ADDRESSPROXY_NONE	-1
 
 class RecvTable;

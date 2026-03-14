@@ -1,12 +1,16 @@
 #pragma once
 #include "Interface.h"
-#include "../Main/INetChannel.h"
 #include "../Misc/ClientClass.h"
 #include "../Misc/ServerClass.h"
+#include "../Misc/CUtlVector.h"
+#include "../Misc/CUtlString.h"
 #include "../Definitions.h"
 
 MAKE_SIGNATURE(CBaseClientState_SendStringCmd, "engine.dll", "48 81 EC ? ? ? ? 48 8B 49", 0x0);
 
+#define	MAX_OSPATH 260 // max length of a filesystem pathname
+
+class INetChannel;
 class IChangeFrameList;
 
 class PackedEntity

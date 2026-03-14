@@ -1,12 +1,12 @@
 #pragma once
-#include "IMoveHelper.h"
 #include "../Misc/IPrediction.h"
 
 MAKE_SIGNATURE(CPrediction_RestoreEntityToPredictedFrame, "client.dll", "40 55 48 83 EC ? 8B EA", 0x0);
 
-class CMoveData;
-class CUserCmd;
 class CBasePlayer;
+class CUserCmd;
+class CMoveData;
+class IMoveHelper;
 
 class CPrediction : public IPrediction
 {

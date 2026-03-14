@@ -295,16 +295,16 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 			bool bClassic = nWeaponID == TF_WEAPON_SNIPERRIFLE_CLASSIC;
 			bool bHeadshot = pWeapon->As<CTFSniperRifle>()->GetRifleType() != RIFLE_JARATE;
 			bool bPiss = SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0;
-			auto GetSniperDot = [](CBaseEntity* pEntity) -> CSniperDot*
+			auto fGetSniperDot = [](CBaseEntity* pEntity) -> CSniperDot*
+			{
+				for (auto pDot : H::Entities.GetGroup(EntityEnum::SniperDots))
 				{
-					for (auto pDot : H::Entities.GetGroup(EntityEnum::SniperDots))
-					{
-						if (pDot->m_hOwnerEntity().Get() == pEntity)
-							return pDot->As<CSniperDot>();
-					}
-					return nullptr;
-				};
-			if (CSniperDot* pPlayerDot = GetSniperDot(pEntity))
+					if (pDot->m_hOwnerEntity().Get() == pEntity)
+						return pDot->As<CSniperDot>();
+				}
+				return nullptr;
+			};
+			if (CSniperDot* pPlayerDot = fGetSniperDot(pEntity))
 			{
 				float flChargeTime = std::max(SDK::AttribHookValue(3.f, "mult_sniper_charge_per_sec", pWeapon), 1.5f);
 				flDamage = Math::RemapVal(TICKS_TO_TIME(I::ClientState->m_ClockDriftMgr.m_nServerTick) - pPlayerDot->m_flChargeStartTime() - 0.3f, 0.f, flChargeTime, 50.f, 150.f);
@@ -596,9 +596,9 @@ void CAutoHeal::AutoVaccinator(CTFPlayer* pLocal, CWeaponMedigun* pWeapon, CUser
 	for (auto pTarget : vTargets)
 		GetDangers(pTarget, true, vResistDangers[MEDIGUN_BULLET_RESIST].first, vResistDangers[MEDIGUN_BLAST_RESIST].first, vResistDangers[MEDIGUN_FIRE_RESIST].first);
 	std::sort(vResistDangers.begin(), vResistDangers.end(), [&](const std::pair<float, int>& a, const std::pair<float, int>& b) -> bool
-		{
-			return a.first > b.first;
-		});
+	{
+		return a.first > b.first;
+	});
 
 	int iTargetResist = vResistDangers.front().second;
 	float flTargetDanger = vResistDangers.front().first;

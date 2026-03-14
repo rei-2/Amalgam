@@ -2,6 +2,9 @@
 #include "../Misc/Datamap.h"
 #include "../../../Utils/Signatures/Signatures.h"
 
+#pragma warning (push)
+#pragma warning (disable : 26495)
+
 MAKE_SIGNATURE(CPredictionCopy_TransferData, "client.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 48 89 7C 24 ? 41 56 48 83 EC ? 8B 3D", 0x0);
 
 #define PC_DATA_PACKED			true
@@ -79,3 +82,5 @@ public:
 	typedescription_t* m_pWatchField;
 	char const* m_pOperation;
 };
+
+#pragma warning (pop)

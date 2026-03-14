@@ -202,28 +202,28 @@ int CTFSniperRifle::GetRifleType()
 
 float CTFSniperRifle::GetHeadshotMult(CTFPlayer* pTarget)
 {
-	auto GetMainMult = [&]()
-		{
-			auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
-			if (pOwner && pOwner->IsCritBoosted())
-				return 3.f;
-
-			if (GetRifleType() == RIFLE_JARATE)
-			{
-				if (SDK::AttribHookValue(0, "jarate_duration", this) > 0)
-					return 1.36f;
-
-				if (pOwner && pOwner->IsMiniCritBoosted()
-					|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
-					return 1.36f;
-
-				return 1.f;
-			}
-
+	auto fGetMainMult = [&]()
+	{
+		auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
+		if (pOwner && pOwner->IsCritBoosted())
 			return 3.f;
-		};
 
-	float flMult = SDK::AttribHookValue(GetMainMult(), "mult_dmg", this);
+		if (GetRifleType() == RIFLE_JARATE)
+		{
+			if (SDK::AttribHookValue(0, "jarate_duration", this) > 0)
+				return 1.36f;
+
+			if (pOwner && pOwner->IsMiniCritBoosted()
+				|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
+				return 1.36f;
+
+			return 1.f;
+		}
+
+		return 3.f;
+	};
+
+	float flMult = SDK::AttribHookValue(fGetMainMult(), "mult_dmg", this);
 	if (m_flChargedDamage() == 150.f)
 		flMult = SDK::AttribHookValue(flMult, "sniper_full_charge_damage_bonus", this);
 	return flMult;
@@ -231,20 +231,20 @@ float CTFSniperRifle::GetHeadshotMult(CTFPlayer* pTarget)
 
 float CTFSniperRifle::GetBodyshotMult(CTFPlayer* pTarget)
 {
-	auto GetMainMult = [&]()
-		{
-			auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
-			if (pOwner && pOwner->IsCritBoosted())
-				return 3.f;
+	auto fGetMainMult = [&]()
+	{
+		auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
+		if (pOwner && pOwner->IsCritBoosted())
+			return 3.f;
 
-			if (pOwner && pOwner->IsMiniCritBoosted()
-				|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
-				return 1.36f;
+		if (pOwner && pOwner->IsMiniCritBoosted()
+			|| pTarget && (pTarget->InCond(TF_COND_URINE) || pTarget->InCond(TF_COND_MARKEDFORDEATH)))
+			return 1.36f;
 
-			return 1.f;
-		};
+		return 1.f;
+	};
 
-	float flMult = SDK::AttribHookValue(GetMainMult(), "mult_dmg", this);
+	float flMult = SDK::AttribHookValue(fGetMainMult(), "mult_dmg", this);
 	flMult = SDK::AttribHookValue(flMult, "bodyshot_damage_modify", this);
 	if (m_flChargedDamage() == 150.f)
 		flMult = SDK::AttribHookValue(flMult, "sniper_full_charge_damage_bonus", this);

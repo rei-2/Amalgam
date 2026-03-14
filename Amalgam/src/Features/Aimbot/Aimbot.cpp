@@ -90,7 +90,7 @@ void CAimbot::Draw(CTFPlayer* pLocal)
 	if (Vars::Aimbot::General::AimFOV.Value >= 90.f)
 		return;
 
-	float flRadius = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value)) / tanf(DEG2RAD(m_flFOV) / 2) * float(H::Draw.m_nScreenW) * (4.f / 6.f) / (16.f / 9.f);
+	float flRadius = tanf(DEG2RAD(Vars::Aimbot::General::AimFOV.Value)) / tanf(DEG2RAD(G::FOV) / 2) * float(H::Draw.m_nScreenW) * (4.f / 6.f) / (16.f / 9.f);
 	H::Draw.LineCircle(H::Draw.m_nScreenW / 2, H::Draw.m_nScreenH / 2, flRadius, 68, Vars::Colors::FOVCircle.Value);
 }
 

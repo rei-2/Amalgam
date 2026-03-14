@@ -1,7 +1,6 @@
 #pragma once
 #include "CBaseEntity.h"
 #include "../Misc/IGameResources.h"
-#include "../Misc/String.h"
 
 #define PLAYER_UNCONNECTED_NAME	"unconnected"
 #define PLAYER_ERROR_NAME "ERRORNAME"

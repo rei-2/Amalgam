@@ -1,10 +1,8 @@
 #pragma once
 #include "CBaseHandle.h"
 #include "IClientEntity.h"
-#include "CCollisionProperty.h"
-#include "CParticleProperty.h"
-#include "../Main/UtlVector.h"
 #include "../Misc/CInterpolatedVar.h"
+#include "../Misc/CUtlVector.h"
 #include "../Definitions.h"
 #include "../../../Utils/Memory/Memory.h"
 #include "../../../Utils/Signatures/Signatures.h"
@@ -29,6 +27,8 @@ typedef CHandle<CBaseEntity> EHANDLE;
 #define MULTIPLAYER_BACKUP 90
 
 class IInterpolatedVar;
+class CCollisionProperty;
+class CParticleProperty;
 
 class VarMapEntry_t
 {

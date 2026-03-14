@@ -2,8 +2,6 @@
 #include "../SDK/Definitions/Types.h"
 #include "../Utils/Macros/Macros.h"
 #include <windows.h>
-#include <unordered_map>
-#include <map>
 #include <typeinfo>
 
 #define DEFAULT_BIND -1
@@ -360,23 +358,20 @@ NAMESPACE_BEGIN(Vars)
 			CVar(HuntsmanPullPoint, "Huntsman pull point", false, NOSAVE | DEBUGVAR);
 			CVar(HuntsmanPullNoZ, "Pull no Z", false, NOSAVE | DEBUGVAR);
 
+			CVarEnum(SplashMode, "Splash mode", 0, NOSAVE | DEBUGVAR, nullptr,
+				VA_LIST("Trace", "Face"),
+				Trace, Face);
 			CVar(SplashPointsDirect, "Splash points direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0, 400, 5);
 			CVar(SplashPointsArc, "Splash points arc", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0, 400, 5);
-			CVar(SplashCountDirect, "Splash count direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 1, 400, 5);
-			CVar(SplashCountArc, "Splash count arc", 5, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 1, 400, 5);
 			CVar(SplashRotateX, "Splash Rx", -1.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, -1.f, 360.f);
 			CVar(SplashRotateY, "Splash Ry", -1.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, -1.f, 360.f);
+			CVar(SplashDensityDirect, "Splash density direct", 40.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 100.f, 1.f);
+			CVar(SplashDensityArc, "Splash density arc", 40.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 100.f, 1.f);
+			CVar(SplashSamplesCutoff, "Splash samples cutoff", 0.0000001f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 0.000001f, 0.00000001f);
+			CVar(SplashCountDirect, "Splash count direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 1, 400, 5);
+			CVar(SplashCountArc, "Splash count arc", 5, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 1, 400, 5);
 			CVar(SplashTraceInterval, "Splash trace interval", 10, NOSAVE | DEBUGVAR, 1, 10);
 			CVar(SplashNormalSkip, "Splash normal skip", 1, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 10);
-			CVarEnum(SplashMode, "Splash mode", 0, NOSAVE | DEBUGVAR, nullptr,
-				VA_LIST("Multi", "Single"),
-				Multi, Single);
-			CVarEnum(RocketSplashMode, "Rocket splash mode", 0, NOSAVE | DEBUGVAR, nullptr,
-				VA_LIST("Regular", "Special light", "Special heavy"),
-				Regular, SpecialLight, SpecialHeavy);
-			CVar(SplashGrates, "Splash grates", true, NOSAVE | DEBUGVAR);
-			CVar(Out2NormalMin, "Out2 normal min", -0.7f, NOSAVE | DEBUGVAR | SLIDER_CLAMP | SLIDER_PRECISION, -1.f, 1.f, 0.1f);
-			CVar(Out2NormalMax, "Out2 normal max", 0.7f, NOSAVE | DEBUGVAR | SLIDER_CLAMP | SLIDER_PRECISION, -1.f, 1.f, 0.1f);
 
 			CVar(DeltaCount, "Delta count", 5, NOSAVE | DEBUGVAR, 1, 5);
 			CVarEnum(DeltaMode, "Delta mode", 0, NOSAVE | DEBUGVAR, nullptr,

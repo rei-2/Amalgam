@@ -316,10 +316,9 @@ bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, 
 	Vec3 vStart = bInterp ? pPlayer->GetEyePosition() : pPlayer->GetShootPos();
 	Vec3 vEnd = tProjInfo.m_vPos;
 
-	SDK::TraceHull(vStart, vEnd, tProjInfo.m_vHull * -1.f, tProjInfo.m_vHull, MASK_SOLID, &filter, &trace);
+	SDK::TraceHull(vStart, vEnd, -tProjInfo.m_vHull, tProjInfo.m_vHull, MASK_SOLID, &filter, &trace);
 	tProjInfo.m_vPos = trace.endpos;
-
-	return true;
+	return !trace.allsolid;
 }
 
 void CProjectileSimulation::GetInfo(CBaseEntity* pProjectile, ProjectileInfo& tProjInfo)
