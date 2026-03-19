@@ -7,6 +7,7 @@
 #include "../Features/EnginePrediction/EnginePrediction.h"
 #include "../Features/Visuals/Materials/Materials.h"
 #include "../Features/Visuals/Visuals.h"
+#include "../Features/Spectate/Spectate.h"
 #include "../SDK/Events/Events.h"
 #include <Psapi.h>
 
@@ -145,17 +146,22 @@ void CCore::Unload()
 
 	if (F::Menu.m_bIsOpen)
 		I::MatSystemSurface->SetCursorAlwaysVisible(false);
-	if (I::Input->CAM_IsThirdPerson())
+	H::ConVars.FindVar("cl_wpn_sway_interp")->SetValue(0.f);
+	H::ConVars.FindVar("cl_wpn_sway_scale")->SetValue(0.f);
+	F::Visuals.RestoreWorldModulation();
+	if (auto pLocal = H::Entities.GetLocal())
 	{
-		if (auto pLocal = H::Entities.GetLocal())
+		if (F::Spectate.HasTarget())
+		{
+			F::Spectate.NetUpdateStart(pLocal);
+			I::EngineClient->SetViewAngles(F::Spectate.m_vOldView);
+		}
+		if (I::Input->CAM_IsThirdPerson())
 		{
 			I::Input->CAM_ToFirstPerson();
 			pLocal->ThirdPersonSwitch();
 		}
 	}
-	F::Visuals.RestoreWorldModulation();
-	H::ConVars.FindVar("cl_wpn_sway_interp")->SetValue(0.f);
-	H::ConVars.FindVar("cl_wpn_sway_scale")->SetValue(0.f);
 
 	Sleep(250);
 	F::EnginePrediction.Unload();

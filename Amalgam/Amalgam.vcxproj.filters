@@ -205,6 +205,7 @@
     <ClCompile Include="src\SDK\Definitions\Misc\CByteSwap.cpp" />
     <ClCompile Include="src\Features\World\World.cpp" />
     <ClCompile Include="src\Hooks\CModelLoader_Map_LoadModel.cpp" />
+    <ClCompile Include="src\Hooks\CM_TraceToDispTree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -608,6 +609,7 @@
     <ClInclude Include="src\Features\World\World.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\WorldBrushData.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CDispCollTree.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\TraceInfo.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

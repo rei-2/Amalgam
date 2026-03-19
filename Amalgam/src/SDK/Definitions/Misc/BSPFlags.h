@@ -55,6 +55,7 @@
 #define	CONTENTS_TRANSLUCENT	0x10000000	// auto set if any surface has trans
 #define	CONTENTS_LADDER			0x20000000
 #define CONTENTS_HITBOX			0x40000000	// use accurate hitboxes on trace
+#define CONTENTS_DISPSOLID		0x80000000	// no normal checks when tracing against displacements
 
 // NOTE: These are stored in a short in the engine now.  Don't use more than 16 bits
 #define	SURF_LIGHT		0x0001		// value will hold the light strength

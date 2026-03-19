@@ -140,7 +140,7 @@ void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)
 			break;
 
 		float flTurnScale = Math::RemapVal(Vars::Misc::Movement::AutoStrafeTurnScale.Value, 0.f, 1.f, 0.9f, 1.f);
-		float flRotation = DEG2RAD((flDirDelta > 0.f ? -90.f : 90.f) + flDirDelta * flTurnScale);
+		float flRotation = Math::Deg2Rad((flDirDelta > 0.f ? -90.f : 90.f) + flDirDelta * flTurnScale);
 		float flCosRot = cosf(flRotation), flSinRot = sinf(flRotation);
 
 		pCmd->forwardmove = flCosRot * flForward - flSinRot * flSide;

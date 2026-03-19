@@ -450,7 +450,8 @@ bool CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 		break;
 	}
 
-	Math::ClampAngles(vOut);
+	if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || Vars::Misc::Game::AntiCheatCompatibility.Value)
+		Math::ClampAngles(vOut);
 	return bReturn;
 }
 

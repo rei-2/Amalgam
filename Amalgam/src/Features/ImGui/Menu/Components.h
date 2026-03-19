@@ -254,21 +254,29 @@ namespace ImGui
 
 		if (bVertical)
 		{
-			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y + flSize }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
-			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flSize }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
-			if (bTwoToneBorder)
-				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flSize - H::Draw.Scale() }, {vDrawPos.x - flInset + vSize.x, vDrawPos.y + flSize }, uBorder);
+			if (!bTwoToneBorder)
+				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + vSize.x - flInset, vDrawPos.y + flSize }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+			else
+			{
+				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + vSize.x - flInset, vDrawPos.y + flSize - H::Draw.Scale() }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersTopRight);
+				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flSize - H::Draw.Scale() }, { vDrawPos.x + vSize.x - flInset, vDrawPos.y + flSize }, uBorder);
+			}
+			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flSize }, { vDrawPos.x + vSize.x - flInset, vDrawPos.y + vSize.y - flInset }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersBottomLeft | ImDrawFlags_RoundCornersBottomRight);
 		}
 		else
 		{
-			pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + flSize, vDrawPos.y - flInset + vSize.y }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomLeft);
-			pDrawList->AddRectFilled({ vDrawPos.x + flSize, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight);
-			if (bTwoToneBorder)
-				pDrawList->AddRectFilled({ vDrawPos.x + flSize - H::Draw.Scale(), vDrawPos.y + flInset }, { vDrawPos.x + flSize, vDrawPos.y - flInset + vSize.y }, uBorder);
+			if (!bTwoToneBorder)
+				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + flSize, vDrawPos.y + vSize.y - flInset }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomLeft);
+			else
+			{
+				pDrawList->AddRectFilled({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + flSize - H::Draw.Scale(), vDrawPos.y + vSize.y - flInset }, uTitle, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomLeft);
+				pDrawList->AddRectFilled({ vDrawPos.x + flSize - H::Draw.Scale(), vDrawPos.y + flInset }, { vDrawPos.x + flSize, vDrawPos.y + vSize.y - flInset }, uBorder);
+			}
+			pDrawList->AddRectFilled({ vDrawPos.x + flSize, vDrawPos.y + flInset }, { vDrawPos.x + vSize.x - flInset, vDrawPos.y + vSize.y - flInset }, uBackground, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopRight | ImDrawFlags_RoundCornersBottomRight);
 		}
 		
 		flInset += H::Draw.Scale(0.5f) - 0.5f - H::Draw.Scale();
-		pDrawList->AddRect({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y }, uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
+		pDrawList->AddRect({ vDrawPos.x + flInset, vDrawPos.y + flInset }, { vDrawPos.x + vSize.x - flInset, vDrawPos.y + vSize.y - flInset }, uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 	}
 	inline void Divider(float flPrePadding = H::Draw.Scale(8), float flPostPadding = H::Draw.Scale(7), float flInset = H::Draw.Scale(), ImU32 uBorder = F::Render.Background2)
 	{

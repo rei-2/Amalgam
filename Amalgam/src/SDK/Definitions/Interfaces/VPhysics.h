@@ -2,6 +2,7 @@
 #include "../Misc/IAppSystem.h"
 #include "../Types.h"
 
+#define AIR_DENSITY	2
 #define k_flMaxVelocity 2000.0f
 #define k_flMaxAngularVelocity 360.0f * 10.0f
 #define DEFAULT_MIN_FRICTION_MASS 10.0f

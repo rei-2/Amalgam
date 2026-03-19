@@ -283,7 +283,7 @@ int CAimbotHitscan::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* 
 		std::sort(vRecords.begin(), vRecords.end(), [&](const TickRecord* a, const TickRecord* b) -> bool
 		{
 			Vec3 vPosA = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
-			Vec3 vPosB = { a->m_aBones[iTargetBone][0][3], a->m_aBones[iTargetBone][1][3], a->m_aBones[iTargetBone][2][3] };
+			Vec3 vPosB = { b->m_aBones[iTargetBone][0][3], b->m_aBones[iTargetBone][1][3], b->m_aBones[iTargetBone][2][3] };
 			Vec3 vAnglesA = Math::CalcAngle(m_vEyePos, vPosA);
 			Vec3 vAnglesB = Math::CalcAngle(m_vEyePos, vPosB);
 			return pDoubletapAngle->DeltaAngle(vAnglesA).Length2D() < pDoubletapAngle->DeltaAngle(vAnglesB).Length2D();
@@ -650,7 +650,8 @@ bool CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 		break;
 	}
 
-	Math::ClampAngles(vOut);
+	//if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || Vars::Misc::Game::AntiCheatCompatibility.Value)
+		Math::ClampAngles(vOut);
 	return bReturn;
 }
 

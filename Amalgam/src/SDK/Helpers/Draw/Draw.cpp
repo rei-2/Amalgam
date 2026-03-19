@@ -292,7 +292,7 @@ void CDraw::FillRoundRect(int x, int y, int w, int h, int iRadius, Color_t tColo
 		const float a = 90.f * i;
 		for (int j = 0; j < _iCount; j++)
 		{
-			const float _a = DEG2RAD(a + j * flDelta);
+			const float _a = Math::Deg2Rad(a + j * flDelta);
 			vVertices.emplace_back(Vertex_t({ { _x + iRadius * sinf(_a), _y - iRadius * cosf(_a) } }));
 		}
 	}
@@ -314,7 +314,7 @@ void CDraw::LineRoundRect(int x, int y, int w, int h, int iRadius, Color_t tColo
 		const float a = 90.f * i;
 		for (int j = 0; j < _iCount; j++)
 		{
-			const float _a = DEG2RAD(a + j * flDelta);
+			const float _a = Math::Deg2Rad(a + j * flDelta);
 			vVertices.emplace_back(Vertex_t({ { _x + iRadius * sinf(_a), _y - iRadius * cosf(_a) } }));
 		}
 	}
@@ -326,8 +326,8 @@ void CDraw::FillCircle(int x, int y, float iRadius, int iSegments, Color_t tColo
 {
 	std::vector<Vertex_t> vVertices = {};
 
-	const float step = static_cast<float>(PI) * 2.0f / iSegments;
-	for (float a = 0; a < PI * 2.0f; a += step)
+	const float flStep = Math::PI * 2.f / iSegments;
+	for (float a = 0; a < Math::PI * 2.f; a += flStep)
 		vVertices.emplace_back(Vector2D{ iRadius * cosf(a) + x, iRadius * sinf(a) + y });
 
 	FillPolygon(vVertices, tColor);

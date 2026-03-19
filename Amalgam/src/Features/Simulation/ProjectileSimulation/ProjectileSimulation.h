@@ -209,6 +209,7 @@ public:
 
 	IPhysicsEnvironment* m_pEnv = nullptr;
 	IPhysicsObject* m_pObj = nullptr;
+	ProjectileInfo* m_pCurrent = nullptr;
 };
 
 ADD_FEATURE(CProjectileSimulation, ProjSim);

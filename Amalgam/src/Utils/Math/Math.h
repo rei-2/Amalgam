@@ -105,11 +105,11 @@ namespace Math
 		}
 		else
 		{
-			flYaw = RAD2DEG(atan2f(vForward.y, vForward.x));
+			flYaw = Rad2Deg(atan2f(vForward.y, vForward.x));
 			if (flYaw < 0)
 				flYaw += 360;
 
-			flPitch = RAD2DEG(atan2f(-vForward.z, vForward.Length2D()));
+			flPitch = Rad2Deg(atan2f(-vForward.z, vForward.Length2D()));
 			if (flPitch < 0)
 				flPitch += 360;
 		}
@@ -129,8 +129,8 @@ namespace Math
 	inline void AngleVectors(const Vec3& vAngles, Vec3* pForward = nullptr, Vec3* pRight = nullptr, Vec3* pUp = nullptr)
 	{
 		float sp, sy, sr, cp, cy, cr;
-		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
-		SinCos(DEG2RAD(vAngles.y), &sy, &cy);
+		SinCos(Deg2Rad(vAngles.x), &sp, &cp);
+		SinCos(Deg2Rad(vAngles.y), &sy, &cy);
 
 		if (pForward)
 		{
@@ -141,7 +141,7 @@ namespace Math
 
 		if (pRight || pUp)
 		{
-			SinCos(DEG2RAD(vAngles.z), &sr, &cr);
+			SinCos(Deg2Rad(vAngles.z), &sr, &cr);
 
 			if (pRight)
 			{
@@ -165,8 +165,8 @@ namespace Math
 		float flHyp = std::sqrtf((vDelta.x * vDelta.x) + (vDelta.y * vDelta.y));
 
 		Vec3 vAngles = {
-			atanf(vDelta.z / flHyp) * float(M_RADPI),
-			atanf(vDelta.y / vDelta.x) * float(M_RADPI),
+			atanf(vDelta.z / flHyp) * RAD,
+			atanf(vDelta.y / vDelta.x) * RAD,
 			0.f
 		};
 
@@ -187,7 +187,7 @@ namespace Math
 		Vec3 vToForward = Vec3();
 		AngleVectors(vToAng, &vToForward);
 
-		float flResult = RAD2DEG(acos(vFromForward.Dot(vToForward)));
+		float flResult = Rad2Deg(acos(vFromForward.Dot(vToForward)));
 		if (!isfinite(flResult) || isinf(flResult) || isnan(flResult))
 			flResult = 0.f;
 
@@ -199,9 +199,9 @@ namespace Math
 		Vec3 vOffset = vPoint - vOrigin;
 
 		float sp, sy, sr, cp, cy, cr;
-		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
-		SinCos(DEG2RAD(vAngles.y), &sy, &cy);
-		SinCos(DEG2RAD(vAngles.z), &sr, &cr);
+		SinCos(Deg2Rad(vAngles.x), &sp, &cp);
+		SinCos(Deg2Rad(vAngles.y), &sy, &cy);
+		SinCos(Deg2Rad(vAngles.z), &sr, &cr);
 
 		Vec3 vX = {
 			cy * cp,
@@ -277,9 +277,9 @@ namespace Math
 	inline void AngleMatrix(const Vec3& vAngles, matrix3x4& mMatrix, bool bClearOrigin = true)
 	{
 		float sp, sy, sr, cp, cy, cr;
-		SinCos(DEG2RAD(vAngles.x), &sp, &cp);
-		SinCos(DEG2RAD(vAngles.y), &sy, &cy);
-		SinCos(DEG2RAD(vAngles.z), &sr, &cr);
+		SinCos(Deg2Rad(vAngles.x), &sp, &cp);
+		SinCos(Deg2Rad(vAngles.y), &sy, &cy);
+		SinCos(Deg2Rad(vAngles.z), &sr, &cr);
 
 		mMatrix[0][0] = cp * cy;
 		mMatrix[1][0] = cp * sy;
@@ -315,14 +315,14 @@ namespace Math
 		float flLen = vForward.Length2D();
 		if (flLen > 0.001f)
 		{
-			vAngles.x = RAD2DEG(std::atan2(-vForward.z, flLen));
-			vAngles.y = RAD2DEG(std::atan2(vForward.y, vForward.x));
-			vAngles.z = RAD2DEG(std::atan2(vLeft.z, vUp.z));
+			vAngles.x = Rad2Deg(std::atan2(-vForward.z, flLen));
+			vAngles.y = Rad2Deg(std::atan2(vForward.y, vForward.x));
+			vAngles.z = Rad2Deg(std::atan2(vLeft.z, vUp.z));
 		}
 		else
 		{
-			vAngles.x = RAD2DEG(std::atan2(-vForward.z, flLen));
-			vAngles.y = RAD2DEG(std::atan2(-vLeft.x, vLeft.y));
+			vAngles.x = Rad2Deg(std::atan2(-vForward.z, flLen));
+			vAngles.y = Rad2Deg(std::atan2(-vLeft.x, vLeft.y));
 			vAngles.z = 0;
 		}
 	}
@@ -411,7 +411,7 @@ namespace Math
 		GetMatrixOrigin(mMatrix, vOut);
 		return vOut;
 	}
-	
+
 	inline void ConcatTransforms(const matrix3x4& mIn1, const matrix3x4& mIn2, matrix3x4& mOut)
 	{
 		if (&mIn1 == &mOut)
@@ -461,7 +461,7 @@ namespace Math
 		float q = 2 * powf(b, 3) / 27 - b * c / 3 + d;
 
 		if (p == 0.f)
-			return pow(q, 1.f / 3);
+			return powf(q, 1.f / 3);
 		if (q == 0.f)
 			return 0.f;
 
@@ -476,7 +476,7 @@ namespace Math
 			return -2 * t * cosh(acosh(-g) / 3) - b / 3;
 		return 2 * t * cosh(acosh(g) / 3) - b / 3;
 	}
-	
+
 	inline std::vector<float> SolveQuartic(float a, float b, float c, float d, float e)
 	{
 		std::vector<float> vRoots = {};

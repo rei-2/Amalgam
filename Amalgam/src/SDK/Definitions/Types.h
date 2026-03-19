@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <numbers>
 #include <string>
 #include <format>
 #include <array>
@@ -9,15 +10,34 @@
 #include <map>
 #include <ranges>
 
-#define PI 3.14159265358979323846
-#define M_RADPI 57.295779513082
-#define DEG2RAD(x) ((float)(x) * (float)((float)(PI) / 180.f))
-#define RAD2DEG(x) ((float)(x) * (float)(180.f / (float)(PI)))
-
 #pragma warning (disable : 26495)
 
 namespace Math
 {
+	template <class T = float>
+	constexpr T PI_V = static_cast<T>(3.141592653589793);
+	constexpr float PI = PI_V<>;
+
+	template <class T = float>
+	constexpr T RAD_V = static_cast<T>(57.29577951308232);
+	constexpr float RAD = RAD_V<>;
+
+	template <class T = float>
+	constexpr T E_V = static_cast<T>(2.718281828459045);
+	constexpr float E = E_V<>;
+
+	template <class T = float>
+	inline T Deg2Rad(T v)
+	{
+		return v * PI_V<T> / T(180);
+	}
+
+	template <class T = float>
+	inline T Rad2Deg(T v)
+	{
+		return v * T(180) / PI_V<T>;
+	}
+
 	inline float DeltaAngle(const float flAngleA, const float flAngleB)
 	{
 		float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
@@ -698,15 +718,15 @@ public:
 
 	inline Vec3 ToAngle() const noexcept
 	{
-		return { RAD2DEG(atan2(-z, hypot(x, y))),
-				 RAD2DEG(atan2(y, x)),
+		return { Math::Rad2Deg(atan2(-z, hypot(x, y))),
+				 Math::Rad2Deg(atan2(y, x)),
 				 0.f };
 	}
 	inline Vec3 FromAngle() const noexcept
 	{
-		return { cos(DEG2RAD(x)) * cos(DEG2RAD(y)),
-				 cos(DEG2RAD(x)) * sin(DEG2RAD(y)),
-				 -sin(DEG2RAD(x)) };
+		return { cos(Math::Deg2Rad(x)) * cos(Math::Deg2Rad(y)),
+				 cos(Math::Deg2Rad(x)) * sin(Math::Deg2Rad(y)),
+				 -sin(Math::Deg2Rad(x)) };
 	}
 };
 using Vector = Vec3;
@@ -749,9 +769,9 @@ private:
 	{
 		float sr, sp, sy, cr, cp, cy;
 
-		SinCos(DEG2RAD(vAngles[1]), &sy, &cy);
-		SinCos(DEG2RAD(vAngles[0]), &sp, &cp);
-		SinCos(DEG2RAD(vAngles[2]), &sr, &cr);
+		SinCos(Math::Deg2Rad(vAngles[1]), &sy, &cy);
+		SinCos(Math::Deg2Rad(vAngles[0]), &sp, &cp);
+		SinCos(Math::Deg2Rad(vAngles[2]), &sr, &cr);
 
 		// matrix = (YAW * PITCH) * ROLL
 		m2[0][0] = cp * cy;

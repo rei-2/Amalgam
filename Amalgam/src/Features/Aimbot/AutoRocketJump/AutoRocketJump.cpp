@@ -78,8 +78,8 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		if (!vSolutions.empty())
 		{
 			vShootPos += vForward * vSolutions.front();
-			m_vAngles.y = flYaw - (RAD2DEG(atan2(vShootPos.y, vShootPos.x)) - flYaw);
-			flYaw = RAD2DEG(atan2(vShootPos.y, vShootPos.x));
+			m_vAngles.y = flYaw - (Math::Rad2Deg(atan2(vShootPos.y, vShootPos.x)) - flYaw);
+			flYaw = Math::Rad2Deg(atan2(vShootPos.y, vShootPos.x));
 		}
 	}
 
@@ -93,7 +93,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 		if (!vSolutions.empty())
 		{
 			vShootPos += vForward * vSolutions.front();
-			m_vAngles.x = flPitch - (RAD2DEG(atan2(-vShootPos.z, vShootPos.x)) - flPitch);
+			m_vAngles.x = flPitch - (Math::Rad2Deg(atan2(-vShootPos.z, vShootPos.x)) - flPitch);
 		}
 	}
 

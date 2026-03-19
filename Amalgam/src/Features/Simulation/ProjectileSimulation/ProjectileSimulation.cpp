@@ -23,7 +23,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 
 	if (Vars::Visuals::Trajectory::Override.Value)
 	{
-		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffsetX.Value, Vars::Visuals::Trajectory::OffsetY.Value, Vars::Visuals::Trajectory::OffsetZ.Value }, vPos, vAngle, Vars::Visuals::Trajectory::ForwardRedirect.Value, !bRedirect ? 1.f : Vars::Visuals::Trajectory::ForwardCutoff.Value, bInterp);
+		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffsetX.Value, Vars::Visuals::Trajectory::OffsetY.Value, Vars::Visuals::Trajectory::OffsetZ.Value }, vPos, vAngle, bRedirect ? Vars::Visuals::Trajectory::ForwardRedirect.Value : 0.f, Vars::Visuals::Trajectory::ForwardCutoff.Value, bInterp);
 
 		tProjInfo = { pPlayer, pWeapon, FNV1A::Hash32Const("custom"), vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::LifeTime.Value };
 		return true;
@@ -360,7 +360,9 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 	if (!m_pEnv || !m_pObj)
 		return false;
 
-	//set drag
+	m_pCurrent = &tProjInfo;
+
+	// set drag
 	{
 		float flDrag = 0.f;
 		Vec3 vDragBasis = {};
@@ -403,7 +405,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 			break;
 		case FNV1A::Hash32Const("models/weapons/w_models/w_baseball.mdl"):
 			flDrag = 1.f;
-			vDragBasis = { 0.009000f /*0.006645f*/, 0.006581f, 0.006710f};
+			vDragBasis = { 0.009000f /*0.006645f*/, 0.006581f, 0.006710f };
 			vAngDragBasis = { 0.002233f, 0.002246f, 0.002206f };
 			break;
 		case FNV1A::Hash32Const("models/weapons/c_models/c_xms_festive_ornament.mdl"):
@@ -443,7 +445,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 		m_pObj->m_angDragBasis = vAngDragBasis;
 	}
 
-	//set position and velocity
+	// set position and velocity
 	{
 		Vec3 vVelocity, vAngularVelocity;
 		if (!bWorld)
@@ -478,7 +480,8 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 						vAngularVelocity = { 600.f, float(SDK::RandomInt(-1200, 1200)), 0.f };
 					break;
 				}
-				vAngularVelocity = { 600.f, -1200.f, 0.f };
+				if (!tProjInfo.m_pWeapon || !SDK::AttribHookValue(0, "grenade_no_spin", tProjInfo.m_pWeapon))
+					vAngularVelocity = { 600.f, -1200.f, 0.f };
 				break;
 			case FNV1A::Hash32Const("models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl"):
 				vVelocity = vForward * 10 + vUp;
@@ -554,12 +557,11 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 		m_pObj->SetVelocity(&vVelocity, &vAngularVelocity);
 	}
 
-	//set m_pEnv params
+	// set m_pEnv params
 	{
 		float flMaxVelocity = 1000000.f;
 		float vMaxAngularVelocity = 1000000.f;
 
-		//only pipes need k_flMaxVelocity and k_flMaxAngularVelocity
 		switch (tProjInfo.m_uType)
 		{
 		case FNV1A::Hash32Const("custom"):
@@ -585,7 +587,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 		params.maxAngularVelocity = vMaxAngularVelocity;
 
 		m_pEnv->SetPerformanceSettings(&params);
-		m_pEnv->SetAirDensity(2.f);
+		m_pEnv->SetAirDensity(AIR_DENSITY);
 		m_pEnv->SetGravity({ 0.f, 0.f, -(800.f * tProjInfo.m_flGravity) });
 
 		m_pEnv->ResetSimulationClock();
@@ -678,6 +680,9 @@ void CProjectileSimulation::SetupTrace(CTraceFilterCollideable& filter, int& nMa
 			}
 		}
 	}
+
+	if (m_pObj->m_dragCoefficient && m_pObj->m_angDragBasis)
+		nMask |= CONTENTS_DISPSOLID;
 }
 
 void CProjectileSimulation::SetupTrace(CTraceFilterCollideable& filter, int& nMask, CBaseEntity* pProjectile)

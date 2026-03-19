@@ -21,7 +21,7 @@ void COffscreenArrows::DrawArrowTo(const Vec3& vFromPos, const Vec3& vToPos, Col
 	}
 
 	Vec3 vAngle = Math::VectorAngles({ vCenter.x - vScreen.x, vCenter.y - vScreen.y, 0 });
-	const float flDeg = DEG2RAD(vAngle.y);
+	const float flDeg = Math::Deg2Rad(vAngle.y);
 	const float flCos = cos(flDeg);
 	const float flSin = sin(flDeg);
 

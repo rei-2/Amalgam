@@ -154,7 +154,7 @@ bool CAutoDetonate::CheckTargets(CTFPlayer* pLocal, EntityEnum::EntityEnum iGrou
 
 bool CAutoDetonate::CheckSelf(CTFPlayer* pLocal, EntityEnum::EntityEnum iGroup)
 {
-	if (!(Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::PreventSelfDamage) || !pLocal->IsAlive() || pLocal->IsAGhost())
+	if (!(Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::PreventSelfDamage) || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsInvulnerable())
 		return false;
 
 	auto& vProjectiles = H::Entities.GetGroup(iGroup);

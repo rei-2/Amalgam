@@ -720,7 +720,7 @@ void SDK::FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTarget
 
 	float flCurYaw = vCurAngle.y + (bCurOOB ? 180.f : 0.f);
 	float flTargetYaw = vTargetAngle.y + (bTargetOOB ? 180.f : 0.f);
-	float flYaw = DEG2RAD(flTargetYaw - flCurYaw + vMoveAng.y);
+	float flYaw = Math::Deg2Rad(flTargetYaw - flCurYaw + vMoveAng.y);
 
 	pCmd->forwardmove = cos(flYaw) * flSpeed;
 	pCmd->sidemove = sin(flYaw) * flSpeed * (bTargetOOB ? -1 : 1);
@@ -766,8 +766,8 @@ Vec3 SDK::ComputeMove(const CUserCmd* pCmd, CTFPlayer* pLocal, const Vec3& vFrom
 
 	Vec3 vSilent = vDiff.To2D();
 	Vec3 vAngle = Math::VectorAngles(vSilent);
-	const float flYaw = DEG2RAD(vAngle.y - pCmd->viewangles.y);
-	const float flPitch = DEG2RAD(vAngle.x - pCmd->viewangles.x);
+	const float flYaw = Math::Deg2Rad(vAngle.y - pCmd->viewangles.y);
+	const float flPitch = Math::Deg2Rad(vAngle.x - pCmd->viewangles.x);
 
 	Vec3 vMove = { cos(flYaw) * 450.f, -sin(flYaw) * 450.f, -cos(flPitch) * 450.f };
 	if (!(I::EngineTrace->GetPointContents(pLocal->GetShootPos()) & CONTENTS_WATER)) // only apply upmove in water

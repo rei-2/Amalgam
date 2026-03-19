@@ -5,7 +5,8 @@
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 
-Enum(CalculateFlags, None = 0, TwoPass = 1 << 0, SetupClip = 1 << 1, AccountDrag = 1 << 2, Accuracy = TwoPass | SetupClip | AccountDrag)
+Enum(PointFlags, None = 0, Regular = 1 << 0, Alternate = 1 << 1)
+Enum(CalculateFlags, None = 0, TwoPass = 1 << 0, SetupClip = 1 << 1, AccountDrag = 1 << 2, AlternateAngle = 1 << 3, Accuracy = TwoPass | SetupClip | AccountDrag)
 Enum(CalculateResult, Pending, Good, Time, Bad)
 
 struct Info_t
@@ -46,6 +47,14 @@ struct Point_t
 	Solution_t m_tSolution = {};
 };
 
+struct Offset_t
+{
+	Vec3 m_vOffset;
+	byte m_iFlags;
+};
+using Directs_t = std::unordered_map<byte, Offset_t>;
+using Splashes_t = std::vector<byte>;
+
 struct History_t
 {
 	Vec3 m_vOrigin;
@@ -63,20 +72,23 @@ struct Splash_t : History_t
 {
 	float m_flTimeTo;
 };
+using DirectHistory_t = std::unordered_map<byte, std::vector<Direct_t>>;
+using SplashHistory_t = std::unordered_map<byte, std::vector<Splash_t>>;
 
 class CAimbotProjectile
 {
 private:
-	std::unordered_map<int, Vec3> GetDirectPoints();
-	void SetupSplashPoints(Vec3& vOrigin, std::vector<Vec3>& vSplashPoints);
-	std::vector<Point_t> GetSplashPoints(Vec3 vOrigin, std::vector<Vec3>& vSplashPoints, int iSimTime);
+	Directs_t GetDirects();
+	Splashes_t GetSplashes();
+	void SetupSplashPoints(Vec3& vOrigin, std::vector<Vec3>& vSplashPoints, byte iFlags = CalculateFlagsEnum::None);
+	std::vector<Point_t> GetSplashPoints(Vec3 vOrigin, std::vector<Vec3>& vSplashPoints, int iSimTime, byte iFlags = CalculateFlagsEnum::Accuracy);
 
-	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, int iSimTime, Solution_t& tOut, int iFlags = CalculateFlagsEnum::Accuracy, int iTolerance = -1);
+	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, int iSimTime, Solution_t& tOut, byte iFlags = CalculateFlagsEnum::Accuracy, int iTolerance = -1);
 	bool TestAngle(const Vec3& vPoint, const Vec3& vAngles, int iSimTime, bool bSplash, bool bSecondTest = false);
 
 	bool HandlePoint(const Vec3& vOrigin, int iSimTime, float flPitch, float flYaw, float flTime, const Vec3& vPoint, bool bSplash = false);
-	bool HandleDirect(std::vector<Direct_t>& vDirectHistory);
-	bool HandleSplash(std::vector<Splash_t>& vSplashHistory);
+	bool HandleDirect(DirectHistory_t& vDirectHistory);
+	bool HandleSplash(SplashHistory_t& vSplashHistory);
 
 	int CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bVisuals = true);
 	bool RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
@@ -108,7 +120,7 @@ private:
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
-	float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pPlayer);
+	float GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pPlayer, float flScale = 1.f);
 
 	bool AutoAirblast(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, CBaseEntity* pProjectile);
 	float GetSplashRadius(CBaseEntity* pProjectile, CTFWeaponBase* pWeapon = nullptr, CTFPlayer* pPlayer = nullptr, float flScale = 1.f, CTFWeaponBase* pAirblast = nullptr);
