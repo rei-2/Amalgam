@@ -6,6 +6,7 @@
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 
 Enum(PointFlags, None = 0, Regular = 1 << 0, Alternate = 1 << 1)
+Enum(PointType, Direct, Geometry, Air)
 Enum(CalculateFlags, None = 0, TwoPass = 1 << 0, SetupClip = 1 << 1, AccountDrag = 1 << 2, AlternateAngle = 1 << 3, Accuracy = TwoPass | SetupClip | AccountDrag)
 Enum(CalculateResult, Pending, Good, Time, Bad)
 
@@ -34,22 +35,32 @@ struct Info_t
 	float m_flNormalOffset = 0.f;
 };
 
+#pragma pack(1)
 struct Solution_t
 {
 	float m_flPitch = 0.f;
 	float m_flYaw = 0.f;
 	float m_flTime = 0.f;
-	int m_iCalculated = CalculateResultEnum::Pending;
+	byte m_iCalculated = CalculateResultEnum::Pending;
+};
+#pragma pack()
+
+struct Setup_t
+{
+	Vec3 m_vPoint = {};
+	byte m_iType = PointTypeEnum::Geometry;
 };
 struct Point_t
 {
 	Vec3 m_vPoint = {};
 	Solution_t m_tSolution = {};
+	byte m_iType = PointTypeEnum::Direct;
 };
 
 struct Offset_t
 {
 	Vec3 m_vOffset;
+	byte m_iType;
 	byte m_iFlags;
 };
 using Directs_t = std::unordered_map<byte, Offset_t>;
@@ -80,13 +91,13 @@ class CAimbotProjectile
 private:
 	Directs_t GetDirects();
 	Splashes_t GetSplashes();
-	void SetupSplashPoints(Vec3& vOrigin, std::vector<Vec3>& vSplashPoints, byte iFlags = CalculateFlagsEnum::None);
-	std::vector<Point_t> GetSplashPoints(Vec3 vOrigin, std::vector<Vec3>& vSplashPoints, int iSimTime, byte iFlags = CalculateFlagsEnum::Accuracy);
+	void SetupSplashPoints(Vec3& vOrigin, std::vector<Setup_t>& vSplashPoints, byte iFlags = CalculateFlagsEnum::None);
+	std::vector<Point_t> GetSplashPoints(Vec3 vOrigin, std::vector<Setup_t>& vSplashPoints, int iSimTime, byte iFlags = CalculateFlagsEnum::Accuracy);
 
 	void CalculateAngle(const Vec3& vLocalPos, const Vec3& vTargetPos, int iSimTime, Solution_t& tOut, byte iFlags = CalculateFlagsEnum::Accuracy, int iTolerance = -1);
-	bool TestAngle(const Vec3& vPoint, const Vec3& vAngles, int iSimTime, bool bSplash, bool bSecondTest = false);
+	bool TestAngle(const Vec3& vPoint, const Vec3& vAngles, int iSimTime, byte iType, bool bSecondTest = false);
 
-	bool HandlePoint(const Vec3& vOrigin, int iSimTime, float flPitch, float flYaw, float flTime, const Vec3& vPoint, bool bSplash = false);
+	bool HandlePoint(const Vec3& vOrigin, int iSimTime, float flPitch, float flYaw, float flTime, const Vec3& vPoint, byte iType = PointTypeEnum::Direct);
 	bool HandleDirect(DirectHistory_t& vDirectHistory);
 	bool HandleSplash(SplashHistory_t& vSplashHistory);
 
@@ -94,7 +105,7 @@ private:
 	bool RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	bool CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pProjectile);
-	bool TestAngle(CBaseEntity* pProjectile, const Vec3& vPoint, Vec3& vAngles, int iSimTime, bool bSplash);
+	bool TestAngle(CBaseEntity* pProjectile, const Vec3& vPoint, Vec3& vAngles, int iSimTime, byte iType);
 
 	bool Aim(const Vec3& vCurAngle, const Vec3& vToAngle, Vec3& vOut, int iMethod = Vars::Aimbot::General::AimType.Value);
 	void Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod = Vars::Aimbot::General::AimType.Value);
@@ -102,7 +113,7 @@ private:
 	Info_t m_tInfo = {};
 	MoveStorage m_tMoveStorage = {};
 	ProjectileInfo m_tProjInfo = {};
-	std::vector<Vec3> m_vSplashPoints = {};
+	std::vector<Setup_t> m_vSplashPoints = {};
 
 	bool m_bLastTickHeld = false;
 

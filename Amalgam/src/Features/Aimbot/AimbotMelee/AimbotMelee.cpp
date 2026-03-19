@@ -44,7 +44,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
 			if (bTeam && !F::AimbotGlobal.FriendlyFire())
@@ -90,7 +90,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 				}
 			}
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			vTargets.emplace_back(pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}
 	}
@@ -108,7 +108,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::NPC, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -667,7 +667,7 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 
 		Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPoint);
 		const float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
-		const float flDistTo = vLocalPos.DistTo(vPoint);
+		const float flDistTo = vLocalPos.DistToSqr(vPoint);
 
 		if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 			continue;

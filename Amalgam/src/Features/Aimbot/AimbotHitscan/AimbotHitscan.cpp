@@ -52,7 +52,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (!F::AimbotGlobal.PlayerBoneInFOV(pEntity->As<CTFPlayer>(), vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo, Vars::Aimbot::Hitscan::Hitboxes.Value))
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
 			if (bTeam && bHeal)
 			{
@@ -87,7 +87,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			vTargets.emplace_back(pEntity, pEntity->IsSentrygun() ? TargetEnum::Sentry : pEntity->IsDispenser() ? TargetEnum::Dispenser : TargetEnum::Teleporter, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -105,7 +105,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::Sticky, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -123,7 +123,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::NPC, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -141,7 +141,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 				continue;
 
-			float flDistTo = vLocalPos.DistTo(vPos);
+			float flDistTo = vLocalPos.DistToSqr(vPos);
 			vTargets.emplace_back(pEntity, TargetEnum::Bomb, vPos, vAngleTo, flFOVTo, flDistTo);
 		}
 	}
@@ -819,7 +819,7 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			}
 
 			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::Tapfire && pWeapon->GetWeaponSpread() != 0.f && !pLocal->InCond(TF_COND_RUNE_PRECISION)
-				&& m_vEyePos.DistTo(tTarget.m_vPos) > Vars::Aimbot::Hitscan::TapfireDistance.Value)
+				&& m_vEyePos.DistToSqr(tTarget.m_vPos) > powf(Vars::Aimbot::Hitscan::TapfireDistance.Value, 2))
 			{
 				const float flTimeSinceLastShot = (pLocal->m_nTickBase() * TICK_INTERVAL) - pWeapon->m_flLastFireTime();
 				if (flTimeSinceLastShot <= (pWeapon->GetBulletsPerShot() > 1 ? 0.25f : 1.25f))

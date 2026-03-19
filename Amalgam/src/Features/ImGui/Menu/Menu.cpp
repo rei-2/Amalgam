@@ -315,6 +315,8 @@ void CMenu::MenuAimbot(int iTab)
 						FText("Splash");
 						Divider(H::Draw.Scale(8), H::Draw.Scale(-1));
 						FDropdown(Vars::Aimbot::Projectile::SplashMode);
+						FSlider(Vars::Aimbot::Projectile::SplashNormalSkip, FSliderEnum::Left);
+						FSlider(Vars::Aimbot::Projectile::SplashAirCount, FSliderEnum::Right, !Vars::Aimbot::Projectile::SplashAirCount[DEFAULT_BIND] ? "random" : "%i");
 						PushTransparent(Vars::Aimbot::Projectile::SplashMode.Value != Vars::Aimbot::Projectile::SplashModeEnum::Trace);
 						{
 							FSlider(Vars::Aimbot::Projectile::SplashPointsDirect, FSliderEnum::Left);
@@ -332,8 +334,7 @@ void CMenu::MenuAimbot(int iTab)
 						PopTransparent();
 						FSlider(Vars::Aimbot::Projectile::SplashCountDirect, FSliderEnum::Left);
 						FSlider(Vars::Aimbot::Projectile::SplashCountArc, FSliderEnum::Right);
-						FSlider(Vars::Aimbot::Projectile::SplashTraceInterval, FSliderEnum::Left);
-						FSlider(Vars::Aimbot::Projectile::SplashNormalSkip, FSliderEnum::Right);
+						FSlider(Vars::Aimbot::Projectile::SplashTraceInterval);
 
 						Divider();
 						FText("Misc");
@@ -3402,13 +3403,20 @@ void CMenu::MenuSearch(std::string sSearch)
 		case WidgetEnum::FISlider:
 		{
 			auto pVar = pBase->As<int>();
-			FSlider(*pVar, !(i % 2) ? FSliderEnum::Left : FSliderEnum::Right, nullptr, nullptr, iOverride/*, iOverride*/);
+			const char* sFormat = nullptr;
+			switch (FNV1A::Hash32(pVar->Name()))
+			{
+			case FNV1A::Hash32Const("Vars::Aimbot::Projectile::SplashAirCount"):
+				if (!pVar->Map[DEFAULT_BIND])
+					sFormat = "random";
+			}
+			FSlider(*pVar, !(i % 2) ? FSliderEnum::Left : FSliderEnum::Right, sFormat, nullptr, iOverride/*, iOverride*/);
 			break;
 		}
 		case WidgetEnum::FFSlider:
 		{
 			auto pVar = pBase->As<float>();
-			const char* sFormat = pVar->m_sExtra;
+			const char* sFormat = nullptr;
 			switch (FNV1A::Hash32(pVar->Name()))
 			{
 			case FNV1A::Hash32Const("Vars::Aimbot::Projectile::SplashRotateX"):

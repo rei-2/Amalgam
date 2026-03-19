@@ -313,15 +313,15 @@ NAMESPACE_BEGIN(Vars)
 			CVarEnum(AutoDetonate, "Auto detonate", 0b00, DROPDOWN_MULTI, "Off",
 				VA_LIST("Stickies", "Flares", "##Divider", "Prevent self damage", "Ignore invisible"),
 				Stickies = 1 << 0, Flares = 1 << 1, PreventSelfDamage = 1 << 2, IgnoreInvisible = 1 << 3);
-			CVarEnum(AutoAirblast, "Auto airblast", 0b000, DROPDOWN_MULTI, "Off", // todo: implement advanced redirect!!
+			CVarEnum(AutoAirblast, "Auto airblast", 0b000, DROPDOWN_MULTI, "Off",
 				VA_LIST("Enabled", "##Divider", "Redirect", "Ignore FOV"),
 				Enabled = 1 << 0, Redirect = 1 << 1, IgnoreFOV = 1 << 2);
 			CVarEnum(Hitboxes, VA_LIST("Hitboxes", "Projectile hitboxes"), 0b001111, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Prioritize feet"),
 				Auto = 1 << 0, Head = 1 << 1, Body = 1 << 2, Feet = 1 << 3, BodyaimIfLethal = 1 << 4, PrioritizeFeet = 1 << 5);
 			CVarEnum(Modifiers, VA_LIST("Modifiers", "Projectile modifiers"), 0b0010, DROPDOWN_MULTI, nullptr,
-				VA_LIST("Charge weapon", "Cancel charge", "Use arm time", "Alternate angles"),
-				ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, UseArmTime = 1 << 2, AlternateAngles = 1 << 3);
+				VA_LIST("Charge weapon", "Cancel charge", "Use arm time", "Air splash", "Lob angles"),
+				ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, UseArmTime = 1 << 2, AirSplash = 1 << 3, LobAngles = 1 << 4);
 			CVar(MaxSimulationTime, "Max simulation time", 2.f, SLIDER_MIN | SLIDER_PRECISION, 0.1f, 2.5f, 0.25f, "%gs");
 			CVar(HitChance, "Hit chance", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
 			CVar(AutodetRadius, "Autodet radius", 90.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
@@ -361,6 +361,8 @@ NAMESPACE_BEGIN(Vars)
 			CVarEnum(SplashMode, "Splash mode", 0, NOSAVE | DEBUGVAR, nullptr,
 				VA_LIST("Trace", "Face"),
 				Trace, Face);
+			CVar(SplashNormalSkip, "Splash normal skip", 1, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 10);
+			CVar(SplashAirCount, "Splash air count", 0, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 10);
 			CVar(SplashPointsDirect, "Splash points direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0, 400, 5);
 			CVar(SplashPointsArc, "Splash points arc", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0, 400, 5);
 			CVar(SplashRotateX, "Splash Rx", -1.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, -1.f, 360.f);
@@ -371,7 +373,6 @@ NAMESPACE_BEGIN(Vars)
 			CVar(SplashCountDirect, "Splash count direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 1, 400, 5);
 			CVar(SplashCountArc, "Splash count arc", 5, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 1, 400, 5);
 			CVar(SplashTraceInterval, "Splash trace interval", 10, NOSAVE | DEBUGVAR, 1, 10);
-			CVar(SplashNormalSkip, "Splash normal skip", 1, NOSAVE | DEBUGVAR | SLIDER_MIN, 1, 10);
 
 			CVar(DeltaCount, "Delta count", 5, NOSAVE | DEBUGVAR, 1, 5);
 			CVarEnum(DeltaMode, "Delta mode", 0, NOSAVE | DEBUGVAR, nullptr,
