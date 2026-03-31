@@ -47,7 +47,10 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 {
 	if (bInterp)
 		F::CameraWindow.m_bShouldDraw = false;
-	if (bInterp ? !Vars::Visuals::Simulation::TrajectoryPath.Value && !Vars::Visuals::Simulation::ProjectileCamera.Value : !Vars::Visuals::Simulation::ShotPath.Value)
+	
+	if (bInterp
+		? !Vars::Visuals::Simulation::TrajectoryPath.Value && !Vars::Visuals::Simulation::ProjectileCamera.Value && !(Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Enabled)
+		: !Vars::Visuals::Simulation::ShotPath.Value)
 		return;
 
 	Vec3 vAngles = bInterp ? I::EngineClient->GetViewAngles() : G::CurrentUserCmd->viewangles;
@@ -108,7 +111,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 
 	float flRadius = 0.f;
 	Vec3 vEndPos = trace.endpos;
-	if ((bInterp ? Vars::Visuals::Simulation::TrajectoryPath.Value : Vars::Visuals::Simulation::ShotPath.Value) && Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Enabled)
+	if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Enabled)
 	{
 		switch (pWeapon->GetWeaponID())
 		{
@@ -150,7 +153,8 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 
 	if (bInterp)
 	{
-		if (Vars::Visuals::Simulation::ProjectileCamera.Value && !I::EngineVGui->IsGameUIVisible() && pPlayer->m_vecOrigin().DistTo(trace.endpos) > 500.f)
+		float flDistanceSqr = powf(500.f, 2);
+		if (Vars::Visuals::Simulation::ProjectileCamera.Value && !I::EngineVGui->IsGameUIVisible() && pPlayer->m_vecOrigin().DistToSqr(trace.endpos) > flDistanceSqr)
 		{
 			CGameTrace cameraTrace = {};
 
@@ -177,20 +181,20 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 				H::Draw.RenderWireframeBox(trace.endpos, -vSize, vSize, vAngles, Vars::Colors::TrajectoryPathIgnoreZ.Value);
 				H::Draw.RenderWireframeBox(trace.endpos, -vSize, vSize, vAngles, Vars::Colors::TrajectoryPath.Value, true);
 			}
+		}
 
-			if (flRadius)
+		if (flRadius)
+		{
+			if (!(Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Sphere))
 			{
-				if (!(Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Sphere))
-				{
-					auto vPoints = SplashTrace(vEndPos, flRadius, pNormal ? *pNormal : Vec3(0, 0, 1), Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Trace);
-					H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusIgnoreZ.Value, false, Vars::Visuals::Simulation::StyleEnum::Line);
-					H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, true, Vars::Visuals::Simulation::StyleEnum::Line);
-				}
-				else
-				{
-					H::Draw.RenderSphere(vEndPos, flRadius, 36, 36, Vars::Colors::SplashRadiusIgnoreZ.Value);
-					H::Draw.RenderSphere(vEndPos, flRadius, 36, 36, Vars::Colors::SplashRadius.Value, true);
-				}
+				auto vPoints = SplashTrace(vEndPos, flRadius, pNormal ? *pNormal : Vec3(0, 0, 1), Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Trace);
+				H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadiusIgnoreZ.Value, false, Vars::Visuals::Path::StyleEnum::Line);
+				H::Draw.RenderPath(vPoints, Vars::Colors::SplashRadius.Value, true, Vars::Visuals::Path::StyleEnum::Line);
+			}
+			else
+			{
+				H::Draw.RenderSphere(vEndPos, flRadius, 36, 36, Vars::Colors::SplashRadiusIgnoreZ.Value);
+				H::Draw.RenderSphere(vEndPos, flRadius, 36, 36, Vars::Colors::SplashRadius.Value, true);
 			}
 		}
 	}
@@ -222,9 +226,9 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			{
 				std::vector<Vec3> vPoints = SplashTrace(vEndPos, flRadius, pNormal ? *pNormal : Vec3(0, 0, 1), Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Trace);
 				if (Vars::Colors::SplashRadiusIgnoreZ.Value.a)
-					G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadiusIgnoreZ.Value, Vars::Visuals::Simulation::StyleEnum::Line);
+					G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadiusIgnoreZ.Value, Vars::Visuals::Path::StyleEnum::Line);
 				if (Vars::Colors::SplashRadius.Value.a)
-					G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadius.Value, Vars::Visuals::Simulation::StyleEnum::Line, true);
+					G::PathStorage.emplace_back(vPoints, I::GlobalVars->curtime + TICKS_TO_TIME(tProjInfo.m_vPath.size()) + F::Backtrack.GetReal(), Vars::Colors::SplashRadius.Value, Vars::Visuals::Path::StyleEnum::Line, true);
 			}
 			else
 			{
@@ -542,7 +546,7 @@ void CVisuals::DrawEffects()
 		bool bPredict = tProjectile.m_iFlags & TrajectoryEnum::Predict && tProjectile.m_vPath.size() && tProjectile.m_flTime;
 
 		if (bPredict && tProjectile.m_iFlags & TrajectoryEnum::Path)
-			H::Draw.RenderPath(tProjectile.m_vPath, tProjectile.m_tColor, bZBuffer, Vars::Visuals::Simulation::StyleEnum::Line, tProjectile.m_flTime);
+			H::Draw.RenderPath(tProjectile.m_vPath, tProjectile.m_tColor, bZBuffer, Vars::Visuals::Path::StyleEnum::Line, tProjectile.m_flTime);
 
 		if (tProjectile.m_iFlags & TrajectoryEnum::Radius)
 		{
@@ -552,7 +556,7 @@ void CVisuals::DrawEffects()
 			if (!(tProjectile.m_iFlags & TrajectoryEnum::Sphere))
 			{
 				auto vPoints = SplashTrace(vOrigin, tProjectile.m_flRadius, vNormal, tProjectile.m_iFlags & TrajectoryEnum::Trace);
-				H::Draw.RenderPath(vPoints, tProjectile.m_tColor, bZBuffer, Vars::Visuals::Simulation::StyleEnum::Line);
+				H::Draw.RenderPath(vPoints, tProjectile.m_tColor, bZBuffer, Vars::Visuals::Path::StyleEnum::Line);
 			}
 			else
 				H::Draw.RenderSphere(vOrigin, tProjectile.m_flRadius, 36, 36, tProjectile.m_tColor, bZBuffer);
@@ -700,8 +704,8 @@ void CVisuals::FOV(CTFPlayer* pLocal, CViewSetup* pView)
 	G::FOV = pView->fov;
 	if (pLocal->IsAlive())
 	{
-		pLocal->m_iFOV() = pView->fov;
-		pLocal->m_iDefaultFOV() = std::max(flRegularOverride, flRegularFOV);
+		pLocal->m_iFOV() = ceilf(pView->fov);
+		pLocal->m_iDefaultFOV() = ceilf(std::max(flRegularOverride, flRegularFOV));
 		default_fov->SetValue(pLocal->m_iDefaultFOV());
 	}
 }

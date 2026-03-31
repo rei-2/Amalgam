@@ -70,7 +70,7 @@ void CResolver::FrameStageNotify()
 		if (fabsf(pPlayer->m_angEyeAnglesX()) == 90.f)
 		{
 			if (auto flPitch = GetPitchForSniperDot(pPlayer, pResource))
-				tData.m_flPitch = flPitch.value();
+				tData.m_flPitch = *flPitch;
 			else if (!tData.m_bFirstOOBPitch && tData.m_bAutoSetPitch || tData.m_bInversePitch)
 				tData.m_flPitch = -pPlayer->m_angEyeAnglesX(); // set to inverse by default
 			else

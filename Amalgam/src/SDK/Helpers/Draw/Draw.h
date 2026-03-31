@@ -77,8 +77,8 @@ public:
 
 	void String(const Font_t& tFont, int x, int y, Color_t tColor, EAlign eAlign, const char* str);
 	void String(const Font_t& tFont, int x, int y, Color_t tColor, EAlign eAlign, const wchar_t* wstr);
-	void StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const char* str, bool bAlpha = true);
-	void StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const wchar_t* wstr, bool bAlpha = true);
+	void StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const char* str);
+	void StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const wchar_t* wstr);
 
 	void Line(int x1, int y1, int x2, int y2, Color_t tColor);
 	void FillPolygon(std::vector<Vertex_t> vVertices, Color_t tColor);
@@ -106,9 +106,9 @@ public:
 
 	void RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t tColor, bool bZBuffer = false);
 	void RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBuffer = false,
-		int iStyle = Vars::Visuals::Simulation::StyleEnum::Line, float flTime = 0.f,
-		int iSeparatorSpacing = Vars::Visuals::Simulation::SeparatorSpacing.Value,
-		float flSeparatorLength = Vars::Visuals::Simulation::SeparatorLength.Value);
+		int iStyle = Vars::Visuals::Path::StyleEnum::Line, float flTime = 0.f,
+		int iSeparatorSpacing = Vars::Visuals::Path::SeparatorSpacing.Value,
+		float flSeparatorLength = Vars::Visuals::Path::SeparatorLength.Value);
 	void RenderBox(const Vec3& vOrigin, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vAngles, Color_t tColor, bool bZBuffer = false, bool bInsideOut = false);
 	void RenderWireframeBox(const Vec3& vOrigin, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vAngles, Color_t tColor, bool bZBuffer = false);
 	void RenderWireframeSweptBox(const Vector& vStart, const Vector& vEnd, const Vec3& vMins, const Vec3& vMaxs, const Vec3& vAngles, Color_t tColor, bool bZBuffer = false);

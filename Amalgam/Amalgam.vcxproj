@@ -1490,6 +1490,7 @@
     <ClInclude Include="src\Utils\Hooks\Hooks.h" />
     <ClInclude Include="src\Utils\Interfaces\Interfaces.h" />
     <ClInclude Include="src\Utils\KeyHandler\KeyHandler.h" />
+    <ClInclude Include="src\Utils\Math\BaseMath.h" />
     <ClInclude Include="src\Utils\Math\Math.h" />
     <ClInclude Include="src\Utils\Memory\Memory.h" />
     <ClInclude Include="src\Utils\NetVars\NetVars.h" />

@@ -68,16 +68,6 @@
 #define OUTPUT_CHAT 1 << 4
 #define OUTPUT_PARTY 1 << 5
 
-template <class T> inline int sign(T t)
-{
-	return (t > T(0)) - (t < T(0));
-}
-
-inline float fnmodf(float flX, float flY)
-{	// silly fix for negative values
-	return fmodf(flX, flY) + (flX < 0 ? flY : 0);
-}
-
 namespace SDK
 {
 	void Output(const char* sFunction, const char* sLog = nullptr, Color_t tColor = { 255, 255, 255, 255 },

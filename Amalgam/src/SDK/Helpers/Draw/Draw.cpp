@@ -24,7 +24,7 @@ void CDraw::Start(bool bBadFontCheck)
 		if (tTimer.Run(1.f))
 		{
 			if (!GetTextSize("", H::Fonts.GetFont(FONT_ESP)).y)
-				H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+				H::Fonts.Reload();
 		}
 	}
 }
@@ -122,8 +122,11 @@ void CDraw::String(const Font_t& tFont, int x, int y, Color_t tColor, EAlign eAl
 	I::MatSystemSurface->DrawSetTextColor(tColor);
 	I::MatSystemSurface->DrawPrintText(wstr, int(wcslen(wstr)));
 }
-void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const char* str, bool bAlpha)
+void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const char* str)
 {
+	if (Vars::Menu::CheapText.Value)
+		return String(tFont, x, y, tColor, eAlign, str);
+
 	wsprintfW(s_wstr, L"%hs", str);
 	const auto dwFont = tFont.m_dwFont;
 
@@ -141,15 +144,11 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Co
 	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
 	}
 
-	std::vector<std::pair<int, int>> vOutline = { { 1, 1 } };
-	if (!Vars::Menu::CheapText.Value)
-		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
-
-	if (bAlpha && !Vars::Menu::CheapText.Value)
-		tColorOut = tColorOut.Alpha(tColorOut.a * Math::RemapVal(tColorOut.Brightness(), 0, 255, 0.5f, 0.1f));
-
+	tColorOut.a *= Math::RemapVal(tColorOut.Brightness(), 0, 255, 0.5f, 0.1f);
 	if (tColorOut.a)
 	{
+		std::vector<std::pair<int, int>> vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
+
 		for (auto& [x2, y2] : vOutline)
 		{
 			I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
@@ -164,8 +163,11 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Co
 	I::MatSystemSurface->DrawSetTextColor(tColor);
 	I::MatSystemSurface->DrawPrintText(s_wstr, int(wcslen(s_wstr)));
 }
-void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const wchar_t* wstr, bool bAlpha)
+void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Color_t tColorOut, EAlign eAlign, const wchar_t* wstr)
 {
+	if (Vars::Menu::CheapText.Value)
+		return String(tFont, x, y, tColor, eAlign, wstr);
+
 	const auto dwFont = tFont.m_dwFont;
 
 	Vec2 vSize = GetTextSize(wstr, tFont);
@@ -181,16 +183,12 @@ void CDraw::StringOutlined(const Font_t& tFont, int x, int y, Color_t tColor, Co
 	case ALIGN_BOTTOM: x -= vSize.x / 2; y -= vSize.y; break;
 	case ALIGN_BOTTOMRIGHT: x -= vSize.x; y -= vSize.y; break;
 	}
-
-	std::vector<std::pair<int, int>> vOutline = { { 1, 1 } };
-	if (!Vars::Menu::CheapText.Value)
-		vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
-
-	if (bAlpha && !Vars::Menu::CheapText.Value)
-		tColorOut = tColorOut.Alpha(tColorOut.a * Math::RemapVal(tColorOut.Brightness(), 0, 255, 0.5f, 0.1f));
-
+	
+	tColorOut.a *= Math::RemapVal(tColorOut.Brightness(), 0, 255, 0.5f, 0.1f);
 	if (tColorOut.a)
 	{
+		std::vector<std::pair<int, int>> vOutline = { { -1, 0 }, { 0, -1 }, { 1, 0 }, { 0, 1 }, { -1, -1 }, { 1, 1 }, { -1, 1 }, { 1, -1 } };
+
 		for (auto& [x2, y2] : vOutline)
 		{
 			I::MatSystemSurface->DrawSetTextPos(x + x2, y + y2);
@@ -485,7 +483,7 @@ void CDraw::RenderLine(const Vec3& vStart, const Vec3& vEnd, Color_t tColor, boo
 
 void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBuffer, int iStyle, float flTime, int iSeparatorSpacing, float flSeparatorLength)
 {
-	if (!tColor.a || iStyle == Vars::Visuals::Simulation::StyleEnum::Off)
+	if (!tColor.a || iStyle == Vars::Visuals::Path::StyleEnum::Off)
 		return;
 
 	for (size_t i = 1; i < vPath.size(); i++)
@@ -495,12 +493,12 @@ void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBu
 
 		switch (iStyle)
 		{
-		case Vars::Visuals::Simulation::StyleEnum::Line:
+		case Vars::Visuals::Path::StyleEnum::Line:
 		{
 			RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
 			break;
 		}
-		case Vars::Visuals::Simulation::StyleEnum::Separators:
+		case Vars::Visuals::Path::StyleEnum::Separators:
 		{
 			RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
 			if (!(i % iSeparatorSpacing))
@@ -514,13 +512,13 @@ void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBu
 			}
 			break;
 		}
-		case Vars::Visuals::Simulation::StyleEnum::Spaced:
+		case Vars::Visuals::Path::StyleEnum::Spaced:
 		{
 			if (!(i % 2))
 				RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
 			break;
 		}
-		case Vars::Visuals::Simulation::StyleEnum::Arrows:
+		case Vars::Visuals::Path::StyleEnum::Arrows:
 		{
 			if (!(i % 3))
 			{
@@ -537,7 +535,7 @@ void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBu
 			}
 			break;
 		}
-		case Vars::Visuals::Simulation::StyleEnum::Boxes:
+		case Vars::Visuals::Path::StyleEnum::Boxes:
 		{
 			RenderLine(vPath[i - 1], vPath[i], tColor, bZBuffer);
 			if (!(i % iSeparatorSpacing))

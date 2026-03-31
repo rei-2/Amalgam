@@ -178,7 +178,7 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 	const auto cFixedSpread = std::ranges::min_element(vBulletCorrections,
 		[&](const Vec3& lhs, const Vec3& rhs)
 		{
-			return lhs.DistTo(vAverageSpread) < rhs.DistTo(vAverageSpread);
+			return lhs.DistToSqr(vAverageSpread) < rhs.DistToSqr(vAverageSpread);
 		});
 
 	if (cFixedSpread == vBulletCorrections.end())

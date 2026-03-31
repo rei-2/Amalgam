@@ -1,5 +1,5 @@
 #pragma once
-#include <algorithm>
+#include "../../Utils/Math/BaseMath.h"
 #include <numbers>
 #include <string>
 #include <format>
@@ -9,47 +9,6 @@
 #include <unordered_map>
 #include <map>
 #include <ranges>
-
-#pragma warning (disable : 26495)
-
-namespace Math
-{
-	template <class T = float>
-	constexpr T PI_V = static_cast<T>(3.141592653589793);
-	constexpr float PI = PI_V<>;
-
-	template <class T = float>
-	constexpr T RAD_V = static_cast<T>(57.29577951308232);
-	constexpr float RAD = RAD_V<>;
-
-	template <class T = float>
-	constexpr T E_V = static_cast<T>(2.718281828459045);
-	constexpr float E = E_V<>;
-
-	template <class T = float>
-	inline T Deg2Rad(T v)
-	{
-		return v * PI_V<T> / T(180);
-	}
-
-	template <class T = float>
-	inline T Rad2Deg(T v)
-	{
-		return v * T(180) / PI_V<T>;
-	}
-
-	inline float DeltaAngle(const float flAngleA, const float flAngleB)
-	{
-		float flOut = fmodf((flAngleA - flAngleB) + 180.f, 360.f);
-		return flOut += flOut < 0 ? 180.f : -180.f;
-	}
-
-	inline float ShortDist(const float flAngleA, const float flAngleB)
-	{
-		const float flDelta = fmodf((flAngleA - flAngleB), 360.f);
-		return fmodf(2 * flDelta, 360.f) - flDelta;
-	}
-}
 
 class Vec2
 {
@@ -280,12 +239,12 @@ public:
 
 	inline Vec2 Lerp(const Vec2& v, float t) const
 	{
-		return { x + (v.x - x) * t, y + (v.y - y) * t };
+		return { Math::Lerp(x, v.x, t), Math::Lerp(y, v.y, t) };
 	}
 
 	inline Vec2 Lerp(float v, float t) const
 	{
-		return { x + (v - x) * t, y + (v - y) * t };
+		return { Math::Lerp(x, v, t), Math::Lerp(y, v, t) };
 	}
 
 	inline Vec2 DeltaAngle(const Vec2& v) const
@@ -300,12 +259,12 @@ public:
 
 	inline Vec2 LerpAngle(const Vec2& v, float t) const
 	{
-		return { x - Math::ShortDist(x, v.x) * t, y - Math::ShortDist(y, v.y) * t };
+		return { Math::LerpAngle(x, v.x, t), Math::LerpAngle(y, v.y, t) };
 	}
 
 	inline Vec2 LerpAngle(float v, float t) const
 	{
-		return { x - Math::ShortDist(x, v) * t, y - Math::ShortDist(y, v) * t };
+		return { Math::LerpAngle(x, v, t), Math::LerpAngle(y, v, t) };
 	}
 
 	inline float Length(void) const
@@ -585,12 +544,12 @@ public:
 
 	inline Vec3 Lerp(const Vec3& v, float t) const
 	{
-		return { x + (v.x - x) * t, y + (v.y - y) * t, z + (v.z - z) * t };
+		return { Math::Lerp(x, v.x, t), Math::Lerp(y, v.y, t), Math::Lerp(z, v.z, t) };
 	}
 
 	inline Vec3 Lerp(float v, float t) const
 	{
-		return { x + (v - x) * t, y + (v - y) * t, z + (v - z) * t };
+		return { Math::Lerp(x, v, t), Math::Lerp(y, v, t), Math::Lerp(z, v, t) };
 	}
 
 	inline Vec3 DeltaAngle(const Vec3& v) const
@@ -605,12 +564,12 @@ public:
 
 	inline Vec3 LerpAngle(const Vec3& v, float t) const
 	{
-		return { x - Math::ShortDist(x, v.x) * t, y - Math::ShortDist(y, v.y) * t, z - Math::ShortDist(z, v.z) * t };
+		return { Math::LerpAngle(x, v.x, t), Math::LerpAngle(y, v.y, t), Math::LerpAngle(z, v.z, t) };
 	}
 
 	inline Vec3 LerpAngle(float v, float t) const
 	{
-		return { x - Math::ShortDist(x, v) * t, y - Math::ShortDist(y, v) * t, z - Math::ShortDist(z, v) * t };
+		return { Math::LerpAngle(x, v, t), Math::LerpAngle(y, v, t), Math::LerpAngle(z, v, t) };
 	}
 
 	inline float Length(void) const
@@ -752,12 +711,6 @@ public:
 	}
 
 private:
-	static inline void SinCos(float flRadians, float* pSin, float* pCos)
-	{
-		*pSin = std::sin(flRadians);
-		*pCos = std::cos(flRadians);
-	}
-
 	static inline void Vector3DMultiplyPosition(const VMatrix& src1, const Vector src2, Vector& dst)
 	{
 		dst[0] = src1[0][0] * src2.x + src1[0][1] * src2.y + src1[0][2] * src2.z + src1[0][3];
@@ -768,10 +721,9 @@ private:
 	static inline void SetupMatrixAnglesInternal(float m2[4][4], const QAngle& vAngles)
 	{
 		float sr, sp, sy, cr, cp, cy;
-
-		SinCos(Math::Deg2Rad(vAngles[1]), &sy, &cy);
-		SinCos(Math::Deg2Rad(vAngles[0]), &sp, &cp);
-		SinCos(Math::Deg2Rad(vAngles[2]), &sr, &cr);
+		Math::SinCos(Math::Deg2Rad(vAngles[1]), sy, cy);
+		Math::SinCos(Math::Deg2Rad(vAngles[0]), sp, cp);
+		Math::SinCos(Math::Deg2Rad(vAngles[2]), sr, cr);
 
 		// matrix = (YAW * PITCH) * ROLL
 		m2[0][0] = cp * cy;
@@ -900,7 +852,7 @@ struct FloatRange_t
 
 namespace LerpEnum {
 	enum LerpEnum {
-		All, NoAlpha, Alpha
+		All, NoAlpha, Alpha, HSV, HSVNoAlpha
 	};
 };
 using byte = unsigned char;
@@ -1015,16 +967,16 @@ struct Color_t
 		{
 		default:
 			return {
-				byte(r + (to.r - r) * t),
-				byte(g + (to.g - g) * t),
-				byte(b + (to.b - b) * t),
-				byte(a + (to.a - a) * t)
+				byte(Math::Lerp(r, to.r, t)),
+				byte(Math::Lerp(g, to.g, t)),
+				byte(Math::Lerp(b, to.b, t)),
+				byte(Math::Lerp(a, to.a, t))
 			};
 		case LerpEnum::NoAlpha:
 			return {
-				byte(r + (to.r - r) * t),
-				byte(g + (to.g - g) * t),
-				byte(b + (to.b - b) * t),
+				byte(Math::Lerp(r, to.r, t)),
+				byte(Math::Lerp(g, to.g, t)),
+				byte(Math::Lerp(b, to.b, t)),
 				byte(a)
 			};
 		case LerpEnum::Alpha:
@@ -1032,8 +984,17 @@ struct Color_t
 				r,
 				g,
 				b,
-				byte(a + (to.a - a) * t)
+				byte(Math::Lerp(a, to.a, t))
 			};
+		case LerpEnum::HSV:
+		case LerpEnum::HSVNoAlpha:
+		{
+			float flHFrom, flSFrom, flVFrom; GetHSV(flHFrom, flSFrom, flVFrom);
+			float flHTo, flSTo, flVTo; to.GetHSV(flHTo, flSTo, flVTo);
+			float flAOut = (eLerp == LerpEnum::HSV ? Math::Lerp(a, to.a, t) : a) * 255.f;
+			Color_t tOut; tOut.SetHSV(fnmodf(Math::LerpAngle(flHFrom - 180, flHTo - 180, t) + 180, 360), Math::Lerp(flSFrom, flSTo, t), Math::Lerp(flVFrom, flVTo, t), flAOut);
+			return tOut;
+		}
 		}
 	}
 

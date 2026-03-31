@@ -58,7 +58,7 @@ MAKE_HOOK(CDispCollTree_SweepAABBTriIntersect, S::CDispCollTree_SweepAABBTriInte
 	CALL_ORIGINAL(rcx, ray, rayDir, iTri, pTri, pTrace);
 
 	if (s_vOriginal)
-		pTri->m_vecNormal = s_vOriginal.value(), s_vOriginal = std::nullopt;
+		pTri->m_vecNormal = *s_vOriginal, s_vOriginal = std::nullopt;
 }
 
 MAKE_HOOK(CDispCollTree_EdgeCrossAxis_0, S::CDispCollTree_EdgeCrossAxis_0(), void,
@@ -67,7 +67,7 @@ MAKE_HOOK(CDispCollTree_EdgeCrossAxis_0, S::CDispCollTree_EdgeCrossAxis_0(), voi
 	DEBUG_RETURN(CDispCollTree_EdgeCrossAxis_0, rcx, ray, iPlane, pHelper);
 
 	if (s_vOriginal)
-		s_pTri->m_vecNormal = s_vOriginal.value(), s_vOriginal = std::nullopt;
+		s_pTri->m_vecNormal = *s_vOriginal, s_vOriginal = std::nullopt;
 
 	CALL_ORIGINAL(rcx, ray, iPlane, pHelper);
 }

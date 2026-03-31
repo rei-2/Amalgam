@@ -113,7 +113,7 @@ void CCore::Load()
 	if (m_bUnload = m_bFailed2 = !U::Hooks.Initialize() || !U::BytePatches.Initialize() || !H::Events.Initialize())
 		return;
 	F::Materials.LoadMaterials();
-	H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+	H::Fonts.Reload();
 	F::Configs.LoadConfig(F::Configs.m_sCurrentConfig, false);
 
 	SDK::Output("Amalgam", "Loaded", DEFAULT_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);

@@ -84,7 +84,8 @@ bool CAutoDetonate::CheckEntity(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWeap
 {
 	// CEntitySphereQuery actually does a box test so we need to make sure the distance is less than the radius first
 	Vec3 vPos; pEntity->m_Collision()->CalcNearestPoint(vOrigin, &vPos);
-	if (vOrigin.DistTo(vPos) > flRadius)
+	float flRadiusSqr = powf(flRadius, 2);
+	if (vOrigin.DistToSqr(vPos) > flRadiusSqr)
 		return false;
 
 	if (pEntity != pLocal
@@ -94,11 +95,12 @@ bool CAutoDetonate::CheckEntity(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWeap
 
 	if (pCmd && pWeapon->GetWeaponID() == TF_WEAPON_PIPEBOMBLAUNCHER && pWeapon->As<CTFPipebombLauncher>()->GetDetonateType() == TF_DETONATE_MODE_DOT)
 	{
-		Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), vOrigin);
-		SDK::FixMovement(pCmd, vAngleTo);
-		pCmd->viewangles = vAngleTo;
-		G::PSilentAngles = true;
+		if (G::Attacking == 1 || I::ClientState->chokedcommands)
+			return false;
+
+		m_vAimPos = vOrigin;
 	}
+
 	return true;
 }
 
@@ -195,7 +197,18 @@ void CAutoDetonate::Run(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (!Vars::Aimbot::Projectile::AutoDetonate.Value)
 		return;
 
+	m_vAimPos = std::nullopt;
 	if (Check(pLocal, pCmd, EntityEnum::LocalStickies, Vars::Aimbot::Projectile::AutoDetonateEnum::Stickies)
 		|| Check(pLocal, pCmd, EntityEnum::LocalFlares, Vars::Aimbot::Projectile::AutoDetonateEnum::Flares))
+	{
 		pCmd->buttons |= IN_ATTACK2;
+
+		if (m_vAimPos)
+		{
+			Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), *m_vAimPos);
+			SDK::FixMovement(pCmd, vAngleTo);
+			pCmd->viewangles = vAngleTo;
+			G::PSilentAngles = true;
+		}
+	}
 }

@@ -2,6 +2,7 @@
 #include "../../../SDK/SDK.h"
 
 #include "../AimbotGlobal/AimbotGlobal.h"
+#include <optional>
 
 class CAutoDetonate
 {
@@ -19,6 +20,7 @@ private:
 	void RestorePlayers();
 
 	std::unordered_map<CBaseEntity*, Vec3> m_mRestore = {};
+	std::optional<Vec3> m_vAimPos = {};
 
 public:
 	void Run(CTFPlayer* pLocal, CUserCmd* pCmd);

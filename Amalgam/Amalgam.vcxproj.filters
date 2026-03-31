@@ -610,6 +610,7 @@
     <ClInclude Include="src\SDK\Definitions\Interfaces\WorldBrushData.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CDispCollTree.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\TraceInfo.h" />
+    <ClInclude Include="src\Utils\Math\BaseMath.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

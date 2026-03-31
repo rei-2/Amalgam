@@ -196,7 +196,7 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		m_vEyePos = mMoveStorage[I::EngineClient->GetLocalPlayer()].m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset();
 		m_flRange = pWeapon->GetSwingRange();
 
-		if (Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value)
+		if (Vars::Visuals::Prediction::SwingLines.Value && Vars::Visuals::Prediction::PlayerPath.Value)
 		{
 			for (auto& [iIndex, tMoveStorage] : mMoveStorage)
 				m_mPaths[iIndex] = tMoveStorage.m_vPath;
@@ -210,10 +210,11 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 
 				for (auto& vPath : m_mPaths | std::views::values)
 				{
+					float flDuration = Vars::Visuals::Prediction::PlayerDrawDuration.Value;
 					if (Vars::Colors::PlayerPathIgnoreZ.Value.a)
-						G::PathStorage.emplace_back(vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Simulation::PlayerPath.Value);
+						G::PathStorage.emplace_back(vPath, !flDuration ? -int(vPath.size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
 					if (Vars::Colors::PlayerPath.Value.a)
-						G::PathStorage.emplace_back(vPath, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
+						G::PathStorage.emplace_back(vPath, !flDuration ? -int(vPath.size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
 				}
 			}
 		}
@@ -248,7 +249,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 
 	if (auto pCmd = G::CurrentUserCmd;
 		m_mRecordMap[pLocal->entindex()].empty() && pCmd->viewangles != vEyeAngles && G::CanPrimaryAttack)
-	{	// repredict, prevent prediction error causing miss
+	{	// repredict, prevent prediction error potentially causing miss
 		CUserCmd tOldCmd = *pCmd;
 		Vec3 vOldAngles = I::EngineClient->GetViewAngles();
 		int iOldAttacking = G::Attacking;
@@ -357,6 +358,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 	CGameTrace trace = {};
 	CTraceFilterHitscan filter = {};
 	filter.pSkip = pLocal;
+
 	for (auto pRecord : vRecords)
 	{
 		Vec3 vRestoreOrigin = tTarget.m_pEntity->GetAbsOrigin();
@@ -364,15 +366,16 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		Vec3 vRestoreMaxs = tTarget.m_pEntity->m_vecMaxs();
 
 		tTarget.m_pEntity->SetAbsOrigin(pRecord->m_vOrigin);
-		tTarget.m_pEntity->m_vecMins() = pRecord->m_vMins + PLAYER_ORIGIN_COMPRESSION; // account for origin compression
+		tTarget.m_pEntity->m_vecMins() = pRecord->m_vMins + PLAYER_ORIGIN_COMPRESSION;
 		tTarget.m_pEntity->m_vecMaxs() = pRecord->m_vMaxs - PLAYER_ORIGIN_COMPRESSION;
 
-		Vec3 vDiff = { 0, 0, std::clamp(m_vEyePos.z - pRecord->m_vOrigin.z, pRecord->m_vMins.z, pRecord->m_vMaxs.z) };
-		tTarget.m_vPos = pRecord->m_vOrigin + vDiff;
+		tTarget.m_vPos = m_vEyePos.Clamp(pRecord->m_vOrigin + tTarget.m_pEntity->m_vecMins(), pRecord->m_vOrigin + tTarget.m_pEntity->m_vecMaxs());
+		if (Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
+			tTarget.m_vPos.x = pRecord->m_vOrigin.x, tTarget.m_vPos.y = pRecord->m_vOrigin.y;
 		Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, tTarget.m_vPos), tTarget.m_vAngleTo);
 
 		Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo, &vForward);
-		Vec3 vTraceEnd = m_vEyePos + (vForward * flRange);
+		Vec3 vTraceEnd = m_vEyePos + vForward * flRange;
 
 		SDK::TraceHull(m_vEyePos, vTraceEnd, {}, {}, MASK_SOLID, &filter, &trace);
 		bool bReturn = trace.m_pEnt && trace.m_pEnt == tTarget.m_pEntity;
@@ -393,7 +396,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		{
 			tTarget.m_pRecord = pRecord;
 			tTarget.m_bBacktrack = tTarget.m_iTargetType == TargetEnum::Player;
-
+			
 			return true;
 		}
 		else switch (Vars::Aimbot::General::AimType.Value)
@@ -404,7 +407,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 			auto vAngle = Math::CalcAngle(m_vEyePos, tTarget.m_vPos);
 
 			Math::AngleVectors(vAngle, &vForward);
-			vTraceEnd = m_vEyePos + (vForward * flRange);
+			vTraceEnd = m_vEyePos + vForward * flRange;
 
 			SDK::TraceHull(m_vEyePos, vTraceEnd, vSwingMins, vSwingMaxs, MASK_SOLID, &filter, &trace);
 			if (trace.m_pEnt && trace.m_pEnt == tTarget.m_pEntity)
@@ -487,7 +490,10 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 
 static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, Target_t& tTarget, std::unordered_map<int, std::vector<Vec3>>& mPaths)
 {
-	bool bPath = Vars::Visuals::Simulation::SwingLines.Value && Vars::Visuals::Simulation::PlayerPath.Value;
+	G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+	G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
+
+	bool bPath = Vars::Visuals::Prediction::SwingLines.Value && Vars::Visuals::Prediction::PlayerPath.Value;
 	bool bLine = Vars::Visuals::Line::Enabled.Value;
 	bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
 	if (bPath || bLine || bBoxes)
@@ -500,15 +506,16 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 
 			if (bPath)
 			{
+				float flDuration = Vars::Visuals::Prediction::PlayerDrawDuration.Value;
 				if (Vars::Colors::PlayerPathIgnoreZ.Value.a)
 				{
-					G::PathStorage.emplace_back(mPaths[I::EngineClient->GetLocalPlayer()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Simulation::PlayerPath.Value);
-					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Simulation::PlayerPath.Value);
+					G::PathStorage.emplace_back(mPaths[I::EngineClient->GetLocalPlayer()], !flDuration ? -int(mPaths[I::EngineClient->GetLocalPlayer()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
+					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], !flDuration ? -int(mPaths[tTarget.m_pEntity->entindex()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
 				}
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
-					G::PathStorage.emplace_back(mPaths[I::EngineClient->GetLocalPlayer()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
-					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Vars::Colors::PlayerPath.Value, Vars::Visuals::Simulation::PlayerPath.Value, true);
+					G::PathStorage.emplace_back(mPaths[I::EngineClient->GetLocalPlayer()], !flDuration ? -int(mPaths[I::EngineClient->GetLocalPlayer()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
+					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], !flDuration ? -int(mPaths[tTarget.m_pEntity->entindex()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
 				}
 			}
 		}
@@ -576,9 +583,6 @@ void CAimbotMelee::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd
 			Aim(pCmd, tTarget.m_vAngleTo);
 			break;
 		}
-
-		G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
-		G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
 
 		if (Vars::Aimbot::General::AutoShoot.Value && pWeapon->m_flSmackTime() < 0.f)
 		{

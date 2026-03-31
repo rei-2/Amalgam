@@ -1,86 +1,14 @@
 #pragma once
+#include "BaseMath.h"
 #include "../../SDK/Definitions/Types.h"
-#include <cmath>
-#include <cfloat>
-#include <algorithm>
 
 #undef min
 #undef max
-
-#pragma warning (push)
-#pragma warning (disable : 26451)
-#pragma warning (disable : 4244)
 
 #define FLT_COMPARE(x, y) (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.f, fmaxf(fabsf(x), fabsf(y))))
 
 namespace Math
 {
-	inline float Lerp(float a, float b, float t)
-	{
-		return a + (b - a) * t;
-	}
-
-	inline float SimpleSpline(float val)
-	{
-		float flSquared = powf(val, 2);
-		return 3 * flSquared - 2 * flSquared * val;
-	}
-
-	inline float RemapVal(float flVal, float a, float b, float c, float d, bool bClamp = true)
-	{
-		if (a == b)
-			return flVal >= b ? d : c;
-
-		float t = (flVal - a) / (b - a);
-		if (bClamp)
-			t = std::clamp(t, 0.f, 1.f);
-
-		return Lerp(c, d, t);
-	}
-
-	inline float SimpleSplineRemapVal(float flVal, float a, float b, float c, float d, bool bClamp = true)
-	{
-		if (a == b)
-			return flVal >= b ? d : c;
-
-		float t = (flVal - a) / (b - a);
-		if (bClamp)
-			t = std::clamp(t, 0.f, 1.f);
-
-		return Lerp(c, d, SimpleSpline(t));
-	}
-
-	inline double FastSqrt(double n)
-	{
-		return std::sqrt(n);
-	}
-
-	inline void SinCos(float flRadians, float* pSin, float* pCos)
-	{
-		*pSin = std::sin(flRadians);
-		*pCos = std::cos(flRadians);
-	}
-
-	inline float NormalizeAngle(float flAngle, float flRange = 360.f)
-	{
-		return std::isfinite(flAngle) ? std::remainder(flAngle, flRange) : 0.f;
-	}
-
-	inline float NormalizeRad(float flAngle, float flRange = PI * 2)
-	{
-		return std::isfinite(flAngle) ? std::remainder(flAngle, flRange) : 0.f;
-	}
-
-	inline float ClampNormalizeAngle(float flAngle, float flRange = 180.f)
-	{
-		return std::isfinite(flAngle) ? (flAngle > flRange ? -flRange : flAngle < -flRange ? flRange : flAngle) : 0.f;
-	}
-
-	inline float ClampNormalizeRad(float flAngle, float flRange = PI)
-	{
-		return std::isfinite(flAngle) ? (flAngle > flRange ? -flRange : flAngle < -flRange ? flRange : flAngle) : 0.f;
-	}
-
 	inline void ClampAngles(Vec3& v)
 	{
 		v.x = std::clamp(NormalizeAngle(v.x), -89.f, 89.f);
@@ -92,6 +20,22 @@ namespace Math
 	{
 		v.x = std::clamp(NormalizeAngle(v.x), -89.f, 89.f);
 		v.y = NormalizeAngle(v.y);
+	}
+
+	inline bool IsBoxIntersectingBox(const Vec3& vMins1, const Vec3& vMaxs1, const Vec3& vMins2, const Vec3& vMaxs2)
+	{
+		if (vMins1.x > vMaxs2.x || vMaxs1.x < vMins2.x)
+			return false;
+		if (vMins1.y > vMaxs2.y || vMaxs1.y < vMins2.y)
+			return false;
+		if (vMins1.z > vMaxs2.z || vMaxs1.z < vMins2.z)
+			return false;
+		return true;
+	}
+
+	inline bool IsPointIntersectingBox(const Vec3& vPoint, const Vec3& vMins, const Vec3& vMaxs)
+	{
+		return IsBoxIntersectingBox(vPoint, vPoint, vMins, vMaxs);
 	}
 
 	inline void VectorAngles(const Vec3& vForward, Vec3& vAngles)
@@ -129,8 +73,8 @@ namespace Math
 	inline void AngleVectors(const Vec3& vAngles, Vec3* pForward = nullptr, Vec3* pRight = nullptr, Vec3* pUp = nullptr)
 	{
 		float sp, sy, sr, cp, cy, cr;
-		SinCos(Deg2Rad(vAngles.x), &sp, &cp);
-		SinCos(Deg2Rad(vAngles.y), &sy, &cy);
+		SinCos(Deg2Rad(vAngles.x), sp, cp);
+		SinCos(Deg2Rad(vAngles.y), sy, cy);
 
 		if (pForward)
 		{
@@ -141,7 +85,7 @@ namespace Math
 
 		if (pRight || pUp)
 		{
-			SinCos(Deg2Rad(vAngles.z), &sr, &cr);
+			SinCos(Deg2Rad(vAngles.z), sr, cr);
 
 			if (pRight)
 			{
@@ -199,9 +143,9 @@ namespace Math
 		Vec3 vOffset = vPoint - vOrigin;
 
 		float sp, sy, sr, cp, cy, cr;
-		SinCos(Deg2Rad(vAngles.x), &sp, &cp);
-		SinCos(Deg2Rad(vAngles.y), &sy, &cy);
-		SinCos(Deg2Rad(vAngles.z), &sr, &cr);
+		SinCos(Deg2Rad(vAngles.x), sp, cp);
+		SinCos(Deg2Rad(vAngles.y), sy, cy);
+		SinCos(Deg2Rad(vAngles.z), sr, cr);
 
 		Vec3 vX = {
 			cy * cp,
@@ -221,21 +165,30 @@ namespace Math
 
 		return Vec3(vX.Dot(vOffset), vY.Dot(vOffset), vZ.Dot(vOffset)) + vOrigin;
 	}
-
-	inline bool IsBoxIntersectingBox(const Vec3& vMins1, const Vec3& vMaxs1, const Vec3& vMins2, const Vec3& vMaxs2)
+	
+	inline float AABBLine(Vec3 vMins, Vec3 vMaxs, Vec3 vStart, Vec3 vDir)
 	{
-		if ((vMins1.x > vMaxs2.x) || (vMaxs1.x < vMins2.x))
-			return false;
-		if ((vMins1.y > vMaxs2.y) || (vMaxs1.y < vMins2.y))
-			return false;
-		if ((vMins1.z > vMaxs2.z) || (vMaxs1.z < vMins2.z))
-			return false;
-		return true;
+		Vec3 a = {
+			(vMins.x - vStart.x) / vDir.x,
+			(vMins.y - vStart.y) / vDir.y,
+			(vMins.z - vStart.z) / vDir.z
+		};
+		Vec3 b = {
+			(vMaxs.x - vStart.x) / vDir.x,
+			(vMaxs.y - vStart.y) / vDir.y,
+			(vMaxs.z - vStart.z) / vDir.z
+		};
+		Vec3 c = {
+			std::min(a.x, b.x),
+			std::min(a.y, b.y),
+			std::min(a.z, b.z)
+		};
+		return std::max(std::max(c.x, c.y), c.z);
 	}
 
-	inline bool IsPointIntersectingBox(const Vec3& vPoint, const Vec3& vMins, const Vec3& vMaxs)
+	inline Vec3 PullPoint(Vec3 vFrom, Vec3 vTo, Vec3 vOrigin, Vec3 vMins, Vec3 vMaxs)
 	{
-		return IsBoxIntersectingBox(vPoint, vPoint, vMins, vMaxs);
+		return vTo.Lerp(vFrom, fabsf(AABBLine(vOrigin + vMins, vOrigin + vMaxs, vTo, vFrom - vTo)));
 	}
 
 	inline void VectorTransform(const Vec3& vIn, const matrix3x4& mMatrix, Vec3& vOut)
@@ -277,9 +230,9 @@ namespace Math
 	inline void AngleMatrix(const Vec3& vAngles, matrix3x4& mMatrix, bool bClearOrigin = true)
 	{
 		float sp, sy, sr, cp, cy, cr;
-		SinCos(Deg2Rad(vAngles.x), &sp, &cp);
-		SinCos(Deg2Rad(vAngles.y), &sy, &cy);
-		SinCos(Deg2Rad(vAngles.z), &sr, &cr);
+		SinCos(Deg2Rad(vAngles.x), sp, cp);
+		SinCos(Deg2Rad(vAngles.y), sy, cy);
+		SinCos(Deg2Rad(vAngles.z), sr, cr);
 
 		mMatrix[0][0] = cp * cy;
 		mMatrix[1][0] = cp * sy;
@@ -443,89 +396,4 @@ namespace Math
 		mOut[2][2] = mIn1[2][0] * mIn2[0][2] + mIn1[2][1] * mIn2[1][2] + mIn1[2][2] * mIn2[2][2];
 		mOut[2][3] = mIn1[2][0] * mIn2[0][3] + mIn1[2][1] * mIn2[1][3] + mIn1[2][2] * mIn2[2][3] + mIn1[2][3];
 	}
-
-	inline std::vector<float> SolveQuadratic(float a, float b, float c)
-	{
-		float flRoot = powf(b, 2.f) - 4 * a * c;
-		if (flRoot < 0)
-			return {};
-
-		a *= 2;
-		b = -b;
-		return { (b + sqrt(flRoot)) / a, (b - sqrt(flRoot)) / a };
-	}
-
-	inline float SolveCubic(float b, float c, float d)
-	{
-		float p = c - powf(b, 2) / 3;
-		float q = 2 * powf(b, 3) / 27 - b * c / 3 + d;
-
-		if (p == 0.f)
-			return powf(q, 1.f / 3);
-		if (q == 0.f)
-			return 0.f;
-
-		float t = sqrt(fabs(p) / 3);
-		float g = q / (2.f / 3) / (p * t);
-		if (p > 0.f)
-			return -2 * t * sinh(asinh(g) / 3) - b / 3;
-
-		if (4 * powf(p, 3) + 27 * powf(q, 2) < 0.f)
-			return 2 * t * cos(acos(g) / 3) - b / 3;
-		if (q > 0.f)
-			return -2 * t * cosh(acosh(-g) / 3) - b / 3;
-		return 2 * t * cosh(acosh(g) / 3) - b / 3;
-	}
-
-	inline std::vector<float> SolveQuartic(float a, float b, float c, float d, float e)
-	{
-		std::vector<float> vRoots = {};
-
-		b /= a, c /= a, d /= a, e /= a;
-		float p = c - powf(b, 2) / (8.f / 3);
-		float q = powf(b, 3) / 8 - b * c / 2 + d;
-		float m = SolveCubic(
-			p,
-			powf(p, 2) / 4 + powf(b, 4) / (256.f / 3) - e + b * d / 4 - powf(b, 2) * c / 16,
-			-powf(q, 2) / 8
-		);
-		if (m < 0.f)
-			return vRoots;
-
-		float sqrt_2m = sqrt(2 * m);
-		if (q == 0.f)
-		{
-			if (-m - p > 0.f)
-			{
-				float flDelta = sqrt(2 * (-m - p));
-				vRoots.push_back(-b / 4 + (sqrt_2m - flDelta) / 2);
-				vRoots.push_back(-b / 4 - (sqrt_2m - flDelta) / 2);
-				vRoots.push_back(-b / 4 + (sqrt_2m + flDelta) / 2);
-				vRoots.push_back(-b / 4 - (sqrt_2m + flDelta) / 2);
-			}
-			if (-m - p == 0.f)
-			{
-				vRoots.push_back(-b / 4 - sqrt_2m / 2);
-				vRoots.push_back(-b / 4 + sqrt_2m / 2);
-			}
-		}
-		else
-		{
-			if (-m - p + q / sqrt_2m >= 0.f)
-			{
-				float flDelta = sqrt(2 * (-m - p + q / sqrt_2m));
-				vRoots.push_back((-sqrt_2m + flDelta) / 2 - b / 4);
-				vRoots.push_back((-sqrt_2m - flDelta) / 2 - b / 4);
-			}
-			if (-m - p - q / sqrt_2m >= 0.f)
-			{
-				float flDelta = sqrt(2 * (-m - p - q / sqrt_2m));
-				vRoots.push_back((sqrt_2m + flDelta) / 2 - b / 4);
-				vRoots.push_back((sqrt_2m - flDelta) / 2 - b / 4);
-			}
-		}
-		return vRoots;
-	}
 }
-
-#pragma warning (pop)

@@ -151,7 +151,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 				for (int n = 1; n < 10; n++)
 				{
 					F::MoveSim.RunTick(tMoveStorage);
-					if (n <= iSkip)
+					if (n <= iSkip || n == 1 && G::Reloading)
 						continue;
 
 					Vec3 Old = F::ProjSim.GetOrigin();
@@ -174,7 +174,8 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 							Vec3 vPos; pLocal->m_Collision()->CalcNearestPoint(vPoint, &vPos);
 							pLocal->SetAbsOrigin(vOriginal);
 
-							return vPoint.DistTo(vPos) < TF_ROCKET_RADIUS_FOR_RJS && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
+							float flRadiusSqr = powf(TF_ROCKET_RADIUS_FOR_RJS, 2);
+							return vPoint.DistToSqr(vPos) < flRadiusSqr && SDK::VisPosWorld(pLocal, pLocal, vPoint, vOrigin + pLocal->m_vecViewOffset(), MASK_SHOT);
 						};
 
 						bWillHit = fWillHit(pLocal, tMoveStorage.m_MoveData.m_vecAbsOrigin, trace.endpos + trace.plane.normal);
@@ -189,9 +190,9 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 								SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", m_iDelay, n).c_str(), { 255, 0, 0 }, Vars::Debug::Logging.Value);
 								if (Vars::Debug::Info.Value)
 								{
-									//G::LineStorage.clear(); G::BoxStorage.clear();
 									Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-									G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3(-1.f, -1.f, -1.f), Vec3(1.f, 1.f, 1.f), vAngles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
+									G::LineStorage.clear(); G::BoxStorage.clear();
+									G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3::Get(-1), Vec3::Get(1), vAngles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
 									G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tMoveStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal), I::GlobalVars->curtime + 5.f, Color_t(), true);
 								}
 							}

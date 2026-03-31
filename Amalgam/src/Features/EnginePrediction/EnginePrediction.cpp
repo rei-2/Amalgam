@@ -1,6 +1,7 @@
 #include "EnginePrediction.h"
 
 #include "../Ticks/Ticks.h"
+#include "../Simulation/MovementSimulation/MovementSimulation.h"
 
 // account for interp and origin compression when simulating local player
 void CEnginePrediction::AdjustPlayers(CBaseEntity* pLocal)
@@ -45,9 +46,9 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::Prediction->SetLocalViewAngles(pCmd->viewangles);
 
 	AdjustPlayers(pLocal);
-	I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_MoveData);
-	I::GameMovement->ProcessMovement(pLocal, &m_MoveData);
-	I::Prediction->FinishMove(pLocal, pCmd, &m_MoveData);
+	I::Prediction->SetupMove(pLocal, pCmd, I::MoveHelper, &m_tMoveData);
+	I::GameMovement->ProcessMovement(pLocal, &m_tMoveData);
+	I::Prediction->FinishMove(pLocal, pCmd, &m_tMoveData);
 	RestorePlayers();
 
 	I::MoveHelper->SetHost(nullptr);
@@ -58,10 +59,8 @@ void CEnginePrediction::Simulate(CTFPlayer* pLocal, CUserCmd* pCmd)
 	I::Prediction->m_bFirstTimePredicted = bOldIsFirstPrediction;
 	I::Prediction->m_bInPrediction = bOldInPrediction;
 
-	m_vOrigin = m_MoveData.m_vecAbsOrigin;
-	m_vVelocity = m_MoveData.m_vecVelocity;
-	m_vDirection = { m_MoveData.m_flForwardMove, -m_MoveData.m_flSideMove, m_MoveData.m_flUpMove };
-	m_vAngles = m_MoveData.m_vecViewAngles;
+	if (static int nLastTickBase = 0; nLastTickBase != nOldTickBase)
+		F::MoveSim.StorePlayer(pLocal, m_tMoveData, TICKS_TO_TIME(nOldTickBase)), nLastTickBase = nOldTickBase;
 }
 
 

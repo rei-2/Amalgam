@@ -317,7 +317,7 @@ bool SDK::IsOnScreen(CBaseEntity* pEntity, bool bShouldGetOwner)
 			pEntity = pOwner;
 	}
 
-	return IsOnScreen(pEntity, pEntity->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo() ? F::EnginePrediction.m_vOrigin : pEntity->GetAbsOrigin());
+	return IsOnScreen(pEntity, pEntity->GetAbsOrigin());
 }
 
 void SDK::Trace(const Vec3& vStart, const Vec3& vEnd, unsigned int nMask, ITraceFilter* pFilter, CGameTrace* pTrace)

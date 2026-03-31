@@ -48,12 +48,15 @@ public:
 
 	#define DEBUG_RETURN()
 #else
-	#define MAKE_HOOK(name, address, type, ...) \
+	#define DEBUG_VAR(name) \
 	namespace Vars { \
 		namespace Hooks { \
 			inline ConfigVar<bool> name = { true, { #name }, "Vars::Hooks::"#name##"_", "Hooks", NOSAVE | DEBUGVAR }; \
 		} \
-	} \
+	}
+
+	#define MAKE_HOOK(name, address, type, ...) \
+	DEBUG_VAR(name) \
 	namespace Hooks \
 	{ \
 		namespace name \

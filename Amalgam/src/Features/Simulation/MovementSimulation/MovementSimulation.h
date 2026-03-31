@@ -60,6 +60,7 @@ private:
 
 public:
 	void Store();
+	void StorePlayer(CTFPlayer* pPlayer, CMoveData& tMoveData, float flTime);
 
 	bool Initialize(CBaseEntity* pEntity, MoveStorage& tMoveStorage, bool bHitchance = true, bool bStrafe = true);
 	bool SetDuck(MoveStorage& tMoveStorage, bool bDuck);

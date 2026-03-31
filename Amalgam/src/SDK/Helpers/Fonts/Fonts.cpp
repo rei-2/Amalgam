@@ -3,10 +3,12 @@
 #include "../../Definitions/Interfaces/IMatSystemSurface.h"
 #include <ranges>
 
-void CFonts::Reload(float flDPI)
+void CFonts::Reload(float flDPI, bool bOutline)
 {
-	m_mFonts[FONT_ESP] = { "Verdana", int(12.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
-	m_mFonts[FONT_INDICATORS] = { "Verdana", int(13.f * flDPI), FONTFLAG_ANTIALIAS, 0 };
+	int iFlags = !bOutline ? FONTFLAG_ANTIALIAS : FONTFLAG_ANTIALIAS | FONTFLAG_DROPSHADOW;
+
+	m_mFonts[FONT_ESP] = { "Verdana", int(12.f * flDPI), iFlags, 0 };
+	m_mFonts[FONT_INDICATORS] = { "Verdana", int(13.f * flDPI), iFlags, 0 };
 
 	for (auto& fFont : m_mFonts | std::views::values)
 	{

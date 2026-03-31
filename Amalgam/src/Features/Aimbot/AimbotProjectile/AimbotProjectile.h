@@ -101,7 +101,7 @@ private:
 	bool HandleDirect(DirectHistory_t& vDirectHistory);
 	bool HandleSplash(SplashHistory_t& vSplashHistory);
 
-	int CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bVisuals = true);
+	int CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bUpdate = true);
 	bool RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 
 	bool CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pProjectile);
@@ -127,7 +127,7 @@ private:
 	Vec3 m_vTarget = {};
 
 	int m_iResult = false;
-	bool m_bVisuals = true;
+	bool m_bUpdate = true;
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);

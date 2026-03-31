@@ -687,11 +687,22 @@ void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 
 static inline void DrawVisuals(CTFPlayer* pLocal, Target_t& tTarget, int nWeaponID)
 {
+	if (G::Attacking == 1)
+	{
+		G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
+		G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
+	}
+	else
+	{
+		G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount, 0 };
+		G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount, 0 };
+	}
+
 	if (G::Attacking == 1 && nWeaponID != TF_WEAPON_LASER_POINTER)
 	{
 		bool bLine = Vars::Visuals::Line::Enabled.Value;
 		bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
-		if (G::CanPrimaryAttack && (bLine || bBoxes))
+		if (bLine || bBoxes)
 		{
 			G::LineStorage.clear();
 			G::BoxStorage.clear();
@@ -795,9 +806,6 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 			Aim(pCmd, tTarget.m_vAngleTo);
 			break;
 		}
-
-		G::AimTarget = { tTarget.m_pEntity->entindex(), I::GlobalVars->tickcount };
-		G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
 
 		if (ShouldFire(pLocal, pWeapon, pCmd, tTarget))
 		{

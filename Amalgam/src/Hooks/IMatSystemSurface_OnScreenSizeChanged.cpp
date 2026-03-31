@@ -9,6 +9,6 @@ MAKE_HOOK(IMatSystemSurface_OnScreenSizeChanged, U::Memory.GetVirtual(I::MatSyst
 
 	CALL_ORIGINAL(rcx, nOldWidth, nOldHeight);
 
-	H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+	H::Fonts.Reload();
 	F::Materials.ReloadMaterials();
 }

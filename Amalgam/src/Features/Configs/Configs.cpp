@@ -506,8 +506,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 			if (sConfigName == std::string("default"))
 			{
 				SaveConfig("default", false);
-
-				H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+				H::Fonts.Reload();
 			}
 			return false;
 		}
@@ -599,7 +598,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 			SDK::Output("Amalgam", "Config groups not found", ALTERNATE_COLOR, OUTPUT_CONSOLE | OUTPUT_MENU | OUTPUT_DEBUG);
 
 		F::Binds.SetVars(nullptr, nullptr, false);
-		H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+		H::Fonts.Reload();
 
 		m_sCurrentConfig = sConfigName; m_sCurrentVisuals = "";
 		if (bNotify)
@@ -848,7 +847,7 @@ void CConfigs::ResetConfig(const std::string& sConfigName, bool bNotify)
 
 		SaveConfig(sConfigName, false);
 		F::Binds.SetVars(nullptr, nullptr, false);
-		H::Fonts.Reload(Vars::Menu::Scale[DEFAULT_BIND]);
+		H::Fonts.Reload();
 
 		if (bNotify)
 			SDK::Output("Amalgam", std::format("Config {} reset", sConfigName).c_str(), DEFAULT_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);

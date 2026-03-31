@@ -96,7 +96,7 @@ void CAimbot::Draw(CTFPlayer* pLocal)
 
 void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
 {
-	if (!Vars::Visuals::Simulation::RealPath.Value)
+	if (!Vars::Visuals::Prediction::RealPath.Value)
 		return;
 
 	if (!pEntity->IsPlayer())
@@ -104,7 +104,8 @@ void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
 
 	if (auto pResource = H::Entities.GetResource())
 	{
-		m_tPath = { { pEntity->m_vecOrigin() }, I::GlobalVars->curtime + Vars::Visuals::Simulation::DrawDuration.Value, Color_t(), Vars::Visuals::Simulation::RealPath.Value };
+		float flDuration = Vars::Visuals::Prediction::PlayerDrawDuration.Value ? Vars::Visuals::Prediction::PlayerDrawDuration.Value : 5.f;
+		m_tPath = { { pEntity->m_vecOrigin() }, I::GlobalVars->curtime + flDuration, Color_t(), Vars::Visuals::Prediction::RealPath.Value };
 		m_iSize = iSize;
 		m_iPlayer = pResource->m_iUserID(pEntity->entindex());
 	}
@@ -112,7 +113,7 @@ void CAimbot::Store(CBaseEntity* pEntity, size_t iSize)
 
 void CAimbot::Store(bool bFrameStageNotify)
 {
-	if (!Vars::Visuals::Simulation::RealPath.Value)
+	if (!Vars::Visuals::Prediction::RealPath.Value)
 		return;
 
 	int iLag = 1;

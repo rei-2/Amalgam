@@ -50,6 +50,8 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 		{	// does this eat up fps? i can't tell currently
 			CGameTrace trace = {};
 			CTraceFilterWorldAndPropsOnly filter = {};
+			filter.pSkip = pPlayer;
+
 			SDK::TraceHull(pLastRecord->m_vOrigin, pLastRecord->m_vOrigin + pLastRecord->m_vVelocity * TICK_INTERVAL, pPlayer->m_vecMins() + PLAYER_ORIGIN_COMPRESSION, pPlayer->m_vecMaxs() - PLAYER_ORIGIN_COMPRESSION, pPlayer->SolidMask(), &filter, &trace);
 			if (trace.DidHit() && trace.plane.normal.z < 0.707f)
 			{
@@ -65,7 +67,7 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 	{
 		s_tDummyCmd.forwardmove = 450.f;
 		s_tDummyCmd.sidemove = 0.f;
-		SDK::FixMovement(&s_tDummyCmd, bLocal ? F::EnginePrediction.m_vAngles : pPlayer->GetEyeAngles(), {});
+		SDK::FixMovement(&s_tDummyCmd, bLocal ? G::CurrentUserCmd->viewangles : pPlayer->GetEyeAngles(), {});
 		tCurRecord.m_vDirection.x = s_tDummyCmd.forwardmove;
 		tCurRecord.m_vDirection.y = -s_tDummyCmd.sidemove;
 		return;
@@ -97,23 +99,24 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 
 void CMovementSimulation::Store()
 {
+	if (I::EngineClient->IsPlayingDemo())
+		return;
+
 	for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		auto& vRecords = m_mRecords[pPlayer->entindex()];
-
-		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->m_vecVelocity().IsZero())
+		if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant() || pPlayer->m_vecVelocity().IsZero())
 		{
 			vRecords.clear();
 			continue;
 		}
-		else if (!H::Entities.GetDeltaTime(pPlayer->entindex()))
+		else if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || !H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
-		bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer() && !I::EngineClient->IsPlayingDemo();
-		Vec3 vVelocity = bLocal ? F::EnginePrediction.m_vVelocity : pPlayer->m_vecVelocity();
-		Vec3 vOrigin = bLocal ? F::EnginePrediction.m_vOrigin : pPlayer->m_vecOrigin();
-		Vec3 vDirection = bLocal ? Math::RotatePoint(F::EnginePrediction.m_vDirection, {}, { 0, F::EnginePrediction.m_vAngles.y, 0 }) : vVelocity.To2D();
+		Vec3 vVelocity = pPlayer->m_vecVelocity();
+		Vec3 vOrigin = pPlayer->m_vecOrigin();
+		Vec3 vDirection = vVelocity.To2D();
 
 		MoveData* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
 		vRecords.emplace_front(
@@ -134,8 +137,7 @@ void CMovementSimulation::Store()
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		auto& vSimTimes = m_mSimTimes[pPlayer->entindex()];
-
-		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost())
+		if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant())
 		{
 			vSimTimes.clear();
 			continue;
@@ -149,6 +151,34 @@ void CMovementSimulation::Store()
 		if (vSimTimes.size() > Vars::Aimbot::Projectile::DeltaCount.Value)
 			vSimTimes.pop_back();
 	}
+}
+
+void CMovementSimulation::StorePlayer(CTFPlayer* pPlayer, CMoveData& tMoveData, float flTime)
+{
+	auto& vRecords = m_mRecords[pPlayer->entindex()];
+	if (!pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant() || pPlayer->m_vecVelocity().IsZero())
+	{
+		vRecords.clear();
+		return;
+	}
+
+	Vec3 vVelocity = tMoveData.m_vecVelocity;
+	Vec3 vOrigin = tMoveData.m_vecAbsOrigin;
+	Vec3 vDirection = Math::RotatePoint({ tMoveData.m_flForwardMove, -tMoveData.m_flSideMove, tMoveData.m_flUpMove }, {}, { 0, tMoveData.m_vecViewAngles.y, 0 });
+
+	MoveData* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
+	vRecords.emplace_front(
+		vDirection,
+		flTime,
+		pPlayer->IsSwimming() ? MoveEnum::Swim : pPlayer->IsOnGround() ? MoveEnum::Ground : MoveEnum::Air,
+		vVelocity,
+		vOrigin
+	);
+	MoveData& tCurRecord = vRecords.front();
+	if (vRecords.size() > 66)
+		vRecords.pop_back();
+
+	HandleMovement(pPlayer, pLastRecord, tCurRecord, vRecords);
 }
 
 
@@ -253,6 +283,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tMoveSto
 		}
 	}
 
+	tMoveStorage.m_vPath = { tMoveStorage.m_MoveData.m_vecAbsOrigin };
 	for (int i = 0; i < H::Entities.GetChoke(pPlayer->entindex()); i++)
 		RunTick(tMoveStorage);
 
@@ -416,6 +447,7 @@ static inline bool GetYawDifference(MoveData& tRecord1, MoveData& tRecord2, bool
 void CMovementSimulation::GetAverageYaw(MoveStorage& tMoveStorage, int iSamples)
 {
 	auto pPlayer = tMoveStorage.m_pPlayer;
+	bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer();
 	auto& vRecords = m_mRecords[pPlayer->entindex()];
 	if (vRecords.empty())
 		return;
@@ -441,8 +473,8 @@ void CMovementSimulation::GetAverageYaw(MoveStorage& tMoveStorage, int iSamples)
 
 		bGround = tRecord1.m_iMode != MoveEnum::Air;
 		float flStraightFuzzyValue = bGround ? Vars::Aimbot::Projectile::GroundStraightFuzzyValue.Value : Vars::Aimbot::Projectile::AirStraightFuzzyValue.Value;
-		int iMaxChanges = bGround ? Vars::Aimbot::Projectile::GroundMaxChanges.Value : Vars::Aimbot::Projectile::AirMaxChanges.Value;
-		int iMaxChangeTime = bGround ? Vars::Aimbot::Projectile::GroundMaxChangeTime.Value : Vars::Aimbot::Projectile::AirMaxChangeTime.Value;
+		int iMaxChanges = bLocal ? 0 : bGround ? Vars::Aimbot::Projectile::GroundMaxChanges.Value : Vars::Aimbot::Projectile::AirMaxChanges.Value;
+		int iMaxChangeTime = bLocal ? 0 : bGround ? Vars::Aimbot::Projectile::GroundMaxChangeTime.Value : Vars::Aimbot::Projectile::AirMaxChangeTime.Value;
 		iMinimumStrafes = 4 + iMaxChanges;
 #ifdef VISUALIZE_RECORDS
 		VisualizeRecords(tRecord1, tRecord2, { 255, 0, 0 }, flStraightFuzzyValue);
@@ -481,7 +513,7 @@ void CMovementSimulation::GetAverageYaw(MoveStorage& tMoveStorage, int iSamples)
 		return;
 
 	int iMinimum = flLowMinimumSamples;
-	if (pPlayer->entindex() != I::EngineClient->GetLocalPlayer())
+	if (!bLocal)
 	{
 		float flDistance = 0.f;
 		if (auto pLocal = H::Entities.GetLocal())
@@ -494,7 +526,7 @@ void CMovementSimulation::GetAverageYaw(MoveStorage& tMoveStorage, int iSamples)
 		return;
 
 	tMoveStorage.m_flAverageYaw = flAverageYaw;
-	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} from {} ({}) {}", flAverageYaw, iTicks, iMinimum, pPlayer->entindex() == I::EngineClient->GetLocalPlayer() ? "(local)" : "").c_str(), { 100, 255, 150 }, Vars::Debug::Logging.Value);
+	SDK::Output("MovementSimulation", std::format("flAverageYaw calculated to {} from {} ({}){}", flAverageYaw, iTicks, iMinimum, bLocal ? " (local)" : "").c_str(), { 100, 255, 150 }, Vars::Debug::Logging.Value);
 }
 
 bool CMovementSimulation::StrafePrediction(MoveStorage& tMoveStorage, int iSamples)
@@ -584,9 +616,6 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 	if (tMoveStorage.m_bFailed || !tMoveStorage.m_pPlayer || !tMoveStorage.m_pPlayer->IsPlayer())
 		return;
 
-	if (bPath)
-		tMoveStorage.m_vPath.push_back(tMoveStorage.m_MoveData.m_vecAbsOrigin);
-
 	// make sure frametime and prediction vars are right
 	I::Prediction->m_bInPrediction = true;
 	I::Prediction->m_bFirstTimePredicted = false;
@@ -647,6 +676,9 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 	}
 
 	RestoreBounds(tMoveStorage.m_pPlayer);
+
+	if (bPath)
+		tMoveStorage.m_vPath.push_back(tMoveStorage.m_MoveData.m_vecAbsOrigin);
 }
 
 void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTickCallback fCallback)

@@ -354,6 +354,7 @@ bool CAimbotGlobal::ShouldHoldAttack(CTFWeaponBase* pWeapon)
 bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEntity* pBomb)
 {
 	Vec3 vOrigin = pBomb->m_vecOrigin();
+	float flRadiusSqr = powf(300.f, 2);
 
 	CBaseEntity* pEntity;
 	for (CEntitySphereQuery sphere(vOrigin, 300.f);
@@ -365,7 +366,7 @@ bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEn
 			continue;
 
 		Vec3 vPos; pEntity->m_Collision()->CalcNearestPoint(vOrigin, &vPos);
-		if (vOrigin.DistTo(vPos) > 300.f)
+		if (vOrigin.DistToSqr(vPos) > flRadiusSqr)
 			continue;
 
 		if (pEntity->IsPlayer() || pEntity->IsBuilding() || pEntity->IsNPC())

@@ -18,11 +18,12 @@ class CMenu
 private:
 	void DrawMenu();
 
-	void MenuAimbot(int iTab);
-	void MenuVisuals(int iTab);
-	void MenuMisc(int iTab);
-	void MenuLogs(int iTab);
-	void MenuSettings(int iTab);
+	void MenuAimbot(int iTab = 0);
+	void MenuHVH(int iTab = 0);
+	void MenuVisuals(int iTab = 0);
+	void MenuMisc(int iTab = 0);
+	void MenuLogs(int iTab = 0);
+	void MenuSettings(int iTab = 0);
 	void MenuSearch(std::string sSearch);
 
 	void AddDraggable(const char* sLabel, ConfigVar<DragBox_t>& var, bool bShouldDraw = true, ImVec2 vSize = { H::Draw.Scale(100), H::Draw.Scale(40) });
