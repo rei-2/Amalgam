@@ -83,7 +83,7 @@ void CMenu::DrawMenu()
 			{ H::Draw.Scale(flSideSize - 16), H::Draw.Scale(36) },
 			{ H::Draw.Scale(8), H::Draw.Scale(8) + flOffset },
 			FTabsEnum::Vertical | FTabsEnum::HorizontalIcons | FTabsEnum::AlignLeft | FTabsEnum::BarLeft,
-			{ { ICON_MD_PERSON }, { ICON_MD_VISIBILITY }, { ICON_MD_ARTICLE }, { ICON_MD_IMPORT_CONTACTS }, { ICON_MD_SETTINGS } },
+			{ { ICON_MD_GROUP }, { ICON_MD_IMAGE }, { ICON_MD_PUBLIC }, { ICON_MD_MENU_BOOK }, { ICON_MD_SETTINGS } },
 			{ H::Draw.Scale(10), 0 }, {},
 			{}, { H::Draw.Scale(22), 0 }
 		);
