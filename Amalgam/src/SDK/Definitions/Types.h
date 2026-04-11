@@ -197,6 +197,11 @@ public:
 		x = X; y = Y;
 	}
 
+	inline Vec2 Pow(float flPower) const
+	{
+		return Vec2(powf(x, flPower), powf(y, flPower));
+	}
+
 	inline float Min() const
 	{
 		return std::min<float>(x, y);
@@ -275,6 +280,23 @@ public:
 	inline float LengthSqr(void) const
 	{
 		return (x * x + y * y);
+	}
+
+	inline float Normalize()
+	{
+		float flLength = Length();
+		float flLengthNormal = 1.f / (FLT_EPSILON + flLength);
+
+		x *= flLengthNormal;
+		y *= flLengthNormal;
+
+		return flLength;
+	}
+
+	inline Vec2 Normalized() const
+	{
+		float flLengthNormal = 1.f / (FLT_EPSILON + Length());
+		return Vec2(x * flLengthNormal, y * flLengthNormal);
 	}
 
 	inline float DistTo(const Vec2& v) const
@@ -502,6 +524,16 @@ public:
 		return { x, y };
 	}
 
+	inline Vec3 Get2D() const
+	{
+		return Vec3(x, y, 0);
+	}
+
+	inline Vec3 Pow(float flPower) const
+	{
+		return Vec3(powf(x, flPower), powf(y, flPower), powf(z, flPower));
+	}
+
 	inline float Min() const
 	{
 		return std::min<float>(x, std::min<float>(y, z));
@@ -582,6 +614,16 @@ public:
 		return (x * x + y * y + z * z);
 	}
 
+	inline float Length2D(void) const
+	{
+		return sqrtf(x * x + y * y);
+	}
+
+	inline float Length2DSqr(void) const
+	{
+		return (x * x + y * y);
+	}
+
 	inline float Normalize()
 	{
 		float flLength = Length();
@@ -606,31 +648,16 @@ public:
 		return flLength;
 	}
 
-	inline Vec3 Normalized()
+	inline Vec3 Normalized() const
 	{
 		float flLengthNormal = 1.f / (FLT_EPSILON + Length());
 		return Vec3(x * flLengthNormal, y * flLengthNormal, z * flLengthNormal);
 	}
 
-	inline Vec3 Normalized2D()
+	inline Vec3 Normalized2D() const
 	{
 		float flLengthNormal = 1.f / (FLT_EPSILON + Length2D());
 		return Vec3(x * flLengthNormal, y * flLengthNormal);
-	}
-
-	inline Vec3 Get2D()
-	{
-		return Vec3(x, y, 0);
-	}
-
-	inline float Length2D(void) const
-	{
-		return sqrtf(x * x + y * y);
-	}
-
-	inline float Length2DSqr(void) const
-	{
-		return (x * x + y * y);
 	}
 
 	inline float DistTo(const Vec3& v) const

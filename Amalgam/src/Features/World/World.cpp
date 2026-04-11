@@ -512,7 +512,7 @@ void CWorld::DrawFace(const Face_t& tFace, int iFlags)
 			const Vec3& vVertex1 = tFace.m_vVertices[i], &vVertex2 = tFace.m_vVertices[(i + 1) % tFace.m_vVertices.size()];
 
 			if (iFlags & DrawTypeEnum::Points)
-				G::BoxStorage.emplace_back(vVertex1, Vec3::Get(1), Vec3::Get(1), Vec3(0, 0, 0), I::GlobalVars->curtime + 60.f, Color_t(255, 0, 0), Color_t(0, 0, 0, 0), true);
+				G::BoxStorage.emplace_back(vVertex1, Vec3::Get(-1), Vec3::Get(1), Vec3(0, 0, 0), I::GlobalVars->curtime + 60.f, Color_t(255, 0, 0), Color_t(0, 0, 0, 0), true);
 			if (iFlags & DrawTypeEnum::Edges)
 				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vVertex1, vVertex2), I::GlobalVars->curtime + 60.f, Color_t(255, 0, 0), true);
 		}

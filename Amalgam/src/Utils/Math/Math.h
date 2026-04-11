@@ -40,26 +40,16 @@ namespace Math
 
 	inline void VectorAngles(const Vec3& vForward, Vec3& vAngles)
 	{
-		float flYaw, flPitch;
-
-		if (vForward.y == 0 && vForward.x == 0)
+		if (vForward.x || vForward.y)
 		{
-			flYaw = 0;
-			flPitch = vForward.z > 0 ? 270 : 90;
+			vAngles.x = Rad2Deg(atan2f(-vForward.z, vForward.Length2D()));
+			vAngles.y = Rad2Deg(atan2f(vForward.y, vForward.x));
 		}
 		else
 		{
-			flYaw = Rad2Deg(atan2f(vForward.y, vForward.x));
-			if (flYaw < 0)
-				flYaw += 360;
-
-			flPitch = Rad2Deg(atan2f(-vForward.z, vForward.Length2D()));
-			if (flPitch < 0)
-				flPitch += 360;
+			vAngles.x = vForward.z > 0 ? 270 : 90;
+			vAngles.y = 0;
 		}
-
-		vAngles.x = flPitch;
-		vAngles.y = flYaw;
 		vAngles.z = 0;
 	}
 
@@ -72,7 +62,7 @@ namespace Math
 
 	inline void AngleVectors(const Vec3& vAngles, Vec3* pForward = nullptr, Vec3* pRight = nullptr, Vec3* pUp = nullptr)
 	{
-		float sp, sy, sr, cp, cy, cr;
+		float sp, sy, cp, cy;
 		SinCos(Deg2Rad(vAngles.x), sp, cp);
 		SinCos(Deg2Rad(vAngles.y), sy, cy);
 
@@ -85,19 +75,20 @@ namespace Math
 
 		if (pRight || pUp)
 		{
+			float sr, cr;
 			SinCos(Deg2Rad(vAngles.z), sr, cr);
 
 			if (pRight)
 			{
-				pRight->x = (-1 * sr * sp * cy + -1 * cr * -sy);
-				pRight->y = (-1 * sr * sp * sy + -1 * cr * cy);
+				pRight->x = -1 * sr * sp * cy + -1 * cr * -sy;
+				pRight->y = -1 * sr * sp * sy + -1 * cr * cy;
 				pRight->z = -1 * sr * cp;
 			}
 
 			if (pUp)
 			{
-				pUp->x = (cr * sp * cy + -sr * -sy);
-				pUp->y = (cr * sp * sy + -sr * cy);
+				pUp->x = cr * sp * cy + -sr * -sy;
+				pUp->y = cr * sp * sy + -sr * cy;
 				pUp->z = cr * cp;
 			}
 		}
@@ -106,7 +97,7 @@ namespace Math
 	inline Vec3 CalcAngle(const Vec3& vFrom, const Vec3& vTo, bool bClamp = true)
 	{
 		Vec3 vDelta = vFrom - vTo;
-		float flHyp = std::sqrtf((vDelta.x * vDelta.x) + (vDelta.y * vDelta.y));
+		float flHyp = std::sqrtf(vDelta.x * vDelta.x + vDelta.y * vDelta.y);
 
 		Vec3 vAngles = {
 			atanf(vDelta.z / flHyp) * RAD,
@@ -132,7 +123,7 @@ namespace Math
 		AngleVectors(vToAng, &vToForward);
 
 		float flResult = Rad2Deg(acos(vFromForward.Dot(vToForward)));
-		if (!isfinite(flResult) || isinf(flResult) || isnan(flResult))
+		if (!isfinite(flResult))
 			flResult = 0.f;
 
 		return flResult;

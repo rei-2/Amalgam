@@ -98,6 +98,7 @@ namespace G
 	inline CUserCmd* CurrentUserCmd = nullptr;
 	inline CUserCmd* LastUserCmd = nullptr;
 	inline CUserCmd OriginalCmd = {};
+	inline CUserCmd DummyCmd = {};
 
 	inline AimTarget_t AimTarget = {};
 	inline AimPoint_t AimPoint = {};

@@ -14,19 +14,19 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 	Vec3 vLocalAngles = I::EngineClient->GetViewAngles();
 
 	{
-		auto eGroupType = EntityEnum::Invalid;
+		auto eGroup = EntityEnum::Invalid;
 		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 		{
-			eGroupType = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
+			eGroup = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
 			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::ExtinguishTeam &&
 				!F::AimbotGlobal.FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
-				eGroupType = EntityEnum::PlayerAll;
+				eGroup = EntityEnum::PlayerAll;
 		}
 		if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
-			eGroupType = Vars::Aimbot::Healing::AutoHeal.Value ? EntityEnum::PlayerTeam : EntityEnum::Invalid;
+			eGroup = Vars::Aimbot::Healing::AutoHeal.Value ? EntityEnum::PlayerTeam : EntityEnum::Invalid;
 		bool bHeal = pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN;
 
-		for (auto pEntity : H::Entities.GetGroup(eGroupType))
+		for (auto pEntity : H::Entities.GetGroup(eGroup))
 		{
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
@@ -656,7 +656,7 @@ bool CAimbotHitscan::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 }
 
 // assume angle calculated outside with other overload
-void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
+void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngles, int iMethod)
 {
 	bool bUnsure = F::Ticks.IsTimingUnsure();
 	switch (iMethod)
@@ -667,20 +667,20 @@ void CAimbotHitscan::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 		[[fallthrough]];
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
-		pCmd->viewangles = vAngle;
-		I::EngineClient->SetViewAngles(vAngle);
+		pCmd->viewangles = vAngles;
+		I::EngineClient->SetViewAngles(vAngles);
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
 		if (G::Attacking == 1 || bUnsure)
 		{
-			SDK::FixMovement(pCmd, vAngle);
-			pCmd->viewangles = vAngle;
+			SDK::FixMovement(pCmd, vAngles);
+			pCmd->viewangles = vAngles;
 			G::SilentAngles = true;
 		}
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
-		SDK::FixMovement(pCmd, vAngle);
-		pCmd->viewangles = vAngle;
+		SDK::FixMovement(pCmd, vAngles);
+		pCmd->viewangles = vAngles;
 		G::SilentAngles = true;
 	}
 }

@@ -30,12 +30,12 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 	{
-		auto eGroupType = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
+		auto eGroup = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
 		if (Vars::Aimbot::Melee::WhipTeam.Value &&
 			!F::AimbotGlobal.FriendlyFire() && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
-			eGroupType = EntityEnum::PlayerAll;
+			eGroup = EntityEnum::PlayerAll;
 
-		for (auto pEntity : H::Entities.GetGroup(eGroupType))
+		for (auto pEntity : H::Entities.GetGroup(eGroup))
 		{
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
@@ -54,13 +54,13 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 	}
 
 	{
-		auto eGroupType = EntityEnum::Invalid;
+		auto eGroup = EntityEnum::Invalid;
 		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Building)
-			eGroupType = EntityEnum::BuildingEnemy;
+			eGroup = EntityEnum::BuildingEnemy;
 		bool bWrench = pWeapon->GetWeaponID() == TF_WEAPON_WRENCH, bSapper = SDK::AttribHookValue(0, "set_dmg_apply_to_sapper", pWeapon);
 		if (Vars::Aimbot::Healing::AutoRepair.Value && (bWrench || bSapper))
-			eGroupType = eGroupType != EntityEnum::Invalid ? EntityEnum::BuildingAll : EntityEnum::BuildingTeam;
-		for (auto pEntity : H::Entities.GetGroup(eGroupType))
+			eGroup = eGroup != EntityEnum::Invalid ? EntityEnum::BuildingAll : EntityEnum::BuildingTeam;
+		for (auto pEntity : H::Entities.GetGroup(eGroup))
 		{
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
@@ -369,6 +369,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		tTarget.m_pEntity->m_vecMins() = pRecord->m_vMins + PLAYER_ORIGIN_COMPRESSION;
 		tTarget.m_pEntity->m_vecMaxs() = pRecord->m_vMaxs - PLAYER_ORIGIN_COMPRESSION;
 
+		// possibly account melee bounds as well?
 		tTarget.m_vPos = m_vEyePos.Clamp(pRecord->m_vOrigin + tTarget.m_pEntity->m_vecMins(), pRecord->m_vOrigin + tTarget.m_pEntity->m_vecMaxs());
 		if (Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
 			tTarget.m_vPos.x = pRecord->m_vOrigin.x, tTarget.m_vPos.y = pRecord->m_vOrigin.y;
@@ -459,7 +460,7 @@ bool CAimbotMelee::Aim(Vec3 vCurAngle, Vec3 vToAngle, Vec3& vOut, int iMethod)
 }
 
 // assume angle calculated outside with other overload
-void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
+void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngles, int iMethod)
 {
 	bool bUnsure = F::Ticks.IsTimingUnsure();
 	switch (iMethod)
@@ -470,20 +471,20 @@ void CAimbotMelee::Aim(CUserCmd* pCmd, Vec3& vAngle, int iMethod)
 		[[fallthrough]];
 	case Vars::Aimbot::General::AimTypeEnum::Smooth:
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
-		pCmd->viewangles = vAngle;
-		I::EngineClient->SetViewAngles(vAngle);
+		pCmd->viewangles = vAngles;
+		I::EngineClient->SetViewAngles(vAngles);
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Silent:
 		if (G::Attacking == 1 || bUnsure)
 		{
-			SDK::FixMovement(pCmd, vAngle);
-			pCmd->viewangles = vAngle;
+			SDK::FixMovement(pCmd, vAngles);
+			pCmd->viewangles = vAngles;
 			G::PSilentAngles = true;
 		}
 		break;
 	case Vars::Aimbot::General::AimTypeEnum::Locking:
-		SDK::FixMovement(pCmd, vAngle);
-		pCmd->viewangles = vAngle;
+		SDK::FixMovement(pCmd, vAngles);
+		pCmd->viewangles = vAngles;
 		G::SilentAngles = true;
 	}
 }

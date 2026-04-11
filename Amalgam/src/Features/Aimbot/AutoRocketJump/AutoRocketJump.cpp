@@ -146,22 +146,23 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 			bool bMoveSimSetup = F::MoveSim.Initialize(pLocal, tMoveStorage, false); // do move sim after to not mess with proj sim
 			if (bMoveSimSetup && bProjSimSetup)
 			{
-				Vec3 vOriginal = F::ProjSim.GetOrigin();
 				int iSkip = bCurrGrounded ? Vars::Misc::Movement::AutoRocketJumpSkipGround.Value : Vars::Misc::Movement::AutoRocketJumpSkipAir.Value;
+
+				CGameTrace trace = {};
+				CTraceFilterCollideable filter = {};
+				filter.pSkip = pLocal;
+
+				Vec3 vNew = F::ProjSim.GetOrigin();
 				for (int n = 1; n < 10; n++)
 				{
 					F::MoveSim.RunTick(tMoveStorage);
 					if (n <= iSkip || n == 1 && G::Reloading)
 						continue;
 
-					Vec3 Old = F::ProjSim.GetOrigin();
 					F::ProjSim.RunTick(tProjInfo);
-					Vec3 New = F::ProjSim.GetOrigin();
 
-					CGameTrace trace = {};
-					CTraceFilterCollideable filter = {};
-					filter.pSkip = pLocal;
-					SDK::Trace(Old, New, MASK_SOLID, &filter, &trace);
+					Vec3 vOld = vNew; vNew = F::ProjSim.GetOrigin();
+					SDK::Trace(vOld, vNew, MASK_SOLID, &filter, &trace);
 					if (trace.DidHit())
 					{
 						if (!pLocal->IsOnGround() || pLocal->IsSwimming())

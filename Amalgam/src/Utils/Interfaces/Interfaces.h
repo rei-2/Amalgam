@@ -7,9 +7,9 @@ struct InterfaceInit_t
 	void** m_pPtr;
 	const char* m_sDLL;
 	const char* m_sName;
-	int8_t m_nType; // 0: find interface, 1: get export, 2: sig scan
+	uint8_t m_nType; // 0: find interface, 1: get export, 2: sig scan
 	int8_t m_nOffset;
-	int8_t m_nDereferenceCount;
+	uint8_t m_nDereferenceCount;
 	bool m_bNullCheck;
 
 	InterfaceInit_t(void** pPtr, const char* sDLL, const char* sName, int8_t nType, int8_t nOffset = 0, int8_t nDereferenceCount = 0, bool bNullCheck = true);

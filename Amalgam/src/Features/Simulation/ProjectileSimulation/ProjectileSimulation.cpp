@@ -1,6 +1,7 @@
 #include "ProjectileSimulation.h"
 
 #include "../../EnginePrediction/EnginePrediction.h"
+#include "../../NoSpread/NoSpreadProjectile/NoSpreadProjectile.h"
 #include "../../CritHack/CritHack.h"
 #include "../../Backtrack/Backtrack.h"
 
@@ -18,14 +19,30 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	bool bMaxSpeed = iFlags & ProjSimEnum::MaxSpeed;
 	bool bPredictCmdNum = iFlags & ProjSimEnum::PredictCmdNum;
 	bool bNoRandomAngles = iFlags & ProjSimEnum::NoRandomAngles;
+	bool bCorrectRandomAngles = iFlags & ProjSimEnum::CorrectRandomAngles;
 
 	Vec3 vPos, vAngle;
+
+	if (bCorrectRandomAngles)
+	{
+		int iOriginalAttacking = G::Attacking;
+		bool bOriginalSilent = G::PSilentAngles;
+
+		G::DummyCmd.viewangles = vAngles;
+		G::DummyCmd.command_number = bPredictCmdNum ? F::CritHack.PredictCmdNum(pPlayer, pWeapon, G::CurrentUserCmd) : G::CurrentUserCmd->command_number;
+		G::Attacking = 1;
+		F::NoSpreadProjectile.Run(pPlayer, pWeapon, &G::DummyCmd);
+		vAngles = G::DummyCmd.viewangles;
+
+		G::Attacking = iOriginalAttacking;
+		G::PSilentAngles = bOriginalSilent;
+	}
 
 	if (Vars::Visuals::Trajectory::Override.Value)
 	{
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { Vars::Visuals::Trajectory::OffsetX.Value, Vars::Visuals::Trajectory::OffsetY.Value, Vars::Visuals::Trajectory::OffsetZ.Value }, vPos, vAngle, bRedirect ? Vars::Visuals::Trajectory::ForwardRedirect.Value : 0.f, Vars::Visuals::Trajectory::ForwardCutoff.Value, bInterp);
 
-		auto uType = FNV1A::Hash32(Vars::Visuals::Trajectory::Type.Value.c_str());
+		auto uType = FNV1A::Hash32Const("custom"); //FNV1A::Hash32(Vars::Visuals::Trajectory::Type.Value.c_str());
 		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value, Vars::Visuals::Trajectory::Hull.Value }, Vars::Visuals::Trajectory::Speed.Value, Vars::Visuals::Trajectory::Gravity.Value, Vars::Visuals::Trajectory::LifeTime.Value };
 		return true;
 	}
@@ -612,6 +629,9 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 		m_pEnv->ResetSimulationClock();
 	}
 
+	if (tProjInfo.m_uType == FNV1A::Hash32Const("custom"))
+		tProjInfo.m_uType = FNV1A::Hash32(Vars::Visuals::Trajectory::Type.Value.c_str());
+
 	RunTick(tProjInfo, false); // simulate an initial time because dumb
 
 	return true;
@@ -619,9 +639,6 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 
 void CProjectileSimulation::RunTick(ProjectileInfo& tProjInfo, bool bPath) // bug: per frame projectile trace can cause inconsistencies?
 {
-	if (!m_pEnv)
-		return;
-
 	if (bPath)
 		tProjInfo.m_vPath.push_back(GetOrigin());
 

@@ -35,19 +35,19 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		for (int i = 0; i < 6; ++i)
 			SDK::RandomFloat();
 
-		Vec3 vAngAdd = pWeapon->GetSpreadAngles() - pLocal->EyeAngles();
+		Vec3 vAngAdd = pLocal->EyeAngles() - pWeapon->GetSpreadAngles();
 		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_COMPOUND_BOW:
 			if (I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > TF_ARROW_MAX_CHARGE_TIME)
 			{
-				vAngAdd.x += float(SDK::RandomInt()) / VALVE_RAND_MAX * 12.f - 6.f;
-				vAngAdd.y += float(SDK::RandomInt()) / VALVE_RAND_MAX * 12.f - 6.f;
+				vAngAdd.x -= float(SDK::RandomInt()) / VALVE_RAND_MAX * 12.f - 6.f;
+				vAngAdd.y -= float(SDK::RandomInt()) / VALVE_RAND_MAX * 12.f - 6.f;
 			}
 			break;
 		case TF_WEAPON_SYRINGEGUN_MEDIC:
-			vAngAdd.x += SDK::RandomFloat(-1.5f, 1.5f);
-			vAngAdd.y += SDK::RandomFloat(-1.5f, 1.5f);
+			vAngAdd.x -= SDK::RandomFloat(-1.5f, 1.5f);
+			vAngAdd.y -= SDK::RandomFloat(-1.5f, 1.5f);
 			break;
 		case TF_WEAPON_GRENADELAUNCHER:
 		case TF_WEAPON_CANNON:
@@ -64,15 +64,17 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 
 			Vec3 vForward, vRight, vUp; Math::AngleVectors(pCmd->viewangles, &vForward, &vRight, &vUp);
 			Vec3 vVelocity = vForward * flSpeed + vUp * 200.f;
-			Vec3 vNewVelocity = vVelocity + vUp * SDK::RandomFloat(-10.f, 10.f) + vRight * SDK::RandomFloat(-10.f, 10.f);
+			Vec3 vAdjusted = vVelocity + vUp * SDK::RandomFloat(-10.f, 10.f) + vRight * SDK::RandomFloat(-10.f, 10.f);
 
-			vAngAdd = Math::VectorAngles(vNewVelocity) - Math::VectorAngles(vVelocity);
+			vAngAdd -= Math::VectorAngles(vAdjusted) - Math::VectorAngles(vVelocity);
 		}
 		}
 
 		if (!vAngAdd.IsZero())
 		{
-			pCmd->viewangles -= vAngAdd;
+			Vec3 vAngles = pCmd->viewangles + vAngAdd;
+			SDK::FixMovement(pCmd, vAngles);
+			pCmd->viewangles = vAngles;
 			G::PSilentAngles = true;
 		}
 	}

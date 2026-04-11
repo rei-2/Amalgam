@@ -20,6 +20,7 @@
 #include "../Utils/Timer/Timer.h"
 #include "../Utils/Macros/Macros.h"
 #include <intrin.h>
+#include <random>
 
 #define DEFAULT_COLOR		Color_t(175, 150, 255, 255)
 #define ALTERNATE_COLOR		Color_t(175, 150, 255, 127)
@@ -86,7 +87,7 @@ namespace SDK
 	HWND GetTeamFortressWindow();
 	bool IsGameWindowInFocus();
 
-	double PlatFloatTime();
+	inline std::default_random_engine Random = {};
 	int StdRandomInt(int iMin = 0, int iMax = VALVE_RAND_MAX);
 	float StdRandomFloat(float flMin = 0.f, float flMax = 1.f);
 
@@ -95,6 +96,7 @@ namespace SDK
 	void RandomSeed(int iSeed);
 	int RandomInt(int iMinVal = 0, int iMaxVal = VALVE_RAND_MAX);
 	float RandomFloat(float flMinVal = 0.f, float flMaxVal = 1.f);
+	double PlatFloatTime();
 
 	bool W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways = false);
 	bool IsOnScreen(CBaseEntity* pEntity, const matrix3x4& mTransform, float* pLeft = nullptr, float* pRight = nullptr, float* pTop = nullptr, float* pBottom = nullptr, bool bAll = false);

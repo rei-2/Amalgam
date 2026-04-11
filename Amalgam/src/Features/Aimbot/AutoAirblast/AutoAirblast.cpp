@@ -82,14 +82,14 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 		pProjectile->SetAbsOrigin(vOrigin);
 		if (Vars::Aimbot::Projectile::AutoAirblast.Value & Vars::Aimbot::Projectile::AutoAirblastEnum::Redirect)
 		{
-			Vec3 vAngle = Math::CalcAngle(vEyePos, vOrigin);
-			if (CanAirblastEntity(pLocal, pWeapon, pProjectile, vAngle))
+			Vec3 vAngles = Math::CalcAngle(vEyePos, vOrigin);
+			if (CanAirblastEntity(pLocal, pWeapon, pProjectile, vAngles))
 			{
 				bShouldBlast = true;
 				if (!F::AimbotProjectile.AutoAirblast(pLocal, pWeapon, pCmd, pProjectile))
 				{
-					SDK::FixMovement(pCmd, vAngle);
-					pCmd->viewangles = vAngle;
+					SDK::FixMovement(pCmd, vAngles);
+					pCmd->viewangles = vAngles;
 					G::PSilentAngles = true;
 				}
 			}

@@ -90,13 +90,14 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 		return;
 
 	int iTicks = TIME_TO_TICKS(std::min(tProjInfo.m_flLifetime, 10.f));
+
+	Vec3 vNew = F::ProjSim.GetOrigin();
 	for (int n = 1; n <= iTicks; n++)
 	{
-		Vec3 Old = F::ProjSim.GetOrigin();
 		F::ProjSim.RunTick(tProjInfo);
-		Vec3 New = F::ProjSim.GetOrigin();
 
-		SDK::TraceHull(Old, New, -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
+		Vec3 vOld = vNew; vNew = F::ProjSim.GetOrigin();
+		SDK::TraceHull(vOld, vNew, -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
 		F::ProjSim.SetupTrace(filter, nMask, pWeapon, n, bInterp);
 		if (trace.DidHit())
 		{
@@ -924,13 +925,14 @@ void CVisuals::Store()
 				F::ProjSim.SetupTrace(filter, nMask, pEntity);
 
 				int iTicks = TIME_TO_TICKS(std::min(tProjInfo.m_flLifetime, 10.f));
+
+				Vec3 vNew = F::ProjSim.GetOrigin();
 				for (int n = 1; n <= iTicks; n++)
 				{
-					Vec3 Old = F::ProjSim.GetOrigin();
 					F::ProjSim.RunTick(tProjInfo);
-					Vec3 New = F::ProjSim.GetOrigin();
 
-					SDK::TraceHull(Old, New, -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
+					Vec3 vOld = vNew; vNew = F::ProjSim.GetOrigin();
+					SDK::TraceHull(vOld, vNew, -tProjInfo.m_vHull, tProjInfo.m_vHull, nMask, &filter, &trace);
 					if (trace.DidHit())
 					{
 						tProjectile.m_vNormal = trace.plane.normal;

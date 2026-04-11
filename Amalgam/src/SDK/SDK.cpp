@@ -3,7 +3,6 @@
 #include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/ImGui/Menu/Menu.h"
 #include "../Features/EnginePrediction/EnginePrediction.h"
-#include <random>
 
 #pragma warning (disable : 6385)
 
@@ -156,23 +155,15 @@ bool SDK::IsGameWindowInFocus()
 	return hWindow == GetForegroundWindow() || !hWindow;
 }
 
-double SDK::PlatFloatTime()
-{
-	static auto Plat_FloatTime = U::Memory.GetModuleExport<double(*)()>("tier0.dll", "Plat_FloatTime");
-	return Plat_FloatTime();
-}
-
-static std::random_device s_tRandomDevice;
-static std::mt19937 s_tEngine(s_tRandomDevice());
 int SDK::StdRandomInt(int iMin, int iMax)
 {
 	std::uniform_int_distribution<int> iDistribution(iMin, iMax);
-	return iDistribution(s_tEngine);
+	return iDistribution(Random);
 }
 float SDK::StdRandomFloat(float flMin, float flMax)
 {
 	std::uniform_real_distribution<float> flDistribution(flMin, flMax);
-	return flDistribution(s_tEngine);
+	return flDistribution(Random);
 }
 
 int SDK::SeedFileLineHash(int iSeed, const char* sName, int iAdditionalSeed)
@@ -206,6 +197,12 @@ float SDK::RandomFloat(float flMinVal, float flMaxVal)
 {
 	static auto RandomFloat = U::Memory.GetModuleExport<float(*)(float, float)>("vstdlib.dll", "RandomFloat");
 	return RandomFloat(flMinVal, flMaxVal);
+}
+
+double SDK::PlatFloatTime()
+{
+	static auto Plat_FloatTime = U::Memory.GetModuleExport<double(*)()>("tier0.dll", "Plat_FloatTime");
+	return Plat_FloatTime();
 }
 
 bool SDK::W2S(const Vec3& vOrigin, Vec3& vScreen, bool bAlways)

@@ -6,9 +6,10 @@ Enum(ProjSim,
 	Redirect = 1 << 0, // redirect and possibly trace when doing GetProjectileFireSetup
 	InitCheck = 1 << 1, // validate starting position
 	Interp = 1 << 2, // use interpolation
-	NoRandomAngles = 1 << 3, // don't do angle stuff for aimbot, nospread will pick that up
-	PredictCmdNum = 1 << 4, // use crithack to predict command number
-	MaxSpeed = 1 << 5 // default projectile speeds to their maximum
+	PredictCmdNum = 1 << 3, // use crithack to predict command number
+	MaxSpeed = 1 << 4, // default projectile speeds to their maximum
+	NoRandomAngles = 1 << 5, // don't do angle stuff for aimbot, nospread will pick that up
+	CorrectRandomAngles = 1 << 6 // or do, position matters
 )
 
 #define GRENADE_CHECK_INTERVAL 0.195f

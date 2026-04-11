@@ -303,9 +303,11 @@ void CMenu::MenuAimbot(int iTab)
 						Divider();
 						FSlider(Vars::Aimbot::Projectile::VelocityAverageCount, FSliderEnum::Left);
 						FSlider(Vars::Aimbot::Projectile::VerticalShift, FSliderEnum::Right);
-
 						FSlider(Vars::Aimbot::Projectile::DragOverride, FSliderEnum::Left);
 						FSlider(Vars::Aimbot::Projectile::TimeOverride, FSliderEnum::Right);
+						FToggle(Vars::Aimbot::Projectile::LobAnglesUnderpredict);
+
+						Divider();
 						FSlider(Vars::Aimbot::Projectile::HuntsmanLerp, FSliderEnum::Left);
 						FSlider(Vars::Aimbot::Projectile::HuntsmanLerpLow, FSliderEnum::Right);
 						FSlider(Vars::Aimbot::Projectile::HuntsmanAdd, FSliderEnum::Left);
@@ -318,8 +320,6 @@ void CMenu::MenuAimbot(int iTab)
 						FText("Splash");
 						Divider(H::Draw.Scale(8), H::Draw.Scale(-1));
 						FDropdown(Vars::Aimbot::Projectile::SplashMode);
-						FSlider(Vars::Aimbot::Projectile::SplashNormalSkip, FSliderEnum::Left);
-						FSlider(Vars::Aimbot::Projectile::SplashAirCount, FSliderEnum::Right, !Vars::Aimbot::Projectile::SplashAirCount[DEFAULT_BIND] ? "random" : "%i");
 						PushTransparent(Vars::Aimbot::Projectile::SplashMode.Value != Vars::Aimbot::Projectile::SplashModeEnum::Trace);
 						{
 							FSlider(Vars::Aimbot::Projectile::SplashPointsDirect, FSliderEnum::Left);
@@ -335,9 +335,17 @@ void CMenu::MenuAimbot(int iTab)
 							FSlider(Vars::Aimbot::Projectile::SplashSamplesCutoff);
 						}
 						PopTransparent();
-						FSlider(Vars::Aimbot::Projectile::SplashCountDirect, FSliderEnum::Left);
-						FSlider(Vars::Aimbot::Projectile::SplashCountArc, FSliderEnum::Right);
+						FSlider(Vars::Aimbot::Projectile::SplashAirCount, FSliderEnum::None, !Vars::Aimbot::Projectile::SplashAirCount[DEFAULT_BIND] ? "random" : "%i");
+
+						Divider();
+						FSlider(Vars::Aimbot::Projectile::SplashRestrictDirect);
+						FSlider(Vars::Aimbot::Projectile::SplashRestrictArc);
+						FSlider(Vars::Aimbot::Projectile::SplashRestrictFirst);
+
+						Divider();
+						FSlider(Vars::Aimbot::Projectile::DirectTraceInterval);
 						FSlider(Vars::Aimbot::Projectile::SplashTraceInterval);
+						FSlider(Vars::Aimbot::Projectile::LobTraceInterval);
 
 						Divider();
 						FText("Misc");

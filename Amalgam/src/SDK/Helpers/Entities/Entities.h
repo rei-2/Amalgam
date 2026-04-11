@@ -3,13 +3,13 @@
 #include "../../Definitions/Classes.h"
 #include "../../Vars.h"
 
-Enum(Entity, Invalid = -1,
+Enum(Entity,
 	PlayerAll, PlayerEnemy, PlayerTeam,
 	BuildingAll, BuildingEnemy, BuildingTeam,
 	PickupHealth, PickupAmmo, PickupMoney, PickupPowerup, PickupSpellbook, PickupGargoyle,
 	WorldProjectile, WorldObjective, WorldNPC, WorldBomb,
 	LocalStickies, LocalFlares, SniperDots,
-	GroupsMax
+	Invalid, GroupsMax
 )
 
 struct DormantData

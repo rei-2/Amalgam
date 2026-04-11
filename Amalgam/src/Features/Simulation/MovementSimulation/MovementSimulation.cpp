@@ -3,8 +3,6 @@
 #include "../../EnginePrediction/EnginePrediction.h"
 #include <numeric>
 
-static CUserCmd s_tDummyCmd = {};
-
 void CMovementSimulation::Store(MoveStorage& tMoveStorage)
 {
 	auto pMap = tMoveStorage.m_pPlayer->GetPredDescMap();
@@ -65,11 +63,11 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 
 	if (pPlayer->InCond(TF_COND_SHIELD_CHARGE))
 	{
-		s_tDummyCmd.forwardmove = 450.f;
-		s_tDummyCmd.sidemove = 0.f;
-		SDK::FixMovement(&s_tDummyCmd, bLocal ? G::CurrentUserCmd->viewangles : pPlayer->GetEyeAngles(), {});
-		tCurRecord.m_vDirection.x = s_tDummyCmd.forwardmove;
-		tCurRecord.m_vDirection.y = -s_tDummyCmd.sidemove;
+		G::DummyCmd.forwardmove = 450.f;
+		G::DummyCmd.sidemove = 0.f;
+		SDK::FixMovement(&G::DummyCmd, bLocal ? G::CurrentUserCmd->viewangles : pPlayer->GetEyeAngles(), {});
+		tCurRecord.m_vDirection.x = G::DummyCmd.forwardmove;
+		tCurRecord.m_vDirection.y = -G::DummyCmd.sidemove;
 		return;
 	}
 
@@ -204,7 +202,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tMoveSto
 
 	// the hacks that make it work
 	I::MoveHelper->SetHost(pPlayer);
-	pPlayer->m_pCurrentCommand() = &s_tDummyCmd;
+	pPlayer->m_pCurrentCommand() = &G::DummyCmd;
 
 	if (auto pAvgVelocity = H::Entities.GetAvgVelocity(pPlayer->entindex()))
 		pPlayer->m_vecVelocity() = *pAvgVelocity; // only use average velocity here
@@ -323,13 +321,13 @@ bool CMovementSimulation::SetupMoveData(MoveStorage& tMoveStorage)
 			auto& tRecord = vRecords.front();
 			if (!tRecord.m_vDirection.IsZero())
 			{
-				s_tDummyCmd.forwardmove = tRecord.m_vDirection.x;
-				s_tDummyCmd.sidemove = -tRecord.m_vDirection.y;
-				s_tDummyCmd.upmove = tRecord.m_vDirection.z;
-				SDK::FixMovement(&s_tDummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
-				tMoveStorage.m_MoveData.m_flForwardMove = s_tDummyCmd.forwardmove;
-				tMoveStorage.m_MoveData.m_flSideMove = s_tDummyCmd.sidemove;
-				tMoveStorage.m_MoveData.m_flUpMove = s_tDummyCmd.upmove;
+				G::DummyCmd.forwardmove = tRecord.m_vDirection.x;
+				G::DummyCmd.sidemove = -tRecord.m_vDirection.y;
+				G::DummyCmd.upmove = tRecord.m_vDirection.z;
+				SDK::FixMovement(&G::DummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
+				tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove;
+				tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;
+				tMoveStorage.m_MoveData.m_flUpMove = G::DummyCmd.upmove;
 			}
 		}
 	}
@@ -670,9 +668,9 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 		&& tMoveStorage.m_MoveData.m_vecVelocity.Length2D() > tMoveStorage.m_MoveData.m_flMaxSpeed * 0.015f)
 	{
 		Vec3 vDirection = tMoveStorage.m_MoveData.m_vecVelocity.Normalized2D() * 450.f;
-		s_tDummyCmd.forwardmove = vDirection.x, s_tDummyCmd.sidemove = -vDirection.y;
-		SDK::FixMovement(&s_tDummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
-		tMoveStorage.m_MoveData.m_flForwardMove = s_tDummyCmd.forwardmove, tMoveStorage.m_MoveData.m_flSideMove = s_tDummyCmd.sidemove;
+		G::DummyCmd.forwardmove = vDirection.x, G::DummyCmd.sidemove = -vDirection.y;
+		SDK::FixMovement(&G::DummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
+		tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove, tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;
 	}
 
 	RestoreBounds(tMoveStorage.m_pPlayer);
