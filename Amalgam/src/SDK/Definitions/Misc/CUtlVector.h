@@ -1,5 +1,6 @@
 #pragma once
 #include "CUtlMemory.h"
+#include "CUtlShared.h"
 #include <stdlib.h>
 #include <cassert>
 
@@ -8,23 +9,11 @@
 #pragma warning (disable : 4514)
 #pragma warning (disable : 26495)
 
-template <class T>
-inline void Construct(T* pMemory)
-{
-	::new(pMemory) T;
-}
+#define FOR_EACH_VEC( vecName, iteratorName ) \
+	for ( int iteratorName = 0; (vecName).IsUtlVector && iteratorName < (vecName).Count(); iteratorName++ )
 
-template <class T>
-inline void CopyConstruct(T* pMemory, T const& src)
-{
-	::new(pMemory) T(src);
-}
-
-template <class T>
-inline void Destruct(T* pMemory)
-{
-	pMemory->~T();
-}
+#define FOR_EACH_VEC_BACK( vecName, iteratorName ) \
+	for ( int iteratorName = (vecName).Count()-1; (vecName).IsUtlVector && iteratorName >= 0; iteratorName-- )
 
 template<class T, class A = CUtlMemory<T>>
 class CUtlVector

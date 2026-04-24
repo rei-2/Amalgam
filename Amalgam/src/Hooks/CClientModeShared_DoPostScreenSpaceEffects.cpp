@@ -14,7 +14,7 @@ MAKE_HOOK(CClientModeShared_DoPostScreenSpaceEffects, U::Memory.GetVirtual(I::Cl
 {
 	DEBUG_RETURN(CClientModeShared_DoPostScreenSpaceEffects, rcx, pSetup);
 
-	if (SDK::CleanScreenshot())
+	if (SDK::CleanScreenshot() || G::Unload)
 		return CALL_ORIGINAL(rcx, pSetup);
 	
 	F::Visuals.ProjectileTrace(H::Entities.GetLocal(), H::Entities.GetWeapon());

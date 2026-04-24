@@ -16,7 +16,6 @@ struct studiomeshdata_t;
 struct LightDesc_t;
 struct studiohwdata_t;
 struct Ray_t;
-struct vertexFileHeader_t;
 struct FlashlightState_t;
 struct FileHeader_t;
 typedef unsigned short MDLHandle_t;
@@ -173,13 +172,6 @@ struct GetTriangles_Output_t
 struct model_array_instance_t
 {
 	matrix3x4 modelToWorld;
-};
-
-class IStudioDataCache : public IAppSystem
-{
-public:
-	virtual bool VerifyHeaders(studiohdr_t* pStudioHdr) = 0;
-	virtual vertexFileHeader_t* CacheVertexData(studiohdr_t* pStudioHdr) = 0;
 };
 
 class IStudioRender : public IAppSystem

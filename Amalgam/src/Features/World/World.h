@@ -2,9 +2,6 @@
 #include "../../SDK/SDK.h"
 #include <functional>
 
-#define DIST_EPSILON 0.03125f
-#define CALC_EPSILON 0.001f
-
 //#define WORLD_DEBUG
 
 Enum(FaceType, None = 0, BoxBrush = 1 << 0, PlaneBrush = 1 << 1, Displacement = 1 << 2, Prop = 1 << 3, Entity = 1 << 4, All = BoxBrush | PlaneBrush | Displacement | Prop | Entity, Cache = BoxBrush | PlaneBrush | Prop | Entity)
@@ -17,6 +14,15 @@ namespace Vars {
 			"BoxBrush", "PlaneBrush", "Displacement", "Prop", "Entity");
 		CVarValues(Draw, "Draw", 0b0110, NOSAVE | DEBUGVAR | DROPDOWN_MULTI, nullptr,
 			"Points", "Edges", "Faces", "Normals");
+
+		CVar(Offset, "Offset", 0.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 1.f, DIST_EPSILON);
+		CVar(Resize, "Resize", 0.f, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0.f, 1.f, DIST_EPSILON);
+
+		CVar(BoxBrush, "BoxBrush", Color_t(255, 0, 0, 255), NOSAVE | DEBUGVAR);
+		CVar(PlaneBrush, "PlaneBrush", Color_t(0, 255, 0, 255), NOSAVE | DEBUGVAR);
+		CVar(Displacement, "Displacement", Color_t(0, 0, 255, 255), NOSAVE | DEBUGVAR);
+		CVar(Prop, "Prop", Color_t(255, 0, 255, 255), NOSAVE | DEBUGVAR);
+		CVar(Entity, "Entity", Color_t(255, 255, 0, 255), NOSAVE | DEBUGVAR);
 	NAMESPACE_END(World)
 }
 #endif
@@ -93,7 +99,7 @@ public:
 	void SetNormalValidCallback(NormalValidCallback* pCallback = nullptr);
 
 #ifdef WORLD_DEBUG
-	void DrawFace(const Face_t& tFace, int iFlags = DrawTypeEnum::Points | DrawTypeEnum::Edges | DrawTypeEnum::Faces | DrawTypeEnum::Normals);
+	void DrawFace(const Face_t& tFace, int iFlags = DrawTypeEnum::Points | DrawTypeEnum::Edges | DrawTypeEnum::Faces | DrawTypeEnum::Normals, std::optional<Color_t> tColor = std::nullopt);
 #endif
 };
 

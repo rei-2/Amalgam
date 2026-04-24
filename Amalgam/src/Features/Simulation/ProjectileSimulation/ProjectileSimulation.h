@@ -12,6 +12,7 @@ Enum(ProjSim,
 	CorrectRandomAngles = 1 << 6 // or do, position matters
 )
 
+#define DEFAULT_GRAVITY 800.f
 #define GRENADE_CHECK_INTERVAL 0.195f
 
 struct ProjectileInfo
@@ -30,7 +31,13 @@ struct ProjectileInfo
 
 	std::vector<Vec3> m_vPath = {};
 
-	int m_iFlags = 0;
+	uint8_t m_iFlags = 0;
+};
+
+struct PhysicsObject_t
+{
+	Vec3 m_vOrigin = {};
+	Vec3 m_vVelocity = {};
 };
 
 class CProjectileSimulation
@@ -53,7 +60,7 @@ private:
 	};
 
 public:
-	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags = ProjSimEnum::Redirect | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
+	bool GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& tProjInfo, int iFlags = ProjSimEnum::Redirect | ProjSimEnum::InitCheck, float flAutoCharge = -1.f);
 	void SetupTrace(CTraceFilterCollideable& filter, int& nMask, CTFWeaponBase* pWeapon, int nTick = 0, bool bInterp = false);
 
 	void GetInfo(CBaseEntity* pProjectile, ProjectileInfo& tProjInfo);
@@ -165,7 +172,7 @@ public:
 		float flReturn = 0.f;
 
 		static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
-		float flGravity = sv_gravity->GetFloat() / 800.f;
+		float flGravity = sv_gravity->GetFloat();
 		switch (pProjectile->GetClassID())
 		{
 		case ETFClassID::CBaseGrenade:
@@ -191,7 +198,7 @@ public:
 		case ETFClassID::CTFProjectile_ThrowableBreadMonster:
 		case ETFClassID::CTFProjectile_ThrowableBrick:
 		case ETFClassID::CTFProjectile_ThrowableRepel:
-			flReturn = 1.f;
+			flReturn = DEFAULT_GRAVITY;
 			break;
 		case ETFClassID::CTFProjectile_HealingBolt:
 			flReturn = 0.2f * flGravity;
@@ -209,7 +216,11 @@ public:
 	}
 
 	IPhysicsEnvironment* m_pEnv = nullptr;
+
 	IPhysicsObject* m_pObj = nullptr;
+	PhysicsObject_t m_tObj = {};
+	bool m_bPhysics = false;
+
 	ProjectileInfo* m_pCurrent = nullptr;
 };
 

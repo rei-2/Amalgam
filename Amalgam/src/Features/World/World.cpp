@@ -125,7 +125,7 @@ static inline void GetFacesForConvex(CPhysConvex* pConvex, std::vector<Face_t>& 
 
 		if (CPhysConvex* pConvex2 = I::PhysicsCollision->ConvexFromPlanes(reinterpret_cast<float*>(vPlanes.data()), int(vPlanes.size()), 0.f))
 		{
-			GetFacesForConvex(pConvex2, vFaces);
+			GetFacesForConvex(pConvex2, vFaces, 0.f, iType);
 			I::PhysicsCollision->ConvexFree(pConvex2);
 		}
 	}
@@ -265,11 +265,14 @@ void CWorld::CacheProps()
 
 	m_iNeedsCache &= ~FaceTypeEnum::Prop;
 
-	CUtlVector<ICollideable*> vProps; I::StaticPropMgr->GetAllStaticProps(&vProps);
-	for (int i = 0; i < vProps.Count(); i++)
+	for (int i = I::MDLCache->m_MDLDict.First(); i != I::MDLCache->m_MDLDict.InvalidIndex(); i = I::MDLCache->m_MDLDict.Next(i))
 	{
-		vcollide_t* pCollide = I::ModelInfoClient->GetVCollide(vProps[i]->GetCollisionModel());
-		if (!pCollide || m_mFaceCache.contains(pCollide))
+		studiodata_t* pStudioData = I::MDLCache->m_MDLDict[i];
+		if (!pStudioData)
+			continue;
+
+		vcollide_t* pCollide = &pStudioData->m_VCollisionData;
+		if (m_mFaceCache.contains(pCollide))
 			continue;
 
 		for (int iSolid = 0; iSolid < pCollide->solidCount; iSolid++)
@@ -474,7 +477,7 @@ std::vector<Face_t> CWorld::GetFacesInAABB(const Vec3& vMins, const Vec3& vMaxs,
 
 			vcollide_t* pCollide = I::ModelInfoClient->GetVCollide(pCollideable->GetCollisionModel());
 			if (!m_mFaceCache.contains(pCollide))
-				continue;
+				continue; // cache as well?
 
 			auto& vCache = m_mFaceCache[pCollide];
 			for (auto& tFace : vCache)
@@ -503,8 +506,21 @@ std::vector<Face_t> CWorld::GetFacesInAABB(const Vec3& vMins, const Vec3& vMaxs,
 }
 
 #ifdef WORLD_DEBUG
-void CWorld::DrawFace(const Face_t& tFace, int iFlags)
+void CWorld::DrawFace(const Face_t& tFace, int iFlags, std::optional<Color_t> tColor)
 {
+	if (!tColor)
+	{
+		switch (tFace.m_iType)
+		{
+		case FaceTypeEnum::BoxBrush: tColor = Vars::World::BoxBrush.Value; break;
+		case FaceTypeEnum::PlaneBrush: tColor = Vars::World::PlaneBrush.Value; break;
+		case FaceTypeEnum::Displacement: tColor = Vars::World::Displacement.Value; break;
+		case FaceTypeEnum::Prop: tColor = Vars::World::Prop.Value; break;
+		case FaceTypeEnum::Entity: tColor = Vars::World::Entity.Value; break;
+		default: tColor = { 255, 255, 255 }; break;
+		}
+	}
+
 	if (iFlags & (DrawTypeEnum::Points | DrawTypeEnum::Edges))
 	{
 		for (int i = 0; i < tFace.m_vVertices.size(); i++)
@@ -512,9 +528,9 @@ void CWorld::DrawFace(const Face_t& tFace, int iFlags)
 			const Vec3& vVertex1 = tFace.m_vVertices[i], &vVertex2 = tFace.m_vVertices[(i + 1) % tFace.m_vVertices.size()];
 
 			if (iFlags & DrawTypeEnum::Points)
-				G::BoxStorage.emplace_back(vVertex1, Vec3::Get(-1), Vec3::Get(1), Vec3(0, 0, 0), I::GlobalVars->curtime + 60.f, Color_t(255, 0, 0), Color_t(0, 0, 0, 0), true);
+				G::BoxStorage.emplace_back(vVertex1, Vec3::Get(-1), Vec3::Get(1), Vec3(0, 0, 0), I::GlobalVars->curtime + 60.f, *tColor, Color_t(0, 0, 0, 0), true);
 			if (iFlags & DrawTypeEnum::Edges)
-				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vVertex1, vVertex2), I::GlobalVars->curtime + 60.f, Color_t(255, 0, 0), true);
+				G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vVertex1, vVertex2), I::GlobalVars->curtime + 60.f, *tColor, true);
 		}
 	}
 
@@ -523,14 +539,14 @@ void CWorld::DrawFace(const Face_t& tFace, int iFlags)
 		for (int i = 0; ++i < tFace.m_vVertices.size() - 1;)
 		{
 			const Vec3& vVertex1 = tFace.m_vVertices[0], &vVertex2 = tFace.m_vVertices[i], &vVertex3 = tFace.m_vVertices[i + 1];
-			G::TriangleStorage.emplace_back(std::array<Vec3, 3>({ vVertex1, vVertex2, vVertex3 }), I::GlobalVars->curtime + 60.f, Color_t(255, 0, 0, 50), true);
+			G::TriangleStorage.emplace_back(std::array<Vec3, 3>({ vVertex1, vVertex2, vVertex3 }), I::GlobalVars->curtime + 60.f, tColor->Alpha(50), true);
 		}
 	}
 
 	if (iFlags & DrawTypeEnum::Normals)
 	{
-		G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tFace.m_vVertices[0], tFace.m_vVertices[0] + tFace.m_vNormal * 10), I::GlobalVars->curtime + 60.f, Color_t(255, 255, 0), true);
-		G::BoxStorage.emplace_back(tFace.m_vVertices[0] + tFace.m_vNormal * 10, Vec3::Get(-1), Vec3::Get(1), Vec3(), I::GlobalVars->curtime + 60.f, Color_t(255, 255, 0), Color_t(0, 0, 0, 0), true);
+		G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tFace.m_vVertices[0], tFace.m_vVertices[0] + tFace.m_vNormal * 10), I::GlobalVars->curtime + 60.f, tColor->Inverse(), true);
+		G::BoxStorage.emplace_back(tFace.m_vVertices[0] + tFace.m_vNormal * 10, Vec3::Get(-1), Vec3::Get(1), Vec3(), I::GlobalVars->curtime + 60.f, tColor->Inverse(), Color_t(0, 0, 0, 0), true);
 	}
 }
 #endif

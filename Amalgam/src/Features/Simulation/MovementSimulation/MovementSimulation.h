@@ -44,9 +44,9 @@ private:
 	void Store(MoveStorage& tMoveStorage);
 	void Reset(MoveStorage& tMoveStorage);
 
-	bool SetupMoveData(MoveStorage& tMoveStorage);
+	void SetupMoveData(MoveStorage& tMoveStorage);
 	void GetAverageYaw(MoveStorage& tMoveStorage, int iSamples);
-	bool StrafePrediction(MoveStorage& tMoveStorage, int iSamples);
+	bool StrafePrediction(MoveStorage& tMoveStorage, bool bHitchance = false);
 
 	void SetBounds(CTFPlayer* pPlayer);
 	void RestoreBounds(CTFPlayer* pPlayer);

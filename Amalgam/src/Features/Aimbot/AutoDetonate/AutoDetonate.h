@@ -2,7 +2,6 @@
 #include "../../../SDK/SDK.h"
 
 #include "../AimbotGlobal/AimbotGlobal.h"
-#include <optional>
 
 class CAutoDetonate
 {

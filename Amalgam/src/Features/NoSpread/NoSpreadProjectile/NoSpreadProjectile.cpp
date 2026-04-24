@@ -39,7 +39,8 @@ void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_COMPOUND_BOW:
-			if (I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > TF_ARROW_MAX_CHARGE_TIME)
+			if (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f
+				&& I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > TF_ARROW_MAX_CHARGE_TIME)
 			{
 				vAngAdd.x -= float(SDK::RandomInt()) / VALVE_RAND_MAX * 12.f - 6.f;
 				vAngAdd.y -= float(SDK::RandomInt()) / VALVE_RAND_MAX * 12.f - 6.f;

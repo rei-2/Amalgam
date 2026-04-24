@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include <map>
 #include <ranges>
+#include <optional>
 
 class Vec2
 {
@@ -1033,6 +1034,11 @@ struct Color_t
 	inline Color_t Alpha(byte to) const
 	{
 		return { r, g, b, to };
+	}
+
+	inline Color_t Inverse() const
+	{
+		return Color_t(255 - r, 255 - g, 255 - b, a);
 	}
 
 	inline float Brightness(float flRed = 0.299f, float flGreen = 0.587f, float flBlue = 0.114f) const

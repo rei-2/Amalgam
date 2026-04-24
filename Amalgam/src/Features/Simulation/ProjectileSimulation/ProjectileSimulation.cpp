@@ -11,7 +11,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		return false;
 
 	static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
-	float flGravity = sv_gravity->GetFloat() / 800.f;
+	float flGravity = sv_gravity->GetFloat(); // vphysics projectiles affected by server start gravity
 	bool bDucking = pPlayer->m_fFlags() & FL_DUCKING;
 
 	bool bRedirect = iFlags & ProjSimEnum::Redirect;
@@ -118,7 +118,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, vHull, flSpeed, 0.f };
 		return true;
 	}
-	case TF_WEAPON_GRENADELAUNCHER: // vphysics projectiles affected by server start gravity
+	case TF_WEAPON_GRENADELAUNCHER:
 	case TF_WEAPON_CANNON:
 	{
 		bool bCannon = pWeapon->GetWeaponID() == TF_WEAPON_CANNON;
@@ -133,7 +133,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime : flMortar
 			: SDK::AttribHookValue(2.f, "fuse_mult", pWeapon);
 		flLifeTime = ceilf(flLifeTime / GRENADE_CHECK_INTERVAL) * GRENADE_CHECK_INTERVAL + GetDesync();
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, vHull, flSpeed, 1.f, flLifeTime };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, vHull, flSpeed, DEFAULT_GRAVITY, flLifeTime };
 		return true;
 	}
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
@@ -145,7 +145,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 			? SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon) * flAutoCharge
 			: (pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f ? I::GlobalVars->curtime - pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() : 0.f);
 		float flSpeed = SDK::AttribHookValue(bMaxSpeed ? 2400.f : Math::RemapVal(flCharge, 0.f, SDK::AttribHookValue(4.f, "stickybomb_charge_rate", pWeapon), 900.f, 2400.f), "mult_projectile_range", pWeapon);
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 4.f, 4.f, 4.f }, flSpeed, 1.f };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 5.f, 5.f, 5.f }, flSpeed, DEFAULT_GRAVITY };
 		return true;
 	}
 	case TF_WEAPON_FLAREGUN:
@@ -238,7 +238,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, 0.f, 0.f, bInterp);
 		
 		auto uType = FNV1A::Hash32Const("models/workshop_partner/weapons/c_models/c_sd_cleaver/c_sd_cleaver.mdl");
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 1.f, 1.f, 10.f } /*weird, probably still inaccurate*/, 3000.f, 1.f, 2.2f };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 1.f, 1.f, 10.f } /*weird, probably still inaccurate*/, 3000.f, DEFAULT_GRAVITY, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_BAT_WOOD:
@@ -252,7 +252,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		auto uType = bWrapAssassin ? FNV1A::Hash32Const("models/weapons/c_models/c_xms_festive_ornament.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_baseball.mdl");
 		Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 		vPos = (bInterp ? pPlayer->GetAbsOrigin() : pPlayer->m_vecOrigin()) + (Vec3(0, 0, 50) + vForward * 32.f) * pPlayer->m_flModelScale(); // why?
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed->GetFloat(), 1.f, bWrapAssassin ? 2.3f : 100.f };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, tf_scout_stunball_base_speed->GetFloat(), DEFAULT_GRAVITY, bWrapAssassin ? 2.3f : 100.f };
 		return true;
 	}
 	case TF_WEAPON_JAR:
@@ -267,7 +267,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		case Sniper_s_TheSelfAwareBeautyMark: uType = FNV1A::Hash32Const("models/weapons/c_models/c_breadmonster/c_breadmonster.mdl"); break;
 		case Scout_s_MutatedMilk: uType = FNV1A::Hash32Const("models/weapons/c_models/c_breadmonster/c_breadmonster_milk.mdl"); break;
 		}
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, 1000.f, 1.f, 2.2f };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, 1000.f, DEFAULT_GRAVITY, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_JAR_GAS:
@@ -275,7 +275,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, 0.f, 0.f, bInterp);
 		
 		auto uType = FNV1A::Hash32Const("models/weapons/c_models/c_gascan/c_gascan.mdl");
-		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, 2000.f, 1.f, 2.2f };
+		tProjInfo = { pPlayer, pWeapon, uType, vPos, vAngle, { 3.f, 3.f, 3.f }, 2000.f, DEFAULT_GRAVITY, 2.2f };
 		return true;
 	}
 	case TF_WEAPON_GRAPPLINGHOOK:
@@ -325,7 +325,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	return false;
 }
 
-bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, Vec3 vAngles, ProjectileInfo& tProjInfo, int iFlags, float flAutoCharge)
+bool CProjectileSimulation::GetInfo(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const Vec3& vAngles, ProjectileInfo& tProjInfo, int iFlags, float flAutoCharge)
 {
 	bool bInitCheck = iFlags & ProjSimEnum::InitCheck;
 	bool bInterp = iFlags & ProjSimEnum::Interp;
@@ -479,6 +479,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 
 		m_pObj->m_dragBasis = vDragBasis;
 		m_pObj->m_angDragBasis = vAngDragBasis;
+		m_bPhysics = m_pObj->m_dragCoefficient && m_pObj->m_dragBasis;
 	}
 
 	// set position and velocity
@@ -586,11 +587,19 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 			}
 		}
 
-		if (bSimulate && !F::ProjSim.m_pObj->IsDragEnabled() && m_pObj->m_dragBasis.IsZero()) // don't include vphysics projectiles
-			vVelocity.z += 400.f * tProjInfo.m_flGravity * TICK_INTERVAL; // i don't know why this makes it more accurate but it does
+		if (bSimulate && !m_bPhysics)
+			vVelocity.z += tProjInfo.m_flGravity * TICK_INTERVAL / 2;
 
-		m_pObj->SetPosition(tProjInfo.m_vPos, tProjInfo.m_vAng, true);
-		m_pObj->SetVelocity(&vVelocity, &vAngularVelocity);
+		if (m_bPhysics)
+		{
+			m_pObj->SetPosition(tProjInfo.m_vPos, tProjInfo.m_vAng, true);
+			m_pObj->SetVelocity(&vVelocity, &vAngularVelocity);
+		}
+		else
+		{
+			m_tObj.m_vOrigin = tProjInfo.m_vPos;
+			m_tObj.m_vVelocity = vVelocity;
+		}
 	}
 
 	// set m_pEnv params
@@ -624,7 +633,7 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 
 		m_pEnv->SetPerformanceSettings(&params);
 		m_pEnv->SetAirDensity(AIR_DENSITY);
-		m_pEnv->SetGravity({ 0.f, 0.f, -(800.f * tProjInfo.m_flGravity) });
+		m_pEnv->SetGravity({ 0.f, 0.f, -tProjInfo.m_flGravity });
 
 		m_pEnv->ResetSimulationClock();
 	}
@@ -632,7 +641,8 @@ bool CProjectileSimulation::Initialize(ProjectileInfo& tProjInfo, bool bSimulate
 	if (tProjInfo.m_uType == FNV1A::Hash32Const("custom"))
 		tProjInfo.m_uType = FNV1A::Hash32(Vars::Visuals::Trajectory::Type.Value.c_str());
 
-	RunTick(tProjInfo, false); // simulate an initial time because dumb
+	if (m_bPhysics)
+		RunTick(tProjInfo, false); // simulate an initial time because dumb
 
 	return true;
 }
@@ -642,15 +652,27 @@ void CProjectileSimulation::RunTick(ProjectileInfo& tProjInfo, bool bPath) // bu
 	if (bPath)
 		tProjInfo.m_vPath.push_back(GetOrigin());
 
-	m_pEnv->Simulate(TICK_INTERVAL);
+	if (m_bPhysics)
+		m_pEnv->Simulate(TICK_INTERVAL);
+	else
+	{
+		Vec3& vOrigin = m_tObj.m_vOrigin;
+		Vec3& vVelocity = m_tObj.m_vVelocity;
+
+		if (tProjInfo.m_flGravity)
+			vVelocity.z -= tProjInfo.m_flGravity * TICK_INTERVAL;
+
+		vOrigin += vVelocity * TICK_INTERVAL;
+	}
 
 	/* // params.maxVelocity limits velocity uniformly
-	Vec3 vVelocity, vAngular;
-	m_pObj->GetVelocity(&vVelocity, &vAngular);
 	static auto sv_maxvelocity = H::ConVars.FindVar("sv_maxvelocity");
-	const float flMaxVel = sv_maxvelocity->GetFloat();
-	vVelocity = { std::clamp(vVelocity.x, -flMaxVel, flMaxVel), std::clamp(vVelocity.y, -flMaxVel, flMaxVel), std::clamp(vVelocity.z, -flMaxVel, flMaxVel) };
-	m_pObj->SetVelocity(&vVelocity, &vAngular);
+
+	Vec3 vVelocity;
+	m_pObj->GetVelocity(&vVelocity, nullptr);
+	float flMaxVel = sv_maxvelocity->GetFloat();
+	vVelocity = vVelocity.Clamp(-flMaxVel, flMaxVel);
+	m_pObj->SetVelocity(&vVelocity, nullptr);
 	*/
 }
 
@@ -659,8 +681,10 @@ Vec3 CProjectileSimulation::GetOrigin()
 	if (!m_pObj)
 		return {};
 
-	Vec3 vOut;
-	m_pObj->GetPosition(&vOut, nullptr);
+	if (!m_bPhysics)
+		return m_tObj.m_vOrigin;
+
+	Vec3 vOut; m_pObj->GetPosition(&vOut, nullptr);
 	return vOut;
 }
 
@@ -669,8 +693,10 @@ Vec3 CProjectileSimulation::GetVelocity()
 	if (!m_pObj)
 		return {};
 
-	Vec3 vOut;
-	m_pObj->GetVelocity(&vOut, nullptr);
+	if (!m_bPhysics)
+		return m_tObj.m_vVelocity;
+
+	Vec3 vOut; m_pObj->GetVelocity(&vOut, nullptr);
 	return vOut;
 }
 

@@ -88,6 +88,7 @@ namespace SDK
 	bool IsGameWindowInFocus();
 
 	inline std::default_random_engine Random = {};
+	bool StdRandomBool();
 	int StdRandomInt(int iMin = 0, int iMax = VALVE_RAND_MAX);
 	float StdRandomFloat(float flMin = 0.f, float flMax = 1.f);
 

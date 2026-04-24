@@ -1,4 +1,5 @@
 #pragma once
+#include "CUtlShared.h"
 #include "../Interfaces/IMemAlloc.h"
 
 #pragma warning (push)

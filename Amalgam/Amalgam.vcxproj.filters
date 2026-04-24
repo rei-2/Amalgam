@@ -611,6 +611,16 @@
     <ClInclude Include="src\SDK\Definitions\Interfaces\CDispCollTree.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\TraceInfo.h" />
     <ClInclude Include="src\Utils\Math\BaseMath.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\IStudioDataCache.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CMDLCache.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CDefaultDataCacheClient.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlDict.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlMap.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlRBTree.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlFixedMemory.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlBlockMemory.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlLinkedList.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlShared.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

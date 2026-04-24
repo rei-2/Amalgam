@@ -2,13 +2,10 @@
 #include "BaseTypes.h"
 #include <cstring>
 
-#ifndef BITVEC_H
-#define BITVEC_H
 #define FORCEINLINE_TEMPLATE __forceinline
 #define COMPILE_TIME_ASSERT( pred ) static_assert( pred, "Compile time assert constraint is not true: " #pred )
 #define Plat_FastMemset memset
-#define PAD_NUMBER(number, boundary) \
-	( ((number) + ((boundary)-1)) / (boundary) ) * (boundary)
+#define PAD_NUMBER(number, boundary) ( ((number) + ((boundary)-1)) / (boundary) ) * (boundary)
 
 class CBitVecAccessor
 {
@@ -1423,8 +1420,3 @@ inline CBitVecAccessor::operator uint32()
 {
 	return m_pDWords[m_iBit >> 5] & (1 << (m_iBit & 31));
 }
-
-
-//=============================================================================
-
-#endif // BITVEC_H

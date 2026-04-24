@@ -374,7 +374,7 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 		Vec3 vOrigin = pLocal->m_vecOrigin();
 		H::Draw.StringOutlined(fFont, x, y += nTall * 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Origin: ({:.3f}, {:.3f}, {:.3f})", vOrigin.x, vOrigin.y, vOrigin.z).c_str());
 		Vec3 vVelocity = pLocal->m_vecVelocity();
-		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Velocity: {:.3f} ({:.3f}, {:.3f}, {:.3f})", vVelocity.Length(), vVelocity.x, vVelocity.y, vVelocity.z).c_str());
+		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Velocity: {:.3f}, {:.3f} ({:.3f}, {:.3f}, {:.3f})", vVelocity.Length(), vVelocity.Length2D(), vVelocity.x, vVelocity.y, vVelocity.z).c_str());
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Tickbase: {}", pLocal->m_nTickBase()).c_str());
 		//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Choke: {}, {}", G::Choking, I::ClientState->chokedcommands).c_str());
 		//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Ticks: {}, {}", F::Ticks.m_iShiftedTicks, F::Ticks.m_iShiftedGoal).c_str());
@@ -406,16 +406,41 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 	{
 		if (Vars::Debug::Info.Value)
 			y += nTall;
-		for (auto& [sString, tColor] : m_vDebugText)
+		for (auto& [sString, tColor, vPosition2D, vPosition3D] : m_vDebugText)
+		{
+			if (vPosition3D)
+			{
+				if (Vec3 vScreen; SDK::W2S(*vPosition3D, vScreen))
+					H::Draw.StringOutlined(fFont, vScreen.x, vScreen.y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+			}
+			else if (vPosition2D)
+				H::Draw.StringOutlined(fFont, vPosition2D->x, vPosition2D->y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+			else
 			H::Draw.StringOutlined(fFont, x, y += nTall, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+	}
 	}
 #endif
 }
 
 #ifdef DEBUG_TEXT
+void CVisuals::AddDebugText(const DebugText_t& sText)
+{
+	m_vDebugText.push_back(sText);
+}
+
 void CVisuals::AddDebugText(const std::string& sString, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor);
+	m_vDebugText.emplace_back(sString, tColor, std::nullopt, std::nullopt);
+}
+
+void CVisuals::AddDebugText(const std::string& sString, const Vec2& vPosition, Color_t tColor)
+{
+	m_vDebugText.emplace_back(sString, tColor, vPosition, std::nullopt);
+}
+
+void CVisuals::AddDebugText(const std::string& sString, const Vec3& vPosition, Color_t tColor)
+{
+	m_vDebugText.emplace_back(sString, tColor, std::nullopt, vPosition);
 }
 
 void CVisuals::ClearDebugText()
@@ -863,7 +888,6 @@ void CVisuals::Store()
 			if (!F::Groups.GetGroup(pEntity, pGroup, false) || !(pGroup->m_iTrajectory & TrajectoryEnum::Enabled))
 				continue;
 
-			bool bContains = m_mProjectiles.contains(pEntity);
 			Projectile_t& tProjectile = m_mProjectiles[pEntity];
 			mProjectiles[pEntity];
 
@@ -947,7 +971,7 @@ void CVisuals::Store()
 			}
 		}
 
-		for (auto& [pEntity, tProjectile] : m_mProjectiles)
+		for (auto& pEntity : m_mProjectiles | std::views::keys)
 		{
 			if (!mProjectiles.contains(pEntity))
 				m_mProjectiles.erase(pEntity);
@@ -1212,11 +1236,17 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		{
 			for (auto& tFace : vFaces)
 			{
+				if (Vars::World::Offset.Value)
+					Math::OffsetPolygon(tFace.m_vVertices, tFace.m_vNormal, Vars::World::Offset.Value);
+				if (Vars::World::Resize.Value)
+					Math::ExpandPolygon(tFace.m_vVertices, tFace.m_vNormal, Vars::World::Resize.Value);
+
 				F::World.DrawFace(tFace, Vars::World::Draw.Value);
+
 				/*
 				for (int i = 0; ++i < tFace.m_vVertices.size() - 1;)
 				{
-					const Vec3& vVertex1 = tFace.m_vVertices[0], & vVertex2 = tFace.m_vVertices[i], & vVertex3 = tFace.m_vVertices[i + 1];
+					const Vec3& vVertex1 = tFace.m_vVertices[0], &vVertex2 = tFace.m_vVertices[i], &vVertex3 = tFace.m_vVertices[i + 1];
 
 					Vec3 vDir21 = vVertex2 - vVertex1, vDir31 = vVertex3 - vVertex1;
 					float flArea = vDir21.Cross(vDir31).Length() / 2;

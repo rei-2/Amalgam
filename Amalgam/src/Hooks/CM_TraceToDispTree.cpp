@@ -1,7 +1,6 @@
 #include "../SDK/SDK.h"
 
 #include "../SDK/Definitions/Misc/TraceInfo.h"
-#include <optional>
 
 MAKE_SIGNATURE(CM_TraceToDispTree_True, "engine.dll", "48 8B C4 48 89 58 ? 48 89 70 ? 57 48 81 EC ? ? ? ? F3 0F 10 01", 0x0);
 MAKE_SIGNATURE(CM_TraceToDispTree_False, "engine.dll", "48 8B C4 48 89 58 ? 48 89 70 ? 57 48 83 EC ? F3 0F 10 01", 0x0);

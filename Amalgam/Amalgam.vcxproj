@@ -1260,6 +1260,7 @@
     <ClInclude Include="src\Features\World\World.h" />
     <ClInclude Include="src\Hooks\Direct3DDevice9.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CCollisionBSPData.h" />
+    <ClInclude Include="src\SDK\Definitions\Interfaces\CMDLCache.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CStaticPropMgr.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGameRules.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CTFGCClientSystem.h" />
@@ -1293,6 +1294,7 @@
     <ClInclude Include="src\SDK\Definitions\Main\ICollideable.h" />
     <ClInclude Include="src\SDK\Definitions\Main\Ray.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CByteSwap.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CDefaultDataCacheClient.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CDiscardableArray.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CInterpolatedVar.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CModel.h" />
@@ -1308,11 +1310,18 @@
     <ClInclude Include="src\SDK\Definitions\Misc\BSPFlags.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\IMoveHelper.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CRangeValidatedArray.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlBlockMemory.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlBuffer.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlCharConversion.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlDict.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlFixedMemory.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlIntrusiveList.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlLinkedList.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlMap.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlMemory.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlObjectReference.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlRBTree.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\CUtlShared.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlString.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\dt_send.h" />
     <ClInclude Include="src\SDK\Definitions\Main\IDispInfo.h" />
@@ -1320,6 +1329,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\IMDLCache.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\IPrediction.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\ISpatialPartition.h" />
+    <ClInclude Include="src\SDK\Definitions\Misc\IStudioDataCache.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\ServerClass.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CSmartPtr.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\TraceInfo.h" />

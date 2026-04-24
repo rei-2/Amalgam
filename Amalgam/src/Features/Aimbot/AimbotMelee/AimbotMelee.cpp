@@ -379,11 +379,11 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		Vec3 vTraceEnd = m_vEyePos + vForward * flRange;
 
 		SDK::TraceHull(m_vEyePos, vTraceEnd, {}, {}, MASK_SOLID, &filter, &trace);
-		bool bReturn = trace.m_pEnt && trace.m_pEnt == tTarget.m_pEntity;
+		bool bReturn = trace.m_pEnt == tTarget.m_pEntity;
 		if (!bReturn)
 		{
 			SDK::TraceHull(m_vEyePos, vTraceEnd, vSwingMins, vSwingMaxs, MASK_SOLID, &filter, &trace);
-			bReturn = trace.m_pEnt && trace.m_pEnt == tTarget.m_pEntity;
+			bReturn = trace.m_pEnt == tTarget.m_pEntity;
 		}
 
 		if (bReturn && Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
@@ -411,7 +411,7 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 			vTraceEnd = m_vEyePos + vForward * flRange;
 
 			SDK::TraceHull(m_vEyePos, vTraceEnd, vSwingMins, vSwingMaxs, MASK_SOLID, &filter, &trace);
-			if (trace.m_pEnt && trace.m_pEnt == tTarget.m_pEntity)
+			if (trace.m_pEnt == tTarget.m_pEntity)
 				return 2;
 		}
 		}

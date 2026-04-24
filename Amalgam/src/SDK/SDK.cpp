@@ -155,6 +155,10 @@ bool SDK::IsGameWindowInFocus()
 	return hWindow == GetForegroundWindow() || !hWindow;
 }
 
+bool SDK::StdRandomBool()
+{
+	return StdRandomInt(0, 1);
+}
 int SDK::StdRandomInt(int iMin, int iMax)
 {
 	std::uniform_int_distribution<int> iDistribution(iMin, iMax);

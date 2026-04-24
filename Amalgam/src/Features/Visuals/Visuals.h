@@ -1,8 +1,6 @@
 #pragma once
 #include "../../SDK/SDK.h"
 
-#include <map>
-
 //#define DEBUG_TEXT
 
 struct Projectile_t
@@ -30,6 +28,16 @@ struct PickupData_t
 	Vec3 m_vLocation;
 };
 
+#ifdef DEBUG_TEXT
+struct DebugText_t
+{
+	std::string m_sText = "";
+	Color_t m_tColor = {};
+	std::optional<Vec2> vPosition2D = std::nullopt;
+	std::optional<Vec3> vPosition3D = std::nullopt;
+};
+#endif
+
 class CVisuals
 {
 private:
@@ -38,7 +46,7 @@ private:
 	std::vector<PickupData_t> m_vPickups = {};
 
 #ifdef DEBUG_TEXT
-	std::vector<std::pair<std::string, Color_t>> m_vDebugText = {};
+	std::vector<DebugText_t> m_vDebugText = {};
 #endif
 
 public:
@@ -52,7 +60,10 @@ public:
 	void DrawDebugInfo(CTFPlayer* pLocal);
 
 #ifdef DEBUG_TEXT
+	void AddDebugText(const DebugText_t& sText);
 	void AddDebugText(const std::string& sString, Color_t tColor = Vars::Menu::Theme::Active.Value);
+	void AddDebugText(const std::string& sString, const Vec2& vPosition, Color_t tColor = Vars::Menu::Theme::Active.Value);
+	void AddDebugText(const std::string& sString, const Vec3& vPosition, Color_t tColor = Vars::Menu::Theme::Active.Value);
 	void ClearDebugText();
 #endif
 

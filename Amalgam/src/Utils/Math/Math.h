@@ -1,11 +1,15 @@
 #pragma once
 #include "BaseMath.h"
 #include "../../SDK/Definitions/Types.h"
+#include "../Hash/FNV1A.h"
 
 #undef min
 #undef max
 
 #define FLT_COMPARE(x, y) (fabsf(x - y) <= FLT_EPSILON * fmaxf(1.f, fmaxf(fabsf(x), fabsf(y))))
+
+#define DIST_EPSILON 0.03125f
+#define CALC_EPSILON 0.001f
 
 namespace Math
 {
@@ -386,5 +390,161 @@ namespace Math
 		mOut[2][1] = mIn1[2][0] * mIn2[0][1] + mIn1[2][1] * mIn2[1][1] + mIn1[2][2] * mIn2[2][1];
 		mOut[2][2] = mIn1[2][0] * mIn2[0][2] + mIn1[2][1] * mIn2[1][2] + mIn1[2][2] * mIn2[2][2];
 		mOut[2][3] = mIn1[2][0] * mIn2[0][3] + mIn1[2][1] * mIn2[1][3] + mIn1[2][2] * mIn2[2][3] + mIn1[2][3];
+	}
+
+	inline void OffsetPolygon(std::vector<Vec3>& vVertices, const Vec3& vNormal, float flOffset)
+	{
+		for (auto& vVertex : vVertices)
+			vVertex += vNormal * flOffset;
+	}
+
+	inline void ExpandPolygon(std::vector<Vec3>& vOldVertices, std::vector<Vec3>& vNewVertices, const Vec3& vNormal, float flOffset, const Vec3* pTarget = nullptr)
+	{
+		Vec3 vForward = (vNewVertices.front() - vNewVertices.back()).Normalized();
+		Vec3 vRight = vForward.Cross(vNormal).Normalized();
+
+		vOldVertices = vNewVertices;
+		for (int i = 0, n = int(vNewVertices.size()); i < n; i++)
+		{
+			Vec3& vVertex1 = vOldVertices[i], &vVertex2 = vOldVertices[(i + 1) % n], &vVertex3 = vOldVertices[(i + 2) % n];
+
+			Vec2 vPoint1 = { vVertex1.Dot(vForward), vVertex1.Dot(vRight) };
+			Vec2 vPoint2 = { vVertex2.Dot(vForward), vVertex2.Dot(vRight) };
+			Vec2 vPoint3 = { vVertex3.Dot(vForward), vVertex3.Dot(vRight) };
+
+			Vec2 vDelta21 = vPoint2 - vPoint1;
+			Vec2 vDelta32 = vPoint3 - vPoint2;
+
+			Vec2 vNormal1 = Vec2(vDelta21.y, -vDelta21.x).Normalized();
+			Vec2 vNormal2 = Vec2(vDelta32.y, -vDelta32.x).Normalized();
+
+			Vec2 vBisect = Vec2(vNormal1.x + vNormal2.x, vNormal1.y + vNormal2.y).Normalized();
+			float flDistance = flOffset / vNormal1.Dot(vBisect);
+			vBisect *= flDistance;
+
+			if (!pTarget)
+				vNewVertices[(i + 1) % n] += vForward * vBisect.x + vRight * vBisect.y;
+			else
+			{
+				Vec3 vToTarget = *pTarget - vVertex2;
+				if (Vec3 vDisplacementX = vForward * vBisect.x; vDisplacementX.Dot(vToTarget) > 0.f)
+					vNewVertices[(i + 1) % n] += vDisplacementX;
+				if (Vec3 vDisplacementY = vRight * vBisect.y; vDisplacementY.Dot(vToTarget) > 0.f)
+					vNewVertices[(i + 1) % n] += vDisplacementY;
+			}
+		}
+	}
+	inline void ExpandPolygon(std::vector<Vec3>& vVertices, const Vec3& vNormal, float flOffset, const Vec3* pTarget = nullptr)
+	{
+		std::vector<Vec3> vTemporary;
+		ExpandPolygon(vTemporary, vVertices, vNormal, flOffset, pTarget);
+	}
+
+	inline Vec3 ClosestPointOnLine(const Vec3& vPoint, const Vec3& vPoint1, const Vec3& vPoint2)
+	{
+		Vec3 vDelta = vPoint2 - vPoint1;
+
+		float flRatio = std::clamp((vPoint - vPoint1).Dot(vDelta) / vDelta.Dot(vDelta), 0.f, 1.f);
+
+		return vPoint1 + vDelta * flRatio;
+	}
+
+	inline Vec3 ClosestPointOnTriangle(const Vec3& vPoint, const Vec3& vPoint1, const Vec3& vPoint2, const Vec3& vPoint3, bool* pInside = nullptr)
+	{
+		Vec3 vDelta21 = vPoint2 - vPoint1;
+		Vec3 vDelta31 = vPoint3 - vPoint1;
+		if (pInside) *pInside = false;
+
+		Vec3 vDeltaPT = vPoint - vPoint1;
+		float flDot1 = vDelta21.Dot(vDeltaPT);
+		float flDot2 = vDelta31.Dot(vDeltaPT);
+		if (flDot1 <= 0 && flDot2 <= 0)
+			return vPoint1;
+
+		vDeltaPT = vPoint - vPoint2;
+		float flDot3 = vDelta21.Dot(vDeltaPT);
+		float flDot4 = vDelta31.Dot(vDeltaPT);
+		if (flDot3 >= 0 && flDot4 <= flDot3)
+			return vPoint2;
+
+		vDeltaPT = vPoint - vPoint3;
+		float flDot5 = vDelta21.Dot(vDeltaPT);
+		float flDot6 = vDelta31.Dot(vDeltaPT);
+		if (flDot6 >= 0 && flDot5 <= flDot6)
+			return vPoint3;
+
+		float flSideC = flDot1 * flDot4 - flDot3 * flDot2;
+		if (flSideC <= 0 && flDot1 >= 0 && flDot3 <= 0)
+		{
+			float flRatio = flDot1 / (flDot1 - flDot3);
+			return vPoint1 + vDelta21 * flRatio;
+		}
+
+		float flSideB = flDot5 * flDot2 - flDot1 * flDot6;
+		if (flSideB <= 0 && flDot2 >= 0 && flDot6 <= 0)
+		{
+			float flRatio = flDot2 / (flDot2 - flDot6);
+			return vPoint1 + vDelta31 * flRatio;
+		}
+
+		float flSideA = flDot3 * flDot6 - flDot5 * flDot4;
+		if (flSideA <= 0 && (flDot4 - flDot3) >= 0 && (flDot5 - flDot6) >= 0)
+		{
+			float flRatio = (flDot4 - flDot3) / (flDot4 - flDot3 + flDot5 - flDot6);
+			return vPoint2 + (vPoint3 - vPoint2) * flRatio;
+		}
+
+		float flDenominator = 1 / (flSideA + flSideB + flSideC);
+		float flV = flSideB * flDenominator;
+		float flW = flSideC * flDenominator;
+		if (pInside) *pInside = true;
+		return vPoint1 + vDelta21 * flV + vDelta31 * flW;
+	}
+
+	inline Vec3 ClosestPointOnPolygon(const Vec3& vPoint, const std::vector<Vec3>& vVertices, const Vec3& vNormal, bool* pInside = nullptr)
+	{
+		float flDot = vNormal.Dot(vPoint - vVertices.front());
+		Vec3 vProjection = vPoint - flDot * vNormal;
+
+		for (int i = 0, n = int(vVertices.size()); i < n; i++)
+		{
+			const Vec3& vVertex1 = vVertices[i], &vVertex2 = vVertices[(i + 1) % n];
+
+			Vec3 vEdge = vVertex2 - vVertex1;
+			Vec3 vToProjection = vProjection - vVertex1;
+
+			if (vToProjection.Cross(vEdge).Dot(vNormal) < 0)
+				goto outside;
+		}
+		if (pInside) *pInside = true;
+		return vProjection;
+
+		outside:
+		float flLowestDistance = std::numeric_limits<float>::max();
+		for (int i = 0, n = int(vVertices.size()); i < n; i++)
+		{
+			const Vec3& vVertex1 = vVertices[i], &vVertex2 = vVertices[(i + 1) % n];
+
+			Vec3 vLine = ClosestPointOnLine(vPoint, vVertex1, vVertex2);
+			float flDistance = vLine.DistToSqr(vPoint);
+			if (flDistance < flLowestDistance)
+				vProjection = vLine, flLowestDistance = flDistance;
+		}
+		if (pInside) *pInside = false;
+		return vProjection;
+	}
+
+	// note: not clamped
+	inline float FullFraction(const Vec3& vDir, const CGameTrace& trace)
+	{
+		if (!trace.DidHit() || FNV1A::Hash32(trace.surface.name) == FNV1A::Hash32Const("**displacement**"))
+			return trace.fraction;
+
+		float flFractionEpsilon = DIST_EPSILON / vDir.Dot(trace.plane.normal);
+		return trace.fraction - flFractionEpsilon;
+	}
+	inline float FullFraction(const Vec3& vStart, const Vec3& vEnd, const CGameTrace& trace)
+	{
+		return FullFraction(vEnd - vStart, trace);
 	}
 }

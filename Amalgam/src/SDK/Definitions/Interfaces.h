@@ -9,6 +9,7 @@
 #include "Interfaces/CGlobalVarsBase.h"
 #include "Interfaces/CHLClient.h"
 #include "Interfaces/CHLTVCamera.h"
+#include "Interfaces/CMDLCache.h"
 #include "Interfaces/CStaticPropMgr.h"
 #include "Interfaces/CTFGameRules.h"
 #include "Interfaces/CTFGCClientSystem.h"

@@ -3362,6 +3362,13 @@ void CMenu::MenuSettings(int iTab)
 		{
 			FDropdown(Vars::World::Faces, FDropdownEnum::Left);
 			FDropdown(Vars::World::Draw, FDropdownEnum::Right);
+			FSlider(Vars::World::Offset, FSliderEnum::Left);
+			FSlider(Vars::World::Resize, FSliderEnum::Right);
+			FColorPicker(Vars::World::BoxBrush, FColorPickerEnum::Left);
+			FColorPicker(Vars::World::PlaneBrush, FColorPickerEnum::Right);
+			FColorPicker(Vars::World::Displacement, FColorPickerEnum::Left);
+			FColorPicker(Vars::World::Prop, FColorPickerEnum::Right);
+			FColorPicker(Vars::World::Entity, FColorPickerEnum::Left);
 		} EndSection();
 #endif
 #ifdef DEBUG_HOOKS
