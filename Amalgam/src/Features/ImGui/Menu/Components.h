@@ -594,7 +594,7 @@ namespace ImGui
 		return Disabled ? false : bReturn;
 	}
 
-	inline bool FBeginPopup(const char* sLabel, ImGuiWindowFlags iFlags = ImGuiWindowFlags_None)
+	inline bool FBeginPopup(const char* sLabel, ImGuiWindowFlags iFlags = ImGuiWindowFlags_NoSavedSettings)
 	{
 		PushStyleColor(ImGuiCol_PopupBg, {});
 
@@ -607,7 +607,7 @@ namespace ImGui
 		return bReturn;
 	}
 
-	inline bool FBeginPopupModal(const char* sLabel, bool* pOpen, ImGuiWindowFlags iFlags = ImGuiWindowFlags_None)
+	inline bool FBeginPopupModal(const char* sLabel, bool* pOpen = nullptr, ImGuiWindowFlags iFlags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar)
 	{
 		PushStyleColor(ImGuiCol_PopupBg, {});
 
@@ -671,7 +671,7 @@ namespace ImGui
 		if (bReturn)
 			RenderBackground(F::Render.Background0p5, F::Render.Background2);
 
-		pDrawList->AddText(F::Render.IconFont, F::Render.IconFont->FontSize, vPos, F::Render.Inactive, ICON_MD_KEYBOARD_ARROW_RIGHT);
+		pDrawList->AddText(F::Render.IconFont, F::Render.IconFont->LegacySize, vPos, F::Render.Inactive, ICON_MD_KEYBOARD_ARROW_RIGHT);
 		return bReturn;
 	}
 
@@ -691,7 +691,7 @@ namespace ImGui
 			flMinHeight = mLastHeights[uHash];
 		PushStyleVar(ImGuiStyleVar_CellPadding, { 0, 0 });
 
-		bool bReturn = BeginChild(sLabel, { GetColumnWidth(), flMinHeight }, false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding);
+		bool bReturn = BeginChild(sLabel, { GetColumnWidth(), flMinHeight }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		if (bReturn)
 		{
 			if (sLabel[0] != '#')
@@ -729,7 +729,7 @@ namespace ImGui
 		PopStyleVar();
 	}
 
-	inline std::vector<WidgetWindow_t> WidgetTable(int iCount, float flHeight, std::vector<float> vWidths = {}, int iWindowFlags = ImGuiWindowFlags_None, int iChildFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_AlwaysUseWindowPadding)
+	inline std::vector<WidgetWindow_t> WidgetTable(int iCount, float flHeight, std::vector<float> vWidths = {}, int iWindowFlags = ImGuiChildFlags_AlwaysUseWindowPadding, int iChildFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)
 	{
 		std::vector<WidgetWindow_t> vReturn = {};
 
@@ -1898,7 +1898,7 @@ namespace ImGui
 		PushStyleColor(ImGuiCol_PopupBg, F::Render.Background0p5.Value);
 
 		ImVec4 tTempColor = ColorToVec(*pColor);
-		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tTempColor.x, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_LargeAlphaGrid | ImGuiColorEditFlags_NoRoundRestrict, vSize);
+		bool bReturn = ColorEdit4(std::format("##{}", sLabel).c_str(), &tTempColor.x, ImGuiColorEditFlags_AlphaBar | ImGuiColorEditFlags_LargeAlphaGrid | ImGuiColorEditFlags_NoRoundRestrict | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoBorder | ImGuiColorEditFlags_NoTooltip, vSize);
 		if (bReturn)
 			*pColor = VecToColor(tTempColor);
 		if (!Disabled && IsItemHovered())
@@ -2018,88 +2018,6 @@ namespace ImGui
 		return bReturn;
 	}
 
-	inline std::string VK2STR(short key)
-	{
-		switch (key)
-		{
-		case 0x0: return "none";
-		case VK_LBUTTON: return "mouse1";
-		case VK_RBUTTON: return "mouse2";
-		case VK_MBUTTON: return "mouse3";
-		case VK_XBUTTON1: return "mouse4";
-		case VK_XBUTTON2: return "mouse5";
-		case VK_SHIFT: return "shift";
-		case VK_LSHIFT: return "lshift";
-		case VK_RSHIFT: return "rshift";
-		case VK_CONTROL: return "control";
-		case VK_LCONTROL: return "lcontrol";
-		case VK_RCONTROL: return "rcontrol";
-		case VK_MENU: return "alt";
-		case VK_LMENU: return "lalt";
-		case VK_RMENU: return "ralt";
-		case VK_NUMPAD0: return "num0";
-		case VK_NUMPAD1: return "num1";
-		case VK_NUMPAD2: return "num2";
-		case VK_NUMPAD3: return "num3";
-		case VK_NUMPAD4: return "num4";
-		case VK_NUMPAD5: return "num5";
-		case VK_NUMPAD6: return "num6";
-		case VK_NUMPAD7: return "num7";
-		case VK_NUMPAD8: return "num8";
-		case VK_NUMPAD9: return "num9";
-		case VK_ADD: return "num+";
-		case VK_SUBTRACT: return "num-";
-		case VK_MULTIPLY: return "num*";
-		case VK_DIVIDE: return "num/";
-		case VK_DECIMAL: return "num.";
-		case VK_INSERT: return "insert";
-		case VK_DELETE: return "delete";
-		case VK_PRIOR: return "pgup";
-		case VK_NEXT: return "pgdown";
-		case VK_HOME: return "home";
-		case VK_END: return "end";
-		case VK_CLEAR: return "clear";
-		case VK_UP: return "up";
-		case VK_DOWN: return "down";
-		case VK_LEFT: return "left";
-		case VK_RIGHT: return "right";
-		case VK_ESCAPE: return "escape";
-		case VK_F13: return "f13";
-		case VK_F14: return "f14";
-		case VK_F15: return "f15";
-		case VK_F16: return "f16";
-		case VK_F17: return "f17";
-		case VK_F18: return "f18";
-		case VK_F19: return "f19";
-		case VK_F20: return "f20";
-		case VK_F21: return "f21";
-		case VK_F22: return "f22";
-		case VK_F23: return "f23";
-		case VK_F24: return "f24";
-		case VK_LWIN:
-		case VK_RWIN: return "windows";
-		case VK_APPS: return "contextmenu";
-		case VK_PAUSE: return "pause";
-		case VK_VOLUME_MUTE: return "mute";
-		case VK_VOLUME_DOWN: return "volumedown";
-		case VK_VOLUME_UP: return "volumeup";
-		case VK_MEDIA_STOP: return "stop";
-		case VK_MEDIA_PLAY_PAUSE: return "pause";
-		case VK_MEDIA_PREV_TRACK: return "previous";
-		case VK_MEDIA_NEXT_TRACK: return "next";
-		}
-
-		std::string str = "unknown";
-		if (char buffer[16]; GetKeyNameText(MapVirtualKey(key, MAPVK_VK_TO_VSC) << 16, buffer, sizeof(buffer)))
-		{
-			str = buffer;
-			std::transform(str.begin(), str.end(), str.begin(), ::tolower);
-			str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
-		}
-		//else if (Vars::Debug::Info.Value)
-		//	str = std::format("{:#x}", key);
-		return str;
-	}
 	inline void FKeybind(const char* sLabel, int& iOutput, int iFlags = FKeybindEnum::None, std::vector<int> vIgnore = { Vars::Menu::PrimaryKey[DEFAULT_BIND], Vars::Menu::SecondaryKey[DEFAULT_BIND] }, ImVec2 vSize = { 0, 30 }, int iSizeOffset = 0, bool* pHovered = nullptr)
 	{
 		ImGuiID uId = GetID(sLabel);
@@ -2153,7 +2071,7 @@ namespace ImGui
 				GetCurrentContext()->ActiveIdAllowOverlap = true;
 			}
 		}
-		else if (FButton(std::format("{}: {}", sLabel, VK2STR(iOutput)).c_str(), iFlags | FButtonEnum::NoUpper, vSize, iSizeOffset, nullptr, pHovered))
+		else if (FButton(std::format("{}: {}", sLabel, U::KeyHandler.String(iOutput)).c_str(), iFlags | FButtonEnum::NoUpper, vSize, iSizeOffset, nullptr, pHovered))
 			SetActiveID(uId, GetCurrentWindow());
 
 		PopID();

@@ -4,6 +4,7 @@
 #include "../../Definitions/Interfaces.h"
 #include "../../../Utils/Math/Math.h"
 #include "../../../Utils/Timer/Timer.h"
+#include "../../../Features/ImGui/Render.h"
 
 MAKE_SIGNATURE(CHudBaseDeathNotice_GetIcon, "client.dll", "40 53 48 81 EC ? ? ? ? 48 8B DA", 0x0);
 MAKE_SIGNATURE(RenderLine, "engine.dll", "48 89 5C 24 ? 48 89 74 24 ? 44 89 44 24", 0x0);
@@ -57,6 +58,20 @@ void CDraw::UpdateW2SMatrix()
 	{
 		static VMatrix mWorldToView, mViewToProjection, mWorldToPixels;
 		I::RenderView->GetMatricesForView(tViewSetup, &mWorldToView, &mViewToProjection, &m_mWorldToProjection, &mWorldToPixels);
+	}
+}
+
+void CDraw::UpdateKeyStrings()
+{
+	if (!F::Render.m_bLoaded)
+		return;
+
+	static HKL pLastLayout = nullptr;
+	if (HKL pCurrLayout = GetKeyboardLayout(0); pCurrLayout != pLastLayout)
+	{
+		pLastLayout = pCurrLayout;
+		for (short iKey = 0; iKey < 256; iKey++)
+			U::KeyHandler.String(iKey, true);
 	}
 }
 
@@ -486,9 +501,10 @@ void CDraw::RenderPath(const std::vector<Vec3>& vPath, Color_t tColor, bool bZBu
 	if (!tColor.a || iStyle == Vars::Visuals::Path::StyleEnum::Off)
 		return;
 
+	bool bTimed = flTime < 0.f;
 	for (size_t i = 1; i < vPath.size(); i++)
 	{
-		if (flTime < 0.f && vPath.size() - i > -flTime)
+		if (bTimed && vPath.size() - i > -flTime)
 			continue;
 
 		switch (iStyle)

@@ -71,6 +71,7 @@ public:
 
 	void UpdateScreenSize();
 	void UpdateW2SMatrix();
+	void UpdateKeyStrings();
 
 	Vec2 GetTextSize(const char* text, const Font_t& tFont);
 	Vec2 GetTextSize(const wchar_t* text, const Font_t& tFont);

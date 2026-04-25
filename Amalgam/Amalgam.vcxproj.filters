@@ -25,14 +25,6 @@
     <ClCompile Include="src\Utils\Signatures\Signatures.cpp" />
     <ClCompile Include="src\Utils\Timer\Timer.cpp" />
     <ClCompile Include="src\DllMain.cpp" />
-    <ClCompile Include="include\ImGui\imgui.cpp" />
-    <ClCompile Include="include\ImGui\imgui_draw.cpp" />
-    <ClCompile Include="include\ImGui\imgui_impl_dx9.cpp" />
-    <ClCompile Include="include\ImGui\imgui_impl_win32.cpp" />
-    <ClCompile Include="include\ImGui\imgui_stdlib.cpp" />
-    <ClCompile Include="include\ImGui\imgui_tables.cpp" />
-    <ClCompile Include="include\ImGui\imgui_widgets.cpp" />
-    <ClCompile Include="include\ImGui\TextEditor.cpp" />
     <ClCompile Include="include\MinHook\hde\hde32.c" />
     <ClCompile Include="include\MinHook\hde\hde64.c" />
     <ClCompile Include="include\MinHook\buffer.c" />
@@ -84,10 +76,8 @@
     <ClCompile Include="src\SDK\Events\Events.cpp" />
     <ClCompile Include="src\Utils\ExceptionHandler\ExceptionHandler.cpp" />
     <ClCompile Include="src\BytePatches\BytePatches.cpp" />
-    <ClCompile Include="include\ImGui\imgui_freetype.cpp" />
     <ClCompile Include="src\Features\Misc\AutoVote\AutoVote.cpp" />
     <ClCompile Include="src\Features\Spectate\Spectate.cpp" />
-    <ClCompile Include="include\ImGui\LanguageDefinitions.cpp" />
     <ClCompile Include="src\Hooks\CHLClient_FrameStageNotify.cpp" />
     <ClCompile Include="src\Hooks\bf_read_ReadString.cpp" />
     <ClCompile Include="src\Hooks\CAchievementMgr_CheckAchievementsEnabled.cpp" />
@@ -97,7 +87,7 @@
     <ClCompile Include="src\Hooks\CBaseAnimating_SetSequence.cpp" />
     <ClCompile Include="src\Hooks\CBaseAnimating_SetupBones.cpp" />
     <ClCompile Include="src\Hooks\CBaseAnimating_UpdateClientSideAnimation.cpp" />
-    <ClCompile Include="src\Hooks\CBaseEntity_BaseInterpolatePart1.cpp" />
+    <ClCompile Include="src\Hooks\CBaseViewModel_Interpolate.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_EstimateAbsVelocity.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_FireBullet.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_ResetLatched.cpp" />
@@ -105,7 +95,7 @@
     <ClCompile Include="src\Hooks\CBaseEntity_WorldSpaceCenter.cpp" />
     <ClCompile Include="src\Hooks\CBaseHudChatLine_InsertAndColorizeText.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_CalcView.cpp" />
-    <ClCompile Include="src\Hooks\CBasePlayer_CalcViewModelView.cpp" />
+    <ClCompile Include="src\Hooks\CBaseViewModel_CalcViewModelView.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_ItemPostFrame.cpp" />
     <ClCompile Include="src\Hooks\CBaseViewModel_ShouldFlipViewModel.cpp" />
     <ClCompile Include="src\Hooks\CHLClient_CreateMove.cpp" />
@@ -138,7 +128,6 @@
     <ClCompile Include="src\Hooks\CStudioRender_DrawModelStaticProp.cpp" />
     <ClCompile Include="src\Hooks\CTFBadgePanel_SetupBadge.cpp" />
     <ClCompile Include="src\Hooks\CTFClientScoreBoardDialog_UpdatePlayerAvatar.cpp" />
-    <ClCompile Include="src\Hooks\CTFGCClientSystem_UpdateAssignedLobby.cpp" />
     <ClCompile Include="src\Hooks\CTFInput_ApplyMouse.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_AvoidPlayers.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayer_BRenderAsZombie.cpp" />
@@ -206,6 +195,15 @@
     <ClCompile Include="src\Features\World\World.cpp" />
     <ClCompile Include="src\Hooks\CModelLoader_Map_LoadModel.cpp" />
     <ClCompile Include="src\Hooks\CM_TraceToDispTree.cpp" />
+    <ClCompile Include="include\ImGui\imgui.cpp" />
+    <ClCompile Include="include\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="include\ImGui\imgui_freetype.cpp" />
+    <ClCompile Include="include\ImGui\imgui_impl_dx9.cpp" />
+    <ClCompile Include="include\ImGui\imgui_impl_win32.cpp" />
+    <ClCompile Include="include\ImGui\imgui_stdlib.cpp" />
+    <ClCompile Include="include\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="include\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="include\ImGui\TextEditor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -334,15 +332,6 @@
     <ClInclude Include="src\Utils\NetVars\NetVars.h" />
     <ClInclude Include="src\Utils\Signatures\Signatures.h" />
     <ClInclude Include="src\Utils\Timer\Timer.h" />
-    <ClInclude Include="include\ImGui\imconfig.h" />
-    <ClInclude Include="include\ImGui\imgui.h" />
-    <ClInclude Include="include\ImGui\imgui_impl_dx9.h" />
-    <ClInclude Include="include\ImGui\imgui_impl_win32.h" />
-    <ClInclude Include="include\ImGui\imgui_internal.h" />
-    <ClInclude Include="include\ImGui\imgui_stdlib.h" />
-    <ClInclude Include="include\ImGui\imstb_rectpack.h" />
-    <ClInclude Include="include\ImGui\imstb_textedit.h" />
-    <ClInclude Include="include\ImGui\TextEditor.h" />
     <ClInclude Include="include\MinHook\hde\hde32.h" />
     <ClInclude Include="include\MinHook\hde\hde64.h" />
     <ClInclude Include="include\MinHook\hde\pstdint.h" />
@@ -564,13 +553,11 @@
     <ClInclude Include="include\freetype\ttnameid.h" />
     <ClInclude Include="include\freetype\tttables.h" />
     <ClInclude Include="include\freetype\tttags.h" />
-    <ClInclude Include="include\ImGui\imgui_freetype.h" />
     <ClInclude Include="src\Features\ImGui\Fonts\CascadiaMono\CascadiaMono.h" />
     <ClInclude Include="src\Features\ImGui\Fonts\MaterialDesign\IconDefinitions.h" />
     <ClInclude Include="src\Features\ImGui\Fonts\MaterialDesign\MaterialIcons.h" />
     <ClInclude Include="src\Features\ImGui\Fonts\Roboto\RobotoMedium.h" />
     <ClInclude Include="src\Features\ImGui\Fonts\Roboto\RobotoBlack.h" />
-    <ClInclude Include="include\ImGui\imstb_truetype.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CEconEntity.h" />
     <ClInclude Include="src\SDK\Definitions\Main\CEconWearable.h" />
     <ClInclude Include="src\Features\Misc\AutoVote\AutoVote.h" />
@@ -611,6 +598,17 @@
     <ClInclude Include="src\SDK\Definitions\Interfaces\CDispCollTree.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\TraceInfo.h" />
     <ClInclude Include="src\Utils\Math\BaseMath.h" />
+    <ClInclude Include="include\ImGui\imconfig.h" />
+    <ClInclude Include="include\ImGui\imgui.h" />
+    <ClInclude Include="include\ImGui\imgui_freetype.h" />
+    <ClInclude Include="include\ImGui\imgui_impl_dx9.h" />
+    <ClInclude Include="include\ImGui\imgui_impl_win32.h" />
+    <ClInclude Include="include\ImGui\imgui_internal.h" />
+    <ClInclude Include="include\ImGui\imgui_stdlib.h" />
+    <ClInclude Include="include\ImGui\imstb_rectpack.h" />
+    <ClInclude Include="include\ImGui\imstb_textedit.h" />
+    <ClInclude Include="include\ImGui\imstb_truetype.h" />
+    <ClInclude Include="include\ImGui\TextEditor.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\IStudioDataCache.h" />
     <ClInclude Include="src\SDK\Definitions\Interfaces\CMDLCache.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CDefaultDataCacheClient.h" />

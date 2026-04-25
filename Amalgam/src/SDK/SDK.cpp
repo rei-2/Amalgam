@@ -130,7 +130,7 @@ std::wstring SDK::ConvertUtf8ToWide(const std::string& source)
 	int size = MultiByteToWideChar(CP_UTF8, 0, source.data(), -1, nullptr, 0);
 	std::wstring result(size, 0);
 	MultiByteToWideChar(CP_UTF8, 0, source.data(), -1, result.data(), size);
-	return result;
+	result.pop_back(); return result;
 }
 
 std::string SDK::ConvertWideToUTF8(const std::wstring& source)
@@ -138,7 +138,7 @@ std::string SDK::ConvertWideToUTF8(const std::wstring& source)
 	int size = WideCharToMultiByte(CP_UTF8, 0, source.data(), -1, nullptr, 0, nullptr, nullptr);
 	std::string result(size, 0);
 	WideCharToMultiByte(CP_UTF8, 0, source.data(), -1, result.data(), size, nullptr, nullptr);
-	return result;
+	result.pop_back(); return result;
 }
 
 HWND SDK::GetTeamFortressWindow()

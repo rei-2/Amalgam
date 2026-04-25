@@ -668,7 +668,7 @@ static inline void StoreMisc(CBaseEntity* pEntity, CTFPlayer* pLocal, Group_t* p
 		const char* sName = "Unknown";
 		switch (pEntity->GetClassID())
 		{
-		case ETFClassID::CTFBaseBoss: sName = "Boss"; break;
+		case ETFClassID::CTFBaseBoss: sName = "NPC"; break;
 		case ETFClassID::CTFTankBoss: sName = "Tank"; break;
 		case ETFClassID::CMerasmus: sName = "Merasmus"; break;
 		case ETFClassID::CEyeballBoss: sName = "Monoculus"; break;

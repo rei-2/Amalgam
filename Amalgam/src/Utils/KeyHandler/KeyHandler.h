@@ -1,6 +1,6 @@
 #pragma once
 #include "../Macros/Macros.h"
-#include <unordered_map>
+#include "../../SDK/Definitions/Types.h"
 
 struct KeyStorage
 {
@@ -14,21 +14,19 @@ struct KeyStorage
 class CKeyHandler
 {
 public:
-	void StoreKey(int iKey, KeyStorage* pStorage = nullptr);
+	void StoreKey(byte iKey, KeyStorage* pStorage = nullptr);
 
-	// Is the button currently down?
-	bool Down(int iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
+	bool Down(byte iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
+	bool Pressed(byte iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
+	bool Double(byte iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
+	bool Released(byte iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
 
-	// Was the button just pressed? This will only be true once.
-	bool Pressed(int iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
+	std::array<KeyStorage, 256> m_aKeyStorage = {};
 
-	// Was the button double clicked? This will only be true once.
-	bool Double(int iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
+public:
+	std::string& String(byte iKey, const bool bStore = false);
 
-	// Was the button just released? This will only be true once.
-	bool Released(int iKey, const bool bStore = false, KeyStorage* pStorage = nullptr);
-
-	std::unordered_map<int, KeyStorage> m_mKeyStorage = {};
+	std::array<std::string, 256> m_aStringStorage = {};
 };
 
 ADD_FEATURE_CUSTOM(CKeyHandler, KeyHandler, U);

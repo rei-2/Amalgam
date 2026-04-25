@@ -11,13 +11,10 @@
 
 void CRender::Render(IDirect3DDevice9* pDevice)
 {
-	using namespace ImGui;
-
-	static std::once_flag initFlag;
-	std::call_once(initFlag, [&]
-		{
-			Initialize(pDevice);
-		});
+	static std::once_flag tFlag; std::call_once(tFlag, [&]
+	{
+		Initialize(pDevice);
+	});
 
 	LoadColors();
 	{
@@ -25,30 +22,25 @@ void CRender::Render(IDirect3DDevice9* pDevice)
 		float flOldScale = flStaticScale;
 		float flNewScale = flStaticScale = Vars::Menu::Scale.Value;
 		if (flNewScale != flOldScale)
-		{
-			LoadFonts();
-			LoadStyle();
-		}
+			Reload();
 	}
 
 	DWORD dwOldRGB; pDevice->GetRenderState(D3DRS_SRGBWRITEENABLE, &dwOldRGB);
 	pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, false);
 	ImGui_ImplDX9_NewFrame();
 	ImGui_ImplWin32_NewFrame();
-	NewFrame();
+	ImGui::NewFrame();
 
 	F::Menu.Render();
 
-	EndFrame();
+	ImGui::EndFrame();
 	ImGui::Render();
-	ImGui_ImplDX9_RenderDrawData(GetDrawData());
+	ImGui_ImplDX9_RenderDrawData(ImGui::GetDrawData());
 	pDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, dwOldRGB);
 }
 
 void CRender::LoadColors()
 {
-	using namespace ImGui;
-
 	auto fColorToVec = [](Color_t tColor) -> ImColor
 	{
 		return { tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f, tColor.a / 255.f };
@@ -64,7 +56,7 @@ void CRender::LoadColors()
 	Inactive = fColorToVec(Vars::Menu::Theme::Inactive.Value);
 	Active = fColorToVec(Vars::Menu::Theme::Active.Value);
 
-	ImVec4* colors = GetStyle().Colors;
+	ImVec4* colors = ImGui::GetStyle().Colors;
 	colors[ImGuiCol_Border] = Background2;
 	colors[ImGuiCol_Button] = {};
 	colors[ImGuiCol_ButtonHovered] = {};
@@ -87,49 +79,41 @@ void CRender::LoadColors()
 
 void CRender::LoadFonts()
 {
-	static bool bHasLoaded = false;
-
 	auto& io = ImGui::GetIO();
-	if (bHasLoaded)
-	{
-		ImGui_ImplDX9_InvalidateDeviceObjects();
-		io.Fonts->ClearFonts();
-	}
 
-	ImFontConfig fontConfig;
-	fontConfig.OversampleH = 2;
-	constexpr ImWchar fontRange[]{ 0x0020, 0x00FF, 0x0400, 0x044F, 0 }; // Basic Latin, Latin Supplement and Cyrillic
+	if (static bool bLoaded = false; !bLoaded)
+		bLoaded = true;
+	else
+		io.Fonts->Clear();
+
+	ImFontConfig tFontConfig;
+	tFontConfig.OversampleH = 2;
 #ifndef AMALGAM_CUSTOM_FONTS
-	FontSmall = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(11), &fontConfig, fontRange);
-	FontRegular = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(13), &fontConfig, fontRange);
-	FontBold = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdanab.ttf)", H::Draw.Scale(13), &fontConfig, fontRange);
-	FontLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(14), &fontConfig, fontRange);
-	FontMono = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\cour.ttf)", H::Draw.Scale(16), &fontConfig, fontRange); // windows mono font installed by default
+	FontSmall = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(11), &tFontConfig);
+	FontRegular = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(13), &tFontConfig);
+	FontBold = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdanab.ttf)", H::Draw.Scale(13), &tFontConfig);
+	FontLarge = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\verdana.ttf)", H::Draw.Scale(14), &tFontConfig);
+	FontMono = io.Fonts->AddFontFromFileTTF(R"(C:\Windows\Fonts\cour.ttf)", H::Draw.Scale(16), &tFontConfig); // windows mono font installed by default
 #else
-	FontSmall = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(12), &fontConfig, fontRange);
-	FontRegular = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(13), &fontConfig, fontRange);
-	FontBold = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoBlack_compressed_data, RobotoBlack_compressed_size, H::Draw.Scale(13), &fontConfig, fontRange);
-	FontLarge = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(15), &fontConfig, fontRange);
-	FontMono = io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data, CascadiaMono_compressed_size, H::Draw.Scale(15), &fontConfig, fontRange);
+	FontSmall = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(12), &tFontConfig);
+	FontRegular = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(13), &tFontConfig);
+	FontBold = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoBlack_compressed_data, RobotoBlack_compressed_size, H::Draw.Scale(13), &tFontConfig);
+	FontLarge = io.Fonts->AddFontFromMemoryCompressedTTF(RobotoMedium_compressed_data, RobotoMedium_compressed_size, H::Draw.Scale(15), &tFontConfig);
+	FontMono = io.Fonts->AddFontFromMemoryCompressedTTF(CascadiaMono_compressed_data, CascadiaMono_compressed_size, H::Draw.Scale(15), &tFontConfig);
 #endif
 
-	ImFontConfig iconConfig;
-	iconConfig.PixelSnapH = true;
-	constexpr ImWchar iconRange[]{ short(ICON_MIN_MD), short(ICON_MAX_MD), 0 };
-	IconFont = io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data, MaterialIcons_compressed_size, H::Draw.Scale(16), &iconConfig, iconRange);
+	ImFontConfig tIconConfig;
+	tIconConfig.PixelSnapH = true;
+	IconFont = io.Fonts->AddFontFromMemoryCompressedTTF(MaterialIcons_compressed_data, MaterialIcons_compressed_size, H::Draw.Scale(16), &tIconConfig);
 
 	io.Fonts->Build();
 	io.ConfigDebugHighlightIdConflicts = false;
-
-	bHasLoaded = true;
 }
 
 void CRender::LoadStyle()
 {
-	using namespace ImGui;
-
-	auto& style = GetStyle();
-	style.ButtonTextAlign = { 0.5f, 0.5f }; // Center button text
+	auto& style = ImGui::GetStyle();
+	style.ButtonTextAlign = { 0.5f, 0.5f };
 	style.CellPadding = { H::Draw.Scale(4), 0 };
 	style.ChildBorderSize = 0.f;
 	style.ChildRounding = H::Draw.Scale(4);
@@ -149,7 +133,6 @@ void CRender::LoadStyle()
 
 void CRender::Initialize(IDirect3DDevice9* pDevice)
 {
-	// Initialize ImGui and device
 	ImGui::CreateContext();
 	ImGui_ImplWin32_Init(WndProc::hwWindow);
 	ImGui_ImplDX9_Init(pDevice);
@@ -160,4 +143,16 @@ void CRender::Initialize(IDirect3DDevice9* pDevice)
 
 	LoadFonts();
 	LoadStyle();
+
+	m_bLoaded = true;
+}
+
+void CRender::Reload()
+{
+	m_bLoaded = false;
+
+	LoadFonts();
+	LoadStyle();
+
+	m_bLoaded = true;
 }

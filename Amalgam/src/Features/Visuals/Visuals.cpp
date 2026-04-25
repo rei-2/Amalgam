@@ -416,8 +416,8 @@ void CVisuals::DrawDebugInfo(CTFPlayer* pLocal)
 			else if (vPosition2D)
 				H::Draw.StringOutlined(fFont, vPosition2D->x, vPosition2D->y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
 			else
-			H::Draw.StringOutlined(fFont, x, y += nTall, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
-	}
+				H::Draw.StringOutlined(fFont, x, y += nTall, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+		}
 	}
 #endif
 }
@@ -522,7 +522,8 @@ void CVisuals::DrawEffects()
 	}
 	for (auto& tPath : G::PathStorage)
 	{
-		if (tPath.m_flTime >= 0.f && tPath.m_flTime < I::GlobalVars->curtime)
+		bool bTimed = tPath.m_flTime < 0.f;
+		if (!bTimed && tPath.m_flTime < I::GlobalVars->curtime)
 			continue;
 
 		H::Draw.RenderPath(tPath.m_vPath, tPath.m_tColor, tPath.m_bZBuffer, tPath.m_iStyle, tPath.m_flTime);

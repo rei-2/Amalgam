@@ -1343,10 +1343,9 @@ void CMenu::MenuMisc(int iTab)
 				} EndSection();
 				if (Section("Game", 8))
 				{
-					FToggle(Vars::Misc::Game::AntiCheatCompatibility, FToggleEnum::Left);
-					FToggle(Vars::Misc::Game::F2PChatBypass, FToggleEnum::Right);
 					FToggle(Vars::Misc::Game::NetworkFix, FToggleEnum::Left);
 					FToggle(Vars::Misc::Game::SetupBonesOptimization, FToggleEnum::Right);
+					FToggle(Vars::Misc::Game::AntiCheatCompatibility);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
@@ -1425,6 +1424,7 @@ void CMenu::MenuLogs(int iTab)
 
 					// tag bar
 					bool bPopup = false;
+					bool bIcon = tPlayer.m_bLocal || F::Spectate.GetTarget(true) == tPlayer.m_iUserID || tPlayer.m_bFriend || tPlayer.m_bParty;
 					float flBarWidth = 0.f;
 
 					if (!tPlayer.m_bFake)
@@ -1458,8 +1458,7 @@ void CMenu::MenuLogs(int iTab)
 								flBarWidth += FCalcTextSize(tTag.m_sName.c_str()).x + H::Draw.Scale(14);
 							for (auto& [pTag, iID] : vTags)
 								flBarWidth += FCalcTextSize(pTag->m_sName.c_str()).x + H::Draw.Scale(iID ? 29 : 14);
-
-							flBarWidth = std::min(flBarWidth, flWidth / 2);
+							flBarWidth = std::min(flBarWidth, std::max(flWidth - FCalcTextSize(tPlayer.m_sName.c_str(), F::Render.FontRegular).x - H::Draw.Scale(bIcon ? 33 : 14), flWidth / 2));
 
 							SetCursorPos(vOriginalPos + ImVec2(flWidth - floorf(flBarWidth), 0));
 							if (BeginChild(std::format("TagBar{}", tPlayer.m_iUserID).c_str(), { flBarWidth, flHeight }, ImGuiWindowFlags_None, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoBackground))
@@ -1500,7 +1499,7 @@ void CMenu::MenuLogs(int iTab)
 
 					// text + icons
 					int lOffset = H::Draw.Scale(10);
-					if (tPlayer.m_bLocal || F::Spectate.GetTarget(true) == tPlayer.m_iUserID || tPlayer.m_bFriend || tPlayer.m_bParty)
+					if (bIcon)
 					{
 						lOffset += H::Draw.Scale(19);
 						SetCursorPos(vOriginalPos + ImVec2(H::Draw.Scale(7), H::Draw.Scale(6)));
@@ -1942,7 +1941,7 @@ void CMenu::MenuLogs(int iTab)
 					PopStyleVar();
 					EndPopup();
 				}
-				else if (FBeginPopupModal(std::format("DeleteTag{}", _iID).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+				else if (FBeginPopupModal(std::format("DeleteTag{}", _iID).c_str()))
 				{
 					FText(std::format("Do you really want to delete '{}'?", _tTag.m_sName).c_str());
 
@@ -2169,7 +2168,7 @@ void CMenu::MenuLogs(int iTab)
 					}
 
 					SetNextWindowSize({ H::Draw.Scale(300), 0 });
-					if (FBeginPopupModal("ImportPlayerlist", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+					if (FBeginPopupModal("ImportPlayerlist"))
 					{
 						FText("Import");
 						FText("As", FTextEnum::Right | FTextEnum::SameLine);
@@ -2563,7 +2562,7 @@ void CMenu::MenuSettings(int iTab)
 					else if (bDelete)
 						OpenPopup(std::format("Remove{}{}", sType, sConfigName).c_str());
 
-					if (FBeginPopupModal(std::format("Save{}{}", sType, sConfigName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+					if (FBeginPopupModal(std::format("Save{}{}", sType, sConfigName).c_str()))
 					{
 						FText(std::format("Do you really want to override '{}'?", sConfigName).c_str());
 
@@ -2580,7 +2579,7 @@ void CMenu::MenuSettings(int iTab)
 
 						EndPopup();
 					}
-					else if (FBeginPopupModal(std::format("Remove{}{}", sType, sConfigName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+					else if (FBeginPopupModal(std::format("Remove{}{}", sType, sConfigName).c_str()))
 					{
 						FText(std::format("Do you really want to remove '{}'?", sConfigName).c_str());
 
@@ -2810,7 +2809,7 @@ void CMenu::MenuSettings(int iTab)
 						case BindEnum::KeyEnum::Toggle: { sType = "toggle"; break; }
 						case BindEnum::KeyEnum::DoubleClick: { sType = "double"; break; }
 						}
-						sInfo = VK2STR(_tBind.m_iKey);
+						sInfo = U::KeyHandler.String(_tBind.m_iKey);
 						break;
 					case BindEnum::Class:
 						sType = "class";
@@ -2967,7 +2966,7 @@ void CMenu::MenuSettings(int iTab)
 						iDragging = _iBind, iLayer = iParent;
 					else if (bDelete)
 					{
-						if (U::KeyHandler.Down(VK_SHIFT)) // allow user to quickly remove binds
+						if (_tBind.m_vVars.size() <= 1 && !F::Binds.HasChildren(_iBind) || U::KeyHandler.Down(VK_SHIFT)) // allow user to quickly remove binds
 							F::Binds.RemoveBind(_iBind);
 						else
 							OpenPopup(std::format("DeleteBind{}", _iBind).c_str());
@@ -3002,7 +3001,7 @@ void CMenu::MenuSettings(int iTab)
 						PopStyleVar();
 						EndPopup();
 					}
-					else if (FBeginPopupModal(std::format("DeleteBind{}", _iBind).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+					else if (FBeginPopupModal(std::format("DeleteBind{}", _iBind).c_str()))
 					{
 						FText(std::format("Do you really want to delete '{}'{}?", _tBind.m_sName, F::Binds.HasChildren(_iBind) ? " and all of its children" : "").c_str());
 
@@ -3051,12 +3050,12 @@ void CMenu::MenuSettings(int iTab)
 	// Materials
 	case 2:
 	{
-		static TextEditor TextEditor;
-		static std::string CurrentMaterial;
-		static bool LockedMaterial;
+		static TextEditor tTextEditor;
+		static std::string sCurrentMaterial;
+		static bool bLockedMaterial;
 
 		bool bTable = false;
-		if (!CurrentMaterial.empty())
+		if (!sCurrentMaterial.empty())
 			bTable = BeginTable("MaterialsTable", 2);
 		{
 			if (bTable)
@@ -3120,7 +3119,7 @@ void CMenu::MenuSettings(int iTab)
 						SetCursorPos({ GetWindowWidth() - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(9) });
 						if (IconButton(ICON_MD_DELETE))
 							OpenPopup(std::format("DeleteMat{}", tMaterial.m_sName).c_str());
-						if (FBeginPopupModal(std::format("DeleteMat{}", tMaterial.m_sName).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+						if (FBeginPopupModal(std::format("DeleteMat{}", tMaterial.m_sName).c_str()))
 						{
 							FText(std::format("Do you really want to delete '{}'?", tMaterial.m_sName).c_str());
 
@@ -3139,11 +3138,11 @@ void CMenu::MenuSettings(int iTab)
 					SetCursorPos({ GetWindowWidth() - H::Draw.Scale(iOffset += 25), vOriginalPos.y + H::Draw.Scale(9) });
 					if (IconButton(ICON_MD_EDIT))
 					{
-						CurrentMaterial = tMaterial.m_sName;
-						LockedMaterial = tMaterial.m_bLocked;
+						sCurrentMaterial = tMaterial.m_sName;
+						bLockedMaterial = tMaterial.m_bLocked;
 
-						TextEditor.SetText(F::Materials.GetVMT(FNV1A::Hash32(CurrentMaterial.c_str())));
-						TextEditor.SetReadOnlyEnabled(LockedMaterial);
+						tTextEditor.SetText(F::Materials.GetVMT(FNV1A::Hash32(sCurrentMaterial.c_str())));
+						tTextEditor.SetReadOnlyEnabled(bLockedMaterial);
 					}
 
 					SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(28) });
@@ -3158,49 +3157,67 @@ void CMenu::MenuSettings(int iTab)
 			{
 				/* Column 2 */
 				TableNextColumn();
-				if (CurrentMaterial.length())
+				if (sCurrentMaterial.length())
 				{
 					SetCursorPosY(GetScrollY() + GetStyle().WindowPadding.y);
 					if (Section("Editor", 0, GetWindowHeight() - GetStyle().WindowPadding.y * 2, true))
 					{
 						// Toolbar
-						if (!LockedMaterial)
+						if (!bLockedMaterial)
 						{
 							if (FButton("Save", FButtonEnum::Fit))
 							{
-								auto sText = TextEditor.GetText();
-								F::Materials.EditMaterial(CurrentMaterial.c_str(), sText.c_str());
+								auto sText = tTextEditor.GetText();
+								F::Materials.EditMaterial(sCurrentMaterial.c_str(), sText.c_str());
 							}
 							SameLine();
 						}
 						if (FButton("Close", FButtonEnum::Fit))
-							CurrentMaterial = "";
+							sCurrentMaterial = "";
 						SetCursorPosY(H::Draw.Scale(52));
 						PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-						FText(std::format("{}: {}", LockedMaterial ? "Viewing" : "Editing", CurrentMaterial).c_str(), FTextEnum::Right);
+						FText(std::format("{}: {}", bLockedMaterial ? "Viewing" : "Editing", sCurrentMaterial).c_str(), FTextEnum::Right);
 						PopStyleColor();
 
 						// Text editor
 						DebugDummy({ 0, H::Draw.Scale(8) });
 
-						TextEditor.SetLanguageDefinition(TextEditor::LanguageDefinitionId::Cpp);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Background, F::Render.Background1);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Default, F::Render.Active);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Identifier, F::Render.Active);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Cursor, F::Render.Active);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::LineNumber, F::Render.Inactive);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Comment, F::Render.Inactive);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::MultiLineComment, F::Render.Inactive);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::Punctuation, F::Render.Inactive);
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::ControlCharacter, ImColor(F::Render.Inactive.Value.x, F::Render.Inactive.Value.y, F::Render.Inactive.Value.z, 0.1f));
-						TextEditor.SetPaletteIndex(TextEditor::PaletteIndex::String, F::Render.Accent);
+						tTextEditor.SetLanguage(TextEditor::Language::Cpp());
+						TextEditor::Palette tPalette = {{
+							F::Render.Active,				// text
+							F::Render.Active,				// keyword
+							F::Render.Active,				// declaration
+							F::Render.Active,				// number
+							F::Render.Accent,				// string
+							F::Render.Inactive,				// punctuation
+							F::Render.Inactive,				// preprocessor
+							F::Render.Inactive,				// identifier
+							F::Render.Inactive,				// known identifier
+							F::Render.Inactive,				// comment
+							F::Render.Background1,			// background
+							F::Render.Active,				// cursor
+							ImColor(F::Render.Inactive.Value.x, F::Render.Inactive.Value.y, F::Render.Inactive.Value.z, 0.5f),	// selection
+							ImColor(F::Render.Inactive.Value.x, F::Render.Inactive.Value.y, F::Render.Inactive.Value.z, 0.1f),	// whitespace
+							IM_COL32( 70,  70,  70, 255),	// matchingBracketBackground
+							IM_COL32(140, 140, 140, 255),	// matchingBracketActive
+							IM_COL32(246, 222,  36, 255),	// matchingBracketLevel1
+							IM_COL32( 66, 120, 198, 255),	// matchingBracketLevel2
+							IM_COL32(213,  96, 213, 255),	// matchingBracketLevel3
+							IM_COL32(198,   8,  32, 255),	// matchingBracketError
+							F::Render.Inactive,				// line number
+							F::Render.Active,				// current line number
+						}};
+						tTextEditor.SetPalette(tPalette);
+						//TextEditor.SetShowLineNumbersEnabled(false);
 
 						PushFont(F::Render.FontMono);
+						PushStyleVar(ImGuiStyleVar_ChildBorderSize, H::Draw.Scale(1));
 						ImVec2 vDrawPos = GetDrawPos() + GetCursorPos();
-						TextEditor.Render("TextEditor");
+						tTextEditor.Render("TextEditor");
 						ImVec2 vSize = GetItemRectSize();
 						float flInset = H::Draw.Scale(0.5f) - 0.5f;
 						GetWindowDrawList()->AddRect(vDrawPos + ImVec2(flInset, flInset), vDrawPos + ImVec2(vSize.x - flInset, vSize.y - flInset), F::Render.Background2, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
+						PopStyleVar();
 						PopFont();
 					} EndSection();
 				}
@@ -3244,7 +3261,7 @@ void CMenu::MenuSettings(int iTab)
 				if (FButton("Lock achievements", FButtonEnum::Right | FButtonEnum::SameLine))
 					OpenPopup("LockAchievements");
 
-				if (FBeginPopupModal("UnlockAchievements", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+				if (FBeginPopupModal("UnlockAchievements"))
 				{
 					FText("Do you really want to unlock all achievements?");
 
@@ -3258,7 +3275,7 @@ void CMenu::MenuSettings(int iTab)
 
 					EndPopup();
 				}
-				else if (FBeginPopupModal("LockAchievements", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+				else if (FBeginPopupModal("LockAchievements"))
 				{
 					FText("Do you really want to lock all achievements?");
 
@@ -3680,7 +3697,7 @@ void CMenu::AddDraggable(const char* sLabel, ConfigVar<DragBox_t>& var, bool bSh
 	PushStyleVar(ImGuiStyleVar_WindowRounding, H::Draw.Scale(3));
 	PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
 	PushStyleVar(ImGuiStyleVar_WindowMinSize, vSize);
-	if (Begin(sLabel, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+	if (Begin(sLabel, nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings))
 	{
 		ImVec2 vWindowPos = GetWindowPos();
 
@@ -3730,7 +3747,7 @@ void CMenu::AddResizableDraggable(const char* sLabel, ConfigVar<WindowBox_t>& va
 	PushStyleColor(ImGuiCol_Border, F::Render.Active.Value);
 	PushStyleVar(ImGuiStyleVar_WindowRounding, H::Draw.Scale(3));
 	PushStyleVar(ImGuiStyleVar_WindowBorderSize, H::Draw.Scale(1));
-	if (Begin(sLabel, nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing))
+	if (Begin(sLabel, nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings))
 	{
 		ImVec2 vWindowPos = GetWindowPos();
 		ImVec2 vWinSize = GetWindowSize();
@@ -3789,7 +3806,7 @@ void CMenu::DrawBinds()
 					case BindEnum::KeyEnum::Toggle: { sType = "toggle"; break; }
 					case BindEnum::KeyEnum::DoubleClick: { sType = "double"; break; }
 					}
-					sInfo = VK2STR(tBind.m_iKey);
+					sInfo = U::KeyHandler.String(tBind.m_iKey);
 					break;
 				case BindEnum::Class:
 					sType = "class";
@@ -3880,7 +3897,7 @@ void CMenu::DrawBinds()
 	float flHeight = H::Draw.Scale(18 * vInfo.size() + (Vars::Menu::BindWindowTitle.Value ? 42 : 12));
 	SetNextWindowSize({ flWidth, flHeight });
 	PushStyleVar(ImGuiStyleVar_WindowMinSize, { H::Draw.Scale(40), H::Draw.Scale(40) });
-	if (Begin("Binds", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing))
+	if (Begin("Binds", nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings))
 	{
 		ImVec2 vWindowPos = GetWindowPos();
 
@@ -3956,13 +3973,13 @@ void CMenu::DrawBinds()
 					tBind.m_bNot = !tBind.m_bNot;
 				else if (bDelete)
 				{
-					if (U::KeyHandler.Down(VK_SHIFT)) // allow user to quickly remove binds
+					if (tBind.m_vVars.size() <= 1 && !F::Binds.HasChildren(iBind) || U::KeyHandler.Down(VK_SHIFT)) // allow user to quickly remove binds
 						F::Binds.RemoveBind(iBind);
 					else
 						OpenPopup(std::format("DeleteBind{}", iBind).c_str());
 				}
 
-				if (FBeginPopupModal(std::format("DeleteBind{}", iBind).c_str(), nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+				if (FBeginPopupModal(std::format("DeleteBind{}", iBind).c_str()))
 				{
 					FText(std::format("Do you really want to delete '{}'{}?", tBind.m_sName, F::Binds.HasChildren(iBind) ? " and all of its children" : "").c_str());
 
@@ -4011,24 +4028,21 @@ void CMenu::Render()
 	if (!(ImGui::GetIO().DisplaySize.x > 160.f && ImGui::GetIO().DisplaySize.y > 28.f))
 		return;
 
-	m_bInKeybind = m_bWindowHovered = false;
+	m_bInKeybind = false;
 	if (m_bIsOpen)
 	{
-		for (int iKey = 0; iKey < 256; iKey++)
+		for (short iKey = 0; iKey < 256; iKey++)
 			U::KeyHandler.StoreKey(iKey);
 	}
 	else
 	{
 		U::KeyHandler.StoreKey(Vars::Menu::PrimaryKey.Value);
 		U::KeyHandler.StoreKey(Vars::Menu::SecondaryKey.Value);
-		U::KeyHandler.StoreKey(VK_F11);
 	}
 	if (U::KeyHandler.Pressed(Vars::Menu::PrimaryKey.Value) || U::KeyHandler.Pressed(Vars::Menu::SecondaryKey.Value))
 		I::MatSystemSurface->SetCursorAlwaysVisible(m_bIsOpen = !m_bIsOpen);
 
 	PushFont(F::Render.FontRegular);
-
-	DrawBinds();
 	if (m_bIsOpen)
 	{
 		ManageVars();
@@ -4059,8 +4073,11 @@ void CMenu::Render()
 		}
 	}
 	else
+	{
 		mActiveMap.clear();
-
+		m_bWindowHovered = false;
+	}
+	DrawBinds();
 	PopFont();
 }
 
