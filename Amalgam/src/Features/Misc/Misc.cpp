@@ -23,6 +23,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	AutoJumpbug(pLocal, pCmd);
 	AutoFaNJump(pLocal, pCmd);
+	AutoRevJump(pLocal, pCmd);
 	AutoStrafe(pLocal, pCmd);
 	AutoPeek(pLocal, pCmd);
 	MovementLock(pLocal, pCmd);
@@ -119,6 +120,20 @@ void CMisc::AutoFaNJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 	pCmd->buttons |= IN_ATTACK;
 	if (pLocal->m_hGroundEntity())
 		pCmd->buttons |= IN_JUMP;
+}
+
+void CMisc::AutoRevJump(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::AutoRevJump.Value || !pLocal->m_hGroundEntity())
+		return;
+
+	if (auto pWeapon = H::Entities.GetWeapon(); !pWeapon || pWeapon->GetWeaponID() != TF_WEAPON_MINIGUN || pWeapon->As<CTFMinigun>()->m_iWeaponState() != AC_STATE_IDLE)
+		return;
+
+	if (!(pCmd->buttons & IN_ATTACK2) || G::LastUserCmd->buttons & IN_ATTACK2)
+		return;
+
+	pCmd->buttons |= IN_JUMP;
 }
 
 void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)

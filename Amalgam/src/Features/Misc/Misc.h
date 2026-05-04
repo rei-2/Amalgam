@@ -7,6 +7,7 @@ private:
 	void AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoFaNJump(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void AutoRevJump(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void MovementLock(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void BreakJump(CTFPlayer* pLocal, CUserCmd* pCmd);
