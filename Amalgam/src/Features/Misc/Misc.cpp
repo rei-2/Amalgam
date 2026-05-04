@@ -22,6 +22,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 
 	AutoJumpbug(pLocal, pCmd);
+	AutoFaNJump(pLocal, pCmd);
 	AutoStrafe(pLocal, pCmd);
 	AutoPeek(pLocal, pCmd);
 	MovementLock(pLocal, pCmd);
@@ -102,6 +103,22 @@ void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 	pCmd->buttons &= ~IN_DUCK;
 	pCmd->buttons |= IN_JUMP;
+}
+
+void CMisc::AutoFaNJump(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::AutoFaNJump.Value || G::Attacking == 1 || pLocal->m_bScattergunJump() || pLocal->m_vecVelocity().To2D().IsZero())
+		return;
+
+	if (auto pWeapon = H::Entities.GetWeapon(); SDK::AttribHookValue(0, "set_scattergun_has_knockback", pWeapon) != 1)
+		return;
+
+	Vec3 vAngles = { 45.f, Math::VectorAngles(pLocal->m_vecVelocity()).y };
+	SDK::FixMovement(pCmd, vAngles);
+	pCmd->viewangles = vAngles;
+	pCmd->buttons |= IN_ATTACK;
+	if (pLocal->m_hGroundEntity())
+		pCmd->buttons |= IN_JUMP;
 }
 
 void CMisc::AutoStrafe(CTFPlayer* pLocal, CUserCmd* pCmd)

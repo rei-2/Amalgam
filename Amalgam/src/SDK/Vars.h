@@ -721,6 +721,7 @@ NAMESPACE_BEGIN(Vars)
 			CVar(BreakJump, "Break jump", false);
 			CVar(AutoRocketJump, "Auto rocket jump", false);
 			CVar(AutoCTap, "Auto ctap", false);
+			CVar(AutoFaNJump, "Auto FaN jump", false);
 			CVar(FastStop, "Fast stop", false);
 			CVar(FastAccelerate, "Fast accelerate", false);
 			CVar(DuckSpeed, "Duck speed", false);
