@@ -53,7 +53,20 @@ void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod
 	});
 }
 
-// this won't prevent shooting bones outside of fov
+float CAimbotGlobal::GetAimFOV()
+{	// restrict now vs later
+	return Vars::Aimbot::General::LeadAndRestrict.Value ? 180.f : Vars::Aimbot::General::AimFOV.Value;
+}
+
+bool CAimbotGlobal::EntityCenterInFOV(CBaseEntity* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo)
+{
+	vPos = pTarget->GetCenter();
+	vAngleTo = Math::CalcAngle(vLocalPos, vPos);
+	flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
+
+	return flFOVTo < GetAimFOV();
+}
+
 bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes)
 {
 	matrix3x4* aBones = F::Backtrack.GetBones(pTarget);
@@ -94,7 +107,7 @@ bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLo
 		}
 	}
 
-	return flMinFOV < Vars::Aimbot::General::AimFOV.Value;
+	return flMinFOV < GetAimFOV();
 }
 
 bool CAimbotGlobal::IsHitboxValid(CBaseEntity* pEntity, int nHitbox, int iHitboxes)
@@ -168,6 +181,14 @@ bool CAimbotGlobal::ShouldMultipoint(CBaseEntity* pEntity, int nHitbox, int iHit
 	}
 
 	return false;
+}
+
+bool CAimbotGlobal::ShouldAimAtAngle(Vec3 vAngles)
+{
+	if (!Vars::Aimbot::General::LeadAndRestrict.Value)
+		return true;
+
+	return Math::CalcFov(I::EngineClient->GetViewAngles(), vAngles) < Vars::Aimbot::General::AimFOV.Value;
 }
 
 bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)

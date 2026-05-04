@@ -69,10 +69,8 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (bTeam && (bWrench && !AimFriendlyBuilding(pEntity->As<CBaseObject>()) || bSapper && !pEntity->As<CBaseObject>()->m_bHasSapper()))
 				continue;
 
-			Vec3 vPos = pEntity->GetCenter();
-			Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPos);
-			float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
-			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
+			float flFOVTo; Vec3 vPos, vAngleTo;
+			if (!F::AimbotGlobal.EntityCenterInFOV(pEntity, vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
 			int iPriority = 0;
@@ -102,10 +100,8 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			if (F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 				continue;
 
-			Vec3 vPos = pEntity->GetCenter();
-			Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPos);
-			float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
-			if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
+			float flFOVTo; Vec3 vPos, vAngleTo;
+			if (!F::AimbotGlobal.EntityCenterInFOV(pEntity, vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo))
 				continue;
 
 			float flDistTo = vLocalPos.DistToSqr(vPos);
@@ -361,6 +357,14 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 
 	for (auto pRecord : vRecords)
 	{
+		// possibly account melee bounds as well?
+		tTarget.m_vPos = m_vEyePos.Clamp(pRecord->m_vOrigin + pRecord->m_vMins, pRecord->m_vOrigin + pRecord->m_vMaxs);
+		if (Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
+			tTarget.m_vPos.x = pRecord->m_vOrigin.x, tTarget.m_vPos.y = pRecord->m_vOrigin.y;
+		Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, tTarget.m_vPos), tTarget.m_vAngleTo);
+		if (!F::AimbotGlobal.ShouldAimAtAngle(tTarget.m_vAngleTo))
+			continue;
+
 		Vec3 vRestoreOrigin = tTarget.m_pEntity->GetAbsOrigin();
 		Vec3 vRestoreMins = tTarget.m_pEntity->m_vecMins();
 		Vec3 vRestoreMaxs = tTarget.m_pEntity->m_vecMaxs();
@@ -368,12 +372,6 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		tTarget.m_pEntity->SetAbsOrigin(pRecord->m_vOrigin);
 		tTarget.m_pEntity->m_vecMins() = pRecord->m_vMins + PLAYER_ORIGIN_COMPRESSION;
 		tTarget.m_pEntity->m_vecMaxs() = pRecord->m_vMaxs - PLAYER_ORIGIN_COMPRESSION;
-
-		// possibly account melee bounds as well?
-		tTarget.m_vPos = m_vEyePos.Clamp(pRecord->m_vOrigin + tTarget.m_pEntity->m_vecMins(), pRecord->m_vOrigin + tTarget.m_pEntity->m_vecMaxs());
-		if (Vars::Aimbot::Melee::AutoBackstab.Value && pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
-			tTarget.m_vPos.x = pRecord->m_vOrigin.x, tTarget.m_vPos.y = pRecord->m_vOrigin.y;
-		Aim(G::CurrentUserCmd->viewangles, Math::CalcAngle(m_vEyePos, tTarget.m_vPos), tTarget.m_vAngleTo);
 
 		Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo, &vForward);
 		Vec3 vTraceEnd = m_vEyePos + vForward * flRange;
@@ -673,7 +671,6 @@ bool CAimbotMelee::RunSapper(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 		Vec3 vAngleTo = Math::CalcAngle(vLocalPos, vPoint);
 		const float flFOVTo = Math::CalcFov(vLocalAngles, vAngleTo);
 		const float flDistTo = vLocalPos.DistToSqr(vPoint);
-
 		if (flFOVTo > Vars::Aimbot::General::AimFOV.Value)
 			continue;
 

@@ -17,8 +17,7 @@ void CMenu::DrawMenu()
 {
 	using namespace ImGui;
 
-	static bool bSetPosition = false;
-	if (!bSetPosition)
+	if (static bool bSetPosition = false; !bSetPosition)
 	{
 		SetNextWindowPos((GetIO().DisplaySize - ImVec2(H::Draw.Scale(750), H::Draw.Scale(500))) / 2, ImGuiCond_FirstUseEver);
 		SetNextWindowSize({ H::Draw.Scale(750), H::Draw.Scale(500) }, ImGuiCond_FirstUseEver);
@@ -173,9 +172,7 @@ void CMenu::MenuAimbot(int iTab)
 					FColorPicker(Vars::Colors::FOVCircle);
 					FToggle(Vars::Aimbot::General::AutoShoot, FToggleEnum::Left);
 					FToggle(Vars::Aimbot::General::FOVCircle, FToggleEnum::Right);
-					FToggle(Vars::CritHack::ForceCrits, FToggleEnum::Left);
-					FToggle(Vars::CritHack::AvoidRandomCrits, FToggleEnum::Right);
-					FToggle(Vars::CritHack::AlwaysMeleeCrit, FToggleEnum::Left);
+					FToggle(Vars::Aimbot::General::LeadAndRestrict, FToggleEnum::Left);
 					FToggle(Vars::Aimbot::General::NoSpread, FToggleEnum::Right);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
@@ -201,6 +198,12 @@ void CMenu::MenuAimbot(int iTab)
 					FSlider(Vars::Backtrack::Interp);
 					FSlider(Vars::Backtrack::Window);
 					//FToggle(Vars::Backtrack::PreferOnShot);
+				} EndSection();
+				if (Section("Crit Hack", 8))
+				{
+					FToggle(Vars::CritHack::ForceCrits, FToggleEnum::Left);
+					FToggle(Vars::CritHack::AvoidRandomCrits, FToggleEnum::Right);
+					FToggle(Vars::CritHack::AlwaysMeleeCrit);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
