@@ -66,7 +66,7 @@ bool CTFWeaponBase::IsInReload()
 
 float CTFWeaponBase::GetDamage(bool bAttribHookValue)
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 	{
 		if (!bAttribHookValue)
 #ifdef WEAPONDATA_USES_WEAPONMODE
@@ -82,7 +82,7 @@ float CTFWeaponBase::GetDamage(bool bAttribHookValue)
 
 float CTFWeaponBase::GetFireRate(bool bAttribHookValue)
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 	{
 		if (!bAttribHookValue)
 #ifdef WEAPONDATA_USES_WEAPONMODE
@@ -98,7 +98,7 @@ float CTFWeaponBase::GetFireRate(bool bAttribHookValue)
 
 int CTFWeaponBase::GetBulletsPerShot(bool bAttribHookValue)
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 	{
 		if (!bAttribHookValue)
 #ifdef WEAPONDATA_USES_WEAPONMODE
@@ -114,7 +114,7 @@ int CTFWeaponBase::GetBulletsPerShot(bool bAttribHookValue)
 
 int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 	{
 		if (!bAttribHookValue)
 #ifdef WEAPONDATA_USES_WEAPONMODE
@@ -132,29 +132,29 @@ int CTFWeaponBase::GetAmmoPerShot(bool bAttribHookValue)
 
 bool CTFWeaponBase::IsRapidFire()
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 #ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_bUseRapidFireCrits;
 #else
 		return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_bUseRapidFireCrits;
 #endif
-		return false;
+	return false;
 }
 
 float CTFWeaponBase::GetSmackDelay()
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 #ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flSmackDelay;
 #else
 		return pWeaponInfo->GetWeaponData(TF_WEAPON_PRIMARY_MODE).m_flSmackDelay;
 #endif
-		return 0.2f;
+	return 0.2f;
 }
 
 float CTFWeaponBase::GetRange()
 {
-	if (auto pWeaponInfo = GetWeaponInfo())
+	if (auto pWeaponInfo = m_pWeaponInfo())
 #ifdef WEAPONDATA_USES_WEAPONMODE
 		return pWeaponInfo->GetWeaponData(m_iWeaponMode()).m_flRange;
 #else

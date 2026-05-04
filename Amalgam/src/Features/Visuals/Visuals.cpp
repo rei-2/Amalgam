@@ -1,20 +1,23 @@
 #include "Visuals.h"
 
-#include "../Aimbot/Aimbot.h"
-#include "../Aimbot/AimbotProjectile/AimbotProjectile.h"
-#include "../Ticks/Ticks.h"
-#include "../Backtrack/Backtrack.h"
 #include "../Simulation/ProjectileSimulation/ProjectileSimulation.h"
+#include "../Aimbot/AimbotProjectile/AimbotProjectile.h"
+#include "../Aimbot/Aimbot.h"
 #include "CameraWindow/CameraWindow.h"
-#include "../Players/PlayerUtils.h"
-#include "../Spectate/Spectate.h"
 #include "Groups/Groups.h"
+#include "../Backtrack/Backtrack.h"
+#include "../Spectate/Spectate.h"
+#include "../CritHack/CritHack.h"
+#include "../Ticks/Ticks.h"
 #include "../World/World.h"
 
 MAKE_SIGNATURE(UTIL_PlayerByIndex, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
 MAKE_SIGNATURE(CBaseAnimating_DrawServerHitboxes, "server.dll", "44 88 44 24 ? 53 48 81 EC", 0x0);
 MAKE_SIGNATURE(NDebugOverlay_BoxAngles, "server.dll", "48 83 EC ? 4C 8B D9 48 8B 0D ? ? ? ? 48 85 C9 74 ? 8B 84 24 ? ? ? ? F3 0F 10 84 24 ? ? ? ? 4C 8B 11 F3 0F 11 44 24 ? 89 44 24 ? 8B 84 24 ? ? ? ? 89 44 24 ? 8B 84 24 ? ? ? ? 89 44 24 ? 8B 84 24 ? ? ? ? 89 44 24 ? 4C 89 4C 24", 0x0);
 MAKE_SIGNATURE(CBaseAnimating_DrawServerHitboxes_BoxAngles_Call, "server.dll", "8B 84 24 ? ? ? ? 49 83 C6", 0x0);
+MAKE_SIGNATURE(CTFPlayerShared_UpdateCritBoostEffect, "client.dll", "48 8B C4 48 89 58 ? 48 89 70 ? 48 89 78 ? 41 56 48 81 EC ? ? ? ? 48 89 68", 0x0);
+
+enum ECritBoostUpdateType { kCritBoost_Ignore, kCritBoost_ForceRefresh };
 
 static std::vector<Vec3> SplashTrace(Vec3 vOrigin, float flRadius, Vec3 vNormal = { 0, 0, 1 }, bool bTrace = true, int iSegments = 100)
 {
@@ -1159,12 +1162,20 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		}
 	}
 
-	if (Vars::Visuals::Effects::SpellFootsteps.Value && (F::Ticks.m_bDoubletap || F::Ticks.m_bWarp))
-		pLocal->FireEvent(pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);
+	bool bEffects = F::CritHack.ShouldForceEffects(pLocal);
+	if (!bEffects && !pLocal->IsCritBoosted() && pLocal->m_pCritBoostSoundLoop())
+		S::CTFPlayerShared_UpdateCritBoostEffect.Call<void>(pLocal->m_Shared(), kCritBoost_Ignore);
+	else if (bEffects && !pLocal->m_pCritBoostSoundLoop())
+	{
+		int iOriginalCond = pLocal->m_nPlayerCondEx();
+		pLocal->AddCond(TF_COND_CRITBOOSTED_USER_BUFF);
+		S::CTFPlayerShared_UpdateCritBoostEffect.Call<void>(pLocal->m_Shared(), kCritBoost_Ignore);
+		pLocal->m_nPlayerCondEx() = iOriginalCond;
+	}
 	
-	static uint32_t iOldMedigunBeam = 0, iOldMedigunCharge = 0;
-	uint32_t iNewMedigunBeam = FNV1A::Hash32(Vars::Visuals::Effects::MedigunBeam.Value.c_str()), iNewMedigunCharge = FNV1A::Hash32(Vars::Visuals::Effects::MedigunCharge.Value.c_str());
-	if (iOldMedigunBeam != iNewMedigunBeam || iOldMedigunCharge != iNewMedigunCharge)
+	static uint32_t uOldHashBeam = 0, uOldHashCharge = 0;
+	auto uHashBeam = FNV1A::Hash32(Vars::Visuals::Effects::MedigunBeam.Value.c_str()), uHashCharge = FNV1A::Hash32(Vars::Visuals::Effects::MedigunCharge.Value.c_str());
+	if (uOldHashBeam != uHashBeam || uOldHashCharge != uHashCharge)
 	{
 		if (pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
 		{
@@ -1174,16 +1185,17 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 			pMedigun->ManageChargeEffect();
 		}
 
-		iOldMedigunBeam = iNewMedigunBeam;
-		iOldMedigunCharge = iNewMedigunCharge;
+		uOldHashBeam = uHashBeam, uOldHashCharge = uHashCharge;
 	}
 
+	if (Vars::Visuals::Effects::SpellFootsteps.Value && (F::Ticks.m_bDoubletap || F::Ticks.m_bWarp))
+		pLocal->FireEvent(pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);
+
 	static auto r_aspectratio = H::ConVars.FindVar("r_aspectratio");
-	static float flStaticRatio = 0.f;
-	float flOldRatio = flStaticRatio;
-	float flNewRatio = flStaticRatio = Vars::Visuals::UI::AspectRatio.Value;
+	static float flOldRatio = 0.f;
+	float flNewRatio = Vars::Visuals::UI::AspectRatio.Value;
 	if (flNewRatio != flOldRatio)
-		r_aspectratio->SetValue(flNewRatio);
+		r_aspectratio->SetValue(flOldRatio = flNewRatio);
 
 	DrawHitboxes(2);
 

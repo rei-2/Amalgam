@@ -422,6 +422,7 @@ NAMESPACE_BEGIN(Vars)
 		CVar(ForceCrits, "Force crits", false);
 		CVar(AvoidRandomCrits, "Avoid random crits", false);
 		CVar(AlwaysMeleeCrit, "Always melee crit", false);
+		CVar(CritEffects, "Crit effects", false);
 	NAMESPACE_END(CritHack)
 
 	NAMESPACE_BEGIN(Backtrack)

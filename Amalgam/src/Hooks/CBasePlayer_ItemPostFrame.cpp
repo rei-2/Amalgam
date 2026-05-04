@@ -100,7 +100,7 @@ MAKE_HOOK(CBasePlayer_ItemPostFrame, S::CBasePlayer_ItemPostFrame(), void,
 		if (!pViewmodel)
 			return CALL_ORIGINAL(rcx);
 
-		auto pStudio = pViewmodel->GetModelPtr();
+		auto pStudio = pViewmodel->m_pStudioHdr();
 		if (!pStudio)
 			return CALL_ORIGINAL(rcx);
 

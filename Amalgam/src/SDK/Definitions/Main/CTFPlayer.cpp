@@ -110,16 +110,29 @@ bool CTFPlayer::IsUbered()
 
 bool CTFPlayer::IsCritBoosted()
 {
-	return InCond(TF_COND_CRITBOOSTED)
+	if (InCond(TF_COND_CRITBOOSTED)
 		|| InCond(TF_COND_CRITBOOSTED_PUMPKIN)
 		|| InCond(TF_COND_CRITBOOSTED_USER_BUFF)
 		|| InCond(TF_COND_CRITBOOSTED_FIRST_BLOOD)
 		|| InCond(TF_COND_CRITBOOSTED_BONUS_TIME)
 		|| InCond(TF_COND_CRITBOOSTED_CTF_CAPTURE)
 		|| InCond(TF_COND_CRITBOOSTED_ON_KILL)
-		|| InCond(TF_COND_CRITBOOSTED_RAGE_BUFF)
 		|| InCond(TF_COND_CRITBOOSTED_CARD_EFFECT)
-		|| InCond(TF_COND_CRITBOOSTED_RUNE_TEMP);
+		|| InCond(TF_COND_CRITBOOSTED_RUNE_TEMP))
+		return true;
+
+	auto pWeapon = m_hActiveWeapon()->As<CTFWeaponBase>();
+	if (!pWeapon)
+		return false;
+
+	auto pWeaponInfo = pWeapon->m_pWeaponInfo();
+	if (!pWeaponInfo)
+		return false;
+
+	if (InCond(TF_COND_CRITBOOSTED_RAGE_BUFF) && pWeaponInfo->m_iWeaponType == TF_WPN_TYPE_PRIMARY)
+		return true;
+
+	return false;
 }
 
 bool CTFPlayer::IsMiniCritBoosted()

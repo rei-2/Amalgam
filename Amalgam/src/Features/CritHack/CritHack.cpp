@@ -411,6 +411,19 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 	return iCommandNumber;
 }
 
+bool CCritHack::ShouldForceEffects(CTFPlayer* pLocal)
+{
+	if (!Vars::CritHack::CritEffects.Value || !pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->IsCritBoosted())
+		return false;
+
+	auto pWeapon = H::Entities.GetWeapon();
+	if (!pWeapon || !WeaponCanCrit(pWeapon))
+		return false;
+
+	float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
+	return Vars::CritHack::ForceCrits.Value && !m_bCritBanned && m_iAvailableCrits > 0 || pWeapon->m_flCritTime() > flTickBase;
+}
+
 void CCritHack::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 {
 	switch (uHash)
@@ -595,8 +608,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 		return;
 
 	auto pWeapon = H::Entities.GetWeapon();
-	if (!pWeapon || !pLocal->IsAlive() || pLocal->IsAGhost()
-		|| !WeaponCanCrit(pWeapon, true))
+	if (!pWeapon || !pLocal->IsAlive() || pLocal->IsAGhost() || !WeaponCanCrit(pWeapon, true))
 		return;
 
 

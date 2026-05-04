@@ -67,14 +67,14 @@ public:
 	NETVAR(m_hViewModel, EHANDLE, "CBasePlayer", "m_hViewModel[0]");
 	NETVAR(m_szLastPlaceName, const char*, "CBasePlayer", "m_szLastPlaceName");
 
+	NETVAR_OFF(m_flWaterJumpTime, float, "CBasePlayer", "m_fOnTarget", -60);
+	NETVAR_OFF(m_flSwimSoundTime, float, "CBasePlayer", "m_fOnTarget", -44);
+	NETVAR_OFF(m_vecLadderNormal, Vec3, "CBasePlayer", "m_fOnTarget", -36);
 	NETVAR_OFF(m_flPhysics, int, "CBasePlayer", "m_nTickBase", -4);
 	NETVAR_OFF(m_nFinalPredictedTick, int, "CBasePlayer", "m_nTickBase", 4);
 	NETVAR_OFF(m_nButtons, int, "CBasePlayer", "m_hConstraintEntity", -12);
 	NETVAR_OFF(m_pCurrentCommand, CUserCmd*, "CBasePlayer", "m_hConstraintEntity", -8);
 	NETVAR_OFF(m_afButtonLast, int, "CBasePlayer", "m_hConstraintEntity", -24);
-	NETVAR_OFF(m_flWaterJumpTime, float, "CBasePlayer", "m_fOnTarget", -60);
-	NETVAR_OFF(m_flSwimSoundTime, float, "CBasePlayer", "m_fOnTarget", -44);
-	NETVAR_OFF(m_vecLadderNormal, Vec3, "CBasePlayer", "m_fOnTarget", -36);
 	NETVAR_OFF(m_surfaceProps, int, "CBasePlayer", "m_szLastPlaceName", 20);
 	NETVAR_OFF(m_pSurfaceData, void*, "CBasePlayer", "m_szLastPlaceName", 24);
 	NETVAR_OFF(m_surfaceFriction, float, "CBasePlayer", "m_szLastPlaceName", 32);

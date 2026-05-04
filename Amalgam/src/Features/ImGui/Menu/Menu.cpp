@@ -203,7 +203,8 @@ void CMenu::MenuAimbot(int iTab)
 				{
 					FToggle(Vars::CritHack::ForceCrits, FToggleEnum::Left);
 					FToggle(Vars::CritHack::AvoidRandomCrits, FToggleEnum::Right);
-					FToggle(Vars::CritHack::AlwaysMeleeCrit);
+					FToggle(Vars::CritHack::AlwaysMeleeCrit, FToggleEnum::Left);
+					FToggle(Vars::CritHack::CritEffects, FToggleEnum::Right);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{

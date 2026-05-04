@@ -187,16 +187,18 @@ public:
 	NETVAR(m_bRegenerating, bool, "CTFPlayer", "m_bRegenerating");
 	NETVAR(m_hOffHandWeapon, EHANDLE, "CTFPlayer", "m_hOffHandWeapon");
 
+	NETVAR_OFF(m_flTankPressure, float, "CTFPlayer", "m_Shared", 636);
 	NETVAR_OFF(m_flInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -8);
 	NETVAR_OFF(m_flPrevInvisibility, float, "CTFPlayer", "m_flInvisChangeCompleteTime", -4);
-	NETVAR_OFF(m_flTankPressure, float, "CTFPlayer", "m_Shared", 636);
+	NETVAR_OFF(m_pCritBoostSoundLoop, void*, "CTFPlayer", "m_flSpyTranqBuffDuration", 12);
+	NETVAR_OFF(m_bScattergunJump, bool, "CTFPlayer", "m_flSpyTranqBuffDuration", 20);
 	NETVAR_OFF(m_PlayerAnimState, CTFPlayerAnimState*, "CTFPlayer", "m_hItem", -88);
-	NETVAR_OFF(m_flPrevTauntYaw, float, "CTFPlayer", "m_flTauntYaw", 4);
 	NETVAR_OFF(m_flLastMovementStunChange, float, "CTFPlayer", "m_hItem", -180);
 	NETVAR_OFF(m_flStunLerpTarget, float, "CTFPlayer", "m_hItem", -184);
 	NETVAR_OFF(m_bStunNeedsFadeOut, bool, "CTFPlayer", "m_hItem", -188);
 	NETVAR_OFF(m_bTauntForceMoveForward, bool, "CTFPlayer", "m_bAllowMoveDuringTaunt", 1);
 	NETVAR_OFF(m_flTauntForceMoveForwardSpeed, float, "CTFPlayer", "m_bAllowMoveDuringTaunt", 4);
+	NETVAR_OFF(m_flPrevTauntYaw, float, "CTFPlayer", "m_flTauntYaw", 4);
 
 	VIRTUAL(GetMaxHealth, int, 107, this);
 	VIRTUAL(ThirdPersonSwitch, void, 256, this);

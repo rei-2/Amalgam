@@ -19,9 +19,9 @@ public:
 	NETVAR(m_iState, int, "CBaseCombatWeapon", "m_iState");
 	NETVAR(m_hOwner, EHANDLE, "CBaseCombatWeapon", "m_hOwner");
 
+	NETVAR_OFF(m_bReloadsSingly, bool, "CBaseCombatWeapon", "m_iClip2", 24);
 	NETVAR_OFF(m_bInReload, bool, "CBaseCombatWeapon", "m_flTimeWeaponIdle", 4);
 	NETVAR_OFF(m_bRemoveable, bool, "CBaseCombatWeapon", "m_iState", -12);
-	NETVAR_OFF(m_bReloadsSingly, bool, "CBaseCombatWeapon", "m_iClip2", 24);
 
 	VIRTUAL(CanBeSelected, bool, 233, this);
 	VIRTUAL(CheckReload, void, 278, this);
