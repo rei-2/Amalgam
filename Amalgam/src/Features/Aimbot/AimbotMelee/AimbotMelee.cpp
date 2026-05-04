@@ -116,110 +116,108 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 int CAimbotMelee::GetSwingTime(CTFWeaponBase* pWeapon, bool bVar)
 {
-	if (pWeapon->GetWeaponID() == TF_WEAPON_KNIFE)
-		return 0;
-	int iSmackTicks = ceilf(pWeapon->GetSmackDelay() / TICK_INTERVAL);
-	if (bVar)
-		iSmackTicks = std::max(iSmackTicks + Vars::Aimbot::Melee::SwingOffset.Value, 0);
-	return iSmackTicks;
+	return pWeapon->GetWeaponID() == TF_WEAPON_KNIFE ? 0
+		: bVar ? Vars::Aimbot::Melee::SwingTicks.Value
+		: ceilf(pWeapon->GetSmackDelay() / TICK_INTERVAL);
 }
 
 void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, std::vector<Target_t> vTargets)
 {
 	m_mRecordMap.clear(); m_mPaths.clear();
-	m_iDoubletapTicks = F::Ticks.GetTicks(pWeapon);
 	m_vEyePos = pLocal->GetShootPos();
 	m_flRange = pWeapon->GetSwingRange();
+	m_iSimulatedTicks = GetSwingTime(pWeapon), m_iSwingTicks = GetSwingTime(pWeapon, false);
+	m_iDoubletapTicks = F::Ticks.GetTicks(pWeapon);
+	m_bShouldSwing = m_iDoubletapTicks <= m_iSwingTicks || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
+	m_bSimulatedLocal = false;
 
-	int iSimTicks = GetSwingTime(pWeapon), iSwingTicks = GetSwingTime(pWeapon, false);
-
-	if ((Vars::Aimbot::Melee::SwingPrediction.Value && iSimTicks || m_iDoubletapTicks) && G::CanPrimaryAttack && pWeapon->m_flSmackTime() < 0.f)
+	if ((!Vars::Aimbot::Melee::SwingPrediction.Value || !m_iSimulatedTicks) && !m_iDoubletapTicks || !G::CanPrimaryAttack || pWeapon->m_flSmackTime() > 0.f)
 	{
-		std::unordered_map<int, MoveStorage> mMoveStorage;
-
-		F::MoveSim.Initialize(pLocal, mMoveStorage[I::EngineClient->GetLocalPlayer()], false, !m_iDoubletapTicks);
-		for (auto& tTarget : vTargets)
-			F::MoveSim.Initialize(tTarget.m_pEntity, mMoveStorage[tTarget.m_pEntity->entindex()], false);
-
-		int iMax = std::max(iSimTicks, m_iDoubletapTicks);
-		int iTicks = iMax; bool bSwung = false;
-		for (int i = 0; i < iTicks; i++) // intended for plocal to collide with targets
-		{
-			{
-				auto& tMoveStorage = mMoveStorage[I::EngineClient->GetLocalPlayer()];
-
-				if (!bSwung && (!m_iDoubletapTicks || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity() || iMax - i <= iSwingTicks))
-				{
-					iTicks = std::min(i + iSwingTicks, iMax), bSwung = true;
-					if (!iSwingTicks)
-						break;
-
-					if (pLocal->InCond(TF_COND_SHIELD_CHARGE))
-					{	// demo charge fix for swing pred
-						tMoveStorage.m_MoveData.m_flMaxSpeed = tMoveStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal, false, true);
-						pLocal->m_flMaxspeed() = tMoveStorage.m_MoveData.m_flMaxSpeed;
-						pLocal->RemoveCond(TF_COND_SHIELD_CHARGE);
-					}
-				}
-				if (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
-					F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, tMoveStorage.m_MoveData.m_flForwardMove, tMoveStorage.m_MoveData.m_flSideMove, iMax - i - 1);
-
-				F::MoveSim.RunTick(tMoveStorage);
-				m_mRecordMap[I::EngineClient->GetLocalPlayer()].emplace_front(
-					pLocal->m_flSimulationTime() + TICKS_TO_TIME(i + 1),
-					tMoveStorage.m_MoveData.m_vecAbsOrigin,
-					pLocal->m_vecMins(), pLocal->m_vecMaxs()
-				);
-			}
-
-			if (i < iSimTicks - m_iDoubletapTicks)
-			{
-				for (auto& tTarget : vTargets)
-				{
-					auto& tMoveStorage = mMoveStorage[tTarget.m_pEntity->entindex()];
-					if (tMoveStorage.m_bFailed)
-						continue;
-
-					F::MoveSim.RunTick(tMoveStorage);
-					m_mRecordMap[tTarget.m_pEntity->entindex()].emplace_front(
-						!Vars::Aimbot::Melee::SwingPredictLag.Value || tMoveStorage.m_bPredictNetworked ? tTarget.m_pEntity->m_flSimulationTime() + TICKS_TO_TIME(i + 1) : 0.f,
-						Vars::Aimbot::Melee::SwingPredictLag.Value ? tMoveStorage.m_vPredictedOrigin : tMoveStorage.m_MoveData.m_vecAbsOrigin,
-						tTarget.m_pEntity->m_vecMins(), tTarget.m_pEntity->m_vecMaxs()
-					);
-				}
-			}
-		}
-		m_vEyePos = mMoveStorage[I::EngineClient->GetLocalPlayer()].m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset();
-		m_flRange = pWeapon->GetSwingRange();
-
-		if (Vars::Visuals::Prediction::SwingLines.Value && Vars::Visuals::Prediction::PlayerPath.Value)
-		{
-			for (auto& [iIndex, tMoveStorage] : mMoveStorage)
-				m_mPaths[iIndex] = tMoveStorage.m_vPath;
-
-			const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
-			if (bAlwaysDraw)
-			{
-				G::LineStorage.clear();
-				G::BoxStorage.clear();
-				G::PathStorage.clear();
-
-				for (auto& vPath : m_mPaths | std::views::values)
-				{
-					float flDuration = Vars::Visuals::Prediction::PlayerDrawDuration.Value;
-					if (Vars::Colors::PlayerPathIgnoreZ.Value.a)
-						G::PathStorage.emplace_back(vPath, !flDuration ? -int(vPath.size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
-					if (Vars::Colors::PlayerPath.Value.a)
-						G::PathStorage.emplace_back(vPath, !flDuration ? -int(vPath.size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
-				}
-			}
-		}
-
-		for (auto& tMoveStorage : mMoveStorage | std::views::values)
-			F::MoveSim.Restore(tMoveStorage);
+		m_iSimulatedTicks = m_iSwingTicks = 0;
+		return;
 	}
 
-	m_bShouldSwing = m_iDoubletapTicks <= iSwingTicks || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity();
+	std::unordered_map<int, MoveStorage> mMoveStorage;
+
+	F::MoveSim.Initialize(pLocal, mMoveStorage[pLocal->entindex()], false, !m_iDoubletapTicks);
+	for (auto& tTarget : vTargets)
+		F::MoveSim.Initialize(tTarget.m_pEntity, mMoveStorage[tTarget.m_pEntity->entindex()], false);
+
+	int iMax = std::max(m_iSimulatedTicks, m_iDoubletapTicks), iTicks = iMax; bool bSwung = false;
+	Vec3 vLocalOrigin = mMoveStorage[pLocal->entindex()].m_MoveData.m_vecAbsOrigin;
+	for (int i = 0; i < iTicks; i++) // intended for plocal to collide with targets
+	{
+		{
+			auto& tMoveStorage = mMoveStorage[pLocal->entindex()];
+			if (!bSwung && (!m_iDoubletapTicks || Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity() || iMax - i <= m_iSwingTicks))
+			{
+				iTicks = std::min(i + m_iSwingTicks, iMax), bSwung = true;
+				if (!m_iSwingTicks)
+					break;
+
+				if (pLocal->InCond(TF_COND_SHIELD_CHARGE))
+				{	// demo charge fix for swing pred
+					tMoveStorage.m_MoveData.m_flMaxSpeed = tMoveStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal, false, true);
+					pLocal->m_flMaxspeed() = tMoveStorage.m_MoveData.m_flMaxSpeed;
+					pLocal->RemoveCond(TF_COND_SHIELD_CHARGE);
+				}
+			}
+			if (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
+				F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, tMoveStorage.m_MoveData.m_flForwardMove, tMoveStorage.m_MoveData.m_flSideMove, iMax - i - 1);
+
+			F::MoveSim.RunTick(tMoveStorage);
+
+			vLocalOrigin = tMoveStorage.m_MoveData.m_vecAbsOrigin;
+			m_bSimulatedLocal = true;
+		}
+
+		if (i < m_iSimulatedTicks - m_iDoubletapTicks)
+		{
+			for (auto& tTarget : vTargets)
+			{
+				auto& tMoveStorage = mMoveStorage[tTarget.m_pEntity->entindex()];
+				if (tMoveStorage.m_bFailed)
+					continue;
+
+				F::MoveSim.RunTick(tMoveStorage);
+				if (Vars::Aimbot::Melee::SwingPredictLag.Value && !tMoveStorage.m_bPredictNetworked)
+					continue;
+
+				Vec3 vOrigin = Vars::Aimbot::Melee::SwingPredictLag.Value ? tMoveStorage.m_vPredictedOrigin : tMoveStorage.m_MoveData.m_vecAbsOrigin;
+				m_mRecordMap[tTarget.m_pEntity->entindex()].emplace_front(
+					tTarget.m_pEntity->m_flSimulationTime() + TICKS_TO_TIME(i + 1), vOrigin, tTarget.m_pEntity->m_vecMins(), tTarget.m_pEntity->m_vecMaxs()
+				);
+			}
+		}
+	}
+	m_vEyePos = vLocalOrigin + pLocal->m_vecViewOffset();
+	m_flRange = pWeapon->GetSwingRange();
+
+	if (Vars::Visuals::Prediction::SwingLines.Value && Vars::Visuals::Prediction::PlayerPath.Value)
+	{
+		for (auto& [iIndex, tMoveStorage] : mMoveStorage)
+			m_mPaths[iIndex] = tMoveStorage.m_vPath;
+
+		const bool bAlwaysDraw = !Vars::Aimbot::General::AutoShoot.Value || Vars::Debug::Info.Value;
+		if (bAlwaysDraw)
+		{
+			G::LineStorage.clear();
+			G::BoxStorage.clear();
+			G::PathStorage.clear();
+
+			for (auto& vPath : m_mPaths | std::views::values)
+			{
+				float flDuration = Vars::Visuals::Prediction::PlayerDrawDuration.Value;
+				if (Vars::Colors::PlayerPathIgnoreZ.Value.a)
+					G::PathStorage.emplace_back(vPath, !flDuration ? -int(vPath.size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
+				if (Vars::Colors::PlayerPath.Value.a)
+					G::PathStorage.emplace_back(vPath, !flDuration ? -int(vPath.size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
+			}
+		}
+	}
+
+	for (auto& tMoveStorage : mMoveStorage | std::views::values)
+		F::MoveSim.Restore(tMoveStorage);
 }
 
 bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEyeAngles)
@@ -244,7 +242,7 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 	const float flSqCompDist = 0.0884f;
 
 	if (auto pCmd = G::CurrentUserCmd;
-		m_mRecordMap[pLocal->entindex()].empty() && pCmd->viewangles != vEyeAngles && G::CanPrimaryAttack)
+		!m_bSimulatedLocal && pCmd->viewangles != vEyeAngles && G::CanPrimaryAttack)
 	{	// repredict, prevent prediction error potentially causing miss
 		CUserCmd tOldCmd = *pCmd;
 		Vec3 vOldAngles = I::EngineClient->GetViewAngles();
@@ -291,14 +289,14 @@ bool CAimbotMelee::CanBackstab(CBaseEntity* pTarget, CTFPlayer* pLocal, Vec3 vEy
 	};
 
 	Vec3 vTargetAngles = { 0.f, H::Entities.GetEyeAngles(pTarget->entindex()).y, 0.f };
-	if (!Vars::Aimbot::Melee::BackstabAccountPing.Value)
+	if (!(Vars::Aimbot::Melee::BackstabFlags.Value & Vars::Aimbot::Melee::BackstabFlagsEnum::AccountPing))
 	{
 		if (!fTestDots(vTargetAngles))
 			return false;
 	}
 	else
 	{
-		if (Vars::Aimbot::Melee::BackstabDoubleTest.Value && !fTestDots(vTargetAngles))
+		if (Vars::Aimbot::Melee::BackstabFlags.Value & Vars::Aimbot::Melee::BackstabFlagsEnum::DoubleTest && !fTestDots(vTargetAngles))
 			return false;
 
 		vTargetAngles.y += H::Entities.GetDeltaAngles(pTarget->entindex()).y;
@@ -337,7 +335,23 @@ int CAimbotMelee::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBase* pW
 		{
 			for (auto& tRecord : vSimRecords)
 				vRecords.push_back(&tRecord);
-			vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal, true, -TICKS_TO_TIME(vSimRecords.size()));
+			switch (Vars::Aimbot::Melee::SwingValidateMode.Value)
+			{
+			case Vars::Aimbot::Melee::SwingValidateModeEnum::Both:
+				if (m_iSimulatedTicks != m_iSwingTicks)
+				{
+					vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal, true, -TICKS_TO_TIME(m_iSimulatedTicks));
+					vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal, true, -TICKS_TO_TIME(m_iSwingTicks));
+					break;
+				}
+				[[fallthrough]];
+			case Vars::Aimbot::Melee::SwingValidateModeEnum::Swing:
+				vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal, true, -TICKS_TO_TIME(m_iSwingTicks));
+				break;
+			case Vars::Aimbot::Melee::SwingValidateModeEnum::Simulated:
+				vRecords = F::Backtrack.GetValidRecords(vRecords, pLocal, true, -TICKS_TO_TIME(m_iSimulatedTicks));
+				break;
+			}
 		}
 		if (vRecords.empty())
 			return false;
@@ -508,12 +522,12 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 				float flDuration = Vars::Visuals::Prediction::PlayerDrawDuration.Value;
 				if (Vars::Colors::PlayerPathIgnoreZ.Value.a)
 				{
-					G::PathStorage.emplace_back(mPaths[I::EngineClient->GetLocalPlayer()], !flDuration ? -int(mPaths[I::EngineClient->GetLocalPlayer()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
+					G::PathStorage.emplace_back(mPaths[pLocal->entindex()], !flDuration ? -int(mPaths[pLocal->entindex()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
 					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], !flDuration ? -int(mPaths[tTarget.m_pEntity->entindex()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPathIgnoreZ.Value, Vars::Visuals::Prediction::PlayerPath.Value);
 				}
 				if (Vars::Colors::PlayerPath.Value.a)
 				{
-					G::PathStorage.emplace_back(mPaths[I::EngineClient->GetLocalPlayer()], !flDuration ? -int(mPaths[I::EngineClient->GetLocalPlayer()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
+					G::PathStorage.emplace_back(mPaths[pLocal->entindex()], !flDuration ? -int(mPaths[pLocal->entindex()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
 					G::PathStorage.emplace_back(mPaths[tTarget.m_pEntity->entindex()], !flDuration ? -int(mPaths[tTarget.m_pEntity->entindex()].size()) : I::GlobalVars->curtime + flDuration, Vars::Colors::PlayerPath.Value, Vars::Visuals::Prediction::PlayerPath.Value, true);
 				}
 			}

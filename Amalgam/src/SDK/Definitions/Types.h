@@ -40,27 +40,27 @@ public:
 
 	inline Vec2(float X = 0.f, float Y = 0.f)
 	{
-		x = X; y = Y;
+		x = X, y = Y;
 	}
 
 	inline Vec2(float* v)
 	{
-		x = v[0]; y = v[1];
+		x = v[0], y = v[1];
 	}
 
 	inline Vec2(const float* v)
 	{
-		x = v[0]; y = v[1];
+		x = v[0], y = v[1];
 	}
 
 	inline Vec2(const Vec2& v)
 	{
-		x = v.x; y = v.y;
+		x = v.x, y = v.y;
 	}
 
 	inline Vec2& operator=(const Vec2& v)
 	{
-		x = v.x; y = v.y; return *this;
+		x = v.x, y = v.y; return *this;
 	}
 
 	inline float& operator[](int i)
@@ -90,42 +90,42 @@ public:
 
 	inline Vec2& operator+=(const Vec2& v)
 	{
-		x += v.x; y += v.y; return *this;
+		x += v.x, y += v.y; return *this;
 	}
 
 	inline Vec2& operator-=(const Vec2& v)
 	{
-		x -= v.x; y -= v.y; return *this;
+		x -= v.x, y -= v.y; return *this;
 	}
 
 	inline Vec2& operator*=(const Vec2& v)
 	{
-		x *= v.x; y *= v.y; return *this;
+		x *= v.x, y *= v.y; return *this;
 	}
 
 	inline Vec2& operator/=(const Vec2& v)
 	{
-		x /= v.x; y /= v.y; return *this;
+		x /= v.x, y /= v.y; return *this;
 	}
 
 	inline Vec2& operator+=(float v)
 	{
-		x += v; y += v; return *this;
+		x += v, y += v; return *this;
 	}
 
 	inline Vec2& operator-=(float v)
 	{
-		x -= v; y -= v; return *this;
+		x -= v, y -= v; return *this;
 	}
 
 	inline Vec2& operator*=(float v)
 	{
-		x *= v; y *= v; return *this;
+		x *= v, y *= v; return *this;
 	}
 
 	inline Vec2& operator/=(float v)
 	{
-		x /= v; y /= v; return *this;
+		x /= v, y /= v; return *this;
 	}
 
 	inline Vec2 operator+(const Vec2& v) const
@@ -195,7 +195,12 @@ public:
 
 	inline void Set(float X = 0.f, float Y = 0.f)
 	{
-		x = X; y = Y;
+		x = X, y = Y;
+	}
+
+	inline void Set(const Vec2& v)
+	{
+		x = v.x, y = v.y;
 	}
 
 	inline Vec2 Pow(float flPower) const
@@ -357,32 +362,32 @@ public:
 
 	inline Vec3(float X = 0.f, float Y = 0.f, float Z = 0.f)
 	{
-		x = X; y = Y; z = Z;
+		x = X, y = Y, z = Z;
 	}
 
 	inline Vec3(float* v)
 	{
-		x = v[0]; y = v[1]; z = v[2];
+		x = v[0], y = v[1], z = v[2];
 	}
 
 	inline Vec3(const float* v)
 	{
-		x = v[0]; y = v[1]; z = v[2];
+		x = v[0], y = v[1], z = v[2];
 	}
 
 	inline Vec3(const Vec3& v)
 	{
-		x = v.x; y = v.y; z = v.z;
+		x = v.x, y = v.y, z = v.z;
 	}
 
 	inline Vec3(const Vec2& v)
 	{
-		x = v.x; y = v.y; z = 0.f;
+		x = v.x, y = v.y, z = 0.f;
 	}
 
 	inline Vec3& operator=(const Vec3& v)
 	{
-		x = v.x; y = v.y; z = v.z; return *this;
+		x = v.x, y = v.y, z = v.z; return *this;
 	}
 
 	inline float& operator[](int i)
@@ -412,42 +417,42 @@ public:
 
 	inline Vec3& operator+=(const Vec3& v)
 	{
-		x += v.x; y += v.y; z += v.z; return *this;
+		x += v.x, y += v.y, z += v.z; return *this;
 	}
 
 	inline Vec3& operator-=(const Vec3& v)
 	{
-		x -= v.x; y -= v.y; z -= v.z; return *this;
+		x -= v.x, y -= v.y, z -= v.z; return *this;
 	}
 
 	inline Vec3& operator*=(const Vec3& v)
 	{
-		x *= v.x; y *= v.y; z *= v.z; return *this;
+		x *= v.x, y *= v.y, z *= v.z; return *this;
 	}
 
 	inline Vec3& operator/=(const Vec3& v)
 	{
-		x /= v.x; y /= v.y; z /= v.z; return *this;
+		x /= v.x, y /= v.y, z /= v.z; return *this;
 	}
 
 	inline Vec3& operator+=(float v)
 	{
-		x += v; y += v; z += v; return *this;
+		x += v, y += v, z += v; return *this;
 	}
 
 	inline Vec3& operator-=(float v)
 	{
-		x -= v; y -= v; z -= v; return *this;
+		x -= v, y -= v, z -= v; return *this;
 	}
 
 	inline Vec3& operator*=(float v)
 	{
-		x *= v; y *= v; z *= v; return *this;
+		x *= v, y *= v, z *= v; return *this;
 	}
 
 	inline Vec3& operator/=(float v)
 	{
-		x /= v; y /= v; z /= v; return *this;
+		x /= v, y /= v, z /= v; return *this;
 	}
 
 	inline Vec3 operator+(const Vec3& v) const
@@ -517,7 +522,22 @@ public:
 
 	inline void Set(float X = 0.f, float Y = 0.f, float Z = 0.f)
 	{
-		x = X; y = Y; z = Z;
+		x = X, y = Y, z = Z;
+	}
+
+	inline void Set(const Vec3& v)
+	{
+		x = v.x, y = v.y, z = v.z;
+	}
+
+	inline void Set(const Vec2& v)
+	{
+		x = v.x, y = v.y;
+	}
+
+	inline void Set2D(const Vec3& v)
+	{
+		x = v.x, y = v.y;
 	}
 
 	inline Vec3 To2D() const

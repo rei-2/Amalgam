@@ -32,6 +32,17 @@ void CMovementSimulation::Reset(MoveStorage& tMoveStorage)
 	}
 }
 
+static inline int GetMoveMode(CTFPlayer* pPlayer)
+{
+	if (pPlayer->IsSwimming())
+		return MoveEnum::Swim;
+
+	if (pPlayer->IsOnGround())
+		return MoveEnum::Ground;
+
+	return MoveEnum::Air;
+}
+
 static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, MoveData& tCurRecord, std::deque<MoveData>& vRecords)
 {
 	bool bLocal = pPlayer->entindex() == I::EngineClient->GetLocalPlayer();
@@ -63,7 +74,7 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 
 	if (pPlayer->InCond(TF_COND_SHIELD_CHARGE))
 	{
-		G::DummyCmd.forwardmove = 450.f;
+		G::DummyCmd.forwardmove = 520.f;
 		G::DummyCmd.sidemove = 0.f;
 		SDK::FixMovement(&G::DummyCmd, bLocal ? G::CurrentUserCmd->viewangles : pPlayer->GetEyeAngles(), {});
 		tCurRecord.m_vDirection.x = G::DummyCmd.forwardmove;
@@ -71,27 +82,24 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 		return;
 	}
 
+	tCurRecord.m_bInputDirection = bLocal;
 	switch (tCurRecord.m_iMode)
 	{
 	case MoveEnum::Ground:
-	{
-		if (bLocal && Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
-		{
-			float flMaxSpeed = SDK::MaxSpeed(pPlayer, true);
-			tCurRecord.m_vDirection = tCurRecord.m_vVelocity.Normalized2D() * flMaxSpeed;
-		}
+		if (!bLocal)
+			break;
+		else if (Vars::Misc::Movement::AutoStrafe.Value || Vars::Misc::Movement::Bunnyhop.Value && G::OriginalCmd.buttons & IN_JUMP)
+			tCurRecord.m_vDirection = tCurRecord.m_vVelocity.Normalized2D() * 520.f, tCurRecord.m_bInputDirection = false;
 		break;
-	}
 	case MoveEnum::Air:
-	{
-		float flMaxSpeed = SDK::MaxSpeed(pPlayer, true);
-		tCurRecord.m_vDirection = tCurRecord.m_vVelocity.Normalized2D() * flMaxSpeed;
+		if (!bLocal)
+			break;
+		else if (Vars::Misc::Movement::AutoStrafe.Value || tCurRecord.m_vDirection.To2D().IsZero() || tCurRecord.m_vVelocity.To2D() == pLastRecord->m_vVelocity.To2D())
+			tCurRecord.m_vDirection = tCurRecord.m_vVelocity.Normalized2D() * 520.f, tCurRecord.m_bInputDirection = false;
 		break;
-	}
 	case MoveEnum::Swim:
-	{
-		tCurRecord.m_vDirection *= 2;
-	}
+		if (!bLocal)
+			tCurRecord.m_vDirection = tCurRecord.m_vVelocity.Normalized() * 520.f, tCurRecord.m_bInputDirection = false;
 	}
 }
 
@@ -120,7 +128,7 @@ void CMovementSimulation::Store()
 		vRecords.emplace_front(
 			vDirection,
 			pPlayer->m_flSimulationTime(),
-			pPlayer->IsSwimming() ? MoveEnum::Swim : pPlayer->IsOnGround() ? MoveEnum::Ground : MoveEnum::Air,
+			GetMoveMode(pPlayer),
 			vVelocity,
 			vOrigin
 		);
@@ -168,7 +176,7 @@ void CMovementSimulation::StorePlayer(CTFPlayer* pPlayer, CMoveData& tMoveData, 
 	vRecords.emplace_front(
 		vDirection,
 		flTime,
-		pPlayer->IsSwimming() ? MoveEnum::Swim : pPlayer->IsOnGround() ? MoveEnum::Ground : MoveEnum::Air,
+		GetMoveMode(pPlayer),
 		vVelocity,
 		vOrigin
 	);
@@ -271,7 +279,7 @@ void CMovementSimulation::SetupMoveData(MoveStorage& tMoveStorage)
 				tMoveStorage.m_MoveData.m_vecViewAngles = H::Entities.GetEyeAngles(iIndex);
 		}
 
-		const auto& vRecords = m_mRecords[tMoveStorage.m_pPlayer->entindex()];
+		const auto& vRecords = m_mRecords[iIndex];
 		if (!vRecords.empty())
 		{
 			auto& tRecord = vRecords.front();
@@ -532,6 +540,22 @@ bool CMovementSimulation::StrafePrediction(MoveStorage& tMoveStorage, bool bHitc
 		}
 	}
 
+	if (tMoveStorage.m_flAverageYaw && !tMoveStorage.m_bDirectMove)
+	{
+		const auto& vRecords = m_mRecords[tMoveStorage.m_pPlayer->entindex()];
+		if (!vRecords.empty())
+		{
+			auto& tRecord = vRecords.front();
+			Vec3 vDirection = tRecord.m_vVelocity;
+			if (!vDirection.IsZero() && tRecord.m_bInputDirection)
+			{	// fix inputs for turning
+				int iSign = sign(tMoveStorage.m_flAverageYaw);
+				float flForward = tMoveStorage.m_MoveData.m_flForwardMove, flSide = tMoveStorage.m_MoveData.m_flSideMove;
+				tMoveStorage.m_MoveData.m_flForwardMove = -flSide * iSign, tMoveStorage.m_MoveData.m_flSideMove = flForward * iSign;
+			}
+		}
+	}
+
 	return true;
 }
 
@@ -629,8 +653,6 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 		}
 		tMoveStorage.m_MoveData.m_vecViewAngles.y += tMoveStorage.m_flAverageYaw * flMult + flCorrection;
 	}
-	else if (!tMoveStorage.m_bDirectMove)
-		tMoveStorage.m_MoveData.m_flForwardMove = tMoveStorage.m_MoveData.m_flSideMove = 0.f;
 
 	float flOldSpeed = tMoveStorage.m_MoveData.m_flClientMaxSpeed;
 	if (tMoveStorage.m_pPlayer->m_bDucked() && tMoveStorage.m_pPlayer->IsOnGround() && !tMoveStorage.m_pPlayer->IsSwimming())
@@ -664,7 +686,7 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 		&& !tMoveStorage.m_MoveData.m_flForwardMove && !tMoveStorage.m_MoveData.m_flSideMove
 		&& tMoveStorage.m_MoveData.m_vecVelocity.Length2D() > tMoveStorage.m_MoveData.m_flMaxSpeed * 0.015f)
 	{
-		Vec3 vDirection = tMoveStorage.m_MoveData.m_vecVelocity.Normalized2D() * 450.f;
+		Vec3 vDirection = tMoveStorage.m_MoveData.m_vecVelocity.Normalized2D() * 520.f;
 		G::DummyCmd.forwardmove = vDirection.x, G::DummyCmd.sidemove = -vDirection.y;
 		SDK::FixMovement(&G::DummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
 		tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove, tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;

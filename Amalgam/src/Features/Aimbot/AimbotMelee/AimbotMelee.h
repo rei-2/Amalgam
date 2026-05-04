@@ -20,7 +20,10 @@ private:
 	Vec3 m_vEyePos = {};
 	float m_flRange = 0.f;
 	bool m_bShouldSwing = false;
+	bool m_bSimulatedLocal = false;
 
+	int m_iSwingTicks = 0;
+	int m_iSimulatedTicks = 0;
 	int m_iDoubletapTicks = 0;
 
 	std::unordered_map<int, std::deque<TickRecord>> m_mRecordMap;

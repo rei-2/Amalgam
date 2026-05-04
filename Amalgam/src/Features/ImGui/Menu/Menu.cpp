@@ -414,10 +414,10 @@ void CMenu::MenuAimbot(int iTab)
 						FText("Debug", { 5, 5 });
 						if (FPopupButton("Debug", { 0, -5 }))
 						{
-							FSlider(Vars::Aimbot::Melee::SwingOffset, FSliderEnum::Left);
+							FSlider(Vars::Aimbot::Melee::SwingTicks, FSliderEnum::Left);
 							FToggle(Vars::Aimbot::Melee::SwingPredictLag, FToggleEnum::Right);
-							FToggle(Vars::Aimbot::Melee::BackstabAccountPing, FToggleEnum::Left);
-							FToggle(Vars::Aimbot::Melee::BackstabDoubleTest, FToggleEnum::Right);
+							FDropdown(Vars::Aimbot::Melee::SwingValidateMode, FDropdownEnum::Left);
+							FDropdown(Vars::Aimbot::Melee::BackstabFlags, FDropdownEnum::Right);
 
 							EndPopup();
 						}

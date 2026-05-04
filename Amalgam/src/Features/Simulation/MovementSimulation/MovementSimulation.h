@@ -36,6 +36,7 @@ struct MoveData
 	int m_iMode = 0;
 	Vec3 m_vVelocity = {};
 	Vec3 m_vOrigin = {};
+	bool m_bInputDirection = false;
 };
 
 class CMovementSimulation

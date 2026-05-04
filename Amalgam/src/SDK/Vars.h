@@ -394,10 +394,14 @@ NAMESPACE_BEGIN(Vars)
 			CVar(SwingPrediction, "Swing prediction", true);
 			CVar(WhipTeam, "Whip team", false);
 
-			CVar(SwingOffset, "Swing offset", -1, NOSAVE | DEBUGVAR, -1, 1);
+			CVar(SwingTicks, "Swing ticks", 13, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 14);
 			CVar(SwingPredictLag, "Swing predict lag", true, NOSAVE | DEBUGVAR);
-			CVar(BackstabAccountPing, "Backstab account ping", true, NOSAVE | DEBUGVAR);
-			CVar(BackstabDoubleTest, "Backstab double test", true, NOSAVE | DEBUGVAR);
+			CVarEnum(SwingValidateMode, "Swing validate mode", 0, NOSAVE | DEBUGVAR, nullptr,
+				VA_LIST("Both", "Swing", "Simulated"),
+				Both, Swing, Simulated);
+			CVarEnum(BackstabFlags, "Backstab flags", 0b11, NOSAVE | DEBUGVAR | DROPDOWN_MULTI, nullptr,
+				VA_LIST("Account ping", "Double test"),
+				AccountPing = 1 << 0, DoubleTest = 1 << 1);
 		NAMESPACE_END(Melee)
 
 		NAMESPACE_BEGIN(Healing)
