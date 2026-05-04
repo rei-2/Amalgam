@@ -81,8 +81,8 @@ namespace SDK
 	std::string GetDate();
 	std::string GetTime();
 
-	std::wstring ConvertUtf8ToWide(const std::string& source);
-	std::string ConvertWideToUTF8(const std::wstring& source);
+	std::wstring ConvertUtf8ToWide(const std::string& sSource);
+	std::string ConvertWideToUTF8(const std::wstring& sSource);
 
 	HWND GetTeamFortressWindow();
 	bool IsGameWindowInFocus();

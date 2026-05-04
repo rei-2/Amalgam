@@ -700,7 +700,7 @@ static inline void DrawVisuals(CTFPlayer* pLocal, Target_t& tTarget, int nWeapon
 
 	if (G::Attacking == 1 && nWeaponID != TF_WEAPON_LASER_POINTER)
 	{
-		bool bLine = Vars::Visuals::Line::Enabled.Value;
+		bool bLine = Vars::Visuals::Line::TracersEnabled.Value;
 		bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
 		if (bLine || bBoxes)
 		{

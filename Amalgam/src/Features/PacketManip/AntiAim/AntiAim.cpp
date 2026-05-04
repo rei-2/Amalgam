@@ -248,3 +248,29 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 
 	MinWalk(pLocal, pCmd);
 }
+
+void CAntiAim::Draw(CTFPlayer* pLocal)
+{
+	if (!pLocal->IsAlive() || pLocal->IsAGhost() || !I::Input->CAM_IsThirdPerson() || !AntiAimOn())
+		return;
+
+	if (Vars::AntiAim::AntiAimLines.Value)
+	{
+		const auto& vOrigin = pLocal->GetAbsOrigin();
+
+		Vec3 vScreen1, vScreen2;
+		if (SDK::W2S(vOrigin, vScreen1))
+		{
+			if (SDK::W2S(vOrigin + Math::RotatePoint({ 50, 0, 0 }, {}, { 0, vRealAngles.y, 0 }), vScreen2))
+				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 0, 255, 0, 255 });
+			if (SDK::W2S(vOrigin + Math::RotatePoint({ 50, 0, 0 }, {}, { 0, vFakeAngles.y, 0 }), vScreen2))
+				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 255, 0, 0, 255 });
+		}
+
+		for (auto& vPair : vEdgeTrace)
+		{
+			if (SDK::W2S(vPair.first, vScreen1) && SDK::W2S(vPair.second, vScreen2))
+				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 255, 255, 255, 255 });
+		}
+	}
+}

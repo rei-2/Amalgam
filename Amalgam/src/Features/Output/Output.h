@@ -9,6 +9,7 @@ private:
 public:
 	void Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal);
 	void UserMessage(bf_read& msgData);
+	void Move();
 	void CheatDetection(const char* sName, const char* sAction, const char* sReason);
 
 	void TagsChanged(const char* sName, const char* sAction, const char* sColor, const char* sTag);
@@ -19,6 +20,8 @@ public:
 	void ReportResolver(int iIndex, const char* sAction, const char* sAxis, const char* sValue);
 	void ReportResolver(const char* sMessage);
 
+	bool AllInfoOnJoin();
+	void InfoOnJoin(const char* sName, uint32_t uAccountID);
 	void TagsOnJoin(const char* sName, uint32_t uAccountID);
 	void AliasOnJoin(const char* sName, uint32_t uAccountID);
 };

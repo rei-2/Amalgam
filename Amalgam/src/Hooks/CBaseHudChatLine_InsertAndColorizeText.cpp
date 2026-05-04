@@ -53,7 +53,7 @@ MAKE_HOOK(CBaseHudChatLine_InsertAndColorizeText, S::CBaseHudChatLine_InsertAndC
 		std::vector<std::pair<std::string, std::string>> vReplace;
 		for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
 		{
-			if (!pResource->m_bValid(n))
+			if (!pResource->m_bValid(n) || !pResource->m_bConnected(n))
 				continue;
 
 			int iType; const char* sReplace = F::PlayerUtils.GetPlayerName(n, nullptr, &iType);

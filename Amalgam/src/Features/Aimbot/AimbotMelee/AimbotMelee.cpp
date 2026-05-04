@@ -495,7 +495,7 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 	G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
 
 	bool bPath = Vars::Visuals::Prediction::SwingLines.Value && Vars::Visuals::Prediction::PlayerPath.Value;
-	bool bLine = Vars::Visuals::Line::Enabled.Value;
+	bool bLine = Vars::Visuals::Line::TracersEnabled.Value;
 	bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
 	if (bPath || bLine || bBoxes)
 	{

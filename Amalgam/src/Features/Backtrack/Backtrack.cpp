@@ -133,6 +133,7 @@ bool CBacktrack::GetRecords(CBaseEntity* pEntity, std::vector<TickRecord*>& vRet
 		return false;
 
 	auto& vRecords = m_mRecords[pEntity];
+	vReturn.reserve(vRecords.size());
 	for (auto& tRecord : vRecords)
 		vReturn.push_back(&tRecord);
 	return true;

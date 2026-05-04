@@ -56,7 +56,6 @@ public:
 
 	void ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const bool bInterp = true);
 	void DrawPickupTimers();
-	void DrawAntiAim(CTFPlayer* pLocal);
 	void DrawDebugInfo(CTFPlayer* pLocal);
 
 #ifdef DEBUG_TEXT

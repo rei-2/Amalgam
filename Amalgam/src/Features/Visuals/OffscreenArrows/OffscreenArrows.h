@@ -20,4 +20,4 @@ public:
 	void Draw(CTFPlayer* pLocal);
 };
 
-ADD_FEATURE(COffscreenArrows, Arrows);
+ADD_FEATURE(COffscreenArrows, OffscreenArrows);

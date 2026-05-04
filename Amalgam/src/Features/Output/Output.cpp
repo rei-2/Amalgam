@@ -7,7 +7,7 @@ static std::string s_sRed =		Color_t(255, 100, 100).ToHex();
 static std::string s_sGreen =		Color_t(100, 255, 100).ToHex();
 static std::string s_sYellow =	Color_t(200, 169, 0).ToHex();
 
-static inline void OutputInfo(int iFlags, const char* sName, const char* sOutput, const char* sChat)
+static inline void OutputInfo(int iFlags, const char* sName, const char* sOutput, const char* sColor)
 {
 	int iTo = (iFlags & Vars::Logging::LogToEnum::Console ? OUTPUT_CONSOLE : 0)
 			| (iFlags & Vars::Logging::LogToEnum::Debug ? OUTPUT_DEBUG : 0)
@@ -19,7 +19,7 @@ static inline void OutputInfo(int iFlags, const char* sName, const char* sOutput
 
 	iTo = (iFlags & Vars::Logging::LogToEnum::Chat ? OUTPUT_CHAT : 0);
 	if (iTo)
-		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sChat, Vars::Menu::Theme::Accent.Value, iTo, -1, "", "");
+		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sColor, Vars::Menu::Theme::Accent.Value, iTo, -1, "", "");
 }
 
 // Event info
@@ -127,15 +127,13 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 
 		try
 		{
-			sID.replace(0, 5, "");
-			sID.pop_back();
+			sID.replace(0, 5, ""); sID.pop_back();
 			uint32_t uAccountID = std::stoul(sID);
 			if (H::Entities.InParty(uAccountID)) // ignore party
 				return;
 
 			auto sName = pEvent->GetString("name");
-			TagsOnJoin(sName, uAccountID);
-			AliasOnJoin(sName, uAccountID);
+			InfoOnJoin(sName, uAccountID);
 		}
 		catch (...) {}
 
@@ -149,22 +147,8 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) != I::EngineClient->GetLocalPlayer())
 			return;
 
-		m_bInfoOnJoin = false;
-		auto pResource = H::Entities.GetResource();
-		if (!pResource)
-			return;
-
-		for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
-		{
-			if (!pResource->m_bValid(n) || pResource->IsFakePlayer(n) || n == I::EngineClient->GetLocalPlayer()
-				|| H::Entities.InParty(n)) // ignore party
-				continue;
-
-			auto sName = pResource->GetName(n);
-			uint32_t uAccountID = pResource->m_iAccountID(n);
-			TagsOnJoin(sName, uAccountID);
-			AliasOnJoin(sName, uAccountID);
-		}
+		if (AllInfoOnJoin())
+			m_bInfoOnJoin = false;
 	}
 	}
 }
@@ -186,9 +170,10 @@ void COutput::UserMessage(bf_read& msgData)
 	int iTeam = msgData.ReadByte();
 	/*int iVoteID =*/ msgData.ReadLong();
 	int iCaller = msgData.ReadByte();
-	char sReason[256]; msgData.ReadString(sReason, sizeof(sReason));
-	char sTarget[256]; msgData.ReadString(sTarget, sizeof(sTarget));
-	int iTarget = msgData.ReadByte() >> 1;
+	char sIssue[256]; msgData.ReadString(sIssue, sizeof(sIssue));
+	char sParam[256]; msgData.ReadString(sParam, sizeof(sParam));
+	/*bool bYesNo =*/ msgData.ReadOneBit();
+	int iTarget = msgData.ReadByte();
 	msgData.Seek(0);
 	if (!iCaller || !iTarget)
 		return;
@@ -196,10 +181,27 @@ void COutput::UserMessage(bf_read& msgData)
 	bool bSameTeam = iTeam == pLocal->m_iTeamNum();
 	auto sCallerName = F::PlayerUtils.GetPlayerName(iCaller, pResource->GetName(iCaller));
 	auto sTargetName = F::PlayerUtils.GetPlayerName(iTarget, pResource->GetName(iTarget));
+	auto sReason = "no reason";
+	switch (FNV1A::Hash32(sIssue))
+	{
+	case FNV1A::Hash32Const("#TF_vote_kick_player_cheating"): sReason = "cheating"; break;
+	case FNV1A::Hash32Const("#TF_vote_kick_player_idle"): sReason = "idle"; break;
+	case FNV1A::Hash32Const("#TF_vote_kick_player_scamming"): sReason = "scamming"; break;
+	}
 	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start",
-		std::format("{}{} called a vote on {}", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName)).c_str(),
-		std::format("{}{}{}\x1 called a vote on {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sCallerName), (s_sYellow), (sTargetName)).c_str()
+		std::format("{}{} called a vote on {} ({})", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName), (sReason)).c_str(),
+		std::format("{}{}{}\x1 called a vote on {}{}\x1 ({})", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sCallerName), (s_sYellow), (sTargetName), (sReason)).c_str()
 	);
+}
+
+// Move
+void COutput::Move()
+{
+	if (m_bInfoOnJoin && I::EngineClient->IsPlayingDemo() && I::EngineClient->IsConnected() && I::EngineClient->IsInGame())
+	{
+		if (AllInfoOnJoin())
+			m_bInfoOnJoin = false;
+	}
 }
 
 // Cheat detection
@@ -212,6 +214,35 @@ void COutput::CheatDetection(const char* sName, const char* sAction, const char*
 		std::format("{} {} for {}", (sName), (sAction), (sReason)).c_str(),
 		std::format("{}{}\x1 {} for {}{}", (s_sYellow), (sName), (sAction), (s_sYellow), (sReason)).c_str()
 	);
+}
+
+// Info
+bool COutput::AllInfoOnJoin()
+{
+	auto pResource = H::Entities.GetResource();
+	if (!pResource)
+		return false;
+
+	for (int n = 1; n <= I::EngineClient->GetMaxClients(); n++)
+	{
+		if (!pResource->m_bValid(n) || !pResource->m_bConnected(n) || pResource->IsFakePlayer(n) || n == I::EngineClient->GetLocalPlayer()
+			|| H::Entities.InParty(n)) // ignore party
+			continue;
+
+		auto sName = pResource->m_szName(n);
+		if (!sName)
+			return false;
+
+		uint32_t uAccountID = pResource->m_iAccountID(n);
+		InfoOnJoin(sName, uAccountID);
+	}
+
+	return true;
+}
+void COutput::InfoOnJoin(const char* sName, uint32_t uAccountID)
+{
+	TagsOnJoin(sName, uAccountID);
+	AliasOnJoin(sName, uAccountID);
 }
 
 // Tags

@@ -4,7 +4,6 @@
 #include "../Aimbot/AimbotProjectile/AimbotProjectile.h"
 #include "../Ticks/Ticks.h"
 #include "../Backtrack/Backtrack.h"
-#include "../PacketManip/AntiAim/AntiAim.h"
 #include "../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "CameraWindow/CameraWindow.h"
 #include "../Players/PlayerUtils.h"
@@ -264,32 +263,6 @@ void CVisuals::DrawPickupTimers()
 			H::Draw.StringOutlined(H::Fonts.GetFont(FONT_ESP), vScreen.x, vScreen.y, pGroup->m_tColor, Vars::Menu::Theme::Background.Value, ALIGN_CENTER, std::format("{:.1f}s", flTime).c_str());
 
 		it++;
-	}
-}
-
-void CVisuals::DrawAntiAim(CTFPlayer* pLocal)
-{
-	if (!pLocal->IsAlive() || pLocal->IsAGhost() || !I::Input->CAM_IsThirdPerson())
-		return;
-
-	if (F::AntiAim.AntiAimOn() && Vars::Debug::AntiAimLines.Value)
-	{
-		const auto& vOrigin = pLocal->GetAbsOrigin();
-
-		Vec3 vScreen1, vScreen2;
-		if (SDK::W2S(vOrigin, vScreen1))
-		{
-			if (SDK::W2S(vOrigin + Math::RotatePoint({ 50, 0, 0 }, {}, { 0, F::AntiAim.vRealAngles.y, 0 }), vScreen2))
-				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 0, 255, 0, 255 });
-			if (SDK::W2S(vOrigin + Math::RotatePoint({ 50, 0, 0 }, {}, { 0, F::AntiAim.vFakeAngles.y, 0 }), vScreen2))
-				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 255, 0, 0, 255 });
-		}
-
-		for (auto& vPair : F::AntiAim.vEdgeTrace)
-		{
-			if (SDK::W2S(vPair.first, vScreen1) && SDK::W2S(vPair.second, vScreen2))
-				H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, { 255, 255, 255, 255 });
-		}
 	}
 }
 

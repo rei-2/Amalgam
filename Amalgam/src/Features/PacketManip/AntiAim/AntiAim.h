@@ -17,6 +17,7 @@ public:
 	bool YawOn();
 	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket);
+	void Draw(CTFPlayer* pLocal);
 
 	inline int AntiAimTicks() { return 2; }
 

@@ -14,7 +14,7 @@ MAKE_HOOK(CL_ProcessPacketEntities, S::CL_ProcessPacketEntities(), bool,
 {
 	DEBUG_RETURN(CL_ProcessPacketEntities, entmsg);
 
-	if (entmsg->m_bIsDelta) // we won't need to restore
+	if (entmsg->m_bIsDelta || I::EngineClient->IsPlayingDemo()) // we won't need to restore
 		return CALL_ORIGINAL(entmsg);
 
 	auto pLocal = H::Entities.GetLocal();

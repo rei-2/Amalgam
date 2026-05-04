@@ -1,5 +1,9 @@
 #include "../SDK/SDK.h"
 
+#include "../Features/Visuals/Notifications/Notifications.h"
+#include "../Features/Visuals/ESP/ESP.h"
+#include "../Features/Visuals/OffscreenArrows/OffscreenArrows.h"
+#include "../Features/Visuals/CameraWindow/CameraWindow.h"
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Ticks/Ticks.h"
 #include "../Features/CritHack/CritHack.h"
@@ -8,10 +12,7 @@
 #include "../Features/Visuals/PlayerConditions/PlayerConditions.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
 #include "../Features/Aimbot/Aimbot.h"
-#include "../Features/Visuals/ESP/ESP.h"
-#include "../Features/Visuals/OffscreenArrows/OffscreenArrows.h"
-#include "../Features/Visuals/CameraWindow/CameraWindow.h"
-#include "../Features/Visuals/Notifications/Notifications.h"
+#include "../Features/PacketManip/AntiAim/AntiAim.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
@@ -31,11 +32,11 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 		if (auto pLocal = H::Entities.GetLocal())
 		{
 			F::CameraWindow.Draw();
-			F::Visuals.DrawAntiAim(pLocal);
 
+			F::AntiAim.Draw(pLocal);
 			F::Visuals.DrawPickupTimers();
 			F::ESP.Draw();
-			F::Arrows.Draw(pLocal);
+			F::OffscreenArrows.Draw(pLocal);
 			F::Aimbot.Draw(pLocal);
 
 #ifdef DEBUG_VACCINATOR

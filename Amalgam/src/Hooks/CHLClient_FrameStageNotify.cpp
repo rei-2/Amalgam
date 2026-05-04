@@ -50,7 +50,7 @@ MAKE_HOOK(CHLClient_FrameStageNotify, U::Memory.GetVirtual(I::Client, 35), void,
 		F::ESP.Store(pLocal);
 		F::Chams.Store(pLocal);
 		F::Glow.Store(pLocal);
-		F::Arrows.Store();
+		F::OffscreenArrows.Store();
 		F::Visuals.Store();
 
 		F::CheaterDetection.Run();

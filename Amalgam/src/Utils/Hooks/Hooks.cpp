@@ -2,6 +2,7 @@
 
 #include "../../Core/Core.h"
 #include "../../Hooks/Direct3DDevice9.h"
+#include <ranges>
 
 CHook::CHook(const std::string& sName, void* pInitFunc)
 {
@@ -14,7 +15,7 @@ bool CHooks::Initialize()
 	MH_Initialize();
 
 	WndProc::Initialize();
-	for (auto& [_, pHook] : m_mHooks)
+	for (auto& pHook : m_mHooks | std::views::values)
 		reinterpret_cast<void(__cdecl*)()>(pHook->m_pInitFunc)();
 
 	m_bFailed = MH_EnableHook(MH_ALL_HOOKS) != MH_OK;

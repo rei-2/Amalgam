@@ -8,6 +8,7 @@
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/Misc/Misc.h"
 #include "../Features/Visuals/Visuals.h"
+#include "../Features/Output/Output.h"
 
 MAKE_SIGNATURE(CL_Move, "engine.dll", "40 55 53 48 8D AC 24 ? ? ? ? B8 ? ? ? ? E8 ? ? ? ? 48 2B E0 83 3D", 0x0);
 
@@ -34,4 +35,5 @@ MAKE_HOOK(CL_Move, S::CL_Move(), void,
 	F::PlayerCore.Run();
 	F::AutoQueue.Run();
 	F::Visuals.Tick();
+	F::Output.Move();
 }
