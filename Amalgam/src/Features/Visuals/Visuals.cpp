@@ -532,7 +532,7 @@ void CVisuals::DrawEffects()
 
 		H::Draw.RenderTriangle(tTriangle.m_aOrigin[0], tTriangle.m_aOrigin[1], tTriangle.m_aOrigin[2], tTriangle.m_tColor, tTriangle.m_bZBuffer);
 	}
-	if (auto& tPath = F::Aimbot.m_tPath; tPath.m_flTime)
+	for (auto& [tPath, _] :F::Aimbot.m_mRealPaths | std::views::values)
 	{
 		H::Draw.RenderPath(tPath.m_vPath, Vars::Colors::RealPath.Value, true, tPath.m_iStyle, tPath.m_flTime);
 		H::Draw.RenderPath(tPath.m_vPath, Vars::Colors::RealPathIgnoreZ.Value, false, tPath.m_iStyle, tPath.m_flTime);

@@ -69,8 +69,6 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 			}
 		}
 	}
-	if (!pLastRecord)
-		return;
 
 	if (pPlayer->InCond(TF_COND_SHIELD_CHARGE))
 	{
@@ -94,7 +92,7 @@ static inline void HandleMovement(CTFPlayer* pPlayer, MoveData* pLastRecord, Mov
 	case MoveEnum::Air:
 		if (!bLocal)
 			break;
-		else if (Vars::Misc::Movement::AutoStrafe.Value || tCurRecord.m_vDirection.To2D().IsZero() || tCurRecord.m_vVelocity.To2D() == pLastRecord->m_vVelocity.To2D())
+		else if (Vars::Misc::Movement::AutoStrafe.Value || tCurRecord.m_vDirection.To2D().IsZero() || pLastRecord && tCurRecord.m_vVelocity.To2D() == pLastRecord->m_vVelocity.To2D())
 			tCurRecord.m_vDirection = tCurRecord.m_vVelocity.Normalized2D() * 520.f, tCurRecord.m_bInputDirection = false;
 		break;
 	case MoveEnum::Swim:
@@ -189,7 +187,7 @@ void CMovementSimulation::StorePlayer(CTFPlayer* pPlayer, CMoveData& tMoveData, 
 
 
 
-bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tMoveStorage, bool bHitchance, bool bStrafe)
+bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tMoveStorage, bool bHitchance, bool bStrafe, bool bPredict)
 {
 	if (!pEntity || !pEntity->IsPlayer() || !pEntity->As<CTFPlayer>()->IsAlive())
 	{
@@ -249,8 +247,11 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tMoveSto
 	}
 
 	tMoveStorage.m_vPath = { tMoveStorage.m_MoveData.m_vecAbsOrigin };
-	for (int i = 0; i < H::Entities.GetChoke(pPlayer->entindex()); i++)
-		RunTick(tMoveStorage);
+	if (bPredict)
+	{
+		for (int i = 0; i < H::Entities.GetChoke(pPlayer->entindex()); i++)
+			RunTick(tMoveStorage);
+	}
 
 	return true;
 }
@@ -641,6 +642,21 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 	I::GlobalVars->frametime = I::Prediction->m_bEnginePaused ? 0.f : TICK_INTERVAL;
 	SetBounds(tMoveStorage.m_pPlayer);
 
+	if (tMoveStorage.m_pPlayer->InCond(TF_COND_SHIELD_CHARGE))
+	{
+		static auto tf_demoman_charge_drain_time = H::ConVars.FindVar("tf_demoman_charge_drain_time");
+
+		float flDrainTime = SDK::AttribHookValue(tf_demoman_charge_drain_time->GetFloat(), "mod_charge_time", tMoveStorage.m_pPlayer);
+		tMoveStorage.m_pPlayer->m_flChargeMeter() -= TICK_INTERVAL * 100.f / flDrainTime;
+
+		if (tMoveStorage.m_pPlayer->m_flChargeMeter() <= 0.f)
+		{
+			tMoveStorage.m_pPlayer->RemoveCond(TF_COND_SHIELD_CHARGE);
+			tMoveStorage.m_MoveData.m_flMaxSpeed = tMoveStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(tMoveStorage.m_pPlayer);
+			tMoveStorage.m_pPlayer->m_flMaxspeed() = tMoveStorage.m_MoveData.m_flMaxSpeed;
+		}
+	}
+
 	float flCorrection = 0.f;
 	if (tMoveStorage.m_flAverageYaw)
 	{
@@ -670,8 +686,8 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 
 	tMoveStorage.m_MoveData.m_flClientMaxSpeed = flOldSpeed;
 
-	tMoveStorage.m_flSimTime += TICK_INTERVAL;
-	tMoveStorage.m_bPredictNetworked = tMoveStorage.m_flSimTime >= tMoveStorage.m_flPredictedSimTime;
+	tMoveStorage.m_flSimTime = ROUND_TO_TICKS(tMoveStorage.m_flSimTime + TICK_INTERVAL);
+	tMoveStorage.m_bPredictNetworked = TIME_TO_TICKS(tMoveStorage.m_flSimTime) >= TIME_TO_TICKS(tMoveStorage.m_flPredictedSimTime);
 	if (tMoveStorage.m_bPredictNetworked)
 	{
 		tMoveStorage.m_vPredictedOrigin = tMoveStorage.m_MoveData.m_vecAbsOrigin;

@@ -200,9 +200,6 @@ NAMESPACE_BEGIN(Vars)
 	NAMESPACE_END(Menu)
 
 	NAMESPACE_BEGIN(Colors)
-		CVar(FOVCircle, "FOV circle color", Color_t(255, 255, 255, 100), VISUAL);
-		CVar(Local, "Local color", Color_t(255, 255, 255, 0), VISUAL);
-
 		CVar(IndicatorGood, "Indicator good", Color_t(0, 255, 100, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorMid, "Indicator mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorBad, "Indicator bad", Color_t(255, 0, 0, 255), NOSAVE | DEBUGVAR);
@@ -212,6 +209,10 @@ NAMESPACE_BEGIN(Vars)
 		CVar(IndicatorTextBad, "Indicator text bad", Color_t(255, 150, 150, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextMisc, "Indicator text misc", Color_t(100, 255, 255, 255), NOSAVE | DEBUGVAR);
 
+		CVar(Local, "Local color", Color_t(255, 255, 255), VISUAL);
+		CVar(FOVCircle, "FOV circle color", Color_t(255, 255, 255, 100), VISUAL);
+		CVar(SpellFootstep, "Spell footstep color", Color_t(255, 255, 255, 255), VISUAL);
+
 		CVar(WorldModulation, VA_LIST("World modulation", "World modulation color"), Color_t(255, 255, 255, 255), VISUAL);
 		CVar(SkyModulation, VA_LIST("Sky modulation", "Sky modulation color"), Color_t(255, 255, 255, 255), VISUAL);
 		CVar(PropModulation, VA_LIST("Prop modulation", "Prop modulation color"), Color_t(255, 255, 255, 255), VISUAL);
@@ -220,19 +221,6 @@ NAMESPACE_BEGIN(Vars)
 
 		CVar(Line, "Line color", Color_t(255, 255, 255, 255), VISUAL);
 		CVar(LineIgnoreZ, "Line ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
-
-		CVar(PlayerPath, "Player path color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(PlayerPathIgnoreZ, "Player path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(ProjectilePath, "Projectile path color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(ProjectilePathIgnoreZ, "Projectile path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(TrajectoryPath, "Trajectory path color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(TrajectoryPathIgnoreZ, "Trajectory path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(ShotPath, "Shot path color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(ShotPathIgnoreZ, "Shot path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(SplashRadius, "Splash radius color", Color_t(255, 255, 255, 0), VISUAL);
-		CVar(SplashRadiusIgnoreZ, "Splash radius ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
-		CVar(RealPath, "Real path color", Color_t(255, 255, 255, 0), NOSAVE | DEBUGVAR);
-		CVar(RealPathIgnoreZ, "Real path ignore Z color", Color_t(255, 255, 255, 255), NOSAVE | DEBUGVAR);
 
 		CVar(BoneHitboxEdge, "Bone hitbox edge color", Color_t(255, 255, 255, 255), VISUAL);
 		CVar(BoneHitboxEdgeIgnoreZ, "Bone hitbox edge ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
@@ -247,7 +235,18 @@ NAMESPACE_BEGIN(Vars)
 		CVar(BoundHitboxFace, "Bound hitbox face color", Color_t(255, 255, 255, 0), VISUAL);
 		CVar(BoundHitboxFaceIgnoreZ, "Bound hitbox face ignore Z color", Color_t(255, 255, 255, 0), VISUAL);
 
-		CVar(SpellFootstep, "Spell footstep color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(PlayerPath, "Player path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(PlayerPathIgnoreZ, "Player path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(ProjectilePath, "Projectile path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(ProjectilePathIgnoreZ, "Projectile path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(TrajectoryPath, "Trajectory path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(TrajectoryPathIgnoreZ, "Trajectory path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(ShotPath, "Shot path color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(ShotPathIgnoreZ, "Shot path ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(SplashRadius, "Splash radius color", Color_t(255, 255, 255, 0), VISUAL);
+		CVar(SplashRadiusIgnoreZ, "Splash radius ignore Z color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(RealPath, "Real path color", Color_t(255, 255, 255, 0), NOSAVE | DEBUGVAR);
+		CVar(RealPathIgnoreZ, "Real path ignore Z color", Color_t(255, 255, 255, 255), NOSAVE | DEBUGVAR);
 	NAMESPACE_END(Colors)
 
 	NAMESPACE_BEGIN(Aimbot)

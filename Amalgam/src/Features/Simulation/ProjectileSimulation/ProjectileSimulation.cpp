@@ -127,7 +127,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 		SDK::GetProjectileFireSetup(pPlayer, vAngles, { 16.f, 8.f, -6.f }, vPos, vAngle, 0.f, 0.f, bInterp);
 		
 		auto uType = bCannon ? FNV1A::Hash32Const("models/weapons/w_models/w_cannonball.mdl") : FNV1A::Hash32Const("models/weapons/w_models/w_grenade_grenadelauncher.mdl");
-		Vec3 vHull = pWeapon->GetWeaponID() == TF_WEAPON_CANNON ? Vec3(6.f, 6.f, 6.f) : !SDK::AttribHookValue(0, "grenade_no_spin", pWeapon) ? Vec3(5.f, 5.f, 5.f) : Vec3(3.f, 3.f, 3.f);
+		Vec3 vHull = pWeapon->GetWeaponID() == TF_WEAPON_CANNON ? Vec3(6.f, 6.f, 6.f) : !SDK::AttribHookValue(0, "grenade_no_spin", pWeapon) ? Vec3(5.f, 5.f, 5.f) : Vec3(4.f, 4.f, 4.f);
 		float flSpeed = SDK::AttribHookValue(pPlayer->InCond(TF_COND_RUNE_PRECISION) ? 3000.f : SDK::AttribHookValue(1200.f, "mult_projectile_speed", pWeapon), "mult_projectile_range", pWeapon);
 		float flLifeTime = flMortar
 			? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() > 0.f ? pWeapon->As<CTFGrenadeLauncher>()->m_flDetonateTime() - I::GlobalVars->curtime : flMortar

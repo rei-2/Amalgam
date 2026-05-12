@@ -2984,14 +2984,18 @@ void CMenu::MenuSettings(int iTab)
 					{	// don't indent too much
 						auto sText = std::format("-> {}", x);
 						SetCursorPos(vOriginalPos + ImVec2(-FCalcTextSize(sText.c_str()).x - H::Draw.Scale(10), H::Draw.Scale(7)));
+						PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
 						FText(sText.c_str());
+						PopStyleColor();
 					}
 
 					float flTextWidth = flWidth - H::Draw.Scale(127);
 					PushTransparent(!F::Binds.WillBeEnabled(_iBind), true);
 
 					SetCursorPos(vOriginalPos + ImVec2(H::Draw.Scale(9), H::Draw.Scale(7)));
+					PushStyleColor(ImGuiCol_Text, _tBind.m_bActive ? F::Render.Accent.Value : F::Render.Active.Value);
 					FText(TruncateText(_tBind.m_sName, flTextWidth * (1.f / 3) - H::Draw.Scale(20)).c_str());
+					PopStyleColor();
 
 					SetCursorPos(vOriginalPos + ImVec2(flTextWidth * (1.f / 3), H::Draw.Scale(7)));
 					FText(sType.c_str());

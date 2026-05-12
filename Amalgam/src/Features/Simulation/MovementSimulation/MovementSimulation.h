@@ -63,7 +63,7 @@ public:
 	void Store();
 	void StorePlayer(CTFPlayer* pPlayer, CMoveData& tMoveData, float flTime);
 
-	bool Initialize(CBaseEntity* pEntity, MoveStorage& tMoveStorage, bool bHitchance = true, bool bStrafe = true);
+	bool Initialize(CBaseEntity* pEntity, MoveStorage& tMoveStorage, bool bHitchance = true, bool bStrafe = true, bool bPredict = true);
 	bool SetDuck(MoveStorage& tMoveStorage, bool bDuck);
 	void RunTick(MoveStorage& tMoveStorage, bool bPath = true, RunTickCallback* pCallback = nullptr);
 	void RunTick(MoveStorage& tMoveStorage, bool bPath, RunTickCallback fCallback);
