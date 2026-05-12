@@ -157,18 +157,15 @@ MAKE_HOOK(CHLClient_CreateMove, U::Memory.GetVirtual(I::Client, 21), void,
 	F::Ticks.End(pLocal, pCmd);
 		F::CritHack.Run(pLocal, pWeapon, pCmd);
 		F::NoSpread.Run(pLocal, pWeapon, pCmd);
-		F::Resolver.CreateMove();
 		F::Misc.RunPost(pLocal, pCmd);
 		F::PacketManip.Run(pLocal, pWeapon, pCmd, pSendPacket);
-		F::Visuals.CreateMove(pLocal, pWeapon);
 		F::Ticks.CreateMove(pLocal, pWeapon, pCmd, pSendPacket);
 		F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
-		F::NoSpreadHitscan.AskForPlayerPerf();
+		F::AntiCheatCompatibility.CreateMove(pCmd, pSendPacket);
 	F::EnginePrediction.End(pLocal, pCmd);
-
-	F::AntiCheatCompatibility.CreateMove(pCmd, pSendPacket);
-	F::Visuals.LocalAnimations(pLocal, pCmd, *pSendPacket);
-
-	G::Choking = !*pSendPacket;
-	G::LastUserCmd = pCmd;
+		F::Visuals.CreateMove(pLocal, pWeapon);
+		F::Visuals.LocalAnimations(pLocal, pCmd, *pSendPacket);
+		F::Resolver.CreateMove();
+		F::NoSpreadHitscan.AskForPlayerPerf();
+	G::Choking = !*pSendPacket, G::LastUserCmd = pCmd;
 }
