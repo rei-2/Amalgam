@@ -4,6 +4,7 @@
 #include "../../Players/PlayerUtils.h"
 #include "../../Misc/Misc.h"
 #include "../../Aimbot/AutoRocketJump/AutoRocketJump.h"
+#include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 bool CAntiAim::AntiAimOn()
 {
@@ -240,7 +241,7 @@ void CAntiAim::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bo
 	vAngles.x = iAntiBackstab != 2 ? GetPitch(pCmd->viewangles.x) : pCmd->viewangles.x;
 	vAngles.y = !iAntiBackstab ? GetYaw(pLocal, pCmd, bSendPacket) : pCmd->viewangles.y;
 
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (F::AntiCheatCompatibility.Active())
 		Math::ClampAngles(vAngles);
 	SDK::FixMovement(pCmd, vAngles);
 	pCmd->viewangles.x = vAngles.x;

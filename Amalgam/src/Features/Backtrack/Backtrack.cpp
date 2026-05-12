@@ -2,6 +2,7 @@
 
 #include "../PacketManip/FakeLag/FakeLag.h"
 #include "../Ticks/Ticks.h"
+#include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 void CBacktrack::Reset()
 {
@@ -30,7 +31,7 @@ float CBacktrack::GetWishFake()
 
 float CBacktrack::GetWishLerp()
 {
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (F::AntiCheatCompatibility.Active())
 		return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, 0.1f);
 
 	return std::clamp(Vars::Backtrack::Interp.Value / 1000.f, G::Lerp, m_flMaxUnlag);
@@ -43,7 +44,7 @@ float CBacktrack::GetFakeLatency()
 
 float CBacktrack::GetFakeInterp()
 {
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (F::AntiCheatCompatibility.Active())
 		return std::min(m_flFakeInterp, 0.1f);
 
 	return m_flFakeInterp;
@@ -66,7 +67,7 @@ int CBacktrack::GetAnticipatedChoke(int iMethod)
 
 void CBacktrack::CreateMove(CUserCmd* pCmd)
 {
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (F::AntiCheatCompatibility.Active())
 		return;
 
 	// correct tick_count for fakeinterp / nointerp
@@ -152,7 +153,7 @@ std::vector<TickRecord*> CBacktrack::GetValidRecords(std::vector<TickRecord*>& v
 	float flCorrect = std::clamp(GetReal(MAX_FLOWS, false) + ROUND_TO_TICKS(GetFakeInterp()), 0.f, m_flMaxUnlag) + flTimeMod;
 	int iServerTick = m_iTickCount + TIME_TO_TICKS(GetReal(FLOW_OUTGOING)) + GetAnticipatedChoke() + Vars::Backtrack::Offset.Value;
 
-	if (!Vars::Misc::Game::AntiCheatCompatibility.Value && GetWindow())
+	if (!F::AntiCheatCompatibility.Active() && GetWindow())
 	{
 		for (auto pRecord : vRecords)
 		{
@@ -197,7 +198,7 @@ std::vector<TickRecord*> CBacktrack::GetValidRecords(std::vector<TickRecord*>& v
 				float flBDelta = flCorrect - TICKS_TO_TIME(iServerTick - TIME_TO_TICKS(b->m_flSimTime));
 				return fabsf(flADelta) < fabsf(flBDelta);
 			});
-		}
+	}
 
 	return vReturn;
 }

@@ -205,6 +205,8 @@
     <ClCompile Include="include\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="include\ImGui\TextEditor.cpp" />
     <ClCompile Include="src\Hooks\CTFPlayerShared_IsCritBoosted.cpp" />
+    <ClCompile Include="src\Hooks\CEngineClient_GetScreenAspectRatio.cpp" />
+    <ClCompile Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -620,6 +622,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlBlockMemory.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlLinkedList.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlShared.h" />
+    <ClInclude Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

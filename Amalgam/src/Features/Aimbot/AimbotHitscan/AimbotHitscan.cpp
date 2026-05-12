@@ -6,6 +6,7 @@
 #include "../../NoSpread/NoSpread.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 #include "../../Visuals/Visuals.h"
+#include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
@@ -616,7 +617,7 @@ bool CAimbotHitscan::Aim(const Vec3& vCurAngle, Vec3 vToAngle, Vec3& vOut, int i
 		break;
 	}
 
-	//if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || Vars::Misc::Game::AntiCheatCompatibility.Value)
+	//if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || F::AntiCheatCompatibility.Active())
 		Math::ClampAngles(vOut);
 	return bReturn;
 }

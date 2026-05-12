@@ -13,22 +13,9 @@
 #include "../Features/Visuals/Visuals.h"
 #include "../Features/Visuals/FakeAngle/FakeAngle.h"
 #include "../Features/Spectate/Spectate.h"
-
-#define MATH_EPSILON (1.f / 16)
-#define PSILENT_EPSILON (1.f - MATH_EPSILON)
-#define REAL_EPSILON (0.1f + MATH_EPSILON)
-#define SNAP_SIZE_EPSILON (10.f - MATH_EPSILON)
-#define SNAP_NOISE_EPSILON (0.5f + MATH_EPSILON)
+#include "../Features/AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
-
-struct CmdHistory_t
-{
-	Vec3 m_vAngle;
-	bool m_bAttack1;
-	bool m_bAttack2;
-	bool m_bSendingPacket;
-};
 
 static inline void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
@@ -144,90 +131,6 @@ static inline void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	G::CanHeadshot = pWeapon->CanHeadshot() || pWeapon->AmbassadorCanHeadshot(TICKS_TO_TIME(pLocal->m_nTickBase()));
 }
 
-static inline void LocalAnimations(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
-{
-	static std::vector<Vec3> vAngles = {};
-	vAngles.push_back(pCmd->viewangles);
-	auto pAnimState = pLocal->m_PlayerAnimState();
-	if (bSendPacket && pAnimState)
-	{
-		float flOldFrametime = I::GlobalVars->frametime;
-		float flOldCurtime = I::GlobalVars->curtime;
-		I::GlobalVars->frametime = TICK_INTERVAL;
-		I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
-		for (auto& vAngle : vAngles)
-		{
-			if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
-				pLocal->m_flTauntYaw() = vAngle.y;
-			pAnimState->Update(pAnimState->m_flEyeYaw = vAngle.y, vAngle.x);
-			pLocal->FrameAdvance(TICK_INTERVAL);
-		}
-		I::GlobalVars->frametime = flOldFrametime;
-		I::GlobalVars->curtime = flOldCurtime;
-		vAngles.clear();
-
-		F::FakeAngle.Run(pLocal);
-	}
-}
-
-static inline void AntiCheatCompatibility(CUserCmd* pCmd, bool* pSendPacket)
-{
-	if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
-		return;
-
-	Math::ClampAngles(pCmd->viewangles); // shouldn't happen, but failsafe
-
-	static std::deque<CmdHistory_t> vHistory;
-	vHistory.emplace_front(pCmd->viewangles, pCmd->buttons & IN_ATTACK, pCmd->buttons & IN_ATTACK2, *pSendPacket);
-	if (vHistory.size() > 5)
-		vHistory.pop_back();
-
-	if (vHistory.size() < 3)
-		return;
-
-	// prevent trigger checks, though this shouldn't happen ordinarily
-	if (!vHistory[0].m_bAttack1 && vHistory[1].m_bAttack1 && !vHistory[2].m_bAttack1)
-		pCmd->buttons |= IN_ATTACK;
-	if (!vHistory[0].m_bAttack2 && vHistory[1].m_bAttack2 && !vHistory[2].m_bAttack2)
-		pCmd->buttons |= IN_ATTACK2;
-
-	// don't care if we are actually attacking or not, a miss is less important than a detection
-	if (vHistory[0].m_bAttack1 || vHistory[1].m_bAttack1 || vHistory[2].m_bAttack1)
-	{
-		// prevent silent aim checks
-		if (Math::CalcFov(vHistory[0].m_vAngle, vHistory[1].m_vAngle) > PSILENT_EPSILON
-			&& Math::CalcFov(vHistory[0].m_vAngle, vHistory[2].m_vAngle) < REAL_EPSILON)
-		{
-			pCmd->viewangles = vHistory[1].m_vAngle.LerpAngle(vHistory[0].m_vAngle, 0.5f);
-			if (Math::CalcFov(pCmd->viewangles, vHistory[2].m_vAngle) < REAL_EPSILON)
-				pCmd->viewangles = vHistory[0].m_vAngle + Vec3(0.f, REAL_EPSILON * 2);
-			vHistory[0].m_vAngle = pCmd->viewangles;
-			vHistory[0].m_bSendingPacket = *pSendPacket = vHistory[1].m_bSendingPacket;
-		}
-
-		// prevent aim snap checks
-		if (vHistory.size() == 5)
-		{
-			float flDelta01 = Math::CalcFov(vHistory[0].m_vAngle, vHistory[1].m_vAngle);
-			float flDelta12 = Math::CalcFov(vHistory[1].m_vAngle, vHistory[2].m_vAngle);
-			float flDelta23 = Math::CalcFov(vHistory[2].m_vAngle, vHistory[3].m_vAngle);
-			float flDelta34 = Math::CalcFov(vHistory[3].m_vAngle, vHistory[4].m_vAngle);
-
-			if ((
-				flDelta12 > SNAP_SIZE_EPSILON && flDelta23 < SNAP_NOISE_EPSILON && vHistory[2].m_vAngle != vHistory[3].m_vAngle
-				|| flDelta23 > SNAP_SIZE_EPSILON && flDelta12 < SNAP_NOISE_EPSILON && vHistory[1].m_vAngle != vHistory[2].m_vAngle
-				)
-				&& flDelta01 < SNAP_NOISE_EPSILON && vHistory[0].m_vAngle != vHistory[1].m_vAngle
-				&& flDelta34 < SNAP_NOISE_EPSILON && vHistory[3].m_vAngle != vHistory[4].m_vAngle)
-			{
-				pCmd->viewangles.y += SNAP_NOISE_EPSILON * 2;
-				vHistory[0].m_vAngle = pCmd->viewangles;
-				vHistory[0].m_bSendingPacket = *pSendPacket = vHistory[1].m_bSendingPacket;
-			}
-		}
-	}
-}
-
 MAKE_HOOK(CHLClient_CreateMove, U::Memory.GetVirtual(I::Client, 21), void,
 	void* rcx, int sequence_number, float input_sample_frametime, bool active)
 {
@@ -263,8 +166,8 @@ MAKE_HOOK(CHLClient_CreateMove, U::Memory.GetVirtual(I::Client, 21), void,
 		F::NoSpreadHitscan.AskForPlayerPerf();
 	F::EnginePrediction.End(pLocal, pCmd);
 
-	AntiCheatCompatibility(pCmd, pSendPacket);
-	LocalAnimations(pLocal, pCmd, *pSendPacket);
+	F::AntiCheatCompatibility.CreateMove(pCmd, pSendPacket);
+	F::Visuals.LocalAnimations(pLocal, pCmd, *pSendPacket);
 
 	G::Choking = !*pSendPacket;
 	G::LastUserCmd = pCmd;

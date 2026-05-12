@@ -5,6 +5,7 @@
 #include "../../EnginePrediction/EnginePrediction.h"
 #include "../../Ticks/Ticks.h"
 #include "../../Visuals/Visuals.h"
+#include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 static inline bool AimFriendlyBuilding(CBaseObject* pBuilding)
 {
@@ -463,7 +464,7 @@ bool CAimbotMelee::Aim(const Vec3& vCurAngle, const Vec3& vToAngle, Vec3& vOut, 
 		break;
 	}
 
-	if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || F::AntiCheatCompatibility.Active())
 		Math::ClampAngles(vOut);
 	return bReturn;
 }

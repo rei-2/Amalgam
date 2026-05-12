@@ -5,6 +5,7 @@
 #include "../../EnginePrediction/EnginePrediction.h"
 #include "../../World/World.h"
 #include "../AutoAirblast/AutoAirblast.h"
+#include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
 #include <numeric>
 
 //#define SPLASH_DEBUG1 // trace splash visualization
@@ -1759,7 +1760,7 @@ bool CAimbotProjectile::Aim(const Vec3& vCurAngle, const Vec3& vToAngle, Vec3& v
 		break;
 	}
 
-	if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (iMethod != Vars::Aimbot::General::AimTypeEnum::Silent || F::AntiCheatCompatibility.Active())
 		Math::ClampAngles(vOut);
 	return bReturn;
 }

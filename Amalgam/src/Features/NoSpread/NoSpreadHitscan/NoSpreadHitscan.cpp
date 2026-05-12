@@ -1,6 +1,7 @@
 #include "NoSpreadHitscan.h"
 
 #include "../../Ticks/Ticks.h"
+#include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
 #include <regex>
 #include <numeric>
 
@@ -24,6 +25,9 @@ bool CNoSpreadHitscan::ShouldRun(CTFWeaponBase* pWeapon)
 	if (pWeapon
 		? G::PrimaryWeaponType != EWeaponType::HITSCAN || pWeapon->GetWeaponSpread() <= 0.f
 		: !Vars::Aimbot::General::NoSpread.Value || !I::EngineClient->IsInGame())
+		return false;
+
+	if (F::AntiCheatCompatibility.Active())
 		return false;
 
 	return true;

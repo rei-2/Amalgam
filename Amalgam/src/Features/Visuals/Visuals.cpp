@@ -9,6 +9,7 @@
 #include "../Spectate/Spectate.h"
 #include "../CritHack/CritHack.h"
 #include "../Ticks/Ticks.h"
+#include "FakeAngle/FakeAngle.h"
 #include "../World/World.h"
 
 MAKE_SIGNATURE(UTIL_PlayerByIndex, "server.dll", "48 83 EC ? 8B D1 85 C9 7E ? 48 8B 05", 0x0);
@@ -1189,12 +1190,6 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 	if (Vars::Visuals::Effects::SpellFootsteps.Value && (F::Ticks.m_bDoubletap || F::Ticks.m_bWarp))
 		pLocal->FireEvent(pLocal->GetAbsOrigin(), QAngle(), 7001, nullptr);
 
-	static auto r_aspectratio = H::ConVars.FindVar("r_aspectratio");
-	static float flOldRatio = 0.f;
-	float flNewRatio = Vars::Visuals::UI::AspectRatio.Value;
-	if (flNewRatio != flOldRatio)
-		r_aspectratio->SetValue(flOldRatio = flNewRatio);
-
 	DrawHitboxes(2);
 
 #ifdef WORLD_DEBUG
@@ -1242,4 +1237,30 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 		}
 	}
 #endif
+}
+
+void CVisuals::LocalAnimations(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
+{
+	m_vAngles.push_back(pCmd->viewangles);
+
+	auto pAnimState = pLocal->m_PlayerAnimState();
+	if (!bSendPacket || !pAnimState)
+		return;
+
+	float flOldFrametime = I::GlobalVars->frametime;
+	float flOldCurtime = I::GlobalVars->curtime;
+	I::GlobalVars->frametime = TICK_INTERVAL;
+	I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
+	for (auto& vAngle : m_vAngles)
+	{
+		if (pLocal->IsTaunting() && pLocal->m_bAllowMoveDuringTaunt())
+			pLocal->m_flTauntYaw() = vAngle.y;
+		pAnimState->Update(pAnimState->m_flEyeYaw = vAngle.y, vAngle.x);
+		pLocal->FrameAdvance(TICK_INTERVAL);
+	}
+	I::GlobalVars->frametime = flOldFrametime;
+	I::GlobalVars->curtime = flOldCurtime;
+	m_vAngles.clear();
+
+	F::FakeAngle.Run(pLocal);
 }

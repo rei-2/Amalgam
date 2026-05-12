@@ -4,6 +4,7 @@
 #include "../EnginePrediction/EnginePrediction.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 #include "../Backtrack/Backtrack.h"
+#include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 void CTicks::Reset()
 {
@@ -239,7 +240,7 @@ void CTicks::MoveManage()
 
 	static auto sv_maxusrcmdprocessticks = H::ConVars.FindVar("sv_maxusrcmdprocessticks");
 	m_iMaxUsrCmdProcessTicks = sv_maxusrcmdprocessticks->GetInt();
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (F::AntiCheatCompatibility.Active())
 		m_iMaxUsrCmdProcessTicks = std::min(m_iMaxUsrCmdProcessTicks, 8);
 	m_iMaxShift = m_iMaxUsrCmdProcessTicks - std::max(m_iMaxUsrCmdProcessTicks - Vars::Doubletap::RechargeLimit.Value, 0) - (F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0);
 	m_iMaxShift = std::max(m_iMaxShift, 1);

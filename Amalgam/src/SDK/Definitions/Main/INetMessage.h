@@ -276,7 +276,7 @@ public:
 
 	int	m_eStatusCode;
 
-private:
+public:
 	char m_szCvarNameBuffer[256];
 	char m_szCvarValueBuffer[256];
 };

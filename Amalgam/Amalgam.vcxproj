@@ -913,6 +913,7 @@
     <ClCompile Include="src\Features\Aimbot\AutoDetonate\AutoDetonate.cpp" />
     <ClCompile Include="src\Features\Aimbot\AutoRocketJump\AutoRocketJump.cpp" />
     <ClCompile Include="src\Features\Aimbot\AutoHeal\AutoHeal.cpp" />
+    <ClCompile Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.cpp" />
     <ClCompile Include="src\Features\Output\Output.cpp" />
     <ClCompile Include="src\Features\Misc\AutoQueue\AutoQueue.cpp" />
     <ClCompile Include="src\Features\Backtrack\Backtrack.cpp" />
@@ -964,6 +965,7 @@
     <ClCompile Include="src\Hooks\CBaseViewModel_Interpolate.cpp" />
     <ClCompile Include="src\Hooks\CBaseEntity_EstimateAbsVelocity.cpp" />
     <ClCompile Include="src\Hooks\CBasePlayer_CalcObserverView.cpp" />
+    <ClCompile Include="src\Hooks\CEngineClient_GetScreenAspectRatio.cpp" />
     <ClCompile Include="src\Hooks\CHLTVCamera_CalcView.cpp" />
     <ClCompile Include="src\Hooks\CInput_ValidateUserCmd.cpp" />
     <ClCompile Include="src\Hooks\CModelLoader_Map_LoadModel.cpp" />
@@ -1222,6 +1224,7 @@
     <ClInclude Include="src\Features\Aimbot\AutoDetonate\AutoDetonate.h" />
     <ClInclude Include="src\Features\Aimbot\AutoRocketJump\AutoRocketJump.h" />
     <ClInclude Include="src\Features\Aimbot\AutoHeal\AutoHeal.h" />
+    <ClInclude Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.h" />
     <ClInclude Include="src\Features\Output\Output.h" />
     <ClInclude Include="src\Features\Misc\AutoQueue\AutoQueue.h" />
     <ClInclude Include="src\Features\Backtrack\Backtrack.h" />

@@ -1,6 +1,7 @@
 #include "CritHack.h"
 
 #include "../Ticks/Ticks.h"
+#include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 #define WEAPON_RANDOM_RANGE				10000
 #define TF_DAMAGE_CRIT_MULTIPLIER		3.0f
@@ -359,7 +360,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	if (iRequest == CritRequestEnum::Any)
 		return;
 
-	if (!Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (!F::AntiCheatCompatibility.Active())
 	{
 		if (int iCommand = GetCritCommand(pWeapon, pCmd->command_number, iRequest == CritRequestEnum::Crit))
 		{
@@ -382,7 +383,7 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 {
 	auto fGetCmdNum = [&](int iCommandNumber)
 	{
-		if (!pWeapon || !pLocal->IsAlive() || !I::EngineClient->IsInGame() || Vars::Misc::Game::AntiCheatCompatibility.Value
+		if (!pWeapon || !pLocal->IsAlive() || !I::EngineClient->IsInGame() || F::AntiCheatCompatibility.Active()
 			|| pLocal->IsCritBoosted() || pWeapon->m_flCritTime() > I::GlobalVars->curtime || !WeaponCanCrit(pWeapon))
 			return iCommandNumber;
 
@@ -641,7 +642,7 @@ void CCritHack::Draw(CTFPlayer* pLocal)
 
 	float flTickBase = TICKS_TO_TIME(pLocal->m_nTickBase());
 
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
+	if (F::AntiCheatCompatibility.Active())
 		H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Colors::IndicatorTextBad.Value, Vars::Menu::Theme::Background.Value, align, "Anticheat compatibility");
 
 	if (pLocal->IsCritBoosted())

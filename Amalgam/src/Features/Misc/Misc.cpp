@@ -4,6 +4,7 @@
 #include "../Ticks/Ticks.h"
 #include "../Players/PlayerUtils.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
+#include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
@@ -68,21 +69,7 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 		if (!(pCmd->buttons & IN_JUMP) && bCurGrounded && !bLastAttempted)
 			pCmd->buttons |= IN_JUMP;
 	}
-
-	if (Vars::Misc::Game::AntiCheatCompatibility.Value)
-	{	// prevent more than 9 bhops occurring. if a server has this under that threshold they're retarded anyways
-		static int iJumps = 0;
-		if (bCurGrounded)
-		{
-			if (!bLastGrounded && pCmd->buttons & IN_JUMP)
-				iJumps++;
-			else
-				iJumps = 0;
-
-			if (iJumps > 9)
-				pCmd->buttons &= ~IN_JUMP;
-		}
-	}
+	F::AntiCheatCompatibility.BunnyHop(pCmd, bCurGrounded, bLastGrounded);
 	bLastAttempted = pCmd->buttons & IN_JUMP;
 }
 
@@ -366,7 +353,7 @@ void CMisc::FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd)
 	case 1:
 	{
 		if ((pLocal->IsDucking() ? !Vars::Misc::Movement::DuckSpeed.Value : !Vars::Misc::Movement::FastAccelerate.Value)
-			|| Vars::Misc::Game::AntiCheatCompatibility.Value
+			|| F::AntiCheatCompatibility.Active()
 			|| G::Attacking == 1 || F::Ticks.m_bDoubletap || F::Ticks.m_bSpeedhack || F::Ticks.m_bRecharge || G::AntiAim)
 			return;
 
