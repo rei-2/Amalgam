@@ -389,14 +389,14 @@ void CTicks::SaveShootAngle(CUserCmd* pCmd, bool bSendPacket)
 	static auto sv_maxusrcmdprocessticks_holdaim = H::ConVars.FindVar("sv_maxusrcmdprocessticks_holdaim");
 
 	if (bSendPacket)
-		m_bShootAngle = false;
-	else if (!m_bShootAngle && G::Attacking == 1 && sv_maxusrcmdprocessticks_holdaim->GetBool())
-		m_vShootAngle = pCmd->viewangles, m_bShootAngle = true;
+		m_vShootAngle = std::nullopt;
+	else if (!m_vShootAngle && G::Attacking == 1 && sv_maxusrcmdprocessticks_holdaim->GetBool())
+		m_vShootAngle = pCmd->viewangles;
 }
 Vec3* CTicks::GetShootAngle()
 {
-	if (m_bShootAngle && I::ClientState->chokedcommands)
-		return &m_vShootAngle;
+	if (m_vShootAngle && I::ClientState->chokedcommands)
+		return &m_vShootAngle.value();
 	return nullptr;
 }
 

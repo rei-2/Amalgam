@@ -3,6 +3,17 @@
 #include "../../Simulation/ProjectileSimulation/ProjectileSimulation.h"
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 
+bool CAutoRocketJump::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+{
+	if (!pLocal->IsAlive() || pLocal->IsAGhost()
+		|| !pWeapon
+		|| I::EngineVGui->IsGameUIVisible()
+		|| m_iFrame == -1 && pCmd->weaponselect)
+		return false;
+
+	return true;
+}
+
 bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	m_vAngles = pCmd->viewangles;
@@ -102,7 +113,7 @@ bool CAutoRocketJump::SetAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 
 void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!pWeapon || !pLocal->IsAlive() || pLocal->IsAGhost() || I::EngineVGui->IsGameUIVisible())
+	if (!ShouldRun(pLocal, pWeapon, pCmd))
 	{
 		m_iFrame = -1;
 		return;
@@ -127,13 +138,8 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		case TF_WEAPON_PARTICLE_CANNON: bValidWeapon = true;
 		}
 	}
-	if (!bValidWeapon)
-	{
-		m_iFrame = -1;
-		return;
-	}
 
-	if (m_iFrame == -1 && (bCurrGrounded && bBeggars ? G::Attacking == 1 : G::CanPrimaryAttack || G::Reloading)
+	if (bValidWeapon && m_iFrame == -1 && (bCurrGrounded && bBeggars ? G::Attacking == 1 : G::CanPrimaryAttack || G::Reloading)
 		&& SetAngles(pLocal, pWeapon, pCmd))
 	{
 		bool bWillHit = false;

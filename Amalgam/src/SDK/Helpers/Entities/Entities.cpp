@@ -254,10 +254,10 @@ void CEntities::Store()
 		if (n != I::EngineClient->GetLocalPlayer())
 		{
 			bool bDormant = pPlayer->IsDormant();
-			float flSimTime = pPlayer->m_flSimulationTime(), flOldSimTime = pPlayer->m_flOldSimulationTime();
-			if (float flDeltaTime = m_aDeltaTimes[n] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 0, 24)))
+			if (float flOldSimTime = m_aSimTimes[n], flSimTime = m_aSimTimes[n] = pPlayer->m_flSimulationTime();
+				m_aDeltaTimes[n] = flSimTime != flOldSimTime)
 			{
-				m_aLagTimes[n] = flDeltaTime;
+				m_aDeltaTimes[n] = m_aLagTimes[n] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 1, 24));
 				m_aSetTicks[n] = I::GlobalVars->tickcount;
 				if (!bDormant)
 				{
@@ -267,12 +267,11 @@ void CEntities::Store()
 
 					if (pPlayer->IsAlive())
 						F::CheaterDetection.ReportChoke(pPlayer, m_aChokes[n]);
+
+					m_aOldAngles[n] = m_aEyeAngles[n], m_aEyeAngles[n] = pPlayer->As<CTFPlayer>()->GetEyeAngles();
 				}
 				else
 					m_aOrigins[n].clear();
-
-				m_aOldAngles[n] = m_aEyeAngles[n];
-				m_aEyeAngles[n] = pPlayer->As<CTFPlayer>()->GetEyeAngles();
 			}
 			m_aChokes[n] = I::GlobalVars->tickcount - m_aSetTicks[n];
 		}
@@ -507,18 +506,18 @@ CTFPlayerResource* CEntities::GetResource()
 	return m_pPlayerResource;
 }
 
-const std::vector<CBaseEntity*>& CEntities::GetGroup(byte iGroup) { return m_aGroups[iGroup]; }
+const std::vector<CBaseEntity*>& CEntities::GetGroup(uint8_t iGroup) { return m_aGroups[iGroup]; }
 
-float CEntities::GetDeltaTime(byte iIndex) { return iIndex < MAX_PLAYERS ? m_aDeltaTimes[iIndex] : TICK_INTERVAL; }
-float CEntities::GetLagTime(byte iIndex) { return iIndex < MAX_PLAYERS ? m_aLagTimes[iIndex] : TICK_INTERVAL; }
-int CEntities::GetChoke(byte iIndex) { return iIndex < MAX_PLAYERS ? m_aChokes[iIndex] : 0; }
-Vec3 CEntities::GetEyeAngles(byte iIndex) { return iIndex < MAX_PLAYERS ? m_aEyeAngles[iIndex] : Vec3(); }
-Vec3 CEntities::GetDeltaAngles(byte iIndex) { return iIndex < MAX_PLAYERS ? m_aEyeAngles[iIndex].DeltaAngle(m_aOldAngles[iIndex]) / GetLagTime(iIndex) * (F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke())) : Vec3(); }
-bool CEntities::GetLagCompensation(byte iIndex) { return iIndex < MAX_PLAYERS ? m_aLagCompensation[iIndex] : false; }
-void CEntities::SetLagCompensation(byte iIndex, bool bLagComp) { if (iIndex < MAX_PLAYERS) m_aLagCompensation[iIndex] = bLagComp; }
-Vec3* CEntities::GetAvgVelocity(byte iIndex) { return iIndex < MAX_PLAYERS && iIndex != I::EngineClient->GetLocalPlayer() ? &m_aAvgVelocities[iIndex] : nullptr; }
-void CEntities::SetAvgVelocity(byte iIndex, Vec3 vAvgVelocity) { if (iIndex < MAX_PLAYERS) m_aAvgVelocities[iIndex] = vAvgVelocity; }
-std::deque<VelFixRecord>* CEntities::GetOrigins(byte iIndex) { return iIndex < MAX_PLAYERS ? &m_aOrigins[iIndex] : nullptr; }
+float CEntities::GetDeltaTime(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? m_aDeltaTimes[iIndex] : TICK_INTERVAL; }
+float CEntities::GetLagTime(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? m_aLagTimes[iIndex] : TICK_INTERVAL; }
+int CEntities::GetChoke(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? m_aChokes[iIndex] : 0; }
+Vec3 CEntities::GetEyeAngles(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? m_aEyeAngles[iIndex] : Vec3(); }
+Vec3 CEntities::GetDeltaAngles(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? m_aEyeAngles[iIndex].DeltaAngle(m_aOldAngles[iIndex]) / GetLagTime(iIndex) * (F::Backtrack.GetReal() + TICKS_TO_TIME(F::Backtrack.GetAnticipatedChoke())) : Vec3(); }
+bool CEntities::GetLagCompensation(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? m_aLagCompensation[iIndex] : false; }
+void CEntities::SetLagCompensation(uint16_t iIndex, bool bLagComp) { if (iIndex < MAX_PLAYERS) m_aLagCompensation[iIndex] = bLagComp; }
+Vec3* CEntities::GetAvgVelocity(uint16_t iIndex) { return iIndex < MAX_PLAYERS && iIndex != I::EngineClient->GetLocalPlayer() ? &m_aAvgVelocities[iIndex] : nullptr; }
+void CEntities::SetAvgVelocity(uint16_t iIndex, Vec3 vAvgVelocity) { if (iIndex < MAX_PLAYERS) m_aAvgVelocities[iIndex] = vAvgVelocity; }
+std::deque<VelFixRecord>* CEntities::GetOrigins(uint16_t iIndex) { return iIndex < MAX_PLAYERS ? &m_aOrigins[iIndex] : nullptr; }
 uint32_t CEntities::GetModel(unsigned short iIndex) { return iIndex < MAX_EDICTS ? m_aModels[iIndex] : 0; }
 bool CEntities::GetDormancy(unsigned short iIndex) { return iIndex < MAX_EDICTS ? m_aDormancy[iIndex] : false; }
 

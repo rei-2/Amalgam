@@ -296,6 +296,7 @@ public:
 	Vec3 GetOffset();
 	Vec3 GetCenter();
 	Vec3 GetRenderCenter();
+	studiohdr_t* GetStudiomodel();
 	int IsInValidTeam();
 	int SolidMask();
 	int GetHitboxToBase(int nHitbox);

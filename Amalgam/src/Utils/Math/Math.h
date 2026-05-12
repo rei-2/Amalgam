@@ -337,6 +337,27 @@ namespace Math
 		return vOut;
 	}
 
+	inline void MatrixInitialize(matrix3x4& mMatrix, const Vec3& vOrigin, const Vec3& vXAxis, const Vec3& vYAxis, const Vec3& vZAxis)
+	{
+		mMatrix[0][0] = vXAxis.x, mMatrix[0][1] = vYAxis.x, mMatrix[0][2] = vZAxis.x, mMatrix[0][3] = vOrigin.x;
+		mMatrix[1][0] = vXAxis.y, mMatrix[1][1] = vYAxis.y, mMatrix[1][2] = vZAxis.y, mMatrix[1][3] = vOrigin.y;
+		mMatrix[2][0] = vXAxis.z, mMatrix[2][1] = vYAxis.z, mMatrix[2][2] = vZAxis.z, mMatrix[2][3] = vOrigin.z;
+	}
+
+	inline void MatrixInitialize(matrix3x4& mMatrix, const Vec3& vOrigin = {}, bool bAxes = true)
+	{
+		if (bAxes)
+		{
+			mMatrix[0][0] = 1, mMatrix[0][1] = 0, mMatrix[0][2] = 0;
+			mMatrix[1][0] = 0, mMatrix[1][1] = 1, mMatrix[1][2] = 0;
+			mMatrix[2][0] = 0, mMatrix[2][1] = 0, mMatrix[2][2] = 1;
+		}
+
+		mMatrix[0][3] = vOrigin.x;
+		mMatrix[1][3] = vOrigin.y;
+		mMatrix[2][3] = vOrigin.z;
+	}
+
 	inline void MatrixCopy(const matrix3x4& mIn, matrix3x4& mOut)
 	{
 		for (int i = 0; i < 3; i++)

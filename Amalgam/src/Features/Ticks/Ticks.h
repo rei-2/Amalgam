@@ -17,9 +17,7 @@ private:
 
 	bool m_bGoalReached = true;
 	Vec3 m_vShootPos = {};
-
-	bool m_bShootAngle = false;
-	Vec3 m_vShootAngle = {};
+	std::optional<Vec3> m_vShootAngle = std::nullopt;
 
 	bool m_bPredictAntiwarp = false;
 	bool m_bTimingUnsure = false; // we aren't sure when we'll actually fire, hold aim

@@ -19,13 +19,14 @@ void CNoSpreadHitscan::Reset()
 	m_bSynced = false;
 }
 
-bool CNoSpreadHitscan::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bCreateMove)
+bool CNoSpreadHitscan::ShouldRun(CTFWeaponBase* pWeapon)
 {
-	if (G::PrimaryWeaponType != EWeaponType::HITSCAN
-		|| (bCreateMove ? pWeapon->GetWeaponSpread() : S::CTFWeaponBaseGun_GetWeaponSpread.Call<float>(pWeapon)) <= 0.f)
+	if (pWeapon
+		? G::PrimaryWeaponType != EWeaponType::HITSCAN || pWeapon->GetWeaponSpread() <= 0.f
+		: !Vars::Aimbot::General::NoSpread.Value || !I::EngineClient->IsInGame())
 		return false;
 
-	return bCreateMove ? G::Attacking == 1 : true;
+	return true;
 }
 
 int CNoSpreadHitscan::GetSeed(CUserCmd* pCmd)
@@ -66,7 +67,7 @@ std::string CNoSpreadHitscan::GetFormat(int iServerTime)
 
 void CNoSpreadHitscan::AskForPlayerPerf()
 {
-	if (!Vars::Aimbot::General::NoSpread.Value || !I::EngineClient->IsInGame())
+	if (!ShouldRun())
 		return Reset();
 
 	if (G::Choking)
@@ -83,7 +84,7 @@ void CNoSpreadHitscan::AskForPlayerPerf()
 
 bool CNoSpreadHitscan::ParsePlayerPerf(const std::string& sMsg)
 {
-	if (!Vars::Aimbot::General::NoSpread.Value)
+	if (!ShouldRun())
 		return false;
 
 	std::smatch tMatch; std::regex_match(sMsg, tMatch, std::regex(R"((\d+.\d+)\s\d+\s\d+\s\d+.\d+\s\d+.\d+\svel\s\d+.\d+)"));
@@ -129,7 +130,7 @@ bool CNoSpreadHitscan::ParsePlayerPerf(const std::string& sMsg)
 
 void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!ShouldRun(pLocal, pWeapon, true))
+	if (!ShouldRun(pWeapon))
 		return;
 
 	m_iSeed = GetSeed(pCmd);
@@ -194,12 +195,8 @@ void CNoSpreadHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* 
 
 void CNoSpreadHitscan::Draw(CTFPlayer* pLocal)
 {
-	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !Vars::Aimbot::General::NoSpread.Value || !pLocal->IsAlive())
+	if (!(Vars::Menu::Indicators.Value & Vars::Menu::IndicatorsEnum::SeedPrediction) || !ShouldRun() || !pLocal->IsAlive())
 		return;
-
-	//auto pWeapon = H::Entities.GetWeapon();
-	//if (!pWeapon || !ShouldRun(pLocal, pWeapon))
-	//	return;
 
 	int x = Vars::Menu::SeedPredictionDisplay.Value.x;
 	int y = Vars::Menu::SeedPredictionDisplay.Value.y + 8;

@@ -1,5 +1,6 @@
 #pragma once
 #include "../../SDK/SDK.h"
+
 #include <functional>
 
 using CommandCallback = const std::function<void(std::deque<const char*>&)>;

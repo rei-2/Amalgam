@@ -33,6 +33,15 @@ Vec3 CBaseEntity::GetRenderCenter()
 	return GetRenderOrigin() + (vMaxs - vMins) / 2;
 }
 
+studiohdr_t* CBaseEntity::GetStudiomodel()
+{
+	auto pModel = GetModel();
+	if (!pModel)
+		return nullptr;
+
+	return I::ModelInfoClient->GetStudiomodel(pModel);
+}
+
 int CBaseEntity::IsInValidTeam()
 {
 	switch (int nTeamNum = m_iTeamNum())

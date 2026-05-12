@@ -1,16 +1,16 @@
 #include "NoSpreadProjectile.h"
 
-bool CNoSpreadProjectile::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+bool CNoSpreadProjectile::ShouldRun(CTFWeaponBase* pWeapon)
 {
 	if (G::PrimaryWeaponType != EWeaponType::PROJECTILE)
 		return false;
 
-	return G::Attacking == 1;
+	return true;
 }
 
 void CNoSpreadProjectile::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!ShouldRun(pLocal, pWeapon))
+	if (!ShouldRun(pWeapon))
 		return;
 
 	switch (pWeapon->GetWeaponID())

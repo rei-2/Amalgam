@@ -437,12 +437,9 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 
 	std::vector<DrawBox_t> vBoxes = {};
 
-	auto pModel = pEntity->GetModel();
-	if (!pModel) return vBoxes;
-	auto pHDR = I::ModelInfoClient->GetStudiomodel(pModel);
-	if (!pHDR) return vBoxes;
-	auto pSet = pHDR->pHitboxSet(pEntity->m_nHitboxSet());
-	if (!pSet) return vBoxes;
+	auto pSet = pEntity->GetHitboxSet();
+	if (!pSet)
+		return vBoxes;
 
 	if (vHitboxes.empty())
 	{
@@ -453,7 +450,8 @@ std::vector<DrawBox_t> CVisuals::GetHitboxes(matrix3x4* aBones, CBaseAnimating* 
 	for (int nHitbox : vHitboxes)
 	{
 		auto pBox = pSet->pHitbox(nHitbox);
-		if (!pBox) continue;
+		if (!pBox)
+			continue;
 
 		bool bTargeted = nHitbox == iTarget;
 		Vec3 vAngle; Math::MatrixAngles(aBones[pBox->bone], vAngle);

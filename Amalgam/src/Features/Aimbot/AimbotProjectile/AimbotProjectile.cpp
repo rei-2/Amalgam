@@ -1333,15 +1333,12 @@ bool CAimbotProjectile::TestAngle(const Vec3& vPoint, const Vec3& vAngles, int i
 					(Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Smooth
 					|| Vars::Aimbot::General::AimType.Value == Vars::Aimbot::General::AimTypeEnum::Assistive))
 				{	// loop and see if closest hitbox is head
-					auto pModel = tTarget.m_pEntity->GetModel();
-					if (!pModel) break;
-					auto pHDR = I::ModelInfoClient->GetStudiomodel(pModel);
-					if (!pHDR) break;
-					auto pSet = pHDR->pHitboxSet(tTarget.m_pEntity->As<CTFPlayer>()->m_nHitboxSet());
-					if (!pSet) break;
-
 					auto aBones = F::Backtrack.GetBones(tTarget.m_pEntity);
 					if (!aBones)
+						break;
+
+					auto pSet = tTarget.m_pEntity->As<CTFPlayer>()->GetHitboxSet();
+					if (!pSet)
 						break;
 
 					Vec3 vOffset = tOriginal.m_vOrigin - tTarget.m_vPos;
@@ -1733,9 +1730,9 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 bool CAimbotProjectile::Aim(const Vec3& vCurAngle, const Vec3& vToAngle, Vec3& vOut, int iMethod)
 {
 	/*
-	if (Vec3* pDoubletapAngle = F::Ticks.GetShootAngle())
+	if (Vec3* pHoldAngle = F::Ticks.GetShootAngle())
 	{
-		vOut = *pDoubletapAngle;
+		vOut = *pHoldAngle;
 		return true;
 	}
 	*/
@@ -1755,8 +1752,8 @@ bool CAimbotProjectile::Aim(const Vec3& vCurAngle, const Vec3& vToAngle, Vec3& v
 	case Vars::Aimbot::General::AimTypeEnum::Assistive:
 		Vec3 vMouseDelta = G::CurrentUserCmd->viewangles.DeltaAngle(G::LastUserCmd->viewangles);
 		Vec3 vTargetDelta = vToAngle.DeltaAngle(G::LastUserCmd->viewangles);
-		float flMouseDelta = vMouseDelta.Length2D(), flTargetDelta = vTargetDelta.Length2D();
-		vTargetDelta = vTargetDelta.Normalized() * std::min(flMouseDelta, flTargetDelta);
+		float flMouseDelta = vMouseDelta.Length2DSqr(), flTargetDelta = vTargetDelta.Length2DSqr();
+		vTargetDelta = vTargetDelta.Normalized() * sqrtf(std::min(flMouseDelta, flTargetDelta));
 		vOut = vCurAngle - vMouseDelta + vMouseDelta.LerpAngle(vTargetDelta, Vars::Aimbot::General::AssistStrength.Value / 100.f);
 		bReturn = true;
 		break;

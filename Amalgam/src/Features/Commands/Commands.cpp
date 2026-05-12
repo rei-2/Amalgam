@@ -5,12 +5,20 @@
 #include <utility>
 #include <boost/algorithm/string/replace.hpp>
 
-#define AddCommand(sCommand, fCommand) \
+#define AddCommand(sCommand, ...) \
 { \
 	FNV1A::Hash32Const(sCommand), \
 	[](const std::deque<const char*>& vArgs) \
-		fCommand \
+		__VA_ARGS__ \
 },
+
+//struct ConVarValues_t
+//{
+//	int m_iValue;
+//	float m_flValue;
+//	const char* m_sValue;
+//};
+//static std::unordered_map<ConVar*, ConVarValues_t> s_mConVarValues = {};
 
 static std::unordered_map<uint32_t, CommandCallback> s_mCommands = {
 	AddCommand("setcvar",
@@ -89,6 +97,29 @@ static std::unordered_map<uint32_t, CommandCallback> s_mCommands = {
 		}
 		reinterpret_cast<void(*)()>(0)();
 	})
+	//AddCommand("recordcvars",
+	//{
+	//	for (ConCommandBase* pBase = I::CVar->GetCommands(); pBase; pBase = pBase->m_pNext)
+	//	{
+	//		if (pBase->IsCommand())
+	//			continue;
+
+	//		auto pCVar = reinterpret_cast<ConVar*>(pBase);
+	//		s_mConVarValues[pCVar] = { pCVar->GetInt(), pCVar->GetFloat(), pCVar->GetString() };
+	//	}
+	//})
+	//AddCommand("diffcvars",
+	//{
+	//	for (auto& [pCVar, tValues] : s_mConVarValues)
+	//	{
+	//		if (auto iOld = tValues.m_iValue, iNew = pCVar->GetInt(); iOld != iNew)
+	//			SDK::Output(pCVar->GetName(), std::format("int: {} -> {}", iOld, iNew).c_str());
+	//		else if (auto flOld = tValues.m_flValue, flNew = pCVar->GetFloat(); flOld != flNew)
+	//			SDK::Output(pCVar->GetName(), std::format("float: {} -> {}", flOld, flNew).c_str());
+	//		else if (auto sOld = tValues.m_sValue, sNew = pCVar->GetString(); sOld != sNew || FNV1A::Hash32(sOld) != FNV1A::Hash32(sNew))
+	//			SDK::Output(pCVar->GetName(), std::format("string: {} -> {}", sOld, sNew).c_str());
+	//	}
+	//})
 };
 
 bool CCommands::Run(const char* sCmd, std::deque<const char*>& vArgs)

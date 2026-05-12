@@ -10,11 +10,12 @@
 #include "../Misc/Misc.h"
 #include "../Visuals/Visuals.h"
 
-bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+bool CAimbot::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	if (!pWeapon || !pLocal->CanAttack()
 		|| !SDK::AttribHookValue(1, "mult_dmg", pWeapon)
-		|| I::EngineVGui->IsGameUIVisible())
+		|| I::EngineVGui->IsGameUIVisible()
+		|| pCmd->weaponselect)
 		return false;
 
 	return true;
@@ -54,11 +55,8 @@ void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	if (abs(G::AimPoint.m_iTickCount - I::GlobalVars->tickcount) > G::AimPoint.m_iDuration)
 		G::AimPoint = {};
 
-	if (pCmd->weaponselect)
-		return;
-
 	F::AutoRocketJump.Run(pLocal, pWeapon, pCmd);
-	if (!ShouldRun(pLocal, pWeapon))
+	if (!ShouldRun(pLocal, pWeapon, pCmd))
 		return;
 
 	F::AutoDetonate.Run(pLocal, pCmd);

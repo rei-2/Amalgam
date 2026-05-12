@@ -121,16 +121,14 @@ bool CTFPlayer::IsCritBoosted()
 		|| InCond(TF_COND_CRITBOOSTED_RUNE_TEMP))
 		return true;
 
-	auto pWeapon = m_hActiveWeapon()->As<CTFWeaponBase>();
-	if (!pWeapon)
-		return false;
-
-	auto pWeaponInfo = pWeapon->m_pWeaponInfo();
-	if (!pWeaponInfo)
-		return false;
-
-	if (InCond(TF_COND_CRITBOOSTED_RAGE_BUFF) && pWeaponInfo->m_iWeaponType == TF_WPN_TYPE_PRIMARY)
-		return true;
+	if (auto pWeapon = m_hActiveWeapon()->As<CTFWeaponBase>())
+	{
+		if (auto pWeaponInfo = pWeapon->m_pWeaponInfo())
+		{
+			if (InCond(TF_COND_CRITBOOSTED_RAGE_BUFF) && pWeaponInfo->m_iWeaponType == TF_WPN_TYPE_PRIMARY)
+				return true;
+		}
+	}
 
 	return false;
 }

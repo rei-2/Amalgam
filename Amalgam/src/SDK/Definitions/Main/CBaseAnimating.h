@@ -56,6 +56,7 @@ public:
 		return bReturn;
 	}
 
+	mstudiohitboxset_t* GetHitboxSet();
 	int GetHitboxGroup(int nHitbox);
 	int GetNumOfHitboxes();
 	Vec3 GetHitboxOrigin(matrix3x4* aBones, int nHitbox, Vec3 vOffset = {});

@@ -4,7 +4,7 @@
 class CAimbot
 {
 private:
-	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
+	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	void RunAimbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSecondaryType = false);
 

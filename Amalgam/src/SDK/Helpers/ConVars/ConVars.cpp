@@ -7,12 +7,10 @@ bool CConVars::Unlock()
 {
 	if (!m_bUnlocked)
 	{
-		ConCommandBase* pCmdBase = I::CVar->GetCommands();
-		while (pCmdBase != nullptr)
+		for (ConCommandBase* pBase = I::CVar->GetCommands(); pBase; pBase = pBase->m_pNext)
 		{
-			m_mFlagMap[pCmdBase] = pCmdBase->m_nFlags;
-			pCmdBase->m_nFlags &= ~(FCVAR_HIDDEN | FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT | FCVAR_NOT_CONNECTED);
-			pCmdBase = pCmdBase->m_pNext;
+			m_mFlagMap[pBase] = pBase->m_nFlags;
+			pBase->m_nFlags &= ~(FCVAR_HIDDEN | FCVAR_DEVELOPMENTONLY | FCVAR_CHEAT | FCVAR_NOT_CONNECTED);
 		}
 		m_bUnlocked = true;
 

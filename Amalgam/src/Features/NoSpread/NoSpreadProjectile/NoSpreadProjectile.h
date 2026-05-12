@@ -4,7 +4,7 @@
 class CNoSpreadProjectile
 {
 private:
-	bool ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
+	bool ShouldRun(CTFWeaponBase* pWeapon);
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
