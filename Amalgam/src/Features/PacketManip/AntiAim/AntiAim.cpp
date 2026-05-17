@@ -47,7 +47,7 @@ bool CAntiAim::ShouldRun(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 
 void CAntiAim::FakeShotAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
-	if (!Vars::AntiAim::InvalidShootPitch.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN || pLocal->m_MoveType() != MOVETYPE_WALK)
+	if (!Vars::AntiAim::HidePitchOnShot.Value || G::Attacking != 1 || G::PrimaryWeaponType != EWeaponType::HITSCAN || pLocal->m_MoveType() != MOVETYPE_WALK)
 		return;
 
 	switch (pWeapon ? pWeapon->GetWeaponID() : 0)
@@ -149,21 +149,9 @@ float CAntiAim::GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 	return pCmd->viewangles.y;
 }
 
-void CAntiAim::RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flYaw, bool bFake, float flEpsilon)
-{
-	if (!Vars::AntiAim::AntiOverlap.Value || bFake)
-		return;
-
-	float flFakeYaw = GetBaseYaw(pEntity, pCmd, true) + GetYawOffset(pEntity, true);
-	const float flYawDiff = Math::NormalizeAngle(flYaw - flFakeYaw);
-	if (fabsf(flYawDiff) < flEpsilon)
-		flYaw += flYawDiff > 0 ? flEpsilon : -flEpsilon;
-}
-
 float CAntiAim::GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake)
 {
 	float flYaw = GetBaseYaw(pLocal, pCmd, bFake) + GetYawOffset(pLocal, bFake);
-	RunOverlapping(pLocal, pCmd, flYaw, bFake);
 	return flYaw;
 }
 

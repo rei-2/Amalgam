@@ -5,7 +5,7 @@
 #include "../Features/Backtrack/Backtrack.h"
 #include "../Features/Ticks/Ticks.h"
 #include "../Features/NoSpread/NoSpreadHitscan/NoSpreadHitscan.h"
-#include "../Features/CheaterDetection/CheaterDetection.h"
+#include "../Features/CheatDetection/CheatDetection.h"
 #include "../Features/Resolver/Resolver.h"
 #include "../Features/Spectate/Spectate.h"
 
@@ -20,7 +20,7 @@ MAKE_HOOK(CViewRender_LevelInit, U::Memory.GetVirtual(I::ViewRender, 1), void,
 	F::Backtrack.Reset();
 	F::Ticks.Reset();
 	F::NoSpreadHitscan.Reset();
-	F::CheaterDetection.Reset();
+	F::CheatDetection.Reset();
 	F::Resolver.Reset();
 	F::Spectate.Reset();
 

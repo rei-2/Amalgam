@@ -468,8 +468,7 @@ NAMESPACE_BEGIN(Vars)
 	NAMESPACE_END(AutoPeek)
 
 	NAMESPACE_BEGIN(Speedhack)
-		CVar(Enabled, VA_LIST("Enabled", "Speedhack enabled"), false);
-		CVar(Amount, VA_LIST("Amount", "SpeedHack amount"), 1, NONE, 1, 50);
+		CVar(Scale, VA_LIST("Scale", "SpeedHack scale"), 1, NONE, 1, 50);
 	NAMESPACE_END(Speedhack)
 
 	NAMESPACE_BEGIN(AntiAim, Antiaim)
@@ -496,8 +495,7 @@ NAMESPACE_BEGIN(Vars)
 		CVar(FakeYawValue, "Fake value", -90.f, SLIDER_CLAMP | SLIDER_PRECISION, -180.f, 180.f, 5.f);
 		CVar(SpinSpeed, "Spin speed", 15.f, SLIDER_PRECISION, -30.f, 30.f);
 		CVar(MinWalk, "Minwalk", true);
-		CVar(AntiOverlap, "Anti-overlap", false);
-		CVar(InvalidShootPitch, "Hide pitch on shot", false);
+		CVar(HidePitchOnShot, "Hide pitch on shot", false);
 
 		CVar(AntiAimLines, "Antiaim lines", false, NOSAVE);
 	NAMESPACE_END(AntiAim)
@@ -514,16 +512,6 @@ NAMESPACE_BEGIN(Vars)
 		CVar(CycleView, "Cycle view", false);
 		CVar(CycleMinwalk, "Cycle minwalk", false);
 	NAMESPACE_END(Resolver)
-
-	NAMESPACE_BEGIN(CheaterDetection, Cheater Detection)
-		CVarEnum(Methods, "Detection methods", 0b0000, DROPDOWN_MULTI, nullptr,
-			VA_LIST("Invalid pitch", "Packet choking", "Aim flicking", "Duck Speed"),
-			InvalidPitch = 1 << 0, PacketChoking = 1 << 1, AimFlicking = 1 << 2, DuckSpeed = 1 << 3);
-		CVar(DetectionsRequired, "Detections required", 10, SLIDER_MIN, 0, 50);
-		CVar(MinimumChoking, "Minimum choking", 20, SLIDER_MIN, 4, 22);
-		CVar(MinimumFlick, "Minimum flick angle", 20.f, SLIDER_PRECISION, 10.f, 30.f); // min flick size to suspect
-		CVar(MaximumNoise, "Maximum flick noise", 1.f, SLIDER_PRECISION, 1.f, 10.f); // max difference between angles before and after flick
-	NAMESPACE_END(CheaterDetection)
 
 	NAMESPACE_BEGIN(ESP)
 		CVarValues(ActiveGroups, "Active groups", int(0b11111111111111111111111111111111), VISUAL | DROPDOWN_MULTI | DROPDOWN_NOSANITIZATION, nullptr);
@@ -595,8 +583,8 @@ NAMESPACE_BEGIN(Vars)
 		NAMESPACE_END(Tracers)
 
 		NAMESPACE_BEGIN(Viewmodel)
-			CVar(CrosshairAim, "Crosshair aim position", false, VISUAL);
-			CVar(ViewmodelAim, "Viewmodel aim position", false, VISUAL);
+			CVar(CrosshairAim, "Crosshair aim", false, VISUAL);
+			CVar(ViewmodelAim, "Viewmodel aim", false, VISUAL);
 			CVar(OffsetX, VA_LIST("Offset X", "Viewmodel offset X"), 0.f, VISUAL | SLIDER_PRECISION, -45.f, 45.f, 5.f);
 			CVar(OffsetY, VA_LIST("Offset Y", "Viewmodel offset Y"), 0.f, VISUAL | SLIDER_PRECISION, -45.f, 45.f, 5.f);
 			CVar(OffsetZ, VA_LIST("Offset Z", "Viewmodel offset Z"), 0.f, VISUAL | SLIDER_PRECISION, -45.f, 45.f, 5.f);
@@ -717,8 +705,8 @@ NAMESPACE_BEGIN(Vars)
 			CVarEnum(AutoStrafe, "Auto strafe", 0, NONE, nullptr,
 				VA_LIST("Off", "Legit", "Directional"),
 				Off, Legit, Directional);
-			CVar(AutoStrafeTurnScale, "Auto strafe turn scale", 0.5f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
-			CVar(AutoStrafeMaxDelta, "Auto strafe max delta", 180.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f, 5.f);
+			CVar(AutoStrafeTurnScale, VA_LIST("Turn scale", "Auto strafe turn scale"), 0.5f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
+			CVar(AutoStrafeMaxDelta, VA_LIST("Max delta", "Auto strafe max delta"), 180.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f, 5.f);
 			CVar(Bunnyhop, "Bunnyhop", false);
 			CVar(EdgeJump, "Edge jump", false);
 			CVar(AutoJumpbug, "Auto jumpbug", false);
@@ -746,10 +734,10 @@ NAMESPACE_BEGIN(Vars)
 			CVarEnum(AntiBackstab, "Anti-backstab", 0, NONE, nullptr,
 				VA_LIST("Off", "Yaw", "Pitch", "Fake"),
 				Off, Yaw, Pitch, Fake);
-			CVar(AntiAFK, "Anti-AFK", false);
-			CVar(AntiAutobalance, "Anti-autobalance", false);
 			CVar(TauntControl, "Taunt control", false);
 			CVar(KartControl, "Kart control", false);
+			CVar(AntiAutobalance, "Anti-autobalance", false);
+			CVar(AntiAFK, "Anti-AFK", false);
 			CVar(AutoF2Ignored, "Auto F2 ignored", false);
 			CVar(AutoF1Priority, "Auto F1 priority", false);
 			CVar(AcceptItemDrops, "Auto accept item drops", false);
@@ -844,45 +832,55 @@ NAMESPACE_BEGIN(Vars)
 		CVar(Lifetime, "Notification time", 5.f, VISUAL, 0.5f, 5.f, 0.5f);
 
 		NAMESPACE_BEGIN(VoteStart, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Vote start log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Vote start log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(VoteStart)
 
 		NAMESPACE_BEGIN(VoteCast, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Vote cast log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Vote cast log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(VoteCast)
 
 		NAMESPACE_BEGIN(ClassChange, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Class change log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Class change log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(ClassChange)
 
 		NAMESPACE_BEGIN(Damage, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Damage log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Damage log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(Damage)
 
 		NAMESPACE_BEGIN(CheatDetection, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Cheat detection log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Cheat detection log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(CheatDetection)
 
 		NAMESPACE_BEGIN(Tags, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Tags log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Tags log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(Tags)
 
 		NAMESPACE_BEGIN(Aliases, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Aliases log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Aliases log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(Aliases)
 
 		NAMESPACE_BEGIN(Resolver, Logging)
-			CVarValues(LogTo, VA_LIST("Log to", "Resolver log to"), 0b000001, DROPDOWN_MULTI, nullptr,
+			CVarValues(LogTo, "Resolver log to", 0b000001, DROPDOWN_MULTI, nullptr,
 				"Toasts", "Chat", "Party", "Console", "Menu", "Debug");
 		NAMESPACE_END(Resolver)
 	NAMESPACE_END(Logging)
+
+	NAMESPACE_BEGIN(CheatDetection, Cheat Detection)
+		CVarEnum(Methods, "Detection methods", 0b0000, DROPDOWN_MULTI, nullptr,
+			VA_LIST("Invalid pitch", "Packet choking", "Aim flicking", "Duck Speed"),
+			InvalidPitch = 1 << 0, PacketChoking = 1 << 1, AimFlicking = 1 << 2, DuckSpeed = 1 << 3);
+		CVar(DetectionsRequired, "Detections required", 10, SLIDER_MIN, 0, 50);
+		CVar(MinChoking, "Min choking", 20, SLIDER_MIN, 4, 22);
+		CVar(MinFlick, "Min flick angle", 20.f, SLIDER_PRECISION, 10.f, 30.f); // min flick size to suspect
+		CVar(MaxNoise, "Max flick noise", 1.f, SLIDER_PRECISION, 1.f, 10.f); // max difference between angles before and after flick
+	NAMESPACE_END(CheatDetection)
 
 	NAMESPACE_BEGIN(Debug)
 		CVar(Info, "Debug info", false, NOSAVE);

@@ -81,7 +81,7 @@ void CTicks::Doubletap(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CTicks::Speedhack()
 {
-	m_bSpeedhack = Vars::Speedhack::Enabled.Value;
+	m_bSpeedhack = Vars::Speedhack::Scale.Value != 1;
 	if (!m_bSpeedhack)
 		return;
 
@@ -178,7 +178,7 @@ void CTicks::Move(float accumulated_extra_samples, bool bFinalTick)
 
 	if (m_bSpeedhack)
 	{
-		m_iShiftedTicks = Vars::Speedhack::Amount.Value;
+		m_iShiftedTicks = Vars::Speedhack::Scale.Value;
 		m_iShiftedGoal = 0;
 	}
 
@@ -415,7 +415,7 @@ void CTicks::Draw(CTFPlayer* pLocal)
 	const auto& fFont = H::Fonts.GetFont(FONT_INDICATORS);
 
 	if (m_bSpeedhack)
-		return H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("Speedhack x{}", Vars::Speedhack::Amount.Value).c_str());
+		return H::Draw.StringOutlined(fFont, dtPos.x, dtPos.y + 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOP, std::format("Speedhack x{}", Vars::Speedhack::Scale.Value).c_str());
 	
 	int iAntiAimTicks = F::AntiAim.YawOn() ? F::AntiAim.AntiAimTicks() : 0;
 	int iTicks = std::clamp(m_iShiftedTicks + std::max(I::ClientState->chokedcommands - iAntiAimTicks, 0), 0, m_iMaxUsrCmdProcessTicks);

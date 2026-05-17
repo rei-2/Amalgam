@@ -7,7 +7,6 @@ private:
 	void FakeShotAngles(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 	float GetYawOffset(CTFPlayer* pEntity, bool bFake);
 	float GetBaseYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake);
-	void RunOverlapping(CTFPlayer* pEntity, CUserCmd* pCmd, float& flYaw, bool bFake, float flEpsilon = 45.f);
 	float GetYaw(CTFPlayer* pLocal, CUserCmd* pCmd, bool bFake);
 	float GetPitch(float flCurPitch);
 	void MinWalk(CTFPlayer* pLocal, CUserCmd* pCmd);

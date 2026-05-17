@@ -4,7 +4,7 @@
 #include "../../../Utils/Hash/FNV1A.h"
 #include "../../../Features/Players/PlayerUtils.h"
 #include "../../../Features/Backtrack/Backtrack.h"
-#include "../../../Features/CheaterDetection/CheaterDetection.h"
+#include "../../../Features/CheatDetection/CheatDetection.h"
 #include "../../../Features/Resolver/Resolver.h"
 
 void CEntities::Store()
@@ -266,7 +266,7 @@ void CEntities::Store()
 						m_aOrigins[n].pop_back();
 
 					if (pPlayer->IsAlive())
-						F::CheaterDetection.ReportChoke(pPlayer, m_aChokes[n]);
+						F::CheatDetection.ReportChoke(pPlayer, m_aChokes[n]);
 
 					m_aOldAngles[n] = m_aEyeAngles[n], m_aEyeAngles[n] = pPlayer->As<CTFPlayer>()->GetEyeAngles();
 				}

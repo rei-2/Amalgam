@@ -31,7 +31,7 @@ struct PlayerInfo
 	} m_DuckSpeed;
 };
 
-class CCheaterDetection
+class CCheatDetection
 {
 private:
 	bool ShouldScan();
@@ -53,4 +53,4 @@ public:
 	void Reset();
 };
 
-ADD_FEATURE(CCheaterDetection, CheaterDetection);
+ADD_FEATURE(CCheatDetection, CheatDetection);

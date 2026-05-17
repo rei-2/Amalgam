@@ -45,7 +45,7 @@
     <ClCompile Include="src\Features\Aimbot\AutoHeal\AutoHeal.cpp" />
     <ClCompile Include="src\Features\Misc\AutoQueue\AutoQueue.cpp" />
     <ClCompile Include="src\Features\Backtrack\Backtrack.cpp" />
-    <ClCompile Include="src\Features\CheaterDetection\CheaterDetection.cpp" />
+    <ClCompile Include="src\Features\CheatDetection\CheatDetection.cpp" />
     <ClCompile Include="src\Features\CritHack\CritHack.cpp" />
     <ClCompile Include="src\Features\EnginePrediction\EnginePrediction.cpp" />
     <ClCompile Include="src\Features\Misc\Misc.cpp" />
@@ -393,7 +393,7 @@
     <ClInclude Include="src\Features\Aimbot\AutoHeal\AutoHeal.h" />
     <ClInclude Include="src\Features\Misc\AutoQueue\AutoQueue.h" />
     <ClInclude Include="src\Features\Backtrack\Backtrack.h" />
-    <ClInclude Include="src\Features\CheaterDetection\CheaterDetection.h" />
+    <ClInclude Include="src\Features\CheatDetection\CheatDetection.h" />
     <ClInclude Include="src\Features\CritHack\CritHack.h" />
     <ClInclude Include="src\Features\EnginePrediction\EnginePrediction.h" />
     <ClInclude Include="src\Features\Misc\Misc.h" />

@@ -197,10 +197,13 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 								SDK::Output("Auto jump", std::format("Ticks to hit: {} ({})", m_iDelay, n).c_str(), { 255, 0, 0 }, Vars::Debug::Logging.Value);
 								if (Vars::Debug::Info.Value)
 								{
-									Vec3 vAngles = Math::VectorAngles(trace.plane.normal);
-									G::LineStorage.clear(); G::BoxStorage.clear();
-									G::BoxStorage.emplace_back(trace.endpos + trace.plane.normal, Vec3::Get(-1), Vec3::Get(1), vAngles, I::GlobalVars->curtime + 5.f, Color_t(), Color_t(0, 0, 0, 0), true);
-									G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(tMoveStorage.m_MoveData.m_vecAbsOrigin + pLocal->m_vecViewOffset(), trace.endpos + trace.plane.normal), I::GlobalVars->curtime + 5.f, Color_t(), true);
+									G::PathStorage.clear(); G::BoxStorage.clear(); G::LineStorage.clear();
+									tProjInfo.m_vPath.push_back(trace.endpos + trace.plane.normal);
+
+									G::PathStorage.emplace_back(tMoveStorage.m_vPath, I::GlobalVars->curtime + 5.f, Color_t(255, 255, 255), Vars::Visuals::Path::StyleEnum::Line);
+									G::BoxStorage.emplace_back(tMoveStorage.m_MoveData.m_vecAbsOrigin, pLocal->m_vecMins(), pLocal->m_vecMaxs(), Vec3(), I::GlobalVars->curtime + 5.f, Color_t(255, 255, 255), Color_t(0, 0, 0, 0), true);
+									G::PathStorage.emplace_back(tProjInfo.m_vPath, I::GlobalVars->curtime + 5.f, Color_t(255, 150, 150), Vars::Visuals::Path::StyleEnum::Line);
+									G::BoxStorage.emplace_back(tProjInfo.m_vPath.back(), Vec3::Get(-1), Vec3::Get(1), Vec3() /*Math::VectorAngles(trace.plane.normal)*/, I::GlobalVars->curtime + 5.f, Color_t(255, 150, 150), Color_t(0, 0, 0, 0), true);
 								}
 							}
 						}
@@ -260,19 +263,22 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 		if (m_iFrame <= m_iChoke)
 			G::PSilentAngles = true, G::SilentAngles = false; // only con to this is that you may not be able to choke depending on the ticks charged
 
-		if (m_iDelay > 1)
+		if (bCurrGrounded)
 		{
-			switch (m_iFrame - m_iDelay + 1)
+			if (m_iDelay > 1)
 			{
-			case 0:
-				pCmd->buttons |= IN_DUCK;
-				break;
-			case 1:
-				pCmd->buttons |= IN_JUMP;
+				switch (m_iFrame - m_iDelay + 1)
+				{
+				case 0:
+					pCmd->buttons |= IN_DUCK;
+					break;
+				case 1:
+					pCmd->buttons |= IN_JUMP;
+				}
 			}
+			else // won't ctap in time
+				pCmd->buttons |= IN_DUCK | IN_JUMP;
 		}
-		else // won't ctap in time
-			pCmd->buttons |= IN_DUCK | IN_JUMP;
 
 		if (m_iFrame == m_iDelay + 3)
 			m_iFrame = -1;

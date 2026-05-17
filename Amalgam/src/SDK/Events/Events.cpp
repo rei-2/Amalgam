@@ -3,7 +3,7 @@
 #include "../../Core/Core.h"
 #include "../../Features/Aimbot/AutoHeal/AutoHeal.h"
 #include "../../Features/Backtrack/Backtrack.h"
-#include "../../Features/CheaterDetection/CheaterDetection.h"
+#include "../../Features/CheatDetection/CheatDetection.h"
 #include "../../Features/CritHack/CritHack.h"
 #include "../../Features/Misc/Misc.h"
 #include "../../Features/PacketManip/AntiAim/AntiAim.h"
@@ -57,7 +57,7 @@ void CEventListener::FireGameEvent(IGameEvent* pEvent)
 	case FNV1A::Hash32Const("player_hurt"):
 	{
 		F::Resolver.PlayerHurt(pEvent);
-		F::CheaterDetection.ReportDamage(pEvent);
+		F::CheatDetection.ReportDamage(pEvent);
 		return;
 	}
 	case FNV1A::Hash32Const("player_spawn"):
