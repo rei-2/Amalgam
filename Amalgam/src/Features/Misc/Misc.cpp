@@ -57,20 +57,16 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 	if (auto pWeapon = H::Entities.GetWeapon(); pWeapon && pWeapon->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK && pWeapon->As<CTFGrapplingHook>()->m_hProjectile())
 		return;
 
-	static bool bStaticJump = false, bStaticGrounded = false, bLastAttempted = false;
-	const bool bLastJump = bStaticJump, bLastGrounded = bStaticGrounded;
-	const bool bCurJump = bStaticJump = pCmd->buttons & IN_JUMP, bCurGrounded = bStaticGrounded = pLocal->m_hGroundEntity();
+	static bool bStaticAttempted = false, bStaticValid = false;
+	const bool bLastAttempted = bStaticAttempted, bLastValid = bStaticValid;
+	const bool bCurrAttempted = bStaticAttempted = G::OriginalCmd.buttons & IN_JUMP, bCurrValid = bStaticValid = pLocal->m_hGroundEntity() && !pLocal->IsDucking();
+	const bool bManual = !(SDK::AttribHookValue(0, "parachute_attribute", pLocal) && !pLocal->InCond(TF_COND_PARACHUTE_ACTIVE) && !(G::OriginalCmd.buttons & IN_DUCK)); // evil we don't want to manual
 
-	if (bCurJump && bLastJump && (bCurGrounded ? !pLocal->IsDucking() : true))
-	{
-		if (!(bCurGrounded && !bLastGrounded))
-			pCmd->buttons &= ~IN_JUMP;
-
-		if (!(pCmd->buttons & IN_JUMP) && bCurGrounded && !bLastAttempted)
-			pCmd->buttons |= IN_JUMP;
-	}
-	F::AntiCheatCompatibility.BunnyHop(pCmd, bCurGrounded, bLastGrounded);
-	bLastAttempted = pCmd->buttons & IN_JUMP;
+	if (!bCurrValid || bCurrValid && G::LastUserCmd->buttons & IN_JUMP)
+		pCmd->buttons &= ~IN_JUMP;
+	if (bCurrAttempted && !bLastAttempted && bManual)
+		pCmd->buttons |= IN_JUMP;
+	F::AntiCheatCompatibility.BunnyHop(pCmd, bCurrValid, bLastValid);
 }
 
 void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)

@@ -104,15 +104,15 @@ void CAntiCheatCompatibility::RespondCvarValue(INetMessage& msg)
 	SDK::Output("Convar spoof", std::format("{}: {} ({})", pMsg->m_szCvarName, pMsg->m_szCvarValue, msg.ToString()).c_str(), Vars::Menu::Theme::Accent.Value, Vars::Debug::Logging.Value);
 }
 
-void CAntiCheatCompatibility::BunnyHop(CUserCmd* pCmd, bool bCurGrounded, bool bLastGrounded)
+void CAntiCheatCompatibility::BunnyHop(CUserCmd* pCmd, bool bCurrValid, bool bLastValid)
 {
 	if (!Active())
 		return;
 
 	// prevent more than 9 bhops occurring. if a server has this under that threshold they're retarded anyways
-	if (bCurGrounded)
+	if (bCurrValid)
 	{
-		if (!bLastGrounded && pCmd->buttons & IN_JUMP)
+		if (!bLastValid && pCmd->buttons & IN_JUMP && !(G::LastUserCmd->buttons & IN_JUMP))
 			m_iJumps++;
 		else
 			m_iJumps = 0;

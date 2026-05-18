@@ -24,7 +24,7 @@ private:
 
 public:
     void CreateMove(CUserCmd* pCmd, bool* pSendPacket);
-    void BunnyHop(CUserCmd* pCmd, bool bCurGrounded, bool bLastGrounded);
+    void BunnyHop(CUserCmd* pCmd, bool bCurrValid, bool bLastValid);
     void RespondCvarValue(INetMessage& msg);
 
     inline bool Active() { return Vars::Misc::Game::AntiCheatCompatibility.Value; }
