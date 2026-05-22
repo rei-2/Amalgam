@@ -42,7 +42,6 @@ private:
 	std::array<Vec3, MAX_PLAYERS> m_aAvgVelocities = {};
 	std::array<std::deque<VelFixRecord>, MAX_PLAYERS> m_aOrigins = {};
 	std::array<uint32_t, MAX_EDICTS> m_aModels = {};
-	std::array<bool, MAX_EDICTS> m_aDormancy = {};
 
 	std::unordered_map<int, int> m_mIPriorities = {};
 	std::unordered_map<uint32_t, int> m_mUPriorities = {};
@@ -84,7 +83,7 @@ public:
 	void SetAvgVelocity(uint16_t iIndex, Vec3 vAvgVelocity);
 	std::deque<VelFixRecord>* GetOrigins(uint16_t iIndex);
 	uint32_t GetModel(unsigned short iIndex);
-	bool GetDormancy(unsigned short iIndex);
+	DormantData* GetDormancy(unsigned short iIndex);
 
 	int GetPriority(int iIndex);
 	int GetPriority(uint32_t uAccountID);

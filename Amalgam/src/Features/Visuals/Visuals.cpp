@@ -966,7 +966,7 @@ void CVisuals::Store()
 		for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 		{
 			auto pPlayer = pEntity->As<CTFPlayer>();
-			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer()
+			if (pPlayer->entindex() == I::EngineClient->GetLocalPlayer() || pPlayer->IsDormant()
 				|| !F::Groups.GetGroup(pEntity, pGroup, false) || !(pGroup->m_iSightlines & SightlinesEnum::Enabled))
 				continue;
 

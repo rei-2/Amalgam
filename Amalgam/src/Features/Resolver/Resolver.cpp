@@ -135,7 +135,7 @@ void CResolver::CreateMove()
 
 		for (auto& pEntity : H::Entities.GetGroup(EntityEnum::PlayerAll))
 		{
-			if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
+			if (pEntity->entindex() == I::EngineClient->GetLocalPlayer() || pEntity->IsDormant())
 				continue;
 
 			Vec3 vCurPos = pEntity->GetCenter();

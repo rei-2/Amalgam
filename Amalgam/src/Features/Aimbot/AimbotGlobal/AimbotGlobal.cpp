@@ -58,7 +58,7 @@ float CAimbotGlobal::GetAimFOV()
 	return Vars::Aimbot::General::LeadAndRestrict.Value ? 180.f : Vars::Aimbot::General::AimFOV.Value;
 }
 
-bool CAimbotGlobal::EntityCenterInFOV(CBaseEntity* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo)
+bool CAimbotGlobal::EntityCenterInFOV(CBaseEntity* pTarget, const Vec3& vLocalPos, const Vec3& vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo)
 {
 	vPos = pTarget->GetCenter();
 	vAngleTo = Math::CalcAngle(vLocalPos, vPos);
@@ -67,8 +67,11 @@ bool CAimbotGlobal::EntityCenterInFOV(CBaseEntity* pTarget, Vec3 vLocalPos, Vec3
 	return flFOVTo < GetAimFOV();
 }
 
-bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, Vec3 vLocalPos, Vec3 vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes)
+bool CAimbotGlobal::PlayerBoneInFOV(CTFPlayer* pTarget, const Vec3& vLocalPos, const Vec3& vLocalAngles, float& flFOVTo, Vec3& vPos, Vec3& vAngleTo, int iHitboxes)
 {
+	if (pTarget->IsDormant())
+		return EntityCenterInFOV(pTarget, vLocalPos, vLocalAngles, flFOVTo, vPos, vAngleTo);
+
 	matrix3x4* aBones = F::Backtrack.GetBones(pTarget);
 	if (!Vars::Visuals::Removals::Interpolation.Value)
 	{
@@ -191,9 +194,9 @@ bool CAimbotGlobal::ShouldAimAtAngle(Vec3 vAngles)
 	return Math::CalcFov(I::EngineClient->GetViewAngles(), vAngles) < Vars::Aimbot::General::AimFOV.Value;
 }
 
-bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
+bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, bool bIgnoreDormant)
 {
-	if (pEntity->IsDormant())
+	if (bIgnoreDormant ? pEntity->IsDormant() : !H::Entities.GetDormancy(pEntity->entindex()))
 		return true;
 
 	if (auto pGameRules = I::TFGameRules())

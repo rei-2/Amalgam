@@ -258,7 +258,7 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 	{
 		auto pPlayer = pEntity->As<CTFPlayer>();
 		int iIndex = pPlayer->entindex();
-		if (!pPlayer->CanAttack(true, false))
+		if (pPlayer->IsDormant() || !pPlayer->CanAttack(true, false))
 			continue;
 
 		auto pWeapon = pPlayer->m_hActiveWeapon()->As<CTFWeaponBase>();
