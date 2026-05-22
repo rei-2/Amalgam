@@ -24,7 +24,7 @@ struct Frame_t
 
 static PVOID s_pHandle;
 static LPVOID s_lpParam;
-static std::unordered_map<LPVOID, bool> s_mAddresses = {};
+static std::unordered_mapset<LPVOID> s_mAddresses = {};
 static int s_iExceptions = 0;
 
 static inline std::deque<Frame_t> StackTrace(PCONTEXT pContext)

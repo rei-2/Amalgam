@@ -462,7 +462,7 @@ std::vector<Face_t> CWorld::GetFacesInAABB(const Vec3& vMins, const Vec3& vMaxs,
 				continue;
 
 			ICollideable* pCollideable = nullptr;
-			if (!I::StaticPropMgr->IsStaticProp(pHandleEntity))
+			if (!bProp)
 			{
 				CBaseEntity* pEntity = reinterpret_cast<CBaseEntity*>(pHandleEntity);
 				if (!pEntity->GetAbsVelocity().IsZero())

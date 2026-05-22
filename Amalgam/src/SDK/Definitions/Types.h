@@ -11,6 +11,12 @@
 #include <ranges>
 #include <optional>
 
+namespace std
+{
+	template <class T>
+	using unordered_mapset = unordered_map<T, bool>;
+}
+
 class Vec2
 {
 public:

@@ -37,7 +37,7 @@ public:
 
 	bool m_bRendering = false;
 
-	std::unordered_map<int, bool> m_mEntities = {};
+	std::unordered_mapset<int> m_mEntities = {};
 };
 
 ADD_FEATURE(CChams, Chams);

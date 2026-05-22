@@ -122,7 +122,7 @@ static inline int GetSwingTime(CTFWeaponBase* pWeapon, bool bVar = true)
 		: ceilf(pWeapon->GetSmackDelay() / TICK_INTERVAL);
 }
 
-void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, std::vector<Target_t> vTargets)
+void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, const std::vector<Target_t>& vTargets)
 {
 	m_mRecordMap.clear(); m_mPaths.clear();
 	m_vEyePos = pLocal->GetShootPos();

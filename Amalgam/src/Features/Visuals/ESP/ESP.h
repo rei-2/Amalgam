@@ -47,7 +47,7 @@ private:
 	void DrawWorld();
 	
 	bool GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h);
-	void DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vecBones, Color_t clr);
+	void DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vBones, Color_t tColor);
 
 	std::unordered_map<CBaseEntity*, PlayerCache_t> m_mPlayerCache = {};
 	std::unordered_map<CBaseEntity*, BuildingCache_t> m_mBuildingCache = {};

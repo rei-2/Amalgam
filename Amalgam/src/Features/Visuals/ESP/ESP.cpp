@@ -743,9 +743,12 @@ void CESP::Store(CTFPlayer* pLocal)
 }
 
 static matrix3x4 s_aBones[MAXSTUDIOBONES];
+static matrix3x4 s_mTransform = {};
 
 void CESP::Draw()
 {
+	Math::AngleMatrix({ 0.f, I::EngineClient->GetViewAngles().y, 0.f }, s_mTransform, false);
+
 	DrawWorld();
 	DrawBuildings();
 	DrawPlayers();
@@ -1008,13 +1011,10 @@ void CESP::DrawWorld()
 
 bool CESP::GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h)
 {
-	Vec3 vOrigin = pEntity->GetAbsOrigin();
-	matrix3x4 mTransform = { { 1, 0, 0, vOrigin.x }, { 0, 1, 0, vOrigin.y }, { 0, 0, 1, vOrigin.z } };
-	//if (pEntity->entindex() == I::EngineClient->GetLocalPlayer())
-		Math::AngleMatrix({ 0.f, I::EngineClient->GetViewAngles().y, 0.f }, mTransform, false);
+	Math::MatrixInitialize(s_mTransform, pEntity->GetAbsOrigin(), false);
 
 	float flLeft, flRight, flTop, flBottom;
-	if (!SDK::IsOnScreen(pEntity, mTransform, &flLeft, &flRight, &flTop, &flBottom, true))
+	if (!SDK::IsOnScreen(pEntity, s_mTransform, &flLeft, &flRight, &flTop, &flBottom, true))
 		return false;
 
 	x = flLeft;
@@ -1035,15 +1035,15 @@ bool CESP::GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, flo
 	return !(x > H::Draw.m_nScreenW || x + w < 0 || y > H::Draw.m_nScreenH || y + h < 0);
 }
 
-void CESP::DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vecBones, Color_t clr)
+void CESP::DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vBones, Color_t tColor)
 {
-	for (size_t n = 1; n < vecBones.size(); n++)
+	for (size_t n = 1; n < vBones.size(); n++)
 	{
-		auto vBone1 = pPlayer->GetHitboxCenter(aBones, vecBones[n]);
-		auto vBone2 = pPlayer->GetHitboxCenter(aBones, vecBones[n - 1]);
+		auto vBone1 = pPlayer->GetHitboxCenter(aBones, vBones[n]);
+		auto vBone2 = pPlayer->GetHitboxCenter(aBones, vBones[n - 1]);
 
 		Vec3 vScreen1, vScreen2;
 		if (SDK::W2S(vBone1, vScreen1) && SDK::W2S(vBone2, vScreen2))
-			H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, clr);
+			H::Draw.Line(vScreen1.x, vScreen1.y, vScreen2.x, vScreen2.y, tColor);
 	}
 }

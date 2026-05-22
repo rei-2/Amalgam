@@ -260,7 +260,7 @@ NAMESPACE_BEGIN(Vars)
 			CVarEnum(Target, "Target", 0b0000001, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Players", "Sentries", "Dispensers", "Teleporters", "Stickies", "NPCs", "Bombs"),
 				Players = 1 << 0, Sentry = 1 << 1, Dispenser = 1 << 2, Teleporter = 1 << 3, Stickies = 1 << 4, NPCs = 1 << 5, Bombs = 1 << 6,
-				Building = Sentry | Dispenser | Teleporter);
+				All = Players | Sentry | Dispenser | Teleporter | Stickies | NPCs | Bombs, Building = Sentry | Dispenser | Teleporter);
 			CVarEnum(Ignore, "Ignore", 0b00000001000, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Friends", "Party", "Unprioritized", "Invulnerable", "Invisible", "Unsimulated", "Dead ringer", "Vaccinator", "Disguised", "Taunting", "Team"),
 				Friends = 1 << 0, Party = 1 << 1, Unprioritized = 1 << 2, Invulnerable = 1 << 3, Invisible = 1 << 4, Unsimulated = 1 << 5, DeadRinger = 1 << 6, Vaccinator = 1 << 7, Disguised = 1 << 8, Taunting = 1 << 9, Team = 1 << 10);
@@ -404,9 +404,13 @@ NAMESPACE_BEGIN(Vars)
 		NAMESPACE_END(Melee)
 
 		NAMESPACE_BEGIN(Healing)
-			CVarEnum(HealPriority, "Heal Priority", 0, NONE, nullptr,
+			CVarEnum(HealPriority, "Heal priority", 0, NONE, nullptr,
 				VA_LIST("None", "Prioritize team", "Prioritize friends", "Friends only"),
 				None, PrioritizeTeam, PrioritizeFriends, FriendsOnly);
+			CVarEnum(DangerIgnore, "Danger ignore", 0b1000, DROPDOWN_MULTI, nullptr,
+				VA_LIST("Friends", "Party", "Unprioritized", "Ignored"),
+				Friends = 1 << 0, Party = 1 << 1, Unprioritized = 1 << 2, Ignored = 1 << 3,
+				Shared = Friends | Party | Unprioritized);
 			CVar(AutoHeal, "Auto heal", false);
 			CVar(AutoArrow, "Auto arrow", false);
 			CVar(AutoRepair, "Auto repair", false);
@@ -657,9 +661,9 @@ NAMESPACE_BEGIN(Vars)
 			CVarValues(ShotPath, "Shot path", 0, VISUAL, nullptr,
 				"Off", "Line", "Separators", "Spaced", "Arrows", "Boxes");
 			CVarEnum(SplashRadius, "Splash radius", 0b0, VISUAL | DROPDOWN_MULTI, "Off",
-				VA_LIST("Rockets", "Stickies", "Pipes", "Scorch shot", "##Divider", "Trace", "Sphere"),
-				Rockets = 1 << 0, Stickies = 1 << 1, Pipes = 1 << 2, ScorchShot = 1 << 3, Trace = 1 << 4, Sphere = 1 << 5,
-				Enabled = Rockets | Stickies | Pipes | ScorchShot);
+				VA_LIST("Rockets", "Stickies", "Pipes", "Flares", "##Divider", "Trace", "Sphere"),
+				Rockets = 1 << 0, Stickies = 1 << 1, Pipes = 1 << 2, Flares = 1 << 3, Trace = 1 << 4, Sphere = 1 << 5,
+				Enabled = Rockets | Stickies | Pipes | Flares);
 			CVar(ProjectileCamera, "Projectile camera", false, VISUAL);
 			CVar(ProjectileWindow, "Projectile window", WindowBox_t(), VISUAL | NOBIND);
 			CVar(Box, VA_LIST("Box", "Path box"), true, VISUAL);

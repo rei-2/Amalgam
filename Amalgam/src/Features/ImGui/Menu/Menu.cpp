@@ -221,7 +221,8 @@ void CMenu::MenuAimbot(int iTab)
 				}
 				if (Section("Healing"))
 				{
-					FDropdown(Vars::Aimbot::Healing::HealPriority);
+					FDropdown(Vars::Aimbot::Healing::HealPriority, FDropdownEnum::Left);
+					FDropdown(Vars::Aimbot::Healing::DangerIgnore, FDropdownEnum::Right);
 					FToggle(Vars::Aimbot::Healing::AutoHeal, FToggleEnum::Left);
 					FToggle(Vars::Aimbot::Healing::AutoArrow, FToggleEnum::Right);
 					FToggle(Vars::Aimbot::Healing::AutoRepair, FToggleEnum::Left);
@@ -2808,7 +2809,7 @@ void CMenu::MenuSettings(int iTab)
 			{
 				int iIndex = -1, i = -1;
 
-				std::unordered_map<int, bool> mBinds = {};
+				std::unordered_mapset<int> mBinds = {};
 				std::function<void(int)> fGetBinds = [&](int iParent)
 				{
 					for (int _iBind = 0; _iBind < F::Binds.m_vBinds.size(); _iBind++)
@@ -2857,7 +2858,7 @@ void CMenu::MenuSettings(int iTab)
 				}
 			}
 
-			std::unordered_map<int, bool> mBinds = {};
+			std::unordered_mapset<int> mBinds = {};
 			std::function<void(int, int)> fGetBinds = [&](int iParent, int x)
 			{
 				for (int _iBind = 0; _iBind < F::Binds.m_vBinds.size(); _iBind++)

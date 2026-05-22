@@ -287,7 +287,7 @@ public:
 	NETVAR(m_iPipebombCount, int, "CTFPipebombLauncher", "m_iPipebombCount");
 	NETVAR(m_flChargeBeginTime, float, "CTFPipebombLauncher", "m_flChargeBeginTime");
 
-	NETVAR_OFF(m_Pipebombs, CUtlVector<CHandle<CTFGrenadePipebombProjectile>>, "CTFPipebombLauncher", "m_flChargeBeginTime", -28);
+	NETVAR_OFF(m_Pipebombs, CUtlVector<CHandle<CTFGrenadePipebombProjectile>>, "CTFPipebombLauncher", "m_flChargeBeginTime", -40);
 
 	int GetDetonateType();
 };

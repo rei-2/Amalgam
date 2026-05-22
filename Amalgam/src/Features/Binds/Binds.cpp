@@ -16,7 +16,7 @@ static inline void SetMain(BaseVar*& pBase, int iBind)
 }
 #define Set(t, b) if (IsType(t)) SetMain<t>(pBase, b);
 
-static std::unordered_map<BaseVar*, bool> s_mVars = {};
+static std::unordered_mapset<BaseVar*> s_mVars = {};
 static bool s_bUI = false, s_bMenu = false;
 
 static inline void LoopVars(int iBind, std::vector<BaseVar*>& vVars = G::Vars)

@@ -162,9 +162,9 @@ MAKE_HOOK(CHLClient_CreateMove, U::Memory.GetVirtual(I::Client, 21), void,
 		F::Ticks.CreateMove(pLocal, pWeapon, pCmd, pSendPacket);
 		F::AntiAim.Run(pLocal, pWeapon, pCmd, *pSendPacket);
 		F::AntiCheatCompatibility.CreateMove(pCmd, pSendPacket);
-	F::EnginePrediction.End(pLocal, pCmd);
 		F::Visuals.CreateMove(pLocal, pWeapon);
 		F::Visuals.LocalAnimations(pLocal, pCmd, *pSendPacket);
+	F::EnginePrediction.End(pLocal, pCmd);
 		F::Resolver.CreateMove();
 		F::NoSpreadHitscan.AskForPlayerPerf();
 	G::Choking = !*pSendPacket, G::LastUserCmd = pCmd;

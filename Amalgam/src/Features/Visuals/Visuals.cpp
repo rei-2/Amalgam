@@ -135,7 +135,7 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			break;
 		case TF_WEAPON_FLAREGUN:
 		case TF_WEAPON_FLAREGUN_REVENGE:
-			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::ScorchShot && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
+			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Flares && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
 				flRadius = TF_FLARE_DET_RADIUS;
 		}
 
@@ -857,7 +857,7 @@ void CVisuals::Store()
 	Group_t* pGroup;
 
 	{
-		std::unordered_map<CBaseEntity*, bool> mProjectiles = {};
+		std::unordered_mapset<CBaseEntity*> mProjectiles = {};
 
 		for (auto pEntity : H::Entities.GetGroup(EntityEnum::WorldProjectile))
 		{
