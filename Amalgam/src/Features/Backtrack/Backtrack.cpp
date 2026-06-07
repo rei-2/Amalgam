@@ -222,9 +222,12 @@ void CBacktrack::MakeRecords()
 			|| !H::Entities.GetDeltaTime(pPlayer->entindex()))
 			continue;
 
+
 		auto& vRecords = m_mRecords[pPlayer];
 
 		TickRecord* pLastRecord = !vRecords.empty() ? &vRecords.front() : nullptr;
+			continue;
+
 		vRecords.emplace_front(
 			pPlayer->m_flSimulationTime(),
 			pPlayer->m_vecOrigin(),

@@ -39,8 +39,12 @@ struct Group_t
 	bool m_bPickupTimer = false;
 
 	int m_iBacktrack = 0b0;
+	int m_iBacktrackDraw = 0b0;
+	int m_iBacktrackGlowDraw = 0b0;
 	std::vector<std::pair<std::string, Color_t>> m_vBacktrackChams = {};
 	Glow_t m_tBacktrackGlow = {};
+	Color_t m_tBacktrackGlowColor = {};
+
 
 	int m_iTrajectory = 0b0;
 

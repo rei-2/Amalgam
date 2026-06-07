@@ -964,6 +964,14 @@ void CMenu::MenuVisuals(int iTab)
 			/* Column 2 */
 			TableNextColumn();
 			{
+				if (Section("ESP Options"))
+				{
+					FDropdown("Extra ESP Options", &tGroup.m_iESPOptions, { "Name use Group Color", "Display Tags at Bottom", "Tags override color", "Centered Health Text" }, {}, FDropdownEnum::Multi);
+					FSlider(Vars::ESP::DownwardBarLerp, FSliderEnum::Left);
+					FSlider(Vars::ESP::UpwardBarLerp, FSliderEnum::Right);
+				}
+				EndSection();
+
 				if (Section("ESP"))
 				{
 					std::vector<const char*> vEntries = { "Name", "Box", "Distance" };
@@ -1052,9 +1060,11 @@ void CMenu::MenuVisuals(int iTab)
 					FToggle("Pickup timer", &tGroup.m_bPickupTimer);
 
 					FToggle("Backtrack", &tGroup.m_iBacktrack, BacktrackEnum::Enabled, FToggleEnum::Left);
+
 					if (FPopupButton("Backtrack", {}, -8))
 					{
-						FDropdown("##Draw", &tGroup.m_iBacktrack, { "Last", "First", "##Divider", "Always" }, { BacktrackEnum::Last, BacktrackEnum::First, BacktrackEnum::Always }, FDropdownEnum::Multi | FDropdownEnum::NoSanitization, 0, "All");
+						FDropdown("Backtrack Chams", &tGroup.m_iBacktrackDraw, { "Last", "First", "##Divider", "Always" }, {}, FDropdownEnum::Multi, 0, "All");
+						FDropdown("Backtrack Glow", &tGroup.m_iBacktrackGlowDraw, { "Last", "First", "##Divider", "Always" }, {}, FDropdownEnum::Multi, 0, "All");
 
 						FMDropdown("Material", &tGroup.m_vBacktrackChams, FDropdownEnum::Left);
 						SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetCursorPosY() - H::Draw.Scale(32) });
@@ -1071,6 +1081,7 @@ void CMenu::MenuVisuals(int iTab)
 							FSlider("Blur scale## Backtrack", &tGroup.m_tBacktrackGlow.Blur, 0.f, 10.f, 1.f, "%g", FSliderEnum::Right | FSliderEnum::Min | FSliderEnum::Precision);
 						}
 						PopTransparent();
+						FColorPicker("Backtrack Glow Color", &tGroup.m_tBacktrackGlowColor);
 
 						EndPopup();
 					}
@@ -1258,15 +1269,48 @@ void CMenu::MenuVisuals(int iTab)
 			{
 				if (Section("Settings", 8))
 				{
-					FColorPicker(Vars::Menu::Theme::Accent, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::TabTitles, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::Accent, FColorPickerEnum::Right);
+					FColorPicker(Vars::Menu::Theme::Alternative, FColorPickerEnum::Left);
 					FColorPicker(Vars::Menu::Theme::Background, FColorPickerEnum::Right);
 					FColorPicker(Vars::Menu::Theme::Active, FColorPickerEnum::Left);
 					FColorPicker(Vars::Menu::Theme::Inactive, FColorPickerEnum::Right);
+					FColorPicker(Vars::Menu::Theme::IndicatorsColor, FColorPickerEnum::Left);
 
 					FSDropdown(Vars::Menu::CheatTitle, FDropdownEnum::Left);
 					FSDropdown(Vars::Menu::CheatTag, FDropdownEnum::Right);
 					FKeybind(Vars::Menu::PrimaryKey, FButtonEnum::Left, { Vars::Menu::SecondaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON });
 					FKeybind(Vars::Menu::SecondaryKey, FButtonEnum::Right | FButtonEnum::SameLine, { Vars::Menu::PrimaryKey[DEFAULT_BIND], VK_LBUTTON, VK_RBUTTON });
+				} EndSection();
+
+				if (Section("Fonts"))
+				{
+					static std::vector fontFlagNames{ "Italic", "Underline", "Strikeout", "Symbol", "Antialias", "Gaussian", "Rotary", "Dropshadow", "Additive", "Outline", "Custom" };
+					static std::vector fontFlagValues{ 0x001, 0x002, 0x004, 0x008, 0x010, 0x020, 0x040, 0x080, 0x100, 0x200, 0x400 };
+
+					FSDropdown(Vars::Fonts::FONT_NAME::szName, FDropdownEnum::Left);
+					FDropdown(Vars::Fonts::FONT_NAME::nFlags, fontFlagNames, fontFlagValues, DROPDOWN_MULTI | FDropdownEnum::Right);
+					FSlider(Vars::Fonts::FONT_NAME::nTall);
+					FSlider(Vars::Fonts::FONT_NAME::nWeight);
+
+					FSDropdown(Vars::Fonts::FONT_FLAGS::szName, FDropdownEnum::Left);
+					FDropdown(Vars::Fonts::FONT_FLAGS::nFlags, fontFlagNames, fontFlagValues, DROPDOWN_MULTI | FDropdownEnum::Right);
+					FSlider(Vars::Fonts::FONT_FLAGS::nTall);
+					FSlider(Vars::Fonts::FONT_FLAGS::nWeight);
+
+					////FSDropdown(Vars::Fonts::FONT_TAGS::szName, {}, FSDropdownEnum::AutoUpdate | FDropdownEnum::Left);
+					FSDropdown(Vars::Fonts::FONT_TAGS::szName, FDropdownEnum::Left);
+					FDropdown(Vars::Fonts::FONT_TAGS::nFlags, fontFlagNames, fontFlagValues, DROPDOWN_MULTI | FDropdownEnum::Right);
+					FSlider(Vars::Fonts::FONT_TAGS::nTall);
+					FSlider(Vars::Fonts::FONT_TAGS::nWeight);
+
+					FSDropdown(Vars::Fonts::FONT_INDICATORS::szName, FDropdownEnum::Left);
+					FDropdown(Vars::Fonts::FONT_INDICATORS::nFlags, fontFlagNames, fontFlagValues, DROPDOWN_MULTI | FDropdownEnum::Right);
+					FSlider(Vars::Fonts::FONT_INDICATORS::nTall);
+					FSlider(Vars::Fonts::FONT_INDICATORS::nWeight);
+
+					if (FButton("Apply fonts"))
+						H::Fonts.Reload();
 				} EndSection();
 			}
 			/* Column 2 */
@@ -1279,6 +1323,25 @@ void CMenu::MenuVisuals(int iTab)
 						H::Fonts.Reload();
 					if (FToggle(Vars::Menu::CheapText))
 						H::Fonts.Reload();
+
+
+					FColorPicker(Vars::Menu::Theme::CritBarColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::CritBarColor2, FColorPickerEnum::Right);
+
+					FColorPicker(Vars::Menu::Theme::TickBarColor, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::TickBarColor2, FColorPickerEnum::Right);
+
+					FColorPicker(Vars::Menu::Theme::CritBarBanned, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::CritBarBanned2, FColorPickerEnum::Right);
+
+					FColorPicker(Vars::Menu::Theme::TickBarColorWait, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::TickBarColorWait2, FColorPickerEnum::Right);
+
+					FColorPicker(Vars::Menu::Theme::CritBarBg, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::TickBarFill, FColorPickerEnum::Right);
+
+					FColorPicker(Vars::Menu::Theme::CritBarOutline, FColorPickerEnum::Left);
+					FColorPicker(Vars::Menu::Theme::TickBarOutline, FColorPickerEnum::Right);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
@@ -3896,6 +3959,7 @@ struct BindInfo_t
 	int iBind;
 	Bind_t& tBind;
 };
+
 void CMenu::DrawBinds()
 {
 	using namespace ImGui;
@@ -4037,7 +4101,6 @@ void CMenu::DrawBinds()
 			SetCursorPos({ H::Draw.Scale(30), H::Draw.Scale(7) });
 			FText("Binds");
 			PopFont();
-
 			iListStart = 36;
 		}
 
@@ -4125,6 +4188,7 @@ void CMenu::DrawBinds()
 	}
 	PopStyleVar();
 }
+
 #pragma endregion
 
 static inline void ManageVars()

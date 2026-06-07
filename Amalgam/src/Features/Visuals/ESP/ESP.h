@@ -30,6 +30,8 @@ struct BuildingCache_t : EntityCache_t
 {
 	std::vector<Bar_t> m_vBars = {};
 	float m_flHealth = 1.f;
+	float m_flSmoothHealth = 1.f;
+
 };
 
 struct PlayerCache_t : BuildingCache_t
@@ -37,6 +39,7 @@ struct PlayerCache_t : BuildingCache_t
 	bool m_bBones = false;
 	int m_iClassIcon = 0;
 	CHudTexture* m_pWeaponIcon = nullptr;
+	float m_flSmoothHealth = 1.f;
 };
 
 class CESP
@@ -45,9 +48,9 @@ private:
 	void DrawPlayers();
 	void DrawBuildings();
 	void DrawWorld();
-	
+
 	bool GetDrawBounds(CBaseEntity* pEntity, float& x, float& y, float& w, float& h);
-	void DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vBones, Color_t tColor);
+	void DrawBones(CTFPlayer* pPlayer, matrix3x4* aBones, std::vector<int> vecBones, Color_t clr);
 
 	std::unordered_map<CBaseEntity*, PlayerCache_t> m_mPlayerCache = {};
 	std::unordered_map<CBaseEntity*, BuildingCache_t> m_mBuildingCache = {};

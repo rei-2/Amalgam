@@ -215,14 +215,41 @@ namespace ImGui
 	}
 	inline void RenderBackground(ImU32 uBackground, ImU32 uBorder, float flInset = H::Draw.Scale())
 	{
+
 		ImVec2 vSize = GetWindowSize();
 		ImVec2 vDrawPos = GetDrawPos();
 		ImDrawList* pDrawList = GetWindowDrawList();
 
-		pDrawList->AddRectFilled(vDrawPos + ImVec2(flInset, flInset), vDrawPos + vSize - ImVec2(flInset, flInset), uBackground, H::Draw.Scale(3));
-		
+		// Subtle inner glow
+		ImU32 glowColor = ImGui::ColorConvertFloat4ToU32(ImVec4(
+			F::Render.Alternative.Value.x,
+			F::Render.Alternative.Value.y,
+			F::Render.Alternative.Value.z,
+			0.03f
+		));
+		pDrawList->AddRectFilled(
+			{ vDrawPos.x + flInset, vDrawPos.y + flInset },
+			{ vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y },
+			glowColor,
+			H::Draw.Scale(4)
+		);
+
+		pDrawList->AddRectFilled(
+			{ vDrawPos.x + flInset, vDrawPos.y + flInset },
+			{ vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y },
+			uBackground,
+			H::Draw.Scale(3)
+		);
+
 		flInset += H::Draw.Scale(0.5f) - 0.5f - H::Draw.Scale();
-		pDrawList->AddRect(vDrawPos + ImVec2(flInset, flInset), vDrawPos + vSize - ImVec2(flInset, flInset), uBorder, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
+		pDrawList->AddRect(
+			{ vDrawPos.x + flInset, vDrawPos.y + flInset },
+			{ vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y },
+			uBorder,
+			H::Draw.Scale(4),
+			ImDrawFlags_None,
+			H::Draw.Scale()
+		);
 	}
 	inline void RenderTwoToneBackground(float flSize, ImU32 uTitle, ImU32 uBackground, bool bHorizontal = false)
 	{

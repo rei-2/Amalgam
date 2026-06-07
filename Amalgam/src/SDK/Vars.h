@@ -188,6 +188,10 @@ NAMESPACE_BEGIN(Vars)
 		CVar(ConditionsDisplay, "Conditions display", DragBox_t(), VISUAL | NOBIND);
 		CVar(SeedPredictionDisplay, "Seed prediction display", DragBox_t(), VISUAL | NOBIND);
 
+		CVarEnum(CritIndicatorType, "Crit Indicator Type", 0b00, VISUAL, nullptr,
+			VA_LIST("Original", "Text Based"),
+			Original, TextBased);
+
 		CVar(Scale, "Scale", 1.f, NOBIND | SLIDER_MIN | SLIDER_PRECISION | SLIDER_NOAUTOUPDATE, 0.75f, 2.f, 0.25f);
 		CVar(CheapText, "Cheap text", false, NOBIND);
 
@@ -279,8 +283,7 @@ NAMESPACE_BEGIN(Vars)
 		CVar(BarFill, "Bar Fill", Color_t(0, 0, 0, 255), VISUAL);
 		CVar(BacktrackGlowColor, "Backtrack Glow Color", Color_t(255, 255, 255, 100), VISUAL);
 
-		CVar(Local, "Local color", Color_t(255, 255, 255), VISUAL);
-		CVar(FOVCircle, "FOV circle color", Color_t(255, 255, 255, 100), VISUAL);
+
 		CVar(SpellFootstep, "Spell footstep color", Color_t(255, 255, 255, 255), VISUAL);
 
 		CVar(WorldModulation, VA_LIST("World modulation", "World modulation color"), Color_t(255, 255, 255, 255), VISUAL);
@@ -589,6 +592,12 @@ NAMESPACE_BEGIN(Vars)
 
 	NAMESPACE_BEGIN(ESP)
 		CVarValues(ActiveGroups, "Active groups", int(0b11111111111111111111111111111111), VISUAL | DROPDOWN_MULTI | DROPDOWN_NOSANITIZATION, nullptr);
+		CVar(UpwardBarLerp, "Healthbar Lerp Value (+)", .2f, VISUAL | SLIDER_PRECISION, 0.1f, 1.f, 0.1f);
+		CVar(DownwardBarLerp, "Healthbar Lerp Value (-)", .2f, VISUAL | SLIDER_PRECISION, 0.1f, 1.f, 0.1f);
+
+		CVarEnum(ExtraESPOptions, "Extra ESP Options", 0, VISUAL | DROPDOWN_MULTI, nullptr,
+			VA_LIST("Dynamic Health Bars", "Name use Group Color", "Display Priority tag at Bottom"),
+			DynamicBars = 1 << 0, NameUseGroupColor = 1 << 1, DisplayTagsAtBottom = 1 << 2);
 	NAMESPACE_END(ESP)
 
 	NAMESPACE_BEGIN(Visuals)

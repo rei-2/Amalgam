@@ -922,6 +922,19 @@ struct Color_t
 		a = byte(std::clamp(flA, 0.f, 255.f));
 	}
 
+	inline Color_t Desaturate(float flAmount) const
+	{
+		float flH, flS, flV;
+
+		Color_t tOut = *this;
+		tOut.GetHSV(flH, flS, flV);
+
+		float flNewS = std::clamp(flS - (flAmount * 100.f), 0.f, 100.f);
+
+		tOut.SetHSV(flH, flNewS, flV, a);
+		return tOut;
+	}
+
 	inline void SetHSV(float flH, float flS = 100.f, float flV = 100.f, float flA = 255.f)
 	{
 		float flR, flG, flB;
