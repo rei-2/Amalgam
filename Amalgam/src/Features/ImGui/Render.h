@@ -18,6 +18,8 @@ public:
 
 	// Colors
 	ImColor Accent = {};
+	ImColor Alternative = {};
+	ImColor TabTitles = {};
 	ImColor Background0 = {};
 	ImColor Background0p5 = {};
 	ImColor Background1 = {};

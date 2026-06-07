@@ -705,9 +705,10 @@ namespace ImGui
 
 	static std::unordered_map<uint32_t, float> mLastHeights = {};
 	static std::vector<uint32_t> vStoredLabels = {};
-	inline bool Section(const char* sLabel, float flPaddingMod = 0.f, float flMinHeight = 28.f, bool bForceHeight = false)
+	inline bool Section(const char* sLabel, float flPaddingMod = 0.f, float flMinHeight = 10.f, bool bForceHeight = false, uint32_t uHash = 0)
 	{
-		uint32_t uHash = FNV1A::Hash32(sLabel);
+		if (!uHash)
+			uHash = FNV1A::Hash32(sLabel);
 		vStoredLabels.push_back(uHash);
 
 		if (!bForceHeight && mLastHeights.contains(uHash) && mLastHeights[uHash] > flMinHeight)
@@ -717,10 +718,84 @@ namespace ImGui
 		bool bReturn = BeginChild(sLabel, { GetColumnWidth(), flMinHeight }, ImGuiChildFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		if (bReturn)
 		{
+			ImDrawList* pDrawList = GetWindowDrawList();
+			ImVec2 vDrawPos = GetDrawPos();
+			ImVec2 vSize = GetWindowSize();
+
 			if (sLabel[0] != '#')
-				RenderTwoToneBackground(H::Draw.Scale(28), F::Render.Background0, F::Render.Background0p5, F::Render.Background2);
+			{
+				// Modern gradient header
+				ImU32 colTop = ImGui::ColorConvertFloat4ToU32(ImVec4(
+					F::Render.Background0.Value.x,
+					F::Render.Background0.Value.y,
+					F::Render.Background0.Value.z,
+					F::Render.Background0.Value.w * 0.8f
+				));
+				ImU32 colBottom = ImGui::ColorConvertFloat4ToU32(ImVec4(
+					F::Render.Background0.Value.x * 0.95f,
+					F::Render.Background0.Value.y * 0.95f,
+					F::Render.Background0.Value.z * 0.95f,
+					F::Render.Background0.Value.w
+				));
+
+				// header gradient
+				pDrawList->AddRectFilledMultiColor(
+					{ vDrawPos.x + H::Draw.Scale(), vDrawPos.y + H::Draw.Scale() },
+					{ vDrawPos.x - H::Draw.Scale() + vSize.x, vDrawPos.y + H::Draw.Scale(28) },
+					colTop, colTop, colBottom, colBottom
+				);
+
+				ImVec4 contentBg = F::Render.Background0p5.Value;
+				float baseAlpha = F::Render.Background0.Value.w;
+				if (baseAlpha < 0.5f) {
+					contentBg.w = baseAlpha + (1.0f - baseAlpha) * 0.4f; // Add 40% of remaining opacity
+				}
+				pDrawList->AddRectFilled(
+					{ vDrawPos.x + H::Draw.Scale(), vDrawPos.y + H::Draw.Scale(28) },
+					{ vDrawPos.x - H::Draw.Scale() + vSize.x, vDrawPos.y - H::Draw.Scale() + vSize.y },
+					ImGui::ColorConvertFloat4ToU32(contentBg),
+					H::Draw.Scale(3),
+					ImDrawFlags_RoundCornersBottom
+				);
+
+				// Accent line under header
+				pDrawList->AddRectFilled(
+					{ vDrawPos.x + H::Draw.Scale(2), vDrawPos.y + H::Draw.Scale(30) },
+					{ vDrawPos.x - H::Draw.Scale(2) + vSize.x, vDrawPos.y + H::Draw.Scale(31) },
+					ImGui::ColorConvertFloat4ToU32(ImVec4(
+						F::Render.Alternative.Value.x,
+						F::Render.Alternative.Value.y,
+						F::Render.Alternative.Value.z,
+						.5f
+					))
+				);
+			}
 			else
-				RenderBackground(F::Render.Background0p5, F::Render.Background2);
+			{
+				// background for hidden sections
+				ImVec4 hiddenBg = F::Render.Background0p5.Value;
+				float baseAlpha = F::Render.Background0.Value.w;
+				if (baseAlpha < 0.5f) {
+					hiddenBg.w = baseAlpha + (1.0f - baseAlpha) * 0.4f; // Add 40% of remaining opacity
+				}
+				pDrawList->AddRectFilled(
+					{ vDrawPos.x + H::Draw.Scale(), vDrawPos.y + H::Draw.Scale() },
+					{ vDrawPos.x - H::Draw.Scale() + vSize.x, vDrawPos.y - H::Draw.Scale() + vSize.y },
+					ImGui::ColorConvertFloat4ToU32(hiddenBg),
+					H::Draw.Scale(3)
+				);
+			}
+
+			// Border
+			float flInset = H::Draw.Scale(0.5f) - 0.5f;
+			pDrawList->AddRect(
+				{ vDrawPos.x + flInset, vDrawPos.y + flInset },
+				{ vDrawPos.x - flInset + vSize.x, vDrawPos.y - flInset + vSize.y },
+				F::Render.Background2,
+				H::Draw.Scale(4),
+				ImDrawFlags_None,
+				H::Draw.Scale()
+			);
 		}
 
 		PushStyleVar(ImGuiStyleVar_ItemSpacing, { H::Draw.Scale(8), 0 });
@@ -729,7 +804,8 @@ namespace ImGui
 			ImVec2 vOriginalPos = GetCursorPos();
 
 			PushFont(F::Render.FontBold);
-			TextColored(F::Render.Accent, StripDoubleHash(sLabel).c_str());
+			//SetCursorPos({ vOriginalPos.x + H::Draw.Scale(8), vOriginalPos.y + H::Draw.Scale(5) });
+			TextColored(F::Render.TabTitles, StripDoubleHash(sLabel).c_str());
 			PopFont();
 
 			SetCursorPos(vOriginalPos); DebugDummy({ 0, H::Draw.Scale(19 + flPaddingMod) });
@@ -802,6 +878,20 @@ namespace ImGui
 	// widgets
 	inline bool FTabs(std::vector<std::vector<const char*>> vEntries, std::vector<int*> vVars, const ImVec2 vSize, const ImVec2 vPos, int iFlags = FTabsEnum::None, std::vector<std::vector<const char*>> vIcons = {}, ImVec2 vAllTextOffset = {}, ImVec2 vAllBarOffset = {}, ImVec2 vSubTextOffset = {}, ImVec2 vSubBarOffset = {}, float flBarSizeMod = 0.f, float flBarThickness = 1.f)
 	{	// WOW fuck this
+
+
+		// helpers
+		static std::map<ImGuiID, float> tabFadeMap;
+		ImVec4 accent4 = ColorConvertU32ToFloat4(F::Render.Alternative);
+		float h, s, v;
+		ImGui::ColorConvertRGBtoHSV(accent4.x, accent4.y, accent4.z, h, s, v);
+		ImVec4 hovered4 = ColorConvertU32ToFloat4(F::Render.Alternative);
+		ImU32 hoveredTextColor = GetColorU32(hovered4);
+
+		static ImVec2 animRelPos = { 0, 0 };
+		static ImVec2 animBarSize = { 0, 0 };
+		float flLerpSpeed = ImGui::GetIO().DeltaTime * 16.0f;
+
 		if (!vIcons.empty() && vIcons.size() != vEntries.size())
 		{
 			IM_ASSERT_USER_ERROR(0, "FTabs() vIcons size mismatch to vEntries.");
@@ -880,54 +970,39 @@ namespace ImGui
 				ImVec2 vCurTextOffset = vAllTextOffset + (j ? vSubTextOffset : ImVec2());
 				ImVec2 vCurBarOffset = vAllBarOffset + (j ? vSubBarOffset : ImVec2());
 
-				if (!iTabState)
-					PushStyleColor(ImGuiCol_Text, F::Render.Inactive.Value);
-				else if (iTabState == 2)
-				{
-					switch (iBar)
-					{
-					case 1: // left
-						pDrawList->AddRectFilled(
-							vDrawPos + vCurBarOffset + ImVec2(0, flBarSizeMod),
-							vDrawPos + vCurBarOffset + ImVec2(H::Draw.Scale(flBarThickness), vNewSize.y - flBarSizeMod),
-							F::Render.Accent
-						);
-						break;
-					case 2: // right
-						pDrawList->AddRectFilled(
-							vDrawPos + vCurBarOffset + ImVec2(vNewSize.x - H::Draw.Scale(flBarThickness), flBarSizeMod),
-							vDrawPos + vCurBarOffset + ImVec2(vNewSize.x, vNewSize.y - flBarSizeMod),
-							F::Render.Accent
-						);
-						break;
-					case 3: // top
-						pDrawList->AddRectFilled(
-							vDrawPos + vCurBarOffset + ImVec2(flBarSizeMod, 0),
-							vDrawPos + vCurBarOffset + ImVec2(vNewSize.x - flBarSizeMod, H::Draw.Scale(flBarThickness)),
-							F::Render.Accent
-						);
-						break;
-					case 4: // bottom
-						pDrawList->AddRectFilled(
-							vDrawPos + vCurBarOffset + ImVec2(flBarSizeMod, vNewSize.y - H::Draw.Scale(flBarThickness)),
-							vDrawPos + vCurBarOffset + ImVec2(vNewSize.x - flBarSizeMod, vNewSize.y),
-							F::Render.Accent
-						);
-						break;
-					}
+				SetCursorPos(vOffset);
+
+				bool bPressed = Button(std::format("##{}", sEntry).c_str(), vNewSize);
+				bool bIsHovered = IsItemHovered() && !Disabled;
+				if (bIsHovered) SetMouseCursor(ImGuiMouseCursor_Hand);
+
+				if (iTabState == 2) {
+					animRelPos = ImLerp(animRelPos, vOffset + vCurBarOffset, flLerpSpeed);
+					animBarSize = ImLerp(animBarSize, vNewSize, flLerpSpeed);
 				}
 
-				SetCursorPos(vOffset);
-				if (Button(std::format("##{}", sEntry).c_str(), vNewSize) && !iTabState && pVar)
-				{
+				ImGuiID tabID = GetID(std::format("##{}_{}_{}", sEntry, i, j).c_str());
+				float& fade = tabFadeMap[tabID];
+				fade = ImLerp(fade, (bIsHovered || iTabState == 2) ? 1.0f : 0.0f, flLerpSpeed);
+
+				ImVec4 colInactive = ImColor(F::Render.Inactive.Value).Value;
+				ImVec4 colTarget = (iTabState == 2) ? ImColor(F::Render.TabTitles).Value : hovered4;
+				ImVec4 colFinal = ImVec4(
+					ImLerp(colInactive.x, colTarget.x, fade),
+					ImLerp(colInactive.y, colTarget.y, fade),
+					ImLerp(colInactive.z, colTarget.z, fade),
+					ImLerp(colInactive.w, colTarget.w, fade)
+				);
+
+				ImU32 finalColorU32 = ImGui::ColorConvertFloat4ToU32(colFinal);
+
+				PushStyleColor(ImGuiCol_Text, finalColorU32);
+
+				if (bPressed && !iTabState && pVar) {
 					*pVar = int(!j ? i : j - 1);
 					bChanged = true;
-					if (vStoredLabels.empty())
-						mLastHeights.clear();
+					if (vStoredLabels.empty()) mLastHeights.clear();
 				}
-				if (!Disabled && IsItemHovered())
-					SetMouseCursor(ImGuiMouseCursor_Hand);
-
 				ImVec2 vOriginalPos = GetCursorPos();
 				std::string sStripped = StripDoubleHash(sEntry);
 
@@ -1020,11 +1095,8 @@ namespace ImGui
 					SetCursorPos(vOffset + vCurTextOffset + vIconOffset);
 					IconImage(sIcon);
 				}
-
+				PopStyleColor();
 				SetCursorPos(vOriginalPos);
-
-				if (!iTabState)
-					PopStyleColor();
 
 				if (!bReverse)
 				{
@@ -1035,7 +1107,42 @@ namespace ImGui
 				}
 			}
 		}
+		ImVec2 vCurrentDrawPos = GetDrawPos();
+		float flThickness = H::Draw.Scale(flBarThickness);
 
+		ImVec2 vFinalPos = vCurrentDrawPos + animRelPos;
+
+		switch (iBar)
+		{
+		case 1: // left
+			pDrawList->AddRectFilled(
+				{ vFinalPos.x, vFinalPos.y + flBarSizeMod },
+				{ vFinalPos.x + flThickness, vFinalPos.y - flBarSizeMod + animBarSize.y },
+				F::Render.Alternative
+			);
+			break;
+		case 2: // right
+			pDrawList->AddRectFilled(
+				{ vFinalPos.x + animBarSize.x - flThickness, vFinalPos.y + flBarSizeMod },
+				{ vFinalPos.x + animBarSize.x, vFinalPos.y - flBarSizeMod + animBarSize.y },
+				F::Render.Alternative
+			);
+			break;
+		case 3: // top
+			pDrawList->AddRectFilled(
+				{ vFinalPos.x + flBarSizeMod, vFinalPos.y },
+				{ vFinalPos.x - flBarSizeMod + animBarSize.x, vFinalPos.y + flThickness },
+				F::Render.Alternative
+			);
+			break;
+		case 4: // bottom
+			pDrawList->AddRectFilled(
+				{ vFinalPos.x + flBarSizeMod, vFinalPos.y + animBarSize.y - flThickness },
+				{ vFinalPos.x - flBarSizeMod + animBarSize.x, vFinalPos.y + animBarSize.y },
+				F::Render.Alternative
+			);
+			break;
+		}
 		return bChanged;
 	}
 

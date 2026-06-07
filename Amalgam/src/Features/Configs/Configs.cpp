@@ -463,6 +463,7 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 				SaveJson(tChild, "Buildings", tGroup.m_iBuildings);
 				SaveJson(tChild, "Projectiles", tGroup.m_iProjectiles);
 				SaveJson(tChild, "ESP", tGroup.m_iESP);
+				SaveJson(tChild, "ESPOptions", tGroup.m_iESPOptions);
 				SaveJson(tChild, "Chams", tGroup.m_tChams);
 				SaveJson(tChild, "Glow", tGroup.m_tGlow);
 				SaveJson(tChild, "OffscreenArrows", tGroup.m_bOffscreenArrows);
@@ -470,8 +471,13 @@ bool CConfigs::SaveConfig(const std::string& sConfigName, bool bNotify)
 				SaveJson(tChild, "OffscreenArrowsMaxDistance", tGroup.m_flOffscreenArrowsMaxDistance);
 				SaveJson(tChild, "PickupTimer", tGroup.m_bPickupTimer);
 				SaveJson(tChild, "Backtrack", tGroup.m_iBacktrack);
-				SaveJson(tChild, "BacktrackChams", tGroup.m_vBacktrackChams);
+				SaveJson(tChild, "BacktrackDraw", tGroup.m_iBacktrackDraw);
 				SaveJson(tChild, "BacktrackGlow", tGroup.m_tBacktrackGlow);
+				SaveJson(tChild, "BacktrackGlowModes", tGroup.m_iBacktrackGlowDraw);
+				SaveJson(tChild, "OffscreenArrows", tGroup.m_bOffscreenArrows);
+				SaveJson(tChild, "OffscreenArrowsOffset", tGroup.m_iOffscreenArrowsOffset);
+				SaveJson(tChild, "OffscreenArrowsMaxDistance", tGroup.m_flOffscreenArrowsMaxDistance);
+				SaveJson(tChild, "BacktrackChams", tGroup.m_vBacktrackChams);
 				SaveJson(tChild, "Trajectory", tGroup.m_iTrajectory);
 				SaveJson(tChild, "Sightlines", tGroup.m_iSightlines);
 
@@ -579,6 +585,7 @@ bool CConfigs::LoadConfig(const std::string& sConfigName, bool bNotify)
 				LoadJson(tChild, "Buildings", tGroup.m_iBuildings);
 				LoadJson(tChild, "Projectiles", tGroup.m_iProjectiles);
 				LoadJson(tChild, "ESP", tGroup.m_iESP);
+				LoadJson(tChild, "ESPOptions", tGroup.m_iESPOptions);
 				LoadJson(tChild, "Chams", tGroup.m_tChams);
 				LoadJson(tChild, "Glow", tGroup.m_tGlow);
 				LoadJson(tChild, "OffscreenArrows", tGroup.m_bOffscreenArrows);

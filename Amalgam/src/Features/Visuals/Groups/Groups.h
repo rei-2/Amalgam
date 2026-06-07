@@ -7,6 +7,7 @@ Enum(Player, Scout = 1 << 0, Soldier = 1 << 1, Pyro = 1 << 2, Demoman = 1 << 3, 
 Enum(Building, Sentry = 1 << 0, Dispenser = 1 << 1, Teleporter = 1 << 2, Hurt = 1 << 3, Classes = Sentry | Dispenser | Teleporter, Conds = Hurt)
 Enum(Projectile, Rocket = 1 << 0, Sticky = 1 << 1, Pipe = 1 << 2, Arrow = 1 << 3, Heal = 1 << 4, Flare = 1 << 5, Fire = 1 << 6, Repair = 1 << 7, Cleaver = 1 << 8, Milk = 1 << 9, Jarate = 1 << 10, Gas = 1 << 11, Bauble = 1 << 12, Baseball = 1 << 13, Energy = 1 << 14, ShortCircuit = 1 << 15, MeteorShower = 1 << 16, Lightning = 1 << 17, Fireball = 1 << 18, Bomb = 1 << 19, Bats = 1 << 20, Pumpkin = 1 << 21, Monoculus = 1 << 22, Skeleton = 1 << 23, Misc = 1 << 24, Crit = 1 << 25, Minicrit = 1 << 26, Classes = Rocket | Sticky | Pipe | Arrow | Heal | Flare | Fire | Repair | Cleaver | Milk | Jarate | Gas | Bauble | Baseball | Energy | ShortCircuit | MeteorShower | Lightning | Fireball | Bomb | Bats | Pumpkin | Monoculus | Skeleton | Misc, Conds = Crit | Minicrit)
 Enum(ESP, Name = 1 << 0, Box = 1 << 1, Distance = 1 << 2, Bones = 1 << 3, HealthBar = 1 << 4, HealthText = 1 << 5, UberBar = 1 << 6, UberText = 1 << 7, ClassIcon = 1 << 8, ClassText = 1 << 9, WeaponIcon = 1 << 10, WeaponText = 1 << 11, Priority = 1 << 12, Labels = 1 << 13, Buffs = 1 << 14, Debuffs = 1 << 15, Flags = 1 << 16, LagCompensation = 1 << 17, Ping = 1 << 18, KDR = 1 << 19, Owner = 1 << 20, Level = 1 << 21, AmmoBars = 1 << 22, AmmoText = 1 << 23, IntelReturnTime = 1 << 24)
+Enum(ESPOptions, NameUseGroupColor = 1 << 0, TagsDisplayBottom = 1 << 1, TagsOverrideColor = 1 << 2, CenteredHealthText = 1 << 3)
 Enum(Backtrack, Enabled = 1 << 0, IgnoreZ = 1 << 1, Last = 1 << 2, First = 1 << 3, Always = 1 << 4)
 Enum(Trajectory, Enabled = 1 << 0, IgnoreZ = 1 << 1, Predict = 1 << 2, Radius = 1 << 3, Trace = 1 << 4, Sphere = 1 << 5, Path = 1 << 6)
 Enum(Sightlines, Enabled = 1 << 0, IgnoreZ = 1 << 1)
@@ -19,6 +20,7 @@ struct Group_t
 	bool m_bTagsOverrideColor = true;
 
 	int m_iTargets = 0b0;
+	int m_iESPOptions = 0b0;
 	int m_iConditions = 0b0;
 	int m_iPlayers = 0b0;
 	int m_iBuildings = 0b0;

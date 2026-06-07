@@ -192,14 +192,77 @@ NAMESPACE_BEGIN(Vars)
 		CVar(CheapText, "Cheap text", false, NOBIND);
 
 		NAMESPACE_BEGIN(Theme)
+			CVar(TabTitles, "Title/Sidebar", Color_t(175, 150, 255, 255), VISUAL);
 			CVar(Accent, "Accent color", Color_t(175, 150, 255, 255), VISUAL);
+			CVar(Alternative, "Alternative color", Color_t(255, 150, 255, 255), VISUAL);
 			CVar(Background, "Background color", Color_t(0, 0, 0, 250), VISUAL);
 			CVar(Active, "Active color", Color_t(255, 255, 255, 255), VISUAL);
 			CVar(Inactive, "Inactive color", Color_t(150, 150, 150, 255), VISUAL);
+
+			CVar(IndicatorsColor, "Indicators color", Color_t(255, 255, 255, 255), VISUAL);
+			CVar(TickBarFill, "DT Bg", Color_t(0, 0, 0, 125), VISUAL);
+			CVar(TickBarOutline, "DT Outline", Color_t(0, 0, 0, 255), VISUAL);
+			CVar(TickBarColor, "DT Color", Color_t(165, 225, 175, 255), VISUAL);
+			CVar(TickBarColor2, "DT Color 2", Color_t(150, 255, 100, 255), VISUAL);
+			CVar(TickBarColorWait, "DT Inactive", Color_t(255, 110, 110, 255), VISUAL);
+			CVar(TickBarColorWait2, "DT Inactive 2", Color_t(255, 190, 110, 255), VISUAL);
+
+
+			CVar(CritBarColor, "Crit Color", Color_t(165, 225, 175, 255), VISUAL);
+			CVar(CritBarColor2, "Crit Color 2", Color_t(150, 255, 100, 255), VISUAL);
+			CVar(CritBarBanned, "Crit Banned", Color_t(255, 110, 110, 255), VISUAL);
+			CVar(CritBarBanned2, "Crit Banned 2", Color_t(255, 190, 110, 255), VISUAL);
+			CVar(CritBarBg, "Crit Bg", Color_t(0, 0, 0, 125), VISUAL);
+			CVar(CritBarOutline, "Crit Outline", Color_t(0, 0, 0, 255), VISUAL);
 		NAMESPACE_END(Theme)
 	NAMESPACE_END(Menu)
 
+
+			NAMESPACE_BEGIN(Fonts);
+		NAMESPACE_BEGIN(FONT_NAME)
+			CVar(szName, "Primary Font", std::string("Tahoma"), VISUAL);
+			CVar(nTall, "Primary Font Size", 13, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 7, 15);
+			CVar(nWeight, "Primary Font Weight", 0, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0, 1000, 50);
+			CVar(nFlags, "Primary Font Flags", VISUAL); // FONTFLAG_DROPSHADOW
+		NAMESPACE_END(FONT_NAME);
+
+		NAMESPACE_BEGIN(FONT_FLAGS)
+			CVar(szName, "Secondary Font", std::string("Small Fonts"), VISUAL);
+			CVar(nTall, "Secondary Font Size", 10, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 7, 15);
+			CVar(nWeight, "Secondary Font Weight", 0, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0, 1000, 50);
+			CVar(nFlags, "Secondary Font Flags", VISUAL); // FONTFLAG_DROPSHADOW
+		NAMESPACE_END(FONT_FLAGS);
+
+		NAMESPACE_BEGIN(FONT_TAGS);
+			CVar(szName, "Priority Font", std::string("Tahoma"), VISUAL);
+			CVar(nTall, "Priority Font Size", 13, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 7, 15);
+			CVar(nWeight, "Priority Font Weight", 0, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0, 1000, 50);
+			CVar(nFlags, "Priority Font Flags", VISUAL); // FONTFLAG_OUTLINE
+		NAMESPACE_END(FONT_ESP);
+
+		NAMESPACE_BEGIN(FONT_INDICATORS);
+			CVar(szName, "Indicators Font", std::string("Tahoma"), VISUAL);
+			CVar(nTall, "Indicators Font Size", 13, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 7, 15);
+			CVar(nWeight, "Indicators Font Weight", 0, VISUAL | SLIDER_MIN | SLIDER_PRECISION, 0, 1000, 50);
+			CVar(nFlags, "Indicators Font Flags", VISUAL); // FONTFLAG_OUTLINE
+		NAMESPACE_END(FONT_INDICATORS);
+		NAMESPACE_END(Fonts);
+
+
 	NAMESPACE_BEGIN(Colors)
+		CVar(FOVCircle, "FOV circle color", Color_t(255, 255, 255, 100), VISUAL);
+		CVar(Local, "Local color", Color_t(255, 255, 255, 0), VISUAL);
+
+		CVar(FullHPColor, "Full HP Color", Color_t(0, 255, 100, 255), VISUAL);
+		CVar(MidHPColor, "Half HP Color", Color_t(245, 255, 0, 255), VISUAL);
+		CVar(LowHPColor, "Low HP Color", Color_t(255, 0, 0, 255), VISUAL);
+
+		CVar(OverhealColor, "Overhealed Color", Color_t(75, 175, 255, 255), VISUAL);
+		CVar(UberColor, "Ubercharged Color", Color_t(216, 216, 216, 255), VISUAL);
+
+		CVar(UberBarHigh, "Uber High", Color_t(75, 175, 255, 255), VISUAL);
+		CVar(UberBarLow, "Uber Low", Color_t(255, 0, 0, 255), VISUAL);
+
 		CVar(IndicatorGood, "Indicator good", Color_t(0, 255, 100, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorMid, "Indicator mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorBad, "Indicator bad", Color_t(255, 0, 0, 255), NOSAVE | DEBUGVAR);
@@ -208,6 +271,13 @@ NAMESPACE_BEGIN(Vars)
 		CVar(IndicatorTextMid, "Indicator text mid", Color_t(255, 200, 0, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextBad, "Indicator text bad", Color_t(255, 150, 150, 255), NOSAVE | DEBUGVAR);
 		CVar(IndicatorTextMisc, "Indicator text misc", Color_t(100, 255, 255, 255), NOSAVE | DEBUGVAR);
+
+
+
+		CVar(ElementsColor, "Text color", Color_t(255, 255, 255, 255), VISUAL);
+		CVar(ElementsOutline, "Text outline", Color_t(0, 0, 0, 255), VISUAL);
+		CVar(BarFill, "Bar Fill", Color_t(0, 0, 0, 255), VISUAL);
+		CVar(BacktrackGlowColor, "Backtrack Glow Color", Color_t(255, 255, 255, 100), VISUAL);
 
 		CVar(Local, "Local color", Color_t(255, 255, 255), VISUAL);
 		CVar(FOVCircle, "FOV circle color", Color_t(255, 255, 255, 100), VISUAL);
