@@ -4,7 +4,7 @@
 
 enum BOUNDS_HITBOXES
 {
-	BOUNDS_HEAD, BOUNDS_BODY, BOUNDS_FEET
+	BOUNDS_HEAD, BOUNDS_BODY, BOUNDS_FEET, BOUNDS_COUNT
 };
 
 Enum(Target, Unknown, Player, Sentry, Dispenser, Teleporter, Sticky, NPC, Bomb)

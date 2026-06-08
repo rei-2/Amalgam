@@ -10,8 +10,7 @@ bool CProjectileSimulation::GetInfoMain(CTFPlayer* pPlayer, CTFWeaponBase* pWeap
 	if (!pWeapon || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsTaunting())
 		return false;
 
-	static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
-	float flGravity = sv_gravity->GetFloat(); // vphysics projectiles affected by server start gravity
+	float flGravity = SDK::GetGravity(); // vphysics projectiles affected by server start gravity
 	bool bDucking = pPlayer->m_fFlags() & FL_DUCKING;
 
 	bool bRedirect = iFlags & ProjSimEnum::Redirect;

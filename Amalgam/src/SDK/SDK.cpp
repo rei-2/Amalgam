@@ -693,6 +693,13 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
 }
 
+float SDK::GetGravity()
+{
+	static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
+
+	return sv_gravity->GetFloat();
+}
+
 float SDK::MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch, bool bIgnoreSpecialAbility)
 {
 	float flSpeed = pPlayer->CalculateMaxSpeed(bIgnoreSpecialAbility);

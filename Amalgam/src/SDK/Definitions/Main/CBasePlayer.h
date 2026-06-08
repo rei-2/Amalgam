@@ -48,7 +48,7 @@ public:
 	NETVAR(m_flLaggedMovementValue, float, "CBasePlayer", "m_flLaggedMovementValue");
 	NETVAR_EMBED(m_AttributeList, void*, "CBasePlayer", "m_AttributeList");
 	NETVAR_EMBED(pl, void*, "CBasePlayer", "pl");
-	NETVAR(deadflag, int, "CBasePlayer", "deadflag");
+	NETVAR(deadflag, bool, "CBasePlayer", "deadflag");
 	NETVAR(m_iFOV, int, "CBasePlayer", "m_iFOV");
 	NETVAR(m_iFOVStart, int, "CBasePlayer", "m_iFOVStart");
 	NETVAR(m_flFOVTime, float, "CBasePlayer", "m_flFOVTime");
@@ -67,9 +67,7 @@ public:
 	NETVAR(m_hViewModel, EHANDLE, "CBasePlayer", "m_hViewModel[0]");
 	NETVAR(m_szLastPlaceName, const char*, "CBasePlayer", "m_szLastPlaceName");
 
-	NETVAR_OFF(m_flWaterJumpTime, float, "CBasePlayer", "m_fOnTarget", -60);
-	NETVAR_OFF(m_flSwimSoundTime, float, "CBasePlayer", "m_fOnTarget", -44);
-	NETVAR_OFF(m_vecLadderNormal, Vec3, "CBasePlayer", "m_fOnTarget", -36);
+	NETVAR_OFF(m_flWaterJumpTime, float, "CBasePlayer", "m_nTickBase", -44);
 	NETVAR_OFF(m_flPhysics, int, "CBasePlayer", "m_nTickBase", -4);
 	NETVAR_OFF(m_nFinalPredictedTick, int, "CBasePlayer", "m_nTickBase", 4);
 	NETVAR_OFF(m_nButtons, int, "CBasePlayer", "m_hConstraintEntity", -12);

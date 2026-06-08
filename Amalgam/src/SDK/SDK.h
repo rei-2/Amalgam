@@ -121,6 +121,7 @@ namespace SDK
 	const char* GetClassByIndex(const int nClass, bool bLower = true);
 
 	int IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase = false);
+	float GetGravity();
 	float MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch = false, bool bIgnoreSpecialAbility = false);
 	float AttribHookValue(float value, const char* name, void* econent, void* buffer = nullptr, bool isGlobalConstString = true);
 

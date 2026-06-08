@@ -388,13 +388,13 @@ bool CEntities::ManageDormancy(CBaseEntity* pEntity)
 
 	if (bDormant)
 	{
-		if (pEntity->IsPlayer())
+		if (auto pResource = GetResource(); pResource && pEntity->IsPlayer())
 		{
-			if (auto pResource = GetResource(); pResource)
-			{
-				pEntity->As<CTFPlayer>()->m_lifeState() = pResource->m_bAlive(n) ? LIFE_ALIVE : LIFE_DEAD;
-				pEntity->As<CTFPlayer>()->m_iHealth() = pResource->m_iHealth(n);
-			}
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			pPlayer->m_lifeState() = pResource->m_bAlive(n) ? LIFE_ALIVE : LIFE_DEAD;
+			pPlayer->m_iHealth() = pResource->m_iHealth(n);
+			if (pPlayer->IsAlive() && pPlayer->m_iObserverMode() != OBS_MODE_NONE)
+				pPlayer->m_iObserverMode() = OBS_MODE_NONE;
 		}
 		if (s_mDormancy.contains(n))
 		{

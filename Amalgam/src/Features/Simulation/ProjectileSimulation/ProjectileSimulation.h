@@ -171,8 +171,7 @@ public:
 	{
 		float flReturn = 0.f;
 
-		static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
-		float flGravity = sv_gravity->GetFloat();
+		float flGravity = SDK::GetGravity();
 		switch (pProjectile->GetClassID())
 		{
 		case ETFClassID::CBaseGrenade:

@@ -1466,6 +1466,14 @@ bool CAimbotProjectile::HandleDirect(DirectHistory_t& mDirectHistory)
 	uint8_t iType = it->first;
 	auto& vDirectHistory = it->second;
 
+	if (F::ProjSim.m_bPhysics)
+	{
+		for (auto& tHistory : vDirectHistory)
+		{
+			if (I::EngineTrace->GetPointContents(tHistory.m_vPoint) & CONTENTS_WATER)
+				tHistory.m_iPriority = COORD_EXTENT - tHistory.m_vPoint.z;
+		}
+	}
 	std::sort(vDirectHistory.begin(), vDirectHistory.end(), [&](const Direct_t& a, const Direct_t& b) -> bool
 	{
 		return a.m_iPriority < b.m_iPriority;
