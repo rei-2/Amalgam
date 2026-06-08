@@ -111,7 +111,7 @@ MAKE_HOOK(CNetChannel_SendNetMsg, S::CNetChannel_SendNetMsg(), bool,
 			const int iCmdCount = pMsg->m_nNewCommands + pMsg->m_nBackupCommands - 3;
 			if (iCmdCount > iAllowedNewCommands)
 			{
-				SDK::Output("clc_Move", std::format("{:d} sent <{:d} | {:d}>, max was {:d}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
+				SDK::Output("CLC_Move", std::format("{} sent ({} | {}), max was {}.", iCmdCount + 3, pMsg->m_nNewCommands, pMsg->m_nBackupCommands, iAllowedNewCommands).c_str(), { 255, 0, 0, 255 });
 				F::Ticks.m_iDeficit = iCmdCount - iAllowedNewCommands;
 			}
 		}

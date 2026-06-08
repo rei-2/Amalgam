@@ -207,6 +207,7 @@
     <ClCompile Include="src\Hooks\CTFPlayerShared_IsCritBoosted.cpp" />
     <ClCompile Include="src\Hooks\CEngineClient_GetScreenAspectRatio.cpp" />
     <ClCompile Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.cpp" />
+    <ClCompile Include="src\Features\Debug\Debug.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />
@@ -623,6 +624,7 @@
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlLinkedList.h" />
     <ClInclude Include="src\SDK\Definitions\Misc\CUtlShared.h" />
     <ClInclude Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.h" />
+    <ClInclude Include="src\Features\Debug\Debug.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />

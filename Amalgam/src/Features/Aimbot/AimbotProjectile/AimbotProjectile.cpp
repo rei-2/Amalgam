@@ -18,7 +18,7 @@
 static std::map<std::string, int> s_mTraceCount = {};
 #endif
 #ifdef SPLASH_DEBUG2
-//#include "../../Visuals/Visuals.h"
+//#include "../../Debug/Debug.h"
 #endif
 
 static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
@@ -559,7 +559,7 @@ static inline void HandleFace(Face_t& tFace, std::vector<Setup_t>& vPoints, floa
 		F::World.DrawFace({ { vVertex1, vVertex2, vVertex3 }, tFace.m_vNormal, tFace.m_iType }, DrawTypeEnum::Edges | DrawTypeEnum::Faces, tColor);
 #endif
 #ifdef DEBUG_TEXT
-		F::Visuals.AddDebugText(std::format("{}:{}:{}"/*:{}"*/, iFaceClosest, /*iEdgeClosest,*/ iEdgeRandom, iSamples), (vVertex1 + vVertex2 + vVertex3) / 3, tColor);
+		F::Debug.AddText(std::format("{}:{}:{}"/*:{}"*/, iFaceClosest, /*iEdgeClosest,*/ iEdgeRandom, iSamples), (vVertex1 + vVertex2 + vVertex3) / 3, tColor);
 #endif
 #endif
 		for (int s = 0; s < iSamples; s++)
@@ -1939,7 +1939,7 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 	G::TriangleStorage.clear();
 #endif
 #if defined(SPLASH_DEBUG2) && defined(DEBUG_TEXT)
-	F::Visuals.ClearDebugText();
+	F::Debug.ClearText();
 #endif
 	for (auto& tTarget : vTargets)
 	{

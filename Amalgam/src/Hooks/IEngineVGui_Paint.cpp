@@ -14,6 +14,7 @@
 #include "../Features/Aimbot/Aimbot.h"
 #include "../Features/PacketManip/AntiAim/AntiAim.h"
 #include "../Features/Aimbot/AutoHeal/AutoHeal.h"
+#include "../Features/Debug/Debug.h"
 
 MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	void* rcx, int iMode)
@@ -48,7 +49,10 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 			F::SpectatorList.Draw(pLocal);
 			F::CritHack.Draw(pLocal);
 			F::Ticks.Draw(pLocal);
-			F::Visuals.DrawDebugInfo(pLocal);
+
+#ifdef DEBUG_INFO
+			F::Debug.Draw(pLocal);
+#endif
 		}
 		H::Draw.End();
 	}
