@@ -4,6 +4,15 @@ std::vector<std::string> CPlayerConditions::Get(CTFPlayer* pEntity)
 {
 	std::vector<std::string> vConditions = {};
 
+	if (pEntity->entindex() != I::EngineClient->GetLocalPlayer())
+	{
+		if (auto pWeapon = pEntity->m_hActiveWeapon()->As<CTFWeaponBase>())
+		{
+			bool bFlip = pEntity->m_bFlipViewModels();
+			vConditions.emplace_back(std::format("{}{}{}", bFlip ? "< " : "", SDK::ConvertWideToUTF8(pWeapon->GetWeaponName()), bFlip ? "" : " >"));
+		}
+	}
+
 	if (pEntity->InCond(TF_COND_INVULNERABLE) ||
 		pEntity->InCond(TF_COND_INVULNERABLE_HIDE_UNLESS_DAMAGED) ||
 		pEntity->InCond(TF_COND_INVULNERABLE_USER_BUFF) ||
