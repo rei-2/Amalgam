@@ -58,14 +58,21 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 
 	static bool bStaticAttempted = false, bStaticValid = false;
-	const bool bLastAttempted = bStaticAttempted, bLastValid = bStaticValid;
-	const bool bCurrAttempted = bStaticAttempted = G::OriginalCmd.buttons & IN_JUMP, bCurrValid = bStaticValid = pLocal->m_hGroundEntity() && !pLocal->IsDucking();
-	const bool bManual = !(SDK::AttribHookValue(0, "parachute_attribute", pLocal) && !pLocal->InCond(TF_COND_PARACHUTE_ACTIVE) && !(G::OriginalCmd.buttons & IN_DUCK)); // evil we don't want to manual
-
+	bool bLastAttempted = bStaticAttempted, bLastValid = bStaticValid;
+	bool bCurrAttempted = bStaticAttempted = G::OriginalCmd.buttons & IN_JUMP, bCurrValid = bStaticValid = pLocal->m_hGroundEntity() && !pLocal->IsDucking();
 	if (!bCurrValid || bCurrValid && G::LastUserCmd->buttons & IN_JUMP)
 		pCmd->buttons &= ~IN_JUMP;
-	if (bCurrAttempted && !bLastAttempted && bManual)
+
+	static float flLastAttempt = 0.f;
+	bool bPressed = bCurrAttempted && !bLastAttempted;
+	bool bParachute = SDK::AttribHookValue(0, "parachute_attribute", pLocal) && !pLocal->InCond(TF_COND_PARACHUTE_ACTIVE);
+	bool bAllow = !bParachute || G::OriginalCmd.buttons & IN_DUCK; // evil we don't want to manual
+	bool bManual = bAllow && (bPressed || bParachute && I::GlobalVars->curtime < flLastAttempt + 0.1f);
+	if (bPressed && !bCurrValid)
+		flLastAttempt = I::GlobalVars->curtime;
+	if (bManual)
 		pCmd->buttons |= IN_JUMP;
+
 	F::AntiCheatCompatibility.BunnyHop(pCmd, bCurrValid, bLastValid);
 }
 

@@ -257,7 +257,7 @@ void CEntities::Store()
 		if (n != I::EngineClient->GetLocalPlayer())
 		{
 			if (float flOldSimTime = m_aSimTimes[n], flSimTime = m_aSimTimes[n] = pPlayer->m_flSimulationTime();
-				m_aDeltaTimes[n] = flSimTime != flOldSimTime)
+				m_aDeltaTimes[n] = flSimTime > flOldSimTime)
 			{
 				m_aDeltaTimes[n] = m_aLagTimes[n] = TICKS_TO_TIME(std::clamp(TIME_TO_TICKS(flSimTime - flOldSimTime) - iLag, 1, 24));
 				m_aSetTicks[n] = I::GlobalVars->tickcount;

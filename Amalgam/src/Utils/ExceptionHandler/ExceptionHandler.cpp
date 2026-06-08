@@ -104,7 +104,8 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	case STATUS_STACK_OVERFLOW: sError = "STACK OVERFLOW"; break;
 	case STATUS_HEAP_CORRUPTION: sError = "HEAP CORRUPTION"; break;
 	case STATUS_RUNTIME_ERROR: sError = "RUNTIME ERROR"; break;
-	case DBG_PRINTEXCEPTION_C: return EXCEPTION_EXECUTE_HANDLER;
+	case DBG_PRINTEXCEPTION_C:
+	case DBG_PRINTEXCEPTION_WIDE_C: return EXCEPTION_EXECUTE_HANDLER;
 	}
 
 	if (s_mAddresses.contains(ExceptionInfo->ExceptionRecord->ExceptionAddress)

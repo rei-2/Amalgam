@@ -2,9 +2,16 @@
 #include "Interface.h"
 #include "../Misc/IClientMode.h"
 #include "../Misc/CGameEventListener.h"
+#include "../Misc/BaseTypes.h"
+#include "../Types.h"
 
 MAKE_SIGNATURE(ClientModeTFNormal_BIsFriendOrPartyMember, "client.dll", "48 89 5C 24 ? 57 48 81 EC ? ? ? ? 48 85 D2 0F 84", 0x0);
 
+class CBaseHudChatInputLine;
+class CBaseHudChatLine;
+class CHudChatHistory;
+class CHudChatFilterButton;
+class CHudChatFilterPanel;
 class CBaseEntity;
 class CBasePlayer;
 class CViewSetup;
@@ -17,9 +24,25 @@ public:
 
 	inline void SetText(const char* text)
 	{
-		if (auto pChatHistory = *reinterpret_cast<void**>(uintptr_t(this) + 688))
-			U::Memory.CallVirtual<239, void>(pChatHistory, text);
+		if (m_pChatHistory)
+			U::Memory.CallVirtual<239, void>(m_pChatHistory, text);
 	}
+
+	byte pad0[656];
+	float m_flHistoryFadeTime;
+	float m_flHistoryIdleTime;
+	CBaseHudChatInputLine* m_pChatInput;
+	CBaseHudChatLine* m_ChatLine;
+	int m_iFontHeight;
+	CHudChatHistory* m_pChatHistory;
+	CHudChatFilterButton* m_pFiltersButton;
+	CHudChatFilterPanel* m_pFilterPanel;
+	Color_t m_ColorCustom;
+	int m_nMessageMode;
+	int m_nVisibleHeight;
+	uint32 m_hChatFont;
+	int m_iFilterFlags;
+	bool m_bEnteringVoice;
 };
 
 class CClientModeShared : public IClientMode, public CGameEventListener
