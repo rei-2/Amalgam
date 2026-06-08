@@ -134,6 +134,10 @@ public:
 		return ent;
 	}
 
+	inline bool IsValid()
+	{
+		return entindex() != -1;
+	}
 	inline bool IsPlayer()
 	{
 		return GetClassID() == ETFClassID::CTFPlayer;
@@ -260,6 +264,21 @@ public:
 		case ETFClassID::CTFWearableRobotArm:
 		case ETFClassID::CTFWearableVM:
 		case ETFClassID::CTFWearableItem:
+			return true;
+		}
+		return false;
+	}
+	inline bool IsWearableVM()
+	{
+		return GetClassID() == ETFClassID::CTFWearableVM;
+	}
+	inline bool IsViewmodel()
+	{
+		switch (GetClassID())
+		{
+		case ETFClassID::CBaseViewModel:
+		case ETFClassID::CTFViewModel:
+		case ETFClassID::CTFWearableVM:
 			return true;
 		}
 		return false;

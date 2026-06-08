@@ -1239,9 +1239,11 @@ void CVisuals::CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 #endif
 }
 
-void CVisuals::LocalAnimations(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)
+void CVisuals::LocalAnimations(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket)
 {
 	m_vAngles.push_back(pCmd->viewangles);
+	if (pWeapon)
+		pWeapon->UpdateAllViewmodelAddons();
 
 	auto pAnimState = pLocal->m_PlayerAnimState();
 	if (!bSendPacket || !pAnimState)

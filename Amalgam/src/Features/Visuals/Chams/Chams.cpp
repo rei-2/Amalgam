@@ -103,7 +103,7 @@ void CChams::Store(CTFPlayer* pLocal)
 		if (pEntity->IsDormant() || !pEntity->ShouldDraw())
 			continue;
 
-		if (pGroup->m_tChams()
+		if (pGroup->m_tChams() && !pEntity->IsWearableVM()
 			&& SDK::IsOnScreen(pEntity, pEntity->IsBaseCombatWeapon() || pEntity->IsWearable()))
 			m_vEntities.emplace_back(pEntity, pGroup->m_tChams);
 
@@ -246,7 +246,39 @@ void CChams::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo
 	}
 }
 
-bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
+bool CChams::RenderViewmodel(void* rcx, int flags, int* iReturn)
+{
+	if (!F::Groups.GroupsActive())
+		return false;
+
+	auto pRenderContext = I::MaterialSystem->GetRenderContext();
+	if (!pRenderContext)
+		return false;
+
+	Group_t* pGroup = nullptr;
+	if (!F::Groups.GetGroup(reinterpret_cast<CBaseAnimating*>(rcx)->IsValid() ? TargetsEnum::ViewmodelHands : TargetsEnum::ViewmodelWeapon, pGroup) || !pGroup->m_tChams(true))
+		return false;
+
+	Begin();
+	for (auto& [sName, tColor] : pGroup->m_tChams.Visible)
+	{
+		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(sName.c_str()));
+
+		F::Materials.SetColor(pMaterial, tColor);
+		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
+
+		bool bFlip = pMaterial && pMaterial->m_bInvertCull ? !G::FlipViewmodels : G::FlipViewmodels;
+		pRenderContext->CullMode(bFlip ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
+
+		static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
+		*iReturn = CBaseAnimating_InternalDrawModel->Call<int>(rcx, flags);
+	}
+	pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
+	End();
+
+	return true;
+}
+bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
 {
 	if (!F::Groups.GroupsActive())
 		return false;
@@ -267,49 +299,13 @@ bool CChams::RenderViewmodel(void* ecx, int flags, int* iReturn)
 		F::Materials.SetColor(pMaterial, tColor);
 		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
 
-		if (pMaterial && pMaterial->m_bInvertCull)
-			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
-
-		static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
-		*iReturn = CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
-
-		if (pMaterial && pMaterial->m_bInvertCull)
-			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
-	}
-	End();
-
-	return true;
-}
-bool CChams::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
-{
-	if (!F::Groups.GroupsActive())
-		return false;
-
-	auto pRenderContext = I::MaterialSystem->GetRenderContext();
-	if (!pRenderContext)
-		return false;
-
-	Group_t* pGroup = nullptr;
-	if (!F::Groups.GetGroup(TargetsEnum::ViewmodelHands, pGroup) || !pGroup->m_tChams(true))
-		return false;
-
-	Begin();
-	for (auto& [sName, tColor] : pGroup->m_tChams.Visible)
-	{
-		auto pMaterial = F::Materials.GetMaterial(FNV1A::Hash32(sName.c_str()));
-
-		F::Materials.SetColor(pMaterial, tColor);
-		I::ModelRender->ForcedMaterialOverride(pMaterial ? pMaterial->m_pMaterial : nullptr);
-
-		if (pMaterial && pMaterial->m_bInvertCull)
-			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CCW : MATERIAL_CULLMODE_CW);
+		bool bFlip = pMaterial && pMaterial->m_bInvertCull ? !G::FlipViewmodels : G::FlipViewmodels;
+		pRenderContext->CullMode(bFlip ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 
 		static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 		IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
-
-		if (pMaterial && pMaterial->m_bInvertCull)
-			pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 	}
+	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW);
 	End();
 
 	return true;

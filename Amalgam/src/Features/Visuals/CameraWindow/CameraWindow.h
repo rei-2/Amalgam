@@ -4,14 +4,14 @@
 class CCameraWindow
 {
 private:
-	void RenderCustomView(void* ecx, const CViewSetup& pViewSetup, ITexture* pTexture);
+	void RenderCustomView(void* rcx, const CViewSetup& pViewSetup, ITexture* pTexture);
 
 	IMaterial* m_pCameraMaterial;
 	ITexture* m_pCameraTexture;
 
 public:
 	void Draw();
-	void RenderView(void* ecx, const CViewSetup& pViewSetup);
+	void RenderView(void* rcx, const CViewSetup& pViewSetup);
 
 	void Initialize();
 	void Unload();

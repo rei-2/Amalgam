@@ -79,7 +79,7 @@ public:
 	void RestoreWorldModulation();
 
 	void CreateMove(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-	void LocalAnimations(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket);
+	void LocalAnimations(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd, bool bSendPacket);
 };
 
 ADD_FEATURE(CVisuals, Visuals);

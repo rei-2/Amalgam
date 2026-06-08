@@ -32,7 +32,7 @@ public:
 	void RenderMain();
 	void RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
 
-	bool RenderViewmodel(void* ecx, int flags, int* iReturn);
+	bool RenderViewmodel(void* rcx, int flags, int* iReturn);
 	bool RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
 
 	bool m_bRendering = false;

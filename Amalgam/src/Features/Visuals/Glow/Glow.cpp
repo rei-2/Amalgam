@@ -135,7 +135,7 @@ void CGlow::Store(CTFPlayer* pLocal)
 			continue;
 
 		Color_t tColor = F::Groups.GetColor(pEntity, pGroup);
-		if (pGroup->m_tGlow()
+		if (pGroup->m_tGlow() && !pEntity->IsWearableVM()
 			&& SDK::IsOnScreen(pEntity, pEntity->IsBaseCombatWeapon() || pEntity->IsWearable()))
 			m_mEntities[pGroup->m_tGlow].emplace_back(pEntity, tColor);
 
@@ -279,7 +279,7 @@ void CGlow::RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_
 	}
 }
 
-void CGlow::RenderViewmodel(void* ecx, int flags)
+void CGlow::RenderViewmodel(void* rcx, int flags)
 {
 	if (!F::Groups.GroupsActive())
 		return;
@@ -289,23 +289,22 @@ void CGlow::RenderViewmodel(void* ecx, int flags)
 		return F::Materials.ReloadMaterials();
 
 	Group_t* pGroup = nullptr;
-	if (!F::Groups.GetGroup(TargetsEnum::ViewmodelWeapon, pGroup) || !pGroup->m_tGlow())
+	if (!F::Groups.GetGroup(reinterpret_cast<CBaseAnimating*>(rcx)->IsValid() ? TargetsEnum::ViewmodelHands : TargetsEnum::ViewmodelWeapon, pGroup) || !pGroup->m_tGlow())
 		return;
 
 	static auto CBaseAnimating_InternalDrawModel = U::Hooks.m_mHooks["CBaseAnimating_InternalDrawModel"];
 
 	const int w = H::Draw.m_nScreenW, h = H::Draw.m_nScreenH;
-	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 
+	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 	FirstBegin(pRenderContext);
-	CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
+	CBaseAnimating_InternalDrawModel->Call<int>(rcx, flags);
 	FirstEnd(pRenderContext);
 	SecondBegin(pRenderContext, w, h);
 	I::RenderView->SetColorModulation(pGroup->m_tColor);
 	I::RenderView->SetBlend(pGroup->m_tColor.a / 255.f);
-	CBaseAnimating_InternalDrawModel->Call<int>(ecx, flags);
+	CBaseAnimating_InternalDrawModel->Call<int>(rcx, flags);
 	SecondEnd(pGroup->m_tGlow, pRenderContext, w, h);
-
 	pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 }
 void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld)
@@ -318,13 +317,12 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 		return F::Materials.ReloadMaterials();
 
 	Group_t* pGroup = nullptr;
-	if (!F::Groups.GetGroup(TargetsEnum::ViewmodelHands, pGroup) || !pGroup->m_tGlow())
+	if (!F::Groups.GetGroup(TargetsEnum::ViewmodelWeapon, pGroup) || !pGroup->m_tGlow())
 		return;
 
 	static auto IVModelRender_DrawModelExecute = U::Hooks.m_mHooks["IVModelRender_DrawModelExecute"];
 
 	const int w = H::Draw.m_nScreenW, h = H::Draw.m_nScreenH;
-	pRenderContext->CullMode(MATERIAL_CULLMODE_CCW); // glow won't work properly with MATERIAL_CULLMODE_CW
 
 	FirstBegin(pRenderContext);
 	IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
@@ -334,8 +332,6 @@ void CGlow::RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInf
 	I::RenderView->SetBlend(pGroup->m_tColor.a / 255.f);
 	IVModelRender_DrawModelExecute->Call<void>(I::ModelRender, pState, pInfo, pBoneToWorld);
 	SecondEnd(pGroup->m_tGlow, pRenderContext, w, h);
-
-	pRenderContext->CullMode(G::FlipViewmodels ? MATERIAL_CULLMODE_CW : MATERIAL_CULLMODE_CCW);
 }
 
 

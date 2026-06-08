@@ -7,7 +7,7 @@ MAKE_SIGNATURE(CBaseViewModel_Interpolate, "client.dll", "48 8B C4 48 89 58 ? 48
 MAKE_HOOK(CBaseViewModel_Interpolate, S::CBaseViewModel_Interpolate(), bool,
 	void* rcx, float& currentTime)
 {
-	DEBUG_RETURN(CBaseEntity_BaseInterpolatePart1, rcx, currentTime);
+	DEBUG_RETURN(CBaseViewModel_Interpolate, rcx, currentTime);
 
 	if (F::Ticks.m_bRecharge)
 		return true;

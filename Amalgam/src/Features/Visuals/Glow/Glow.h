@@ -62,7 +62,7 @@ public:
 	void RenderSecond();
 	void RenderHandler(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
 
-	void RenderViewmodel(void* ecx, int flags);
+	void RenderViewmodel(void* rcx, int flags);
 	void RenderViewmodel(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo, matrix3x4* pBoneToWorld);
 
 	void Initialize();

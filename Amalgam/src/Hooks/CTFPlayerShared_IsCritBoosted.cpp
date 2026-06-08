@@ -8,7 +8,7 @@ MAKE_SIGNATURE(CProxyModelGlowColor_OnBind_IsCritBoosted_Call, "client.dll", "48
 MAKE_HOOK(CTFPlayerShared_IsCritBoosted, S::CTFPlayerShared_IsCritBoosted(), bool,
 	void* rcx)
 {
-	DEBUG_RETURN(CTFPlayerShared_UpdateCritBoostEffect, rcx);
+	DEBUG_RETURN(CTFPlayerShared_IsCritBoosted, rcx);
 
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 	const auto dwDesired = S::CProxyModelGlowColor_OnBind_IsCritBoosted_Call();
