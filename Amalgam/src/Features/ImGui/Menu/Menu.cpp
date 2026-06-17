@@ -1056,9 +1056,8 @@ void CMenu::MenuVisuals(int iTab)
 					{
 						FDropdown("##Draw", &tGroup.m_iBacktrack, { "Last", "First", "##Divider", "Always" }, { BacktrackEnum::Last, BacktrackEnum::First, BacktrackEnum::Always }, FDropdownEnum::Multi | FDropdownEnum::NoSanitization, 0, "All");
 
-						FMDropdown("Material", &tGroup.m_vBacktrackChams, FDropdownEnum::Left);
-						SetCursorPos({ GetWindowWidth() / 2 + GetStyle().WindowPadding.x / 2, GetCursorPosY() - H::Draw.Scale(32) });
-						FToggle("Ignore Z", &tGroup.m_iBacktrack, BacktrackEnum::IgnoreZ, FToggleEnum::Left);
+						FMDropdown("Visible material", &tGroup.m_tBacktrackChams.Visible, FDropdownEnum::Left);
+						FMDropdown("Occluded material", &tGroup.m_tBacktrackChams.Occluded, FDropdownEnum::Right);
 
 						SetCursorPosY(GetCursorPosY() + H::Draw.Scale(8));
 						PushTransparent(!tGroup.m_tBacktrackGlow.Stencil);

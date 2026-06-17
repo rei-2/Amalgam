@@ -1,13 +1,15 @@
 #pragma once
 #include "../../../SDK/SDK.h"
 
+Enum(Model, Visible, Occluded);
+
 class CChams
 {
 private:
 	void Begin();
 	void End();
 
-	void DrawModel(CBaseEntity* pEntity, Chams_t& tChams, IMatRenderContext* pRenderContext, bool bTwoModels = true);
+	void DrawModel(CBaseEntity* pEntity, const Chams_t& tChams, IMatRenderContext* pRenderContext, int iModel = ModelEnum::Visible, bool bTwoModel = false);
 
 	void RenderBacktrack(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
 	void RenderFakeAngle(const DrawModelState_t& pState, const ModelRenderInfo_t& pInfo);
@@ -15,7 +17,7 @@ private:
 	struct ChamsInfo_t
 	{
 		CBaseEntity* m_pEntity;
-		Chams_t m_tChams;
+		Chams_t* m_pChams;
 		int m_iFlags = 0;
 	};
 	std::vector<ChamsInfo_t> m_vEntities = {};

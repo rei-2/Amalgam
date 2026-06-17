@@ -1101,6 +1101,11 @@ struct Gradient_t
 
 struct Chams_t
 {
+private:
+	static inline const std::vector<std::pair<std::string, Color_t>> s_vNone = std::vector<std::pair<std::string, Color_t>>{ { "None", {} } };
+	static inline const std::vector<std::pair<std::string, Color_t>> s_vOriginal = std::vector<std::pair<std::string, Color_t>>{ { "Original", {} } };
+
+public:
 	std::vector<std::pair<std::string, Color_t>> Visible = { { "Original", Color_t() } };
 	std::vector<std::pair<std::string, Color_t>> Occluded = {};
 
@@ -1114,9 +1119,19 @@ struct Chams_t
 		return Visible != t.Visible || Occluded != t.Occluded;
 	}
 
-	inline bool operator()(bool bVisibleOnly = false) const
+	inline bool operator()(bool bDefault = true) const
 	{
-		return Visible != std::vector<std::pair<std::string, Color_t>>{ { "Original", Color_t() } } || !bVisibleOnly && !Occluded.empty();
+		return (bDefault ? Visible != s_vOriginal : !Visible.empty()) || !Occluded.empty();
+	}
+
+	const std::vector<std::pair<std::string, Color_t>>& GetVisible() const
+	{
+		return !Visible.empty() ? Visible : s_vNone;
+	}
+
+	const std::vector<std::pair<std::string, Color_t>>& GetOccluded() const
+	{
+		return !Occluded.empty() ? Occluded : s_vNone;
 	}
 };
 
