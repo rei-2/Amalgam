@@ -697,14 +697,19 @@ void CMovementSimulation::RunTick(MoveStorage& tMoveStorage, bool bPath, RunTick
 
 	if (tMoveStorage.m_flAverageYaw)
 		tMoveStorage.m_MoveData.m_vecViewAngles.y -= flCorrection;
-	else if (tMoveStorage.m_bDirectMove && !bLastbDirectMove
-		&& !tMoveStorage.m_MoveData.m_flForwardMove && !tMoveStorage.m_MoveData.m_flSideMove
-		&& tMoveStorage.m_MoveData.m_vecVelocity.Length2D() > tMoveStorage.m_MoveData.m_flMaxSpeed * 0.015f)
+
+	if (tMoveStorage.m_bDirectMove && !bLastbDirectMove)
 	{
-		Vec3 vDirection = tMoveStorage.m_MoveData.m_vecVelocity.Normalized2D() * 520.f;
-		G::DummyCmd.forwardmove = vDirection.x, G::DummyCmd.sidemove = -vDirection.y;
-		SDK::FixMovement(&G::DummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
-		tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove, tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;
+		if (tMoveStorage.m_flAverageYaw)
+			tMoveStorage.m_flAverageYaw *= -1;
+		else if (!tMoveStorage.m_MoveData.m_flForwardMove && !tMoveStorage.m_MoveData.m_flSideMove
+			&& tMoveStorage.m_MoveData.m_vecVelocity.Length2D() > tMoveStorage.m_MoveData.m_flMaxSpeed * 0.015f)
+		{
+			Vec3 vDirection = tMoveStorage.m_MoveData.m_vecVelocity.Normalized2D() * 520.f;
+			G::DummyCmd.forwardmove = vDirection.x, G::DummyCmd.sidemove = -vDirection.y;
+			SDK::FixMovement(&G::DummyCmd, {}, tMoveStorage.m_MoveData.m_vecViewAngles);
+			tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove, tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;
+		}
 	}
 
 	RestoreBounds(tMoveStorage.m_pPlayer);

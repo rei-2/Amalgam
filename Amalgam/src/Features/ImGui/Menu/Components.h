@@ -358,24 +358,14 @@ namespace ImGui
 		return sText;
 	}
 
-	inline std::string TruncateText(const std::string& sText, int iPixels, ImFont* pFont = nullptr, const char* sEnd = "...", size_t* pLength = nullptr)
+	inline std::string TruncateText(const std::string& sText, int iPixels, ImFont* pFont = nullptr, const char* sEnd = "...", int iMin = 0, int* pLength = nullptr)
 	{
-		if (sText.empty())
-			return "";
-		else if (FCalcTextSize(sText.c_str(), pFont).x < iPixels) // no unnecessary truncation
+		if (sText.empty() || FCalcTextSize(sText.c_str(), pFont).x < iPixels) // no unnecessary truncation
 			return sText;
 
 		std::string sTruncated = "";
-		size_t i = 0;
-		while (FCalcTextSize(std::format("{}{}{}", sTruncated, sText[i + 1], sEnd).c_str(), pFont).x < iPixels)
-		{
+		int i = 0; while (i < iMin || i < sText.length() && FCalcTextSize(std::format("{}{}{}", sTruncated, sText[i], sEnd).c_str(), pFont).x < iPixels)
 			sTruncated += sText[i++];
-			if (i >= sText.length())
-			{
-				i = 0;
-				break;
-			}
-		}
 		if (i)
 			sTruncated += sEnd;
 		if (pLength)
@@ -384,11 +374,15 @@ namespace ImGui
 		return sTruncated;
 	}
 
-	inline std::deque<std::string> WrapText(const std::string& sText, int iPixels, ImFont* pFont = nullptr)
+	inline std::vector<std::string> WrapText(const std::string& sText, std::vector<int> vPixels, ImFont* pFont = nullptr)
 	{
-		if (sText.empty())
-			return { "" };
-		else if (FCalcTextSize(sText.c_str(), pFont).x < iPixels) // no unnecessary wrapping
+		if (vPixels.empty())
+		{
+			IM_ASSERT_USER_ERROR(0, "WrapText() vPixels empty.");
+			return {};
+		}
+
+		if (sText.empty() || sText.find("\n") == std::string::npos && FCalcTextSize(sText.c_str(), pFont).x < vPixels.front()) // no unnecessary wrapping
 			return { sText };
 
 		std::vector<std::string> vWords = { "" };
@@ -400,43 +394,43 @@ namespace ImGui
 				vWords.back().push_back(iChar);
 		}
 
-		std::deque<std::string> vWrapped = { "" };
-		int iWord = 0;
-		for (auto& sWord : vWords)
+		std::vector<std::string> vWrapped = { "" };
+		int iWord = 0; for (auto& sWord : vWords)
 		{
 		begin:
 			if (sWord.empty())
 				continue;
 
-			auto sSeparator = iWord ? std::string(1, sWord[0]) : "";
-			if (sWord[0] == ' ' || sWord[0] == '\n' || sWord[0] == '\t')
-				sWord.erase(0, 1);
-			if (sSeparator != "\n" && FCalcTextSize(std::format("{}{}{}", vWrapped.back(), sSeparator, sWord).c_str(), pFont).x < iPixels)
+			int iPixels = vPixels[std::min(vWrapped.size(), vPixels.size()) - 1];
+			bool bForce = sWord[0] == '\n';
+			if (!bForce && FCalcTextSize(std::format("{}{}", vWrapped.back(), sWord).c_str(), pFont).x < iPixels)
 			{
-				vWrapped.back() += std::format("{}{}", sSeparator, sWord);
+				vWrapped.back() += sWord;
 				iWord++;
 			}
 			else
 			{
-				bool bContinue = false, bFirstWord = !iWord; iWord = 0;
-				if (bFirstWord)
+				if (sWord[0] == ' ' || sWord[0] == '\t' || bForce)
+					sWord.erase(0, 1);
+
+				if (!iWord && !bForce)
 				{
-					size_t i = 0;
-					vWrapped.back() += TruncateText(sWord, iPixels, pFont, "-", &i);
-					if (!i) // i don't know why it fucking does this, but i don't care enough to fix it
-						bContinue = true;
-					else
-						sWord = sWord.substr(i, sWord.length() - i);
+					int i = 0; vWrapped.back() += TruncateText(sWord, iPixels, pFont, "-", 1, &i);
+					sWord = sWord.substr(i, sWord.length() - i);
 				}
-				if (vWrapped.back().empty())
-					break; // don't do the same thing over and over
-				vWrapped.push_back("");
-				if (!bContinue)
+				if (!sWord.empty() || bForce)
+				{
+					vWrapped.push_back(""); iWord = 0;
 					goto begin;
+				}
 			}
 		}
 
 		return vWrapped;
+	}
+	inline std::vector<std::string> WrapText(const std::string& sText, int iPixels, ImFont* pFont = nullptr)
+	{
+		return WrapText(sText, std::vector<int>({ iPixels }), pFont);
 	}
 
 	inline void FTooltip(const char* sTooltip, bool bCondition = IsItemHovered(), float flWrapWidth = 300, ImFont* pFont = F::Render.FontSmall, ImVec2* pPosOverride = nullptr, ImVec2* pSizeOverride = nullptr)
@@ -449,7 +443,7 @@ namespace ImGui
 			ImVec2 vPos = pPosOverride ? *pPosOverride : !pRowSizes->empty() ? pRowSizes->back().m_vPos : ImVec2((GetItemRectMin().x + GetItemRectMax().x) / 2, GetItemRectMax().y);
 			ImVec2 vSize = pSizeOverride ? *pSizeOverride : !pRowSizes->empty() ? pRowSizes->back().m_vSize : ImVec2();
 
-			std::deque<std::string> vWraps = WrapText(sTooltip, H::Draw.Scale(flWrapWidth));
+			auto vWraps = WrapText(sTooltip, H::Draw.Scale(flWrapWidth));
 			ImVec2 vText = { 0, H::Draw.Scale(9) };
 			for (auto& sText : vWraps)
 			{
@@ -1473,11 +1467,6 @@ namespace ImGui
 	{
 		bool bReturn = false;
 
-		if (Transparent || Disabled)
-			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
-
-		bool bTitle = sLabel[0] != '#';
-
 		if (vValues.empty())
 		{
 			int i = 0; for (auto& sEntry : vEntries)
@@ -1489,6 +1478,16 @@ namespace ImGui
 				i++;
 			}
 		}
+		if (vValues.size() != std::count_if(vEntries.begin(), vEntries.end(), [](auto sEntry) { return FNV1A::Hash32(sEntry) != FNV1A::Hash32Const("##Divider"); }))
+		{
+			IM_ASSERT_USER_ERROR(0, "FDropdown() vValues size mismatch to vEntries.");
+			return bReturn;
+		}
+
+		if (Transparent || Disabled)
+			PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+
+		bool bTitle = sLabel[0] != '#';
 
 		if (!(iFlags & FDropdownEnum::NoSanitization) && !vValues.empty())
 		{
@@ -2003,7 +2002,7 @@ namespace ImGui
 			vIconOffset += { flIconOffset, flIconOffset };
 		}
 
-		std::deque<std::string> vWrapped;
+		std::vector<std::string> vWrapped;
 		int iWraps = 0;
 		if (iFlags & (FColorPickerEnum::Left | FColorPickerEnum::Right | FColorPickerEnum::Full))
 		{

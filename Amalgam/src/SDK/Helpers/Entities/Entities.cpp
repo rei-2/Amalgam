@@ -359,13 +359,10 @@ void CEntities::ManualNetwork(const StartSoundParams_t& params)
 	case ETFClassID::CTFPlayer:
 		pEntity->As<CTFPlayer>()->m_vecVelocity() = (params.origin - pEntity->m_vecOrigin()) / std::min(I::GlobalVars->curtime - s_mDormancy[n].m_flLastUpdate, 1.f);
 		pEntity->SetAbsVelocity(pEntity->As<CTFPlayer>()->m_vecVelocity()); SetAvgVelocity(pEntity->entindex(), pEntity->As<CTFPlayer>()->m_vecVelocity());
-		s_mDormancy[n] = { params.origin, I::GlobalVars->curtime };
-		break;
-	case ETFClassID::CObjectSentrygun:
-	case ETFClassID::CObjectDispenser:
-	case ETFClassID::CObjectTeleporter:
-		s_mDormancy[n] = { params.origin, I::GlobalVars->curtime };
 	}
+	pEntity->SetAbsOrigin(pEntity->m_vecOrigin() = params.origin);
+
+	s_mDormancy[n] = { params.origin, I::GlobalVars->curtime };
 }
 bool CEntities::ManageDormancy(CBaseEntity* pEntity)
 {
@@ -399,9 +396,7 @@ bool CEntities::ManageDormancy(CBaseEntity* pEntity)
 		if (s_mDormancy.contains(n))
 		{
 			auto& tDormancy = s_mDormancy[n];
-			if (tDormancy.m_flLastUpdate + flDuration > I::GlobalVars->curtime)
-				pEntity->SetAbsOrigin(pEntity->m_vecOrigin() = tDormancy.m_vLocation);
-			else
+			if (tDormancy.m_flLastUpdate + flDuration < I::GlobalVars->curtime || pEntity->IsPlayer() && !pEntity->As<CTFPlayer>()->IsAlive())
 				s_mDormancy.erase(n);
 		}
 	}

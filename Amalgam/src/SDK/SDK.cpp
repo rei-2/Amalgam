@@ -564,8 +564,6 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 
 	switch (pWeapon->GetWeaponID())
 	{
-	case TF_WEAPON_COMPOUND_BOW:
-		return !(pCmd->buttons & IN_ATTACK) && pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f;
 	case TF_WEAPON_PIPEBOMBLAUNCHER:
 	case TF_WEAPON_STICKY_BALL_LAUNCHER:
 	case TF_WEAPON_GRENADE_STICKY_BALL:
@@ -586,17 +584,16 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	}
 	case TF_WEAPON_SNIPERRIFLE_CLASSIC:
 		return !(pCmd->buttons & IN_ATTACK) && pWeapon->As<CTFSniperRifle>()->m_flChargedDamage() > 0.f;
+	case TF_WEAPON_COMPOUND_BOW:
+		return !(pCmd->buttons & IN_ATTACK) && pWeapon->As<CTFPipebombLauncher>()->m_flChargeBeginTime() > 0.f;
 	case TF_WEAPON_PARTICLE_CANNON:
-	{
-		float flChargeBeginTime = pWeapon->As<CTFParticleCannon>()->m_flChargeBeginTime();
-		if (flChargeBeginTime > 0)
+		if (float flChargeBeginTime = pWeapon->As<CTFParticleCannon>()->m_flChargeBeginTime(); flChargeBeginTime > 0)
 		{
 			float flTotalChargeTime = flTickBase - flChargeBeginTime;
 			if (flTotalChargeTime >= TF_PARTICLE_MAX_CHARGE_TIME)
 				return 1;
 		}
 		break;
-	}
 	case TF_WEAPON_CLEAVER: // we can randomly use attack2 to fire
 	case TF_WEAPON_JAR:
 	case TF_WEAPON_JAR_MILK:
@@ -663,6 +660,10 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	case TF_WEAPON_MECHANICAL_ARM:
 		if (G::CanSecondaryAttack && pCmd->buttons & IN_ATTACK2)
 			return 1;
+		break;
+	case TF_WEAPON_MEDIGUN:
+		if (pWeapon->As<CWeaponMedigun>()->m_bHealing())
+			return false;
 		break;
 	}
 

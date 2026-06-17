@@ -2434,47 +2434,30 @@ void CMenu::MenuLogs(int iTab)
 				size_t iLines = 1;
 
 				float flWidth = GetWindowWidth() - GetStyle().WindowPadding.x * 2;
-				if (tOutput.m_sFunction != "")
+				if (!tOutput.m_sFunction.empty())
 				{
 					float flTitleWidth = 0.f;
 
-					PushStyleColor(ImGuiCol_Text, ColorToVec(tOutput.tAccent));
-
 					auto vWrapped = WrapText(tOutput.m_sFunction, flWidth);
-					for (size_t i = 0; i < vWrapped.size(); i++)
+					if (!vWrapped.empty())
 					{
-						FText(vWrapped[i].c_str());
-						if (i == vWrapped.size() - 1)
-							flTitleWidth = FCalcTextSize(vWrapped[i].c_str()).x + H::Draw.Scale(4);
+						PushStyleColor(ImGuiCol_Text, ColorToVec(tOutput.tAccent));
+
+						for (auto& sText : vWrapped)
+							FText(sText.c_str());
+						iLines = vWrapped.size();
+						flTitleWidth = FCalcTextSize(vWrapped.back().c_str()).x + H::Draw.Scale(4);
+
+						PopStyleColor();
 					}
-					iLines = vWrapped.size();
 
-					PopStyleColor();
-
-					vWrapped = WrapText(tOutput.m_sLog, flWidth - flTitleWidth);
+					vWrapped = WrapText(tOutput.m_sLog, { int(flWidth - flTitleWidth), int(flWidth) });
 					if (!vWrapped.empty())
 					{
 						SameLine(flTitleWidth + GetStyle().WindowPadding.x);
-						FText(vWrapped.front().c_str());
-
-						if (vWrapped.size() > 1)
-						{
-							std::string sLog = "";
-							for (size_t i = 1; i < vWrapped.size(); i++)
-							{
-								sLog += vWrapped[i].c_str();
-								if (i != vWrapped.size() - 1)
-									sLog += " ";
-							}
-							vWrapped = WrapText(sLog, flWidth);
-							for (size_t i = 0; i < vWrapped.size(); i++)
-							{
-								FText(vWrapped[i].c_str());
-								if (i == vWrapped.size() - 1)
-									flTitleWidth = FCalcTextSize(vWrapped[i].c_str()).x + H::Draw.Scale(4);
-							}
-							iLines += vWrapped.size();
-						}
+						for (auto& sText : vWrapped)
+							FText(sText.c_str());
+						iLines += vWrapped.size() - 1;
 					}
 				}
 				else
@@ -2482,8 +2465,8 @@ void CMenu::MenuLogs(int iTab)
 					PushStyleColor(ImGuiCol_Text, ColorToVec(tOutput.tAccent));
 
 					auto vWrapped = WrapText(tOutput.m_sLog, flWidth);
-					for (size_t i = 0; i < vWrapped.size(); i++)
-						FText(vWrapped[i].c_str());
+					for (auto& sText : vWrapped)
+						FText(sText.c_str());
 					iLines = vWrapped.size();
 
 					PopStyleColor();

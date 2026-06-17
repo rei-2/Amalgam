@@ -62,6 +62,7 @@
 #define VK_Y              0x59
 #define VK_Z              0x5A
 
+#define OUTPUT_NONE 0
 #define OUTPUT_CONSOLE 1 << 0
 #define OUTPUT_DEBUG 1 << 1
 #define OUTPUT_TOAST 1 << 2
