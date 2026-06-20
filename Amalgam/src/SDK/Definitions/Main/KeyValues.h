@@ -38,6 +38,7 @@ private:
 	KeyValues* m_pPeer;
 	KeyValues* m_pSub;
 	KeyValues* m_pChain;
+	void* m_pUnknown;
 
 public:
 	class AutoDelete
@@ -55,9 +56,9 @@ public:
 		KeyValues* m_pKeyValues;
 	};
 
-	bool LoadFromBuffer(char const* resourceName, const char* pBuffer, void* pFileSystem = 0, const char* pPathID = 0);
-	void Initialize(const char* name);
 	KeyValues(const char* name);
+	void Initialize(const char* name);
+	bool LoadFromBuffer(char const* resourceName, const char* pBuffer, void* pFileSystem = 0, const char* pPathID = 0);
 
 	void* operator new(size_t iAllocSize);
 	void* operator new(size_t iAllocSize, int nBlockUse, const char* pFileName, int nLine);

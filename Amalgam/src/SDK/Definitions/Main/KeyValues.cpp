@@ -4,8 +4,8 @@
 
 #define Q_ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 
-MAKE_SIGNATURE(KeyValues_LoadFromBuffer, "engine.dll", "4C 89 4C 24 ? 48 89 4C 24 ? 55 56", 0x0);
 MAKE_SIGNATURE(KeyValues_Initialize, "engine.dll", "40 53 48 83 EC ? 48 8B D9 C6 41 ? ? 33 C9 48 8B C2", 0x0);
+MAKE_SIGNATURE(KeyValues_LoadFromBuffer, "engine.dll", "4C 89 4C 24 ? 48 89 4C 24 ? 55 56", 0x0);
 MAKE_SIGNATURE(KeyValues_GetSymbolForStringClassic, "engine.dll", "48 89 5C 24 ? 57 48 83 EC ? 0F B6 DA 48 8B F9", 0x0);
 MAKE_SIGNATURE(KeyValues_GetStringForSymbolClassic, "engine.dll", "40 53 48 83 EC ? 8B D9 FF 15", 0x0);
 MAKE_SIGNATURE(KeyValues_FindKey, "client.dll", "48 8B C4 53 55 56 48 81 EC ? ? ? ? 41 0F B6 E8", 0x0);
@@ -26,9 +26,9 @@ static int UTF8ToUnicode(const char* ansi, wchar_t* unicode, int unicodeBufferSi
 
 
 
-bool KeyValues::LoadFromBuffer(char const* resourceName, const char* pBuffer, void* pFileSystem, const char* pPathID)
+KeyValues::KeyValues(const char* name)
 {
-	return S::KeyValues_LoadFromBuffer.Call<bool>(this, resourceName, pBuffer, pFileSystem, pPathID);
+	Initialize(name);
 }
 
 void KeyValues::Initialize(const char* name)
@@ -36,9 +36,9 @@ void KeyValues::Initialize(const char* name)
 	S::KeyValues_Initialize.Call<KeyValues*>(this, name);
 }
 
-KeyValues::KeyValues(const char* name)
+bool KeyValues::LoadFromBuffer(char const* resourceName, const char* pBuffer, void* pFileSystem, const char* pPathID)
 {
-	Initialize(name);
+	return S::KeyValues_LoadFromBuffer.Call<bool>(this, resourceName, pBuffer, pFileSystem, pPathID);
 }
 
 void* KeyValues::operator new(size_t iAllocSize)
