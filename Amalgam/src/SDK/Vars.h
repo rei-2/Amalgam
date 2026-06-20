@@ -833,7 +833,8 @@ NAMESPACE_BEGIN(Vars)
 		CVarEnum(NotificationPosition, "Notification position", 0, VISUAL, nullptr,
 			VA_LIST("Top left", "Top right", "Bottom left", "Bottom right"),
 			TopLeft, TopRight, BottomLeft, BottomRight);
-		CVar(Lifetime, "Notification time", 5.f, VISUAL, 0.5f, 5.f, 0.5f);
+		CVar(NotificationTime, "Notification time", 5.f, VISUAL, 0.5f, 5.f, 0.5f);
+		CVar(MaxNotifications, "Max notifications", 10, VISUAL | SLIDER_MIN, 1, 10);
 
 		NAMESPACE_BEGIN(VoteStart, Logging)
 			CVarValues(LogTo, "Vote start log to", 0b000001, DROPDOWN_MULTI, nullptr,

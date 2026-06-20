@@ -1,25 +1,27 @@
 #include "Output.h"
 
-#include "../Visuals/Notifications/Notifications.h"
+#include "../ImGui/Notifications/Notifications.h"
 #include "../Players/PlayerUtils.h"
 
 static std::string s_sRed =		Color_t(255, 100, 100).ToHex();
 static std::string s_sGreen =		Color_t(100, 255, 100).ToHex();
 static std::string s_sYellow =	Color_t(200, 169, 0).ToHex();
 
-static inline void OutputInfo(int iFlags, const char* sName, const char* sOutput, const char* sColor)
+static inline void OutputInfo(int iFlags, const char* sName,
+	const char* sOutput, const char* sColor,
+	const char* sIcon = nullptr, Color_t tColor = Vars::Menu::Theme::Accent.Value)
 {
-	int iTo = (iFlags & Vars::Logging::LogToEnum::Console ? OUTPUT_CONSOLE : 0)
-			| (iFlags & Vars::Logging::LogToEnum::Debug ? OUTPUT_DEBUG : 0)
-			| (iFlags & Vars::Logging::LogToEnum::Toasts ? OUTPUT_TOAST : 0)
-			| (iFlags & Vars::Logging::LogToEnum::Menu ? OUTPUT_MENU : 0)
-			| (iFlags & Vars::Logging::LogToEnum::Party ? OUTPUT_PARTY : 0);
-	if (iTo)
-		SDK::Output(sName, sOutput, Vars::Menu::Theme::Accent.Value, iTo);
+	int iTo;
 
-	iTo = (iFlags & Vars::Logging::LogToEnum::Chat ? OUTPUT_CHAT : 0);
-	if (iTo)
-		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sColor, Vars::Menu::Theme::Accent.Value, iTo, -1, "", "");
+	if (iTo = (iFlags & Vars::Logging::LogToEnum::Toasts ? OUTPUT_TOAST : 0)
+		| (iFlags & Vars::Logging::LogToEnum::Party ? OUTPUT_PARTY : 0)
+		| (iFlags & Vars::Logging::LogToEnum::Console ? OUTPUT_CONSOLE : 0)
+		| (iFlags & Vars::Logging::LogToEnum::Menu ? OUTPUT_MENU : 0)
+		| (iFlags & Vars::Logging::LogToEnum::Debug ? OUTPUT_DEBUG : 0))
+		SDK::Output(sName, sOutput, tColor, iTo, sIcon);
+
+	if (iTo = (iFlags & Vars::Logging::LogToEnum::Chat ? OUTPUT_CHAT : 0))
+		SDK::Output(Vars::Menu::CheatTag.Value.c_str(), sColor, tColor, iTo, nullptr, MB_NONE, "", "");
 }
 
 // Event info
@@ -55,7 +57,8 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
 		OutputInfo(Vars::Logging::VoteCast::LogTo.Value, "Vote Cast",
 			std::format("{}{} voted {}", (bSameTeam ? "" : "[Enemy] "), (sName), (bVotedYes ? "Yes" : "No")).c_str(),
-			std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sName), (bVotedYes ? s_sGreen : s_sRed), (bVotedYes ? "Yes" : "No")).c_str()
+			std::format("{}{}{}\x1 voted {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sName), (bVotedYes ? s_sGreen : s_sRed), (bVotedYes ? "Yes" : "No")).c_str(),
+			ICON_MD_HOW_TO_VOTE
 		);
 
 		return;
@@ -78,7 +81,8 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		bool bSameTeam = pEntity->As<CTFPlayer>()->m_iTeamNum() == pLocal->m_iTeamNum();
 		OutputInfo(Vars::Logging::ClassChange::LogTo.Value, "Class Change",
 			std::format("{}{} changed class to {}", (bSameTeam ? "" : "[Enemy] "), (sName), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str(),
-			std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sName), (s_sYellow), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str()
+			std::format("{}{}{}\x1 changed class to {}{}", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sName), (s_sYellow), (SDK::GetClassByIndex(pEvent->GetInt("class")))).c_str(),
+			ICON_MD_INFO
 		);
 
 		return;
@@ -110,7 +114,8 @@ void COutput::Event(IGameEvent* pEvent, uint32_t uHash, CTFPlayer* pLocal)
 		auto sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
 		OutputInfo(Vars::Logging::Damage::LogTo.Value, "Damage",
 			std::format("Hit {} for {} damage ({} / {}{})", (sName), (nDamage), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str(),
-			std::format("Hit {}{}\x1 for {}{} damage{} ({} / {}{})", (s_sYellow), (sName), (s_sRed), (nDamage), (s_sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str()
+			std::format("Hit {}{}\x1 for {}{} damage{} ({} / {}{})", (s_sYellow), (sName), (s_sRed), (nDamage), (s_sYellow), (nHealth), (iMaxHealth), (bCrit ? ", crit" : bMinicrit ? ", minicrit" : "")).c_str(),
+			ICON_MD_INFO
 		);
 
 		return;
@@ -190,7 +195,8 @@ void COutput::UserMessage(bf_read& msgData)
 	}
 	OutputInfo(Vars::Logging::VoteStart::LogTo.Value, "Vote Start",
 		std::format("{}{} called a vote on {} ({})", (bSameTeam ? "" : "[Enemy] "), (sCallerName), (sTargetName), (sReason)).c_str(),
-		std::format("{}{}{}\x1 called a vote on {}{}\x1 ({})", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sCallerName), (s_sYellow), (sTargetName), (sReason)).c_str()
+		std::format("{}{}{}\x1 called a vote on {}{}\x1 ({})", (bSameTeam ? "" : "[Enemy] "), (s_sYellow), (sCallerName), (s_sYellow), (sTargetName), (sReason)).c_str(),
+		ICON_MD_BALLOT
 	);
 }
 
@@ -212,7 +218,8 @@ void COutput::CheatDetection(const char* sName, const char* sAction, const char*
 
 	OutputInfo(Vars::Logging::CheatDetection::LogTo.Value, "Cheat Detection",
 		std::format("{} {} for {}", (sName), (sAction), (sReason)).c_str(),
-		std::format("{}{}\x1 {} for {}{}", (s_sYellow), (sName), (sAction), (s_sYellow), (sReason)).c_str()
+		std::format("{}{}\x1 {} for {}{}", (s_sYellow), (sName), (sAction), (s_sYellow), (sReason)).c_str(),
+		ICON_MD_INFO, F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].m_tColor
 	);
 }
 
@@ -300,7 +307,8 @@ void COutput::TagsOnJoin(const char* sName, uint32_t uAccountID)
 
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags",
 		std::format("{} has the {} {}", (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sOutputText)).c_str(),
-		std::format("{}{}\x1 has the {} {}", (s_sYellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText)).c_str()
+		std::format("{}{}\x1 has the {} {}", (s_sYellow), (sName), (vColorsTags.size() == 1 ? "tag" : "tags"), (sChatText)).c_str(),
+		ICON_MD_INFO, INFO_COLOR
 	);
 }
 void COutput::TagsChanged(const char* sName, const char* sAction, const char* sColor, const char* sTag)
@@ -311,7 +319,8 @@ void COutput::TagsChanged(const char* sName, const char* sAction, const char* sC
 	auto uHash = FNV1A::Hash32(sAction);
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Tags",
 		std::format("{} tag {} {} {}", (sAction), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (sName)).c_str(),
-		std::format("{} tag {}{}\x1 {} {}{}", (sAction), (sColor), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (s_sYellow), (sName)).c_str()
+		std::format("{} tag {}{}\x1 {} {}{}", (sAction), (sColor), (sTag), (uHash == FNV1A::Hash32Const("Added") ? "to" : "from"), (s_sYellow), (sName)).c_str(),
+		ICON_MD_INFO, INFO_COLOR
 	);
 }
 
@@ -328,7 +337,8 @@ void COutput::AliasOnJoin(const char* sName, uint32_t uAccountID)
 
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases",
 		std::format("{} has the alias \"{}\"", (sName), (sAlias)).c_str(),
-		std::format("{}{}\x1 has the alias \"{}{}\x1\"", (s_sYellow), (sName), (s_sYellow), (sAlias)).c_str()
+		std::format("{}{}\x1 has the alias \"{}{}\x1\"", (s_sYellow), (sName), (s_sYellow), (sAlias)).c_str(),
+		ICON_MD_INFO, INFO_COLOR
 	);
 }
 void COutput::AliasChanged(const char* sName, const char* sAction, const char* sAlias)
@@ -339,7 +349,8 @@ void COutput::AliasChanged(const char* sName, const char* sAction, const char* s
 	auto uHash = FNV1A::Hash32(sAction);
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Aliases",
 		std::format("{} {}'s alias {} \"{}\"", (sAction), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (sAlias)).c_str(),
-		std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (s_sYellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (s_sYellow), (sAlias)).c_str()
+		std::format("{} {}{}\x1's alias {} \"{}{}\x1\"", (sAction), (s_sYellow), (sName), (uHash == FNV1A::Hash32Const("Changed") ? "to" : "of"), (s_sYellow), (sAlias)).c_str(),
+		ICON_MD_INFO, INFO_COLOR
 	);
 }
 
@@ -363,7 +374,8 @@ void COutput::ReportResolver(int iIndex, const char* sAction, const char* sAxis,
 	auto sName = F::PlayerUtils.GetPlayerName(iIndex, pResource->GetName(iIndex));
 	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver",
 		std::format("{} {} of {} to {}", (sAction), (sAxis), (sName), (sValue)).c_str(),
-		std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (s_sYellow), (sAxis), (s_sYellow), (sName), (s_sYellow), (sValue)).c_str()
+		std::format("{} {}{}\x1 of {}{}\x1 to {}{}\x1", (sAction), (s_sYellow), (sAxis), (s_sYellow), (sName), (s_sYellow), (sValue)).c_str(),
+		ICON_MD_INFO
 	);
 }
 void COutput::ReportResolver(const char* sMessage)
@@ -371,5 +383,9 @@ void COutput::ReportResolver(const char* sMessage)
 	if (!(Vars::Logging::Logs.Value & Vars::Logging::LogsEnum::Resolver))
 		return;
 
-	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver", sMessage, sMessage);
+	OutputInfo(Vars::Logging::Tags::LogTo.Value, "Resolver",
+		sMessage,
+		sMessage,
+		ICON_MD_INFO
+	);
 }

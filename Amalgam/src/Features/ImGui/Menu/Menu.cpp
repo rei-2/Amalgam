@@ -1,6 +1,7 @@
 #include "Menu.h"
 
 #include "Components.h"
+#include "../Notifications/Notifications.h"
 #include "../../Configs/Configs.h"
 #include "../../Binds/Binds.h"
 #include "../../Visuals/Groups/Groups.h"
@@ -69,11 +70,11 @@ void CMenu::DrawMenu()
 			PopStyleColor();
 		}
 		else
-			pDrawList->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flSize - flInset, vWindowSize.y), F::Render.Background0, H::Draw.Scale(3), ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomLeft);
+			pDrawList->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flSize - flInset, vWindowSize.y), F::Render.Background0, H::Draw.Scale(3), ImDrawFlags_RoundCornersLeft);
 
-		PushClipRect({ 0, 0 }, { ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.y }, false);
+		pDrawList->PushClipRect({ 0, 0 }, { GetIO().DisplaySize.x, GetIO().DisplaySize.y }, false);
 		RenderTwoToneBackground(flSize, {}, F::Render.Background1, F::Render.Background2, 0.f, false);
-		PopClipRect();
+		pDrawList->PopClipRect();
 
 		static int iTab = 0, iAimbotTab = 0, iVisualsTab = 0, iLogsTab = 0, iSettingsTab = 0;
 		PushFont(F::Render.FontBold);
@@ -849,7 +850,7 @@ void CMenu::MenuVisuals(int iTab)
 				// background
 				float flWidth = GetWindowWidth() / 2 - GetStyle().WindowPadding.x * 1.5f;
 				float flHeight = H::Draw.Scale(28);
-				ImColor tColor = ColorToVec(tGroup.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.5f, LerpEnum::NoAlpha));
+				ImColor tColor = ColorByteToFloat(tGroup.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.5f, LerpEnum::NoAlpha));
 				ImVec2 vDrawPos = GetDrawPos() + vOriginalPos;
 				if (iCurrentGroup != iGroup)
 					GetWindowDrawList()->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flWidth, flHeight), tColor, H::Draw.Scale(4));
@@ -858,7 +859,7 @@ void CMenu::MenuVisuals(int iTab)
 					ImColor tColor2 = { tColor.Value.x * 1.1f, tColor.Value.y * 1.1f, tColor.Value.z * 1.1f, tColor.Value.w };
 					GetWindowDrawList()->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flWidth, flHeight), tColor2, H::Draw.Scale(4));
 
-					tColor2 = ColorToVec(tGroup.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.25f, LerpEnum::NoAlpha));
+					tColor2 = ColorByteToFloat(tGroup.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.25f, LerpEnum::NoAlpha));
 					float flInset = H::Draw.Scale(0.5f) - 0.5f;
 					GetWindowDrawList()->AddRect(vDrawPos + ImVec2(flInset, flInset), vDrawPos + ImVec2(flWidth - flInset, flHeight - flInset), tColor2, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 				}
@@ -1483,7 +1484,7 @@ void CMenu::MenuLogs(int iTab)
 					// background
 					float flWidth = GetWindowWidth() / 2 - GetStyle().WindowPadding.x * 1.5f;
 					float flHeight = H::Draw.Scale(28);
-					ImColor tColor = ColorToVec(fGetTeamColor(tPlayer.m_iTeam, tPlayer.m_bAlive));
+					ImColor tColor = ColorByteToFloat(fGetTeamColor(tPlayer.m_iTeam, tPlayer.m_bAlive));
 					ImVec2 vDrawPos = GetDrawPos() + vOriginalPos;
 					GetWindowDrawList()->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flWidth, flHeight), tColor, H::Draw.Scale(4));
 
@@ -1532,14 +1533,14 @@ void CMenu::MenuLogs(int iTab)
 								float flTagOffset = H::Draw.Scale(4);
 								auto fDrawTag = [&](PriorityLabel_t& tTag, int iID)
 								{
-									ImColor tTagColor = ColorToVec(tTag.m_tColor);
+									ImColor tTagColor = ColorByteToFloat(tTag.m_tColor);
 									float flTagWidth = FCalcTextSize(tTag.m_sName.c_str()).x + H::Draw.Scale(!iID ? 10 : 25);
 									float flTagHeight = H::Draw.Scale(20);
 									ImVec2 vTagPos = { flTagOffset, H::Draw.Scale(4) };
 
 									GetWindowDrawList()->AddRectFilled(vDrawPos + vTagPos, vDrawPos + vTagPos + ImVec2(flTagWidth, flTagHeight), tTagColor, H::Draw.Scale(4));
 									SetCursorPos(vTagPos + ImVec2(H::Draw.Scale(5), H::Draw.Scale(3)));
-									TextColored(VecToColor(tColor).Blend(tTag.m_tColor).IsColorBright() ? ImVec4(0, 0, 0, 1) : ImVec4(1, 1, 1, 1), tTag.m_sName.c_str());
+									TextColored(ColorFloatToByte(tColor).Blend(tTag.m_tColor).IsColorBright() ? ImVec4(0, 0, 0, 1) : ImVec4(1, 1, 1, 1), tTag.m_sName.c_str());
 									if (iID)
 									{
 										SetCursorPos(vTagPos + ImVec2(flTagWidth - H::Draw.Scale(22), H::Draw.Scale(-2)));
@@ -1636,10 +1637,10 @@ void CMenu::MenuLogs(int iTab)
 									if (!tTag.m_bAssignable || F::PlayerUtils.HasTag(tPlayer.m_uAccountID, iID))
 										continue;
 
-									auto imColor = ColorToVec(tTag.m_tColor);
-									PushStyleColor(ImGuiCol_Text, imColor);
-									imColor.x /= 3; imColor.y /= 3; imColor.z /= 3;
-									if (FSelectable(tTag.m_sName.c_str(), imColor))
+									ImVec4 tColor = ColorByteToVec(tTag.m_tColor);
+									PushStyleColor(ImGuiCol_Text, tColor);
+									tColor.x /= 3; tColor.y /= 3; tColor.z /= 3;
+									if (FSelectable(tTag.m_sName.c_str(), tColor))
 										F::PlayerUtils.AddTag(tPlayer.m_uAccountID, iID, true, tPlayer.m_sName.c_str());
 									PopStyleColor();
 								}
@@ -1910,7 +1911,7 @@ void CMenu::MenuLogs(int iTab)
 				// background
 				float flWidth = GetWindowWidth() * (_tTag.m_bLabel ? 1.f / 3 : 2.f / 3) - GetStyle().WindowPadding.x * 1.5f;
 				float flHeight = H::Draw.Scale(28);
-				ImColor tColor = ColorToVec(_tTag.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.5f, LerpEnum::NoAlpha));
+				ImColor tColor = ColorByteToFloat(_tTag.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.5f, LerpEnum::NoAlpha));
 				ImVec2 vDrawPos = GetDrawPos() + vOriginalPos;
 				if (iID != _iID)
 					GetWindowDrawList()->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flWidth, flHeight), tColor, H::Draw.Scale(4));
@@ -1919,7 +1920,7 @@ void CMenu::MenuLogs(int iTab)
 					ImColor tColor2 = { tColor.Value.x * 1.1f, tColor.Value.y * 1.1f, tColor.Value.z * 1.1f, tColor.Value.w };
 					GetWindowDrawList()->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flWidth, flHeight), tColor2, H::Draw.Scale(4));
 
-					tColor2 = ColorToVec(_tTag.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.25f, LerpEnum::NoAlpha));
+					tColor2 = ColorByteToFloat(_tTag.m_tColor.Lerp(Vars::Menu::Theme::Background.Value, 0.25f, LerpEnum::NoAlpha));
 					float flInset = H::Draw.Scale(0.5f) - 0.5f;
 					GetWindowDrawList()->AddRect(vDrawPos + ImVec2(flInset, flInset), vDrawPos + ImVec2(flWidth - flInset, flHeight - flInset), tColor2, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 				}
@@ -2132,7 +2133,7 @@ void CMenu::MenuLogs(int iTab)
 						fStream.close();
 
 						SDK::SetClipboard(sString);
-						SDK::Output("Amalgam", "Copied playerlist to clipboard", DEFAULT_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);
+						SDK::Output("Amalgam", "Copied playerlist to clipboard", INFO_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG, ICON_MD_INFO);
 					}
 				}
 
@@ -2233,7 +2234,7 @@ void CMenu::MenuLogs(int iTab)
 						}
 						catch (...)
 						{
-							SDK::Output("Amalgam", "Failed to import playerlist", ALTERNATE_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);
+							SDK::Output("Amalgam", "Failed to import playerlist", ERROR_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG, ICON_MD_CANCEL);
 						}
 					}
 
@@ -2251,7 +2252,7 @@ void CMenu::MenuLogs(int iTab)
 							auto& iIDTo = mAs[i];
 
 							ImVec2 vOriginalPos = GetCursorPos();
-							PushStyleColor(ImGuiCol_Text, ColorToVec(vTags[i].m_tColor));
+							PushStyleColor(ImGuiCol_Text, ColorByteToInt(vTags[i].m_tColor));
 							SetCursorPos(vOriginalPos + ImVec2(H::Draw.Scale(8), H::Draw.Scale(5)));
 							FText(vTags[i].m_sName.c_str());
 							PopStyleColor();
@@ -2294,7 +2295,7 @@ void CMenu::MenuLogs(int iTab)
 							}
 
 							F::PlayerUtils.m_bSave = true;
-							SDK::Output("Amalgam", "Imported playerlist", DEFAULT_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);
+							SDK::Output("Amalgam", "Imported playerlist", INFO_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG, ICON_MD_INFO);
 
 							CloseCurrentPopup();
 						}
@@ -2325,11 +2326,11 @@ void CMenu::MenuLogs(int iTab)
 							F::Configs.m_sCorePath + std::format("Backup{}.json", iBackupCount + 1),
 							std::filesystem::copy_options::overwrite_existing
 						);
-						SDK::Output("Amalgam", "Saved backup playerlist", DEFAULT_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);
+						SDK::Output("Amalgam", "Saved backup playerlist", INFO_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG, ICON_MD_INFO);
 					}
 					catch (...)
 					{
-						SDK::Output("Amalgam", "Failed to backup playerlist", ALTERNATE_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG);
+						SDK::Output("Amalgam", "Failed to backup playerlist", ERROR_COLOR, OUTPUT_CONSOLE | OUTPUT_TOAST | OUTPUT_MENU | OUTPUT_DEBUG, ICON_MD_CANCEL);
 					}
 				}
 			}
@@ -2349,7 +2350,8 @@ void CMenu::MenuLogs(int iTab)
 				{
 					FDropdown(Vars::Logging::Logs);
 					FDropdown(Vars::Logging::NotificationPosition);
-					FSlider(Vars::Logging::Lifetime);
+					FSlider(Vars::Logging::NotificationTime);
+					FSlider(Vars::Logging::MaxNotifications);
 				} EndSection();
 				if (Section("Cheat Detection"))
 				{
@@ -2428,6 +2430,8 @@ void CMenu::MenuLogs(int iTab)
 	{
 		if (Section("##Output", false, GetWindowHeight() - GetStyle().WindowPadding.y * 2))
 		{
+			bool bClear = false;
+
 			for (auto& tOutput : m_vOutput)
 			{
 				ImVec2 vOriginalPos = GetCursorPos();
@@ -2441,7 +2445,7 @@ void CMenu::MenuLogs(int iTab)
 					auto vWrapped = WrapText(tOutput.m_sFunction, flWidth);
 					if (!vWrapped.empty())
 					{
-						PushStyleColor(ImGuiCol_Text, ColorToVec(tOutput.tAccent));
+						PushStyleColor(ImGuiCol_Text, ColorByteToInt(tOutput.tAccent));
 
 						for (auto& sText : vWrapped)
 							FText(sText.c_str());
@@ -2462,7 +2466,7 @@ void CMenu::MenuLogs(int iTab)
 				}
 				else
 				{
-					PushStyleColor(ImGuiCol_Text, ColorToVec(tOutput.tAccent));
+					PushStyleColor(ImGuiCol_Text, ColorByteToInt(tOutput.tAccent));
 
 					auto vWrapped = WrapText(tOutput.m_sLog, flWidth);
 					for (auto& sText : vWrapped)
@@ -2482,11 +2486,16 @@ void CMenu::MenuLogs(int iTab)
 
 					if (FSelectable("Copy"))
 						SDK::SetClipboard(std::format("{}{}{}", tOutput.m_sFunction, tOutput.m_sFunction != "" ? " " : "", tOutput.m_sLog));
+					if (FSelectable("Clear"))
+						bClear = true;
 
 					PopStyleVar();
 					EndPopup();
 				}
 			}
+
+			if (bClear)
+				m_vOutput.clear();
 		} EndSection();
 		break;
 	}
@@ -2934,7 +2943,7 @@ void CMenu::MenuSettings(int iTab)
 						ImColor tColor = F::Render.Background1p5L;
 						GetWindowDrawList()->AddRectFilled(vDrawPos, vDrawPos + ImVec2(flWidth, flHeight), tColor, H::Draw.Scale(4));
 
-						tColor = ColorToVec((VecToColor(F::Render.Background1p5)).Lerp({ 127, 127, 127 }, 1.f / 9, LerpEnum::NoAlpha));
+						tColor = ColorByteToFloat((ColorFloatToByte(F::Render.Background1p5)).Lerp({ 127, 127, 127 }, 1.f / 9, LerpEnum::NoAlpha));
 						float flInset = H::Draw.Scale(0.5f) - 0.5f;
 						GetWindowDrawList()->AddRect(vDrawPos + ImVec2(flInset, flInset), vDrawPos + ImVec2(flWidth - flInset, flHeight - flInset), tColor, H::Draw.Scale(4), ImDrawFlags_None, H::Draw.Scale());
 					}
@@ -4120,7 +4129,7 @@ void CMenu::Render()
 {
 	using namespace ImGui;
 
-	if (!(ImGui::GetIO().DisplaySize.x > 160.f && ImGui::GetIO().DisplaySize.y > 28.f))
+	if (!(GetIO().DisplaySize.x > 160.f && GetIO().DisplaySize.y > 28.f))
 		return;
 
 	m_bInKeybind = false;
@@ -4154,25 +4163,26 @@ void CMenu::Render()
 		F::Render.Cursor = GetMouseCursor();
 		m_bWindowHovered = IsWindowHovered(ImGuiHoveredFlags_AnyWindow | ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
 
-		if (!vDisabled.empty())
+		if (!DisabledVec.empty())
 		{
 			IM_ASSERT_USER_ERROR(0, "Calling PopDisabled() too little times: stack overflow.");
 			Disabled = false;
-			vDisabled.clear();
+			DisabledVec.clear();
 		}
-		if (!vTransparent.empty())
+		if (!TransparentVec.empty())
 		{
 			IM_ASSERT_USER_ERROR(0, "Calling PopTransparent() too little times: stack overflow.");
 			Transparent = false;
-			vTransparent.clear();
+			TransparentVec.clear();
 		}
 	}
 	else
 	{
-		mActiveMap.clear();
+		ActiveMap.clear();
 		m_bWindowHovered = false;
 	}
 	DrawBinds();
+	F::Notifications.Draw();
 	PopFont();
 }
 

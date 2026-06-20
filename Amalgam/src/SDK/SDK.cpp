@@ -1,6 +1,6 @@
 #include "SDK.h"
 
-#include "../Features/Visuals/Notifications/Notifications.h"
+#include "../Features/ImGui/Notifications/Notifications.h"
 #include "../Features/ImGui/Menu/Menu.h"
 #include "../Features/EnginePrediction/EnginePrediction.h"
 
@@ -33,7 +33,7 @@ static BOOL CALLBACK TeamFortressWindow(HWND hWindow, LPARAM lParam)
 
 
 void SDK::Output(const char* sFunction, const char* sLog, Color_t tColor,
-	int iTo, int iMessageBox,
+	int iTo, const char* sIcon, int iMessageBox,
 	const char* sLeft, const char* sRight)
 {
 	if (sLog)
@@ -46,7 +46,7 @@ void SDK::Output(const char* sFunction, const char* sLog, Color_t tColor,
 		if (iTo & OUTPUT_DEBUG)
 			OutputDebugString(std::format("{}{}{} {}\n", sLeft, sFunction, sRight, sLog).c_str());
 		if (iTo & OUTPUT_TOAST)
-			F::Notifications.Add(sLog, tColor);
+			F::Notifications.Add(sLog, sIcon, tColor);
 		if (iTo & OUTPUT_MENU)
 			F::Menu.AddOutput(std::format("{}{}{}", sLeft, sFunction, sRight).c_str(), sLog, tColor);
 		if (iTo & OUTPUT_CHAT)
@@ -63,7 +63,7 @@ void SDK::Output(const char* sFunction, const char* sLog, Color_t tColor,
 		if (iTo & OUTPUT_DEBUG)
 			OutputDebugString(std::format("{}\n", sFunction).c_str());
 		if (iTo & OUTPUT_TOAST)
-			F::Notifications.Add(sFunction, tColor);
+			F::Notifications.Add(sFunction, sIcon, tColor);
 		if (iTo & OUTPUT_MENU)
 			F::Menu.AddOutput("", sFunction, tColor);
 		if (iTo & OUTPUT_CHAT)

@@ -1,6 +1,5 @@
 #include "../SDK/SDK.h"
 
-#include "../Features/Visuals/Notifications/Notifications.h"
 #include "../Features/Visuals/ESP/ESP.h"
 #include "../Features/Visuals/OffscreenArrows/OffscreenArrows.h"
 #include "../Features/Visuals/CameraWindow/CameraWindow.h"
@@ -24,7 +23,11 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 	if (G::Unload)
 		return CALL_ORIGINAL(rcx, iMode);
 
-	if (iMode & PAINT_INGAMEPANELS && !SDK::CleanScreenshot())
+	if (iMode & PAINT_UIPANELS)
+	{
+		H::Draw.UpdateKeyStrings();
+	}
+	else if (iMode & PAINT_INGAMEPANELS && !SDK::CleanScreenshot())
 	{
 		H::Draw.UpdateScreenSize();
 		H::Draw.UpdateW2SMatrix();
@@ -59,15 +62,4 @@ MAKE_HOOK(IEngineVGui_Paint, U::Memory.GetVirtual(I::EngineVGui, 14), void,
 
 	CALL_ORIGINAL(rcx, iMode);
 
-	if (iMode & PAINT_UIPANELS && !SDK::CleanScreenshot())
-	{
-		H::Draw.UpdateScreenSize();
-		H::Draw.UpdateKeyStrings();
-
-		H::Draw.Start();
-		{
-			F::Notifications.Draw();
-		}
-		H::Draw.End();
-	}
 }

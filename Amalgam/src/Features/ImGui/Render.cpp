@@ -8,6 +8,7 @@
 #include "Fonts/Roboto/RobotoMedium.h"
 #include "Fonts/Roboto/RobotoBlack.h"
 #include "Menu/Menu.h"
+#include "Menu/Components.h"
 
 void CRender::Render(IDirect3DDevice9* pDevice)
 {
@@ -41,22 +42,19 @@ void CRender::Render(IDirect3DDevice9* pDevice)
 
 void CRender::LoadColors()
 {
-	auto fColorToVec = [](Color_t tColor) -> ImColor
-	{
-		return { tColor.r / 255.f, tColor.g / 255.f, tColor.b / 255.f, tColor.a / 255.f };
-	};
+	using namespace ImGui;
 
-	Accent = fColorToVec(Vars::Menu::Theme::Accent.Value);
-	Background0 = fColorToVec(Vars::Menu::Theme::Background.Value);
-	Background0p5 = fColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 0.5f / 9, LerpEnum::NoAlpha));
-	Background1 = fColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 1.f / 9, LerpEnum::NoAlpha));
-	Background1p5 = fColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 1.5f / 9, LerpEnum::NoAlpha));
+	Accent = ColorByteToFloat(Vars::Menu::Theme::Accent.Value);
+	Background0 = ColorByteToFloat(Vars::Menu::Theme::Background.Value);
+	Background0p5 = ColorByteToFloat(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 0.5f / 9, LerpEnum::NoAlpha));
+	Background1 = ColorByteToFloat(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 1.f / 9, LerpEnum::NoAlpha));
+	Background1p5 = ColorByteToFloat(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 1.5f / 9, LerpEnum::NoAlpha));
 	Background1p5L = { Background1p5.Value.x * 1.1f, Background1p5.Value.y * 1.1f, Background1p5.Value.z * 1.1f, Background1p5.Value.w };
-	Background2 = fColorToVec(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 2.f / 9, LerpEnum::NoAlpha));
-	Inactive = fColorToVec(Vars::Menu::Theme::Inactive.Value);
-	Active = fColorToVec(Vars::Menu::Theme::Active.Value);
+	Background2 = ColorByteToFloat(Vars::Menu::Theme::Background.Value.Lerp({ 127, 127, 127 }, 2.f / 9, LerpEnum::NoAlpha));
+	Inactive = ColorByteToFloat(Vars::Menu::Theme::Inactive.Value);
+	Active = ColorByteToFloat(Vars::Menu::Theme::Active.Value);
 
-	ImVec4* colors = ImGui::GetStyle().Colors;
+	ImVec4* colors = GetStyle().Colors;
 	colors[ImGuiCol_Border] = Background2;
 	colors[ImGuiCol_Button] = {};
 	colors[ImGuiCol_ButtonHovered] = {};
@@ -79,7 +77,9 @@ void CRender::LoadColors()
 
 void CRender::LoadFonts()
 {
-	auto& io = ImGui::GetIO();
+	using namespace ImGui;
+
+	auto& io = GetIO();
 
 	if (static bool bLoaded = false; !bLoaded)
 		bLoaded = true;
@@ -112,7 +112,9 @@ void CRender::LoadFonts()
 
 void CRender::LoadStyle()
 {
-	auto& style = ImGui::GetStyle();
+	using namespace ImGui;
+
+	auto& style = GetStyle();
 	style.ButtonTextAlign = { 0.5f, 0.5f };
 	style.CellPadding = { H::Draw.Scale(4), 0 };
 	style.ChildBorderSize = 0.f;

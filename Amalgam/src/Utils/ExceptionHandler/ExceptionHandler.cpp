@@ -175,7 +175,7 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	case STATUS_ACCESS_VIOLATION:
 	case STATUS_STACK_OVERFLOW:
 	case STATUS_HEAP_CORRUPTION:
-		SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, OUTPUT_DEBUG, MB_OK | MB_ICONERROR);
+		SDK::Output("Unhandled exception", ssErrorStream.str().c_str(), {}, OUTPUT_DEBUG, nullptr, MB_OK | MB_ICONERROR);
 	}
 
 	return EXCEPTION_CONTINUE_SEARCH;
