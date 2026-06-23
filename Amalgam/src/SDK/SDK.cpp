@@ -3,10 +3,12 @@
 #include "../Features/ImGui/Notifications/Notifications.h"
 #include "../Features/ImGui/Menu/Menu.h"
 #include "../Features/EnginePrediction/EnginePrediction.h"
+#include "../Features/Ticks/Ticks.h"
 
 #pragma warning (disable : 6385)
 
 MAKE_SIGNATURE(CAttributeManager_AttribHookValue_Float, "client.dll", "4C 8B DC 49 89 5B ? 49 89 6B ? 56 57 41 54 41 56 41 57 48 83 EC ? 48 8B 3D ? ? ? ? 4C 8D 35", 0x0);
+MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
 
 static BOOL CALLBACK TeamFortressWindow(HWND hWindow, LPARAM lParam)
 {
@@ -418,6 +420,13 @@ bool SDK::PredictOrigin(Vec3& vOut, const Vec3& vOrigin, const Vec3& vVelocity, 
 	return !trace.DidHit();
 }
 
+float SDK::GetGravity()
+{
+	static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
+
+	return sv_gravity->GetFloat();
+}
+
 bool SDK::IsLoopback()
 {
 	auto pNetChan = I::EngineClient->GetNetChannelInfo();
@@ -435,6 +444,38 @@ int SDK::GetWinningTeam()
 	if (auto pGameRules = I::TFGameRules())
 		return pGameRules->m_iWinningTeam();
 	return 0;
+}
+
+const char* SDK::GetClassByIndex(const int nClass, bool bLower)
+{
+	static const char* szClassesUpper[] = {
+		"Unknown", "Scout", "Sniper", "Soldier", "Demoman", "Medic", "Heavy", "Pyro", "Spy", "Engineer"
+	};
+	static const char* szClassesLower[] = {
+		"unknown", "scout", "sniper", "soldier", "demoman", "medic", "heavy", "pyro", "spy", "engineer"
+	};
+
+	if (!bLower)
+		return nClass < 10 && nClass > 0 ? szClassesUpper[nClass] : szClassesUpper[0];
+	else
+		return nClass < 10 && nClass > 0 ? szClassesLower[nClass] : szClassesLower[0];
+}
+
+float SDK::AttribHookValue(float value, const char* name, void* econent, void* buffer, bool isGlobalConstString)
+{
+	return S::CAttributeManager_AttribHookValue_Float.Call<float>(value, name, econent, buffer, isGlobalConstString);
+}
+
+float SDK::MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch, bool bIgnoreSpecialAbility)
+{
+	float flSpeed = pPlayer->CalculateMaxSpeed(bIgnoreSpecialAbility);
+
+	if (pPlayer->InCond(TF_COND_SPEED_BOOST) || pPlayer->InCond(TF_COND_HALLOWEEN_SPEED_BOOST))
+		flSpeed *= 1.35f;
+	if (bIncludeCrouch && pPlayer->IsDucking() && pPlayer->IsOnGround())
+		flSpeed /= 3;
+
+	return flSpeed;
 }
 
 EWeaponType SDK::GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType)
@@ -478,7 +519,6 @@ EWeaponType SDK::GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryTy
 	case TF_WEAPON_PDA_SPY_BUILD:
 	case TF_WEAPON_INVIS:
 	case TF_WEAPON_BUFF_ITEM:
-	case TF_WEAPON_GRAPPLINGHOOK:
 	case TF_WEAPON_ROCKETPACK:
 		return EWeaponType::UNKNOWN;
 	case TF_WEAPON_CLEAVER:
@@ -502,25 +542,107 @@ EWeaponType SDK::GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryTy
 	case TF_WEAPON_JAR_MILK:
 	case TF_WEAPON_JAR_GAS:
 	case TF_WEAPON_LUNCHBOX:
+	case TF_WEAPON_GRAPPLINGHOOK:
 		return EWeaponType::PROJECTILE;
 	}
 
 	return EWeaponType::HITSCAN;
 }
 
-const char* SDK::GetClassByIndex(const int nClass, bool bLower)
+void SDK::CanAttack(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool& bPrimary, bool& bSecondary, bool& bReloading)
 {
-	static const char* szClassesUpper[] = {
-		"Unknown", "Scout", "Sniper", "Soldier", "Demoman", "Medic", "Heavy", "Pyro", "Spy", "Engineer"
-	};
-	static const char* szClassesLower[] = {
-		"unknown", "scout", "sniper", "soldier", "demoman", "medic", "heavy", "pyro", "spy", "engineer"
-	};
+	bPrimary = bSecondary = bReloading = false;
 
-	if (!bLower)
-		return nClass < 10 && nClass > 0 ? szClassesUpper[nClass] : szClassesUpper[0];
-	else
-		return nClass < 10 && nClass > 0 ? szClassesLower[nClass] : szClassesLower[0];
+	if (pWeapon->GetMaxClip1() != WEAPON_NOCLIP && !pWeapon->m_bReloadsSingly())
+	{	// dumb fix
+		float flOldCurtime = I::GlobalVars->curtime;
+		I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
+		pWeapon->CheckReload();
+		I::GlobalVars->curtime = flOldCurtime;
+	}
+
+	bool bCanAttack = pLocal->CanAttack();
+	{
+		static int iStaticItemDefinitionIndex = 0;
+		int iOldItemDefinitionIndex = iStaticItemDefinitionIndex;
+		int iNewItemDefinitionIndex = iStaticItemDefinitionIndex = pWeapon->m_iItemDefinitionIndex();
+
+		if (iNewItemDefinitionIndex != iOldItemDefinitionIndex || !bCanAttack || !pWeapon->m_iClip1())
+			F::Ticks.m_iWait = -1;
+	}
+	if (bCanAttack)
+	{
+		bPrimary = pWeapon->CanPrimaryAttack();
+		bSecondary = pWeapon->CanSecondaryAttack();
+
+		switch (pWeapon->GetWeaponID())
+		{
+		case TF_WEAPON_FLAME_BALL:
+			if (bPrimary)
+			{
+				// do this, otherwise it will be a tick behind
+				float flFrametime = TICK_INTERVAL * 100;
+				float flMeterMult = S::IHasGenericMeter_GetMeterMultiplier.Call<float>(pWeapon->m_pMeter());
+				float flRate = SDK::AttribHookValue(1.f, "item_meter_charge_rate", pWeapon) - 1;
+				float flMult = SDK::AttribHookValue(1.f, "mult_item_meter_charge_rate", pWeapon);
+				float flTankPressure = pLocal->m_flTankPressure() + flFrametime * flMeterMult / (flRate * flMult);
+
+				if (bPrimary && flTankPressure < 100.f)
+					bPrimary = bSecondary = false;
+			}
+			break;
+		case TF_WEAPON_MINIGUN:
+			if (int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState(); iState != AC_STATE_FIRING && iState != AC_STATE_SPINNING || !pWeapon->HasPrimaryAmmoForShot())
+				bPrimary = false;
+			break;
+		case TF_WEAPON_FLAREGUN_REVENGE:
+			if (pCmd->buttons & IN_ATTACK2)
+				bPrimary = false;
+			break;
+		case TF_WEAPON_BAT_WOOD:
+		case TF_WEAPON_BAT_GIFTWRAP:
+			if (!pWeapon->HasPrimaryAmmoForShot())
+				bSecondary = false;
+			break;
+		case TF_WEAPON_MEDIGUN:
+		case TF_WEAPON_BUILDER:
+		case TF_WEAPON_LASER_POINTER:
+			break;
+		case TF_WEAPON_PARTICLE_CANNON:
+			if (float flChargeBeginTime = pWeapon->As<CTFParticleCannon>()->m_flChargeBeginTime(); flChargeBeginTime > 0)
+			{
+				float flTotalChargeTime = TICKS_TO_TIME(pLocal->m_nTickBase()) - flChargeBeginTime;
+				if (flTotalChargeTime < TF_PARTICLE_MAX_CHARGE_TIME)
+				{
+					bPrimary = bSecondary = false;
+					break;
+				}
+			}
+			[[fallthrough]];
+		default:
+			if (pWeapon->GetSlot() != SLOT_MELEE)
+			{
+				bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
+				bool bReload = pWeapon->IsInReload();
+				if (!bAmmo && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
+					bPrimary = bSecondary = false;
+				if (bReload && bAmmo && !bPrimary)
+					bReloading = true;
+			}
+		}
+		if (bPrimary)
+		{
+			switch (pWeapon->GetWeaponID())
+			{
+			case TF_WEAPON_FLAMETHROWER:
+			case TF_WEAPON_FLAME_BALL:
+			case TF_WEAPON_FLAREGUN:
+			case TF_WEAPON_FLAREGUN_REVENGE:
+				if (pLocal->IsUnderwater())
+					bPrimary = bSecondary = false;
+			}
+		}
+	}
 }
 
 int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase)
@@ -621,14 +743,14 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 		if (!G::CanPrimaryAttack || !(pCmd->buttons & IN_ATTACK) || pWeapon->As<CTFGrapplingHook>()->m_hProjectile())
 			return false;
 
-		Vec3 vPos, vAngle; GetProjectileFireSetup(pLocal, pCmd->viewangles, { 23.5f, -8.f, -3.f }, vPos, vAngle, false);
+		static auto tf_grapplinghook_max_distance = H::ConVars.FindVar("tf_grapplinghook_max_distance");
+		const float flGrappleDistance = tf_grapplinghook_max_distance->GetFloat();
+
+		Vec3 vPos, vAngle; GetProjectileFireSetup(pLocal, pCmd->viewangles, { 23.5f, -8.f, -3.f }, vPos, vAngle, 2000.f);
 		Vec3 vForward; Math::AngleVectors(vAngle, &vForward);
 
 		CGameTrace trace = {};
-		CTraceFilterHitscan filter = {};
-		filter.pSkip = pLocal;
-		static auto tf_grapplinghook_max_distance = H::ConVars.FindVar("tf_grapplinghook_max_distance");
-		const float flGrappleDistance = tf_grapplinghook_max_distance->GetFloat();
+		CTraceFilterWorldAndPropsOnly filter = {};
 		Trace(vPos, vPos + vForward * flGrappleDistance, MASK_SOLID, &filter, &trace);
 		return trace.DidHit() && !(trace.surface.flags & SURF_SKY);
 	}
@@ -692,30 +814,6 @@ int SDK::IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* 
 	}
 
 	return G::CanPrimaryAttack && pCmd->buttons & IN_ATTACK ? 1 : G::Reloading && pCmd->buttons & IN_ATTACK ? 2 : 0;
-}
-
-float SDK::GetGravity()
-{
-	static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
-
-	return sv_gravity->GetFloat();
-}
-
-float SDK::MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch, bool bIgnoreSpecialAbility)
-{
-	float flSpeed = pPlayer->CalculateMaxSpeed(bIgnoreSpecialAbility);
-
-	if (pPlayer->InCond(TF_COND_SPEED_BOOST) || pPlayer->InCond(TF_COND_HALLOWEEN_SPEED_BOOST))
-		flSpeed *= 1.35f;
-	if (bIncludeCrouch && pPlayer->IsDucking() && pPlayer->IsOnGround())
-		flSpeed /= 3;
-
-	return flSpeed;
-}
-
-float SDK::AttribHookValue(float value, const char* name, void* econent, void* buffer, bool isGlobalConstString)
-{
-	return S::CAttributeManager_AttribHookValue_Float.Call<float>(value, name, econent, buffer, isGlobalConstString);
 }
 
 void SDK::FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTargetAngle)

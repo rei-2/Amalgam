@@ -23,6 +23,8 @@
 #include <intrin.h>
 #include <random>
 
+#define no_inline __declspec(noinline)
+
 #define VK_0				0x30
 #define VK_1				0x31
 #define VK_2				0x32
@@ -122,16 +124,18 @@ namespace SDK
 	Vec3 PredictOrigin(const Vec3& vOrigin, const Vec3& vVelocity, float flLatency, bool bTrace = true, const Vec3& vMins = {}, const Vec3& vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
 	bool PredictOrigin(Vec3& vOut, const Vec3& vOrigin, const Vec3& vVelocity, float flLatency, bool bTrace = true, const Vec3& vMins = {}, const Vec3& vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
 
+	float GetGravity();
 	bool IsLoopback();
 	int GetRoundState();
 	int GetWinningTeam();
-	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType = nullptr);
-	const char* GetClassByIndex(const int nClass, bool bLower = true);
 
-	int IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase = false);
-	float GetGravity();
-	float MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch = false, bool bIgnoreSpecialAbility = false);
+	const char* GetClassByIndex(const int nClass, bool bLower = true);
 	float AttribHookValue(float value, const char* name, void* econent, void* buffer = nullptr, bool isGlobalConstString = true);
+	float MaxSpeed(CTFPlayer* pPlayer, bool bIncludeCrouch = false, bool bIgnoreSpecialAbility = false);
+
+	EWeaponType GetWeaponType(CTFWeaponBase* pWeapon, EWeaponType* pSecondaryType = nullptr);
+	void CanAttack(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool& bPrimary, bool& bSecondary, bool& bReloading);
+	int IsAttacking(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, const CUserCmd* pCmd, bool bTickBase = false);
 
 	void FixMovement(CUserCmd* pCmd, const Vec3& vCurAngle, const Vec3& vTargetAngle);
 	void FixMovement(CUserCmd* pCmd, const Vec3& vTargetAngle);

@@ -208,6 +208,7 @@
     <ClCompile Include="src\Hooks\CEngineClient_GetScreenAspectRatio.cpp" />
     <ClCompile Include="src\Features\AntiCheatCompatibility\AntiCheatCompatibility.cpp" />
     <ClCompile Include="src\Features\Debug\Debug.cpp" />
+    <ClCompile Include="src\Hooks\CTFGrapplingHook_ItemPostFrame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Utils\UtlVector\UtlVector.h" />

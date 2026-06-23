@@ -236,7 +236,7 @@ bool CMovementSimulation::Initialize(CBaseEntity* pEntity, MoveStorage& tMoveSto
 
 	// setup move data
 	SetupMoveData(tMoveStorage);
-	if (I::GameMovement->player = pPlayer, I::GameMovement->mv = &tMoveStorage.m_MoveData; I::GameMovement->CheckStuck())
+	if (CheckStuck(tMoveStorage))
 	{
 		tMoveStorage.m_bFailed = true;
 		return true;
@@ -317,6 +317,15 @@ void CMovementSimulation::SetupMoveData(MoveStorage& tMoveStorage)
 	tMoveStorage.m_flPredictedSimTime = tMoveStorage.m_flSimTime + tMoveStorage.m_flPredictedDelta;
 	tMoveStorage.m_vPredictedOrigin = tMoveStorage.m_MoveData.m_vecAbsOrigin;
 	tMoveStorage.m_bDirectMove = tMoveStorage.m_pPlayer->IsOnGround() || tMoveStorage.m_pPlayer->IsSwimming();
+}
+
+bool CMovementSimulation::CheckStuck(MoveStorage& tMoveStorage)
+{
+	I::GameMovement->player = I::GameMovement->m_pTFPlayer = tMoveStorage.m_pPlayer, I::GameMovement->mv = &tMoveStorage.m_MoveData;
+	SetBounds(tMoveStorage.m_pPlayer);
+	bool bReturn = I::GameMovement->CheckStuck();
+	RestoreBounds(tMoveStorage.m_pPlayer);
+	return bReturn;
 }
 
 static inline float GetFrictionScale(float flVelocityXY, float flTurn, float flVelocityZ, float flMin = 50.f, float flMax = 150.f)

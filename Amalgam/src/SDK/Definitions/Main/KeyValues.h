@@ -2,6 +2,8 @@
 #include "../Types.h"
 #include <stdint.h>
 
+class CKeyValuesGrowableStringTable;
+
 enum types_t
 {
 	TYPE_NONE = 0,
@@ -33,12 +35,12 @@ private:
 	char m_iDataType;
 	char m_bHasEscapeSequences;
 	char m_bEvaluateConditionals;
-	char unused[1];
+	char m_bUnknown;
 
 	KeyValues* m_pPeer;
 	KeyValues* m_pSub;
 	KeyValues* m_pChain;
-	void* m_pUnknown;
+	CKeyValuesGrowableStringTable* m_pGrowableStringTable;
 
 public:
 	class AutoDelete

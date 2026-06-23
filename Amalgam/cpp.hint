@@ -1,3 +1,5 @@
+#define no_inline __declspec(noinline)
+
 #define VA_LIST(...) __VA_ARGS__
 
 #define STRINGIFY(x) STRINGIFY2(x)

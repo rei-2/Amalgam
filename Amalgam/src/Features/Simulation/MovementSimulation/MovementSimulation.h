@@ -46,6 +46,7 @@ private:
 	void Reset(MoveStorage& tMoveStorage);
 
 	void SetupMoveData(MoveStorage& tMoveStorage);
+	bool CheckStuck(MoveStorage& tMoveStorage);
 	void GetAverageYaw(MoveStorage& tMoveStorage, int iSamples);
 	bool StrafePrediction(MoveStorage& tMoveStorage, bool bHitchance = false);
 

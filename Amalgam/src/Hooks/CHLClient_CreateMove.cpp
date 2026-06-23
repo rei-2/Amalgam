@@ -15,9 +15,7 @@
 #include "../Features/Spectate/Spectate.h"
 #include "../Features/AntiCheatCompatibility/AntiCheatCompatibility.h"
 
-MAKE_SIGNATURE(IHasGenericMeter_GetMeterMultiplier, "client.dll", "F3 0F 10 81 ? ? ? ? C3 CC CC CC CC CC CC CC 48 85 D2", 0x0);
-
-static inline void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+static no_inline void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 {
 	G::PSilentAngles = G::SilentAngles = G::Attacking = G::Throwing = false;
 	G::LastUserCmd = G::CurrentUserCmd ? G::CurrentUserCmd : pCmd;
@@ -27,105 +25,7 @@ static inline void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 	if (!pWeapon)
 		return;
 
-	G::CanPrimaryAttack = G::CanSecondaryAttack = G::Reloading = false;
-
-	if (pWeapon->GetMaxClip1() != WEAPON_NOCLIP && !pWeapon->m_bReloadsSingly())
-	{	// dumb fix
-		float flOldCurtime = I::GlobalVars->curtime;
-		I::GlobalVars->curtime = TICKS_TO_TIME(pLocal->m_nTickBase());
-		pWeapon->CheckReload();
-		I::GlobalVars->curtime = flOldCurtime;
-	}
-
-	bool bCanAttack = pLocal->CanAttack();
-	{
-		static int iStaticItemDefinitionIndex = 0;
-		int iOldItemDefinitionIndex = iStaticItemDefinitionIndex;
-		int iNewItemDefinitionIndex = iStaticItemDefinitionIndex = pWeapon->m_iItemDefinitionIndex();
-
-		if (iNewItemDefinitionIndex != iOldItemDefinitionIndex || !bCanAttack || !pWeapon->m_iClip1())
-			F::Ticks.m_iWait = -1;
-	}
-	if (bCanAttack)
-	{
-		G::CanPrimaryAttack = pWeapon->CanPrimaryAttack();
-		G::CanSecondaryAttack = pWeapon->CanSecondaryAttack();
-
-		switch (pWeapon->GetWeaponID())
-		{
-		case TF_WEAPON_FLAME_BALL:
-			if (G::CanPrimaryAttack)
-			{
-				// do this, otherwise it will be a tick behind
-				float flFrametime = TICK_INTERVAL * 100;
-				float flMeterMult = S::IHasGenericMeter_GetMeterMultiplier.Call<float>(pWeapon->m_pMeter());
-				float flRate = SDK::AttribHookValue(1.f, "item_meter_charge_rate", pWeapon) - 1;
-				float flMult = SDK::AttribHookValue(1.f, "mult_item_meter_charge_rate", pWeapon);
-				float flTankPressure = pLocal->m_flTankPressure() + flFrametime * flMeterMult / (flRate * flMult);
-
-				if (G::CanPrimaryAttack && flTankPressure < 100.f)
-					G::CanPrimaryAttack = G::CanSecondaryAttack = false;
-			}
-			break;
-		case TF_WEAPON_MINIGUN:
-		{
-			int iState = pWeapon->As<CTFMinigun>()->m_iWeaponState();
-			if (iState != AC_STATE_FIRING && iState != AC_STATE_SPINNING || !pWeapon->HasPrimaryAmmoForShot())
-				G::CanPrimaryAttack = false;
-			break;
-		}
-		case TF_WEAPON_FLAREGUN_REVENGE:
-			if (pCmd->buttons & IN_ATTACK2)
-				G::CanPrimaryAttack = false;
-			break;
-		case TF_WEAPON_BAT_WOOD:
-		case TF_WEAPON_BAT_GIFTWRAP:
-			if (!pWeapon->HasPrimaryAmmoForShot())
-				G::CanSecondaryAttack = false;
-			break;
-		case TF_WEAPON_MEDIGUN:
-		case TF_WEAPON_BUILDER:
-		case TF_WEAPON_LASER_POINTER:
-			break;
-		case TF_WEAPON_PARTICLE_CANNON:
-		{
-			float flChargeBeginTime = pWeapon->As<CTFParticleCannon>()->m_flChargeBeginTime();
-			if (flChargeBeginTime > 0)
-			{
-				float flTotalChargeTime = TICKS_TO_TIME(pLocal->m_nTickBase()) - flChargeBeginTime;
-				if (flTotalChargeTime < TF_PARTICLE_MAX_CHARGE_TIME)
-				{
-					G::CanPrimaryAttack = G::CanSecondaryAttack = false;
-					break;
-				}
-			}
-			[[fallthrough]];
-		}
-		default:
-			if (pWeapon->GetSlot() != SLOT_MELEE)
-			{
-				bool bAmmo = pWeapon->HasPrimaryAmmoForShot();
-				bool bReload = pWeapon->IsInReload();
-				if (!bAmmo && pWeapon->m_iItemDefinitionIndex() != Soldier_m_TheBeggarsBazooka)
-					G::CanPrimaryAttack = G::CanSecondaryAttack = false;
-				if (bReload && bAmmo && !G::CanPrimaryAttack)
-					G::Reloading = true;
-			}
-		}
-		if (G::CanPrimaryAttack)
-		{
-			switch (pWeapon->GetWeaponID())
-			{
-			case TF_WEAPON_FLAMETHROWER:
-			case TF_WEAPON_FLAME_BALL:
-			case TF_WEAPON_FLAREGUN:
-			case TF_WEAPON_FLAREGUN_REVENGE:
-				if (pLocal->IsUnderwater())
-					G::CanPrimaryAttack = G::CanSecondaryAttack = false;
-			}
-		}
-	}
-
+	SDK::CanAttack(pLocal, pWeapon, pCmd, G::CanPrimaryAttack, G::CanSecondaryAttack, G::Reloading);
 	G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd);
 	G::PrimaryWeaponType = SDK::GetWeaponType(pWeapon, &G::SecondaryWeaponType);
 	G::CanHeadshot = pWeapon->CanHeadshot() || pWeapon->AmbassadorCanHeadshot(TICKS_TO_TIME(pLocal->m_nTickBase()));

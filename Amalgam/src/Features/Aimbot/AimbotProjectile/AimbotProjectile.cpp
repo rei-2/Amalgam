@@ -2035,12 +2035,27 @@ bool CAimbotProjectile::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 						pCmd->buttons &= ~IN_ATTACK;
 				}
 				break;
+			case TF_WEAPON_GRAPPLINGHOOK:
+				break;
 			default:
 				pCmd->buttons |= IN_ATTACK;
 			}
 		}
 
-		F::Aimbot.m_bRan = G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
+		if (nWeaponID != TF_WEAPON_GRAPPLINGHOOK)
+			F::Aimbot.m_bRan = G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
+		else
+		{
+			Vec3 vOriginalAngles = pCmd->viewangles; int iOriginalButtons = pCmd->buttons;
+			pCmd->viewangles = tTarget.m_vAngleTo, pCmd->buttons |= IN_ATTACK;
+			F::Aimbot.m_bRan = G::Attacking = SDK::IsAttacking(pLocal, pWeapon, pCmd, true);
+			pCmd->viewangles = vOriginalAngles, pCmd->buttons = iOriginalButtons;
+			if (!G::Attacking)
+				continue;
+
+			if (Vars::Aimbot::General::AutoShoot.Value)
+				pCmd->buttons |= IN_ATTACK;
+		}
 		DrawVisuals(iResult, tTarget, m_vPlayerPath, m_vProjectilePath, m_vBoxes);
 
 		Aim(pCmd, tTarget.m_vAngleTo);

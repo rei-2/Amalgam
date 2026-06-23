@@ -367,7 +367,9 @@ bool CAimbotGlobal::ShouldHoldAttack(CTFWeaponBase* pWeapon)
 			break;
 		[[fallthrough]];
 	case Vars::Aimbot::General::AimHoldsFireEnum::Always:
-		if (!F::Aimbot.m_bRunningSecondary && !G::CanPrimaryAttack && G::LastUserCmd->buttons & IN_ATTACK && Vars::Aimbot::General::AimType.Value && !pWeapon->IsInReload())
+		if (!(G::LastUserCmd->buttons & IN_ATTACK) || !Vars::Aimbot::General::AimType.Value || F::Aimbot.m_bRunningSecondary)
+			break;
+		if (!G::CanPrimaryAttack && !pWeapon->IsInReload() || pWeapon->GetWeaponID() == TF_WEAPON_GRAPPLINGHOOK && pWeapon->As<CTFGrapplingHook>()->m_hProjectile())
 			return true;
 	}
 	return false;
