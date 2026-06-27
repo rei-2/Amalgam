@@ -6,7 +6,7 @@
 void CDebug::Draw(CTFPlayer* pLocal)
 {
 #ifdef DEBUG_TEXT
-	if (!Vars::Debug::Info.Value && m_vDebugText.empty())
+	if (!Vars::Debug::Info.Value && m_mDebugText.empty())
 		return;
 #else
 	if (!Vars::Debug::Info.Value)
@@ -21,7 +21,7 @@ void CDebug::Draw(CTFPlayer* pLocal)
 	if (Vars::Debug::Info.Value)
 	{
 		auto pWeapon = H::Entities.GetWeapon();
-		auto pCmd = !I::EngineClient->IsPlayingDemo() ? G::LastUserCmd : I::Input->GetUserCmd(I::ClientState->lastoutgoingcommand);
+		auto pCmd = !I::EngineClient->IsPlayingDemo() ? G::CurrentUserCmd : I::Input->GetUserCmd(I::ClientState->lastoutgoingcommand);
 
 		if (pCmd)
 		{
@@ -76,9 +76,12 @@ void CDebug::Draw(CTFPlayer* pLocal)
 						}
 					}
 					return sReturn.empty() ? "NONE" : sReturn;
-				}()
-					).c_str());
-			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Tickcount: {}, Command: {}", pCmd->tick_count, pCmd->command_number).c_str());
+				}()).c_str());
+			H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("TickCount: {}, Command: {}", pCmd->tick_count, pCmd->command_number).c_str());
+			//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("WeaponSelect: {}, WeaponSubtype: {}", pCmd->weaponselect, pCmd->weaponsubtype, pCmd->impulse).c_str());
+			//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("RandomSeed: {}, Impulse: {}", pCmd->random_seed, pCmd->impulse).c_str());
+			//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("MouseDx: {}, MouseDy: {}", pCmd->random_seed, pCmd->impulse).c_str());
+			//H::Draw.StringOutlined(fFont, x, y += nTall, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("HasBeenPredicted: {}", pCmd->hasbeenpredicted).c_str());
 		}
 		Vec3 vOrigin = pLocal->m_vecOrigin();
 		H::Draw.StringOutlined(fFont, x, y += nTall * 2, Vars::Menu::Theme::Active.Value, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, std::format("Origin: ({:.3f}, {:.3f}, {:.3f})", vOrigin.x, vOrigin.y, vOrigin.z).c_str());
@@ -111,28 +114,36 @@ void CDebug::Draw(CTFPlayer* pLocal)
 	}
 
 #ifdef DEBUG_TEXT
-	if (!m_vDebugText.empty())
+	if (!m_mDebugText.empty())
 	{
 		if (Vars::Debug::Info.Value)
 			y += nTall;
-		for (auto it = m_vDebugText.begin(); it != m_vDebugText.end();)
+		for (auto& [uType, vDebugText] : m_mDebugText)
 		{
-			if (it->m_flTime && it->m_flTime < I::GlobalVars->curtime)
-				it = m_vDebugText.erase(it);
-			else
-				++it;
-		}
-		for (auto& [sString, tColor, _, vPosition2D, vPosition3D] : m_vDebugText)
-		{
-			if (vPosition3D)
+			for (auto it = vDebugText.begin(); it != vDebugText.end();)
 			{
-				if (Vec3 vScreen; SDK::W2S(*vPosition3D, vScreen))
-					H::Draw.StringOutlined(fFont, vScreen.x, vScreen.y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+				if (it->m_flTime && it->m_flTime < I::GlobalVars->curtime)
+					it = vDebugText.erase(it);
+				else
+					++it;
 			}
-			else if (vPosition2D)
-				H::Draw.StringOutlined(fFont, vPosition2D->x, vPosition2D->y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
-			else
-				H::Draw.StringOutlined(fFont, x, y += nTall, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+			if (vDebugText.empty())
+			{
+				m_mDebugText.erase(uType);
+				continue;
+			}
+			for (auto& [sString, flTime, vPosition2D, vPosition3D, tColor] : vDebugText)
+			{
+				if (vPosition3D)
+				{
+					if (Vec3 vScreen; SDK::W2S(*vPosition3D, vScreen))
+						H::Draw.StringOutlined(fFont, vScreen.x, vScreen.y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+				}
+				else if (vPosition2D)
+					H::Draw.StringOutlined(fFont, vPosition2D->x, vPosition2D->y, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+				else
+					H::Draw.StringOutlined(fFont, x, y += nTall, tColor, Vars::Menu::Theme::Background.Value, ALIGN_TOPLEFT, sString.c_str());
+			}
 		}
 	}
 #endif
@@ -142,74 +153,103 @@ void CDebug::Draw(CTFPlayer* pLocal)
 
 
 #ifdef DEBUG_TEXT
-const std::vector<DebugText_t>& CDebug::GetText()
+const std::map<int, std::vector<DebugText_t>>& CDebug::GetText()
 {
-	return m_vDebugText;
+	return m_mDebugText;
+}
+const std::vector<DebugText_t>& CDebug::GetText(uint32_t uType)
+{
+	return m_mDebugText[uType];
 }
 
-void CDebug::ClearText(byte iType)
+void CDebug::ClearText(uint32_t uType)
 {
-	if (iType == TextEnum::All)
-		m_vDebugText.clear();
-	else for (auto it = m_vDebugText.begin(); it != m_vDebugText.end();)
-	{
-		if ((iType == TextEnum::Manual) == (it->vPosition2D || it->vPosition3D))
-			it = m_vDebugText.erase(it);
-		else
-			++it;
-	}
+	if (!uType)
+		m_mDebugText.clear();
+	else if (m_mDebugText.contains(uType))
+		m_mDebugText.erase(uType);
 }
 
-void CDebug::PopText(byte iType)
+void CDebug::PopText(uint32_t uType)
 {
-	if (!m_vDebugText.empty())
-	{
-		if (iType == TextEnum::All)
-			m_vDebugText.erase(m_vDebugText.begin());
-		else for (auto it = m_vDebugText.begin(); it != m_vDebugText.end();)
-		{
-			if ((iType == TextEnum::Manual) == (it->vPosition2D || it->vPosition3D))
-			{
-				it = m_vDebugText.erase(it);
-				break;
-			}
-		}
-	}
+	if (m_mDebugText.contains(uType))
+		return;
+
+	auto& vDebugText = m_mDebugText[uType];
+	if (!vDebugText.empty())
+		return;
+
+	vDebugText.erase(vDebugText.begin());
 }
 
 void CDebug::AddText(const DebugText_t& sText)
 {
-	m_vDebugText.push_back(sText);
+	m_mDebugText[0].push_back(sText);
+}
+
+void CDebug::AddText(const DebugText_t& sText, uint32_t uType)
+{
+	m_mDebugText[uType].push_back(sText);
 }
 
 void CDebug::AddText(const std::string& sString, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor, 0.f, std::nullopt, std::nullopt);
+	m_mDebugText[0].emplace_back(sString, 0.f, std::nullopt, std::nullopt, tColor);
 }
 
 void CDebug::AddText(const std::string& sString, const Vec2& vPosition, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor, 0.f, vPosition, std::nullopt);
+	m_mDebugText[0].emplace_back(sString, 0.f, vPosition, std::nullopt, tColor);
 }
 
 void CDebug::AddText(const std::string& sString, const Vec3& vPosition, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor, 0.f, std::nullopt, vPosition);
+	m_mDebugText[0].emplace_back(sString, 0.f, std::nullopt, vPosition, tColor);
+}
+
+void CDebug::AddText(const std::string& sString, uint32_t uType, Color_t tColor)
+{
+	m_mDebugText[uType].emplace_back(sString, 0.f, std::nullopt, std::nullopt, tColor);
+}
+
+void CDebug::AddText(const std::string& sString, uint32_t uType, const Vec2& vPosition, Color_t tColor)
+{
+	m_mDebugText[uType].emplace_back(sString, 0.f, vPosition, std::nullopt, tColor);
+}
+
+void CDebug::AddText(const std::string& sString, uint32_t uType, const Vec3& vPosition, Color_t tColor)
+{
+	m_mDebugText[uType].emplace_back(sString, 0.f, std::nullopt, vPosition, tColor);
 }
 
 void CDebug::AddText(const std::string& sString, float flTime, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor, flTime, std::nullopt, std::nullopt);
+	m_mDebugText[0].emplace_back(sString, flTime, std::nullopt, std::nullopt, tColor);
 }
 
-void CDebug::AddText(const std::string& sString, const Vec2& vPosition, float flTime, Color_t tColor)
+void CDebug::AddText(const std::string& sString, float flTime, const Vec2& vPosition, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor, flTime, vPosition, std::nullopt);
+	m_mDebugText[0].emplace_back(sString, flTime, vPosition, std::nullopt, tColor);
 }
 
-void CDebug::AddText(const std::string& sString, const Vec3& vPosition, float flTime, Color_t tColor)
+void CDebug::AddText(const std::string& sString, float flTime, const Vec3& vPosition, Color_t tColor)
 {
-	m_vDebugText.emplace_back(sString, tColor, flTime, std::nullopt, vPosition);
+	m_mDebugText[0].emplace_back(sString, flTime, std::nullopt, vPosition, tColor);
+}
+
+void CDebug::AddText(const std::string& sString, float flTime, uint32_t uType, Color_t tColor)
+{
+	m_mDebugText[uType].emplace_back(sString, flTime, std::nullopt, std::nullopt, tColor);
+}
+
+void CDebug::AddText(const std::string& sString, float flTime, uint32_t uType, const Vec2& vPosition, Color_t tColor)
+{
+	m_mDebugText[uType].emplace_back(sString, flTime, vPosition, std::nullopt, tColor);
+}
+
+void CDebug::AddText(const std::string& sString, float flTime, uint32_t uType, const Vec3& vPosition, Color_t tColor)
+{
+	m_mDebugText[uType].emplace_back(sString, flTime, std::nullopt, vPosition, tColor);
 }
 #endif
 
