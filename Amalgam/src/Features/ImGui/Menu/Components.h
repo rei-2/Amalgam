@@ -2085,22 +2085,35 @@ namespace ImGui
 			{
 				SetActiveID(uId, GetCurrentWindow());
 
-				int iKeyPressed = 0;
-				for (short iKey = 0; iKey < 255; iKey++)
+				for (short iKey = 1; iKey < 255; iKey++)
 				{
-					if (!vIgnore.empty() && std::find(vIgnore.begin(), vIgnore.end(), iKey) != vIgnore.end())
+					bool bValid = U::KeyHandler.Pressed(iKey);
+					if (!bValid)
 						continue;
 
-					if (U::KeyHandler.Pressed(iKey))
-					{
-						iKeyPressed = iKey;
-						break;
-					}
-				}
+					bValid = vIgnore.empty() || std::find(vIgnore.begin(), vIgnore.end(), iKey) == vIgnore.end();
+					if (!bValid)
+						continue;
 
-				if (iKeyPressed && (iKeyPressed != VK_LBUTTON || !bHovered))
-				{
-					switch (iKeyPressed)
+					switch (iKey)
+					{
+					case VK_LBUTTON:
+						bValid = !bHovered; break;
+					case VK_SHIFT:
+					case VK_LSHIFT:
+					case VK_RSHIFT:
+					case VK_CONTROL:
+					case VK_LCONTROL:
+					case VK_RCONTROL:
+					case VK_MENU:
+					case VK_LMENU:
+					case VK_RMENU:
+						bValid = iKey != iOutput; break;
+					}
+					if (!bValid)
+						continue;
+
+					switch (iKey)
 					{
 					case VK_ESCAPE:
 						if (iFlags & FKeybindEnum::AllowNone)
@@ -2110,9 +2123,10 @@ namespace ImGui
 						}
 						[[fallthrough]];
 					default:
-						iOutput = iKeyPressed;
+						iOutput = iKey;
 					}
 					ClearActiveID();
+					break;
 				}
 
 				GetCurrentContext()->ActiveIdAllowOverlap = true;

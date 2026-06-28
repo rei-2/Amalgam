@@ -4135,7 +4135,7 @@ void CMenu::Render()
 	m_bInKeybind = false;
 	if (m_bIsOpen)
 	{
-		for (short iKey = 0; iKey < 256; iKey++)
+		for (short iKey = 1; iKey < 255; iKey++)
 			U::KeyHandler.StoreKey(iKey);
 	}
 	else

@@ -26,7 +26,7 @@ public:
 public:
 	std::string& String(byte iKey, const bool bStore = false);
 
-	std::array<std::string, 256> m_aStringStorage = {};
+	std::array<std::string, 256> m_aStringStorage = { "none" };
 };
 
 ADD_FEATURE_CUSTOM(CKeyHandler, KeyHandler, U);

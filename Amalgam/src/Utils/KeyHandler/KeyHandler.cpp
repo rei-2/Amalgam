@@ -26,7 +26,9 @@ void CKeyHandler::StoreKey(byte iKey, KeyStorage* pStorage)
 	pStorage->m_bIsPressed = bPressed;
 	pStorage->m_bIsDouble = bDouble;
 	pStorage->m_bIsReleased = bReleased;
-	if (bPressed)
+	if (bDouble)
+		pStorage->m_dPressTime = 0.0;
+	else if (bPressed)
 		pStorage->m_dPressTime = dFloatTime;
 }
 

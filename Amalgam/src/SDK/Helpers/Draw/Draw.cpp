@@ -70,7 +70,7 @@ void CDraw::UpdateKeyStrings()
 	if (HKL pCurrLayout = GetKeyboardLayout(0); pCurrLayout != pLastLayout)
 	{
 		pLastLayout = pCurrLayout;
-		for (short iKey = 0; iKey < 256; iKey++)
+		for (short iKey = 1; iKey < 255; iKey++)
 			U::KeyHandler.String(iKey, true);
 	}
 }
