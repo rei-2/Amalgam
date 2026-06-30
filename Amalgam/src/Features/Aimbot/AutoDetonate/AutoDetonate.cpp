@@ -114,7 +114,7 @@ bool CAutoDetonate::CheckEntities(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUs
 		sphere.NextEntity())
 	{
 		if (pEntity == pLocal || pEntity->IsPlayer() && (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->As<CTFPlayer>()->IsAGhost())
-			|| !F::AimbotGlobal.FriendlyFire() && pEntity->m_iTeamNum() == pLocal->m_iTeamNum()
+			|| !SDK::FriendlyFire() && pEntity->m_iTeamNum() == pLocal->m_iTeamNum()
 			|| F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
 			continue;
 

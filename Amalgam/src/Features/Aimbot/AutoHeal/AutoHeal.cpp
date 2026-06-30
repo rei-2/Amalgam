@@ -477,7 +477,7 @@ void CAutoHeal::GetDangers(CTFPlayer* pTarget, bool bVaccinator, float& flBullet
 			pOwner = pWeapon ? pWeapon->m_hOwner()->As<CTFPlayer>() : nullptr;
 		}
 		if (!pOwner || ShouldIgnore(pOwner, m_pLocal, m_pWeapon)
-			|| (!F::AimbotGlobal.FriendlyFire() || pEntity->GetClassID() == ETFClassID::CTFProjectile_HealingBolt) && pOwner->m_iTeamNum() == pTarget->m_iTeamNum()
+			|| (!SDK::FriendlyFire() || pEntity->GetClassID() == ETFClassID::CTFProjectile_HealingBolt) && pOwner->m_iTeamNum() == pTarget->m_iTeamNum()
 			|| pWeapon && !pWeapon->GetDamage())
 			continue;
 

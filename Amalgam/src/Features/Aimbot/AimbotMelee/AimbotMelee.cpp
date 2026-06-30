@@ -31,9 +31,9 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 	if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 	{
-		auto eGroup = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
+		auto eGroup = !SDK::FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
 		if (Vars::Aimbot::Melee::WhipTeam.Value &&
-			!F::AimbotGlobal.FriendlyFire() && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
+			!SDK::FriendlyFire() && SDK::AttribHookValue(0, "speed_buff_ally", pWeapon) > 0)
 			eGroup = EntityEnum::PlayerAll;
 
 		for (auto pEntity : H::Entities.GetGroup(eGroup))
@@ -48,7 +48,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 			float flDistTo = vLocalPos.DistToSqr(vPos);
 			bool bTeam = pEntity->m_iTeamNum() == pLocal->m_iTeamNum();
 			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
-			if (bTeam && !F::AimbotGlobal.FriendlyFire())
+			if (bTeam && !SDK::FriendlyFire())
 				iPriority = 0;
 			vTargets.emplace_back(pEntity, TargetEnum::Player, vPos, vAngleTo, flFOVTo, flDistTo, iPriority);
 		}

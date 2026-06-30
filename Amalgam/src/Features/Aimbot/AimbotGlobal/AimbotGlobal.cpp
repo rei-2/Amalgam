@@ -201,7 +201,7 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 
 	if (auto pGameRules = I::TFGameRules())
 	{
-		if (pGameRules->m_bTruceActive() && (FriendlyFire() || pLocal->m_iTeamNum() != pEntity->m_iTeamNum()))
+		if (pGameRules->m_bTruceActive() && (SDK::FriendlyFire() || pLocal->m_iTeamNum() != pEntity->m_iTeamNum()))
 			return true;
 	}
 
@@ -213,7 +213,7 @@ bool CAimbotGlobal::ShouldIgnore(CBaseEntity* pEntity, CTFPlayer* pLocal, CTFWea
 		if (pPlayer == pLocal || !pPlayer->IsAlive() || pPlayer->IsAGhost())
 			return true;
 
-		if (!FriendlyFire() && pLocal->m_iTeamNum() == pEntity->m_iTeamNum())
+		if (!SDK::FriendlyFire() && pLocal->m_iTeamNum() == pEntity->m_iTeamNum())
 			return false;
 
 		if (iFunctionFlags & ShouldIgnoreEnum::Ignored && F::PlayerUtils.IsIgnored(pPlayer->entindex())
@@ -339,12 +339,6 @@ int CAimbotGlobal::GetPriority(int iIndex)
 	return F::PlayerUtils.GetPriority(iIndex);
 }
 
-bool CAimbotGlobal::FriendlyFire()
-{
-	static auto mp_friendlyfire = H::ConVars.FindVar("mp_friendlyfire");
-	return mp_friendlyfire->GetBool();
-}
-
 bool CAimbotGlobal::ShouldAim()
 {
 	switch (Vars::Aimbot::General::AimType.Value)
@@ -387,7 +381,7 @@ bool CAimbotGlobal::ValidBomb(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CBaseEn
 		sphere.NextEntity())
 	{
 		if (pEntity == pLocal || pEntity->IsPlayer() && (!pEntity->As<CTFPlayer>()->IsAlive() || pEntity->As<CTFPlayer>()->IsAGhost())
-			|| !FriendlyFire() && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
+			|| !SDK::FriendlyFire() && pEntity->m_iTeamNum() == pLocal->m_iTeamNum())
 			continue;
 
 		Vec3 vPos; pEntity->m_Collision()->CalcNearestPoint(vOrigin, &vPos);

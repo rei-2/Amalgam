@@ -125,6 +125,7 @@ namespace SDK
 	bool PredictOrigin(Vec3& vOut, const Vec3& vOrigin, const Vec3& vVelocity, float flLatency, bool bTrace = true, const Vec3& vMins = {}, const Vec3& vMaxs = {}, unsigned int nMask = MASK_SOLID, float flNormal = 0.f);
 
 	float GetGravity();
+	bool FriendlyFire();
 	bool IsLoopback();
 	int GetRoundState();
 	int GetWinningTeam();

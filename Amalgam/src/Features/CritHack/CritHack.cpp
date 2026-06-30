@@ -297,23 +297,24 @@ void CCritHack::Reset()
 
 
 
-int CCritHack::GetCritRequest(CUserCmd* pCmd, CTFWeaponBase* pWeapon)
+int CCritHack::GetCritRequest(CUserCmd* pCmd, CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
 	bool bCanCrit = m_iAvailableCrits > 0 && !m_bCritBanned;
-	bool bPressed = Vars::CritHack::ForceCrits.Value;
-	if (Vars::CritHack::AlwaysMeleeCrit.Value && m_bMelee
+
+	bool bForce = bCanCrit && Vars::CritHack::ForceCrits.Value;
+	if (bCanCrit && m_bMelee && Vars::CritHack::AlwaysMeleeCrit.Value
 		&& (Vars::Aimbot::General::AutoShoot.Value ? pCmd->buttons & IN_ATTACK && !(G::OriginalCmd.buttons & IN_ATTACK) : Vars::Aimbot::General::AimType.Value)
 		&& G::AimTarget.m_iEntIndex)
 	{
 		auto pEntity = I::ClientEntityList->GetClientEntity(G::AimTarget.m_iEntIndex)->As<CBaseEntity>();
-		if (pEntity && pEntity->IsPlayer())
-			bPressed = true;
+		if (pEntity && pEntity->IsPlayer() && (SDK::FriendlyFire() || pLocal->m_iTeamNum() != pEntity->m_iTeamNum()))
+			bForce = true;
 	}
 	
 	bool bSkip = Vars::CritHack::AvoidRandomCrits.Value;
 	bool bDesync = CommandToSeed(pCmd->command_number) == pWeapon->m_iCurrentSeed();
 
-	return bCanCrit && bPressed ? CritRequestEnum::Crit : bSkip || bDesync ? CritRequestEnum::Skip : CritRequestEnum::Any;
+	return bForce ? CritRequestEnum::Crit : bSkip || bDesync ? CritRequestEnum::Skip : CritRequestEnum::Any;
 }
 
 void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
@@ -356,7 +357,7 @@ void CCritHack::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 	if (!bAttacking || pWeapon->IsRapidFire() && I::GlobalVars->curtime < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
 		return;
 
-	int iRequest = GetCritRequest(pCmd, pWeapon);
+	int iRequest = GetCritRequest(pCmd, pLocal, pWeapon);
 	if (iRequest == CritRequestEnum::Any)
 		return;
 
@@ -391,7 +392,7 @@ int CCritHack::PredictCmdNum(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd
 		if (pWeapon->IsRapidFire() && I::GlobalVars->curtime < pWeapon->m_flLastRapidFireCritCheckTime() + 1.f)
 			return iCommandNumber;
 
-		int iRequest = GetCritRequest(pCmd, pWeapon);
+		int iRequest = GetCritRequest(pCmd, pLocal, pWeapon);
 		if (iRequest == CritRequestEnum::Any)
 			return iCommandNumber;
 

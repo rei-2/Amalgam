@@ -31,7 +31,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 	{
 		auto eGroup = EntityEnum::Invalid;
 		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
-			eGroup = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
+			eGroup = !SDK::FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
 		switch (pWeapon->GetWeaponID())
 		{
 		case TF_WEAPON_CROSSBOW:
@@ -1181,7 +1181,7 @@ bool CAimbotProjectile::TestAngle(const Vec3& vPoint, const Vec3& vAngles, int i
 	filter.iPlayer = iType == PointTypeEnum::Direct ? PLAYER_DEFAULT : PLAYER_NONE;
 	filter.bMisc = iType == PointTypeEnum::Direct;
 	int nMask = MASK_SOLID;
-	if (iType == PointTypeEnum::Direct && F::AimbotGlobal.FriendlyFire())
+	if (iType == PointTypeEnum::Direct && SDK::FriendlyFire())
 	{
 		switch (pWeapon->GetWeaponID())
 		{	// only weapons that actually hit teammates properly

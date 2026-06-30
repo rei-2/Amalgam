@@ -27,7 +27,7 @@ private:
 
 	void UpdateWeaponInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 	void UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
-	int GetCritRequest(CUserCmd* pCmd, CTFWeaponBase* pWeapon);
+	int GetCritRequest(CUserCmd* pCmd, CTFPlayer* pLocal, CTFWeaponBase* pWeapon);
 
 	void Reset();
 	void StoreHealthHistory(int iIndex, int iHealth, CTFPlayer* pPlayer = nullptr);

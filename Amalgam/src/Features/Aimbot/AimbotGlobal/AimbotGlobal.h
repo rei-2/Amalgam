@@ -43,7 +43,6 @@ public:
 
 	bool ShouldIgnore(CBaseEntity* pTarget, CTFPlayer* pLocal, CTFWeaponBase* pWeapon, int iFunctionFlags = ShouldIgnoreEnum::Dormant | ShouldIgnoreEnum::Ignored, int iTargetFlags = Vars::Aimbot::General::Target.Value, int iIgnoreFlags = Vars::Aimbot::General::Ignore.Value);
 	int GetPriority(int iIndex);
-	bool FriendlyFire();
 
 	bool ShouldAim();
 	bool ShouldHoldAttack(CTFWeaponBase* pWeapon);

@@ -19,9 +19,9 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 		auto eGroup = EntityEnum::Invalid;
 		if (Vars::Aimbot::General::Target.Value & Vars::Aimbot::General::TargetEnum::Players)
 		{
-			eGroup = !F::AimbotGlobal.FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
+			eGroup = !SDK::FriendlyFire() || Vars::Aimbot::General::Ignore.Value & Vars::Aimbot::General::IgnoreEnum::Team ? EntityEnum::PlayerEnemy : EntityEnum::PlayerAll;
 			if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::ExtinguishTeam &&
-				!F::AimbotGlobal.FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
+				!SDK::FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
 				eGroup = EntityEnum::PlayerAll;
 		}
 		if (pWeapon->GetWeaponID() == TF_WEAPON_MEDIGUN)
@@ -43,7 +43,7 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 						&& !H::Entities.IsFriend(pEntity->entindex()) && !H::Entities.InParty(pEntity->entindex()))
 						continue;
 				}
-				if (!F::AimbotGlobal.FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
+				if (!SDK::FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
 				{
 					if (!pEntity->As<CTFPlayer>()->InCond(TF_COND_BURNING))
 						continue;

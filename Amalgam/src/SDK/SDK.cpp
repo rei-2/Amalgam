@@ -423,8 +423,13 @@ bool SDK::PredictOrigin(Vec3& vOut, const Vec3& vOrigin, const Vec3& vVelocity, 
 float SDK::GetGravity()
 {
 	static auto sv_gravity = H::ConVars.FindVar("sv_gravity");
-
 	return sv_gravity->GetFloat();
+}
+
+bool SDK::FriendlyFire()
+{
+	static auto mp_friendlyfire = H::ConVars.FindVar("mp_friendlyfire");
+	return mp_friendlyfire->GetBool();
 }
 
 bool SDK::IsLoopback()

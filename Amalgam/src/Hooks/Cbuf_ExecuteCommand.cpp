@@ -1,6 +1,7 @@
 #include "../SDK/SDK.h"
 
 #include "../Features/Commands/Commands.h"
+//#include "../Features/Debug/Debug.h"
 
 MAKE_SIGNATURE(Cbuf_ExecuteCommand, "engine.dll", "48 89 5C 24 ? 48 89 6C 24 ? 48 89 74 24 ? 57 48 83 EC ? 48 8B 05 ? ? ? ? 48 8D 3D", 0x0);
 
@@ -14,6 +15,8 @@ MAKE_HOOK(Cbuf_ExecuteCommand, S::Cbuf_ExecuteCommand(), void,
 	CCommand& args, cmd_source_t source)
 {
     DEBUG_RETURN(Cbuf_ExecuteCommand, args, source);
+
+	//F::Debug.AddText(args.GetCommandString(), I::GlobalVars->curtime + 1.f);
 
 	if (args.ArgC())
 	{
