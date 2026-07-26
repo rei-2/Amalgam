@@ -799,6 +799,11 @@ I dont think this is a good idea to disable simulations completely:
 			CVar(FastAccelerate, "Fast accelerate", false);
 			CVar(DuckSpeed, "Duck speed", false);
 			CVar(ShieldTurnRate, "Shield turn rate", false);
+			CVar(ChargeBot, "Charge bot", false);
+			CVar(ChargeBotDelay, "Charge bot delay", 0.5f, SLIDER_MIN, 0.f, 3.f, 0.1f, "%gs");
+			CVar(ChargeBotTurnRate, "Charge bot turn rate", 10.f, SLIDER_MIN, 1.f, 45.f, 1.f, "%g°");
+			CVar(AutoAirStickyPogo, "Auto air sticky pogo", false);
+			CVar(AutoAirStickyPogoDelay, "Auto air sticky pogo delay", 0.5f, SLIDER_MIN, 0.f, 3.f, 0.1f, "%gs");
 			CVar(NoPush, "No push", false);
 			CVar(MovementLock, "Movement lock", false);
 
@@ -1117,7 +1122,7 @@ I dont think this is a good idea to disable simulations completely:
 				static const std::vector<int> vItemAchievementIDs =
 				{
 					1036, 1037, 1038, 1136, 1137, 1138, 1236, 1237, 1238, 1336, 1337, 1338, 1437, 1438, 1439, 1537,
-					1538, 1539, 156, 1637, 1638, 1639, 166, 167, 1735, 1736, 1737, 1801, 1802, 1803, 1901, 1902,
+					1538, 1539, 1637, 1638, 1639, 1735, 1736, 1737, 1801, 1802, 1803, 1901, 1902,
 					1906, 1909, 1910, 1911, 1912, 1928, 2006, 2212, 2412
 				};
 				return vItemAchievementIDs;

@@ -10,6 +10,7 @@
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
 #include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
 #include "../EnginePrediction/EnginePrediction.h"
+#include "../Aimbot/AimbotGlobal/AimbotGlobal.h"
 #include "../NavBot/NavEngine/NavEngine.h"
 #ifdef TEXTMODE
 #include "NamedPipe/NamedPipe.h"
@@ -40,8 +41,14 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 	ExecBuyBot(pLocal, pCmd);
 
 	if (!pLocal->IsAlive() || pLocal->IsAGhost() || pLocal->m_MoveType() != MOVETYPE_WALK || pLocal->IsSwimming()
-		|| pLocal->IsTaunting() || pLocal->InCond(TF_COND_SHIELD_CHARGE))
+		|| pLocal->IsTaunting())
 		return;
+
+	if (pLocal->InCond(TF_COND_SHIELD_CHARGE))
+	{
+		ChargeBot(pLocal, pCmd);
+		return;
+	}
 
 	AutoJump(pLocal, pCmd);
 	EdgeJump(pLocal, pCmd);
@@ -51,6 +58,7 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 	AutoJumpbug(pLocal, pCmd);
 	AutoRevJump(pLocal, pCmd);
 	AutoStrafe(pLocal, pCmd);
+	AutoAirStickyPogo(pLocal, pCmd);
 	AutoPeek(pLocal, pCmd);
 	BreakJump(pLocal, pCmd);
 }
@@ -2718,6 +2726,150 @@ std::vector<std::string> CMisc::ParseTokens(std::string str, char delimiter)
 			tokens.push_back(token);
 	}
 	return tokens;
+}
+
+void CMisc::ChargeBot(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::ChargeBot.Value)
+		return;
+
+	auto pWeapon = H::Entities.GetWeapon();
+	if (!pWeapon || pWeapon->GetSlot() != SLOT_MELEE)
+		return;
+
+	if (Vars::Misc::Movement::ChargeBotDelay.Value)
+	{
+		if (!m_bChargeBotReady)
+		{
+			if (!m_tChargeBotTimer.Run(Vars::Misc::Movement::ChargeBotDelay.Value))
+				return;
+			m_bChargeBotReady = true;
+		}
+	}
+	else
+		m_bChargeBotReady = true;
+
+	if (!m_bChargeBotReady)
+		return;
+
+	CBaseEntity* pBestTarget = nullptr;
+	float flBestScore = FLT_MAX;
+
+	for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerEnemy))
+	{
+		auto pPlayer = pEntity->As<CTFPlayer>();
+		if (!pPlayer || !pPlayer->IsAlive() || pPlayer->IsAGhost() || pPlayer->IsDormant()
+			|| F::AimbotGlobal.ShouldIgnore(pPlayer, pLocal, pWeapon))
+			continue;
+
+		Vec3 vDelta = pPlayer->GetCenter() - pLocal->GetCenter();
+		float flDist = vDelta.Length();
+		if (flDist > 500.f)
+			continue;
+
+		if (fabsf(vDelta.z) > 200.f)
+			continue;
+
+		float flScore = flDist;
+		if (flScore < flBestScore)
+		{
+			flBestScore = flScore;
+			pBestTarget = pPlayer;
+		}
+	}
+
+	if (!pBestTarget)
+	{
+		m_bChargeBotReady = false;
+		return;
+	}
+
+	Vec3 vAngleTo = Math::CalcAngle(pLocal->GetShootPos(), pBestTarget->GetCenter());
+	float flYawDelta = Math::NormalizeAngle(vAngleTo.y - pCmd->viewangles.y);
+
+	float flMaxTurn = Vars::Misc::Movement::ChargeBotTurnRate.Value;
+	flYawDelta = std::clamp(flYawDelta, -flMaxTurn, flMaxTurn);
+
+	pCmd->viewangles.y += flYawDelta;
+	G::PSilentAngles = true;
+
+	if (flBestScore < 72.f)
+	{
+		pCmd->buttons |= IN_ATTACK;
+		m_bChargeBotReady = false;
+	}
+
+	CGameTrace trace = {};
+	CTraceFilterWorldAndPropsOnly filter(pLocal);
+	Vec3 vForward; Math::AngleVectors(pCmd->viewangles, &vForward);
+	SDK::TraceHull(pLocal->m_vecOrigin(), pLocal->m_vecOrigin() + vForward * 100.f,
+		pLocal->m_vecMins() * 0.9f, pLocal->m_vecMaxs() * 0.9f,
+		MASK_PLAYERSOLID, &filter, &trace);
+	if (trace.DidHit() && trace.fraction < 0.5f)
+	{
+		pCmd->viewangles.y -= flYawDelta * 2.f;
+		G::PSilentAngles = true;
+	}
+}
+
+void CMisc::AutoAirStickyPogo(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::AutoAirStickyPogo.Value)
+		return;
+
+	auto pWeapon = H::Entities.GetWeapon();
+	if (!pWeapon || pWeapon->GetWeaponID() != TF_WEAPON_PIPEBOMBLAUNCHER)
+		return;
+
+	if (pLocal->m_fFlags() & FL_ONGROUND)
+		return;
+
+	if (pLocal->m_MoveType() != MOVETYPE_WALK)
+		return;
+
+	if (!(pCmd->buttons & IN_JUMP))
+		return;
+
+	if (!m_tStickyPogoTimer.Run(Vars::Misc::Movement::AutoAirStickyPogoDelay.Value))
+		return;
+
+	auto& vProjectiles = H::Entities.GetGroup(EntityEnum::LocalStickies);
+	if (vProjectiles.empty())
+		return;
+
+	CTFGrenadePipebombProjectile* pBestSticky = nullptr;
+	float flBestDist = FLT_MAX;
+	Vec3 vLocalOrigin = pLocal->GetCenter();
+
+	for (auto pProjectile : vProjectiles)
+	{
+		auto pSticky = pProjectile->As<CTFGrenadePipebombProjectile>();
+		if (!pSticky || !pSticky->m_hOriginalLauncher())
+			continue;
+
+		if (pSticky->m_iType() != TF_GL_MODE_REMOTE_DETONATE)
+			continue;
+
+		Vec3 vDelta = pSticky->m_vecOrigin() - vLocalOrigin;
+		if (vDelta.z > -20.f || vDelta.z < -300.f)
+			continue;
+
+		float flDist2D = Vec2(vDelta.x, vDelta.y).Length();
+		if (flDist2D > 150.f)
+			continue;
+
+		float flDist = vDelta.Length();
+		if (flDist < flBestDist)
+		{
+			flBestDist = flDist;
+			pBestSticky = pSticky;
+		}
+	}
+
+	if (!pBestSticky)
+		return;
+
+	pCmd->buttons |= IN_ATTACK2;
 }
 
 void CMisc::OnChatMessage(int iEntIndex, const std::string& sName, const std::string& sMsg)

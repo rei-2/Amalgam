@@ -35,6 +35,8 @@ private:
 	void WeaponSway();
 
 	void TauntKartControl(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void ChargeBot(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void AutoAirStickyPogo(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoCrouchNavbot(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void FastMovement(CTFPlayer* pLocal, CUserCmd* pCmd);
 
@@ -52,6 +54,9 @@ private:
 	bool m_bEdgeBugRepredict = false;
 	bool m_bEdgeBug = false;
 	bool m_bDuckSpeedActive = false;
+	bool m_bChargeBotReady = false;
+	Timer m_tChargeBotTimer;
+	Timer m_tStickyPogoTimer;
 	std::vector<Vec3> m_vEdgebugPath;
 
 	bool m_bPeekPlaced = false;

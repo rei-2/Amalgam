@@ -1710,6 +1710,11 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 		|| !F::ProjSim.Initialize(m_tProjInfo, false))
 		return false;
 
+	// Rescue Ranger safety check: ensure projectile velocity is valid
+	Vec3 vVelCheck = F::ProjSim.GetVelocity();
+	if (vVelCheck.IsZero() || !std::isfinite(vVelCheck.x) || !std::isfinite(vVelCheck.y) || !std::isfinite(vVelCheck.z))
+		return false;
+
 	m_tInfo = { pLocal, pWeapon, &tTarget };
 	m_vShootPos = pLocal->GetShootPos();
 	// The sentrygun's rocket firing position is fixed based on its current angles, so its not quite correct when testing with different angles

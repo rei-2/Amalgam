@@ -11,11 +11,8 @@
 
 inline int GetPriorityIdx(CTFWeaponBase* pWeapon)
 {
-	if (pWeapon->GetSlot() != SLOT_MELEE)
-	{
-		if (F::AutoHeal.m_iAutoSwitch)
-			return F::AutoHeal.m_iTargetIdx;
-	}
+	if (F::AutoHeal.m_iAutoSwitch)
+		return F::AutoHeal.m_iTargetIdx;
 
 	return -1;
 }
@@ -103,6 +100,8 @@ void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod
 
 float CAimbotGlobal::GetAimFOV()
 {	// restrict now vs later
+	if (!Vars::Aimbot::General::LeadAndRestrict.Value)
+		return 180.f;
 	return std::min(Vars::Aimbot::General::AimFOV.Value, 180.f);
 }
 
