@@ -5,6 +5,8 @@ class CMisc
 {
 private:
 	void AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void ParachuteKey(CTFPlayer* pLocal, CUserCmd* pCmd);
+	void FallDamage(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoFaNJump(CTFPlayer* pLocal, CUserCmd* pCmd);
 	void AutoRevJump(CTFPlayer* pLocal, CUserCmd* pCmd);
@@ -26,6 +28,7 @@ private:
 
 	bool m_bPeekPlaced = false;
 	Vec3 m_vPeekReturnPos = {};
+	bool m_bFallDamageDeployed = false;
 
 	//bool bSteamCleared = false;
 

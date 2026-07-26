@@ -150,6 +150,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 
 			bool bProjSimSetup = F::ProjSim.GetInfo(pLocal, pWeapon, m_vAngles, tProjInfo, ProjSimEnum::Redirect | ProjSimEnum::InitCheck | ProjSimEnum::NoRandomAngles) && F::ProjSim.Initialize(tProjInfo);
 			bool bMoveSimSetup = F::MoveSim.Initialize(pLocal, tMoveStorage, false); // do move sim after to not mess with proj sim
+			tMoveStorage.m_bBunnyHop = false; // don't predict bunny hopping so the trajectory sim keeps us grounded
 			if (bMoveSimSetup && bProjSimSetup)
 			{
 				int iSkip = bCurrGrounded ? Vars::Misc::Movement::AutoRocketJumpSkipGround.Value : Vars::Misc::Movement::AutoRocketJumpSkipAir.Value;
@@ -221,7 +222,7 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 
 		if (bWillHit)
 		{
-			if (bCurrGrounded && bCurrGrounded == bLastGrounded)
+			if (bCurrGrounded && (bCurrGrounded == bLastGrounded || G::OriginalCmd.buttons & IN_JUMP))
 				m_iFrame = 0;
 			else if (!bCurrGrounded)
 				m_iFrame = m_iDelay = 0;

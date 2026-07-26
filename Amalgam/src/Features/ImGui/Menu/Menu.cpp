@@ -714,6 +714,7 @@ void CMenu::MenuHVH(int iTab)
 					FToggle(Vars::Doubletap::Warp, FToggleEnum::Right);
 					FToggle(Vars::Doubletap::RechargeTicks, FToggleEnum::Left);
 					FToggle(Vars::Doubletap::AntiWarp, FToggleEnum::Right);
+					FToggle(Vars::Doubletap::AutoDumpTicks);
 					FSlider(Vars::Doubletap::TickLimit, FSliderEnum::Left);
 					FSlider(Vars::Doubletap::WarpRate, FSliderEnum::Right);
 					FSlider(Vars::Doubletap::RechargeLimit, FSliderEnum::Left);
@@ -1279,6 +1280,7 @@ void CMenu::MenuVisuals(int iTab)
 						H::Fonts.Reload();
 					if (FToggle(Vars::Menu::CheapText))
 						H::Fonts.Reload();
+					FToggle(Vars::ESP::HealthbarOutline);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
@@ -1334,6 +1336,11 @@ void CMenu::MenuMisc(int iTab)
 					PopTransparent();
 					FToggle(Vars::Misc::Movement::Bunnyhop, FToggleEnum::Left);
 					FToggle(Vars::Misc::Movement::EdgeJump, FToggleEnum::Right);
+					FKeybind(Vars::Misc::Movement::ParachuteKey, FKeybindEnum::AllowNone);
+					FToggle(Vars::Misc::Movement::FallDamage);
+					PushTransparent(!Vars::Misc::Movement::FallDamage.Value);
+					FSlider(Vars::Misc::Movement::FallDamageTicks);
+					PopTransparent();
 					FToggle(Vars::Misc::Movement::AutoJumpbug, FToggleEnum::Left); // this is unreliable without setups, do not depend on it!
 					FToggle(Vars::Misc::Movement::BreakJump, FToggleEnum::Right);
 					FToggle(Vars::Misc::Movement::AutoRocketJump, FToggleEnum::Left);
