@@ -450,6 +450,7 @@ NAMESPACE_BEGIN(Vars)
 		CVar(WarpRate, "Warp rate", 22, SLIDER_CLAMP, 2, 22);
 		CVar(RechargeLimit, "Recharge limit", 24, SLIDER_MIN, 1, 24);
 		CVar(PassiveRecharge, "Passive recharge", 0, SLIDER_CLAMP, 0, 67);
+		CVar(AutoDumpTicks, "Auto dump ticks", true);
 	NAMESPACE_END(DoubleTap)
 
 	NAMESPACE_BEGIN(Fakelag)
@@ -519,6 +520,7 @@ NAMESPACE_BEGIN(Vars)
 
 	NAMESPACE_BEGIN(ESP)
 		CVarValues(ActiveGroups, "Active groups", int(0b11111111111111111111111111111111), VISUAL | DROPDOWN_MULTI | DROPDOWN_NOSANITIZATION, nullptr);
+		CVar(HealthbarOutline, "Full healthbar outline", true);
 	NAMESPACE_END(ESP)
 
 	NAMESPACE_BEGIN(Visuals)
@@ -712,6 +714,9 @@ NAMESPACE_BEGIN(Vars)
 			CVar(AutoStrafeTurnScale, VA_LIST("Turn scale", "Auto strafe turn scale"), 0.5f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 1.f, 0.1f);
 			CVar(AutoStrafeMaxDelta, VA_LIST("Max delta", "Auto strafe max delta"), 180.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 180.f, 5.f);
 			CVar(Bunnyhop, "Bunnyhop", false);
+			CVar(ParachuteKey, "Parachute key", 0, NOBIND);
+			CVar(FallDamage, "Auto parachute", false);
+			CVar(FallDamageTicks, "Simulated ticks", 2, SLIDER_CLAMP, 1, 10);
 			CVar(EdgeJump, "Edge jump", false);
 			CVar(AutoJumpbug, "Auto jumpbug", false);
 			CVar(BreakJump, "Break jump", false);

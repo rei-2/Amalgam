@@ -19,6 +19,14 @@ void CTicks::Recharge(CTFPlayer* pLocal)
 
 	bool bPassive = m_bRecharge = false;
 
+	// dump stored ticks and prevent recharging while doubletap is disabled
+	if (Vars::Doubletap::AutoDumpTicks.Value && !Vars::Doubletap::Doubletap.Value)
+	{
+		if (m_iShiftedTicks > 0)
+			m_iShiftedGoal = 0;
+		return;
+	}
+
 	static float flPassiveTime = 0.f;
 	flPassiveTime = std::max(flPassiveTime - TICK_INTERVAL, -TICK_INTERVAL);
 	if (Vars::Doubletap::PassiveRecharge.Value && 0.f >= flPassiveTime)

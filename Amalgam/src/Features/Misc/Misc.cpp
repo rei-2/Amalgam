@@ -4,6 +4,7 @@
 #include "../Ticks/Ticks.h"
 #include "../Players/PlayerUtils.h"
 #include "../Aimbot/AutoRocketJump/AutoRocketJump.h"
+#include "../Simulation/MovementSimulation/MovementSimulation.h"
 #include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
 
 void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
@@ -18,6 +19,8 @@ void CMisc::RunPre(CTFPlayer* pLocal, CUserCmd* pCmd)
 		return;
 
 	AutoJump(pLocal, pCmd);
+	ParachuteKey(pLocal, pCmd);
+	FallDamage(pLocal, pCmd);
 	EdgeJump(pLocal, pCmd);
 	if (pLocal->InCond(TF_COND_HALLOWEEN_KART))
 		return;
@@ -51,6 +54,37 @@ void CMisc::RunPost(CTFPlayer* pLocal, CUserCmd* pCmd)
 
 void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 {
+	// suppress bunny hop so auto rocket jump / ctap can take over cleanly
+	if (Vars::Misc::Movement::AutoRocketJump.Value || Vars::Misc::Movement::AutoCTap.Value)
+	{
+		bool bSuppress = F::AutoRocketJump.IsRunning();
+
+		if (!bSuppress && pLocal->m_hGroundEntity() && !pLocal->IsDucking())
+		{
+			if (auto pWeapon = H::Entities.GetWeapon())
+			{
+				bool bValidWeapon = false;
+				switch (pWeapon->GetWeaponID())
+				{
+				case TF_WEAPON_ROCKETLAUNCHER:
+				case TF_WEAPON_ROCKETLAUNCHER_DIRECTHIT:
+				case TF_WEAPON_PARTICLE_CANNON: bValidWeapon = true;
+				}
+				if (bValidWeapon)
+				{
+					bool bBeggars = pWeapon->m_iItemDefinitionIndex() == Soldier_m_TheBeggarsBazooka;
+					bSuppress = bBeggars ? G::Attacking == 1 : (G::CanPrimaryAttack || G::Reloading);
+				}
+			}
+		}
+
+		if (bSuppress)
+		{
+			pCmd->buttons &= ~IN_JUMP;
+			return;
+		}
+	}
+
 	if (!Vars::Misc::Movement::Bunnyhop.Value)
 		return;
 
@@ -74,6 +108,99 @@ void CMisc::AutoJump(CTFPlayer* pLocal, CUserCmd* pCmd)
 		pCmd->buttons |= IN_JUMP;
 
 	F::AntiCheatCompatibility.BunnyHop(pCmd, bCurrValid, bLastValid);
+}
+
+void CMisc::ParachuteKey(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::ParachuteKey.Value)
+		return;
+
+	if (!U::KeyHandler.Pressed(Vars::Misc::Movement::ParachuteKey.Value, true))
+		return;
+
+	if (pLocal->m_hGroundEntity())
+		return;
+
+	if (!SDK::AttribHookValue(0, "parachute_attribute", pLocal))
+		return;
+
+	pCmd->buttons |= IN_JUMP;
+}
+
+void CMisc::FallDamage(CTFPlayer* pLocal, CUserCmd* pCmd)
+{
+	if (!Vars::Misc::Movement::FallDamage.Value)
+		return;
+
+	if (pLocal->m_hGroundEntity())
+	{
+		m_bFallDamageDeployed = false;
+		return;
+	}
+
+	if (!SDK::AttribHookValue(0, "parachute_attribute", pLocal))
+		return;
+
+	bool bParachuteActive = pLocal->InCond(TF_COND_PARACHUTE_ACTIVE);
+
+	// disengage if we deployed via fall damage but are no longer about to land
+	if (bParachuteActive && m_bFallDamageDeployed)
+	{
+		MoveStorage tMoveStorage;
+		if (F::MoveSim.Initialize(pLocal, tMoveStorage, false))
+		{
+			pLocal->RemoveCond(TF_COND_PARACHUTE_ACTIVE); // simulate without the parachute slowing us
+			tMoveStorage.m_bBunnyHop = false;
+
+			bool bWillLand = false;
+			for (int n = 0; n < Vars::Misc::Movement::FallDamageTicks.Value; n++)
+			{
+				F::MoveSim.RunTick(tMoveStorage, false);
+				if (pLocal->IsOnGround())
+				{
+					bWillLand = true;
+					break;
+				}
+			}
+			F::MoveSim.Restore(tMoveStorage);
+
+			if (!bWillLand)
+			{
+				pCmd->buttons |= IN_JUMP; // toggle parachute off
+				m_bFallDamageDeployed = false;
+			}
+		}
+		return;
+	}
+
+	if (bParachuteActive)
+		return; // deployed via keybind or other; leave it alone
+
+	if (pLocal->m_vecVelocity().z > -560.f)
+		return;
+
+	MoveStorage tMoveStorage;
+	if (!F::MoveSim.Initialize(pLocal, tMoveStorage, false))
+		return;
+	tMoveStorage.m_bBunnyHop = false;
+
+	bool bWillLand = false;
+	for (int n = 0; n < Vars::Misc::Movement::FallDamageTicks.Value; n++)
+	{
+		F::MoveSim.RunTick(tMoveStorage, false);
+		if (pLocal->IsOnGround())
+		{
+			bWillLand = true;
+			break;
+		}
+	}
+	F::MoveSim.Restore(tMoveStorage);
+
+	if (bWillLand)
+	{
+		pCmd->buttons |= IN_JUMP;
+		m_bFallDamageDeployed = true;
+	}
 }
 
 void CMisc::AutoJumpbug(CTFPlayer* pLocal, CUserCmd* pCmd)
