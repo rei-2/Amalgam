@@ -260,25 +260,11 @@ void CAutoRocketJump::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* p
 			}
 		}
 
-		if (m_iFrame <= m_iChoke)
-			G::PSilentAngles = true, G::SilentAngles = false; // only con to this is that you may not be able to choke depending on the ticks charged
+		if (bCurrGrounded && (m_iFrame - m_iDelay == 0 || !m_iDelay))
+			pCmd->buttons |= IN_DUCK | IN_JUMP;
 
-		if (bCurrGrounded)
-		{
-			if (m_iDelay > 1)
-			{
-				switch (m_iFrame - m_iDelay + 1)
-				{
-				case 0:
-					pCmd->buttons |= IN_DUCK;
-					break;
-				case 1:
-					pCmd->buttons |= IN_JUMP;
-				}
-			}
-			else // won't ctap in time
-				pCmd->buttons |= IN_DUCK | IN_JUMP;
-		}
+		if (m_iFrame <= m_iChoke)
+			G::PSilentAngles = true, G::SilentAngles = false;
 
 		if (m_iFrame == m_iDelay + 3)
 			m_iFrame = -1;
