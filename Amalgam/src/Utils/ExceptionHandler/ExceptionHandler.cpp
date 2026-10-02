@@ -27,6 +27,45 @@ static PVOID s_pHandle;
 static LPVOID s_lpParam;
 static int s_iExceptions = 0;
 
+// our own image range, used to attribute frames when the image is not in the loader's module list (e.g. manual mapping)
+static uintptr_t s_uImageBase = 0;
+static uintptr_t s_uImageEnd = 0;
+static PRUNTIME_FUNCTION s_pFunctionTable = nullptr;
+static DWORD s_nFunctionTableEntries = 0;
+
+static void RegisterImageInformation(uintptr_t uBase)
+{
+	const auto pDosHeader = reinterpret_cast<const IMAGE_DOS_HEADER*>(uBase);
+	if (pDosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+		return;
+
+	const auto pNtHeaders = reinterpret_cast<const IMAGE_NT_HEADERS*>(uBase + pDosHeader->e_lfanew);
+	if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE)
+		return;
+
+	s_uImageBase = uBase;
+	s_uImageEnd = uBase + pNtHeaders->OptionalHeader.SizeOfImage;
+
+	// the OS has no unwind data for images that are not in the loader's module list,
+	// causing stack traces to die at our first frame, so register ours manually
+	HMODULE hModule = nullptr;
+	if (!GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT, LPCSTR(uBase), &hModule))
+	{
+		const auto& tDirectory = pNtHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXCEPTION];
+		if (tDirectory.VirtualAddress && tDirectory.Size >= sizeof(RUNTIME_FUNCTION))
+		{
+			s_pFunctionTable = reinterpret_cast<PRUNTIME_FUNCTION>(uBase + tDirectory.VirtualAddress);
+			s_nFunctionTableEntries = tDirectory.Size / sizeof(RUNTIME_FUNCTION);
+			RtlAddFunctionTable(s_pFunctionTable, s_nFunctionTableEntries, uBase);
+		}
+	}
+}
+
+static inline bool IsAddressInImage(uintptr_t uAddress)
+{
+	return s_uImageBase && uAddress >= s_uImageBase && uAddress < s_uImageEnd;
+}
+
 static inline std::deque<Frame_t> StackTrace(PCONTEXT pContext)
 {
 	std::deque<Frame_t> vTrace = {};
@@ -63,6 +102,11 @@ static inline std::deque<Frame_t> StackTrace(PCONTEXT pContext)
 				tFrame.m_sModule = buffer;
 			else
 				tFrame.m_sModule = std::format("{:#x}", tFrame.m_uBase);
+		}
+		else if (IsAddressInImage(tStackFrame.AddrPC.Offset))
+		{	// manually mapped images are not in the module list, attribute their frames ourselves
+			tFrame.m_uBase = s_uImageBase;
+			tFrame.m_sModule = "Amalgam";
 		}
 
 		{
@@ -117,11 +161,27 @@ static LONG APIENTRY ExceptionFilter(PEXCEPTION_POINTERS ExceptionInfo)
 	ssErrorStream << std::format("Error: {} (0x{:X}) ({})\n", sError, ExceptionInfo->ExceptionRecord->ExceptionCode, ++s_iExceptions);
 	ssErrorStream << "Built @ " __DATE__ ", " __TIME__ ", " __CONFIGURATION__ "\n";
 	ssErrorStream << std::format("Time @ {}, {}\n", SDK::GetDate(), SDK::GetTime());
+	ssErrorStream << std::format("Thread: {}\n", GetCurrentThreadId());
+
+	if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION
+		&& ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
+	{
+		const auto uOperation = ExceptionInfo->ExceptionRecord->ExceptionInformation[0];
+		const auto uTarget = ExceptionInfo->ExceptionRecord->ExceptionInformation[1];
+		const char* sOperation = "ACCESS";
+		if (uOperation == 0)
+			sOperation = "READ of";
+		else if (uOperation == 1)
+			sOperation = "WRITE to";
+		else if (uOperation == 8)
+			sOperation = "EXECUTE of (DEP)";
+		ssErrorStream << std::format("Fault: {} {:#x} ({})\n", sOperation, uTarget, U::Memory.GetModuleOffset(uTarget));
+	}
 
 	ssErrorStream << "\n";
-	if (U::Memory.GetOffsetFromBase(s_lpParam))
-		ssErrorStream << std::format("This: {}\n", U::Memory.GetModuleOffset(s_lpParam));
-	ssErrorStream << std::format("RIP: {:#x}\n", ExceptionInfo->ContextRecord->Rip);
+	if (U::Memory.GetOffsetFromBase(s_lpParam) == uintptr_t(-1))
+		ssErrorStream << std::format("This: {} (unregistered image, injected manually?)\n", U::Memory.GetModuleOffset(s_lpParam));
+	ssErrorStream << std::format("RIP: {:#x} ({})\n", ExceptionInfo->ContextRecord->Rip, U::Memory.GetModuleOffset(ExceptionInfo->ContextRecord->Rip));
 	ssErrorStream << std::format("RAX: {:#x}\n", ExceptionInfo->ContextRecord->Rax);
 	ssErrorStream << std::format("RCX: {:#x}\n", ExceptionInfo->ContextRecord->Rcx);
 	ssErrorStream << std::format("RDX: {:#x}\n", ExceptionInfo->ContextRecord->Rdx);
@@ -185,8 +245,16 @@ void CExceptionHandler::Initialize(LPVOID lpParam)
 {
 	s_pHandle = AddVectoredExceptionHandler(1, ExceptionFilter);
 	s_lpParam = lpParam;
+	RegisterImageInformation(uintptr_t(lpParam));
 }
 void CExceptionHandler::Unload()
 {
 	RemoveVectoredExceptionHandler(s_pHandle);
+
+	if (s_pFunctionTable)
+	{
+		RtlRemoveFunctionTable(s_pFunctionTable, s_nFunctionTableEntries, s_uImageBase);
+		s_pFunctionTable = nullptr;
+		s_nFunctionTableEntries = 0;
+	}
 }

@@ -27,10 +27,14 @@ bool BytePatch::Initialize()
 	if (m_bIsPatched)
 		return true;
 
-	m_pAddress = LPVOID(U::Memory.FindSignature(m_sModule, m_sSignature));
+	// byte patches overwrite game code, only apply them when the pattern unambiguously
+	// identifies its target, otherwise a game update could silently redirect us into unrelated code
+	m_pAddress = LPVOID(U::Memory.FindUniqueSignature(m_sModule, m_sSignature));
 	if (!m_pAddress)
 	{
-		U::Core.AppendFailText(std::format("BytePatch::Initialize() failed to initialize:\n  {}\n  {}", m_sModule, m_sSignature).c_str());
+		int iMatches = 0;
+		U::Memory.FindSignature(m_sModule, m_sSignature, iMatches);
+		U::Core.AppendFailText(std::format("BytePatch::Initialize() failed to initialize:\n  {}\n  {}\n  {}", m_sModule, m_sSignature, iMatches > 1 ? std::format("pattern matched {} locations", iMatches) : "pattern not found").c_str());
 		return false;
 	}
 

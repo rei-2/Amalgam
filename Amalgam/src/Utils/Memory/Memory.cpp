@@ -40,6 +40,14 @@ std::vector<int> CMemory::PatternToInt(const char* szPattern)
 
 uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 {
+	int iMatches = 0;
+	return FindSignature(szModule, szPattern, iMatches);
+}
+
+uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern, int& iMatches)
+{
+	iMatches = 0;
+
 	if (const auto hModule = GetModuleHandle(szModule))
 	{
 		// Get module information to search in the given module
@@ -61,12 +69,14 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 
 		const auto pImageBytes = reinterpret_cast<byte*>(hModule);
 
+		uintptr_t uResult = 0x0;
+
 		// Now loop through all bytes and check if the byte sequence matches
 		for (auto i = 0ul; i < dwImageSize - iPatternSize; ++i)
 		{
 			auto bFound = true;
 
-			// Go through all bytes from the signature and check if it matches
+			// Go through each byte of the signature and check if it matches
 			for (auto j = 0ul; j < iPatternSize; ++j)
 			{
 				if (pImageBytes[i + j] != iPatternBytes[j] // Bytes don't match
@@ -78,13 +88,24 @@ uintptr_t CMemory::FindSignature(const char* szModule, const char* szPattern)
 			}
 
 			if (bFound)
-				return uintptr_t(&pImageBytes[i]);
+			{
+				++iMatches;
+				if (!uResult)
+					uResult = uintptr_t(&pImageBytes[i]);
+			}
 		}
 
-		return 0x0;
+		return uResult;
 	}
 
 	return 0x0;
+}
+
+uintptr_t CMemory::FindUniqueSignature(const char* szModule, const char* szPattern)
+{
+	int iMatches = 0;
+	const auto uResult = FindSignature(szModule, szPattern, iMatches);
+	return iMatches == 1 ? uResult : 0x0;
 }
 
 using CreateInterfaceFn = void*(*)(const char* pName, int* pReturnCode);

@@ -19,7 +19,13 @@ MAKE_HOOK(CTFPlayerShared_IsPlayerDominated, S::CTFPlayerShared_IsPlayerDominate
 	bool bReturn = CALL_ORIGINAL(rcx, index);
 
 	if (dwRetAddr == dwDesired && Vars::Visuals::UI::RevealScoreboard.Value && !SDK::CleanScreenshot() && !bReturn)
-		*static_cast<uintptr_t*>(_AddressOfReturnAddress()) = dwJump;
+	{
+		// both addresses live inside CClientScoreBoardDialog::UpdatePlayerList,
+		// if they drift apart after a game update the signatures no longer point into the same function
+		// and redirecting execution there would jump to an arbitrary location with a mismatched stack
+		if (dwJump && (dwJump > dwDesired ? dwJump - dwDesired : dwDesired - dwJump) < 0x10000)
+			*static_cast<uintptr_t*>(_AddressOfReturnAddress()) = dwJump;
+	}
 
 	return bReturn;
 }
@@ -36,7 +42,10 @@ MAKE_HOOK(KeyValues_SetInt, S::KeyValues_SetInt(), void,
 	CALL_ORIGINAL(rcx, keyName, value);
 
 	if (dwRetAddr == dwDesired && Vars::Visuals::UI::RevealScoreboard.Value && !SDK::CleanScreenshot() && keyName && FNV1A::Hash32(keyName) == FNV1A::Hash32Const("nemesis"))
-		*static_cast<uintptr_t*>(_AddressOfReturnAddress()) = dwJump;
+	{
+		if (dwJump && (dwJump > dwDesired ? dwJump - dwDesired : dwDesired - dwJump) < 0x10000)
+			*static_cast<uintptr_t*>(_AddressOfReturnAddress()) = dwJump;
+	}
 }
 
 MAKE_HOOK(CClientScoreBoardDialog_NeedsUpdate, S::CClientScoreBoardDialog_NeedsUpdate(), bool,

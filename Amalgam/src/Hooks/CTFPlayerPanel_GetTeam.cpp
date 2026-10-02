@@ -12,6 +12,11 @@ MAKE_SIGNATURE(CVGui_RunFrame, "vgui2.dll", "48 8B C4 53 48 81 EC", 0x0);
 static int s_iPlayerIndex;
 static void* s_pTeamStatus;
 
+void ResetTeamStatusPointer()
+{
+	s_pTeamStatus = nullptr;
+}
+
 static inline void SetScoreboardColor(int iIndex, Color_t& tColor)
 {
 	if (iIndex == I::EngineClient->GetLocalPlayer())
@@ -42,16 +47,24 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 
 	if (auto pResource = H::Entities.GetResource(); dwRetAddr == dwDesired && pResource)
 	{
-		s_iPlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
+		// the offsets below are tied to the exact layout of CTFPlayerPanel,
+		// sanity check them so a game update cannot silently corrupt the panel
+		const int iPlayerIndex = *reinterpret_cast<int*>(uintptr_t(rcx) + 580);
+		if (iPlayerIndex > 0 && iPlayerIndex < MAX_PLAYERS)
+		{
+			s_iPlayerIndex = iPlayerIndex;
 
-		int iLocalTeam = pResource->m_iTeam(I::EngineClient->GetLocalPlayer());
+			int iLocalTeam = pResource->m_iTeam(I::EngineClient->GetLocalPlayer());
 
-		if (Vars::Visuals::UI::RevealScoreboard.Value && !SDK::CleanScreenshot())
-			iReturn = iLocalTeam;
-		
-		if (auto pHealthBar = *reinterpret_cast<void**>(uintptr_t(rcx) + 688);
-			pHealthBar && U::Memory.CallVirtual<34, bool>(pHealthBar) != (iReturn == iLocalTeam))
-			*reinterpret_cast<int*>(uintptr_t(rcx) + 624) = -1;
+			if (Vars::Visuals::UI::RevealScoreboard.Value && !SDK::CleanScreenshot())
+				iReturn = iLocalTeam;
+
+			const auto pHealthBar = *reinterpret_cast<void**>(uintptr_t(rcx) + 688);
+			const auto pHealthBarVTable = pHealthBar ? *reinterpret_cast<void**>(pHealthBar) : nullptr;
+			if (pHealthBarVTable && U::Memory.GetOffsetFromBase(uintptr_t(pHealthBarVTable)) != uintptr_t(-1) // vtable has to belong to a module
+				&& U::Memory.CallVirtual<34, bool>(pHealthBar) != (iReturn == iLocalTeam))
+				*reinterpret_cast<int*>(uintptr_t(rcx) + 624) = -1;
+		}
 	}
 
 	return iReturn;
@@ -60,7 +73,7 @@ MAKE_HOOK(CTFPlayerPanel_GetTeam, S::CTFPlayerPanel_GetTeam(), int,
 MAKE_HOOK(vgui_Panel_SetBgColor, S::vgui_Panel_SetBgColor(), void,
 	void* rcx, Color_t color)
 {
-	DEBUG_RETURN(CTFPlayerPanel_GetTeam, rcx, color);
+	DEBUG_RETURN(vgui_Panel_SetBgColor, rcx, color);
 
 	const auto dwRetAddr = uintptr_t(_ReturnAddress());
 	const auto dwDesired = S::CTFTeamStatusPlayerPanel_Update_SetBgColor_Call();
@@ -86,7 +99,7 @@ MAKE_HOOK(CVGui_RunFrame, S::CVGui_RunFrame(), void,
 {
 	DEBUG_RETURN(CVGui_RunFrame, rcx);
 
-	if (!s_pTeamStatus)
+	if (!s_pTeamStatus || !I::EngineClient->IsInGame())
 		return CALL_ORIGINAL(rcx);
 
 	static bool bStaticMod = false;

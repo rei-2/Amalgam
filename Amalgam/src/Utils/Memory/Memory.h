@@ -11,6 +11,8 @@ public:
 	std::vector<byte> PatternToByte(const char* szPattern);
 	std::vector<int> PatternToInt(const char* szPattern);
 	uintptr_t FindSignature(const char* szModule, const char* szPattern);
+	uintptr_t FindSignature(const char* szModule, const char* szPattern, int& iMatches); // continues scanning after the first hit, iMatches receives the total amount of matches
+	uintptr_t FindUniqueSignature(const char* szModule, const char* szPattern); // returns 0 unless the pattern matches exactly once
 	PVOID FindInterface(const char* szModule, const char* szObject);
 	std::string GetModuleOffset(void* pAddress) { return GetModuleOffset(uintptr_t(pAddress)); };
 	std::string GetModuleOffset(uintptr_t uAddress);
