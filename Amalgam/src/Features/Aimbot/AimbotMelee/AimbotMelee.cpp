@@ -161,6 +161,7 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 				{	// demo charge fix for swing pred
 					pLocal->RemoveCond(TF_COND_SHIELD_CHARGE);
 					tMoveStorage.m_MoveData.m_flMaxSpeed = tMoveStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal);
+					tMoveStorage.m_MoveData.m_flForwardMove = pCmd->forwardmove, tMoveStorage.m_MoveData.m_flSideMove = pCmd->sidemove;
 					pLocal->m_flMaxspeed() = tMoveStorage.m_MoveData.m_flMaxSpeed;
 				}
 			}
