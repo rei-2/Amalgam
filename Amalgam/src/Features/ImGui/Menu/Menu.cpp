@@ -282,11 +282,12 @@ void CMenu::MenuAimbot(int iTab)
 				if (Section("Projectile"))
 				{
 					FDropdown(Vars::Aimbot::Projectile::StrafePrediction, FDropdownEnum::Left);
-					FDropdown(Vars::Aimbot::Projectile::SplashPrediction, FDropdownEnum::Right);
+					FDropdown(Vars::Aimbot::Projectile::Hitboxes, FDropdownEnum::Right);
+					FDropdown(Vars::Aimbot::Projectile::SplashPrediction, FDropdownEnum::Left);
+					FDropdown(Vars::Aimbot::Projectile::SplashMode, FDropdownEnum::Right);
 					FDropdown(Vars::Aimbot::Projectile::AutoDetonate, FDropdownEnum::Left);
 					FDropdown(Vars::Aimbot::Projectile::AutoAirblast, FDropdownEnum::Right);
-					FDropdown(Vars::Aimbot::Projectile::Hitboxes, FDropdownEnum::Left);
-					FDropdown(Vars::Aimbot::Projectile::Modifiers, FDropdownEnum::Right);
+					FDropdown(Vars::Aimbot::Projectile::Modifiers);
 					FSlider(Vars::Aimbot::Projectile::MaxSimulationTime, FSliderEnum::Left);
 					PushTransparent(!Vars::Aimbot::Projectile::StrafePrediction.Value);
 					{
@@ -327,9 +328,8 @@ void CMenu::MenuAimbot(int iTab)
 						}
 
 						FText("Splash", { 5, 5 });
-						if (FPopupButton("Splash", { 0, -5 }, -8))
+						if (FPopupButton("Splash", { 0, -5 }))
 						{
-							FDropdown(Vars::Aimbot::Projectile::SplashMode);
 							PushTransparent(Vars::Aimbot::Projectile::SplashMode.Value != Vars::Aimbot::Projectile::SplashModeEnum::Trace);
 							{
 								FSlider(Vars::Aimbot::Projectile::SplashPointsDirect, FSliderEnum::Left);

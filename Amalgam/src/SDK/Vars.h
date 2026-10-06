@@ -307,18 +307,21 @@ NAMESPACE_BEGIN(Vars)
 			CVarEnum(StrafePrediction, VA_LIST("Predict", "Strafe prediction"), 0b11, DROPDOWN_MULTI, "Off",
 				VA_LIST("Air strafing", "Ground strafing"),
 				Air = 1 << 0, Ground = 1 << 1);
-			CVarEnum(SplashPrediction, VA_LIST("Splash", "Splash prediction"), 0, NONE, nullptr,
+			CVarEnum(Hitboxes, VA_LIST("Hitboxes", "Projectile hitboxes"), 0b001111, DROPDOWN_MULTI, nullptr,
+				VA_LIST("Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Prioritize feet"),
+				Auto = 1 << 0, Head = 1 << 1, Body = 1 << 2, Feet = 1 << 3, BodyaimIfLethal = 1 << 4, PrioritizeFeet = 1 << 5);
+			CVarEnum(SplashPrediction, "Splash prediction", 0, NONE, nullptr,
 				VA_LIST("Off", "Include", "Prefer", "Only"),
 				Off, Include, Prefer, Only);
+			CVarEnum(SplashMode, "Splash mode", 0, NONE, nullptr,
+				VA_LIST("Trace", "Face"),
+				Trace, Face);
 			CVarEnum(AutoDetonate, "Auto detonate", 0b00, DROPDOWN_MULTI, "Off",
 				VA_LIST("Stickies", "Flares", "##Divider", "Prevent self damage", "Ignore invisible"),
 				Stickies = 1 << 0, Flares = 1 << 1, PreventSelfDamage = 1 << 2, IgnoreInvisible = 1 << 3);
 			CVarEnum(AutoAirblast, "Auto airblast", 0b000, DROPDOWN_MULTI, "Off",
 				VA_LIST("Enabled", "##Divider", "Redirect", "Ignore FOV"),
 				Enabled = 1 << 0, Redirect = 1 << 1, IgnoreFOV = 1 << 2);
-			CVarEnum(Hitboxes, VA_LIST("Hitboxes", "Projectile hitboxes"), 0b001111, DROPDOWN_MULTI, nullptr,
-				VA_LIST("Auto", "##Divider", "Head", "Body", "Feet", "##Divider", "Bodyaim if lethal", "Prioritize feet"),
-				Auto = 1 << 0, Head = 1 << 1, Body = 1 << 2, Feet = 1 << 3, BodyaimIfLethal = 1 << 4, PrioritizeFeet = 1 << 5);
 			CVarEnum(Modifiers, VA_LIST("Modifiers", "Projectile modifiers"), 0b0010, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Charge weapon", "Cancel charge", "Use arm time", "Air splash", "Lob angles", "Target dormant"),
 				ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, UseArmTime = 1 << 2, AirSplash = 1 << 3, LobAngles = 1 << 4, TargetDormant = 1 << 5);
@@ -359,9 +362,6 @@ NAMESPACE_BEGIN(Vars)
 			CVar(HuntsmanPullPoint, "Huntsman pull point", false, NOSAVE | DEBUGVAR);
 			CVar(HuntsmanPullNoZ, "Pull no Z", false, NOSAVE | DEBUGVAR);
 
-			CVarEnum(SplashMode, "Splash mode", 0, NOSAVE | DEBUGVAR, nullptr,
-				VA_LIST("Trace", "Face"),
-				Trace, Face);
 			CVar(SplashAirCount, "Splash air count", 0, NOSAVE | DEBUGVAR | SLIDER_MIN, 0, 10);
 			CVar(SplashPointsDirect, "Splash points direct", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0, 400, 5);
 			CVar(SplashPointsArc, "Splash points arc", 100, NOSAVE | DEBUGVAR | SLIDER_MIN | SLIDER_PRECISION, 0, 400, 5);

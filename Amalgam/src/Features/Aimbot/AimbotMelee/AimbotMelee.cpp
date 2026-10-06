@@ -505,10 +505,10 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 	G::AimPoint = { tTarget.m_vPos, I::GlobalVars->tickcount };
 
 	bool bPath = Vars::Visuals::Prediction::SwingLines.Value && Vars::Visuals::Prediction::PlayerPath.Value;
-	bool bLine = Vars::Visuals::Line::TracersEnabled.Value;
+	//bool bLine = Vars::Visuals::Line::TracersEnabled.Value;
 	bool bBoxes = Vars::Visuals::Hitbox::BonesEnabled.Value & Vars::Visuals::Hitbox::BonesEnabledEnum::OnShot;
 	bool bRealPath = Vars::Visuals::Prediction::RealPath.Value;
-	if (bPath || bLine || bBoxes || bRealPath)
+	if (bPath /*|| bLine*/ || bBoxes || bRealPath)
 	{
 		if (pCmd->buttons & IN_ATTACK && G::CanPrimaryAttack && pWeapon->m_flSmackTime() < 0.f)
 		{
@@ -538,17 +538,17 @@ static inline void DrawVisuals(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserC
 		}
 		if (G::Attacking == 1)
 		{
-			if (bLine)
-			{
-				Vec3 vEyePos = pLocal->GetShootPos();
-				float flDist = vEyePos.DistTo(tTarget.m_vPos);
-				Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo, &vForward);
+			//if (bLine)
+			//{
+			//	Vec3 vEyePos = pLocal->GetShootPos();
+			//	float flDist = vEyePos.DistTo(tTarget.m_vPos);
+			//	Vec3 vForward; Math::AngleVectors(tTarget.m_vAngleTo, &vForward);
 
-				if (Vars::Colors::LineIgnoreZ.Value.a)
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::LineIgnoreZ.Value);
-				if (Vars::Colors::Line.Value.a)
-					G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::Line.Value, true);
-			}
+			//	if (Vars::Colors::LineIgnoreZ.Value.a)
+			//		G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::LineIgnoreZ.Value);
+			//	if (Vars::Colors::Line.Value.a)
+			//		G::LineStorage.emplace_back(std::pair<Vec3, Vec3>(vEyePos, vEyePos + vForward * flDist), I::GlobalVars->curtime + Vars::Visuals::Line::DrawDuration.Value, Vars::Colors::Line.Value, true);
+			//}
 			if (bBoxes)
 			{
 				auto vBoxes = F::Visuals.GetHitboxes(tTarget.m_pRecord->m_aBones, tTarget.m_pEntity->As<CBaseAnimating>());
