@@ -5,6 +5,16 @@
 MAKE_SIGNATURE(CTFPlayerSharedUtils_GetEconItemViewByLoadoutSlot, "client.dll", "48 89 6C 24 ? 56 41 54 41 55 41 56 41 57 48 83 EC", 0x0);
 MAKE_SIGNATURE(CEconItemView_GetItemName, "client.dll", "40 53 48 83 EC ? 48 8B D9 C6 81 ? ? ? ? ? E8 ? ? ? ? 48 8B 8B", 0x0);
 
+int CTFWeaponBase::GetSwingRange() {
+	int iRange = U::Memory.CallVirtual<458, int>(this);
+
+	auto pOwner = m_hOwnerEntity()->As<CTFPlayer>();
+	if (pOwner != nullptr && pOwner->InCond(TF_COND_SHIELD_CHARGE) && iRange == 128)
+		return (SDK::AttribHookValue(0, "is_a_sword", this) == 1) ? 72 : 48;
+
+	return iRange;
+}
+
 bool CTFWeaponBase::HasPrimaryAmmoForShot()
 {
 	if (IsEnergyWeapon())

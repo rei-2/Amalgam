@@ -6,6 +6,7 @@
 #include "../../Ticks/Ticks.h"
 #include "../../Visuals/Visuals.h"
 #include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
+#include "../../Misc/Misc.h"
 
 static inline bool AimFriendlyBuilding(CBaseObject* pBuilding)
 {
@@ -165,6 +166,17 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 			}
 			if (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
 				F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, tMoveStorage.m_MoveData.m_flForwardMove, tMoveStorage.m_MoveData.m_flSideMove, iMax - i - 1);
+
+			if (bSwung && Vars::Misc::Movement::FastStop.Value && !(pCmd->buttons & IN_FORWARD))
+			{
+				G::DummyCmd.viewangles = Vec3{ pCmd->viewangles };
+				G::DummyCmd.forwardmove = G::DummyCmd.sidemove = 0;
+				G::DummyCmd.buttons = pCmd->buttons;
+				F::Misc.RunPost(pLocal, &G::DummyCmd);
+
+				tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove;
+				tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;
+			}
 
 			F::MoveSim.RunTick(tMoveStorage);
 
