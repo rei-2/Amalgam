@@ -168,10 +168,11 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 			if (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
 				F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, tMoveStorage.m_MoveData.m_flForwardMove, tMoveStorage.m_MoveData.m_flSideMove, iMax - i - 1);
 
-			if (bSwung && Vars::Misc::Movement::FastStop.Value && !(pCmd->buttons & IN_FORWARD))
+			if (bSwung && Vars::Misc::Movement::FastStop.Value && !(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
 			{
 				G::DummyCmd.viewangles = Vec3{ pCmd->viewangles };
-				G::DummyCmd.forwardmove = G::DummyCmd.sidemove = 0;
+				G::DummyCmd.forwardmove = pCmd->forwardmove;
+				G::DummyCmd.sidemove = pCmd->sidemove;
 				G::DummyCmd.buttons = pCmd->buttons;
 				F::Misc.RunPost(pLocal, &G::DummyCmd);
 
