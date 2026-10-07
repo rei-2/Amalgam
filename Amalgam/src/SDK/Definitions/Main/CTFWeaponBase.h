@@ -212,7 +212,6 @@ public:
 	VIRTUAL(CalcIsAttackCriticalHelper, bool, 399, this);
 	VIRTUAL(AreRandomCritsEnabled, bool, 405, this);
 	VIRTUAL(GetWeaponSpread, float, 470, this);
-	VIRTUAL(GetSwingRange, int, 458, this);
 	VIRTUAL_ARGS(ApplyFireDelay, float, 410, (float flDelay), this, flDelay);
 	
 	SIGNATURE(IncrementAmmo, void, CTFWeaponBase, this);
@@ -227,6 +226,7 @@ public:
 		return vOut;
 	}
 
+	int GetSwingRange();
 	bool HasPrimaryAmmoForShot();
 	bool CanPrimaryAttack();
 	bool CanSecondaryAttack();
