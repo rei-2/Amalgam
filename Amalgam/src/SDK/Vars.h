@@ -881,6 +881,7 @@ NAMESPACE_BEGIN(Vars)
 		CVarEnum(Methods, "Detection methods", 0b0000, DROPDOWN_MULTI, nullptr,
 			VA_LIST("Invalid pitch", "Packet choking", "Aim flicking", "Duck Speed"),
 			InvalidPitch = 1 << 0, PacketChoking = 1 << 1, AimFlicking = 1 << 2, DuckSpeed = 1 << 3);
+		CVar(IgnoreIgnoredTag, "Ignore ignored tag", false);
 		CVar(DetectionsRequired, "Detections required", 10, SLIDER_MIN, 0, 50);
 		CVar(MinChoking, "Min choking", 20, SLIDER_MIN, 4, 22);
 		CVar(MinFlick, "Min flick angle", 20.f, SLIDER_PRECISION, 10.f, 30.f); // min flick size to suspect
