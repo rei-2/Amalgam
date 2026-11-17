@@ -34,9 +34,11 @@ void CAimbotGlobal::SortTargetsPre(std::vector<Target_t>& vTargets, int iMethod)
 		break;
 	}
 
-	// keep medics ahead so they aren't cut off by max targets
+	// keep medics and buildings ahead so they aren't cut off by max targets, buildings first
 	if (Vars::Aimbot::General::PrioritizeMedic.Value)
 		std::stable_partition(vTargets.begin(), vTargets.end(), [&](const Target_t& tTarget) { return IsPrioritizedMedic(tTarget); });
+	if (Vars::Aimbot::General::PrioritizeBuildings.Value)
+		std::stable_partition(vTargets.begin(), vTargets.end(), [&](const Target_t& tTarget) { return IsPrioritizedBuilding(tTarget); });
 }
 
 void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod)
@@ -55,6 +57,8 @@ void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod
 	{
 		if (a.m_nPriority != b.m_nPriority)
 			return a.m_nPriority > b.m_nPriority;
+		if (bool bA = IsPrioritizedBuilding(a), bB = IsPrioritizedBuilding(b); bA != bB)
+			return bA;
 		return IsPrioritizedMedic(a) && !IsPrioritizedMedic(b);
 	});
 }
@@ -67,6 +71,25 @@ bool CAimbotGlobal::IsPrioritizedMedic(const Target_t& tTarget)
 	auto pLocal = H::Entities.GetLocal();
 	auto pPlayer = tTarget.m_pEntity->As<CTFPlayer>();
 	return pPlayer->m_iClass() == TF_CLASS_MEDIC && (!pLocal || pPlayer->m_iTeamNum() != pLocal->m_iTeamNum());
+}
+
+bool CAimbotGlobal::IsPrioritizedBuilding(const Target_t& tTarget)
+{
+	if (!Vars::Aimbot::General::PrioritizeBuildings.Value)
+		return false;
+
+	switch (tTarget.m_iTargetType)
+	{
+	case TargetEnum::Sentry:
+	case TargetEnum::Dispenser:
+	case TargetEnum::Teleporter:
+	{
+		auto pLocal = H::Entities.GetLocal();
+		return !pLocal || tTarget.m_pEntity->m_iTeamNum() != pLocal->m_iTeamNum();
+	}
+	}
+
+	return false;
 }
 
 float CAimbotGlobal::GetAimFOV()

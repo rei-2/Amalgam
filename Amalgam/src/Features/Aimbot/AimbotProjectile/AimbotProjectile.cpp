@@ -331,8 +331,11 @@ static inline int GetHitboxPriority(int nHitbox, Target_t& tTarget, Info_t& tInf
 		bool bLower = Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::PrioritizeFeet
 			&& tTarget.m_iTargetType == TargetEnum::Player && tTarget.m_pEntity->As<CTFPlayer>()->IsOnGround() /*&& tInfo.m_flRadius*/;
 
+		// when headshotting the head is always priority 0, body is only used as a fallback if enabled
+		bool bFallback = Vars::Aimbot::Projectile::Hitboxes.Value & Vars::Aimbot::Projectile::HitboxesEnum::BodyFallback;
+
 		iHeadPriority = bHeadshot ? 0 : 2;
-		iBodyPriority = bHeadshot ? -1 : bLower ? 1 : 0;
+		iBodyPriority = bHeadshot ? (bFallback ? 1 : -1) : bLower ? 1 : 0;
 		iFeetPriority = bHeadshot ? -1 : bLower ? 0 : 1;
 	}
 
@@ -1480,14 +1483,18 @@ bool CAimbotProjectile::HandleDirect(DirectHistory_t& mDirectHistory)
 	});
 	m_flTimeTo = vDirectHistory.front().m_flTime + m_tInfo.m_flLatency;
 
+	// only the head point counts as a headshot, anything after it is a body fallback
+	const int nAimedHitbox = m_tInfo.m_pTarget->m_nAimedHitbox;
 	for (auto& tHistory : vDirectHistory)
 	{
+		m_tInfo.m_pTarget->m_nAimedHitbox = tHistory.m_iPriority ? -1 : nAimedHitbox;
 		if (HandlePoint(tHistory.m_vOrigin, tHistory.m_iSimtime, tHistory.m_flPitch, tHistory.m_flYaw, tHistory.m_flTime, tHistory.m_vPoint, PointTypeEnum::Direct, iType))
 		{
 			bReturn = true;
 			break;
 		}
 	}
+	m_tInfo.m_pTarget->m_nAimedHitbox = nAimedHitbox;
 
 	mDirectHistory.erase(it);
 	return bReturn;
@@ -1612,7 +1619,7 @@ int CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBas
 			uint8_t iType = tOffset.m_iFlags & -tOffset.m_iFlags;
 
 			Vec3 vPoint = tTarget.m_vPos + vOffset;
-			if (Vars::Aimbot::Projectile::HuntsmanPullPoint.Value && tTarget.m_nAimedHitbox == HITBOX_HEAD)
+			if (Vars::Aimbot::Projectile::HuntsmanPullPoint.Value && tTarget.m_nAimedHitbox == HITBOX_HEAD && !iIndex)
 			{
 				vPoint = PullPoint(vPoint, m_tInfo.m_vLocalEye, m_tInfo, tTarget.m_vPos, tTarget.m_pEntity->m_vecMins() + m_tInfo.m_vHull, tTarget.m_pEntity->m_vecMaxs() - m_tInfo.m_vHull);
 				if (Vars::Aimbot::Projectile::HuntsmanPullNoZ.Value)
@@ -2348,7 +2355,7 @@ bool CAimbotProjectile::CanHit(Target_t& tTarget, CTFPlayer* pLocal, CTFWeaponBa
 			uint8_t iType = tOffset.m_iFlags & -tOffset.m_iFlags;
 
 			Vec3 vPoint = tTarget.m_vPos + vOffset;
-			if (Vars::Aimbot::Projectile::HuntsmanPullPoint.Value && tTarget.m_nAimedHitbox == HITBOX_HEAD)
+			if (Vars::Aimbot::Projectile::HuntsmanPullPoint.Value && tTarget.m_nAimedHitbox == HITBOX_HEAD && !iIndex)
 			{
 				vPoint = PullPoint(vPoint, m_tInfo.m_vLocalEye, m_tInfo, tTarget.m_pEntity->m_vecMins() + m_tInfo.m_vHull, tTarget.m_pEntity->m_vecMaxs() - m_tInfo.m_vHull, tTarget.m_vPos);
 				if (Vars::Aimbot::Projectile::HuntsmanPullNoZ.Value)
