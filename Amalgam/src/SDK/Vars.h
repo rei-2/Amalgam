@@ -274,6 +274,7 @@ NAMESPACE_BEGIN(Vars)
 			CVar(LeadAndRestrict, "Lead and restrict", false, VISUAL);
 			CVar(NoSpread, "No spread", false);
 			CVar(PrioritizeMedic, "Prioritize medic", false);
+			CVar(PrioritizeBuildings, "Prioritize buildings", false);
 
 			CVarEnum(AimHoldsFire, "Aim holds fire", 2, NOSAVE | DEBUGVAR, nullptr,
 				VA_LIST("False", "Minigun only", "Always"),
@@ -431,6 +432,7 @@ NAMESPACE_BEGIN(Vars)
 		CVar(AvoidRandomCrits, "Avoid random crits", false);
 		CVar(AlwaysMeleeCrit, "Always melee crit", false);
 		CVar(CritEffects, "Crit effects", false);
+		CVar(CritRageTargets, "Crit rage targets", false);
 	NAMESPACE_END(CritHack)
 
 	NAMESPACE_BEGIN(Backtrack)

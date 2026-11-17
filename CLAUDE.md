@@ -4,6 +4,7 @@
 
 **Siempre pregunta antes de proceder.** Antes de editar archivos, hacer commits, hacer push, abrir PRs o modificar la config del usuario, explica lo que piensas hacer y espera su confirmación explícita. Revisar y analizar está permitido sin preguntar.
 
+- **Antes de programar, primero acordamos un listado de cambios.** Presenta la lista de lo que se va a hacer, espera a que el usuario la apruebe y recién entonces programa. No adelantes código ni cambios de config fuera de lo aprobado.
 - Responde en español.
 - Nunca modifiques el archivo de config original del usuario: entrega la versión corregida en un archivo nuevo.
 - Avanzamos clase por clase en la config; no adelantes cambios de otras clases.

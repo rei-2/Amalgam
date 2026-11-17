@@ -2,6 +2,7 @@
 
 #include "../Ticks/Ticks.h"
 #include "../AntiCheatCompatibility/AntiCheatCompatibility.h"
+#include "../Players/PlayerUtils.h"
 
 #define WEAPON_RANDOM_RANGE				10000
 #define TF_DAMAGE_CRIT_MULTIPLIER		3.0f
@@ -308,6 +309,14 @@ int CCritHack::GetCritRequest(CUserCmd* pCmd, CTFPlayer* pLocal, CTFWeaponBase* 
 	{
 		auto pEntity = I::ClientEntityList->GetClientEntity(G::AimTarget.m_iEntIndex)->As<CBaseEntity>();
 		if (pEntity && pEntity->IsPlayer() && (SDK::FriendlyFire() || pLocal->m_iTeamNum() != pEntity->m_iTeamNum()))
+			bForce = true;
+	}
+	if (bCanCrit && Vars::CritHack::CritRageTargets.Value && G::AimTarget.m_iEntIndex)
+	{	// players tagged "Rage" in the playerlist
+		auto pEntity = I::ClientEntityList->GetClientEntity(G::AimTarget.m_iEntIndex)->As<CBaseEntity>();
+		int iRage = F::PlayerUtils.GetTag("Rage");
+		if (iRage != -1 && pEntity && pEntity->IsPlayer() && (SDK::FriendlyFire() || pLocal->m_iTeamNum() != pEntity->m_iTeamNum())
+			&& F::PlayerUtils.HasTag(G::AimTarget.m_iEntIndex, iRage))
 			bForce = true;
 	}
 	

@@ -176,6 +176,7 @@ void CMenu::MenuAimbot(int iTab)
 					FToggle(Vars::Aimbot::General::LeadAndRestrict, FToggleEnum::Left);
 					FToggle(Vars::Aimbot::General::NoSpread, FToggleEnum::Right);
 					FToggle(Vars::Aimbot::General::PrioritizeMedic, FToggleEnum::Left);
+					FToggle(Vars::Aimbot::General::PrioritizeBuildings, FToggleEnum::Right);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
@@ -207,6 +208,7 @@ void CMenu::MenuAimbot(int iTab)
 					FToggle(Vars::CritHack::AvoidRandomCrits, FToggleEnum::Right);
 					FToggle(Vars::CritHack::AlwaysMeleeCrit, FToggleEnum::Left);
 					FToggle(Vars::CritHack::CritEffects, FToggleEnum::Right);
+					FToggle(Vars::CritHack::CritRageTargets, FToggleEnum::Left);
 				} EndSection();
 				if (Vars::Debug::Options.Value)
 				{
