@@ -447,8 +447,42 @@ void CMisc::Event(IGameEvent* pEvent, uint32_t uHash)
 			return;
 
 		m_bPeekPlaced = false;
+		break;
 	}
+	case FNV1A::Hash32Const("player_death"):
+		AutoRage(pEvent);
+		break;
+	case FNV1A::Hash32Const("game_newmap"):
+		m_mRageKills.clear();
 	}
+}
+
+void CMisc::AutoRage(IGameEvent* pEvent)
+{
+	if (!Vars::Misc::Automation::AutoRage.Value || pEvent->GetInt("death_flags") & TF_DEATH_FEIGN_DEATH)
+		return;
+
+	const int iLocal = I::EngineClient->GetLocalPlayer();
+	const int iAttacker = I::EngineClient->GetPlayerForUserID(pEvent->GetInt("attacker"));
+	if (I::EngineClient->GetPlayerForUserID(pEvent->GetInt("userid")) != iLocal || !iAttacker || iAttacker == iLocal)
+		return;
+
+	auto pResource = H::Entities.GetResource();
+	if (!pResource || pResource->m_iTeam(iAttacker) == pResource->m_iTeam(iLocal))
+		return;
+
+	uint32_t uAccountID = F::PlayerUtils.GetAccountID(iAttacker);
+	if (!uAccountID || ++m_mRageKills[uAccountID] < Vars::Misc::Automation::AutoRageKills.Value)
+		return;
+
+	int iRage = F::PlayerUtils.GetTag("Rage");
+	if (iRage == -1)
+	{
+		F::PlayerUtils.m_vTags.push_back({ "Rage", { 255, 0, 0, 255 }, 2 });
+		F::PlayerUtils.m_bSave = true;
+		iRage = int(F::PlayerUtils.m_vTags.size()) - 1;
+	}
+	F::PlayerUtils.AddTag(uAccountID, iRage, true, F::PlayerUtils.GetPlayerName(iAttacker));
 }
 
 int CMisc::AntiBackstab(CTFPlayer* pLocal, CUserCmd* pCmd, bool bSendPacket)

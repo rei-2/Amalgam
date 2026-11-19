@@ -27,6 +27,9 @@ private:
 	bool m_bPeekPlaced = false;
 	Vec3 m_vPeekReturnPos = {};
 
+	void AutoRage(IGameEvent* pEvent);
+	std::unordered_map<uint32_t, int> m_mRageKills = {}; // kills on the local player this map, by account id
+
 	//bool bSteamCleared = false;
 
 public:

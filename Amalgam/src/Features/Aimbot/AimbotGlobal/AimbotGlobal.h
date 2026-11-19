@@ -32,6 +32,8 @@ public:
 		int iMethod = Vars::Aimbot::General::TargetSelection.Value, int iMaxTargets = Vars::Aimbot::General::MaxTargets.Value);
 	void SortTargetsPre(std::vector<Target_t>& vTargets, int iMethod);
 	void SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod);
+	bool ComparePriority(const Target_t& a, const Target_t& b);
+	bool IsPriorityTarget(const Target_t& tTarget);
 	bool IsPrioritizedMedic(const Target_t& tTarget);
 	bool IsPrioritizedBuilding(const Target_t& tTarget);
 

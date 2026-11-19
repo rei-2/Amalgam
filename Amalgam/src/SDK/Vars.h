@@ -322,8 +322,8 @@ NAMESPACE_BEGIN(Vars)
 				VA_LIST("Stickies", "Flares", "##Divider", "Prevent self damage", "Ignore invisible"),
 				Stickies = 1 << 0, Flares = 1 << 1, PreventSelfDamage = 1 << 2, IgnoreInvisible = 1 << 3);
 			CVarEnum(AutoAirblast, "Auto airblast", 0b000, DROPDOWN_MULTI, "Off",
-				VA_LIST("Enabled", "##Divider", "Redirect", "Ignore FOV"),
-				Enabled = 1 << 0, Redirect = 1 << 1, IgnoreFOV = 1 << 2);
+				VA_LIST("Enabled", "##Divider", "Redirect", "Ignore FOV", "Extinguish team"),
+				Enabled = 1 << 0, Redirect = 1 << 1, IgnoreFOV = 1 << 2, ExtinguishTeam = 1 << 3);
 			CVarEnum(Modifiers, VA_LIST("Modifiers", "Projectile modifiers"), 0b0010, DROPDOWN_MULTI, nullptr,
 				VA_LIST("Charge weapon", "Cancel charge", "Use arm time", "Air splash", "Lob angles", "Target dormant"),
 				ChargeWeapon = 1 << 0, CancelCharge = 1 << 1, UseArmTime = 1 << 2, AirSplash = 1 << 3, LobAngles = 1 << 4, TargetDormant = 1 << 5);
@@ -748,6 +748,8 @@ NAMESPACE_BEGIN(Vars)
 			CVar(AutoF2Ignored, "Auto F2 ignored", false);
 			CVar(AutoF1Priority, "Auto F1 priority", false);
 			CVar(AcceptItemDrops, "Auto accept item drops", false);
+			CVar(AutoRage, "Auto rage", false);
+			CVar(AutoRageKills, "Auto rage kills", 3, SLIDER_CLAMP, 1, 10);
 		NAMESPACE_END(Automation)
 
 		NAMESPACE_BEGIN(Exploits)

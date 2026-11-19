@@ -102,6 +102,30 @@ void CAutoAirblast::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCm
 			break;
 	}
 
+	if (!bShouldBlast && Vars::Aimbot::Projectile::AutoAirblast.Value & Vars::Aimbot::Projectile::AutoAirblastEnum::ExtinguishTeam)
+	{	// projectiles take priority, then put out burning teammates
+		for (auto pEntity : H::Entities.GetGroup(EntityEnum::PlayerTeam))
+		{
+			auto pPlayer = pEntity->As<CTFPlayer>();
+			if (pPlayer == pLocal || pPlayer->IsDormant() || !pPlayer->IsAlive() || pPlayer->IsAGhost() || !pPlayer->InCond(TF_COND_BURNING))
+				continue;
+
+			Vec3 vAngles = Math::CalcAngle(vEyePos, pPlayer->GetCenter());
+			if (!(Vars::Aimbot::Projectile::AutoAirblast.Value & Vars::Aimbot::Projectile::AutoAirblastEnum::IgnoreFOV)
+				&& Math::CalcFov(I::EngineClient->GetViewAngles(), vAngles) > Vars::Aimbot::General::AimFOV.Value)
+				continue;
+
+			if (CanAirblastEntity(pLocal, pWeapon, pPlayer, vAngles))
+			{
+				bShouldBlast = true;
+				SDK::FixMovement(pCmd, vAngles);
+				pCmd->viewangles = vAngles;
+				G::PSilentAngles = true;
+				break;
+			}
+		}
+	}
+
 	if (bShouldBlast)
 	{
 		G::Attacking = true;
