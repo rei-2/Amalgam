@@ -10,9 +10,23 @@ std::vector<Target_t> CAimbotGlobal::ManageTargets(std::vector<Target_t>(*GetTar
 {
 	auto vTargets = GetTargets(pLocal, pWeapon);
 	SortTargetsPre(vTargets, iMethod);
-	vTargets.resize(std::min(size_t(iMaxTargets), vTargets.size()));
-	SortTargetsPost(vTargets, iMethod);
-	return vTargets;
+
+	// prioritized targets get their own max targets slots so they can't push regular targets out, and vice versa
+	std::stable_sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
+	{
+		return ComparePriority(a, b);
+	});
+	std::vector<Target_t> vManaged = {};
+	size_t iPriorityCount = 0, iRegularCount = 0;
+	for (auto& tTarget : vTargets)
+	{
+		size_t& iCount = IsPriorityTarget(tTarget) ? iPriorityCount : iRegularCount;
+		if (iCount < size_t(iMaxTargets))
+			vManaged.push_back(tTarget), iCount++;
+	}
+
+	SortTargetsPost(vManaged, iMethod);
+	return vManaged;
 }
 
 void CAimbotGlobal::SortTargetsPre(std::vector<Target_t>& vTargets, int iMethod)
@@ -33,12 +47,6 @@ void CAimbotGlobal::SortTargetsPre(std::vector<Target_t>& vTargets, int iMethod)
 		});
 		break;
 	}
-
-	// keep medics and buildings ahead so they aren't cut off by max targets, buildings first
-	if (Vars::Aimbot::General::PrioritizeMedic.Value)
-		std::stable_partition(vTargets.begin(), vTargets.end(), [&](const Target_t& tTarget) { return IsPrioritizedMedic(tTarget); });
-	if (Vars::Aimbot::General::PrioritizeBuildings.Value)
-		std::stable_partition(vTargets.begin(), vTargets.end(), [&](const Target_t& tTarget) { return IsPrioritizedBuilding(tTarget); });
 }
 
 void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod)
@@ -55,12 +63,24 @@ void CAimbotGlobal::SortTargetsPost(std::vector<Target_t>& vTargets, int iMethod
 
 	std::sort(vTargets.begin(), vTargets.end(), [&](const Target_t& a, const Target_t& b) -> bool
 	{
-		if (a.m_nPriority != b.m_nPriority)
-			return a.m_nPriority > b.m_nPriority;
-		if (bool bA = IsPrioritizedBuilding(a), bB = IsPrioritizedBuilding(b); bA != bB)
-			return bA;
-		return IsPrioritizedMedic(a) && !IsPrioritizedMedic(b);
+		return ComparePriority(a, b);
 	});
+}
+
+// playerlist priority (rage, cheater) first, then prioritized buildings, then prioritized medics
+bool CAimbotGlobal::ComparePriority(const Target_t& a, const Target_t& b)
+{
+	if (a.m_nPriority != b.m_nPriority)
+		return a.m_nPriority > b.m_nPriority;
+	if (bool bA = IsPrioritizedBuilding(a), bB = IsPrioritizedBuilding(b); bA != bB)
+		return bA;
+	return IsPrioritizedMedic(a) && !IsPrioritizedMedic(b);
+}
+
+bool CAimbotGlobal::IsPriorityTarget(const Target_t& tTarget)
+{
+	return tTarget.m_nPriority > F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(DEFAULT_TAG)].m_iPriority
+		|| IsPrioritizedBuilding(tTarget) || IsPrioritizedMedic(tTarget);
 }
 
 bool CAimbotGlobal::IsPrioritizedMedic(const Target_t& tTarget)

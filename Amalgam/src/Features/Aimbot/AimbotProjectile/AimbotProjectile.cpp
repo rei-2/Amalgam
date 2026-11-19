@@ -192,8 +192,12 @@ float CAimbotProjectile::GetSplashRadius(CTFWeaponBase* pWeapon, CTFPlayer* pPla
 		break;
 	case TF_WEAPON_FLAREGUN:
 	case TF_WEAPON_FLAREGUN_REVENGE:
-		if (pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
+		switch (pWeapon->As<CTFFlareGun>()->GetFlareGunType())
+		{
+		case FLAREGUN_DETONATE:
+		case FLAREGUN_SCORCHSHOT:
 			flRadius = TF_FLARE_DET_RADIUS;
+		}
 		break;
 	case TF_WEAPON_JAR:
 	case TF_WEAPON_JAR_MILK:
@@ -232,8 +236,17 @@ float CAimbotProjectile::GetSplashRadius(CBaseEntity* pProjectile, CTFWeaponBase
 			flRadius = TF_ROCKET_RADIUS;
 		break;
 	case ETFClassID::CTFProjectile_Flare:
-		if (pWeapon && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
+		if (!pWeapon)
+			break;
+		switch (pWeapon->As<CTFFlareGun>()->GetFlareGunType())
+		{
+		case FLAREGUN_SCORCHSHOT:
 			flRadius = TF_FLARE_DET_RADIUS;
+			break;
+		case FLAREGUN_DETONATE: // only when pWeapon is the flare gun that fired it, not e.g. a flamethrower redirecting it
+			if (pWeapon->GetWeaponID() == TF_WEAPON_FLAREGUN)
+				flRadius = TF_FLARE_DET_RADIUS;
+		}
 		break;
 	case ETFClassID::CTFProjectile_Jar:
 	case ETFClassID::CTFProjectile_JarMilk:

@@ -135,8 +135,15 @@ void CVisuals::ProjectileTrace(CTFPlayer* pPlayer, CTFWeaponBase* pWeapon, const
 			break;
 		case TF_WEAPON_FLAREGUN:
 		case TF_WEAPON_FLAREGUN_REVENGE:
-			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Flares && pWeapon->As<CTFFlareGun>()->GetFlareGunType() == FLAREGUN_SCORCHSHOT)
-				flRadius = TF_FLARE_DET_RADIUS;
+			if (Vars::Visuals::Simulation::SplashRadius.Value & Vars::Visuals::Simulation::SplashRadiusEnum::Flares)
+			{
+				switch (pWeapon->As<CTFFlareGun>()->GetFlareGunType())
+				{
+				case FLAREGUN_DETONATE:
+				case FLAREGUN_SCORCHSHOT:
+					flRadius = TF_FLARE_DET_RADIUS;
+				}
+			}
 		}
 
 		if (flRadius)

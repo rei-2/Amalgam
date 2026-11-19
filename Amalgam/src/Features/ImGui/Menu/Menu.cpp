@@ -1378,6 +1378,12 @@ void CMenu::MenuMisc(int iTab)
 					FToggle(Vars::Misc::Automation::AutoF2Ignored, FToggleEnum::Left);
 					FToggle(Vars::Misc::Automation::AutoF1Priority, FToggleEnum::Right);
 					FToggle(Vars::Misc::Automation::AcceptItemDrops);
+					FToggle(Vars::Misc::Automation::AutoRage);
+					PushTransparent(!Vars::Misc::Automation::AutoRage.Value);
+					{
+						FSlider(Vars::Misc::Automation::AutoRageKills);
+					}
+					PopTransparent();
 				} EndSection();
 				if (Section("Mann vs. Machine", 8))
 				{
