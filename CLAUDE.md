@@ -43,6 +43,8 @@
   - `Extinguish team` (Auto airblast): apaga compañeros en llamas con apuntado silencioso, después de reflejar proyectiles. PR #4.
   - Lugares propios para objetivos prioritarios en Max targets: Rage/Cheater → construcciones → Medic se evalúan además de los objetivos normales, sin quitarles el lugar. PR #4.
   - `Auto rage` (Misc → Automation, interruptor + `Auto rage kills` 1–10): etiqueta Rage al jugador que te mata N veces en el mapa actual (se reinicia al cambiar de mapa, ignora Dead Ringer); crea la etiqueta Rage (prioridad 2, roja) si no existe. PR #4.
+- **Firmas tras la actualización de TF2 (nov 2026)**: `CTFClientScoreBoardDialog_OnCommand` (client.dll, cambió `sub rsp` a imm32) y `KeyValues_Initialize` (engine.dll: ahora es el constructor `KeyValues(name, bUseGrowableTable)`, se llama con `false`). Verificadas contra las DLL x64 del usuario (únicas). La firma del PR #326 de rei-2 apunta a `SetName` y no inicializa el objeto: no usarla. Para futuras actualizaciones, pedir al usuario `bin\x64\engine.dll` y `tf\bin\x64\client.dll` (x64, no las de 32 bits).
+- **Config v4** (`default-nueva-v4.json`): igual que la v3 + en el bind Medic `- Projectile` (12) Heal priority = Prioritize team (1) y Max targets 3. Arregla que la ballesta no curara a compañeros: con Max targets 1 y prioridad igual, el único lugar se lo llevaba un enemigo (o un Medic enemigo por Prioritize medic). Ojo: Auto arrow nunca dispara a compañeros con la vida llena (es normal).
 - **Config v3** (`default-nueva-v3.json`): igual que la v2 + bind `Pyro → - Projectile` (Splash Include, Modifiers 24, Max targets 3, Ignore 1051), Auto airblast 15 (agrega Extinguish team) y Auto rage encendido con 3 kills.
 - **Config v2** (`default-nueva-v2.json`): igual que la primera + Max targets 3 en el Sniper `- Projectile` (bind 10). Arregló que el Huntsman casi no disparara.
 - **Primera config nueva** (`default-nueva.json`, generada desde la config original del usuario sin modificarla):
@@ -63,5 +65,6 @@
 - Auto detonator jump: no por ahora.
 
 ### Pendiente
-- Compilar el PR #4 y probar en el juego la Detonator, Extinguish team, los lugares prioritarios y Auto rage.
+- PR #4 ya está fusionado y compilado en `master` (DLL en los botones Download del README vía nightly.link). Falta probar en el juego la Detonator, Extinguish team, los lugares prioritarios y Auto rage.
+- Probar la config v4: ballesta del Medic curando compañeros heridos (manteniendo Shift).
 - Opcional: activar Visuals → UI → Scoreboard utility para poner o quitar la etiqueta Rage con clic derecho en la tabla de puntajes.
