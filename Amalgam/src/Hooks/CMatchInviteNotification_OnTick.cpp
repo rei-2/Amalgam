@@ -15,7 +15,7 @@ MAKE_HOOK(CMatchInviteNotification_OnTick, S::CMatchInviteNotification_OnTick(),
 	if (Vars::Misc::Queueing::ExtendQueue.Value)
 	{
 		auto dFloatTime = SDK::PlatFloatTime();
-		auto& dAutoJoinTime = *reinterpret_cast<double*>(uintptr_t(rcx) + 616);
+		auto& dAutoJoinTime = *reinterpret_cast<double*>(uintptr_t(rcx) + 648);
 		auto& dLastAutoJoinTime = s_mLastAutoJoinTime[rcx];
 		double dExtend = dAutoJoinTime != dLastAutoJoinTime ? FULL_TIME : 0.0;
 		dLastAutoJoinTime = dAutoJoinTime = std::max(dAutoJoinTime + dExtend, dFloatTime + 1.0);
