@@ -7,6 +7,7 @@
 #include "../../Simulation/MovementSimulation/MovementSimulation.h"
 #include "../../Visuals/Visuals.h"
 #include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
+#include "../../Players/PlayerUtils.h"
 
 static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase* pWeapon)
 {
@@ -45,7 +46,8 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 				}
 				if (!SDK::FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
 				{
-					if (!pEntity->As<CTFPlayer>()->InCond(TF_COND_BURNING))
+					// jarate is only applied on scoped hits, so unscoped shots can't extinguish
+					if (!pEntity->As<CTFPlayer>()->InCond(TF_COND_BURNING) || !pLocal->InCond(TF_COND_ZOOMED))
 						continue;
 				}
 			}
@@ -56,6 +58,8 @@ static inline std::vector<Target_t> GetTargets(CTFPlayer* pLocal, CTFWeaponBase*
 
 			float flDistTo = vLocalPos.DistToSqr(vPos);
 			int iPriority = F::AimbotGlobal.GetPriority(pEntity->entindex());
+			if (bTeam && !bHeal && !SDK::FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0) // burning teammate to extinguish, same priority as cheaters
+				iPriority = F::PlayerUtils.m_vTags[F::PlayerUtils.TagToIndex(CHEATER_TAG)].m_iPriority;
 			if (bTeam && bHeal)
 			{
 				iPriority = 0;
@@ -518,6 +522,11 @@ bool CAimbotHitscan::ShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUser
 {
 	if (!Vars::Aimbot::General::AutoShoot.Value)
 		return false;
+
+	// extinguishing a burning teammate doesn't need charge or a headshot
+	if (tTarget.m_pEntity->IsPlayer() && tTarget.m_pEntity->m_iTeamNum() == pLocal->m_iTeamNum()
+		&& !SDK::FriendlyFire() && SDK::AttribHookValue(0, "jarate_duration", pWeapon) > 0)
+		return true;
 
 	if (Vars::Aimbot::Hitscan::Modifiers.Value & Vars::Aimbot::Hitscan::ModifiersEnum::WaitForHeadshot
 		&& tTarget.m_pEntity->IsPlayer())
