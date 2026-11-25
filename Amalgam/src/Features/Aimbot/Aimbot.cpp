@@ -65,6 +65,8 @@ void CAimbot::RunMain(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
 
 	RunAimbot(pLocal, pWeapon, pCmd);
 	RunAimbot(pLocal, pWeapon, pCmd, true);
+
+	F::AimbotHitscan.RunTriggerbot(pLocal, pWeapon, pCmd);
 }
 
 void CAimbot::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)

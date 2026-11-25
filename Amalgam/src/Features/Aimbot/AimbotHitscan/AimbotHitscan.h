@@ -33,6 +33,7 @@ private:
 
 public:
 	void Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
+	void RunTriggerbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd);
 };
 
 ADD_FEATURE(CAimbotHitscan, AimbotHitscan);

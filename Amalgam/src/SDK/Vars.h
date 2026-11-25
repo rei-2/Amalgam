@@ -330,6 +330,7 @@ NAMESPACE_BEGIN(Vars)
 			CVar(MaxSimulationTime, "Max simulation time", 1.f, SLIDER_MIN | SLIDER_PRECISION, 0.1f, 2.5f, 0.25f, "%gs");
 			CVar(HitChance, "Hit chance", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
 			CVar(AutodetRadius, "Autodet radius", 90.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
+			CVar(AutodetDelay, "Autodet delay", 0, SLIDER_CLAMP, 0, 2000, 50, "%ims");
 			CVar(SplashRadius, "Splash radius", 90.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 10.f, "%g%%");
 			CVar(AutoRelease, "Auto release", 0.f, SLIDER_CLAMP | SLIDER_PRECISION, 0.f, 100.f, 5.f, "%g%%");
 
@@ -404,6 +405,15 @@ NAMESPACE_BEGIN(Vars)
 				VA_LIST("Account ping", "Double test"),
 				AccountPing = 1 << 0, DoubleTest = 1 << 1);
 		NAMESPACE_END(Melee)
+
+		NAMESPACE_BEGIN(Triggerbot)
+			CVar(Enabled, VA_LIST("Enabled", "Triggerbot enabled"), false);
+			CVarEnum(Hitboxes, VA_LIST("Hitboxes", "Triggerbot hitboxes"), 0b1111, DROPDOWN_MULTI, nullptr,
+				VA_LIST("Head", "Body", "Arms", "Legs"),
+				Head = 1 << 0, Body = 1 << 1, Arms = 1 << 2, Legs = 1 << 3);
+			CVar(Delay, VA_LIST("Delay", "Triggerbot delay"), 0, SLIDER_CLAMP, 0, 500, 10, "%ims");
+			CVar(WaitForCharge, VA_LIST("Wait for charge", "Triggerbot wait for charge"), false);
+		NAMESPACE_END(Triggerbot)
 
 		NAMESPACE_BEGIN(Healing)
 			CVarEnum(HealPriority, "Heal priority", 0, NONE, nullptr,

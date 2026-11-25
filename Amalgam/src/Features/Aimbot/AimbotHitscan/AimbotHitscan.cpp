@@ -826,3 +826,93 @@ void CAimbotHitscan::Run(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pC
 		break;
 	}
 }
+
+static inline bool TriggerbotShouldFire(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+{
+	const int nWeaponID = pWeapon->GetWeaponID();
+	switch (nWeaponID)
+	{
+	case TF_WEAPON_MEDIGUN:
+	case TF_WEAPON_LASER_POINTER:
+	case TF_WEAPON_SNIPERRIFLE_CLASSIC: // fires on release, not supported
+		return false;
+	}
+
+	const bool bSniper = nWeaponID == TF_WEAPON_SNIPERRIFLE || nWeaponID == TF_WEAPON_SNIPERRIFLE_DECAP;
+	if (bSniper && !pLocal->InCond(TF_COND_ZOOMED))
+		return false;
+
+	// trace where the shot would actually go
+	Vec3 vForward; Math::AngleVectors(pCmd->viewangles + pLocal->m_vecPunchAngle(), &vForward);
+	const Vec3 vStart = pLocal->GetShootPos();
+	const Vec3 vEnd = vStart + vForward * 8192.f;
+
+	CGameTrace trace = {};
+	CTraceFilterHitscan filter = {};
+	filter.pSkip = pLocal;
+	filter.iType = SKIP_CHECK; // bullets pass through teammates
+	SDK::Trace(vStart, vEnd, MASK_SHOT, &filter, &trace);
+
+	auto pEntity = trace.m_pEnt;
+	if (!pEntity || pEntity->m_iTeamNum() == pLocal->m_iTeamNum()
+		|| (!pEntity->IsPlayer() && !pEntity->IsBuilding())
+		|| F::AimbotGlobal.ShouldIgnore(pEntity, pLocal, pWeapon))
+		return false;
+
+	if (pEntity->IsPlayer())
+	{
+		int iFlag;
+		if (trace.hitbox == HITBOX_HEAD)
+			iFlag = Vars::Aimbot::Triggerbot::HitboxesEnum::Head;
+		else if (trace.hitbox <= HITBOX_SPINE3)
+			iFlag = Vars::Aimbot::Triggerbot::HitboxesEnum::Body;
+		else if (trace.hitbox <= HITBOX_RIGHT_HAND)
+			iFlag = Vars::Aimbot::Triggerbot::HitboxesEnum::Arms;
+		else
+			iFlag = Vars::Aimbot::Triggerbot::HitboxesEnum::Legs;
+		if (!(Vars::Aimbot::Triggerbot::Hitboxes.Value & iFlag))
+			return false;
+	}
+
+	// sniper: only fire once the current charge is lethal (or fully charged)
+	if (bSniper && Vars::Aimbot::Triggerbot::WaitForCharge.Value)
+	{
+		auto pSniperRifle = pWeapon->As<CTFSniperRifle>();
+		const float flCharge = pSniperRifle->m_flChargedDamage();
+		if (flCharge < 150.f)
+		{
+			if (pEntity->IsPlayer())
+			{
+				auto pPlayer = pEntity->As<CTFPlayer>();
+				const bool bHeadshot = trace.hitbox == HITBOX_HEAD && (G::CanHeadshot || pLocal->IsCritBoosted());
+				const int iDamage = ceilf(std::max(flCharge, 50.f) * (bHeadshot ? pSniperRifle->GetHeadshotMult(pPlayer) : pSniperRifle->GetBodyshotMult(pPlayer)));
+				if (pPlayer->m_iHealth() > iDamage)
+					return false;
+			}
+			else if (pEntity->As<CBaseObject>()->m_iHealth() > ceilf(std::max(flCharge, 50.f)))
+				return false;
+		}
+	}
+
+	return true;
+}
+
+void CAimbotHitscan::RunTriggerbot(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCmd* pCmd)
+{
+	static double dOnTargetTime = -1.0;
+
+	if (!Vars::Aimbot::Triggerbot::Enabled.Value || G::PrimaryWeaponType != EWeaponType::HITSCAN
+		|| !TriggerbotShouldFire(pLocal, pWeapon, pCmd))
+	{
+		dOnTargetTime = -1.0;
+		return;
+	}
+
+	const double dTime = SDK::PlatFloatTime();
+	if (dOnTargetTime < 0.0)
+		dOnTargetTime = dTime;
+	if (dTime - dOnTargetTime < Vars::Aimbot::Triggerbot::Delay.Value / 1000.0)
+		return;
+
+	pCmd->buttons |= IN_ATTACK;
+}
