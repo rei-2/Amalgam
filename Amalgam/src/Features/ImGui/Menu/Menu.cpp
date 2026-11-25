@@ -195,6 +195,17 @@ void CMenu::MenuAimbot(int iTab)
 						}
 					} EndSection();
 				}
+				if (Section("Triggerbot", 8))
+				{
+					FToggle(Vars::Aimbot::Triggerbot::Enabled, FToggleEnum::Left);
+					FToggle(Vars::Aimbot::Triggerbot::WaitForCharge, FToggleEnum::Right);
+					PushTransparent(!Vars::Aimbot::Triggerbot::Enabled.Value);
+					{
+						FDropdown(Vars::Aimbot::Triggerbot::Hitboxes, FDropdownEnum::Left);
+						FSlider(Vars::Aimbot::Triggerbot::Delay, FSliderEnum::Right);
+					}
+					PopTransparent();
+				} EndSection();
 				if (Section("Backtrack", 8))
 				{
 					FSlider(Vars::Backtrack::Latency);
@@ -299,6 +310,11 @@ void CMenu::MenuAimbot(int iTab)
 					PopTransparent();
 					FSlider(Vars::Aimbot::Projectile::AutodetRadius, FSliderEnum::Left);
 					FSlider(Vars::Aimbot::Projectile::SplashRadius, FSliderEnum::Right);
+					PushTransparent(!(Vars::Aimbot::Projectile::AutoDetonate.Value & Vars::Aimbot::Projectile::AutoDetonateEnum::Stickies));
+					{
+						FSlider(Vars::Aimbot::Projectile::AutodetDelay);
+					}
+					PopTransparent();
 					PushTransparent(!Vars::Aimbot::Projectile::AutoRelease.Value);
 					{
 						FSlider(Vars::Aimbot::Projectile::AutoRelease);

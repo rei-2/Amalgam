@@ -43,6 +43,9 @@
   - `Extinguish team` (Auto airblast): apaga compañeros en llamas con apuntado silencioso, después de reflejar proyectiles. PR #4.
   - Lugares propios para objetivos prioritarios en Max targets: Rage/Cheater → construcciones → Medic se evalúan además de los objetivos normales, sin quitarles el lugar. PR #4.
   - `Auto rage` (Misc → Automation, interruptor + `Auto rage kills` 1–10): etiqueta Rage al jugador que te mata N veces en el mapa actual (se reinicia al cambiar de mapa, ignora Dead Ringer); crea la etiqueta Rage (prioridad 2, roja) si no existe. PR #4.
+- **Triggerbot** (Aimbot → General, sección Triggerbot): `Enabled`, `Hitboxes` (Head/Body/Arms/Legs), `Delay` 0–500 ms y `Wait for charge` (Sniper). Solo hitscan; traza un rayo hacia donde va el disparo (`viewangles` + punch) y dispara si golpea a un enemigo válido (respeta Target/Ignore del aimbot); el rifle de Sniper solo dispara con zoom; Classic, Medigun y Wrangler no están soportados. Código: `RunTriggerbot` en `AimbotHitscan.cpp`, llamado al final de `CAimbot::RunMain`. PR #8.
+- **Autodet delay** (Aimbot → Projectile, 0–2000 ms): tiempo extra que espera una sticky después de armarse antes de auto detonar. Solo stickies. PR #8.
+- **Config v5** (`default-nueva-v5.json`): igual que la v4 + Triggerbot activado (todas las hitboxes, Delay 0, Wait for charge) y Autodet delay 150 ms.
 - **Firmas tras la actualización de TF2 (nov 2026)**: `CTFClientScoreBoardDialog_OnCommand` (client.dll, cambió `sub rsp` a imm32) y `KeyValues_Initialize` (engine.dll: ahora es el constructor `KeyValues(name, bUseGrowableTable)`, se llama con `false`). Verificadas contra las DLL x64 del usuario (únicas). La firma del PR #326 de rei-2 apunta a `SetName` y no inicializa el objeto: no usarla. Para futuras actualizaciones, pedir al usuario `bin\x64\engine.dll` y `tf\bin\x64\client.dll` (x64, no las de 32 bits).
   - Ojo: una actualización también puede mover offsets fijos sin romper firmas (la DLL carga pero la opción no hace nada). Ej.: `Extend queue` (`CMatchInviteNotification_OnTick`) usa el tiempo de auto-unión en `rcx + 648` (0x288; antes 616). Se verifica desensamblando la función: lee un double en esa posición y lo compara con `Plat_FloatTime`.
 - GitHub puede desactivar el workflow; el usuario lo reactiva en Actions. El workflow tiene `workflow_dispatch` (botón "Run workflow").
@@ -67,6 +70,6 @@
 - Auto detonator jump: no por ahora.
 
 ### Pendiente
-- PR #4 ya está fusionado y compilado en `master` (DLL en los botones Download del README vía nightly.link). Falta probar en el juego la Detonator, Extinguish team, los lugares prioritarios y Auto rage.
-- Probar la config v4: ballesta del Medic curando compañeros heridos (manteniendo Shift).
+- Probado y funcionando (24 nov 2026, build #13 de `master`, PR #5, #6 y #7): la DLL carga tras la actualización de TF2 y Extend queue vuelve a funcionar.
+- Falta confirmar en el juego la Detonator, Extinguish team, los lugares prioritarios, Auto rage y la ballesta del Medic con la config v4 (curar compañeros heridos manteniendo Shift).
 - Opcional: activar Visuals → UI → Scoreboard utility para poner o quitar la etiqueta Rage con clic derecho en la tabla de puntajes.

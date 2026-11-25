@@ -42,7 +42,7 @@ bool CAutoDetonate::GetRadius(EntityEnum::EntityEnum eGroup, CBaseEntity* pProje
 	if (eGroup == EntityEnum::LocalStickies)
 	{
 		auto pPipebomb = pProjectile->As<CTFGrenadePipebombProjectile>();
-		if (!pPipebomb->m_flCreationTime() || I::GlobalVars->curtime < pPipebomb->m_flCreationTime() + SDK::AttribHookValue(0.8f, "sticky_arm_time", pWeapon))
+		if (!pPipebomb->m_flCreationTime() || I::GlobalVars->curtime < pPipebomb->m_flCreationTime() + SDK::AttribHookValue(0.8f, "sticky_arm_time", pWeapon) + Vars::Aimbot::Projectile::AutodetDelay.Value / 1000.f)
 			return false;
 
 		flRadius *= TF_ROCKET_RADIUS;
