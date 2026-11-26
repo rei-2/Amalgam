@@ -221,28 +221,28 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t uAccountID, int iM
 		{
 			for (auto& iID : m_mPlayerTags[uAccountID])
 			{
-				PriorityLabel_t* _pTag = GetTag(iID);
-				if (_pTag && !_pTag->m_bLabel)
-					vTags.push_back(_pTag);
+				PriorityLabel_t* pTag = GetTag(iID);
+				if (pTag && !pTag->m_bLabel)
+					vTags.push_back(pTag);
 			}
 		}
 		if (H::Entities.IsFriend(uAccountID))
 		{
-			auto _pTag = &m_vTags[TagToIndex(FRIEND_TAG)];
-			if (!_pTag->m_bLabel)
-				vTags.push_back(_pTag);
+			auto pTag = &m_vTags[TagToIndex(FRIEND_TAG)];
+			if (!pTag->m_bLabel)
+				vTags.push_back(pTag);
 		}
 		if (H::Entities.InParty(uAccountID))
 		{
-			auto _pTag = &m_vTags[TagToIndex(PARTY_TAG)];
-			if (!_pTag->m_bLabel)
-				vTags.push_back(_pTag);
+			auto pTag = &m_vTags[TagToIndex(PARTY_TAG)];
+			if (!pTag->m_bLabel)
+				vTags.push_back(pTag);
 		}
 		if (H::Entities.IsF2P(uAccountID))
 		{
-			auto _pTag = &m_vTags[TagToIndex(F2P_TAG)];
-			if (!_pTag->m_bLabel)
-				vTags.push_back(_pTag);
+			auto pTag = &m_vTags[TagToIndex(F2P_TAG)];
+			if (!pTag->m_bLabel)
+				vTags.push_back(pTag);
 		}
 	}
 	if ((!iMode || iMode == 2) && !vTags.size())
@@ -251,28 +251,28 @@ PriorityLabel_t* CPlayerlistUtils::GetSignificantTag(uint32_t uAccountID, int iM
 		{
 			for (auto& iID : m_mPlayerTags[uAccountID])
 			{
-				PriorityLabel_t* _pTag = GetTag(iID);
-				if (_pTag && _pTag->m_bLabel)
-					vTags.push_back(_pTag);
+				PriorityLabel_t* pTag = GetTag(iID);
+				if (pTag && pTag->m_bLabel)
+					vTags.push_back(pTag);
 			}
 		}
 		if (H::Entities.IsFriend(uAccountID))
 		{
-			auto _pTag = &m_vTags[TagToIndex(FRIEND_TAG)];
-			if (_pTag->m_bLabel)
-				vTags.push_back(_pTag);
+			auto pTag = &m_vTags[TagToIndex(FRIEND_TAG)];
+			if (pTag->m_bLabel)
+				vTags.push_back(pTag);
 		}
 		if (H::Entities.InParty(uAccountID))
 		{
-			auto _pTag = &m_vTags[TagToIndex(PARTY_TAG)];
-			if (_pTag->m_bLabel)
-				vTags.push_back(_pTag);
+			auto pTag = &m_vTags[TagToIndex(PARTY_TAG)];
+			if (pTag->m_bLabel)
+				vTags.push_back(pTag);
 		}
 		if (H::Entities.IsF2P(uAccountID))
 		{
-			auto _pTag = &m_vTags[TagToIndex(F2P_TAG)];
-			if (_pTag->m_bLabel)
-				vTags.push_back(_pTag);
+			auto pTag = &m_vTags[TagToIndex(F2P_TAG)];
+			if (pTag->m_bLabel)
+				vTags.push_back(pTag);
 		}
 	}
 	if (vTags.empty())
