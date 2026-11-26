@@ -6,6 +6,7 @@
 #include "../../Ticks/Ticks.h"
 #include "../../Visuals/Visuals.h"
 #include "../../AntiCheatCompatibility/AntiCheatCompatibility.h"
+#include "../../Misc/Misc.h"
 
 static inline bool AimFriendlyBuilding(CBaseObject* pBuilding)
 {
@@ -160,11 +161,24 @@ void CAimbotMelee::UpdateInfo(CTFPlayer* pLocal, CTFWeaponBase* pWeapon, CUserCm
 				{	// demo charge fix for swing pred
 					pLocal->RemoveCond(TF_COND_SHIELD_CHARGE);
 					tMoveStorage.m_MoveData.m_flMaxSpeed = tMoveStorage.m_MoveData.m_flClientMaxSpeed = SDK::MaxSpeed(pLocal);
+					tMoveStorage.m_MoveData.m_flForwardMove = pCmd->forwardmove, tMoveStorage.m_MoveData.m_flSideMove = pCmd->sidemove;
 					pLocal->m_flMaxspeed() = tMoveStorage.m_MoveData.m_flMaxSpeed;
 				}
 			}
 			if (m_iDoubletapTicks && Vars::Doubletap::AntiWarp.Value && pLocal->m_hGroundEntity())
 				F::Ticks.AntiWarp(pLocal, pCmd->viewangles.y, tMoveStorage.m_MoveData.m_flForwardMove, tMoveStorage.m_MoveData.m_flSideMove, iMax - i - 1);
+
+			if (bSwung && Vars::Misc::Movement::FastStop.Value && !(pCmd->buttons & (IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT)))
+			{
+				G::DummyCmd.viewangles = Vec3{ pCmd->viewangles };
+				G::DummyCmd.forwardmove = pCmd->forwardmove;
+				G::DummyCmd.sidemove = pCmd->sidemove;
+				G::DummyCmd.buttons = pCmd->buttons;
+				F::Misc.RunPost(pLocal, &G::DummyCmd);
+
+				tMoveStorage.m_MoveData.m_flForwardMove = G::DummyCmd.forwardmove;
+				tMoveStorage.m_MoveData.m_flSideMove = G::DummyCmd.sidemove;
+			}
 
 			F::MoveSim.RunTick(tMoveStorage);
 
