@@ -66,12 +66,17 @@
   - Spy (nuevo): `- Hitscan` con Wait for headshot (2).
   - Se quitó Hitscan Modifiers del bind `Hitscan` (2) y de `[AIMBOT]` (1) para que los binds de Hitscan por clase funcionen.
 
+### Ideas para el próximo lote (juntar y programar todo de una vez)
+- **Auto melee** (Aimbot → General, sección Melee): switch `Auto melee` + slider `Auto melee distance` (50–300, defecto 100) + switch `Switch back`. Si un enemigo válido (filtros Ignore/etiquetas) está a menos de la distancia y visible, cambia al arma melee y el aimbot de melee apunta y golpea en silencioso aunque no se mantenga Shift (usa swing prediction); con Switch back vuelve al arma anterior tras ~0,5 s sin enemigos cerca. No actuar en taunt, con über ni si no se puede cambiar de arma (carga del Demoknight). Hoy Amalgam no tiene cambio automático a melee. Preguntas abiertas: ¿todas las clases o excluir alguna (Sniper/Heavy)?, ¿distancia 100 ok?
+- **Config v7** (sobre la v6): Triggerbot `Wait for charge` apagado (el usuario lo había olvidado activado y creyó que no disparaba) y `Zoomed field of view` (Visuals → UI, hoy 0 = zoom normal; valor por definir, p. ej. 70) para que el zoom del Sniper no acerque tanto.
+- Propuestas por clase que quedaron sin elegir (25 nov): Auto über (Medic), Auto sap (Spy), timer visual de stickies (Demoman), Auto banner (Soldier), Auto comer sandvich (Heavy), alerta de sapper (Engineer), Auto Jarate a Spies (Sniper), Auto cloak (Spy), Airblast a ubercargados (Pyro), Auto charge swing (Demoknight).
+
 ### Descartado por el usuario
 - Ignore 1051 en `[AIMBOT]`, quitar Ignore FOV del airblast, limpieza de opciones inútiles, Prioritize feet en Demoman, Hit chance 50% para Huntsman, separar melee de Shift, mover auto detonate solo al Demoman.
 - Huntsman: quitar Target dormant y bajar Hit chance (bastó con Max targets 3).
 - Auto detonator jump: no por ahora.
 
 ### Pendiente
-- Probado y funcionando (24 nov 2026, build #13 de `master`, PR #5, #6 y #7): la DLL carga tras la actualización de TF2 y Extend queue vuelve a funcionar.
+- Probado y funcionando (24 nov 2026, build #13 de `master`, PR #5, #6 y #7): la DLL carga tras la actualización de TF2 y Extend queue vuelve a funcionar. El triggerbot (PR #8) también funciona en el juego (26 nov).
 - Falta confirmar en el juego la Detonator, Extinguish team, los lugares prioritarios, Auto rage y la ballesta del Medic con la config v4 (curar compañeros heridos manteniendo Shift).
 - Opcional: activar Visuals → UI → Scoreboard utility para poner o quitar la etiqueta Rage con clic derecho en la tabla de puntajes.
