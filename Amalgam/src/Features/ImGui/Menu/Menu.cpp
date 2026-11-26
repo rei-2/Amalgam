@@ -2356,6 +2356,7 @@ void CMenu::MenuLogs(int iTab)
 				if (Section("Cheat Detection"))
 				{
 					FDropdown(Vars::CheatDetection::Methods);
+					FToggle(Vars::CheatDetection::IgnoreIgnoredTag);
 					PushTransparent(!Vars::CheatDetection::DetectionsRequired.Value);
 					{
 						FSlider(Vars::CheatDetection::DetectionsRequired);

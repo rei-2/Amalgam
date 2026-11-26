@@ -112,12 +112,14 @@ void CCheatDetection::Run()
 			continue;
 
 		if (iIndex == I::EngineClient->GetLocalPlayer() || !pPlayer->IsAlive() || pPlayer->IsAGhost()
-			|| pResource->IsFakePlayer(iIndex) || F::PlayerUtils.HasTag(iIndex, F::PlayerUtils.TagToIndex(CHEATER_TAG)))
+		    || pResource->IsFakePlayer(iIndex)
+		    || F::PlayerUtils.HasTag(iIndex, F::PlayerUtils.TagToIndex(CHEATER_TAG))
+		    || (Vars::CheatDetection::IgnoreIgnoredTag.Value && F::PlayerUtils.HasTag(iIndex, F::PlayerUtils.TagToIndex(IGNORED_TAG))))
 		{
-			mData[pPlayer].m_PacketChoking = {};
-			mData[pPlayer].m_AimFlicking = {};
-			mData[pPlayer].m_DuckSpeed = {};
-			continue;
+		    mData[pPlayer].m_PacketChoking = {};
+		    mData[pPlayer].m_AimFlicking = {};
+		    mData[pPlayer].m_DuckSpeed = {};
+		    continue;
 		}
 
 		mData[pPlayer].m_uAccountID = pResource->m_iAccountID(iIndex);
